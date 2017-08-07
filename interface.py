@@ -44,6 +44,7 @@ class Interface(object):
     """
 
     def __init__(self, human):
+        """Set up the interface. (None)"""
         self.human = human
         self.load_games()
 
