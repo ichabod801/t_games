@@ -1,5 +1,13 @@
 """
 interface.py
+
+todo:
+comment all files
+write Sorter and Flip test games
+set up as package
+write some real games
+expand the interface
+write more real games
 """
 
 import os
