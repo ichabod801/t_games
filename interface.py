@@ -1,6 +1,8 @@
 """
 interface.py
 
+The interface for the tgames game suite.
+
 todo:
 comment all files
 write Sorter and Flip test games
@@ -8,6 +10,12 @@ set up as package
 write some real games
 expand the interface
 write more real games
+
+Classes:
+Interface: A menu interface for playing games. (object)
+
+Functions:
+excel_column: Convert a number into a Excel style column header. (str)
 """
 
 import os
@@ -17,53 +25,82 @@ import game
 import player
 
 class Interface(object):
+    """
+    A menu interface for playing games. (object)
+
+    !! I need to standardize the use of selection/choice
+
+    Attributes:
+    human: The player navigating the menu. (player.Player)
+
+    Methods:
+    load_games: Load all of the games defined locally. (None)
+    menu: Run the game selection menu. (None)
+    play_game: Play a selected game. (None)
+    show_menu: Display the menu options to the user. (dict)
+
+    Overridden Methods:
+    __init__
+    """
 
     def __init__(self, human):
         self.human = human
         self.load_games()
 
     def load_games(self):
-        # import game files
+        """Load all of the games defined locally. (None)"""
+        # Import the Python files.
         for dir_path, dir_name, file_names in os.walk('.'):
             for file_name in file_names:
                 if file_name.endswith('_game.py'):
                     __import__(file_name[:-3])
-        # categorize game classes
+        # Search through all of the game.Game sub-classes.
         self.categories = {'sub-categories': {}, 'games': []}
         self.games = {}
         search = [game.Game]
         while search:
             game_class = search.pop()
-            # Store game by name
+            # Store game by name.
             self.games[game_class.name.lower()] = game_class
             for alias in game_class.aka:
                 self.games[alias] = game_class
             # Store game by category
+            # !! Once I have non-test games, hide the test games.
             category = self.categories
             for game_category in game_class.categories:
                 if game_category not in category:
                     category['sub-categories'][game_category] = {'sub-categories': {}, 'games': []}
                 category = category['sub-categories'][game_category]
             category['games'].append(game_class)
+            # Search the full hierarchy of sub-classes.
             search.extend(game_class.__subclasses__())
 
     def menu(self):
+        """Run the game selection menu. (None)"""
+        # Start at the top category.
         category = self.categories
         previous = []
+        # Loop through player choices.
         while True:
+            # Show the menu and get the user's choice.
             choices = self.show_menu(category)
             selection = self.human.ask('What is your selection? ')
+            # Check for menu choices.
             if selection.upper() in choices:
                 choice = choices[selection.upper()]
+                # Check for sub-category choices.
                 if choice[:-9] in category['sub-categories']:
                     previous.append(category)
                     category = category['sub-categories'][choice[:-9]]
+                # Check for special choices.
                 elif choice == 'Previous Menu':
                     category = previous.pop()
                 elif choice == 'Quit':
                     break
+                # Assume anything else is a game to play.
                 else:
-                    self.play_game([game for game in category['games'] if game.name == choice][0])
+                    self.play_game(self.games[choice])
+            # Check for non-menu choices.
             elif selection.lower().startswith('play'):
                 game_name = selection[4:].strip()
                 if game_name in self.games:
@@ -71,32 +108,62 @@ class Interface(object):
                     print()
                 else:
                     print("I don't know how to play that game.")
+            # Give an error for everything else.
             else:
                 self.human.tell('That is not a valid selection.')
 
     def play_game(self, game_class):
+        """
+        Play a selected game. (None)
+
+        !! Needs a way to pass on options.
+
+        Parameters:
+        game_class: The game to play. (subclass of game.Game)
+        """
+        # Set up the game.
         game = game_class(self.human, '')
+        # Play the game until the player wants to stop.
         while True:
             results = game.play()
             if self.human.ask('Would you like to play again? ').lower() not in ('yes', 'y', '1'):
                 break
 
     def show_menu(self, category):
+        """
+        Display the menu options to the user. (dict)
+
+        The return value is a dictionary of letter choices to selections.
+
+        Parameters:
+        category: The category of games to display a menu for. (dict)
+        """
+        # Alphabetize the sub-categories and games.
         categories = sorted([sub_category + ' Category' for sub_category in category['sub-categories']])
         games = sorted([game.name for game in category['games']])
         selections = categories + games
+        # Add a previous menu option if not at the top.
         if category != self.categories:
             selections.append('Previous Menu')
+        # Add a quit option.
         selections.append('Quit')
+        # Get letters for the choices.
         choices = [(excel_column(n + 1), selection) for n, selection in enumerate(selections)]
+        # Display the menu.
         for choice, selection in choices:
             print('{}: {}'.format(choice, selection))
         print()
+        # Return the meaning of the menu letters.
         return dict(choices)
 
 def excel_column(n):
+    """
+    Convert a number into a Excel style column header. (str)
+
+    Parameters:
+    n: A number to convert to letters. (int)
+    """
     column = ''
-    characters = [''] + list(ascii_uppercase)
     while n:
         column = ascii_uppercase[(n % 26) - 1] + column
         n //= 27
