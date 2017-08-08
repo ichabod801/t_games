@@ -100,9 +100,10 @@ class Interface(object):
                     self.play_game(self.games[choice.lower()])
             # Check for non-menu choices.
             elif letter.lower().startswith('play'):
-                game_name = letter[4:].strip()
+                game_name, slash, options = letter[4:].strip().partition('/')
+                game_name = game_name.strip()
                 if game_name in self.games:
-                    self.play_game(self.games[game_name])
+                    self.play_game(self.games[game_name], options.strip())
                     self.human.tell()
                 else:
                     self.human.tell("I don't know how to play that game.")
@@ -110,17 +111,16 @@ class Interface(object):
             else:
                 self.human.tell('That is not a valid selection.')
 
-    def play_game(self, game_class):
+    def play_game(self, game_class, options = ''):
         """
         Play a selected game. (None)
 
-        !! Needs a way to pass on options.
-
         Parameters:
         game_class: The game to play. (subclass of game.Game)
+        options: Options specified by the play command. (str)
         """
         # Set up the game.
-        game = game_class(self.human, '')
+        game = game_class(self.human, options)
         # Play the game until the player wants to stop.
         while True:
             results = game.play()
