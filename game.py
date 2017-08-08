@@ -36,6 +36,9 @@ class Game(object):
     clean_up: Handle any end of game tasks. (None)
     game_over: Check for the end of the game. (bool)
     handle_options: Handle any options for the game. (None)
+    play: Play the game. (list of int)
+    player_turn: Handle a player's turn or other player actions. (bool)
+    set_up: Handle any pre-game tasks. (None)
 
     Overridden Methods:
     __init__
@@ -77,20 +80,43 @@ class Game(object):
         pass
 
     def play(self):
+        """
+        Play the game. (list of int)
+
+        The return value is the win, loss, draw, and score for the primary player.
+        The win/loss/draw is per player for one game. So if you tie for second 
+        with five players, your win/loss/draw is 2, 1, 1.
+        """
+        # Set up the game.
         self.set_up()
+        # Loop through the players repeatedly.
         for player in itertools.cycle(self.players):
+            # Loop through player actions until their turn is done.
             while self.player_turn(player):
                 pass
+            # Update tracking.
             self.turns += 1
+            # Check for the end of game.
             if self.game_over():
                 break
+        # Clean up the game.
         self.clean_up()
+        # Report the results.
         return self.win_loss_draw + [self.scores[self.human.name]]
 
     def player_turn(self, player):
+        """
+        Handle a player's turn or other player actions. (bool)
+
+        The return value is a flag for the player's turn being done.
+
+        Parameters:
+        player: The player whose turn it is. (Player)
+        """
         move = player.ask('What is your move, {}? '.format(player.name))
 
     def set_up(self):
+        """Handle any pre-game tasks. (None)"""
         self.players = [self.human]
         self.scores = {self.human.name: 0}
 
