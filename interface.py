@@ -66,7 +66,7 @@ class Interface(object):
             # !! Once I have non-test games, hide the test games.
             category = self.categories
             for game_category in game_class.categories:
-                if game_category not in category:
+                if game_category not in category['sub-categories']:
                     category['sub-categories'][game_category] = {'sub-categories': {}, 'games': []}
                 category = category['sub-categories'][game_category]
             category['games'].append(game_class)

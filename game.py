@@ -5,6 +5,7 @@ The base game object for tgames.
 
 Classes:
 Game: A game with a text interface. (object)
+Sorter: A test game of sorting a sequence. (Game)
 """
 
 import itertools
@@ -119,6 +120,92 @@ class Game(object):
         self.scores = {self.human.name: 0}
         self.win_loss_draw = [0, 0, 0]
         self.turns = 0
+
+
+class Sorter(Game):
+    """
+    A test game of sorting a sequence. (Game)
+
+    Attributes:
+    length: The length of the sequences to sort. (int)
+    minimum: The minimum number of swaps to sort the sequence. (int)
+    sequence: The sequence to sort. (list of int)
+
+    Overridden Methods:
+    handle_options
+    player_turn
+    set_up
+    """
+
+    name = 'Sorter'
+
+    def game_over(self):
+        """Check for the game being over. (bool)"""
+        # Check for sorted sequences.
+        if self.sequence == sorted(self.sequence):
+            # Check if it is a win or a loss.
+            if self.turns == self.minimum:
+                self.win_loss_draw[0] = 1
+                self.human.tell('You won!')
+            else:
+                self.win_loss_draw[1] = 1
+                self.human.tell('You lost. The sequence could be sorted in {} swaps.'.format(self.minimum))
+            # Set the score and end the game.
+            self.scores[self.human.name] = self.minimum - self.turns
+            return True
+
+    def handle_options(self):
+        """Set the length of the sequence to sort. (None)"""
+        # Set the default options
+        self.length = 5
+        # If no options, ask for manual setting of options.
+        if not self.raw_options.strip():
+            self.raw_options = self.human.ask('Enter the length of the sequence to sort (return for 5): ')
+        # Read any specified options
+        if self.raw_options.isdigit():
+            self.length = int(self.raw_options)
+
+    def player_turn(self, player):
+        """
+        Get two numbers to swap. (bool)
+
+        Parameters:
+        player: The player whose turn it is. (Player)
+        """
+        # Get the move.
+        player.tell('The current sequence is: ', str(self.sequence)[1:-1])
+        move = player.ask('Pick two numbers to swap: ')
+        # Parse the move.
+        try:
+            if ',' in move:
+                numbers = [int(x) for x in move.split(',')]
+            else:
+                numbers = [int(x) for x in move.split()]
+        except ValueError:
+            # Handle invalid moves.
+            player.tell('Invalid input. Please enter two numbers separated by a space or a comma.')
+            return True
+        # Make the move.
+        ndxs = [self.sequence.index(x) for x in numbers]
+        self.sequence[ndxs[0]], self.sequence[ndxs[1]] = self.sequence[ndxs[1]], self.sequence[ndxs[0]]
+
+    def set_up(self):
+        """Set up the sequence and minimum swaps. (None)"""
+        # Set up base attributes.
+        super(Sorter, self).set_up()
+        # Set up the sequence to sort.
+        self.sequence = list(range(self.length))
+        while self.sequence == sorted(self.sequence):
+            random.shuffle(self.sequence)
+        # Determine the minimum number of swaps.
+        self.minimum = 0
+        check = self.sequence[:]
+        for num_index, num in enumerate(check):
+            if num_index != num:
+                target_index = check.index(num_index)
+                check[num_index], check[target_index] = check[target_index], check[num_index]
+                self.minimum += 1
+
 
 if __name__ == '__main__':
     craig = Player('Craig')
