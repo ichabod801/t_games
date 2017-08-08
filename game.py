@@ -5,6 +5,7 @@ The base game object for tgames.
 
 Classes:
 Game: A game with a text interface. (object)
+Flip: A test game of flipping coins. (Game)
 Sorter: A test game of sorting a sequence. (Game)
 """
 
@@ -116,10 +117,122 @@ class Game(object):
 
     def set_up(self):
         """Handle any pre-game tasks. (None)"""
-        self.players = [self.human]
-        self.scores = {self.human.name: 0}
+        if not self.players:
+            self.players = [self.human]
+        random.shuffle(self.players)
+        self.scores = {player.name: 0 for player in self.players}
         self.win_loss_draw = [0, 0, 0]
         self.turns = 0
+
+
+class Flip(Game):
+    """
+    A test game of flipping coins. (Game)
+
+    Attributes:
+    bot: The non-human player. (FlipBot)
+
+    Overridden Methods:
+    game_over
+    player_turn
+    set_up
+    """
+
+    categories = ['Test Games', 'Multi-Player']
+    name = 'Flip'
+
+    def game_over(self):
+        """Check for the end of the game. (bool)"""
+        # Only check after both players get a chance to flip.
+        if not self.turns % 2:
+            # Check for someone ahead by 2 flips.
+            score_values = list(self.scores.values())
+            score_diff = abs(score_values[1] - score_values[0])
+            if score_diff == 2:
+                # Figure out who won.
+                winning_score = max(score_values)
+                if self.scores[self.human.name] == winning_score:
+                    self.win_loss_draw[0] = 1
+                    self.human.tell('You beat {} with {} heads!'.format(self.bot.name, winning_score))
+                else:
+                    self.win_loss_draw[1] = 1
+                    message = 'You lost to {} win {} heads.'
+                    self.human.tell(message.format(self.bot.name, winning_score - 2))
+                return True
+
+    def player_turn(self, player):
+        """
+        Handle a player's turn or other player actions. (bool)
+
+        Parameters:
+        player: The player whose turn it is. (Player)
+        """
+        # Get the number of flips.
+        flips = player.ask('How many times would you like to flip the coin (only the last flip counts)? ')
+        # Check for invalid answers.
+        if not flips.strip().isdigit():
+            player.tell('Please enter a number of flips to make.')
+            return True
+        # Flip a coin the specified number of times.
+        for flip_index in range(int(flips)):
+            if random.random() < 0.5:
+                flip = 'tails'
+            else:
+                flip = 'heads'
+            player.tell('Flip #{} is {}.'.format(flip_index + 1, flip))
+        # Record the final flip.
+        if flip == 'heads':
+            self.scores[player.name] += 1
+        # Update the player.
+        player.tell('You now have {} heads.'.format(self.scores[player.name]))
+        print()
+
+    def set_up(self):
+        # Make sure the bot has a unique name.
+        if self.human.name != 'Flip':
+            self.bot = FlipBot('Flip')
+        else:
+            self.bot = FlipBot('Tosser')
+        # Set up the players as the human and the bot.
+        self.players = [self.human, self.bot]
+        # Handle standard set up.
+        super(Flip, self).set_up()
+
+
+class FlipBot(Player):
+    """
+    A bot to play Flip against. (Player)
+
+    Class Attributes:
+    count_words: Words for the number of flips the bot requests. (list of str)
+
+    Overridden Methods:
+    ask
+    tell
+    """
+
+    count_words = ['none', 'once', 'twice', 'three times']
+
+    def ask(self, prompt):
+        """
+        Get information from the player. (str)
+
+        Parameters:
+        prompt: The question being asked of the player. (str)
+        """
+        flips = random.randint(1, 3)
+        print('{} chooses to flip {}.'.format(self.name, self.count_words[flips]))
+        return str(flips)
+
+    def tell(self, *args, **kwargs):
+        """
+        Give information to the player. (None)
+
+        Parameters:
+        The parameters are as per the built-in print function.
+        """
+        if args:
+            print(args[0].replace('You', self.name).replace('have', 'has'))
 
 
 class Sorter(Game):
