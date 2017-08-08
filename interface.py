@@ -4,7 +4,6 @@ interface.py
 The interface for the tgames game suite.
 
 todo:
-comment all files
 write Sorter and Flip test games
 set up as package
 write some real games
@@ -27,8 +26,6 @@ import player
 class Interface(object):
     """
     A menu interface for playing games. (object)
-
-    !! I need to standardize the use of selection/choice
 
     Attributes:
     human: The player navigating the menu. (player.Player)
@@ -83,12 +80,12 @@ class Interface(object):
         previous = []
         # Loop through player choices.
         while True:
-            # Show the menu and get the user's choice.
-            choices = self.show_menu(category)
-            selection = self.human.ask('What is your selection? ')
+            # Show the menu and get the possible choices.
+            menu_map = self.show_menu(category)
+            letter = self.human.ask('What is your selection? ').strip()
             # Check for menu choices.
-            if selection.upper() in choices:
-                choice = choices[selection.upper()]
+            if letter.upper() in menu_map:
+                choice = menu_map[letter.upper()]
                 # Check for sub-category choices.
                 if choice[:-9] in category['sub-categories']:
                     previous.append(category)
@@ -100,15 +97,15 @@ class Interface(object):
                     break
                 # Assume anything else is a game to play.
                 else:
-                    self.play_game(self.games[choice])
+                    self.play_game(self.games[choice.lower()])
             # Check for non-menu choices.
-            elif selection.lower().startswith('play'):
-                game_name = selection[4:].strip()
+            elif letter.lower().startswith('play'):
+                game_name = letter[4:].strip()
                 if game_name in self.games:
                     self.play_game(self.games[game_name])
-                    print()
+                    self.human.tell()
                 else:
-                    print("I don't know how to play that game.")
+                    self.human.tell("I don't know how to play that game.")
             # Give an error for everything else.
             else:
                 self.human.tell('That is not a valid selection.')
@@ -134,7 +131,7 @@ class Interface(object):
         """
         Display the menu options to the user. (dict)
 
-        The return value is a dictionary of letter choices to selections.
+        The return value is a dictionary of letters to choices.
 
         Parameters:
         category: The category of games to display a menu for. (dict)
@@ -142,20 +139,20 @@ class Interface(object):
         # Alphabetize the sub-categories and games.
         categories = sorted([sub_category + ' Category' for sub_category in category['sub-categories']])
         games = sorted([game.name for game in category['games']])
-        selections = categories + games
+        choices = categories + games
         # Add a previous menu option if not at the top.
         if category != self.categories:
-            selections.append('Previous Menu')
+            choices.append('Previous Menu')
         # Add a quit option.
-        selections.append('Quit')
+        choices.append('Quit')
         # Get letters for the choices.
-        choices = [(excel_column(n + 1), selection) for n, selection in enumerate(selections)]
+        pairs = [(excel_column(n + 1), selection) for n, selection in enumerate(choices)]
         # Display the menu.
-        for choice, selection in choices:
-            print('{}: {}'.format(choice, selection))
-        print()
+        for letter, choice in pairs:
+            self.human.tell('{}: {}'.format(letter, choice))
+        self.human.tell()
         # Return the meaning of the menu letters.
-        return dict(choices)
+        return dict(pairs)
 
 def excel_column(n):
     """

@@ -55,8 +55,6 @@ class Game(object):
         self.human = human
         self.raw_options = options
         self.handle_options()
-        self.win_loss_draw = [0, 0, 0]
-        self.turns = 0
 
     def clean_up(self):
         """Handle any end of game tasks. (None)"""
@@ -119,6 +117,8 @@ class Game(object):
         """Handle any pre-game tasks. (None)"""
         self.players = [self.human]
         self.scores = {self.human.name: 0}
+        self.win_loss_draw = [0, 0, 0]
+        self.turns = 0
 
 if __name__ == '__main__':
     craig = Player('Craig')
