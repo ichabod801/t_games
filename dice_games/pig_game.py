@@ -6,9 +6,9 @@ Pig and related variants.
 
 from __future__ import print_function
 
-import dice
-import game
-import player
+import tgames.dice as dice
+import tgames.game as game
+import tgames.player as player
 import random
 
 
@@ -159,6 +159,10 @@ class PigBotValue(PigBot):
 
 
 if __name__ == '__main__':
+    try:
+        input = raw_input
+    except NameError:
+        pass
     name = input('What is your name? ')
-    pig = Pig(player.Player(name))
+    pig = Pig(player.Player(name), '')
     pig.play()

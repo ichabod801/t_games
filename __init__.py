@@ -14,8 +14,8 @@ play: Play some text games. (None)
 
 from __future__ import print_function
 
-import interface
-import player
+import tgames.interface as interface
+import tgames.player as player
 
 def play():
     """Play some text games. (None)"""

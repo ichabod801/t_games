@@ -13,9 +13,8 @@ excel_column: Convert a number into a Excel style column header. (str)
 import os
 from string import ascii_uppercase
 
-import game
-import dice_games
-import player
+import tgames.game as game
+import tgames.player as player
 
 class Interface(object):
     """

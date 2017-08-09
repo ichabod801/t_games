@@ -15,7 +15,7 @@ from __future__ import print_function
 import itertools
 import random
 
-from player import Player
+from tgames.player import Player
 
 
 class Game(object):
