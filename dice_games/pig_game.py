@@ -4,6 +4,7 @@ pig_game.py
 Pig and related variants.
 """
 
+
 import dice
 import game
 import player
@@ -14,6 +15,9 @@ class Pig(game.Game):
     """
     A game of pig. (Game)
     """
+
+    name = 'Pig'
+    categories = ['Dice Games']
 
     def game_over(self):
         if max(self.scores.values()) > 99:
