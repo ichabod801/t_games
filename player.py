@@ -8,6 +8,7 @@ Player: The base player class. (object)
 Human: A human being, with stored data. (Player)
 """
 
+
 from __future__ import print_function
 
 import os
@@ -58,6 +59,8 @@ class Player(object):
     def tell(self, *args, **kwargs):
         """
         Give information to the player. (None)
+
+        !! get the actual signature from print.
 
         Parameters:
         The parameters are as per the built-in print function.
