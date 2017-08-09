@@ -11,6 +11,7 @@ Human: A human being, with stored data. (Player)
 from __future__ import print_function
 
 import os
+import random
 import string
 import sys
 

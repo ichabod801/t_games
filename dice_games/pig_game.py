@@ -8,7 +8,7 @@ Pig and related variants.
 import dice
 import game
 import player
-import re
+import random
 
 
 class Pig(game.Game):
@@ -32,32 +32,38 @@ class Pig(game.Game):
                         self.win_loss_draw[0] += 1
                     else:
                         self.win_loss_draw[2] += 1
+            return True
+
+    def handle_options(self):
+        """Handle game options and set up players. (None)"""
+        self.bot = PigBotValue(taken_names = [self.human.name])
+        self.players = [self.bot, self.human]
+        random.shuffle(self.players)
 
     def set_up(self):
         """Set up the game. (None)"""
-        self.die = Dice.die()
-        self.bot = PigBotValue(21)
-        self.players = [self.bot, self.human]
+        self.die = dice.Die()
         super(Pig, self).set_up()
 
     def player_turn(self, player):
-        turn_score = 0
+        self.turn_score = 0
         while True:
             roll = self.die.roll()
             if roll == 1:
                 player.tell('You rolled a 1, your turn is over.')
                 break
             else:
-                turn_score += roll
-                player.tell('You rolled a {}, your turn score is {}.')
+                self.turn_score += roll
+                player.tell('You rolled a {}, your turn score is {}.'.format(roll, self.turn_score))
             move = player.ask('Would you like to roll or stop? ')
             if move.lower() in ('s', 'stop', 'whoa'):
-                self.scores[player.name] += turn_score
+                self.scores[player.name] += self.turn_score
                 break
+        player.tell("{}'s score is now {}".format(player.name, self.scores[player.name]))
+        print()
+
 
 class PigBot(player.Bot):
-
-    number_re = re.compile('\d+')
 
     def __init__(self, taken_names = [], initial = ''):
         """
@@ -77,6 +83,24 @@ class PigBot(player.Bot):
         return random.choice(('yes', 'no'))
 
     def tell(self, text):
-        if 'your turn is over' in text:
-            self.turn_score = 0
+        out = text.replace('your', 'their').replace('You', self.name)
+        print(out)
 
+
+class PigBotValue(PigBot):
+
+    def __init__(self, value = 21, taken_names = []):
+        super(PigBotValue, self).__init__(taken_names, 'v')
+        self.value = value
+
+    def ask(self, prompt):
+        if self.game.turn_score < self.value:
+            return 'roll'
+        else:
+            return 'stop'
+
+
+if __name__ == '__main__':
+    name = input('What is your name? ')
+    pig = Pig(player.Player(name))
+    pig.play()
