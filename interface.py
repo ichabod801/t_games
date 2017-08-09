@@ -14,6 +14,7 @@ import os
 from string import ascii_uppercase
 
 import game
+from dice_games import *
 import player
 
 class Interface(object):
@@ -40,11 +41,11 @@ class Interface(object):
 
     def load_games(self):
         """Load all of the games defined locally. (None)"""
-        # Import the Python files.
+        """# Import the Python files.
         for dir_path, dir_name, file_names in os.walk('.'):
             for file_name in file_names:
                 if file_name.endswith('_game.py'):
-                    __import__(file_name[:-3])
+                    __import__(file_name[:-3])"""
         # Search through all of the game.Game sub-classes.
         self.categories = {'sub-categories': {}, 'games': []}
         self.games = {}

@@ -24,6 +24,7 @@ class Player(object):
     The base player class. (object)
 
     Attributes:
+    game: The game the player is playing. (game.Game)
     name: The name of the player. (str)
 
     Methods:
@@ -42,6 +43,7 @@ class Player(object):
         name: The name of the player. (str)
         """
         self.name = name
+        self.game = None
 
     def ask(self, prompt):
         """
@@ -113,7 +115,7 @@ class Human(Player):
                 self.quest = input('What is your quest? ')
                 self.color = input('What is your favorite color? ')
             # Check for previous log in.
-            self.folder_name = 'player_data/{}-{}-{}/'.format(self.name, self.quest, self.color)
+            self.folder_name = 'player_data/{}-{}-{}/'.format(self.name, self.quest, self.color).lower()
             if not os.path.exists(self.folder_name):
                 new_player = input('I have not heard of you. Are you a new player? ')
                 if new_player.lower() in ('yes', 'y', '1'):

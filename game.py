@@ -20,6 +20,8 @@ class Game(object):
 
     !! needs a way to check for commands like help, rules, and so on.
 
+    In non-solitaire games, the players attribute should be set in handle_options.
+
     Class Attributes:
     aka: Other names for the game. (list of str)
     categories: The categories of the game. (list of str)
@@ -37,7 +39,7 @@ class Game(object):
     Methods:
     clean_up: Handle any end of game tasks. (None)
     game_over: Check for the end of the game. (bool)
-    handle_options: Handle any options for the game. (None)
+    handle_options: Handle game options and set the player list. (None)
     play: Play the game. (list of int)
     player_turn: Handle a player's turn or other player actions. (bool)
     set_up: Handle any pre-game tasks. (None)
@@ -57,6 +59,10 @@ class Game(object):
         self.human = human
         self.raw_options = options
         self.handle_options()
+        if not hasattr(self, 'players'):
+            self.players = [self.human]
+        for player in self.players:
+            player.game = self
 
     def clean_up(self):
         """Handle any end of game tasks. (None)"""
@@ -88,6 +94,9 @@ class Game(object):
         with five players, your win/loss/draw is 2, 1, 1.
         """
         # Set up the game.
+        self.scores = {player.name: 0 for player in self.players}
+        self.win_loss_draw = [0, 0, 0]
+        self.turns = 0
         self.set_up()
         # Loop through the players repeatedly.
         for player in itertools.cycle(self.players):
@@ -117,12 +126,7 @@ class Game(object):
 
     def set_up(self):
         """Handle any pre-game tasks. (None)"""
-        if not self.players:
-            self.players = [self.human]
-        random.shuffle(self.players)
-        self.scores = {player.name: 0 for player in self.players}
-        self.win_loss_draw = [0, 0, 0]
-        self.turns = 0
+        pass
 
 
 class Flip(Game):
@@ -140,6 +144,17 @@ class Flip(Game):
 
     categories = ['Test Games', 'Multi-Player']
     name = 'Flip'
+
+    def handle_options(self):
+        """Handle game options and set the player list. (None)"""
+        # Make sure the bot has a unique name.
+        if self.human.name != 'Flip':
+            self.bot = FlipBot('Flip')
+        else:
+            self.bot = FlipBot('Tosser')
+        # Set up the players as the human and the bot.
+        self.players = [self.human, self.bot]
+        random.shuffle(self.players)
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
@@ -186,17 +201,6 @@ class Flip(Game):
         # Update the player.
         player.tell('You now have {} heads.'.format(self.scores[player.name]))
         print()
-
-    def set_up(self):
-        # Make sure the bot has a unique name.
-        if self.human.name != 'Flip':
-            self.bot = FlipBot('Flip')
-        else:
-            self.bot = FlipBot('Tosser')
-        # Set up the players as the human and the bot.
-        self.players = [self.human, self.bot]
-        # Handle standard set up.
-        super(Flip, self).set_up()
 
 
 class FlipBot(Player):
@@ -304,8 +308,6 @@ class Sorter(Game):
 
     def set_up(self):
         """Set up the sequence and minimum swaps. (None)"""
-        # Set up base attributes.
-        super(Sorter, self).set_up()
         # Set up the sequence to sort.
         self.sequence = list(range(self.length))
         while self.sequence == sorted(self.sequence):
