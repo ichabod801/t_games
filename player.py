@@ -14,11 +14,12 @@ from __future__ import print_function
 import os
 import random
 import string
-import sys
 
 
-if sys.version_info[0] == 2:
+try:
     input = raw_input
+except NameError:
+    pass
     
 
 class Player(object):
