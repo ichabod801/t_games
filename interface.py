@@ -42,7 +42,7 @@ class Interface(object):
     def load_games(self):
         """Load all of the games defined locally. (None)"""
         # Import the Python files.
-        for package in [name for name in os.listdir() if name.endswith('_games')]:
+        for package in [name for name in os.listdir('.') if name.endswith('_games')]:
             for module in [name for name in os.listdir(package) if name.endswith('_game.py')]:
                 __import__('{}.{}'.format(package, module[:-3]))
         # Search through all of the game.Game sub-classes.

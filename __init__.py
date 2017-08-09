@@ -12,6 +12,8 @@ Functions:
 play: Play some text games. (None)
 """
 
+from __future__ import print_function
+
 import interface
 import player
 

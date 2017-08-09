@@ -9,10 +9,14 @@ Flip: A test game of flipping coins. (Game)
 Sorter: A test game of sorting a sequence. (Game)
 """
 
+
+from __future__ import print_function
+
 import itertools
 import random
 
 from player import Player
+
 
 class Game(object):
     """

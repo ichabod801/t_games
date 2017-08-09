@@ -4,6 +4,7 @@ pig_game.py
 Pig and related variants.
 """
 
+from __future__ import print_function
 
 import dice
 import game
