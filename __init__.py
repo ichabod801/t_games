@@ -5,7 +5,6 @@ Package initializer for tgames.
 
 todo:
 write some real games
-    wumpus
     battleships
 expand the interface
 write more real games (trac ticket #69)

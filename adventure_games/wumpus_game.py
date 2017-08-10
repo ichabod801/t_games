@@ -9,6 +9,7 @@ to create a Hunt the Wumpus game.
 Constants:
 ADJACENT: Adjacent points on a dodecahedron. (list of tuple of int)
 DESCRIPTIONS: The room descriptions. (list of str)
+HELP_TEXT: Text describing the game. (str)
 
 Classes:
 Cave: One cave in a cave complex. (object)
@@ -36,6 +37,29 @@ DESCRIPTIONS = ['wumpus dung in the corner', '', '', '', '', 'ants crawling all 
     'a family of lizards hiding in cracks in the wall', 'a strange mist in the air', 
     'several notches marked on the wall', 'an obelisk carved out of a stalagmite', 'a tall roof', 
     'a skull on the floor', 'a big red X marked on the floor']
+
+# Text describing the game.
+HELP_TEXT = """
+Hunt the Wumpus
+
+The goal is to search the cave system for the wumpus, a large and heavy beast
+with a gaping maw and wall-climbing suckers it's claws. You also have to watch
+out for giant bats that will carry you off to some place you may not want to go 
+and bottomless pits. As you go through the caves you will sense when you get
+near to the hazards of the caves: you can hear the bats, feel the draft from
+the pits, and smell the fould stench of the wumpus (he's not big on bathing). 
+You have five crooked arrows to shoot the wumpus with, but if you miss the
+wumpus, he may move to a different cave. 
+
+The commands are:
+   LEFT: Move through the left hand passage.
+   RIGHT: Move through the right hand passage.
+   BACK: Move through the passage behind you.
+   CLIMB: Climb out of the cave system (only from the cave you started in).
+   SHOOT: Shoot a crooked arrow. You can provide 1-3 directions for the arrow
+      to travel through the passages (frex, SHOOT LRL).
+   HELP: Read these fascinating, well written instructions again.
+"""
 
 
 class Cave(object):
@@ -249,6 +273,19 @@ class Dodecahedron(object):
 class Wumpus(game.Game):
     """
     A game of Hunt the Wumpus.
+
+    Attributes:
+    arrows: The number of crooked arrows left. (int)
+    dodec: The cave system. (Dodecahedron)
+
+    Methods:
+    shoot: Fire a crooked arrow. (None)
+    status_check: Check the room for hazards and description. (None)
+
+    Overridden Methods:
+    game_over
+    player_turn
+    set_up
     """
 
     aka = ['Wumpus']
@@ -256,6 +293,8 @@ class Wumpus(game.Game):
     name = 'Hunt the Wumpus'
 
     def game_over(self):
+        """Check for the game being over. (None)"""
+        # Game over is flagged elsewhere by changing win/loss/draw.
         if self.win_loss_draw[1]:
             print('The wumpus wins. :(')
         elif self.win_loss_draw[0]:
@@ -263,11 +302,19 @@ class Wumpus(game.Game):
         elif self.win_loss_draw[2]:
             print("Alright, we'll call it a draw.")
         else:
+            # Game still on.
             return False
+        # Record score and end game.
         self.scores[self.human.name] = self.turns
         return True
 
     def player_turn(self, player):
+        """
+        Handle a player's turn or other player actions. (bool)
+
+        Parameters:
+        player: The player whose turn it is. (Player)
+        """
         move = player.ask('What is your move? ').strip().lower()
         if move in ('b', 'back'):
             self.dodec.move('B')
@@ -287,8 +334,20 @@ class Wumpus(game.Game):
             self.shoot(move.split()[1])
         if not sum(self.win_loss_draw):
             self.status_check()
+
+    def set_up(self):
+        """Set up the caves and the tracking variables. (None)"""
+        self.dodec = Dodecahedron()
+        self.arrows = 5
+        self.status_check()
         
     def shoot(self, arg):
+        """
+        Fire a crooked arrow. (None)
+
+        Parameters:
+        arg: The directions to shoot the arrow in. (str)
+        """
         # make sure there are arrows
         if self.arrows:
             # update arrows
@@ -297,43 +356,44 @@ class Wumpus(game.Game):
             hit = self.dodec.shoot(arg.upper())
             # print the results
             if not hit:
+                # miss means wumpus may move
                 print('You hear the arrow break uselessly against a wall.')
                 print('You hear a grumbling roar and a strange suck-pop sound.')
                 print('You have {} crooked arrows left.'.format(self.arrows))
-                # miss means wumpus may move
                 self.dodec.move_wumpus()
             elif hit < 0:
-                print('Arrgh! You shot yourself in the back')
                 # shooting yourself is a loss
+                print('Arrgh! You shot yourself in the back')
                 self.win_loss_draw[1] = 1
             else:
-                print('You hear the horrible scream of a dieing wumpus!')
                 # shooting the wumpus is a win
+                print('You hear the horrible scream of a dieing wumpus!')
                 self.win_loss_draw[0] = 1
         else:
             print("You don't have any arrows left to shoot.")
     
     def status_check(self):
+        """Check the room for hazards and description. (None)"""
         # check for hazards
         while True:
             status = self.dodec.check_cave()
             if 'WUMPUS' in status:
+                # wumpus is a loss
                 print("The heavy weight of a wumpus lands on you, and you are")
                 print("trapped in it's sucker tipped claws. In seconds you are")
                 print("shoved into it's huge maw and eaten alive.")
-                # wumpus is a loss
                 self.win_loss_draw[1] = 1
             elif 'BATS' in status:
+                # bats move randomly and skip to next cave
                 print("You are grabbed by a giant, screeching bat and flown through")
                 print("the caves at random.")
-                # bats move randomly and skip to next cave
                 self.dodec.bats()
                 continue
             elif 'PIT' in status:
+                # pit is a loss
                 print("You stumble in the dark and fall down a bottomless pit. Well,")
                 print("okay, it's got a bottom. Give us some room for poetic")
                 print("license here.")
-                # pit is a loss
                 self.win_loss_draw[1] = 1
             else:
                 # print description
@@ -347,12 +407,6 @@ class Wumpus(game.Game):
                     print("You feel a cool draft.")
                 result = ''
             break
-
-    def set_up(self):
-        "Set up the caves and the tracking variables. (None)"
-        self.dodec = Dodecahedron()
-        self.arrows = 5
-        self.status_check()
 
 
 if __name__ == '__main__':
