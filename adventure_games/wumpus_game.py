@@ -247,8 +247,9 @@ class Dodecahedron(object):
         """
         Shoot a crooked arrow from the current location. (int)
         
-        The return value is 1 for hitting the wumpus, -1 for hitting yourself,
-        and 0 for not hitting anything.
+        The return value is >0 for hitting the wumpus, 0 for hitting yourself,
+        and <0 for not hitting anything. Absolute value is the number of rooms
+        shot through.
         
         Parameter:
         direction: The (L/R/B) directions to shoot the arrow in (str)
@@ -257,17 +258,18 @@ class Dodecahedron(object):
         target = self.current
         shooter = self.previous
         # shoot through up to three caves
+        rooms = 1
         for char in direction[:3]:
             # move the arrow
             shooter, target = target, self.next_cave(shooter, target, char)
             # check for a hit
             if target.wumpus:
-                return 1
+                return rooms
             if target.id == self.current.id:
-                return -1
+                return 0
             # indicate a miss (for that cave at least)
-            print('Whiff!')
-        return 0
+            rooms += 1
+        return rooms * -1
 
 
 class Wumpus(game.Game):
@@ -296,11 +298,11 @@ class Wumpus(game.Game):
         """Check for the game being over. (None)"""
         # Game over is flagged elsewhere by changing win/loss/draw.
         if self.win_loss_draw[1]:
-            print('The wumpus wins. :(')
+            self.human.tell('The wumpus wins. :(')
         elif self.win_loss_draw[0]:
-            print('You win!')
+            self.human.tell('You win!')
         elif self.win_loss_draw[2]:
-            print("Alright, we'll call it a draw.")
+            self.human.tell("Alright, we'll call it a draw.")
         else:
             # Game still on.
             return False
@@ -320,10 +322,10 @@ class Wumpus(game.Game):
             self.dodec.move('B')
         elif move in ('c', 'climb'):
             if self.dodec.current == self.dodec.start:
-                print('You climb back out of the bowels of the earth.')
+                player.tell('You climb back out of the bowels of the earth.')
                 self.win_loss_draw[2] = 1
             else:
-                print('There is no way to climb out of here.')
+                player.tell('There is no way to climb out of here.')
         elif move in ('l', 'left'):
             self.dodec.move('L')
         elif move in ('q', 'quit'):
@@ -354,23 +356,25 @@ class Wumpus(game.Game):
             self.arrows -= 1
             # take the shot
             hit = self.dodec.shoot(arg.upper())
-            # print the results
+            # Show the results
+            for whiff in range(abs(hit) - 1):
+                self.human.tell('Whiff!')
             if not hit:
                 # miss means wumpus may move
-                print('You hear the arrow break uselessly against a wall.')
-                print('You hear a grumbling roar and a strange suck-pop sound.')
-                print('You have {} crooked arrows left.'.format(self.arrows))
+                self.human.tell('You hear the arrow break uselessly against a wall.')
+                self.human.tell('You hear a grumbling roar and a strange suck-pop sound.')
+                self.human.tell('You have {} crooked arrows left.'.format(self.arrows))
                 self.dodec.move_wumpus()
-            elif hit < 0:
+            elif hit == 0:
                 # shooting yourself is a loss
-                print('Arrgh! You shot yourself in the back')
+                self.human.tell('Arrgh! You shot yourself in the back')
                 self.win_loss_draw[1] = 1
             else:
                 # shooting the wumpus is a win
-                print('You hear the horrible scream of a dieing wumpus!')
+                self.human.tell('You hear the horrible scream of a dieing wumpus!')
                 self.win_loss_draw[0] = 1
         else:
-            print("You don't have any arrows left to shoot.")
+            self.human.tell("You don't have any arrows left to shoot.")
     
     def status_check(self):
         """Check the room for hazards and description. (None)"""
@@ -379,32 +383,32 @@ class Wumpus(game.Game):
             status = self.dodec.check_cave()
             if 'WUMPUS' in status:
                 # wumpus is a loss
-                print("The heavy weight of a wumpus lands on you, and you are")
-                print("trapped in it's sucker tipped claws. In seconds you are")
-                print("shoved into it's huge maw and eaten alive.")
+                self.human.tell("The heavy weight of a wumpus lands on you, and you are")
+                self.human.tell("trapped in it's sucker tipped claws. In seconds you are")
+                self.human.tell("shoved into it's huge maw and eaten alive.")
                 self.win_loss_draw[1] = 1
             elif 'BATS' in status:
                 # bats move randomly and skip to next cave
-                print("You are grabbed by a giant, screeching bat and flown through")
-                print("the caves at random.")
+                self.human.tell("You are grabbed by a giant, screeching bat and flown through")
+                self.human.tell("the caves at random.")
                 self.dodec.bats()
                 continue
             elif 'PIT' in status:
                 # pit is a loss
-                print("You stumble in the dark and fall down a bottomless pit. Well,")
-                print("okay, it's got a bottom. Give us some room for poetic")
-                print("license here.")
+                self.human.tell("You stumble in the dark and fall down a bottomless pit. Well,")
+                self.human.tell("okay, it's got a bottom. Give us some room for poetic")
+                self.human.tell("license here.")
                 self.win_loss_draw[1] = 1
             else:
-                # print description
-                print("You are in a cave with " + status[0])
-                # print any nearby hazard warnings
+                # player.tell description
+                self.human.tell("You are in a cave with " + status[0])
+                # player.tell any nearby hazard warnings
                 if 'FLAP' in status:
-                    print("You hear a strange flapping sound.")
+                    self.human.tell("You hear a strange flapping sound.")
                 if 'SMELL' in status:
-                    print("You smell a foul odor.")
+                    self.human.tell("You smell a foul odor.")
                 if 'DRAFT' in status:
-                    print("You feel a cool draft.")
+                    self.human.tell("You feel a cool draft.")
                 result = ''
             break
 
