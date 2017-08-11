@@ -291,7 +291,7 @@ class Wumpus(game.Game):
     """
 
     aka = ['Wumpus']
-    cateories = ['Adventure Games']
+    categories = ['Adventure Games']
     name = 'Hunt the Wumpus'
 
     def game_over(self):

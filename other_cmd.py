@@ -5,9 +5,8 @@ Basically, a cmd-style command processor without a cmdloop. This is just for
 side handling of other commands during another text input handling loop.
 
 Note that the return values for command handling methods are different in
-OtherCmd compared to Cmd. In OtherCmd, the return value indicates that
-the command was valid, and no warnings for invalid commands need to be
-given to the user.
+OtherCmd compared to Cmd. To match game.Game processing, True means keep
+processing without moving to the next turn.
 
 Classes:
 OtherCmd: An object for handing text commands. (object)
@@ -24,6 +23,8 @@ class OtherCmd(object):
     Methods:
     handle_cmd: Check text input for a valid command. (bool)
     """
+
+    aliases = {}
 
     def __init__(self, human):
         """
@@ -43,7 +44,8 @@ class OtherCmd(object):
         Parameters:
         text: The raw text input by the user. (str)
         """
-        return False
+        self.human.tell('I do not recognize that command.')
+        return True
 
     def do_debug(self, arguments):
         """

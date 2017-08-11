@@ -5,10 +5,13 @@ Package initializer for tgames.
 
 todo:
 expand the interface
-    other commands, esp rules and credits
+    Rules, credit, and maybe help on all games.
     full option handling on all games
     rules from menu
     games connect to interface (gipf/xyzzy)
+    store results
+    statistics
+    defensive programming on games
 write more real games (trac ticket #69)
 
 Functions:

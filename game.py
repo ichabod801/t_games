@@ -4,7 +4,7 @@ game.py
 The base game object for tgames.
 
 Classes:
-Game: A game with a text interface. (object)
+Game: A game with a text interface. (OtherCmd)
 Flip: A test game of flipping coins. (Game)
 Sorter: A test game of sorting a sequence. (Game)
 """
@@ -13,16 +13,18 @@ Sorter: A test game of sorting a sequence. (Game)
 from __future__ import print_function
 
 import itertools
+import math
+import operator
 import random
 
+from tgames.other_cmd import OtherCmd
 from tgames.player import Player
+import tgames.utility as utility
 
 
-class Game(object):
+class Game(OtherCmd):
     """
-    A game with a text interface. (object)
-
-    !! needs a way to check for commands like help, rules, and so on.
+    A game with a text interface. (OtherCmd)
 
     In non-solitaire games, the players attribute should be set in handle_options.
 
@@ -58,7 +60,15 @@ class Game(object):
     credits = 'No credits have been specified for this game.'
     help = {}
     name = 'Null'
-    rules_text = 'No rules have been specified for this game.'
+    # The operators used by rpn.
+    operators = {'|': (abs, 1), '+': (operator.add, 2), 'C': (utility.choose, 2), '/%': (divmod, 2), 
+        '!': (math.factorial, 1), '//': (operator.floordiv, 2), '*': (operator.mul, 2), 
+        '%': (operator.mod, 2), '+-': (operator.neg, 1), 'P': (utility.permutations, 2), '^': (pow, 2), 
+        '1/': (lambda x: 1 / x, 1), '-': (operator.sub, 2), '/': (operator.truediv, 2), 
+        'ab/c': (lambda a, b, c: a + b / c, 3), 'cos': (math.cos, 1), 'ln': (math.log, 1), 
+        'log': (math.log10, 1), 'R': (random.random, 0), 'F': (utility.flip, 0), 'sin': (math.sin, 1), 
+        'V': (math.sqrt, 1), 'tan': (math.tan, 1)}
+    rules = 'No rules have been specified for this game.'
 
     def __init__(self, human, options):
         """Set up the game. (None)"""
@@ -73,6 +83,74 @@ class Game(object):
     def clean_up(self):
         """Handle any end of game tasks. (None)"""
         self.scores[self.human.name] = -self.turns
+
+    def do_credits(self, arguments):
+        """
+        Show the credits. (bool)
+
+        Parameters:
+        arguments: This parameter is ignored. (str)
+        """
+        self.human.tell(self.credits)
+        return True
+
+    def do_help(self, arguments):
+        """
+        Show the help text for a given area. (bool)
+
+        Parameter:
+        arguments: The area to get help on. (str)
+        """
+        if arguments.lower() in self.help:
+            self.human.tell(self.help[arguments.lower()])
+        else:
+            self.human.tell("I can't help you with that.")
+        return True
+
+    def do_rpn(self, arguments):
+        """
+        Process reverse Polish notation statements to do calculations. (None)
+
+        Parameters:
+        arguments: The calculation to process. (str)
+        """
+        # Process reverse Polish notation.
+        stack = []
+        for word in arguments.split():
+            # handle operators
+            if word in self.operators:
+                # process operator
+                op, n_params = self.operators[word]
+                params = stack[-n_params:]
+                stack = stack[:-n_params]
+                result = op(*params)
+                # add to stack
+                if isinstance(result, tuple):
+                    stack.extend(result)
+                else:
+                    stack.append(result)
+            # handle integers
+            elif word.isdigit():
+                stack.append(int(word))
+            # handle decimals
+            elif self.float_re.match(word):
+                stack.append(float(word))
+            # handle garbage
+            else:
+                self.human.tell('Invalid RPN expression.')
+        # Display the stack.
+        self.human.tell(' '.join([str(x) for x in stack]))
+        return True
+
+    def do_rules(self, arguments):
+        """
+        Show the rules text. (bool)
+
+        Parameters:
+        arguments: This parameter is ignored. (str)
+        """
+        self.human.tell(self.rules)
+        return True
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
@@ -149,7 +227,9 @@ class Flip(Game):
     """
 
     categories = ['Test Games', 'Multi-Player']
+    credits = 'Design and programming by Craig "Ichabod" O''Brien'
     name = 'Flip'
+    rules = 'Whoever gets two more heads than their opponent wins.'
 
     def handle_options(self):
         """Handle game options and set the player list. (None)"""
@@ -192,8 +272,7 @@ class Flip(Game):
         flips = player.ask('How many times would you like to flip the coin (only the last flip counts)? ')
         # Check for invalid answers.
         if not flips.strip().isdigit():
-            player.tell('Please enter a number of flips to make.')
-            return True
+            return self.handle_cmd(flips)
         # Flip a coin the specified number of times.
         for flip_index in range(int(flips)):
             if random.random() < 0.5:
@@ -260,7 +339,9 @@ class Sorter(Game):
     set_up
     """
 
+    credits = 'Design and programming by Craig "Ichabod" O''Brien.'
     name = 'Sorter'
+    rules = 'Each turn, swap two numbers. If you can sort the list with a minimum of swaps, you win.'
 
     def game_over(self):
         """Check for the game being over. (bool)"""
@@ -306,8 +387,7 @@ class Sorter(Game):
                 numbers = [int(x) for x in move.split()]
         except ValueError:
             # Handle invalid moves.
-            player.tell('Invalid input. Please enter two numbers separated by a space or a comma.')
-            return True
+            return self.handle_cmd(move)
         # Make the move.
         ndxs = [self.sequence.index(x) for x in numbers]
         self.sequence[ndxs[0]], self.sequence[ndxs[1]] = self.sequence[ndxs[1]], self.sequence[ndxs[0]]

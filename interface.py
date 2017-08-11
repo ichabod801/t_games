@@ -93,7 +93,8 @@ class Interface(other_cmd.OtherCmd):
         # Play it if it is a valid game.
         if game_name.lower() in self.games:
             self.do_play(line)
-            return True
+        else:
+            self.human.tell('That is an invalid selection.')
 
     def do_credits(self, arguments):
         """
@@ -149,7 +150,7 @@ class Interface(other_cmd.OtherCmd):
         """
         arguments = arguments.lower()
         if arguments in self.games:
-            self.human.tell(self.games[arguments].rules_text)
+            self.human.tell(self.games[arguments].rules)
             self.human.ask('Press Enter to continue: ')
         else:
             self.human.tell("\nI do not know the rules to that game.")
@@ -208,11 +209,8 @@ class Interface(other_cmd.OtherCmd):
                 else:
                     self.play_game(self.games[choice.lower()])
             # Check for non-menu choices.
-            elif self.handle_cmd(letter):
-                pass
-            # Give an error for everything else.
             else:
-                self.human.tell('That is not a valid selection.')
+                self.handle_cmd(letter)
 
     def play_game(self, game_class, options = ''):
         """
