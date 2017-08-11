@@ -7,7 +7,6 @@ todo:
 expand the interface
     Rules, credit, and maybe help on all games.
     full option handling on all games
-    rules from menu
     games connect to interface (gipf/xyzzy)
     store results
     statistics

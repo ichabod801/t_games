@@ -7,7 +7,9 @@ A game of Battleships.
 !! Have a 3D version named Yamato. 5x5x5, longest ship would be 4.
 
 Constants:
-LAYOUTS: Different inventories of ships to place. (dict of str: tuple of int)
+CREDITS: The design and programming credits. (str)
+INVENTORIES: Different inventories of ships to place. (dict of str: tuple of int)
+RULES: The rules of the game. (str)
 SQUARE_RE: A regular expression matching coordinate. (re.SRE_Pattern)
 
 Classes:
@@ -27,8 +29,16 @@ import tgames.game as game
 import tgames.player as player
 
 
+# The design and programming credits.
+CREDITS = """
+Although Milton-Bradley did make a version of this game, it is a traditional
+game dating back to the First World War.
+
+Programming by Craig "Ichabod" O'Brien.
+"""
+
 # Different inventories of ships to place.
-LAYOUTS = {'Bradley': {'Carrier': (5, 1), 'Battleship': (4, 1), 'Cruiser': (3, 1), 
+INVENTORIES = {'Bradley': {'Carrier': (5, 1), 'Battleship': (4, 1), 'Cruiser': (3, 1), 
         'Destroyer': (2, 1), 'Submarine': (3, 1)},
     'Bednar': {'Carrier': (5, 1), 'Battleship': (4, 1), 'Cruiser': (3, 1),
         'Destroyer': (2, 2), 'Submarine': (1, 2)},
@@ -36,6 +46,40 @@ LAYOUTS = {'Bradley': {'Carrier': (5, 1), 'Battleship': (4, 1), 'Cruiser': (3, 1
         'Destroyer': (2, 4), 'Submarine': (1, 1)},
     'Wikipedia': {'Carrier': (6, 1), 'Battleship': (4, 2), 'Cruiser': (3, 3),
         'Destroyer': (2, 4), 'Submarine': (1, 0)}}
+
+# The rules of the game.
+RULES = """
+You layout your ships on your board. Only you can see where your ships are. 
+Each ship takes up one or more squares on the board. Ships must be arranged
+orthogonally, and cannot be orthogonally adjacent to each other.
+
+Then you and your opponent simultaneously fire shots at each other's boards.
+You are told if the shot is a hit or a miss. If all of the squares on a ship
+are hit, that ship is sunk, and the person who sunk it is informed. If all of
+your ships are sunk, you lose the game.
+
+You will be shown two grids, with the columns labelled 0-9 and the rows 
+labelled A-J. You call shots (and place ships) by using letter-number
+coordinates, such as A8. The top grid represents your opponents board, and the
+bottom grid represents your board. Hits are marked 'X', misses are marked '/',
+and ship squares not yet hit (on your board only) are marked 'O'.
+
+Options:
+
+inventory=: This determines the number and size of ships played with. The
+value can be Bradley (the Milton Bradley version), Bednar (an open source
+version by Samuel Bednar), Ichabod (the version I remember), and Wikipedia
+(the inventory shown in a picture in the Wikipedia article on the game.) the
+inventories give the following ships (name size x count):
+    Bradley: Carrier 5x1, Battleship 4x1, Cruiser 3x1, Destroyer 2x1,
+        Submarine 3x1.
+    Bednar: Carrier 5x1, Battleship 4x1, Cruiser 3x1, Destroyer 2x2,
+        Submarine 1x2.
+    Ichabod: Carrier 5x1, Battleship 4x2, Cruiser 3x3, Destroyer 2x4,
+        Submarine 1x1.
+    Wikipedia: Carrier 6x1, Battleship 4x2, Cruiser 3x3, Destroyer 2x4,
+        No Submarine.
+"""
 
 #A regular expression matching coordinate.
 SQUARE_RE = re.compile(r'[ABCDEFGHIJ]\d')
@@ -48,7 +92,7 @@ class Battleships(game.Game):
     Attributes:
     boards: The boards for each player. (dict of str: SeaBoard)
     bot: The bot opponent. (player.Bot)
-    layout: The name of the inventory of ships. (str)
+    inventory_name: The name of the inventory of ships. (str)
 
     Overridden Methods:
     handle_options
@@ -59,13 +103,15 @@ class Battleships(game.Game):
 
     aka = ['Battleship', 'Sea Battle', 'Broadsides']
     categories = ['Board Games', 'Displace Games']
+    credits = CREDITS
     name = 'Battleships'
+    rules = RULES
 
     def handle_options(self):
         """Handle game options and set the player list. (None)"""
         self.bot = BattleBot([self.human.name])
         self.players = [self.human, self.bot]
-        self.layout = 'Bradley'
+        self.inventory_name = 'Bradley'
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
@@ -113,8 +159,8 @@ class Battleships(game.Game):
 
     def set_up(self):
         """Set up a board for each player. (None)"""
-        self.boards = {self.bot.name: SeaBoard(self.bot, self.layout)}
-        self.boards[self.human.name] = SeaBoard(self.human, self.layout)
+        self.boards = {self.bot.name: SeaBoard(self.bot, self.inventory_name)}
+        self.boards[self.human.name] = SeaBoard(self.human, self.inventory_name)
 
 
 class BattleBot(player.Bot):
@@ -293,17 +339,17 @@ class SeaBoard(object):
     letters = 'ABCDEFGHIJ'
     numbers = '0123456789'
 
-    def __init__(self, player, layout = 'Bradley'):
+    def __init__(self, player, inventory_name = 'Bradley'):
         """
         Set up the board. (None)
 
         Parameters:
         player: The player the board is for. (player.Player)
-        layout: The name of the layout to use. (str)
+        inventory_name: The name of the inventory to use. (str)
         """
         # Set the specified attributes.
         self.player = player
-        self.layout = LAYOUTS[layout]
+        self.inventory = INVENTORIES[inventory_name]
         # Set the default attributes.
         self.hits = set()
         self.misses = set()
@@ -395,7 +441,7 @@ class SeaBoard(object):
     def place_ships(self):
         """Get the placement of the ships from the player. (None)"""
         # Get the available ships sorted by size.
-        ships = sorted(self.layout.items(), key = lambda ship: ship[1][0], reverse = True)
+        ships = sorted(self.inventory.items(), key = lambda ship: ship[1][0], reverse = True)
         # Set up the tracking variables.
         invalid_squares = set()
         self.fleet = []
@@ -492,7 +538,7 @@ def test():
     print('adj A0', board.adjacent_squares('A0'))
     # Test ship placement.
     craig = BattleBot('Craig')
-    board = SeaBoard(craig, layout = 'Ichabod')
+    board = SeaBoard(craig, inventory = 'Ichabod')
     board.place_ships()
     print(board.show())
     # Test firing shots.

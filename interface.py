@@ -3,6 +3,10 @@ interface.py
 
 The interface for the tgames game suite.
 
+Contants:
+CREDITS: Programming credits and play testers. (str)
+HELP_TEXT: General help for the interface. (str)
+
 Classes:
 Interface: A menu interface for playing games. (OtherCmd)
 
@@ -19,6 +23,13 @@ import tgames.other_cmd as other_cmd
 import tgames.player as player
 
 
+# Programming credits and play testers.
+CREDITS = """
+This interface and the tgames framework was programmed by Craig "Ichabod"
+O'Brien.
+"""
+
+# General help for the interface.
 HELP_TEXT = """
 The games are organized into categories. You can use the menu to browse
 throught the categories to find the game you want. Just type in the 
@@ -42,11 +53,6 @@ You can see the credits (who designed and programmed the game) for any game
 by typing 'credits'.
 
 You can get this help text by typing help or ?
-"""
-
-CREDITS = """
-This interface and the tgames framework was programmed by Craig "Ichabod"
-O'Brien.
 """
 
 
