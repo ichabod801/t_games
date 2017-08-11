@@ -7,6 +7,10 @@ todo:
 write some real games
     battleships
 expand the interface
+    other commands, esp rules
+    full option handling on all games
+    rules from menu
+    games connect to interface (gipf/xyzzy)
 write more real games (trac ticket #69)
 
 Functions:

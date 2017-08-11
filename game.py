@@ -86,7 +86,7 @@ class Game(object):
         return sum(self.win_loss_draw)
 
     def handle_options(self):
-        """Handle any options for the game. (None)"""
+        """Handle game options and set the player list. (None)"""
         pass
 
     def play(self):
