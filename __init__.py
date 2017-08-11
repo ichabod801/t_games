@@ -4,10 +4,8 @@ __init__.py
 Package initializer for tgames.
 
 todo:
-write some real games
-    battleships
 expand the interface
-    other commands, esp rules
+    other commands, esp rules and credits
     full option handling on all games
     rules from menu
     games connect to interface (gipf/xyzzy)

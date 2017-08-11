@@ -146,6 +146,23 @@ class Interface(object):
         # Return the meaning of the menu letters.
         return dict(pairs)
 
+
+class RandomValve(object):
+
+    def __init__(self, p = 0.05):
+        self.p = p
+        self.q = p
+
+    def blow(self):
+        check = random.random()
+        if check < self.q:
+            self.q = self.p
+            return True
+        else:
+            self.q += self.q * check
+            return False
+            
+
 def excel_column(n):
     """
     Convert a number into a Excel style column header. (str)
