@@ -13,6 +13,7 @@ Classes:
 OtherCmd: An object for handing text commands. (object)
 """
 
+
 class OtherCmd(object):
     """
     An object for handing text commands. (object)
@@ -23,8 +24,6 @@ class OtherCmd(object):
     Methods:
     handle_cmd: Check text input for a valid command. (bool)
     """
-
-    aliases = {'!': 'debug'}
 
     def __init__(self, human):
         """
@@ -72,7 +71,8 @@ class OtherCmd(object):
         if hasattr(self, method):
             return getattr(self, method)(arguments)
         else:
-            return self.default(arguments)
+            return self.default(text)
+
 
 if __name__ == '__main__':
     import tgames.player

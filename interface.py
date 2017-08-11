@@ -4,26 +4,62 @@ interface.py
 The interface for the tgames game suite.
 
 Classes:
-Interface: A menu interface for playing games. (object)
+Interface: A menu interface for playing games. (OtherCmd)
 
 Functions:
 excel_column: Convert a number into a Excel style column header. (str)
 """
 
+
 import os
 from string import ascii_uppercase
 
 import tgames.game as game
+import tgames.other_cmd as other_cmd
 import tgames.player as player
 
-class Interface(object):
+
+HELP_TEXT = """
+The games are organized into categories. You can use the menu to browse
+throught the categories to find the game you want. Just type in the 
+letter or letters to the left of the colon to make a selection.
+
+You can see the rules for a game by typing 'rules game-name'. You should
+also be able to see the rules from within the game by typing 'rules'.
+
+You can go directly to a game by typing 'play game-name'. If you don't see
+the game you want to play, you might try this. Some games are stored with
+aliases that are not shown in the menu. For example, 'play Broadsides' will
+play the game listed in the menu as 'Battleships'. You can also specify
+options for a game with the play command by putting them after the slash.
+The options for the games should be specified in the game rules. Options
+ending with an equals sign (=) require a value to be specified. Do not put
+spaces around the equals sign. That is, use 'win=108' rather than 'win = 108'.
+If you play a game through the menu or by the play command without options, 
+the game should prompt you to specify the options (if there are any).
+
+You can see the credits (who designed and programmed the game) for any game 
+by typing 'credits'.
+
+You can get this help text by typing help or ?
+"""
+
+CREDITS = """
+This interface and the tgames framework was programmed by Craig "Ichabod"
+O'Brien.
+"""
+
+
+class Interface(other_cmd.OtherCmd):
     """
-    A menu interface for playing games. (object)
+    A menu interface for playing games. (OtherCmd)
 
     Attributes:
     human: The player navigating the menu. (player.Player)
 
     Methods:
+    do_credits: Show the programming credits for the interface. (bool)
+    do_help: Show the general help text for tgames. (bool)
     load_games: Load all of the games defined locally. (None)
     menu: Run the game selection menu. (None)
     play_game: Play a selected game. (None)
@@ -31,12 +67,93 @@ class Interface(object):
 
     Overridden Methods:
     __init__
+    default
     """
+
+    aliases = {'?': 'help'}
 
     def __init__(self, human):
         """Set up the interface. (None)"""
         self.human = human
         self.load_games()
+
+    def default(self, line):
+        """
+        Handle unrecognized user input. (bool)
+
+        If it is a game name, that game is played.
+
+        Parameters:
+        line: The unrecognized input. (str)
+        """
+        # Get game name.
+        game_name = line
+        if '/' in game_name:
+            game_name = game_name.split('/')[0].strip()
+        # Play it if it is a valid game.
+        if game_name.lower() in self.games:
+            self.do_play(line)
+            return True
+
+    def do_credits(self, arguments):
+        """
+        Show the programming credits for the interface. (bool)
+
+        Parameters:
+        arguments: This parameter is ignored. (str)
+        """
+        self.human.tell(CREDITS)
+        self.human.ask('Press Enter to continue: ')
+        return True
+
+    def do_help(self, arguments):
+        """
+        Show the general help text for tgames. (bool)
+
+        Parameters:
+        arguments: This parameter is ignored. (str)
+        """
+        self.human.tell(HELP_TEXT)
+        self.human.ask('Press Enter to continue: ')
+        return True
+
+    def do_play(self, arguments):
+        """
+        Play a game with the specified options, if any. (bool)
+
+        Parameters:
+        arguments: The game name, with any options specified after a slash. (str)
+        """
+        # Get the game name and options.
+        if '/' in arguments:
+            game_name, options = arguments.split('/')
+        else:
+            game_name = arguments
+            options = ''
+        game_name = game_name.lower().strip()
+        if game_name in self.games:
+            # Play the game if known.
+            self.play_game(self.games[game_name], options)
+            self.human.tell()
+        else:
+            # Warn about unknown games.
+            self.human.tell("\nI don't know how to play that game.")
+        return True
+
+    def do_rules(self, arguments):
+        """
+        Show the rules for the specified game. (bool)
+
+        Parameters:
+        arguments: The game name. (str)
+        """
+        arguments = arguments.lower()
+        if arguments in self.games:
+            self.human.tell(self.games[arguments].rules_text)
+            self.human.ask('Press Enter to continue: ')
+        else:
+            self.human.tell("\nI do not know the rules to that game.")
+        return True
 
     def load_games(self):
         """Load all of the games defined locally. (None)"""
@@ -91,14 +208,8 @@ class Interface(object):
                 else:
                     self.play_game(self.games[choice.lower()])
             # Check for non-menu choices.
-            elif letter.lower().startswith('play'):
-                game_name, slash, options = letter[4:].strip().partition('/')
-                game_name = game_name.strip()
-                if game_name in self.games:
-                    self.play_game(self.games[game_name], options.strip())
-                    self.human.tell()
-                else:
-                    self.human.tell("I don't know how to play that game.")
+            elif self.handle_cmd(letter):
+                pass
             # Give an error for everything else.
             else:
                 self.human.tell('That is not a valid selection.')

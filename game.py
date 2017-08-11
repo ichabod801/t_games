@@ -28,10 +28,11 @@ class Game(object):
 
     Class Attributes:
     aka: Other names for the game. (list of str)
+    credits: The design and programming credits for this game. (str)
     categories: The categories of the game. (list of str)
     help: The help text for the game. (dict of str: str)
     name: The primary name of the game. (str)
-    rules: The rules of the game. (str)
+    rules_text: The rules of the game. (str)
 
     Attributes:
     human: The primary player of the game. (Player)
@@ -54,9 +55,10 @@ class Game(object):
 
     aka = []
     categories = ['Test Games', 'Solitaire']
+    credits = 'No credits have been specified for this game.'
     help = {}
     name = 'Null'
-    rules = 'Make whatever move you want. Whether or not you win is random.'
+    rules_text = 'No rules have been specified for this game.'
 
     def __init__(self, human, options):
         """Set up the game. (None)"""
