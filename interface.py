@@ -177,7 +177,7 @@ class Interface(other_cmd.OtherCmd):
             # Store game by name.
             self.games[game_class.name.lower()] = game_class
             for alias in game_class.aka:
-                self.games[alias] = game_class
+                self.games[alias.lower()] = game_class
             # Store game by category
             # !! Once I have non-test games, hide the test games.
             category = self.categories

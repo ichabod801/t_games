@@ -125,11 +125,11 @@ class Battleships(game.Game):
         else:
             while True:
                 inventory = self.human.ask('Which inventory would you like to use (return for Bradley)? ')
-                if not inventory or inventory in INVENTORIES:
+                if not inventory.lower() or inventory in INVENTORIES:
                     break
                 self.human.tell('The available inventories are Bradley, Bednar, Ichabod, and Wikipedia')
             if inventory:
-                self.inventory_name = inventory
+                self.inventory_name = inventory.lower()
         # Set player list.
         self.players = [self.human, self.bot]
 
@@ -316,7 +316,7 @@ class BattleBot(player.Bot):
                     self.targets.append(adjacent)
         # Handle initial targetting.
         else:
-            self.targets = [ajacent for adjancent in adjacents if adjacent not in self.dont_shoot]
+            self.targets = [adjacent for adjacent in adjacents if adjacent not in self.dont_shoot]
             self.target_ship = [self.last_shot]
 
     def tell(self, text):
