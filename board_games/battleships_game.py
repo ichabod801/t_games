@@ -38,13 +38,13 @@ Programming by Craig "Ichabod" O'Brien.
 """
 
 # Different inventories of ships to place.
-INVENTORIES = {'Bradley': {'Carrier': (5, 1), 'Battleship': (4, 1), 'Cruiser': (3, 1), 
+INVENTORIES = {'bradley': {'Carrier': (5, 1), 'Battleship': (4, 1), 'Cruiser': (3, 1), 
         'Destroyer': (2, 1), 'Submarine': (3, 1)},
-    'Bednar': {'Carrier': (5, 1), 'Battleship': (4, 1), 'Cruiser': (3, 1),
+    'bednar': {'Carrier': (5, 1), 'Battleship': (4, 1), 'Cruiser': (3, 1),
         'Destroyer': (2, 2), 'Submarine': (1, 2)},
-    'Ichabod': {'Carrier': (5, 1), 'Battleship': (4, 2), 'Cruiser': (3, 3),
+    'ichabod': {'Carrier': (5, 1), 'Battleship': (4, 2), 'Cruiser': (3, 3),
         'Destroyer': (2, 4), 'Submarine': (1, 1)},
-    'Wikipedia': {'Carrier': (6, 1), 'Battleship': (4, 2), 'Cruiser': (3, 3),
+    'wikipedia': {'Carrier': (6, 1), 'Battleship': (4, 2), 'Cruiser': (3, 3),
         'Destroyer': (2, 4), 'Submarine': (1, 0)}}
 
 # The rules of the game.
@@ -109,9 +109,29 @@ class Battleships(game.Game):
 
     def handle_options(self):
         """Handle game options and set the player list. (None)"""
+        # Set the defaults.
         self.bot = BattleBot([self.human.name])
+        self.inventory_name = 'bradley'
+        # Check for options
+        if self.raw_options.strip():
+            for word in self.raw_options.lower().split():
+                if word.startswith('inventory='):
+                    value = word[10:]
+                    if value in INVENTORIES:
+                        self.inventory_name = word[10:]
+                    else:
+                        self.human.tell('Invalid inventory option.')
+        # Get options from the player.
+        else:
+            while True:
+                inventory = self.human.ask('Which inventory would you like to use (return for Bradley)? ')
+                if not inventory or inventory in INVENTORIES:
+                    break
+                self.human.tell('The available inventories are Bradley, Bednar, Ichabod, and Wikipedia')
+            if inventory:
+                self.inventory_name = inventory
+        # Set player list.
         self.players = [self.human, self.bot]
-        self.inventory_name = 'Bradley'
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
