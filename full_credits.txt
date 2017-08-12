@@ -1,0 +1,31 @@
+                             Interface Programming
+                             ---------------------
+
+                            Craig "Ichabod" O'Brien
+
+                                  Game Design
+                                  -----------
+
+                                     Humans
+
+                                Game Programming
+                                ----------------
+
+                            Craig "Ichabod" O'Brien
+
+                                   Bot Design
+                                   ----------
+
+    Roger Johnson       Reiner Knizia        Todd Neller        Craig O'Brien
+                                Clifton Presser
+
+                                Bot Programming
+                                ----------------
+
+                            Craig "Ichabod" O'Brien
+
+                                 Special Thanks
+                                 --------------
+
+                                Guido van Rossum
+                     python-forums.io        github.com
