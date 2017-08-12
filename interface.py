@@ -3,6 +3,8 @@ interface.py
 
 The interface for the tgames game suite.
 
+!! Add options after / for menu selections.
+
 Contants:
 CREDITS: Programming credits and play testers. (str)
 HELP_TEXT: General help for the interface. (str)
@@ -133,7 +135,7 @@ class Interface(other_cmd.OtherCmd):
         """
         # Get the game name and options.
         if '/' in arguments:
-            game_name, options = arguments.split('/')
+            game_name, options = arguments.split('/', maxsplit = 1)
         else:
             game_name = arguments
             options = ''

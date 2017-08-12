@@ -1,6 +1,9 @@
 """
 Utility functions for tgames.
 
+Constants:
+YES: Synonyms for 'yes'. (set of str)
+
 Functions:
 choose: Combinations [n choose r]. (int)
 median: Calculate the median of a list of values. (float)
@@ -16,9 +19,9 @@ import os
 import sys
 import textwrap
 
-# English interface text for options. (dict of str: dict)
-# text for interface options.
-LOCAL_TEXT = {'options': {}}
+# Yes
+YES = set(['yes', 'y', '1', 'yup', 'sure', 'affirmative', 'yeah', 'indubitably', 'yep', 'aye', 'ok'])
+YES.update(['okay', 'darn tootin', 'roger'])
 
 
 def choose(n, r):
