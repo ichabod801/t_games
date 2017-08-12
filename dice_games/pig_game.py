@@ -1,13 +1,17 @@
 """
 pig_game.py
 
-Pig and related variants.
+Pig.
 
 If you write a new kind of bot, it will not be usable unless you:
     1. Put it before the Pig class definition.
     2. Make all of the parameters integer parameters.
     3. Give a list of paramter descriptions as a class attribute.
     4. Put it in the general bots class attribute of the Pig Class.
+
+!! Piglet: coin tosses to 10 points, heads = 1, tails = turn end.
+    Dan Fendel, Diane Resek, Lynne Alper, and Sherry Fraser.
+!! Two die pig, seven ends turn.
 
 Constants:
 CREDITS: The credits for the game, progamming, and bots. (str)
@@ -54,6 +58,7 @@ total of all your rolls that turn.
 The first player to score 100 or more wins.
 
 OPTIONS:
+even-turns: Everyone gets the same number of turns.
 six-bad: Turns end with no score on a six instead of a one.
 
 BOT OPTIONS:
@@ -393,6 +398,9 @@ class Pig(game.Game):
             # Six is the turn ender.
             if self.human.ask('Should six be the number that ends the turn? ').lower() in utility.YES:
                 self.bad = 6
+            # Even turns.
+            elif self.human.ask('Should everyone get an even number of turns? ').lower() in utility.YES:
+                self.even_turns = True
             # Add bots until the user doesn't want any more.
             while self.human.ask('Would you like to add a bot? ').lower() in utility.YES:
                 # Get the bot type.
@@ -431,6 +439,9 @@ class Pig(game.Game):
         """Check a score being over 100. (bool)"""
         # Check for win.
         if max(self.scores.values()) > 99:
+            # Check for even turns option.
+            if self.even_turns and self.turns % len(self.players):
+                return False
             # Update win/loss/draw.
             human_score = self.scores[self.human.name]
             for name, score in self.scores.items():
@@ -451,6 +462,7 @@ class Pig(game.Game):
         # Set the defaults.
         self.players = [self.human]
         self.bad = 1
+        self.even_turns = False
         # Prep the option loop.
         taken_names = [self.human.name]
         if self.raw_options:
@@ -469,6 +481,9 @@ class Pig(game.Game):
             # Six is the turn ender.
             if word == 'six-bad':
                 self.bad = 6
+            # Even turns.
+            elif word == 'even-turns':
+                self.even-turns = True
             # Check for preset bots.
             elif word in self.preset_bots:
                 bot_class, parameters = self.preset_bots[word]
