@@ -8,8 +8,9 @@ to create a Hunt the Wumpus game.
 
 Constants:
 ADJACENT: Adjacent points on a dodecahedron. (list of tuple of int)
+CREDITS: The game design and programming credits. (str)
 DESCRIPTIONS: The room descriptions. (list of str)
-HELP_TEXT: Text describing the game. (str)
+RULES: Text describing the game. (str)
 
 Classes:
 Cave: One cave in a cave complex. (object)
@@ -29,6 +30,12 @@ ADJACENT = [(4, 5, 1), (0, 6, 2), (1, 7, 3), (2, 8, 4), (3, 9, 0),
     (5, 15, 6), (6, 16, 7), (7, 17, 8), (8, 18, 9), (9, 19, 5),
     (10, 19, 16), (11, 15, 17), (12, 16, 18), (13, 17, 19), (14, 18, 15)]
 
+# The game design and programming credits.
+CREDITS = """
+Game Design/Original Programming: Gregory Yob
+Python Game Programming: Craig "Ichabod" O'Brien
+"""
+
 # The room descriptions.
 # 0 is where the wumpus starts, and 1:4 are blank because they are pits or bats.
 DESCRIPTIONS = ['wumpus dung in the corner', '', '', '', '', 'ants crawling all over everything', 
@@ -39,7 +46,7 @@ DESCRIPTIONS = ['wumpus dung in the corner', '', '', '', '', 'ants crawling all 
     'a skull on the floor', 'a big red X marked on the floor']
 
 # Text describing the game.
-HELP_TEXT = """
+RULES = """
 Hunt the Wumpus
 
 The goal is to search the cave system for the wumpus, a large and heavy beast
@@ -58,7 +65,7 @@ The commands are:
    CLIMB: Climb out of the cave system (only from the cave you started in).
    SHOOT: Shoot a crooked arrow. You can provide 1-3 directions for the arrow
       to travel through the passages (frex, SHOOT LRL).
-   HELP: Read these fascinating, well written instructions again.
+   RULES: Read these fascinating, well written instructions again.
 """
 
 
@@ -292,7 +299,9 @@ class Wumpus(game.Game):
 
     aka = ['Wumpus']
     categories = ['Adventure Games']
+    credits = CREDITS
     name = 'Hunt the Wumpus'
+    rules = RULES
 
     def game_over(self):
         """Check for the game being over. (None)"""
@@ -334,6 +343,8 @@ class Wumpus(game.Game):
             self.dodec.move('R')
         elif move.split()[0] in ('s', 'shoot'):
             self.shoot(move.split()[1])
+        else:
+            return handle_cmd(move)
         if not sum(self.win_loss_draw):
             self.status_check()
 
