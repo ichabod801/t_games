@@ -574,8 +574,8 @@ class Pig(game.Game):
         self.turn_score = 0
         while True:
             roll = self.die.roll()
-            if roll == 1:
-                player.tell('You rolled a 1, your turn is over.')
+            if roll == self.bad:
+                player.tell('You rolled a {}, your turn is over.'.format(self.bad))
                 break
             else:
                 self.turn_score += roll
