@@ -9,9 +9,6 @@ If you write a new kind of bot, it will not be usable unless you:
     3. Give a list of paramter descriptions as a class attribute.
     4. Put it in the general bots class attribute of the Pig Class.
 
-!! bad-six is not implemented.
-!! not using commands.
-!! bots not taking into account even-turns.
 !! Piglet: coin tosses to 10 points, heads = 1, tails = turn end.
     Dan Fendel, Diane Resek, Lynne Alper, and Sherry Fraser.
 !! Two die pig, seven ends turn.
@@ -416,15 +413,21 @@ class Pig(game.Game):
     """
     A game of pig. (Game)
 
+    Class Attributes:
+    general_bots: The bot classes, for options with =. (dict of str: PigBot)
+    present_bots: The bots with preset parameters. (dict of str: tuple)
+
     Attributes:
     die: The die that is rolled. (dice.Die)
     turn_score: The current player's turn score. (int)
 
     Methods:
     ask_options: Get options from the user. (None)
+    do_scores: Show the current scores. (None)
     parse_options: Parse options from the play command. (None)
 
     Overridden Methods:
+    clean_up
     game_over
     handle_options
     set_up
@@ -433,6 +436,7 @@ class Pig(game.Game):
 
     name = 'Pig'
     categories = ['Dice Games']
+    credits = CREDITS
     general_bots = {'value': PigBotValue, 'base-pace-race': PigBotBasePaceRace, 'bpr': PigBotBasePaceRace,
         'scoring-turns': PigBotScoringTurns, 't': PigBotScoringTurns, 'pace-race': PigBotPaceRace,
         'pr': PigBotPaceRace, 'rolls': PigBotRolls}
@@ -441,31 +445,32 @@ class Pig(game.Game):
         'x': (PigBotRolls, (3,))}
     for bot_type, bot_class in general_bots.items():
         preset_bots[bot_type] = (bot_class, ())
+    rules = RULES
 
     def ask_options(self):
         """Get options from the user. (None)"""
         taken_names = [self.human.name]
-        if self.human.ask('Would you like to change the options? ').lower() in utility.YES:
+        if self.human.ask('\nWould you like to change the options? ').lower() in utility.YES:
             # Six is the turn ender.
-            if self.human.ask('Should six be the number that ends the turn? ').lower() in utility.YES:
+            if self.human.ask('\nShould six be the number that ends the turn? ').lower() in utility.YES:
                 self.bad = 6
             # Even turns.
-            elif self.human.ask('Should everyone get an even number of turns? ').lower() in utility.YES:
+            elif self.human.ask('\nShould everyone get an even number of turns? ').lower() in utility.YES:
                 self.even_turns = True
             # Add bots until the user doesn't want any more.
-            while self.human.ask('Would you like to add a bot? ').lower() in utility.YES:
+            while self.human.ask('\nWould you like to add a bot? ').lower() in utility.YES:
                 # Get the bot type.
-                bot_type = self.human.ask('What type of bot would you like to add? ').lower()
+                bot_type = self.human.ask('\nWhat type of bot would you like to add? ').lower()
                 # Get the parameters for general bots.
                 if bot_type in self.general_bots:
                     bot_class = self.general_bots[bot_type]
                     parameters = []
                     try:
                         for parameter in bot_class.parameters:
-                            text = 'What value do you want for the {} parameter? '.format(parameter)
+                            text = '\nWhat value do you want for the {} parameter? '.format(parameter)
                             parameters.append(int(self.human.ask(text)))
                     except ValueError:
-                        self.human.tell('Bot parameters should integers.')
+                        self.human.tell('\nBot parameters should integers.')
                     self.players.append(bot_class(*parameters, taken_names = taken_names))
                     taken_names.append(self.players[-1].name)
                 # Add in preset bots.
@@ -478,13 +483,26 @@ class Pig(game.Game):
                     taken_names.append(self.players[-1].name)
                 # Give an infomative warning.
                 else:
-                    self.human.tell("I don't know that kind of bot.")
+                    self.human.tell("\nI don't know that kind of bot.")
                     known_bots = sorted(self.general_bots.keys(), self.present_bots.keys())
                     self.human.tell('The bots I know are ' + ', '.join(known_bots))
 
     def clean_up(self):
         """Set the loser to go first next round. (None)"""
         self.players.sort(key = lambda player: self.scores[player.name])
+
+    def do_scores(self, arguments):
+        """
+        Show the current scores. (None)
+
+        Parameters:
+        arguments: The (ignored) arguments to the score command. (str)
+        """
+        scores = sorted([(score, name) for name, score in self.scores.items()], reverse = True)
+        for score, name in scores:
+            self.human.tell('{}: {}'.format(name, score))
+        self.human.tell()
+        return True
 
     def game_over(self):
         """Check a score being over 100. (bool)"""
@@ -572,18 +590,26 @@ class Pig(game.Game):
         player: The player whose turn it is. (Player)
         """
         self.turn_score = 0
+        no_roll = False
         while True:
-            roll = self.die.roll()
-            if roll == self.bad:
-                player.tell('You rolled a {}, your turn is over.'.format(self.bad))
-                break
+            if no_roll:
+                no_roll = False
             else:
-                self.turn_score += roll
-                player.tell('You rolled a {}, your turn score is {}.'.format(roll, self.turn_score))
+                roll = self.die.roll()
+                if roll == self.bad:
+                    player.tell('You rolled a {}, your turn is over.'.format(self.bad))
+                    break
+                else:
+                    self.turn_score += roll
+                    player.tell('You rolled a {}, your turn score is {}.'.format(roll, self.turn_score))
             move = player.ask('Would you like to roll or stop? ')
             if move.lower() in ('s', 'stop', 'whoa'):
                 self.scores[player.name] += self.turn_score
                 break
+            elif move.lower() in ('r', 'roll', 'go'):
+                pass
+            else:
+                no_roll = self.handle_cmd(move)
         player.tell("{}'s score is now {}".format(player.name, self.scores[player.name]))
         print()
 
