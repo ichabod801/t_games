@@ -9,6 +9,9 @@ If you write a new kind of bot, it will not be usable unless you:
     3. Give a list of paramter descriptions as a class attribute.
     4. Put it in the general bots class attribute of the Pig Class.
 
+!! bad-six is not implemented.
+!! not using commands.
+!! bots not taking into account even-turns.
 !! Piglet: coin tosses to 10 points, heads = 1, tails = turn end.
     Dan Fendel, Diane Resek, Lynne Alper, and Sherry Fraser.
 !! Two die pig, seven ends turn.
@@ -176,14 +179,17 @@ class PigBotBasePaceRace(PigBot):
         turn_score = self.game.turn_score
         max_score = max(self.game.scores.values())
         my_score = self.game.scores[self.name]
+        # Stop if you've won.
+        if my_score + turn_score > 99:
+            return 'stop'
         # Roll until the base is met.
-        if turn_score < self.base or my_score + turn_score > 100:
+        elif turn_score < self.base:
             return 'roll'
         # Roll until I'm as close as the pace.
-        elif self.pace < max_score - my_score:
+        elif self.pace < max_score - my_score - turn_score:
             return 'roll'
         # Roll to win if someone is within race.
-        elif max_score >= self.race:
+        elif 100 - max_score <= self.race:
             return 'roll'
         else:
             return 'stop'
@@ -228,11 +234,14 @@ class PigBotPaceRace(PigBot):
         max_other = max([score for name, score in self.game.score.items() if name != self.name])
         my_score = self.game.scores[self.name]
         hold_value = round(self.pace + (max_other - my_score) / self.modifier, 0)
+        # Stop if you've won.
+        if my_score + turn_score > 99:
+            return 'stop'
         # Roll until the base is met.
-        if turn_score < hold_value or my_score + turn_score > 99:
+        elif turn_score < hold_value:
             return 'roll'
         # Roll to win if someone is within race.
-        elif max_other >= self.race:
+        elif 100 - max_score <= self.race:
             return 'roll'
         else:
             return 'stop'
@@ -272,12 +281,27 @@ class PigBotRolls(PigBot):
         # Calcuate values.
         turn_score = self.game.turn_score
         my_score = self.game.scores[self.name]
+        # Stop if you've won.
+        if my_score + turn_score > 99:
+            return 'stop'
         # Stop if the number of rolls is met.
-        if self.rolls == self.max_rolls or my_score + turn_score > 99:
+        if self.rolls == self.max_rolls:
             self.rolls = 0
             return 'stop'
         else:
             return 'roll'
+
+    def tell(self, text):
+        """
+        Give information to the player. (None)
+
+        Parameters:
+        text: The information from the game. (str)
+        """
+        super(PigBotRolls, self).tell(text)
+        # Catch turn endings.
+        if 'turn is over' in text:
+            self.rolls = 0
 
 
 class PigBotScoringTurns(PigBot):
@@ -316,8 +340,11 @@ class PigBotScoringTurns(PigBot):
         """
         # Calculate stop value.
         hold_at = (100 - self.game.scores[self.name]) // self.scoring_turns
+        # Stop if you've won.
+        if my_score + turn_score > 99:
+            return 'stop'
         # Stop if the hold value is met or exceeded.
-        if self.game.turn_score < hold_at:
+        elif self.game.turn_score < hold_at:
             return 'roll'
         else:
             self.scoring_turns -= 1
@@ -355,8 +382,11 @@ class PigBotValue(PigBot):
         # Calcuate values.
         turn_score = self.game.turn_score
         my_score = self.game.scores[self.name]
+        # Stop if you've won.
+        if my_score + turn_score > 99:
+            return 'stop'
         # Stop if the value is met or exceeded.
-        if self.game.turn_score < self.value or my_score + turn_score > 99:
+        elif self.game.turn_score < self.value:
             return 'roll'
         else:
             return 'stop'
@@ -394,6 +424,7 @@ class Pig(game.Game):
 
     def ask_options(self):
         """Get options from the user. (None)"""
+        taken_names = [self.human.name]
         if self.human.ask('Would you like to change the options? ').lower() in utility.YES:
             # Six is the turn ender.
             if self.human.ask('Should six be the number that ends the turn? ').lower() in utility.YES:
@@ -421,7 +452,7 @@ class Pig(game.Game):
                 elif bot_type in self.preset_bots:
                     bot_class, parameters = self.preset_bots[bot_type]
                     self.players.append(bot_class(*parameters, taken_names = taken_names))
-                    if word = 'satan':
+                    if word == 'satan':
                         name = random.choice([name for name in SATAN_NAMES if name not in taken_names])
                         self.players[-1].name = name
                     taken_names.append(self.players[-1].name)
@@ -463,8 +494,6 @@ class Pig(game.Game):
         self.players = [self.human]
         self.bad = 1
         self.even_turns = False
-        # Prep the option loop.
-        taken_names = [self.human.name]
         if self.raw_options:
             self.parse_options()
         else:
@@ -477,21 +506,23 @@ class Pig(game.Game):
 
     def parse_options(self):
         """Parse options from the play command. (None)"""
-        for word in self.raw_options().lower().split():
+        taken_names = [self.human.name]
+        print(self.raw_options)
+        for word in self.raw_options.lower().split():
             # Six is the turn ender.
             if word == 'six-bad':
                 self.bad = 6
             # Even turns.
             elif word == 'even-turns':
-                self.even-turns = True
+                self.even_turns = True
             # Check for preset bots.
             elif word in self.preset_bots:
                 bot_class, parameters = self.preset_bots[word]
                 self.players.append(bot_class(*parameters, taken_names = taken_names))
-                if word = 'satan':
+                if word == 'satan':
                     new_name = random.choice([name for name in SATAN_NAMES if name not in taken_names])
                     self.players[-1].name = new_name
-                taken_names.append(self.palyers[-1].name)
+                taken_names.append(self.players[-1].name)
             # Check for general bots.
             elif '=' in word:
                 bot_type, values = word.split('=')
@@ -501,7 +532,7 @@ class Pig(game.Game):
                         new_bot = self.general_bots[bot_type](*parameters, taken_names = taken_names)
                         self.players.append(new_bot)
                         taken_names.append(new_bot.name)
-                    except ValueError, TypeError:
+                    except (ValueError, TypeError):
                         self.human.tell('Invalid {} bot specification.'.format(bot_type))
                 else:
                     # Warn about unknown bot types.
