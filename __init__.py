@@ -5,8 +5,6 @@ Package initializer for tgames.
 
 todo:
 expand the interface
-    Rules, credit, and maybe help on all games.
-    full option handling on all games
     games connect to interface (gipf/xyzzy)
     store results
     statistics

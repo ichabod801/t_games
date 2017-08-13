@@ -344,7 +344,7 @@ class Wumpus(game.Game):
         elif move.split()[0] in ('s', 'shoot'):
             self.shoot(move.split()[1])
         else:
-            return handle_cmd(move)
+            return self.handle_cmd(move)
         if not sum(self.win_loss_draw):
             self.status_check()
 
