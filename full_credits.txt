@@ -30,3 +30,4 @@
 
                                 Guido van Rossum
                      python-forums.io        github.com
+                                   Kris Burm

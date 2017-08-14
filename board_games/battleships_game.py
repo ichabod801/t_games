@@ -109,6 +109,64 @@ class Battleships(game.Game):
     name = 'Battleships'
     rules = RULES
 
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        arguments = arguments.strip().lower()
+        # Hunt the Wumpus
+        if arguments in ('wumpus', 'hunt the wumpus'):
+            game = self.interface.games[arguments](self.human, 'none', self.interface)
+            result = game.play()
+            if results[1:3] == [0, 0]:
+                while True:
+                    ship = self.human.ask('Enter a ship type: ')
+                    if ship in INVENTORIES['bradley']:
+                        break
+                    self.human.tell('I do not recognize that ship type.')
+                board = self.boards[self.bot.name]
+                ships = [(name, squares) for name, squares in board.fleet if name == ship and squares]
+                if not ships:
+                    self.human.tell('There are no more {}s.'.format(ship))
+                else:
+                    name, squares = random.choice(ships)
+                    square = random.choice(squares)
+                    self.human.tell(square)
+            return True
+        # Pig
+        elif arguments in ('pig'):
+            game = self.interface.games[arguments](self.human, 'none', self.interface)
+            result = game.play()
+            if results[1:3] == [0, 0]:
+                # Get the first shot.
+                while True:
+                    self.human.ask('Where do you want to shoot? ')
+                    if SQUARE_RE.match(human_shot):
+                        break
+                bot_shot = self.bot.ask('Where do you want to shoot? ')
+                # Fire the shots.
+                self.boards[self.bot.name].fire(human_shot, self.human)
+                self.boards[self.human.name].fire(bot_shot, self.bot)
+                # Check for second shot.
+                if human_shot in self.boards[self.bot.name].hits:
+                    self.player.tell('You hit, so you get a bonus shot.')
+                    while True:
+                        self.human.ask('Where do you want to shoot? ')
+                        if SQUARE_RE.match(human_shot):
+                            break
+                    self.boards[self.bot.name].fire(human_shot, self.human)
+                # Update the human. (Bots don't need updates.)
+                self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
+                self.human.tell(self.boards[self.human.name].show())
+                return False
+            return True
+        # Game with no gipf link
+        else:
+            self.human.tell('Gesundheit.')
+
     def handle_options(self):
         """Handle game options and set the player list. (None)"""
         # Set the defaults.
@@ -166,11 +224,9 @@ class Battleships(game.Game):
         player: The player whose turn it is. (Player)
         """
         # Get the players' moves.
-        while True:
-            human_shot = self.human.ask('Where do you want to shoot? ').strip()[:2].upper()
-            if SQUARE_RE.match(human_shot):
-                break
-            self.human.tell('That was an invalid shot.')
+        human_shot = self.human.ask('Where do you want to shoot? ').strip()[:2].upper()
+        if not SQUARE_RE.match(human_shot):
+            return self.handle_cmd(human_shot)
         bot_shot = self.bot.ask('Where do you want to shoot? ')
         # Fire the shots.
         self.boards[self.bot.name].fire(human_shot, self.human)
@@ -347,8 +403,11 @@ class SeaBoard(object):
     numbers: The numbers for coordinates. (str)
 
     Attributes:
+    fleet: The ships on the board. (list of tuple)
     hits: The squares with made shots. (set of str)
+    inventory: The inventory of ships used for the game. (dict)
     misses: The squares with missed shots. (set of str)
+    player: The player the board belongs to. (player.Player)
 
     Methods:
     adjacent_squares: Get the adjacent squares for a given square. (list of str)

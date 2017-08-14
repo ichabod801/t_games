@@ -6,6 +6,7 @@ Package initializer for tgames.
 todo:
 expand the interface
     games connect to interface (gipf/xyzzy)
+    customizable defaults in other_cmd
     store results
     statistics
     defensive programming on games

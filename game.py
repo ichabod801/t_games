@@ -181,7 +181,7 @@ class Game(OtherCmd):
         """
         if self.interface.valve.blow(self):
             game_class = random.choice(list(self.interface.games.values()))
-            game = game_class(self.human, 'none', self)
+            game = game_class(self.human, 'none', self.interface)
             result = game.play()
             if result[1] == 0 and result[2] == 0:
                 self.force_end = 'win'
