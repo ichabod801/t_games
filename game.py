@@ -45,6 +45,11 @@ class Game(OtherCmd):
 
     Methods:
     clean_up: Handle any end of game tasks. (None)
+    do_credits: Show the credits. (bool)
+    do_help: Show the help text for a given area. (bool)
+    do_quit: Quit the game, which counts as a loss. (bool)
+    do_rpn: Process reverse Polish notation statements to do calculations. (None)
+    do_rules: Show the rules text. (bool)
     game_over: Check for the end of the game. (bool)
     handle_options: Handle game options and set the player list. (None)
     play: Play the game. (list of int)
@@ -70,15 +75,18 @@ class Game(OtherCmd):
         'V': (math.sqrt, 1), 'tan': (math.tan, 1)}
     rules = 'No rules have been specified for this game.'
 
-    def __init__(self, human, options):
+    def __init__(self, human, options, interface = None):
         """Set up the game. (None)"""
         self.human = human
-        self.raw_options = options
+        if self.raw_options.lower().strip() != 'none'
+            self.raw_options = options
+            self.interface = interface
         self.handle_options()
         if not hasattr(self, 'players'):
             self.players = [self.human]
         for player in self.players:
             player.game = self
+        self.force_end = ''
 
     def clean_up(self):
         """Handle any end of game tasks. (None)"""
@@ -105,6 +113,18 @@ class Game(OtherCmd):
             self.human.tell(self.help[arguments.lower()])
         else:
             self.human.tell("I can't help you with that.")
+        return True
+
+    def do_quit(self, arguments):
+        """
+        Quit the game, which counts as a loss. (bool)
+
+        Parameters:
+        arguments: This parameter is ignored. (str)
+        """
+        self.force_end = 'loss'
+        self.win_loss_draw = [0, len(self.players) - 1, 0]
+        self.scores[self.human.name] = -801
         return True
 
     def do_rpn(self, arguments):
@@ -152,6 +172,25 @@ class Game(OtherCmd):
         self.human.tell(self.rules)
         return True
 
+    def do_xyzzy(self, arguments):
+        """
+        Nothing happens. (bool)
+
+        Parameters:
+        arguments: What doesn't happen. (str)
+        """
+        if self.interface.valve.blow(self):
+            game_class = random.choice(list(self.interface.games.values()))
+            game = game_class(self.human, 'none', self)
+            result = game.play()
+            if result[1] == 0 and result[2] == 0:
+                self.force_end = 'win'
+                self.win_loss_draw = [len(self.players) - 1, 0, 0]
+                self.scores[self.human.name] = 801
+            else:
+                self.human.tell('Nothing happens.')
+                return True
+
     def game_over(self):
         """Check for the end of the game. (bool)"""
         roll = random.randint(1, 3)
@@ -190,7 +229,7 @@ class Game(OtherCmd):
             # Update tracking.
             self.turns += 1
             # Check for the end of game.
-            if self.game_over():
+            if self.game_over() or self.force_end:
                 break
         # Clean up the game.
         self.clean_up()

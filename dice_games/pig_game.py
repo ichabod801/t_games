@@ -9,6 +9,7 @@ If you write a new kind of bot, it will not be usable unless you:
     3. Give a list of paramter descriptions as a class attribute.
     4. Put it in the general bots class attribute of the Pig Class.
 
+!! Gipf: battleships: next roll is a 2; wumpus: know what your next roll is.
 !! Piglet: coin tosses to 10 points, heads = 1, tails = turn end.
     Dan Fendel, Diane Resek, Lynne Alper, and Sherry Fraser.
 !! Two die pig, seven ends turn.

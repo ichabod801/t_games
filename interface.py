@@ -171,6 +171,7 @@ class Interface(other_cmd.OtherCmd):
             for module in [name for name in os.listdir(package) if name.endswith('_game.py')]:
                 __import__('{}.{}'.format(package, module[:-3]))
         # Search through all of the game.Game sub-classes.
+        self.valve = RandomValve()
         self.categories = {'sub-categories': {}, 'games': []}
         self.games = {}
         search = [game.Game]
@@ -229,7 +230,7 @@ class Interface(other_cmd.OtherCmd):
         options: Options specified by the play command. (str)
         """
         # Set up the game.
-        game = game_class(self.human, options)
+        game = game_class(self.human, options, self)
         # Play the game until the player wants to stop.
         while True:
             results = game.play()
@@ -269,9 +270,13 @@ class RandomValve(object):
     def __init__(self, p = 0.05):
         self.p = p
         self.q = p
+        self.last = None
 
-    def blow(self):
+    def blow(self, last):
         check = random.random()
+        if last is self.last:
+            return False
+        self.last = last
         if check < self.q:
             self.q = self.p
             return True
