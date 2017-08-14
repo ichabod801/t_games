@@ -119,8 +119,8 @@ class Battleships(game.Game):
         arguments = arguments.strip().lower()
         # Hunt the Wumpus
         if arguments in ('wumpus', 'hunt the wumpus'):
-            game = self.interface.games[arguments](self.human, 'none', self.interface)
-            result = game.play()
+            game = self.interface.games[arguments](self.human, '', self.interface)
+            results = game.play()
             if results[1:3] == [0, 0]:
                 while True:
                     ship = self.human.ask('Enter a ship type: ')
@@ -130,7 +130,7 @@ class Battleships(game.Game):
                 board = self.boards[self.bot.name]
                 ships = [(name, squares) for name, squares in board.fleet if name == ship and squares]
                 if not ships:
-                    self.human.tell('There are no more {}s.'.format(ship))
+                    self.human.tell('There are no more {}s.'.format(ship.lower()))
                 else:
                     name, squares = random.choice(ships)
                     square = random.choice(squares)
@@ -138,8 +138,8 @@ class Battleships(game.Game):
             return True
         # Pig
         elif arguments in ('pig'):
-            game = self.interface.games[arguments](self.human, 'none', self.interface)
-            result = game.play()
+            game = self.interface.games[arguments](self.human, 'bpr', self.interface)
+            results = game.play()
             if results[1:3] == [0, 0]:
                 # Get the first shot.
                 while True:
@@ -224,12 +224,12 @@ class Battleships(game.Game):
         player: The player whose turn it is. (Player)
         """
         # Get the players' moves.
-        human_shot = self.human.ask('Where do you want to shoot? ').strip()[:2].upper()
-        if not SQUARE_RE.match(human_shot):
+        human_shot = self.human.ask('Where do you want to shoot? ').strip()
+        if not SQUARE_RE.match(human_shot.upper()):
             return self.handle_cmd(human_shot)
         bot_shot = self.bot.ask('Where do you want to shoot? ')
         # Fire the shots.
-        self.boards[self.bot.name].fire(human_shot, self.human)
+        self.boards[self.bot.name].fire(human_shot.upper(), self.human)
         self.boards[self.human.name].fire(bot_shot, self.bot)
         # Update the human. (Bots don't need updates.)
         self.human.tell(self.boards[self.bot.name].show(to = 'foe'))

@@ -78,9 +78,8 @@ class Game(OtherCmd):
     def __init__(self, human, options, interface = None):
         """Set up the game. (None)"""
         self.human = human
-        if self.raw_options.lower().strip() != 'none'
-            self.raw_options = options
-            self.interface = interface
+        self.interface = interface
+        self.raw_options = options
         self.handle_options()
         if not hasattr(self, 'players'):
             self.players = [self.human]
