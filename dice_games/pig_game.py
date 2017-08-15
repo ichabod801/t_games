@@ -492,6 +492,47 @@ class Pig(game.Game):
         """Set the loser to go first next round. (None)"""
         self.players.sort(key = lambda player: self.scores[player.name])
 
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        arguments = arguments.strip().lower()
+        # Battleships.
+        if arguments in ('battleships', 'battleship', 'sea battle') and 'battleships' not in self.gipfed:
+            self.gipfed.append('battleships')
+            game = self.interface.games[arguments](self.human, '', self.interface)
+            results = game.play()
+            if not results[1]:
+                self.turn_score += 2
+                self.human.tell('You rolled a 2. Your turn score is now {}.'.format(self.turn_score))
+                return False
+            else:
+                return True
+        # Hunt the Wumpus
+        elif arguments in ('wumpus', 'hunt the wumpus') and 'wumpus' not in self.gipfed:
+            self.gipfed.append('wumpus')
+            game = self.interface.games[arguments](self.human, '', self.interface)
+            results = game.play()
+            if not results[1]:
+                roll = self.Die.roll()
+                move = self.human.ask('Your next roll will be a {}. Would you like to roll or stop? ')
+                move = move.strip().lower()
+                if move in ('s', 'stop', 'whoa'):
+                    self.scores[self.human.name] += self.turn_score
+                    return 'break'
+                elif move in ('r', 'roll', 'go'):
+                    if roll == self.bad:
+                        return 'break'
+                    else:
+                        self.turn_score += roll
+                        return False
+        else:
+            self.human.tell('Say what?')
+
+
     def do_scores(self, arguments):
         """
         Show the current scores. (None)
@@ -611,6 +652,8 @@ class Pig(game.Game):
                 pass
             else:
                 no_roll = self.handle_cmd(move)
+                if no_roll == 'break':
+                    break
         player.tell("{}'s score is now {}".format(player.name, self.scores[player.name]))
         print()
 

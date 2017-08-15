@@ -94,6 +94,7 @@ class Battleships(game.Game):
     Attributes:
     boards: The boards for each player. (dict of str: SeaBoard)
     bot: The bot opponent. (player.Bot)
+    do_gipf: Gipf. (boo)
     inventory_name: The name of the inventory of ships. (str)
 
     Overridden Methods:
@@ -116,7 +117,6 @@ class Battleships(game.Game):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
-        # !! need to track so can only do each once. Gipf limit for player?
         arguments = arguments.strip().lower()
         # Hunt the Wumpus
         if arguments in ('wumpus', 'hunt the wumpus') and 'wumpus' not in self.gipfed:
