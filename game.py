@@ -233,6 +233,7 @@ class Game(OtherCmd):
                 break
         # Clean up the game.
         self.clean_up()
+        self.gipfed = []
         # Report the results.
         return self.win_loss_draw + [self.scores[self.human.name]]
 

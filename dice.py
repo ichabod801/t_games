@@ -108,3 +108,10 @@ class Pool(object):
         for die in self.dice:
             self.values.append(die.roll())
         return self.values
+
+if __name__ == '__main__':
+    die = Die('die')
+    rolls = [die.roll() for roll in range(3)]
+    while rolls[-3:] != ['d', 'i', 'e']:
+        rolls.append(die.roll())
+    print(rolls)

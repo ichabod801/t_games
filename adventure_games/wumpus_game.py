@@ -348,6 +348,7 @@ class Wumpus(game.Game):
         else:
             return self.handle_cmd(move)
         if not sum(self.win_loss_draw):
+            self.human.tell()
             self.status_check()
 
     def set_up(self):
@@ -372,7 +373,7 @@ class Wumpus(game.Game):
             # Show the results
             for whiff in range(abs(hit) - 1):
                 self.human.tell('Whiff!')
-            if not hit:
+            if hit < 0:
                 # miss means wumpus may move
                 self.human.tell('You hear the arrow break uselessly against a wall.')
                 self.human.tell('You hear a grumbling roar and a strange suck-pop sound.')

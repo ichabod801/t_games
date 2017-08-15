@@ -503,22 +503,21 @@ class Pig(game.Game):
         # Battleships.
         if arguments in ('battleships', 'battleship', 'sea battle') and 'battleships' not in self.gipfed:
             self.gipfed.append('battleships')
-            game = self.interface.games[arguments](self.human, '', self.interface)
+            game = self.interface.games['battleships'](self.human, '', self.interface)
             results = game.play()
             if not results[1]:
                 self.turn_score += 2
                 self.human.tell('You rolled a 2. Your turn score is now {}.'.format(self.turn_score))
-                return False
-            else:
-                return True
+            return True
         # Hunt the Wumpus
         elif arguments in ('wumpus', 'hunt the wumpus') and 'wumpus' not in self.gipfed:
             self.gipfed.append('wumpus')
-            game = self.interface.games[arguments](self.human, '', self.interface)
+            game = self.interface.games['wumpus'](self.human, '', self.interface)
             results = game.play()
             if not results[1]:
-                roll = self.Die.roll()
-                move = self.human.ask('Your next roll will be a {}. Would you like to roll or stop? ')
+                roll = self.die.roll()
+                question = 'Your next roll will be a {}. Would you like to roll or stop? '
+                move = self.human.ask(question.format(roll))
                 move = move.strip().lower()
                 if move in ('s', 'stop', 'whoa'):
                     self.scores[self.human.name] += self.turn_score
@@ -528,10 +527,13 @@ class Pig(game.Game):
                         return 'break'
                     else:
                         self.turn_score += roll
-                        return False
+                        self.human.tell('Your turn score is {}.'.format(self.turn_score))
+                        return True
+            else:
+                return True
         else:
             self.human.tell('Say what?')
-
+            return True
 
     def do_scores(self, arguments):
         """
