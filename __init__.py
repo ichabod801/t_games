@@ -7,7 +7,7 @@ todo:
 expand the interface
     games connect to interface (gipf/xyzzy)
     customizable defaults in other_cmd
-    store results
+    store results (with flags)
     statistics
     defensive programming on games
 write more real games (trac ticket #69)

@@ -86,6 +86,7 @@ class Game(OtherCmd):
         for player in self.players:
             player.game = self
         self.force_end = ''
+        self.gipfed = []
 
     def clean_up(self):
         """Handle any end of game tasks. (None)"""

@@ -116,14 +116,19 @@ class Battleships(game.Game):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
+        # !! need to track so can only do each once. Gipf limit for player?
         arguments = arguments.strip().lower()
         # Hunt the Wumpus
-        if arguments in ('wumpus', 'hunt the wumpus'):
+        if arguments in ('wumpus', 'hunt the wumpus') and 'wumpus' not in self.gipfed:
+            self.gipfed.append('wumpus')
             game = self.interface.games[arguments](self.human, '', self.interface)
             results = game.play()
-            if results[1:3] == [0, 0]:
+            if not results[1]:
+                # Remind the human.
+                self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
+                self.human.tell(self.boards[self.human.name].show())
                 while True:
-                    ship = self.human.ask('Enter a ship type: ')
+                    ship = self.human.ask('\nEnter a ship type: ')
                     if ship in INVENTORIES['bradley']:
                         break
                     self.human.tell('I do not recognize that ship type.')
@@ -137,13 +142,17 @@ class Battleships(game.Game):
                     self.human.tell(square)
             return True
         # Pig
-        elif arguments in ('pig'):
+        elif arguments == 'pig' and 'pig' not in self.gipfed:
+            self.gipfed.append('pig')
             game = self.interface.games[arguments](self.human, 'bpr', self.interface)
             results = game.play()
-            if results[1:3] == [0, 0]:
+            if not results[1]:
+                # Remind the human.
+                self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
+                self.human.tell(self.boards[self.human.name].show())
                 # Get the first shot.
                 while True:
-                    self.human.ask('Where do you want to shoot? ')
+                    human_shot = self.human.ask('\nWhere do you want to shoot? ').upper().strip()
                     if SQUARE_RE.match(human_shot):
                         break
                 bot_shot = self.bot.ask('Where do you want to shoot? ')
@@ -152,9 +161,9 @@ class Battleships(game.Game):
                 self.boards[self.human.name].fire(bot_shot, self.bot)
                 # Check for second shot.
                 if human_shot in self.boards[self.bot.name].hits:
-                    self.player.tell('You hit, so you get a bonus shot.')
+                    self.human.tell('You hit, so you get a bonus shot.')
                     while True:
-                        self.human.ask('Where do you want to shoot? ')
+                        human_shot = self.human.ask('Where do you want to shoot? ').upper().strip()
                         if SQUARE_RE.match(human_shot):
                             break
                     self.boards[self.bot.name].fire(human_shot, self.human)
@@ -203,7 +212,7 @@ class Battleships(game.Game):
         elif not self.boards[self.bot.name].fleet:
             self.human.tell("You sank {}'s fleet and won!".format(self.bot.name))
             squares_left = sum([len(squares) for ship, squares in self.boards[self.human.name].fleet])
-            self.scores[self.human.name] = sum(squares_left)
+            self.scores[self.human.name] = squares_left
             self.human.tell("You have {} squares of ships left.".format(squares_left))
             self.win_loss_draw[0] = 1
         # Check for a loss.
@@ -224,10 +233,10 @@ class Battleships(game.Game):
         player: The player whose turn it is. (Player)
         """
         # Get the players' moves.
-        human_shot = self.human.ask('Where do you want to shoot? ').strip()
+        human_shot = self.human.ask('\nWhere do you want to shoot? ').strip()
         if not SQUARE_RE.match(human_shot.upper()):
             return self.handle_cmd(human_shot)
-        bot_shot = self.bot.ask('Where do you want to shoot? ')
+        bot_shot = self.bot.ask('\nWhere do you want to shoot? ')
         # Fire the shots.
         self.boards[self.bot.name].fire(human_shot.upper(), self.human)
         self.boards[self.human.name].fire(bot_shot, self.bot)
@@ -295,7 +304,7 @@ class BattleBot(player.Bot):
             length = int(prompt[-3])
             return self.place_ship(length)
         # Handle firing shots.
-        elif prompt.startswith('Where'):
+        elif prompt.startswith('\nWhere'):
             return self.fire()
 
     def fire(self):
