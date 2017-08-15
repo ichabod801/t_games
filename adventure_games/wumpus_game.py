@@ -314,7 +314,6 @@ class Wumpus(game.Game):
         """
         # Check the argument.
         game, losses = self.gipf_check(argument, ('battleships', 'pig'))
-        print(game, losses)
         # Successful Battleships moves the wumpus.
         if game == 'battleships':
             if losses:
