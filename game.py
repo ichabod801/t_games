@@ -204,6 +204,25 @@ class Game(OtherCmd):
             self.win_loss_draw[0] = 1
         return sum(self.win_loss_draw)
 
+    def gipf_check(self, argument, game_names):
+        """
+        Check for successful gipfing. (int)
+
+        Parameters:
+        argument: The argument to the gipf command. (str)
+        game_name: The names of the games to check. (list of str)
+        """
+        games = {game_name: self.interface.games[game_name] for game_name in game_names}
+        aliases = {}
+        for game_name in game_names:
+            aliases[game_name] = [alias.lower() for alias in games[game_name].aliases] + [game_name]
+        for game_name in game_names:
+            if argument in aliases[game_name] and game_name not in self.gipfed:
+                self.gipfed.append(game_name)
+                result = games[game_name](self.human, 'none', self.interface).play()
+                return game_name, result[1]
+        return 'invalid-game', 1 
+
     def handle_options(self):
         """Handle game options and set the player list. (None)"""
         pass

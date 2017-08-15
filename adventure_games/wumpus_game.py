@@ -305,6 +305,39 @@ class Wumpus(game.Game):
     name = 'Hunt the Wumpus'
     rules = RULES
 
+    def do_gipf(self, argument):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        # Check the argument.
+        game, losses = self.gipf_check(argument, ('battleships', 'pig'))
+        print(game, losses)
+        # Successful Battleships moves the wumpus.
+        if game == 'battleships':
+            if losses:
+                return True
+            else:
+                self.human.tell('You hear a grumbling roar and a strange suck-pop sound.\n')
+                self.dodec.move_wumpus()
+                self.status_check()
+                return False
+        # Successful Pig summons a giant bat.
+        elif game == 'pig':
+            if losses:
+                return True
+            else:
+                self.human.tell("You are grabbed by a giant, screeching bat and flown through")
+                self.human.tell("the caves at random.")
+                self.dodec.bats()
+                self.status_check()
+                return False
+        # Handle invalid games.
+        elif game == 'invalid-game':
+            self.human.tell("You're hunting a wumpus, not a gipf.")
+
     def game_over(self):
         """Check for the game being over. (None)"""
         # Game over is flagged elsewhere by changing win/loss/draw.
