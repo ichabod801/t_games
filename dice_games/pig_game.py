@@ -498,22 +498,16 @@ class Pig(game.Game):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
-        arguments = arguments.strip().lower()
+        game, losses = self.gipf_check(arguments, ('battleships', 'wumpus'))
         # Battleships.
-        if arguments in ('battleships', 'battleship', 'sea battle') and 'battleships' not in self.gipfed:
-            self.gipfed.append('battleships')
-            game = self.interface.games['battleships'](self.human, '', self.interface)
-            results = game.play()
-            if not results[1]:
+        if game == 'battleships':
+            if not losses:
                 self.turn_score += 2
                 self.human.tell('You rolled a 2. Your turn score is now {}.'.format(self.turn_score))
             go = True
         # Hunt the Wumpus
-        elif arguments in ('wumpus', 'hunt the wumpus') and 'wumpus' not in self.gipfed:
-            self.gipfed.append('wumpus')
-            game = self.interface.games['wumpus'](self.human, '', self.interface)
-            results = game.play()
-            if not results[1]:
+        elif game == 'wumpus':
+            if not losses:
                 roll = self.die.roll()
                 question = 'Your next roll will be a {}. Would you like to roll or stop? '
                 move = self.human.ask(question.format(roll))

@@ -117,13 +117,10 @@ class Battleships(game.Game):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
-        arguments = arguments.strip().lower()
+        game, losses = self.gipf_check(argument, ('wumpus', 'pig'))
         # Hunt the Wumpus
-        if arguments in ('wumpus', 'hunt the wumpus') and 'wumpus' not in self.gipfed:
-            self.gipfed.append('wumpus')
-            game = self.interface.games[arguments](self.human, '', self.interface)
-            results = game.play()
-            if not results[1]:
+        if game == 'wumpus':
+            if not losses:
                 # Remind the human.
                 self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
                 self.human.tell(self.boards[self.human.name].show())
@@ -140,13 +137,10 @@ class Battleships(game.Game):
                     name, squares = random.choice(ships)
                     square = random.choice(squares)
                     self.human.tell(square)
-            return True
+            go = True
         # Pig
-        elif arguments == 'pig' and 'pig' not in self.gipfed:
-            self.gipfed.append('pig')
-            game = self.interface.games[arguments](self.human, 'bpr', self.interface)
-            results = game.play()
-            if not results[1]:
+        elif game == 'pig':
+            if not losses:
                 # Remind the human.
                 self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
                 self.human.tell(self.boards[self.human.name].show())
@@ -170,11 +164,13 @@ class Battleships(game.Game):
                 # Update the human. (Bots don't need updates.)
                 self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
                 self.human.tell(self.boards[self.human.name].show())
-                return False
-            return True
+                go = False
+            go = True
         # Game with no gipf link
         else:
             self.human.tell('Gesundheit.')
+            go = True
+        return go
 
     def handle_options(self):
         """Handle game options and set the player list. (None)"""
