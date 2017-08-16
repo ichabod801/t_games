@@ -5,7 +5,6 @@ Package initializer for tgames.
 
 todo:
 expand the interface
-    store results (with flags)
     statistics
     defensive programming on games
     bot tournaments

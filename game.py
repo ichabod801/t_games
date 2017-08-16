@@ -90,6 +90,7 @@ class Game(OtherCmd):
         self.human = human
         self.interface = interface
         self.raw_options = options.strip()
+        self.flags = 0
         self.handle_options()
         if not hasattr(self, 'players'):
             self.players = [self.human]
@@ -144,7 +145,6 @@ class Game(OtherCmd):
         self.flags |= 4
         self.force_end = 'loss'
         self.win_loss_draw = [0, len(self.players) - 1, 0]
-        self.scores[self.human.name] = -801
         return False
 
     def do_rpn(self, arguments):
@@ -212,7 +212,6 @@ class Game(OtherCmd):
                 self.flags |= 128
                 self.force_end = 'win'
                 self.win_loss_draw = [len(self.players) - 1, 0, 0]
-                self.scores[self.human.name] = 801
                 self.human.tell('\nThe incantation is complete. You win at {}.\n'.format(self.name))
                 go = False
             else:
@@ -275,7 +274,7 @@ class Game(OtherCmd):
         self.win_loss_draw = [0, 0, 0]
         self.turns = 0
         self.force_end = ''
-        self.flags = 0
+        self.flags &= 1 # reset everything but the options flag.
         self.set_up()
         # Loop through the players repeatedly.
         for player in itertools.cycle(self.players):

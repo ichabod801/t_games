@@ -156,7 +156,7 @@ class Human(Player):
                 results = line.strip().split(',')
                 self.results.append(results[:1] + [int(x) for x in results[1:]])
 
-    def store_results(self, game_name, result):
+    def store_results(self, game_name, results):
         """
         Store game results. (None)
 
@@ -182,9 +182,10 @@ class Tester(Human):
         self.quest = quest
         self.color = color
         self.file_name = '{}-{}-{}.txt'.format(self.name, self.quest, self.color).lower()
-        if not os.path.exists(self.file_name)
+        if not os.path.exists(self.file_name):
             with open(self.file_name, 'w') as player_data:
                 player_data.write('')
+        self.load_results()
 
 
 BOT_NAMES = {'a': 'Ash/Abby/Adam/Alan/Alice/Ada/Adele/Alonzo/Angus/Astro',
