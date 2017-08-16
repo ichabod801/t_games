@@ -236,6 +236,7 @@ class Interface(other_cmd.OtherCmd):
         # Play the game until the player wants to stop.
         while True:
             results = self.game.play()
+            self.human.store_results(self.game.name, results)
             if self.human.ask('Would you like to play again? ').lower() not in ('yes', 'y', '1'):
                 break
 

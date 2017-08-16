@@ -6,6 +6,7 @@ Base player classes for tgames.
 Classes:
 Player: The base player class. (object)
 Human: A human being, with stored data. (Player)
+Tester: A preset test account. (Human)
 """
 
 
@@ -14,6 +15,8 @@ from __future__ import print_function
 import os
 import random
 import string
+
+import tgames.utility as utility
 
 
 try:
@@ -32,6 +35,7 @@ class Player(object):
 
     Methods:
     ask: Get information from the player. (str)
+    store_results: Store a game result. (None)
     tell: Give information to the player. (None)
 
     Overridden Methods:
@@ -56,6 +60,16 @@ class Player(object):
         prompt: The question being asked of the player. (str)
         """
         return input(prompt)
+
+    def store_results(self, game_name, result):
+        """
+        Store game results. (None)
+
+        Parameters:
+        game_name: The name of the game the result is from. (str)
+        results: The results of playing the game. (list of int)
+        """
+        pass
 
     def tell(self, *args, **kwargs):
         """
@@ -102,14 +116,16 @@ class Human(Player):
 
     Attributes:
     color: The player's favorite color. (str)
-    folder_name: The local folder with the player's data. (str)
+    file_name: The local file with the player's data. (str)
     quest: The player's quest. (str)
 
     Overridden Methods:
     __init__
+    store_results
     """
 
     def __init__(self):
+        """Get a login from a human. (None)"""
         while True:
             # Get the user's name.
             self.name = input('What is your name? ')
@@ -120,15 +136,55 @@ class Human(Player):
                 self.quest = input('What is your quest? ')
                 self.color = input('What is your favorite color? ')
             # Check for previous log in.
-            self.folder_name = 'player_data/{}-{}-{}/'.format(self.name, self.quest, self.color).lower()
-            if not os.path.exists(self.folder_name):
+            self.file_name = '{}-{}-{}.txt'.format(self.name, self.quest, self.color).lower()
+            if not os.path.exists(self.file_name):
                 new_player = input('I have not heard of you. Are you a new player? ')
-                if new_player.lower() in ('yes', 'y', '1'):
-                    os.mkdir(self.folder_name)
+                if new_player.lower() in utility.YES:
+                    with open(self.file_name, 'w') as player_data:
+                        player_data.write('')
                     break
                 print()
             else:
                 break
+        self.load_results()
+
+    def load_results(self):
+        """Load the player's history of play. (None)"""
+        self.results = []
+        with open(self.file_name) as player_data:
+            for line in player_data:
+                results = line.strip().split(',')
+                self.results.append(results[:1] + [int(x) for x in results[1:]])
+
+    def store_results(self, game_name, result):
+        """
+        Store game results. (None)
+
+        Parameters:
+        game_name: The name of the game the result is from. (str)
+        results: The results of playing the game. (list of int)
+        """
+        results_text = ','.join([str(x) for x in results])
+        with open(self.file_name, 'a') as player_data:
+            player_data.write('{},{}\n'.format(game_name, results_text))
+
+class Tester(Human):
+    """
+    A preset test account. (Human)
+
+    Overridden Methods:
+    __init__
+    """
+
+    def __init__(self, name = 'Buckaroo', quest = 'testing', color = 'black'):
+        """Auto setup a Human. (None)"""
+        self.name = name
+        self.quest = quest
+        self.color = color
+        self.file_name = '{}-{}-{}.txt'.format(self.name, self.quest, self.color).lower()
+        if not os.path.exists(self.file_name)
+            with open(self.file_name, 'w') as player_data:
+                player_data.write('')
 
 
 BOT_NAMES = {'a': 'Ash/Abby/Adam/Alan/Alice/Ada/Adele/Alonzo/Angus/Astro',

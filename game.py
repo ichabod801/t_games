@@ -205,9 +205,10 @@ class Game(OtherCmd):
             self.flags |= 32
             self.human.tell('\nPoof!')
             self.human.tell('You are now playing {}.\n'.format(game.name))
-            result = game.play()
-            result[4] |= 64
-            if result[1] == 0:
+            results = game.play()
+            results[4] |= 64
+            self.human.store_results(game.name, results)
+            if results[1] == 0:
                 self.flags |= 128
                 self.force_end = 'win'
                 self.win_loss_draw = [len(self.players) - 1, 0, 0]
@@ -250,9 +251,11 @@ class Game(OtherCmd):
         for game_name in game_names:
             if argument in aliases[game_name] and game_name not in self.gipfed:
                 self.gipfed.append(game_name)
-                result = games[game_name](self.human, 'none', self.interface).play()
-                result[4] |= 16
-                return game_name, result[1]
+                game = games[game_name](self.human, 'none', self.interface)
+                results = game.play()
+                results[4] |= 16
+                self.human.store_results(game.name, results)
+                return game_name, results[1]
         return 'invalid-game', 1 
 
     def handle_options(self):
