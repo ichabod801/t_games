@@ -18,6 +18,7 @@ excel_column: Convert a number into a Excel style column header. (str)
 
 
 import os
+import random
 from string import ascii_uppercase
 
 import tgames.game as game

@@ -634,6 +634,7 @@ class Pig(game.Game):
         """
         self.turn_score = 0
         no_roll = False
+        # !! I need to remove this loop and use the one in player_turn.
         while True:
             if no_roll:
                 no_roll = False

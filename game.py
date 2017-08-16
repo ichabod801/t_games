@@ -125,7 +125,7 @@ class Game(OtherCmd):
         self.force_end = 'loss'
         self.win_loss_draw = [0, len(self.players) - 1, 0]
         self.scores[self.human.name] = -801
-        return True
+        return False
 
     def do_rpn(self, arguments):
         """
@@ -179,7 +179,7 @@ class Game(OtherCmd):
         Parameters:
         arguments: What doesn't happen. (str)
         """
-        if self.interface.valve.blow(self):
+        if self.interface.valve.blow(self) or 1:
             game_class = random.choice(list(self.interface.games.values()))
             game = game_class(self.human, 'none', self.interface)
             result = game.play()
@@ -187,9 +187,9 @@ class Game(OtherCmd):
                 self.force_end = 'win'
                 self.win_loss_draw = [len(self.players) - 1, 0, 0]
                 self.scores[self.human.name] = 801
-            else:
-                self.human.tell('Nothing happens.')
-                return True
+        else:
+            self.human.tell('Nothing happens.')
+            return True
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
