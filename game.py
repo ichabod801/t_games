@@ -37,6 +37,7 @@ class Game(OtherCmd):
     rules_text: The rules of the game. (str)
 
     Attributes:
+    force_end: How to force the end of the game. (str)
     human: The primary player of the game. (Player)
     raw_options: The options as given by the play command. (str)
     scores: The players' scores in the game. (dict of str: int)
@@ -85,7 +86,6 @@ class Game(OtherCmd):
             self.players = [self.human]
         for player in self.players:
             player.game = self
-        self.force_end = ''
         self.gipfed = []
 
     def clean_up(self):
@@ -179,17 +179,24 @@ class Game(OtherCmd):
         Parameters:
         arguments: What doesn't happen. (str)
         """
-        if self.interface.valve.blow(self) or 1:
+        if self.interface.valve.blow(self):
             game_class = random.choice(list(self.interface.games.values()))
             game = game_class(self.human, 'none', self.interface)
+            self.human.tell('\nPoof!')
+            self.human.tell('You are now playing {}.\n'.format(game.name))
             result = game.play()
             if result[1] == 0 and result[2] == 0:
                 self.force_end = 'win'
                 self.win_loss_draw = [len(self.players) - 1, 0, 0]
                 self.scores[self.human.name] = 801
+                self.human.tell('\nThe incantation is complete. You win at {}.\n'.format(self.name))
+                go = False
+            else:
+                go = True
         else:
             self.human.tell('Nothing happens.')
-            return True
+            go = True
+        return go
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
@@ -239,6 +246,7 @@ class Game(OtherCmd):
         self.scores = {player.name: 0 for player in self.players}
         self.win_loss_draw = [0, 0, 0]
         self.turns = 0
+        self.force_end = ''
         self.set_up()
         # Loop through the players repeatedly.
         for player in itertools.cycle(self.players):

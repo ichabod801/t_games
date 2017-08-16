@@ -64,6 +64,7 @@ class Interface(other_cmd.OtherCmd):
     A menu interface for playing games. (OtherCmd)
 
     Attributes:
+    game: The game being played. (game.Game)
     human: The player navigating the menu. (player.Player)
 
     Methods:
@@ -231,10 +232,10 @@ class Interface(other_cmd.OtherCmd):
         options: Options specified by the play command. (str)
         """
         # Set up the game.
-        game = game_class(self.human, options, self)
+        self.game = game_class(self.human, options, self)
         # Play the game until the player wants to stop.
         while True:
-            results = game.play()
+            results = self.game.play()
             if self.human.ask('Would you like to play again? ').lower() not in ('yes', 'y', '1'):
                 break
 

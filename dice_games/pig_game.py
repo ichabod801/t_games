@@ -507,7 +507,7 @@ class Pig(game.Game):
             if not results[1]:
                 self.turn_score += 2
                 self.human.tell('You rolled a 2. Your turn score is now {}.'.format(self.turn_score))
-            return True
+            go = True
         # Hunt the Wumpus
         elif arguments in ('wumpus', 'hunt the wumpus') and 'wumpus' not in self.gipfed:
             self.gipfed.append('wumpus')
@@ -520,19 +520,20 @@ class Pig(game.Game):
                 move = move.strip().lower()
                 if move in ('s', 'stop', 'whoa'):
                     self.scores[self.human.name] += self.turn_score
-                    return 'break'
+                    go = False
                 elif move in ('r', 'roll', 'go'):
                     if roll == self.bad:
-                        return 'break'
+                        go = False
                     else:
                         self.turn_score += roll
                         self.human.tell('Your turn score is {}.'.format(self.turn_score))
-                        return True
+                        go = True
             else:
-                return True
+                go = True
         else:
             self.human.tell('Say what?')
-            return True
+            go = True
+        return go
 
     def do_scores(self, arguments):
         """
@@ -542,6 +543,7 @@ class Pig(game.Game):
         arguments: The (ignored) arguments to the score command. (str)
         """
         scores = sorted([(score, name) for name, score in self.scores.items()], reverse = True)
+        self.human.tell()
         for score, name in scores:
             self.human.tell('{}: {}'.format(name, score))
         self.human.tell()
@@ -624,6 +626,7 @@ class Pig(game.Game):
     def set_up(self):
         """Set up the game. (None)"""
         self.die = dice.Die()
+        self.turn_score = 0
 
     def player_turn(self, player):
         """
@@ -632,32 +635,28 @@ class Pig(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        self.turn_score = 0
-        no_roll = False
-        # !! I need to remove this loop and use the one in player_turn.
-        while True:
-            if no_roll:
-                no_roll = False
-            else:
-                roll = self.die.roll()
-                if roll == self.bad:
-                    player.tell('You rolled a {}, your turn is over.'.format(self.bad))
-                    break
-                else:
-                    self.turn_score += roll
-                    player.tell('You rolled a {}, your turn score is {}.'.format(roll, self.turn_score))
+        if self.turn_score:
             move = player.ask('Would you like to roll or stop? ')
-            if move.lower() in ('s', 'stop', 'whoa'):
-                self.scores[player.name] += self.turn_score
-                break
-            elif move.lower() in ('r', 'roll', 'go'):
-                pass
+        else:
+            move = 'roll'
+        if move.lower() in ('s', 'stop', 'whoa'):
+            self.scores[player.name] += self.turn_score
+            go = False
+        elif move.lower() in ('r', 'roll', 'go'):
+            roll = self.die.roll()
+            if roll == self.bad:
+                player.tell('You rolled a {}, your turn is over.'.format(self.bad))
+                go = False
             else:
-                no_roll = self.handle_cmd(move)
-                if no_roll == 'break':
-                    break
-        player.tell("{}'s score is now {}".format(player.name, self.scores[player.name]))
-        print()
+                self.turn_score += roll
+                player.tell('You rolled a {}, your turn score is {}'.format(roll, self.turn_score))
+                go = True
+        else:
+            go = self.handle_cmd(move)
+        if not go:
+            player.tell("{}'s score is now {}.\n".format(player.name, self.scores[player.name]))
+            self.turn_score = 0
+        return go
 
 
 if __name__ == '__main__':
