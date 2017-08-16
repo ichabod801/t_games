@@ -28,6 +28,13 @@ class Game(OtherCmd):
 
     In non-solitaire games, the players attribute should be set in handle_options.
 
+    The flags attribute represents a bunch of binary flags:
+        1: Options were set by the player.
+        2: The debug command was used by the player.
+        4: The game was lost via the quit command.
+        8: The gipf command was used in this game.
+        16: This game was started by the gipf command.
+
     Class Attributes:
     aka: Other names for the game. (list of str)
     credits: The design and programming credits for this game. (str)
@@ -37,6 +44,7 @@ class Game(OtherCmd):
     rules_text: The rules of the game. (str)
 
     Attributes:
+    flags: Flags for different game events tracked in the results. (int)
     force_end: How to force the end of the game. (str)
     human: The primary player of the game. (Player)
     raw_options: The options as given by the play command. (str)
@@ -59,6 +67,7 @@ class Game(OtherCmd):
 
     Overridden Methods:
     __init__
+    do_debug
     """
 
     aka = []
@@ -102,6 +111,16 @@ class Game(OtherCmd):
         self.human.tell(self.credits)
         return True
 
+    def do_debug(self, arguments):
+        """
+        Handle debugging commands. (bool)
+
+        Parameters:
+        arguments: The debugging information needed. (str)
+        """
+        self.flags |= 2
+        return super(Game, self).debug(arguments)
+
     def do_help(self, arguments):
         """
         Show the help text for a given area. (bool)
@@ -122,6 +141,7 @@ class Game(OtherCmd):
         Parameters:
         arguments: This parameter is ignored. (str)
         """
+        self.flags |= 4
         self.force_end = 'loss'
         self.win_loss_draw = [0, len(self.players) - 1, 0]
         self.scores[self.human.name] = -801
@@ -182,10 +202,13 @@ class Game(OtherCmd):
         if self.interface.valve.blow(self):
             game_class = random.choice(list(self.interface.games.values()))
             game = game_class(self.human, 'none', self.interface)
+            self.flags |= 32
             self.human.tell('\nPoof!')
             self.human.tell('You are now playing {}.\n'.format(game.name))
             result = game.play()
-            if result[1] == 0 and result[2] == 0:
+            result[4] |= 64
+            if result[1] == 0:
+                self.flags |= 128
                 self.force_end = 'win'
                 self.win_loss_draw = [len(self.players) - 1, 0, 0]
                 self.scores[self.human.name] = 801
@@ -219,6 +242,7 @@ class Game(OtherCmd):
         argument: The argument to the gipf command. (str)
         game_name: The names of the games to check. (list of str)
         """
+        self.flags |= 8
         games = {game_name: self.interface.games[game_name] for game_name in game_names}
         aliases = {}
         for game_name in game_names:
@@ -227,6 +251,7 @@ class Game(OtherCmd):
             if argument in aliases[game_name] and game_name not in self.gipfed:
                 self.gipfed.append(game_name)
                 result = games[game_name](self.human, 'none', self.interface).play()
+                result[4] |= 16
                 return game_name, result[1]
         return 'invalid-game', 1 
 
@@ -247,6 +272,7 @@ class Game(OtherCmd):
         self.win_loss_draw = [0, 0, 0]
         self.turns = 0
         self.force_end = ''
+        self.flags = 0
         self.set_up()
         # Loop through the players repeatedly.
         for player in itertools.cycle(self.players):
@@ -262,7 +288,7 @@ class Game(OtherCmd):
         self.clean_up()
         self.gipfed = []
         # Report the results.
-        return self.win_loss_draw + [self.scores[self.human.name]]
+        return self.win_loss_draw + [self.scores[self.human.name], self.flags]
 
     def player_turn(self, player):
         """
