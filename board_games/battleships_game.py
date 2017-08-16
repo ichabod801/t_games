@@ -177,7 +177,10 @@ class Battleships(game.Game):
         self.bot = BattleBot([self.human.name])
         self.inventory_name = 'bradley'
         # Check for options
-        if self.raw_options.strip():
+        if self.raw_options == 'none':
+            pass
+        elif self.raw_options:
+            self.flags |= 1
             for word in self.raw_options.lower().split():
                 if word.startswith('inventory='):
                     value = word[10:]
@@ -189,10 +192,11 @@ class Battleships(game.Game):
         else:
             while True:
                 inventory = self.human.ask('Which inventory would you like to use (return for Bradley)? ')
-                if not inventory.lower() or inventory in INVENTORIES:
+                if not inventory.strip() or inventory in INVENTORIES:
                     break
                 self.human.tell('The available inventories are Bradley, Bednar, Ichabod, and Wikipedia')
             if inventory:
+                self.flags |= 1
                 self.inventory_name = inventory.lower()
         # Set player list.
         self.players = [self.human, self.bot]

@@ -89,7 +89,7 @@ class Game(OtherCmd):
         """Set up the game. (None)"""
         self.human = human
         self.interface = interface
-        self.raw_options = options
+        self.raw_options = options.strip()
         self.handle_options()
         if not hasattr(self, 'players'):
             self.players = [self.human]

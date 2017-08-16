@@ -451,6 +451,7 @@ class Pig(game.Game):
         """Get options from the user. (None)"""
         taken_names = [self.human.name]
         if self.human.ask('\nWould you like to change the options? ').lower() in utility.YES:
+            self.flags |= 1
             # Six is the turn ender.
             if self.human.ask('\nShould six be the number that ends the turn? ').lower() in utility.YES:
                 self.bad = 6
@@ -571,8 +572,11 @@ class Pig(game.Game):
         self.players = [self.human]
         self.bad = 1
         self.even_turns = False
-        if self.raw_options:
+        if self.raw_options == 'none':
+            pass
+        elif self.raw_options:
             self.parse_options()
+            self.flags |= 1
         else:
             self.ask_options()
         # If no optional bots, default to a basic value bot.
