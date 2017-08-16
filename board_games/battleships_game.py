@@ -117,7 +117,7 @@ class Battleships(game.Game):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
-        game, losses = self.gipf_check(argument, ('wumpus', 'pig'))
+        game, losses = self.gipf_check(arguments, ('wumpus', 'pig'))
         # Hunt the Wumpus
         if game == 'wumpus':
             if not losses:
