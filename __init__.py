@@ -5,8 +5,6 @@ Package initializer for tgames.
 
 todo:
 expand the interface
-    statistics
-    defensive programming on games
     bot tournaments
 write more real games (trac ticket #69)
 
@@ -16,6 +14,8 @@ play: Play some text games. (None)
 
 from __future__ import print_function
 
+import tgames.dice as dice
+import tgames.game as game
 import tgames.interface as interface
 import tgames.player as player
 

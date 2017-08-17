@@ -7,6 +7,9 @@ Classes:
 Game: A game with a text interface. (OtherCmd)
 Flip: A test game of flipping coins. (Game)
 Sorter: A test game of sorting a sequence. (Game)
+
+Functions:
+load_games: Load all of the games defined locally. (tuple of dict)
 """
 
 
@@ -15,6 +18,7 @@ from __future__ import print_function
 import itertools
 import math
 import operator
+import os
 import random
 
 from tgames.other_cmd import OtherCmd
@@ -64,6 +68,7 @@ class Game(OtherCmd):
     play: Play the game. (list of int)
     player_turn: Handle a player's turn or other player actions. (bool)
     set_up: Handle any pre-game tasks. (None)
+    tournament: Run a tournament of the game. (dict)
 
     Overridden Methods:
     __init__
@@ -100,7 +105,7 @@ class Game(OtherCmd):
 
     def clean_up(self):
         """Handle any end of game tasks. (None)"""
-        self.scores[self.human.name] = -self.turns
+        pass
 
     def do_credits(self, arguments):
         """
@@ -307,6 +312,37 @@ class Game(OtherCmd):
         """Handle any pre-game tasks. (None)"""
         pass
 
+    def tournament(self, players, rounds):
+        """
+        Run a tournament of the game. (dict)
+
+        Parameters:
+        players: The players in the tournament. (list of player.Player)
+        rounds: The number of rounds to play. (int)
+        """
+        # Set up the players.
+        self.players = players
+        for player in self.players:
+            player.game = self
+        # Set one of the players to be the human.
+        human_hold = self.human
+        self.human = self.players[0]
+        # Set up results tracking.
+        score_tracking = {player.name: [] for player in self.players}
+        place_tracking = {player.name: [] for player in self.players}
+        # Run the tournament.
+        for game_index in range(rounds):
+            # Run the game.
+            results = self.play()
+            # Track the results.
+            rankings = sorted(self.scores.values(), reverse = True)
+            for player, score in self.scores.items():
+                score_tracking[player].append(score)
+                place_tracking[player].append(rankings.index(score) + 1)
+        # Clean up.
+        self.human = human_hold
+        return {'scores': score_tracking, 'places': place_tracking}
+
 
 class Flip(Game):
     """
@@ -504,8 +540,47 @@ class Sorter(Game):
                 self.minimum += 1
 
 
+def load_games():
+    """
+    Load all of the games defined locally. (tuple of dict)
+
+    The return value is two dictionaries. The first is game classes keyed to lower
+    case game names and aliases. The second is tree of categories, each one with
+    a dictionary of sub-categories and a list of games in that category.
+    """
+    # Import the Python files.
+    for package in [name for name in os.listdir('.') if name.endswith('_games')]:
+        for module in [name for name in os.listdir(package) if name.endswith('_game.py')]:
+            __import__('{}.{}'.format(package, module[:-3]))
+    # Search through all of the game.Game sub-classes.
+    categories = {'sub-categories': {}, 'games': []}
+    games = {}
+    search = [Game]
+    while search:
+        game_class = search.pop()
+        # Store game by name.
+        games[game_class.name.lower()] = game_class
+        for alias in game_class.aka:
+            games[alias.lower()] = game_class
+        # Store game by category
+        # !! Once I have non-test games, hide the test games.
+        category = categories
+        for game_category in game_class.categories:
+            if game_category not in category['sub-categories']:
+                category['sub-categories'][game_category] = {'sub-categories': {}, 'games': []}
+            category = category['sub-categories'][game_category]
+        category['games'].append(game_class)
+        # Search the full hierarchy of sub-classes.
+        search.extend(game_class.__subclasses__())
+    return games, categories
+
+
 if __name__ == '__main__':
     craig = Player('Craig')
     game = Game(craig, '')
     result = game.play()
     print(result)
+    flip = Flip(Player('Ref'), '')
+    bots = [FlipBot('Flip'), FlipBot('Tosser')]
+    t_result = flip.tournament(bots, 10)
+    print(t_result)

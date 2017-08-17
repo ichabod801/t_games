@@ -13,9 +13,9 @@ permutations: The number of permutations of n out r objects. (int)
 streaks: Calculates longest streaks for a sequence. (dict of float: int)
 """
 
+
 import collections
 import math
-
 
 # Yes
 YES = set(['yes', 'y', '1', 'yup', 'sure', 'affirmative', 'yeah', 'indubitably', 'yep', 'aye', 'ok'])

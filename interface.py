@@ -94,7 +94,8 @@ class Interface(other_cmd.OtherCmd):
     def __init__(self, human):
         """Set up the interface. (None)"""
         self.human = human
-        self.load_games()
+        self.games, self.categories = game.load_games()
+        self.valve = RandomValve()
 
     def default(self, line):
         """
@@ -221,34 +222,6 @@ class Interface(other_cmd.OtherCmd):
                 self.show_stats(relevant, gipf = gipf, xyzzy = xyzzy)
         else:
             self.human.tell('You have never played that game.')
-
-    def load_games(self):
-        """Load all of the games defined locally. (None)"""
-        # Import the Python files.
-        for package in [name for name in os.listdir('.') if name.endswith('_games')]:
-            for module in [name for name in os.listdir(package) if name.endswith('_game.py')]:
-                __import__('{}.{}'.format(package, module[:-3]))
-        # Search through all of the game.Game sub-classes.
-        self.valve = RandomValve()
-        self.categories = {'sub-categories': {}, 'games': []}
-        self.games = {}
-        search = [game.Game]
-        while search:
-            game_class = search.pop()
-            # Store game by name.
-            self.games[game_class.name.lower()] = game_class
-            for alias in game_class.aka:
-                self.games[alias.lower()] = game_class
-            # Store game by category
-            # !! Once I have non-test games, hide the test games.
-            category = self.categories
-            for game_category in game_class.categories:
-                if game_category not in category['sub-categories']:
-                    category['sub-categories'][game_category] = {'sub-categories': {}, 'games': []}
-                category = category['sub-categories'][game_category]
-            category['games'].append(game_class)
-            # Search the full hierarchy of sub-classes.
-            search.extend(game_class.__subclasses__())
 
     def menu(self):
         """Run the game selection menu. (None)"""
@@ -426,7 +399,7 @@ def excel_column(n):
     return column
 
 if __name__ == '__main__':
-    interface = Interface(player.Player('Ichabod'))
+    interface = Interface(player.Tester('Ichabod','relaxation','super-green'))
     interface.menu()
 
 
