@@ -24,6 +24,7 @@ from string import ascii_uppercase
 import tgames.game as game
 import tgames.other_cmd as other_cmd
 import tgames.player as player
+import tgames.utility as utility
 
 
 # Programming credits and play testers.
@@ -181,22 +182,28 @@ class Interface(other_cmd.OtherCmd):
         parameters:
         arguments: The game to show statistics for. (str)
         """
+        # Process the arguments.
         arguments, slash, options = arguments.partition('/')
         arguments = arguments.strip()
         options = options.strip().lower()
         xyzzy = 'xyzzy' in options
         gipf = 'gipf' in options
+        # Handle overall stats.
         if not arguments:
             self.show_stats(self.human.results, 'Overall Statistics', gipf = gipf, xyzzy = xyzzy)
             games = sorted(set([result[0] for result in self.human.results]))
+            # Show the stats for the individual games.
             for game in games:
                 relevant = [result for result in self.human.results if result[0] == game]
                 self.show_stats(relevant, gipf = gipf, xyzzy = xyzzy)
-        elif argument.lower() in self.games:
-            game_class = self.games[argument.lower()]
+        # Handle specific game stats.
+        elif arguments.lower() in self.games:
+            game_class = self.games[arguments.lower()]
             relevant = [result for result in self.human.results if result[0] == game_class.name]
             self.show_stats(relevant, gipf = gipf, xyzzy = xyzzy)
-        elif argument.lower() == 'cat':
+        # Handle category stats.
+        elif arguments.lower() == 'cat':
+            # Find all of the games in the category
             search = [self.focus]
             games = []
             while search:
@@ -204,8 +211,14 @@ class Interface(other_cmd.OtherCmd):
                 games.extend(category['games'])
                 search.extend(list(category['sub-categories'].values()))
             names = [game.name for game in games]
+            # Get and show the overall stats.
             relevant = [result for result in self.human.results if result[0] in names]
-            self.show_stats(relevant, gipf = gipf, xyzzy = xyzzy)
+            self.show_stats(relevant, 'Category Statistics', gipf = gipf, xyzzy = xyzzy)
+            # Show the stats for the individual games.
+            games = sorted(set([result[0] for result in relevant]))
+            for game in games:
+                relevant = [result for result in self.human.results if result[0] == game]
+                self.show_stats(relevant, gipf = gipf, xyzzy = xyzzy)
         else:
             self.human.tell('You have never played that game.')
 
@@ -280,6 +293,7 @@ class Interface(other_cmd.OtherCmd):
         while True:
             results = self.game.play()
             self.human.store_results(self.game.name, results)
+            self.do_stats(self.game.name)
             if self.human.ask('Would you like to play again? ').lower() not in ('yes', 'y', '1'):
                 break
 
@@ -320,20 +334,23 @@ class Interface(other_cmd.OtherCmd):
         results: The game results to generate stats for. (list of list)
         title: The title to print for the statistics. (str)
         """
+        # Check for empty results.
         if not results:
             self.human.tell('You have never played that game.')
             return None
+        # Process parameters.
         if not title:
             title = results[0][0] + ' Statistics'
         if not gipf:
             results = [result for result in results if not result[5] & 8]
         if not xyzzy:
             results = [result for result in results if not result[5] & 128]
-        self.human.tell(title)
-        self.human.tell('-' * len(title))
+        # Calculate total win-loss-draw and get data for streaks.
+        # Prep for loop.
         wins = []
         game_wld = [0, 0, 0]
         player_wld = [0, 0, 0]
+        # Loop through results storing totals and streak data.
         for name, win, loss, draw, score, flags in results:
             if not loss and not win:
                 game_wld[2] += 1
@@ -347,22 +364,31 @@ class Interface(other_cmd.OtherCmd):
             player_wld[0] += win
             player_wld[1] += loss
             player_wld[2] += draw
-        scores = [result[4] for result in results]
+        # Get streaks.
         current_streak, streak_type, longest_streaks = utility.streaks(wins)
+        # Get score data.
+        scores = [result[4] for result in results]
+        # Display the statistics to the user.
+        # Display the title.
+        self.human.tell(title)
+        self.human.tell('-' * len(title))
+        # Display win-loss-draw
         self.human.tell('Overall Win-Loss-Draw: {}-{}-{}'.format(*game_wld))
         self.human.tell('Player Win-Loss-Draw: {}-{}-{}'.format(*player_wld))
-        self.human.tell('Average Score: {}'.format(utility.mean(scores)))
-        self.human.tell('Median Score: {}'.format(utility.median(scores)))
+        # Display scores.
         self.human.tell('Lowest Score: {}'.format(min(scores)))
+        self.human.tell('Average Score: {:.1f}'.format(utility.mean(scores)))
+        self.human.tell('Median Score: {}'.format(utility.median(scores)))
         self.human.tell('Highest Score: {}'.format(max(scores)))
+        # Display streaks.
         if longest_streaks[1]:
-            self.human.tell('Longest winning streak: {}', longest_streaks[1])
+            self.human.tell('Longest winning streak: {}'.format(longest_streaks[1]))
         if longest_streaks[-1]:
-            self.human.tell('Longest losing streak: {}', longest_streaks[-1])
+            self.human.tell('Longest losing streak: {}'.format(longest_streaks[-1]))
         if longest_streaks[0]:
-            self.human.tell('Longest drawing streak: {}', longest_streaks[0])
+            self.human.tell('Longest drawing streak: {}'.format(longest_streaks[0]))
         streak_name = ('drawing', 'winning', 'losing')[streak_type]
-        self.human.tell('You are currently on a {} {} streak.'.format(current_streak, streak_name))
+        self.human.tell('You are currently on a {} game {} streak.'.format(current_streak, streak_name))
         self.human.tell()
 
 

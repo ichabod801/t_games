@@ -43,7 +43,7 @@ def median(values):
     Parameters:
     values: The list of values. (seq of float)
     """
-    return sorted(values)[len(values) // 2 - 1]
+    return sorted(values)[len(values) // 2]
 
 def mean(values):
     """
@@ -73,15 +73,15 @@ def streaks(values):
     """
     # Prep the loop.
     previous = values[0]
-    lengths = collections.defaultdict(int())
+    lengths = collections.defaultdict(int)
     length = 0
     # Calculate streaks
     for value in values:
         if value == previous:
             length += 1
         else:
-            lengths[value] = max(length, lengths[value])
-            lengths.append(1)
+            lengths[previous] = max(length, lengths[previous])
+            length = 1
             previous = value
     # Record the last streak.
     lengths[value] = max(length, lengths[value])
@@ -89,3 +89,9 @@ def streaks(values):
     max_winning = max(max(lengths), 0)
     max_losing = min(min(lengths), 0)
     return length, value, lengths
+
+
+if __name__ == '__main__':
+    test = [1, 0, 1, 1, 1, 0, 1, 1, 0, 0]
+    print(test)
+    print(streaks(test))

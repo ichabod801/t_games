@@ -164,6 +164,9 @@ class Human(Player):
         game_name: The name of the game the result is from. (str)
         results: The results of playing the game. (list of int)
         """
+        # Store locally.
+        self.results.append([game_name] + results)
+        # Store in the player's file.
         results_text = ','.join([str(x) for x in results])
         with open(self.file_name, 'a') as player_data:
             player_data.write('{},{}\n'.format(game_name, results_text))

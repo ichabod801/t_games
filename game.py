@@ -462,6 +462,7 @@ class Sorter(Game):
             self.raw_options = self.human.ask('Enter the length of the sequence to sort (return for 5): ')
         # Read any specified options
         if self.raw_options.isdigit():
+            self.flags |= 1
             self.length = int(self.raw_options)
 
     def player_turn(self, player):

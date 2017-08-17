@@ -377,6 +377,7 @@ class Wumpus(game.Game):
             self.shoot(move.split()[1])
         else:
             return self.handle_cmd(move)
+        self.scores[self.human.name] = -self.turns
         if not sum(self.win_loss_draw):
             self.human.tell()
             self.status_check()
