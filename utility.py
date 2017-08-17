@@ -13,11 +13,9 @@ permutations: The number of permutations of n out r objects. (int)
 streaks: Calculates longest streaks for a sequence. (dict of float: int)
 """
 
-import csv
+import collections
 import math
-import os
-import sys
-import textwrap
+
 
 # Yes
 YES = set(['yes', 'y', '1', 'yup', 'sure', 'affirmative', 'yeah', 'indubitably', 'yep', 'aye', 'ok'])
@@ -45,7 +43,7 @@ def median(values):
     Parameters:
     values: The list of values. (seq of float)
     """
-    pass
+    return sorted(values)[len(values) // 2 - 1]
 
 def mean(values):
     """
@@ -54,17 +52,7 @@ def mean(values):
     Parameters:
     values: The list of values. (seq of float)
     """
-    pass
-
-def percentile(value, population):
-    """
-    Calculate the percentile of a value within a population. (int)
-
-    Parameters:
-    value: The value to get a percentile for. (float)
-    population: The population of values. (seq of float)
-    """
-    pass
+    return sum(values) / float(len(values))
 
 def permutations(n, r):
     """
@@ -83,4 +71,21 @@ def streaks(values):
     Parameters:
     values: The list of values. (seq of float)
     """
-    pass
+    # Prep the loop.
+    previous = values[0]
+    lengths = collections.defaultdict(int())
+    length = 0
+    # Calculate streaks
+    for value in values:
+        if value == previous:
+            length += 1
+        else:
+            lengths[value] = max(length, lengths[value])
+            lengths.append(1)
+            previous = value
+    # Record the last streak.
+    lengths[value] = max(length, lengths[value])
+    # Get notable streaks.
+    max_winning = max(max(lengths), 0)
+    max_losing = min(min(lengths), 0)
+    return length, value, lengths

@@ -55,6 +55,12 @@ the game should prompt you to specify the options (if there are any).
 You can see the credits (who designed and programmed the game) for any game 
 by typing 'credits'.
 
+When the game is over you will be shown your overall statistics for that game.
+From the interface you can see your statistics for any game by typing 'stats'
+and the name of the game. You can also type 'stats cat' for all games in the
+category you are currently in, or just 'stats' for stats for all of the games
+you have played.
+
 You can get this help text by typing help or ?
 """
 
@@ -64,6 +70,8 @@ class Interface(other_cmd.OtherCmd):
     A menu interface for playing games. (OtherCmd)
 
     Attributes:
+    categories: The tree of categories and games. (dict)
+    focus: The menu's current location in the category tree. (dict)
     game: The game being played. (game.Game)
     human: The player navigating the menu. (player.Player)
 
@@ -166,6 +174,41 @@ class Interface(other_cmd.OtherCmd):
             self.human.tell("\nI do not know the rules to that game.")
         return True
 
+    def do_stats(self, arguments):
+        """
+        Show game statistics. (bool)
+
+        parameters:
+        arguments: The game to show statistics for. (str)
+        """
+        arguments, slash, options = arguments.partition('/')
+        arguments = arguments.strip()
+        options = options.strip().lower()
+        xyzzy = 'xyzzy' in options
+        gipf = 'gipf' in options
+        if not arguments:
+            self.show_stats(self.human.results, 'Overall Statistics', gipf = gipf, xyzzy = xyzzy)
+            games = sorted(set([result[0] for result in self.human.results]))
+            for game in games:
+                relevant = [result for result in self.human.results if result[0] == game]
+                self.show_stats(relevant, gipf = gipf, xyzzy = xyzzy)
+        elif argument.lower() in self.games:
+            game_class = self.games[argument.lower()]
+            relevant = [result for result in self.human.results if result[0] == game_class.name]
+            self.show_stats(relevant, gipf = gipf, xyzzy = xyzzy)
+        elif argument.lower() == 'cat':
+            search = [self.focus]
+            games = []
+            while search:
+                category = search.pop()
+                games.extend(category['games'])
+                search.extend(list(category['sub-categories'].values()))
+            names = [game.name for game in games]
+            relevant = [result for result in self.human.results if result[0] in names]
+            self.show_stats(relevant, gipf = gipf, xyzzy = xyzzy)
+        else:
+            self.human.tell('You have never played that game.')
+
     def load_games(self):
         """Load all of the games defined locally. (None)"""
         # Import the Python files.
@@ -197,23 +240,23 @@ class Interface(other_cmd.OtherCmd):
     def menu(self):
         """Run the game selection menu. (None)"""
         # Start at the top category.
-        category = self.categories
+        self.focus = self.categories
         previous = []
         # Loop through player choices.
         while True:
             # Show the menu and get the possible choices.
-            menu_map = self.show_menu(category)
+            menu_map = self.show_menu(self.focus)
             letter = self.human.ask('What is your selection? ').strip()
             # Check for menu choices.
             if letter.upper() in menu_map:
                 choice = menu_map[letter.upper()]
                 # Check for sub-category choices.
-                if choice[:-9] in category['sub-categories']:
-                    previous.append(category)
-                    category = category['sub-categories'][choice[:-9]]
+                if choice[:-9] in self.focus['sub-categories']:
+                    previous.append(self.focus)
+                    self.focus = self.focus['sub-categories'][choice[:-9]]
                 # Check for special choices.
                 elif choice == 'Previous Menu':
-                    category = previous.pop()
+                    self.focus = previous.pop()
                 elif choice == 'Quit':
                     break
                 # Assume anything else is a game to play.
@@ -266,6 +309,61 @@ class Interface(other_cmd.OtherCmd):
         self.human.tell()
         # Return the meaning of the menu letters.
         return dict(pairs)
+
+    def show_stats(self, results, title = '', gipf = False, xyzzy = False):
+        """
+        Show the statistics for a set of game results. (None)
+
+        If the title is blank, it is taken from the game name in the first result.
+
+        Parameters:
+        results: The game results to generate stats for. (list of list)
+        title: The title to print for the statistics. (str)
+        """
+        if not results:
+            self.human.tell('You have never played that game.')
+            return None
+        if not title:
+            title = results[0][0] + ' Statistics'
+        if not gipf:
+            results = [result for result in results if not result[5] & 8]
+        if not xyzzy:
+            results = [result for result in results if not result[5] & 128]
+        self.human.tell(title)
+        self.human.tell('-' * len(title))
+        wins = []
+        game_wld = [0, 0, 0]
+        player_wld = [0, 0, 0]
+        for name, win, loss, draw, score, flags in results:
+            if not loss and not win:
+                game_wld[2] += 1
+                wins.append(0)
+            elif not loss:
+                game_wld[0] += 1
+                wins.append(1)
+            else:
+                game_wld[1] += 1
+                wins.append(-1)
+            player_wld[0] += win
+            player_wld[1] += loss
+            player_wld[2] += draw
+        scores = [result[4] for result in results]
+        current_streak, streak_type, longest_streaks = utility.streaks(wins)
+        self.human.tell('Overall Win-Loss-Draw: {}-{}-{}'.format(*game_wld))
+        self.human.tell('Player Win-Loss-Draw: {}-{}-{}'.format(*player_wld))
+        self.human.tell('Average Score: {}'.format(utility.mean(scores)))
+        self.human.tell('Median Score: {}'.format(utility.median(scores)))
+        self.human.tell('Lowest Score: {}'.format(min(scores)))
+        self.human.tell('Highest Score: {}'.format(max(scores)))
+        if longest_streaks[1]:
+            self.human.tell('Longest winning streak: {}', longest_streaks[1])
+        if longest_streaks[-1]:
+            self.human.tell('Longest losing streak: {}', longest_streaks[-1])
+        if longest_streaks[0]:
+            self.human.tell('Longest drawing streak: {}', longest_streaks[0])
+        streak_name = ('drawing', 'winning', 'losing')[streak_type]
+        self.human.tell('You are currently on a {} {} streak.'.format(current_streak, streak_name))
+        self.human.tell()
 
 
 class RandomValve(object):

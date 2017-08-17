@@ -71,7 +71,7 @@ class OtherCmd(object):
         command = self.aliases.get(command, command)
         method = 'do_' + command
         if hasattr(self, method):
-            return getattr(self, method)(arguments)
+            return getattr(self, method)(arguments.strip())
         else:
             return self.default(text)
 
