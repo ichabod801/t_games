@@ -102,29 +102,31 @@ class SolitaireDice(game.Game):
         # Get the required/requested discard.
         if len(allowed_discards) == 1:
             discard = str(list(allowed_discards)[0])
-            player.tell('You must discard a {}.'.format(discard))
+            self.message += '\nYou must discard a {}.'.format(discard)
         else:
             discard = player.ask('Which number would you like to discard? ')
         # Check for discard and split.
         split_check = self.three_numbers_re.match(discard.strip())
         if split_check:
             discard = split_check.groups()[0]
-            self.held_split = ' '.join(split_check.groups[1:])
+            self.held_split = ' '.join(split_check.groups()[1:])
+        else:
+            self.held_split = ''
         # Handle the discard.
         if discard.strip().isdigit():
             discard = int(discard)
             # Check for discard being rolled.
             if discard not in self.roll:
-                player.tell('You did not roll a {}, so you cannot discard it.'.format(discard))
-                player.tell('Your roll is:', ', '.join([str(x) for x in self.roll]))
+                self.message += 'You did not roll a {}, so you cannot discard it.'.format(discard)
                 return False
             # Check for invalid discard.
             elif discard not in allowed_discards:
-                player.tell('{} is an invalid discard.'.format(discard))
-                player.tell('You must discard one of {}.'.format(str(allowed_discards)[1:-1]))
+                self.message += '\n{} is an invalid discard.'.format(discard)
+                self.message += '\nYou must discard one of {}.'.format(str(allowed_discards)[1:-1])
                 return False
-            # Process valid discards.
-            self.discards[discard] = self.discards.get(discard, 0) + 1
+            # Process valid discards (don't store free rides).
+            if len(self.discards) < 3 or discard in self.discards:
+                self.discards[discard] = self.discards.get(discard, 0) + 1
             self.roll.remove(discard)
             self.mode = 'split'
         # Handle other commands.
@@ -174,6 +176,7 @@ class SolitaireDice(game.Game):
         self.roll = [self.die.roll() for die in range(5)]
         self.roll.sort()
         self.mode = 'discard'
+        self.message = ''
 
     def show_status(self, player):
         """
@@ -199,6 +202,10 @@ class SolitaireDice(game.Game):
             player.tell('{}: {}'.format(value, self.discards[value]))
         # show score
         player.tell('\nYour current score is {}.'.format(self.scores[player.name]))
+        # show message
+        if self.message:
+            player.tell(self.message.strip())
+            self.message = ''
         # show roll
         player.tell('Your roll is:', ', '.join([str(x) for x in self.roll]))
 
@@ -229,8 +236,7 @@ class SolitaireDice(game.Game):
             else:
                 in_check = split[0] in self.roll and split[1] in self.roll
             if not in_check:
-                message = 'You did not roll both those numbers. Your roll is {}.'
-                player.tell(message.format(str(self.roll)[1:-1]))
+                self.message += '\nYou did not roll both those numbers.'
                 return False
             self.totals[sum(split)] += 1
             self.roll.remove(split[0])
