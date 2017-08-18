@@ -1,0 +1,58 @@
++------------------------------+
+| Planning document for tgames |
++------------------------------+
+
+== Short Term To Do List ==
+
+Redo the game I've played alot, and start playing them.
+	cards.py
+	solitaire (functions instead of sub-classing)
+How to write a game documentation.
+
+== Long Term To Do List ==
+
+Program the games planned for text_games round 2.
+	Try for every category gets one before any gets two.
+	Gipf planning
+	Gipf implmentation
+	How to write a game documentation.
+Clean Up
+    documentation
+    output (one blank line)
+Play testing
+108 Games
+
+== Games to Program ==
+
+board/chase: fox and geese, tafl
+board/displace: mancala, chess (wrapper for Sunfish), battleships!
+board/race: backgammon, snakes and ladders
+board/space: connect four, halma
+card/solitaire: port my solitaire suite (19, drop storehouse, add supercell, rename sarah)
+card/trick: hearts, spades
+card/matching: cribbage, snip snap snorem
+card/shedding: crazy eights, spit
+card/rummy: rummy, tonk
+card/accumulating: war, slapjack
+card/other: ace-jack, peace and love
+dice/jeopardy: pig!, zip
+dice/category: yacht, poker dice
+dice/liar: dudo, liar's dice
+dice/other: solitaire dice*, mate
+gambling/dice: craps, mexico
+gambling/cards: black jack, baccarat
+gambling/other: roulette, slot machines
+other/adventure: hunt the wumpus!, adventure
+other/simulation: hamurabi, my space traders (with bot traders), global thermonuclear war
+other/word: hangman, ghost (small word list?)
+other/other: RPS(LS), number guessing game 
+
+An asterisk means the game has been coded. An exclamation point means the game has been coded and is in the gipf graph.
+
+games planned: 63
+games coded:    4
+games gipfed:   3
+
+== 108 Games ==
+
+board/displace: checkers

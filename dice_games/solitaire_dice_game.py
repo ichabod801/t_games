@@ -64,8 +64,16 @@ class SolitaireDice(game.Game):
     Attributes:
     die: The die that is rolled. (dice.Die)
     discards: The numbers discarded and how many times. (dict of int: int)
+    message: A message to show the user in show_status. (str)
     mode: Where we are in the player's turn. (str)
+    roll: The current roll. (list of int)
     totals: The number of times each total has been rolled. (list of int)
+
+    Methods:
+    discard_mode: Discard a die. (bool)
+    roll_mode: Roll the dice. (bool)
+    show_status: Show the current game state. (None)
+    update_score: Update the game score. (None)
 
     Overridden Methods:
     set_up
@@ -84,8 +92,6 @@ class SolitaireDice(game.Game):
     def discard_mode(self, player):
         """
         Discard a die. (bool)
-
-        !! error formatting
 
         Parameters:
         player: The player whose turn it is. (Player)
@@ -134,15 +140,18 @@ class SolitaireDice(game.Game):
             return self.handle_cmd(discard)
 
     def game_over(self):
-        """Check for any number being discarded 8 times. (None)"""
+        """Check for any number being discarded 8 times. (bool)"""
         if self.mode == 'roll' and max(self.discards.values()) == 8:
             score = self.scores[self.human.name]
+            # Win
             if score < 0:
                 self.human.tell('You lost with {} points. :('.format(score))
                 self.win_loss_draw[1] = 1
+            # Loss
             elif score <= 500:
                 self.human.tell('You drew with {} points. :|'.format(score))
                 self.win_loss_draw[2] = 1
+            # Draw
             else:
                 self.human.tell('You won with {} points! :)'.format(score))
                 self.win_loss_draw[0] = 1
@@ -156,12 +165,15 @@ class SolitaireDice(game.Game):
         player: The player whose turn it is. (Player)
         """
         player.tell()
+        # Roll five dice.
         if self.mode == 'roll':
             self.roll_mode(player)
         self.show_status(player)
+        # Discard one die.
         if self.mode == 'discard':
             if not self.discard_mode(player):
                 return False
+        # Split into pairs.
         if self.mode == 'split':
             if not self.split_mode(player):
                 return False
@@ -173,10 +185,19 @@ class SolitaireDice(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
+        # Roll the dice.
         self.roll = [self.die.roll() for die in range(5)]
         self.roll.sort()
+        # Set tracking variables.
         self.mode = 'discard'
         self.message = ''
+
+    def set_up(self):
+        """Set up the game. (None)"""
+        self.die = dice.Die()
+        self.totals = [0] * 13
+        self.discards = {}
+        self.mode = 'roll'
 
     def show_status(self, player):
         """
@@ -209,13 +230,6 @@ class SolitaireDice(game.Game):
         # show roll
         player.tell('Your roll is:', ', '.join([str(x) for x in self.roll]))
 
-    def set_up(self):
-        """Set up the game. (None)"""
-        self.die = dice.Die()
-        self.totals = [0] * 13
-        self.discards = {}
-        self.mode = 'roll'
-
     def split_mode(self, player):
         """
         Choose two pairs of dice. (bool)
@@ -223,11 +237,13 @@ class SolitaireDice(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
+        # Get the requested split.
         if self.held_split:
             split = self.held_split
             self.held_split = ''
         else:
             split = player.ask('Choose two numbers to make a pair: ')
+        # Check for a valid split.
         split_check = self.two_numbers_re.match(split.strip())
         if split_check:
             split = [int(die) for die in split_check.groups()]
@@ -238,6 +254,7 @@ class SolitaireDice(game.Game):
             if not in_check:
                 self.message += '\nYou did not roll both those numbers.'
                 return False
+            # Handle a valid split
             self.totals[sum(split)] += 1
             self.roll.remove(split[0])
             self.roll.remove(split[1])
