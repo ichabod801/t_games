@@ -125,7 +125,7 @@ class Game(OtherCmd):
         arguments: The debugging information needed. (str)
         """
         self.flags |= 2
-        return super(Game, self).debug(arguments)
+        return super(Game, self).do_debug(arguments)
 
     def do_help(self, arguments):
         """

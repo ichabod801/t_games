@@ -42,6 +42,10 @@ and 10 score 60, 5 and 9 score 50, 6 and 8 score 40, and 7 scores 30.
 
 Any score under 0 is recorded as a loss, any non-negative score up to 500 is
 recorded as a draw, and any score over 500 is recorded as a win.
+
+Note that when you type in your discard, you can type in three numbers instead
+of one. The second and third numbers are assumed to be your split. This allows
+you to enter your discard and your split at the same time.
 """
 
 # Text used in displaying the scores.
@@ -75,15 +79,18 @@ class SolitaireDice(game.Game):
     name = 'Solitaire Dice'
     rules = RULES
     two_numbers_re = re.compile('([123456]).*?([123456])')
+    three_numbers_re = re.compile('([123456]).*?([123456]).*?([123456])')
 
     def discard_mode(self, player):
         """
         Discard a die. (bool)
 
+        !! error formatting
+
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        # Determine what can be discarded
+        # Determine what can be discarded.
         if len(self.discards) == 3:
             allowed_discards = [d for d in self.discards if d in self.roll]
             # Check for a free ride.
@@ -92,8 +99,18 @@ class SolitaireDice(game.Game):
                 allowed_discards = set(self.roll)
         else:
             allowed_discards = set(self.roll)
-        # Get the requested discard
-        discard = player.ask('Which number would you like to discard? ')
+        # Get the required/requested discard.
+        if len(allowed_discards) == 1:
+            discard = str(list(allowed_discards)[0])
+            player.tell('You must discard a {}.'.format(discard))
+        else:
+            discard = player.ask('Which number would you like to discard? ')
+        # Check for discard and split.
+        split_check = self.three_numbers_re.match(discard.strip())
+        if split_check:
+            discard = split_check.groups()[0]
+            self.held_split = ' '.join(split_check.groups[1:])
+        # Handle the discard.
         if discard.strip().isdigit():
             discard = int(discard)
             # Check for discard being rolled.
@@ -104,18 +121,19 @@ class SolitaireDice(game.Game):
             # Check for invalid discard.
             elif discard not in allowed_discards:
                 player.tell('{} is an invalid discard.'.format(discard))
-                player.tell('You must discard one of {}.'.format(str(allowed_rejects)[1:-1]))
+                player.tell('You must discard one of {}.'.format(str(allowed_discards)[1:-1]))
                 return False
             # Process valid discards.
             self.discards[discard] = self.discards.get(discard, 0) + 1
             self.roll.remove(discard)
             self.mode = 'split'
+        # Handle other commands.
         else:
             return self.handle_cmd(discard)
 
     def game_over(self):
         """Check for any number being discarded 8 times. (None)"""
-        if mode == 'roll' and max(self.discards.values()) == 8:
+        if self.mode == 'roll' and max(self.discards.values()) == 8:
             score = self.scores[self.human.name]
             if score < 0:
                 self.human.tell('You lost with {} points. :('.format(score))
@@ -126,6 +144,7 @@ class SolitaireDice(game.Game):
             else:
                 self.human.tell('You won with {} points! :)'.format(score))
                 self.win_loss_draw[0] = 1
+            return True
 
     def player_turn(self, player):
         """
@@ -135,9 +154,9 @@ class SolitaireDice(game.Game):
         player: The player whose turn it is. (Player)
         """
         player.tell()
-        self.show_status(player)
         if self.mode == 'roll':
             self.roll_mode(player)
+        self.show_status(player)
         if self.mode == 'discard':
             if not self.discard_mode(player):
                 return False
@@ -154,7 +173,6 @@ class SolitaireDice(game.Game):
         """
         self.roll = [self.die.roll() for die in range(5)]
         self.roll.sort()
-        player.tell('Your roll is:', ', '.join([str(x) for x in self.roll]))
         self.mode = 'discard'
 
     def show_status(self, player):
@@ -173,14 +191,23 @@ class SolitaireDice(game.Game):
                 player.tell(self.totals[line])
             else:
                 player.tell()
-        # show rejects
-        player.tell('\nREJECTS:')
+        # show discards
+        player.tell('\nDISCARDS:')
         player.tell('#  Count')
         player.tell('-- -----')
-        for value in self.rejects:
-            player.tell('{}: {}'.format(value, self.rejects[value]))
+        for value in self.discards:
+            player.tell('{}: {}'.format(value, self.discards[value]))
         # show score
         player.tell('\nYour current score is {}.'.format(self.scores[player.name]))
+        # show roll
+        player.tell('Your roll is:', ', '.join([str(x) for x in self.roll]))
+
+    def set_up(self):
+        """Set up the game. (None)"""
+        self.die = dice.Die()
+        self.totals = [0] * 13
+        self.discards = {}
+        self.mode = 'roll'
 
     def split_mode(self, player):
         """
@@ -189,7 +216,11 @@ class SolitaireDice(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        split = player.ask('Choose two numbers to make a pair: ')
+        if self.held_split:
+            split = self.held_split
+            self.held_split = ''
+        else:
+            split = player.ask('Choose two numbers to make a pair: ')
         split_check = self.two_numbers_re.match(split.strip())
         if split_check:
             split = [int(die) for die in split_check.groups()]
@@ -206,15 +237,9 @@ class SolitaireDice(game.Game):
             self.roll.remove(split[1])
             self.totals[sum(self.roll)] += 1
             self.update_score(player, split)
+            self.mode = 'roll'
         else:
             return self.handle_cmd(split)
-
-    def set_up(self):
-        """Set up the game. (None)"""
-        self.die = dice.Die()
-        self.totals = [0] * 13
-        self.discards = {}
-        self.mode = 'roll'
 
     def update_score(self, player, split):
         """
@@ -229,6 +254,16 @@ class SolitaireDice(game.Game):
             if 0 < total < 5:
                 score -= 200
             elif total:
-                score += (min(sum_count, 10) - 5) * value
+                score += (min(total, 10) - 5) * value
         self.scores[player.name] = score
 
+
+if __name__ == '__main__':
+    import tgames.player as player
+    try:
+        input = raw_input
+    except NameError:
+        pass
+    name = input('What is your name? ')
+    sodi = SolitaireDice(player.Player(name), '')
+    sodi.play()
