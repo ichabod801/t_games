@@ -298,7 +298,7 @@ class Wumpus(game.Game):
     """
 
     aka = ['Wumpus']
-    categories = ['Adventure Games']
+    categories = ['Other Games', 'Adventure Games']
     credits = CREDITS
     name = 'Hunt the Wumpus'
     rules = RULES

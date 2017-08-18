@@ -7,7 +7,7 @@
                                   -----------
 
                                      Humans
-                                  Gregory Yob
+                         Sid Sackson         Gregory Yob
 
                                 Game Programming
                                 ----------------

@@ -435,7 +435,7 @@ class Pig(game.Game):
     """
 
     name = 'Pig'
-    categories = ['Dice Games']
+    categories = ['Dice Games', 'Jeopardy Games']
     credits = CREDITS
     general_bots = {'value': PigBotValue, 'base-pace-race': PigBotBasePaceRace, 'bpr': PigBotBasePaceRace,
         'scoring-turns': PigBotScoringTurns, 't': PigBotScoringTurns, 'pace-race': PigBotPaceRace,
@@ -621,11 +621,6 @@ class Pig(game.Game):
                 # Warn about unknown options.
                 self.human.tell("I don't recognize the {} option.".format(word))
 
-    def set_up(self):
-        """Set up the game. (None)"""
-        self.die = dice.Die()
-        self.turn_score = 0
-
     def player_turn(self, player):
         """
         Have one player roll until terminal number or they choose to stop. (bool)
@@ -655,6 +650,11 @@ class Pig(game.Game):
             player.tell("{}'s score is now {}.\n".format(player.name, self.scores[player.name]))
             self.turn_score = 0
         return go
+
+    def set_up(self):
+        """Set up the game. (None)"""
+        self.die = dice.Die()
+        self.turn_score = 0
 
 
 if __name__ == '__main__':

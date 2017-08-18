@@ -149,7 +149,7 @@ class Game(OtherCmd):
         """
         self.flags |= 4
         self.force_end = 'loss'
-        self.win_loss_draw = [0, len(self.players) - 1, 0]
+        self.win_loss_draw = [0, max(len(self.players) - 1, 1), 0]
         return False
 
     def do_rpn(self, arguments):
@@ -216,7 +216,7 @@ class Game(OtherCmd):
             if results[1] == 0:
                 self.flags |= 128
                 self.force_end = 'win'
-                self.win_loss_draw = [len(self.players) - 1, 0, 0]
+                self.win_loss_draw = [max(len(self.players) - 1, 1), 0, 0]
                 self.human.tell('\nThe incantation is complete. You win at {}.\n'.format(self.name))
                 go = False
             else:
