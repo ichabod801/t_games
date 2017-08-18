@@ -53,6 +53,19 @@ games planned: 63
 games coded:    4
 games gipfed:   3
 
+== Gipf Planning ==
+
+Gambling would make for a good crossover category. connect four <-> roulette, craps <-> solitaire dice, slap jack <-> blackjack, slot machines <-> number guessing game.
+
 == 108 Games ==
 
-board/displace: checkers
+board/space: Tic-Tac-Toe (MNK), 3D tic-tac-toe, quantum tic-tac-toe
+board/displace: checkers, yamato
+board/theme: the landlord game
+dice/jeopardy: two die pig
+card/matching: memory
+gambling/cards: poker
+other/simulation: santa paravia
+
+games planned: 10
+games needed:  35

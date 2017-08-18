@@ -5,7 +5,7 @@ A game of Battleships.
 
 !! Make the coordiates an object, for easier handling. (should be in board.py)
 !! Have a 3D version named Yamato. 5x5x5, longest ship would be 4.
-    (already done by Solvenians, see Wikipedia)
+    (already done by Solvenians, see Wikipedia, but they use singletons)
 
 Constants:
 CREDITS: The design and programming credits. (str)
