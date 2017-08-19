@@ -9,6 +9,8 @@ Deck: A standard deck of cards. (object)
 TrackingCard: A card that tracks it's location. (Card)
 """
 
+import re
+
 class Card(object):
     """
     A standared playing card, with a suit and a rank. (object)
@@ -16,10 +18,11 @@ class Card(object):
     The color, rank, and suit attributes are length 1.
 
     Class Attributes:
-    suits: The suit characters. (str)
-    suit_names: The names of the suits. (list of str)
+    card_re: A regular expression to match a card.
     ranks: The rank characters. (str)
     rank_names: The names of the ranks. (list of str)
+    suits: The suit characters. (str)
+    suit_names: The names of the suits. (list of str)
 
     Attributes:
     color: The color of the card. ('R' or 'B')
@@ -44,6 +47,7 @@ class Card(object):
     ranks = 'XA23456789TJQK'
     rank_names = ['Joker', 'Ace', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten']
     rank_names += ['Jack', 'Queen', 'King']
+    card_re = re.compile('[{}][{}]'.format(ranks, suits), re.IGNORECASE)
 
     def __init__(self, rank, suit):
         """
@@ -139,6 +143,7 @@ class Deck(object):
     A standard deck of cards. (object)
 
     Attributes:
+    card_re: A regular expression to match a card.
     cards: The cards in the deck. (list of card)
     discards: The cards in the discard pile. (list of card)
 
@@ -160,6 +165,7 @@ class Deck(object):
         for rank in Card.ranks:
             for suit in Card.suit:
                 self.cards.append(Card(rank, suit))
+        self.card_re = Card.card_re
         # Add any requested jokers.
         for suit_index in range(jokers):
             self.cards.append(Card('X', Card.suits[suit_index % len(Card.suits)]))
@@ -225,6 +231,7 @@ class TrackingCard(Card):
         """
         super(TrackingCard, self).__init__(rank, suit)
         self.deck = deck
+        self.rank_num = self.ranks.index(self.rank)
         if self.deck is not None:
             self.deck_location = self.deck.cards
             self.game_location = self.deck.cards
@@ -266,6 +273,7 @@ class TrackingDeck(Deck):
 
     Attributes:
     card_map: A map for finding cards in the deck. (dict of str(card): card}
+    card_re: A regular expression to match a card.
     game: The game the deck is a part of. (Solitaire)
     in_play: The cards currently in play. (list of Card)
     last_order: The order of the deck at the last shuffle. (list of int)
@@ -297,7 +305,8 @@ class TrackingDeck(Deck):
         # Set the general attributes.
         self.game = game
         self.ranks = card_class.ranks
-        self.suits = card_calss.suits
+        self.suits = card_class.suits
+        self.card_re = card_class.card_re
         # Fill the deck.
         self.cards = []
         self.card_map = {}

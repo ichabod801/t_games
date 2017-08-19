@@ -6,6 +6,7 @@
 
 Redo the game I've played alot, and start playing them.
 	cards.py (add features from solitaire.base)
+		solitaire.py done up through build_check
 	solitaire (functions instead of sub-classing)
 How to write a game documentation.
 
