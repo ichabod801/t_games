@@ -85,6 +85,10 @@ class Card(object):
             return str(self) == other.upper()
         else:
             return NotImplemented
+
+    def __hash__(self):
+        """The hash is the card text. (hash)"""
+        return hash(self.rank + self.suit)
         
     def __lt__(self, other):
         """For sorting by rank. (bool)"""
@@ -268,6 +272,18 @@ class TrackingDeck(Deck):
     max_rank: The highest rank in the deck. (int)
     ranks: The ranks available to cards in the deck. (list of int)
     suits: The suits available to cards in the deck. (list of str)
+
+    Methods:
+    find: Find a card in the deck. (Card)
+    force: Remove a particular card from the deck. (Card)
+    gather: Gather cards back into the deck. (None)
+
+    Overridden Methods:
+    __init__
+    __repr__
+    __str__
+    deal
+    discard
     """
 
     def __init__(self, game, card_class = TrackingCard):
@@ -290,9 +306,127 @@ class TrackingDeck(Deck):
             for suit in self.suits:
                 card = card_class(rank, suit, self)
                 self.cards.append(card)
-                self.card_map[str(card)] = card
+                self.card_map[card.rank + card.suit] = card
         self.max_rank = self.ranks[-1]
         # set the default attributes
         self.in_play = []
         self.discards = []
         self.last_order = [card.number for card in self.cards]
+
+    def __repr__(self):
+        """Debugging text representation. (str)"""
+        if self.in_play:
+            card = self.in_play[0]
+        elif self.cards:
+            card = self.cards[0]
+        else:
+            card = self.discards[0]
+        return 'TrackingDeck({}, {})'.format(self.game, type(card))
+
+    def __str__(self):
+        """Human readable text representation. (str)"""
+        text = 'Deck of cards with {} cards, plus {} cards in play and {} cards discarded'
+        return text.format(len(self.cards), len(self.in_play), len(self.discards))
+    
+    def deal(self, game_location, face_up = True, card_ndx = -1):
+        """
+        Deal a card from the deck. (Card)
+        
+        Parameters:
+        game_location: The new location of card in the game. (list of Card)
+        face_up = Flag for dealing the card face up. (bool)
+        card_ndx = The location of the card to deal. (int)
+        """
+        # move the card
+        card = self.cards.pop(card_ndx)
+        self.in_play.append(card)
+        game_location.append(card)
+        # change the cards attributes
+        card.game_location = game_location
+        card.deck_location = self.in_play
+        card.face_up = face_up
+        # return the card
+        return card
+        
+    def discard(self, card):
+        """
+        Discard the game from play. (None)
+        
+        Parameters:
+        card: The card to discard. (Card)
+        """
+        # move the card in the deck
+        self.in_play.remove(card)
+        self.discards.append(card)
+        # remove the card from the game
+        card.game_location.remove(card)
+        # reset the card status
+        card.game_location = game.deck.discards
+        card.deck_location = self.discards
+    
+    def find(self, card_text):
+        """
+        Find a card in the deck. (Card)
+        
+        Paramters:
+        card_text: The string version of the card. (str)
+        """
+        return self.card_map[card_text]
+    
+    def force(self, card_text, game_location, face_up = True):
+        """
+        Remove a particular card from the deck. (Card)
+        
+        Parameters:
+        card_text: The string version of the card. (str)
+        game_location: The new location of card in the game. (list of Card)
+        face_up = Flag for dealing the card face up. (bool)
+        """
+        return self.deal(game_location, face_up = face_up, card_ndx = self.cards.index(card_text))
+    
+    def gather(self, in_play = True):
+        """
+        Gather cards back into the deck. (None)
+        
+        Parameters:
+        in_play: A flag for gathering in play cards as well as discards. (bool)
+        """
+        for card in self.discards + self.in_play:
+            card.deck_location.remove(card)
+            try:
+                card.game_location.remove(card)
+            except IndexError:
+                pass
+            self.cards.append(card)
+            card.deck_location = self.cards
+            card.game_location = self.cards
+            card.face_up = False
+
+    def shuffle(self):
+        """Shuffle the discards back into the deck. (None)"""
+        super(TrackingDeck, self).shuffle()
+        for card in self.cards:
+            card.deck_location = self.cards
+            card.game_location = self.cards
+        
+    def stack(self, order):
+        """
+        Put the stack in a specified order. (None)
+        
+        The order given must include all the Card.s currently in the deck.
+        
+        Parameters:
+        order: The order to put the deck into. (list of Card or str)
+        """
+        # check for valid order
+        if sorted(self.last_order) != sorted(order):
+            raise ValueError('Invalid deck order.')
+        # stack the deck
+        for card_ref in order:
+            card = self.card_map[card_ref]
+            self.cards.append(card)
+            self.card.deck_location = self.cards
+            self.card.game_location = self.cards
+        # clear the other piles
+        self.discards = []
+        self.in_play = []
