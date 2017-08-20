@@ -5,8 +5,6 @@
 == Short Term To Do List ==
 
 Redo the game I've played alot, and start playing them.
-	cards.py (add features from solitaire.base)
-		solitaire.py done up through build_check
 	solitaire (functions instead of sub-classing)
 How to write a game documentation.
 
@@ -60,13 +58,16 @@ Gambling would make for a good crossover category. connect four <-> roulette, cr
 
 == 108 Games ==
 
-board/space: Tic-Tac-Toe (MNK), 3D tic-tac-toe, quantum tic-tac-toe
 board/displace: checkers, yamato
+board/race: parchesi
+board/space: Tic-Tac-Toe (MNK), 3D tic-tac-toe, quantum tic-tac-toe, dominoes
 board/theme: the landlord game
 dice/jeopardy: two die pig
 card/matching: memory
 gambling/cards: poker
-other/simulation: santa paravia
+other/simulation: santa paravia, oregon trail
+other/rouge-like: rogue
+???/???: Star Trek text game
 
-games planned: 10
-games needed:  35
+games planned: 15
+games needed:  30

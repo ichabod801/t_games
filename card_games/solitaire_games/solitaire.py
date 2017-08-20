@@ -13,6 +13,12 @@ class Solitaire(game.Game):
     """
     A generalized solitaire game. (game.game)
 
+    As an example of how this generally works: the foo command is handled by
+    the do_foo method, which parse the command and uses the foo_check method
+    to confirm a valid move. The foo_check method checks basic rules common
+    to all games, and then uses the foo_checker attribute (a list of
+    functions) to check rules specific to the game.
+
     Attributes:
     cells: Holding spaces for manuevering cards. (list of Card)
     deck: The deck of cards for the game. (cards.TrackingDeck)
@@ -30,15 +36,23 @@ class Solitaire(game.Game):
     wrap_ranks: Flag for building by rank wrappng from king to ace. (bool)
 
     Methods:
+    build_check: Check for a valid build. (bool)
+    cell_text: Generate the text for the cards in cells. (str)
+    deal: Deal the initial set up for the game. (None)
     do_auto: Automatically play cards into the foundations. (bool)
     do_build: Build card(s) into stacks on the tableau. (bool)
+    do_free: Move a card to one of the free cells. (bool)
+    find_foundation: Find the foundation a card should sort to. (list of Card)
+    foundation_text: Generate the text for the foundation piles. (str)
+    free_check: Check that a card can be moved to a free cell. (bool)
+    game_over: Check for the foundations being full. (bool)
     set_solitaire: Special initialization for solitaire games. (None)
 
     Overridden Methods:
     __str__
     """
 
-    aliases = {'a': 'auto', 'otto': 'auto'}
+    aliases = {'a': 'auto', 'b': 'build', 'otto': 'auto'}
     categories = ['Test Games', 'Solitaire Games']
     name = 'Solitaire Base'
     
@@ -61,6 +75,48 @@ class Solitaire(game.Game):
         if self.stock or self.waste:
             lines.append(self.stock_text())
         return '\n\n'.join(lines) + '\n'
+    
+    def build_check(self, mover, target, moving_stack, show_error = True):
+        """
+        Check for a valid build. (bool)
+        
+        Parameters:
+        mover: The card to move. (Card)
+        target: The destination card. (Card)
+        moving_stack: The stack of cards that would move with mover. (Card)
+        show_error: A flag for displaying why the build failed. (bool)
+        """
+        error = ''
+        # check for valid destination
+        if target.game_location not in self.tableau or target != target.game_location[-1]:
+            error = 'The destination (the {}) is not on top of a tableau pile.'.format(target.name)
+        # check for moving foundation cards
+        elif mover.game_location in self.foundations:
+            error = 'Cards may not be moved from the foundation.'
+        # check for face down cards
+        elif not mover.face_up:
+            error = 'The {} is face down and cannot be moved.'.format(mover.name)
+        # check for a valid stack to move
+        elif not moving_stack:
+            error = '{} is not the base of a movable stack.'.format(mover)
+        else:
+            for checker in self.build_checkers:
+                error = checker(self, mover, target):
+                if error:
+                    break
+        # handle determination
+        if error and show_error:
+            self.human.tell(error)
+        return not error
+    
+    def cell_text(self):
+        """Generate the text for the cards in cells. (str)"""
+        return ' '.join([str(card) for card in self.cells])
+
+    def deal(self):
+        """Deal the initial set up for the game. (None)"""
+        for card_ndx in range(len(self.deck.cards)):
+            self.deck.deal(self.tableau[card_ndx % len(self.tableau)])
         
     def do_auto(self, max_rank):
         """
@@ -137,39 +193,70 @@ class Solitaire(game.Game):
             return False
         else:
             return True
-    
-    def build_check(self, mover, target, moving_stack, show_error = True):
+        
+    def do_free(self, card):
         """
-        Check for a valid build. (bool)
+        Move a card to one of the free cells. (bool)
         
         Parameters:
-        mover: The card to move. (Card)
-        target: The destination card. (Card)
-        moving_stack: The stack of cards that would move with mover. (Card)
-        show_error: A flag for displaying why the build failed. (bool)
+        arguments: The card to be freed. (str)
+        """
+        # parse the arguments
+        card_arguments = self.deck.card_re.findall(arguments.upper())
+        if len(card_arguments) != 1:
+            self.human.tell('Invalid arguments to build command: {!r}.'.format(arguments))
+            return True
+        # get the details on the card to be freed.
+        card = self.deck.find(card_arguments)
+        # free the card
+        if self.free_check(card):
+            self.transfer([card], self.cells)
+            return False
+        else:
+            return True
+            
+    def find_foundation(self, card):
+        """Determine which foundation a card should sort to. (list of Card)"""
+        return self.foundations[self.deck.suits.index(card.suit)]
+    
+    def foundation_text(self):
+        """Generate the text for the foundation piles. (str)"""
+        return ' '.join([str(pile[-1]) for pile in self.foundations if pile])
+    
+    def free_check(self, card, show_error = True):
+        """
+        Check that a card can be moved to a free cell. (bool)
+        
+        Parameters:
+        card: The card to be freed. (Card)
+        show_error: A flag for showing why the card can't be freed. (bool)
         """
         error = ''
-        # check for valid destination
-        if target.game_location not in self.tableau or target != target.game_location[-1]:
-            error = 'The destination (the {}) is not on top of a tableau pile.'.format(target.name)
-        # check for moving foundation cards
-        elif mover.game_location in self.foundations:
-            error = 'Cards may not be moved from the foundation.'
-        # check for face down cards
-        elif not mover.face_up:
-            error = 'The {} is face down and cannot be moved.'.format(mover.name)
-        # check for a valid stack to move
-        elif not moving_stack:
-            error = '{} is not the base of a movable stack.'.format(mover)
+        # check for open cells
+        if len(self.cells) == self.num_cells:
+            error = 'There are no free cells to place the {} into.'.format(card.name.lower())
+        # check for foundation card
+        elif card.game_location in self.foundations:
+            error = 'Cards cannot be freed from the foundation.'
+        # check for blocked card
+        elif card.game_location[-1] != card:
+            error = 'The {} is not available to be freed.'.format(card.name)
+        # check game specific rules
         else:
-            for checker in self.build_checkers:
-                error = checker(self, mover, target):
+            for checker in self.free_checkers:
+                error = checker(self, card):
                 if error:
                     break
         # handle determination
         if error and show_error:
-            self.human.tell(error)
+            print(error)
         return not error
+
+    def game_over(self):
+        """Check for the foundations being full. (bool)"""
+        check = sum([len(foundation) for foundation in self.foundations])
+        target = len(self.deck.cards) + len(self.deck.in_play) + len(self.deck.discards)
+        return check == target
 
     def set_solitaire(deck_specs = [], num_tableau = 7, num_foundations = 4, num_reserve = 0, 
         num_cells = 0, turn_count = 3, max_passes = -1, wrap_ranks = False):
@@ -208,5 +295,8 @@ class Solitaire(game.Game):
         self.moves = []
         self.undo_count = 0
         self.commands = []
+        # checkers
+        self.build_checkers = []
+        self.free_checkers = []
         # deal
         self.deal()
