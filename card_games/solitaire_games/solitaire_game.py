@@ -5,6 +5,13 @@ Base class for solitaire games.
 
 Classes:
 Solitaire: A generalized solitaire game. (game.game)
+
+Functions:
+build_alt_color: Build in alternating colors. (str)
+build_down: Build sequentially down in rank. (str)
+deal_free: Deal all the cards out onto the tableau. (None)
+sort_ace: Sort starting with the ace. (bool)
+sort_up: Sort sequentially up in rank. (bool)
 """
 
 import tgames.cards as cards
@@ -120,8 +127,9 @@ class Solitaire(game.Game):
         # check for a valid stack to move
         elif not moving_stack:
             error = '{} is not the base of a movable stack.'.format(mover)
+        # check game specific rules
         else:
-            error = build_pair(mover, target)
+            error = self.build_pair(mover, target)
         # handle determination
         if error and show_error:
             self.human.tell(error)
@@ -137,6 +145,7 @@ class Solitaire(game.Game):
         mover: The card to move. (Card)
         target: The destination card. (Card)
         """
+        error = ''
         for checker in self.build_checkers:
             error = checker(self, mover, target)
             if error:
@@ -164,7 +173,7 @@ class Solitaire(game.Game):
         elif len(cards) == 1:
             return self.guess(cards[0])
         elif len(cards) == 2:
-            return self.build(' '.join(cards))
+            return self.do_build(' '.join(cards))
         else:
             self.human.tell("I don't know what to do with that many cards.")
         
@@ -173,10 +182,11 @@ class Solitaire(game.Game):
         Automatically play cards into the foundations. (bool)
         
         Parameters:
-        agruments: The maximum rank to auto sort. (str)
+        max_rank: The maximum rank to auto sort. (str)
         """
         # convert max rank to int
-        if arguments == '1':
+        max_rank = max_rank.upper()
+        if max_rank.strip() == '':
             max_rank = len(self.deck.ranks) - 1
         elif max_rank in self.deck.ranks:
             max_rank = self.deck.ranks.index(max_rank)
@@ -191,7 +201,7 @@ class Solitaire(game.Game):
             for card in self.cells:
                 card_foundation = self.find_foundation(card)
                 if card.rank_num <= max_rank and self.sort_check(card, card_foundation, False):
-                    self.sort(card)
+                    self.do_sort(str(card))
                     sorts += 1
             # check tableau
             for pile in self.tableau:
@@ -199,14 +209,14 @@ class Solitaire(game.Game):
                     card = pile[-1]
                     card_foundation = self.find_foundation(card)
                     if card.rank_num <= max_rank and self.sort_check(card, card_foundation, False):
-                        self.sort(card)
+                        self.do_sort(str(card))
                         sorts += 1
             # check the waste
             if self.waste:
                 card = self.waste[-1]
                 card_foundation = self.find_foundation(card)
                 if card.rank_num <= max_rank and self.sort_check(card, card_foundation, False):
-                    self.sort(card)
+                    self.do_sort(str(card))
                     sorts += 1
             # check the reserve
             for pile in self.reserve:
@@ -214,7 +224,7 @@ class Solitaire(game.Game):
                     card = pile[-1]
                     card_foundation = self.find_foundation(card)
                     if card.rank_num <= max_rank and self.sort_check(card, card_foundation, False):
-                        self.sort(card)
+                        self.do_sort(str(card))
                         sorts += 1
             if not sorts:
                 break
@@ -273,6 +283,9 @@ class Solitaire(game.Game):
         card: The string identifying the card. (str)
         """
         # get the card and the cards to be moved
+        if not self.deck.card_re.match(card):
+            self.human.tell('Invalid card passed to lane command: {!r}.'.format(card))
+            return True
         card = self.deck.find(card)
         moving_stack = self.super_stack(card)
         # check for validity and move
@@ -290,6 +303,9 @@ class Solitaire(game.Game):
         card: The card being moved. (str)
         """
         # get the card
+        if not self.deck.card_re.match(card):
+            self.human.tell('Invalid card passed to sort command: {!r}.'.format(card))
+            return True
         card = self.deck.find(card)
         foundation = self.find_foundation(card)
         if self.sort_check(card, foundation):
@@ -393,7 +409,13 @@ class Solitaire(game.Game):
         """Check for the foundations being full. (bool)"""
         check = sum([len(foundation) for foundation in self.foundations])
         target = len(self.deck.cards) + len(self.deck.in_play) + len(self.deck.discards)
-        return check == target
+        if check == target:
+            message = 'Congratulations! You won in {} moves (with {} undos).'
+            self.human.tell(message.format(len(self.moves) + 2 * self.undo_count, self.undo_count))
+            self.win_loss_draw[0] = 1
+            return True
+        else:
+            return False
     
     def guess(self, card):
         """
@@ -469,7 +491,8 @@ class Solitaire(game.Game):
         """
         player.tell(self)
         move = player.ask('What is your move? ')
-        return self.handle_cmd(move)
+        keep_playing = self.handle_cmd(move)
+        self.scores[self.human.name] = len(self.moves) + 2 * self.undo_count
     
     def reserve_text(self):
         """Generate text for the reserve piles. (str)"""
@@ -530,7 +553,7 @@ class Solitaire(game.Game):
     def set_up(self):
         """Set up the game. (None)"""
         self.set_solitaire()
-        self.dealers = [free_deal]
+        self.dealers = [deal_free]
         self.deal()
     
     def sort_check(self, card, foundation, show_error = True):
@@ -661,7 +684,38 @@ class Solitaire(game.Game):
         for card in move_stack:
             card.game_location = new_location
 
-def free_deal(game):
+    
+def build_alt_color(self, mover, target):
+    """
+    Build in alternating colors. (str)
+    
+    Parameters:
+    game: The game buing played. (Solitaire)
+    mover: The card to move. (TrackingCard)
+    target: The destination card. (TrackingCard)
+    """
+    error = ''
+    if mover.color == target.color:
+        error = 'The {} is not the opposite color of the {}'
+        error = error.format(mover.name, target.name)
+    return error
+    
+def build_down(self, mover, target):
+    """
+    Build sequentially down in rank. (str)
+    
+    Parameters:
+    game: The game buing played. (Solitaire)
+    mover: The card to move. (TrackingCard)
+    target: The destination card. (TrackingCard)
+    """
+    error = ''
+    if not mover.below(target):
+        error = 'The {} is not one rank lower than the {}'
+        error = error.format(mover.name, target.name)
+    return error
+
+def deal_free(game):
     """
     Deal all the cards out onto the tableau. (None)
 
@@ -670,6 +724,38 @@ def free_deal(game):
     """
     for card_ndx in range(len(game.deck.cards)):
         game.deck.deal(game.tableau[card_ndx % len(game.tableau)])
+
+def sort_ace(game, card, foundation, show_error = True):
+    """
+    Sort starting with the ace. (bool)
+    
+    Parameters:
+    game: The game being played. (Solitiaire)
+    card: The card to be sorted. (TrackingCard)
+    foundation: The target foundation. (list of TrackingCard)
+    show_error: A flag for showing why the card can't be sorted. (bool)
+    """
+    error = ''
+    # check for match to foundation pile
+    if not foundation and card.rank_num != 1:
+        error = 'Only aces can be sorted to empty foundations.'
+    return error
+
+def sort_up(game, card, foundation, show_error = True):
+    """
+    Sort sequentially up in rank. (bool)
+    
+    Parameters:
+    game: The game being played. (Solitiaire)
+    card: The card to be sorted. (TrackingCard)
+    foundation: The target foundation. (list of TrackingCard)
+    show_error: A flag for showing why the card can't be sorted. (bool)
+    """
+    error = ''
+    # check for match to foundation pile
+    if foundation and not card.above(foundation[-1]):
+        error = '{} is not one rank higher than {}.'.format(card, foundation[-1])
+    return error
 
 
 if __name__ == '__main__':
