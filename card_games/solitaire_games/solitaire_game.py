@@ -30,6 +30,7 @@ class Solitaire(game.Game):
     moves: The moves taken in the game. (list of list)
     num_cells: The number of cells in the game. (int)
     reserve: Piles where building is not permitted. (list of list of Card)
+    sort_checkers: Functions for validating foundation moves. (list of callable)
     stock: A face down pile of cards for later play. (list of Card)
     stock_passes: The number of times the waste has been gone through. (int)
     tableau: The main playing area. (list of list of card.TrackingCard)
@@ -46,6 +47,9 @@ class Solitaire(game.Game):
     do_build: Build card(s) into stacks on the tableau. (bool)
     do_free: Move a card to one of the free cells. (bool)
     do_lane: Move a card into an empty lane. (None)
+    do_sort: Move a card to the foundation. (bool)
+    do_turn: Turn cards from the stock into the waste. (bool)
+    do_undo: Undo one or more previous moves. (bool)
     find_foundation: Find the foundation a card should sort to. (list of Card)
     foundation_text: Generate the text for the foundation piles. (str)
     free_check: Check that a card can be moved to a free cell. (bool)
@@ -54,6 +58,13 @@ class Solitaire(game.Game):
     lane_check: Check for a valid move into a lane. (bool)
     reserve_text: Generate text for the reserve piles. (str)
     set_solitaire: Special initialization for solitaire games. (None)
+    set_up: Set up the game. (None)
+    sort_check: Check for a valid sort. (bool)
+    stack_check: Check for a valid stack to move. (bool)
+    stock_text: Generate text for the stock and waste. (str)
+    super_stack: Find and validate any stack being moved. (list of Card)
+    tableau_text: Generate text for the tableau piles. (str)
+    transfer: Move a stack of cards from one game location to another. (None)
 
     Overridden Methods:
     __str__
@@ -242,7 +253,7 @@ class Solitaire(game.Game):
         
     def do_lane(self, card):
         """
-        Move a card into an empty lane. (None)
+        Move a card into an empty lane. (bool)
         
         Parameters:
         card: The string identifying the card. (str)
@@ -253,7 +264,79 @@ class Solitaire(game.Game):
         # check for validity and move
         if self.lane_check(card, moving_stack):
             self.transfer(moving_stack, self.tableau[self.tableau.index([])])
+            return False
+        else:
             return True
+    
+    def do_sort(self, card):
+        """
+        Move a card to the foundation. (bool)
+        
+        Parameters:
+        card: The card being moved. (str)
+        """
+        # get the card
+        card = self.deck.find(card)
+        foundation = self.find_foundation(card)
+        if self.sort_check(card, foundation):
+            self.transfer([card], foundation)
+            return False
+        else:
+            return True
+    
+    def do_turn(self, arguments):
+        """
+        Turn cards from the stock into the waste. (bool)
+
+        Parameters:
+        arguments: The (ignored) arguments to the turn command. (str)
+        """
+        if self.stock_passes != self.max_passes:
+            # put the waste back in the stock if necessary
+            if not self.stock:
+                self.transfer(self.waste[:], self.stock, face_up = False)
+                self.stock.reverse()
+            # flip over cards turn count cards
+            for card_ndx in range(self.turn_count):
+                self.transfer(self.stock[-1:], self.waste, undo_ndx = card_ndx)
+                # stop when the stock runs out
+                if not self.stock:
+                    break
+            if not self.stock:
+                self.stock_passes += 1
+            return False
+        else:
+            self.human.tell('You may not make any more passes through the stock.')
+            return True
+    
+    def do_undo(self, num_moves):
+        """
+        Undo one or more previous moves. (bool)
+        
+        Parameters:
+        num_moves: The number of moves to undo. (str)
+        """
+        num_moves = int(num_moves)
+        moves_undone = False
+        for move_ndx in range(num_moves):
+            # check for there being a move to undo.
+            if self.moves:
+                # update move tracking
+                move_stack, old_location, new_location, undo_ndx, flip = self.moves.pop()
+                self.undo_count += 1
+                moves_undone = True
+                # undo the move
+                if flip:
+                    old_location[-1].face_up = False
+                self.transfer(move_stack, old_location, track = False)
+                if undo_ndx:
+                    self.undo_count -= 1
+                    self.undo(1)
+            # no move to undo
+            else:
+                self.human.tell('There are no moves to undo.')
+                break
+        return not moves_undone
             
     def find_foundation(self, card):
         """Determine which foundation a card should sort to. (list of Card)"""
@@ -394,7 +477,7 @@ class Solitaire(game.Game):
         self.turn_count = turn_count
         self.max_passes = max_passes
         # initialize derived attributes
-        self.set_deck(deck_specs)
+        self.set_deck(self, *deck_specs)
         self.tableau = [[] for ndx in range(num_tableau)]
         self.foundations = [[] for ndx in range(num_foundations)]
         self.reserve = [[] for ndx in range(num_reserve)]
@@ -412,6 +495,7 @@ class Solitaire(game.Game):
         self.build_checkers = []
         self.free_checkers = []
         self.lane_checkers = []
+        self.sort_checkers = []
         # dealers
         self.dealers = []
 
@@ -420,3 +504,152 @@ class Solitaire(game.Game):
         self.set_solitaire()
         self.dealers = [free_deal]
         self.deal()
+    
+    def sort_check(self, card, foundation, show_error = True):
+        """
+        Check for a valid sort. (bool)
+        
+        Parameters:
+        card: The card to be sorted. (Card)
+        foundation: The target foundation. (list of Card)
+        show_error: A flag for showing why the card can't be sorted. (bool)
+        """
+        error = ''
+        # check for moving foundation cards
+        if card.game_location in self.foundations:
+            error = 'The {} is already sorted.'.format(card.name)
+        # check for face down cards
+        elif not card.face_up:
+            error = 'The {} is face down and cannot be sorted.'.format(card.name)
+        # check for blocked cards
+        elif (card.game_location in self.tableau + self.reserve + [self.waste] 
+            and card.game_location[-1] != card):
+            error = 'The {} is blocked and cannot be sorted.'.format(card.name)
+        # check game specific rules
+        else:
+            for checker in self.sort_checkers:
+                error = checker(self, card):
+                if error:
+                    break
+        # handle determination
+        if error and show_error:
+            print(error)
+        return not error
+    
+    def stack_check(self, stack):
+        """
+        Check for a valid stack to move. (bool)
+        
+        Parameters:
+        stack: The stack of cards to check. (list of Card)
+        """
+        valid = True
+        if len(stack) > 1:
+            for card_ndx, card in enumerate(stack[:-1]):
+                next_card = stack[card_ndx + 1]
+                if self.build_pair(next_card, card): # note that build_pair returns an error str if invalid
+                    valid = False
+                    break
+        return valid
+    
+    def stock_text(self):
+        """Generate text for the stock and waste. (str)"""
+        # stock
+        if self.stock:
+            stock_text = '??'
+        else:
+            stock_text = '  '
+        # waste
+        for card in self.waste[-self.turn_count:]:
+            stock_text += ' ' + str(card)
+        stock_text += ' ' * (3 * self.turn_count + 2 - len(stock_text))
+        return stock_text
+    
+    def super_stack(self, card):
+        """
+        Find and validate any stack being moved. (list of Card)
+        
+        If the stack is invalid, an empty list is returned.
+        
+        Parameters:
+        card: The card at the base of the stack to be moved.
+        """
+        stack = []
+        if card.game_location is self.cells:
+            # a card in a cell is just the card
+            stack = [card]
+        elif card.game_location in self.reserve + [self.waste]:
+            # a card in the reserve or waste is a just the card, if it's on top
+            if card == card.game_location[-1]:
+                stack = [card]
+            else:
+                stack = []
+        else:
+            # otherwise (it's in the tableau) check the full stack
+            stack = card.game_location[card.game_location.index(card):]
+            if not self.stack_check(stack):
+                stack = []
+        return stack
+    
+    def tableau_text(self):
+        """Generate text for the tableau piles. (str)"""
+        max_tableau = max([len(pile) for pile in self.tableau])
+        tableau_lines = [['  ' for pile in self.tableau] for ndx in range(max_tableau)]
+        for pile_ndx, pile in enumerate(self.tableau):
+            for card_ndx, card in enumerate(pile):
+                tableau_lines[card_ndx][pile_ndx] = str(card)
+        return '\n'.join([' '.join(line) for line in tableau_lines])
+    
+    def transfer(self, move_stack, new_location, track = True, face_up = True, undo_ndx = 0):
+        """
+        Move a stack of cards from one game location to another. (None)
+        
+        This handles the card's knowledge of where it is and tracking game moves.
+        
+        Parameters:
+        move_stack: The stack of cards to move. (list of Card)
+        new_location: The new game location for the cards. (list of Card)
+        track: A flag for tracking the move. (bool)
+        face_up: A flag for the cards being face up. (bool)
+        """
+        # record the move
+        old_location = move_stack[0].game_location
+        if track:
+            self.moves.append([move_stack[:], old_location, new_location, undo_ndx])
+        # move the cards
+        for card in move_stack:
+            old_location.remove(card)
+            card.face_up = face_up
+        new_location.extend(move_stack)
+        # turn over any revealed cards
+        if old_location and old_location is not self.stock and not old_location[-1].face_up:
+            old_location[-1].face_up = True
+            # track turning over revealed cards
+            if track:
+                self.moves[-1].append(True)
+        elif track:
+            self.moves[-1].append(False)
+        # reset location tracking
+        for card in move_stack:
+            card.game_location = new_location
+
+def free_deal(game):
+    """
+    Deal all the cards out onto the tableau. (None)
+
+    Parameters:
+    game: The game to deal the cards for. (Solitaire)
+    """
+    for card_ndx in range(len(game.deck)):
+        game.deck.deal(game.tableau[card_ndx % len(game.tableau)])
+
+
+if __name__ == '__main__':
+    import tgames.player as player
+    try:
+        input = raw_input
+    except NameError:
+        pass
+    name = input('What is your name? ')
+    pig = Pig(player.Player(name), '')
+    pig.play()
