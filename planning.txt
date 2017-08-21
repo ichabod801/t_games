@@ -58,16 +58,23 @@ Gambling would make for a good crossover category. connect four <-> roulette, cr
 
 == 108 Games ==
 
-board/displace: checkers, yamato
-board/race: parchesi
-board/space: Tic-Tac-Toe (MNK), 3D tic-tac-toe, quantum tic-tac-toe, dominoes
+board/displace: checkers, yamato, conway's life
+board/race: parchesi, maze generator
+board/space: Tic-Tac-Toe (MNK), 3D tic-tac-toe, quantum tic-tac-toe, niner, reversi
 board/theme: the landlord game
+board/war: Star Trek text game, swords (melee), sorcery (wizard)
 dice/jeopardy: two die pig
 card/matching: memory
-gambling/cards: poker
-other/simulation: santa paravia, oregon trail
+gambling/cards: poker, acey ducey
+gambling/other: horse races.
+other/simulation: santa paravia, oregon trail, basket ball (robot wars?), lunar/lem/rocket (101)
 other/rouge-like: rogue
-???/???: Star Trek text game
+other/word: 20 questions
+puzzles: Sliding puzzle, mastermind, math quiz, mine sweeper
+tile games: Domino's, maj hong with characters.
+unknown: three musketeer's (gamut of games), fencing (101 basic games), darts (101), nim (101), boggle, mille bornes
 
-games planned: 15
-games needed:  30
+games planned: 36
+games needed:   9
+
+unformed ideas: rubik's sudoku? (2d, 9x9 rubik's sytle puzzle). OS hacking. Wizardry? Strago?

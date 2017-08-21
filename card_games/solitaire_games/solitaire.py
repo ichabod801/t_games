@@ -20,9 +20,12 @@ class Solitaire(game.Game):
     functions) to check rules specific to the game.
 
     Attributes:
+    build_checkers: Functions for determining valid builds. (list of callable)
     cells: Holding spaces for manuevering cards. (list of Card)
     deck: The deck of cards for the game. (cards.TrackingDeck)
+    dealers: The deal functions for setting up the tableau. (list of callable)
     foundations: The piles to fill to win the game. (list of list of Card)
+    free_checkers: Functions for determining valid cell moves. (list of callable)
     max_passes: The number of allowed passes through the stock. (int)
     moves: The moves taken in the game. (list of list)
     num_cells: The number of cells in the game. (int)
@@ -42,17 +45,23 @@ class Solitaire(game.Game):
     do_auto: Automatically play cards into the foundations. (bool)
     do_build: Build card(s) into stacks on the tableau. (bool)
     do_free: Move a card to one of the free cells. (bool)
+    do_lane: Move a card into an empty lane. (None)
     find_foundation: Find the foundation a card should sort to. (list of Card)
     foundation_text: Generate the text for the foundation piles. (str)
     free_check: Check that a card can be moved to a free cell. (bool)
     game_over: Check for the foundations being full. (bool)
+    guess: Guess what move to make for a particular card. (None)
+    lane_check: Check for a valid move into a lane. (bool)
+    reserve_text: Generate text for the reserve piles. (str)
     set_solitaire: Special initialization for solitaire games. (None)
 
     Overridden Methods:
     __str__
+    default
+    set_up
     """
 
-    aliases = {'a': 'auto', 'b': 'build', 'otto': 'auto'}
+    aliases = {'a': 'auto', 'b': 'build', 'f': 'free', 'l': 'lane', 'otto': 'auto'}
     categories = ['Test Games', 'Solitaire Games']
     name = 'Solitaire Base'
     
@@ -115,8 +124,24 @@ class Solitaire(game.Game):
 
     def deal(self):
         """Deal the initial set up for the game. (None)"""
-        for card_ndx in range(len(self.deck.cards)):
-            self.deck.deal(self.tableau[card_ndx % len(self.tableau)])
+        for dealer in self.dealers:
+            dealer(self)
+
+    def default(self, line):
+        """
+        Handle unrecognized commands. (bool)
+
+        line: The user's input. (str)
+        """
+        cards = self.deck.card_re.findall(line)
+        if not cards:
+            self.human.tell('I do not recognize that command.')
+        elif len(cards) == 1:
+            return self.guess(cards[0])
+        elif len(cards) == 2:
+            return self.build(' '.join(cards))
+        else:
+            self.human.tell("I don't know what to do with that many cards.")
         
     def do_auto(self, max_rank):
         """
@@ -214,6 +239,21 @@ class Solitaire(game.Game):
             return False
         else:
             return True
+        
+    def do_lane(self, card):
+        """
+        Move a card into an empty lane. (None)
+        
+        Parameters:
+        card: The string identifying the card. (str)
+        """
+        # get the card and the cards to be moved
+        card = self.deck.find(card)
+        moving_stack = self.super_stack(card)
+        # check for validity and move
+        if self.lane_check(card, moving_stack):
+            self.transfer(moving_stack, self.tableau[self.tableau.index([])])
+            return True
             
     def find_foundation(self, card):
         """Determine which foundation a card should sort to. (list of Card)"""
@@ -257,6 +297,79 @@ class Solitaire(game.Game):
         check = sum([len(foundation) for foundation in self.foundations])
         target = len(self.deck.cards) + len(self.deck.in_play) + len(self.deck.discards)
         return check == target
+    
+    def guess(self, card):
+        """
+        Guess what move to make for a particular card. (None)
+        
+        Parameters:
+        card: The card to move. (str)
+        """
+        # get the card.
+        card = self.deck.find(card)
+        # check sorting
+        if self.foundations and self.sort_check(card, self.find_foundation(card), False):
+            self.do_sort(str(card))
+        else:
+            # check building
+            moving_stack = self.super_stack(card)
+            for pile in self.tableau:
+                if pile and self.build_check(card, pile[-1], moving_stack, False):
+                    self.do_build(str(card), str(pile[-1]))
+                    break
+            else:
+                # check freeing
+                if card.game_location is not self.cells and self.free_check(card, False):
+                    self.free(str(card))
+                # check laning
+                elif self.lane_check(card, moving_stack, False):
+                    self.lane(str(card))
+                else:
+                    # error out if nothing else works
+                    print('There are no valid moves for the {}.'.format(card.name))
+    
+    def lane_check(self, card, moving_stack, show_error = True):
+        """
+        Check for a valid move into a lane. (bool)
+        
+        Parameters:
+        card: The card to move into the lane. (Card)
+        moving_stack: The cards on top of the card moving. (list of Card)
+        show_error: A flag for showing why the card can't be moved. (bool)
+        """
+        error = ''
+        # check for sorted cards
+        if card.game_location in self.foundations:
+            error = 'The {} is sorted and cannot be moved.'.format(card.name)
+        # check for face down cards
+        elif not card.face_up:
+            error = 'The {} is face down and cannot be moved.'.format(card.name)
+        # check for open lanes
+        if not self.tableau.count([]):
+            error = 'There are no open lanes.'
+        # check for a valid stack
+        elif not moving_stack:
+            error = 'The {} is not the base of a valid stack to move.'.format(card.name)
+        # check game specific rules
+        else:
+            for checker in self.lane_checkers:
+                error = checker(self, card):
+                if error:
+                    break
+        # handle determination
+        if error and show_error:
+            self.human.tell(error)
+        return not error
+    
+    def reserve_text(self):
+        """Generate text for the reserve piles. (str)"""
+        reserve_text = []
+        for pile in self.reserve:
+            if pile:
+                reserve_text.append(str(pile[-1]))
+            else:
+                reserve_text.append('  ')
+        return ' '.join(reserve_text)
 
     def set_solitaire(deck_specs = [], num_tableau = 7, num_foundations = 4, num_reserve = 0, 
         num_cells = 0, turn_count = 3, max_passes = -1, wrap_ranks = False):
@@ -298,5 +411,12 @@ class Solitaire(game.Game):
         # checkers
         self.build_checkers = []
         self.free_checkers = []
-        # deal
+        self.lane_checkers = []
+        # dealers
+        self.dealers = []
+
+    def set_up(self):
+        """Set up the game. (None)"""
+        self.set_solitaire()
+        self.dealers = [free_deal]
         self.deal()
