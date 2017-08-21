@@ -7,9 +7,12 @@ Classes:
 Solitaire: A generalized solitaire game. (game.game)
 
 Functions:
-build_alt_color: Build in alternating colors. (str)
-build_down: Build sequentially down in rank. (str)
+pair_alt_color: Build in alternating colors. (str)
+pair_down: Build sequentially down in rank. (str)
+build_one: Build moving one card at a time. (bool)
 deal_free: Deal all the cards out onto the tableau. (None)
+lane_one: Check moving one card at a time into a lane. (bool)
+move_one_size: Calculate maximum stack under "move one" rules. (int)
 sort_ace: Sort starting with the ace. (bool)
 sort_up: Sort sequentially up in rank. (bool)
 """
@@ -127,9 +130,14 @@ class Solitaire(game.Game):
         # check for a valid stack to move
         elif not moving_stack:
             error = '{} is not the base of a movable stack.'.format(mover)
-        # check game specific rules
+        # check valid stack
         else:
             error = self.build_pair(mover, target)
+            if not error:
+                for checker in self.build_checkers:
+                    error = checker(game, mover, target, moving_stack)
+                    if error:
+                        break
         # handle determination
         if error and show_error:
             self.human.tell(error)
@@ -146,7 +154,7 @@ class Solitaire(game.Game):
         target: The destination card. (Card)
         """
         error = ''
-        for checker in self.build_checkers:
+        for checker in self.pair_checkers:
             error = checker(self, mover, target)
             if error:
                 break
@@ -546,6 +554,7 @@ class Solitaire(game.Game):
         self.build_checkers = []
         self.free_checkers = []
         self.lane_checkers = []
+        self.pair_checkers = []
         self.sort_checkers = []
         # dealers
         self.dealers = []
@@ -685,7 +694,65 @@ class Solitaire(game.Game):
             card.game_location = new_location
 
     
-def build_alt_color(self, mover, target):
+def build_one(game, mover, target, moving_stack, show_error = True):
+    """
+    Build moving one card at a time. (bool)
+    
+    Parameters:
+    game: The game being played. (Solitaire)
+    mover: The card to move. (TrackingCard)
+    target: The destination card. (TrackingCard)
+    moving_stack: The stack of cards that would move. (list of TrackingCard)
+    show_error: A flag for displaying why the build failed. (bool)
+    """
+    error = ''
+    # check for enough space to move the cards
+    if len(moving_stack) > max_super(game):
+        error = 'You may only move {} cards at this time.'.format(max_super(game))
+    return error
+
+def deal_free(game):
+    """
+    Deal all the cards out onto the tableau. (None)
+
+    Parameters:
+    game: The game to deal the cards for. (Solitaire)
+    """
+    for card_ndx in range(len(game.deck.cards)):
+        game.deck.deal(game.tableau[card_ndx % len(game.tableau)])
+        
+def lane_one(game, card, moving_stack, show_error = True):
+    """
+    Check moving one card at a time into a lane. (bool)
+    
+    Parameters:
+    game: The game being played. (Solitaire)
+    card: The card to move into the lane. (TrackingCard)
+    moving_stack: The cards on top of the card moving. (list of TrackingCard)
+    show_error: A flag for showing why the card can't be moved. (bool)
+    """
+    error = ''
+    # check for open space to move the stack
+    max_lane = max_super(game, to_lane = True)
+    if len(moving_stack) > max_lane:
+        error = 'You cannot move that {} cards to a lane at the moment.'.format(max_lane)
+    return error
+    
+def move_one_size(game, to_lane = False):
+    """
+    Calculate maximum stack under "move one" rules. (int)
+
+    In other words, how big a stack could you move by moving one card at a time.
+    
+    Parameters:
+    game: The game being played. (Solitaire)
+    to_lane: A flag for the moving going to an open lane. (bool)
+    """
+    free = game.num_cells - len(game.cells)
+    lanes = game.tableau.count([]) - to_lane
+    return (1 + free) * 2 ** lanes
+    
+def pair_alt_color(self, mover, target):
     """
     Build in alternating colors. (str)
     
@@ -700,12 +767,12 @@ def build_alt_color(self, mover, target):
         error = error.format(mover.name, target.name)
     return error
     
-def build_down(self, mover, target):
+def pair_down(self, mover, target):
     """
     Build sequentially down in rank. (str)
     
     Parameters:
-    game: The game buing played. (Solitaire)
+    game: The game being played. (Solitaire)
     mover: The card to move. (TrackingCard)
     target: The destination card. (TrackingCard)
     """
@@ -714,16 +781,6 @@ def build_down(self, mover, target):
         error = 'The {} is not one rank lower than the {}'
         error = error.format(mover.name, target.name)
     return error
-
-def deal_free(game):
-    """
-    Deal all the cards out onto the tableau. (None)
-
-    Parameters:
-    game: The game to deal the cards for. (Solitaire)
-    """
-    for card_ndx in range(len(game.deck.cards)):
-        game.deck.deal(game.tableau[card_ndx % len(game.tableau)])
 
 def sort_ace(game, card, foundation, show_error = True):
     """
