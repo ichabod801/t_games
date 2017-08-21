@@ -7,6 +7,7 @@ Classes:
 Solitaire: A generalized solitaire game. (game.game)
 """
 
+import tgames.cards as cards
 import tgames.game as game
 
 class Solitaire(game.Game):
@@ -114,20 +115,33 @@ class Solitaire(game.Game):
         elif mover.game_location in self.foundations:
             error = 'Cards may not be moved from the foundation.'
         # check for face down cards
-        elif not mover.face_up:
+        elif not mover.up:
             error = 'The {} is face down and cannot be moved.'.format(mover.name)
         # check for a valid stack to move
         elif not moving_stack:
             error = '{} is not the base of a movable stack.'.format(mover)
         else:
-            for checker in self.build_checkers:
-                error = checker(self, mover, target):
-                if error:
-                    break
+            error = build_pair(mover, target)
         # handle determination
         if error and show_error:
             self.human.tell(error)
         return not error
+        
+    def build_pair(self, mover, target):
+        """
+        Check for a valid pair of building cards. (str)
+        
+        Returns any error resulting from the build.
+        
+        Parameters:
+        mover: The card to move. (Card)
+        target: The destination card. (Card)
+        """
+        for checker in self.build_checkers:
+            error = checker(self, mover, target)
+            if error:
+                break
+        return error
     
     def cell_text(self):
         """Generate the text for the cards in cells. (str)"""
@@ -327,7 +341,7 @@ class Solitaire(game.Game):
                 moves_undone = True
                 # undo the move
                 if flip:
-                    old_location[-1].face_up = False
+                    old_location[-1].up = False
                 self.transfer(move_stack, old_location, track = False)
                 if undo_ndx:
                     self.undo_count -= 1
@@ -367,7 +381,7 @@ class Solitaire(game.Game):
         # check game specific rules
         else:
             for checker in self.free_checkers:
-                error = checker(self, card):
+                error = checker(self, card)
                 if error:
                     break
         # handle determination
@@ -425,7 +439,7 @@ class Solitaire(game.Game):
         if card.game_location in self.foundations:
             error = 'The {} is sorted and cannot be moved.'.format(card.name)
         # check for face down cards
-        elif not card.face_up:
+        elif not card.up:
             error = 'The {} is face down and cannot be moved.'.format(card.name)
         # check for open lanes
         if not self.tableau.count([]):
@@ -436,13 +450,26 @@ class Solitaire(game.Game):
         # check game specific rules
         else:
             for checker in self.lane_checkers:
-                error = checker(self, card):
+                error = checker(self, card)
                 if error:
                     break
         # handle determination
         if error and show_error:
             self.human.tell(error)
         return not error
+
+    def player_turn(self, player):
+        """
+        Handle a player's turn or other player actions. (bool)
+
+        The return value is a flag for the player's turn being done.
+
+        Parameters:
+        player: The player whose turn it is. (Player)
+        """
+        player.tell(self)
+        move = player.ask('What is your move? ')
+        return self.handle_cmd(move)
     
     def reserve_text(self):
         """Generate text for the reserve piles. (str)"""
@@ -454,7 +481,7 @@ class Solitaire(game.Game):
                 reserve_text.append('  ')
         return ' '.join(reserve_text)
 
-    def set_solitaire(deck_specs = [], num_tableau = 7, num_foundations = 4, num_reserve = 0, 
+    def set_solitaire(self, deck_specs = [], num_tableau = 7, num_foundations = 4, num_reserve = 0, 
         num_cells = 0, turn_count = 3, max_passes = -1, wrap_ranks = False):
         """
         Special initialization for solitaire games. (None)
@@ -477,7 +504,8 @@ class Solitaire(game.Game):
         self.turn_count = turn_count
         self.max_passes = max_passes
         # initialize derived attributes
-        self.set_deck(self, *deck_specs)
+        self.deck = cards.TrackingDeck(self, *deck_specs)
+        self.deck.shuffle()
         self.tableau = [[] for ndx in range(num_tableau)]
         self.foundations = [[] for ndx in range(num_foundations)]
         self.reserve = [[] for ndx in range(num_reserve)]
@@ -519,7 +547,7 @@ class Solitaire(game.Game):
         if card.game_location in self.foundations:
             error = 'The {} is already sorted.'.format(card.name)
         # check for face down cards
-        elif not card.face_up:
+        elif not card.up:
             error = 'The {} is face down and cannot be sorted.'.format(card.name)
         # check for blocked cards
         elif (card.game_location in self.tableau + self.reserve + [self.waste] 
@@ -528,7 +556,7 @@ class Solitaire(game.Game):
         # check game specific rules
         else:
             for checker in self.sort_checkers:
-                error = checker(self, card):
+                error = checker(self, card)
                 if error:
                     break
         # handle determination
@@ -619,11 +647,11 @@ class Solitaire(game.Game):
         # move the cards
         for card in move_stack:
             old_location.remove(card)
-            card.face_up = face_up
+            card.up = face_up
         new_location.extend(move_stack)
         # turn over any revealed cards
-        if old_location and old_location is not self.stock and not old_location[-1].face_up:
-            old_location[-1].face_up = True
+        if old_location and old_location is not self.stock and not old_location[-1].up:
+            old_location[-1].up = True
             # track turning over revealed cards
             if track:
                 self.moves[-1].append(True)
@@ -640,7 +668,7 @@ def free_deal(game):
     Parameters:
     game: The game to deal the cards for. (Solitaire)
     """
-    for card_ndx in range(len(game.deck)):
+    for card_ndx in range(len(game.deck.cards)):
         game.deck.deal(game.tableau[card_ndx % len(game.tableau)])
 
 
@@ -651,5 +679,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    pig = Pig(player.Player(name), '')
-    pig.play()
+    solo = Solitaire(player.Player(name), '')
+    solo.play()

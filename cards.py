@@ -9,6 +9,7 @@ Deck: A standard deck of cards. (object)
 TrackingCard: A card that tracks it's location. (Card)
 """
 
+import random
 import re
 
 class Card(object):
@@ -111,6 +112,7 @@ class Card(object):
             text = self.rank + self.suit
         else:
             text = '??'
+        return text
     
     def above(self, other, n = 1, wrap_ranks = False):
         """
@@ -311,7 +313,7 @@ class TrackingDeck(Deck):
         self.cards = []
         self.card_map = {}
         card_number = 0
-        for rank in self.ranks:
+        for rank in self.ranks[1:]:
             for suit in self.suits:
                 card = card_class(rank, suit, self)
                 self.cards.append(card)
@@ -320,7 +322,7 @@ class TrackingDeck(Deck):
         # set the default attributes
         self.in_play = []
         self.discards = []
-        self.last_order = [card.number for card in self.cards]
+        self.last_order = self.cards[:]
 
     def __repr__(self):
         """Debugging text representation. (str)"""
@@ -353,7 +355,7 @@ class TrackingDeck(Deck):
         # change the cards attributes
         card.game_location = game_location
         card.deck_location = self.in_play
-        card.face_up = face_up
+        card.up = face_up
         # return the card
         return card
         
@@ -380,7 +382,7 @@ class TrackingDeck(Deck):
         Paramters:
         card_text: The string version of the card. (str)
         """
-        return self.card_map[card_text]
+        return self.card_map[card_text.upper()]
     
     def force(self, card_text, game_location, face_up = True):
         """
@@ -409,7 +411,7 @@ class TrackingDeck(Deck):
             self.cards.append(card)
             card.deck_location = self.cards
             card.game_location = self.cards
-            card.face_up = False
+            card.up = False
 
     def shuffle(self):
         """Shuffle the discards back into the deck. (None)"""
