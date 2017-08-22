@@ -13,7 +13,7 @@ data_to_text: Convert CREDITS_DATA to formatted text. (str)
 
 
 CREDITS_DATA = [('Interface Programming', """Craig "Ichabod" O'Brien"""),
-    ('Game Design', """Humans; Sid Sackson, Gregory Yob"""),
+    ('Game Design', """Humans; Paul Alfille, Sid Sackson, Gregory Yob"""),
     ('Game Programming', """Craig "Ichabod" O'Brien"""),
     ('Bot Design', """Roger Johnson, Reiner Knizia, Todd Neller, Craig O'Brien, Clifton Presser"""),
     ('Bot Programming', """Craig "Ichabod" O'Brien"""),
@@ -30,7 +30,7 @@ def data_to_text():
             names = line.strip().split(',')
             while names:
                 quad, names = names[:4], names[4:]
-                quad_text = ''.join(['{:^20}'.format(name) for name in quad])
+                quad_text = ''.join(['{:^20}'.format(name.strip()) for name in quad])
                 credits_text += '{:^79}\n'.format(quad_text)
     return credits_text
 FULL_CREDITS = data_to_text()
