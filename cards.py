@@ -122,9 +122,9 @@ class Card(object):
         other: The card to compare with. (Card)
         wrap_ranks: A flag for K-A-2 wrapping. (bool)
         """
-        diff = self.rank - other.rank
+        diff = self.ranks.index(self.rank) - self.ranks.index(other.rank)
         if wrap_ranks and diff < 0:
-            diff += self.deck.max_rank
+            diff += len(self.ranks) - 1
         return diff == n
     
     def below(self, other, n = 1, wrap_ranks = False):
@@ -135,9 +135,9 @@ class Card(object):
         other: The card to compare with. (Card)
         wrap_ranks: A flag for K-A-2 wrapping. (bool)
         """
-        diff = other.rank - self.rank
+        diff = self.ranks.index(other.rank) - self.ranks.index(self.rank)
         if wrap_ranks and diff < 0:
-            diff += self.deck.max_rank
+            diff += len(self.ranks) - 1
         return diff == n
 
 class Deck(object):
@@ -248,7 +248,7 @@ class TrackingCard(Card):
         Parameters:
         other: The card to compare with. (Card)
         """
-        super(TrackingCard, self).above(other, n, self.deck.game.wrap_ranks)
+        return super(TrackingCard, self).above(other, n, self.deck.game.wrap_ranks)
 
     def below(self, other, n = 1):
         """
@@ -257,7 +257,7 @@ class TrackingCard(Card):
         Parameters:
         other: The card to compare with. (Card)
         """
-        super(TrackingCard, self).below(other, n, self.deck.game.wrap_ranks)
+        return super(TrackingCard, self).below(other, n, self.deck.game.wrap_ranks)
         
     def discard(self):
         """

@@ -135,7 +135,7 @@ class Solitaire(game.Game):
             error = self.build_pair(mover, target)
             if not error:
                 for checker in self.build_checkers:
-                    error = checker(game, mover, target, moving_stack)
+                    error = checker(self, mover, target, moving_stack)
                     if error:
                         break
         # handle determination
@@ -267,10 +267,10 @@ class Solitaire(game.Game):
         Move a card to one of the free cells. (bool)
         
         Parameters:
-        arguments: The card to be freed. (str)
+        card: The card to be freed. (str)
         """
         # parse the arguments
-        card_arguments = self.deck.card_re.findall(arguments.upper())
+        card_arguments = self.deck.card_re.findall(card.upper())
         if len(card_arguments) != 1:
             self.human.tell('Invalid arguments to build command: {!r}.'.format(arguments))
             return True
@@ -447,10 +447,10 @@ class Solitaire(game.Game):
             else:
                 # check freeing
                 if card.game_location is not self.cells and self.free_check(card, False):
-                    self.free(str(card))
+                    self.do_free(str(card))
                 # check laning
                 elif self.lane_check(card, moving_stack, False):
-                    self.lane(str(card))
+                    self.do_lane(str(card))
                 else:
                     # error out if nothing else works
                     print('There are no valid moves for the {}.'.format(card.name))
@@ -480,7 +480,7 @@ class Solitaire(game.Game):
         # check game specific rules
         else:
             for checker in self.lane_checkers:
-                error = checker(self, card)
+                error = checker(self, card, moving_stack)
                 if error:
                     break
         # handle determination
@@ -588,7 +588,7 @@ class Solitaire(game.Game):
         # check game specific rules
         else:
             for checker in self.sort_checkers:
-                error = checker(self, card)
+                error = checker(self, card, foundation)
                 if error:
                     break
         # handle determination
@@ -694,7 +694,7 @@ class Solitaire(game.Game):
             card.game_location = new_location
 
     
-def build_one(game, mover, target, moving_stack, show_error = True):
+def build_one(game, mover, target, moving_stack):
     """
     Build moving one card at a time. (bool)
     
@@ -703,12 +703,11 @@ def build_one(game, mover, target, moving_stack, show_error = True):
     mover: The card to move. (TrackingCard)
     target: The destination card. (TrackingCard)
     moving_stack: The stack of cards that would move. (list of TrackingCard)
-    show_error: A flag for displaying why the build failed. (bool)
     """
     error = ''
     # check for enough space to move the cards
-    if len(moving_stack) > max_super(game):
-        error = 'You may only move {} cards at this time.'.format(max_super(game))
+    if len(moving_stack) > move_one_size(game):
+        error = 'You may only move {} cards at this time.'.format(move_one_size(game))
     return error
 
 def deal_free(game):
@@ -721,7 +720,7 @@ def deal_free(game):
     for card_ndx in range(len(game.deck.cards)):
         game.deck.deal(game.tableau[card_ndx % len(game.tableau)])
         
-def lane_one(game, card, moving_stack, show_error = True):
+def lane_one(game, card, moving_stack):
     """
     Check moving one card at a time into a lane. (bool)
     
@@ -729,11 +728,10 @@ def lane_one(game, card, moving_stack, show_error = True):
     game: The game being played. (Solitaire)
     card: The card to move into the lane. (TrackingCard)
     moving_stack: The cards on top of the card moving. (list of TrackingCard)
-    show_error: A flag for showing why the card can't be moved. (bool)
     """
     error = ''
     # check for open space to move the stack
-    max_lane = max_super(game, to_lane = True)
+    max_lane = move_one_size(game, to_lane = True)
     if len(moving_stack) > max_lane:
         error = 'You cannot move that {} cards to a lane at the moment.'.format(max_lane)
     return error
@@ -782,7 +780,7 @@ def pair_down(self, mover, target):
         error = error.format(mover.name, target.name)
     return error
 
-def sort_ace(game, card, foundation, show_error = True):
+def sort_ace(game, card, foundation):
     """
     Sort starting with the ace. (bool)
     
@@ -790,7 +788,6 @@ def sort_ace(game, card, foundation, show_error = True):
     game: The game being played. (Solitiaire)
     card: The card to be sorted. (TrackingCard)
     foundation: The target foundation. (list of TrackingCard)
-    show_error: A flag for showing why the card can't be sorted. (bool)
     """
     error = ''
     # check for match to foundation pile
@@ -798,7 +795,7 @@ def sort_ace(game, card, foundation, show_error = True):
         error = 'Only aces can be sorted to empty foundations.'
     return error
 
-def sort_up(game, card, foundation, show_error = True):
+def sort_up(game, card, foundation):
     """
     Sort sequentially up in rank. (bool)
     
@@ -806,7 +803,6 @@ def sort_up(game, card, foundation, show_error = True):
     game: The game being played. (Solitiaire)
     card: The card to be sorted. (TrackingCard)
     foundation: The target foundation. (list of TrackingCard)
-    show_error: A flag for showing why the card can't be sorted. (bool)
     """
     error = ''
     # check for match to foundation pile
