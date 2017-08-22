@@ -355,6 +355,8 @@ class Solitaire(game.Game):
         Parameters:
         num_moves: The number of moves to undo. (str)
         """
+        if not num_moves.strip():
+            num_moves = 1
         num_moves = int(num_moves)
         moves_undone = False
         for move_ndx in range(num_moves):
