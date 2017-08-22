@@ -83,7 +83,8 @@ class Solitaire(game.Game):
     set_up
     """
 
-    aliases = {'a': 'auto', 'b': 'build', 'f': 'free', 'l': 'lane', 'otto': 'auto'}
+    aliases = {'a': 'auto', 'b': 'build', 'f': 'free', 'l': 'lane', 'otto': 'auto', 's': 'sort', 
+        'q': 'quit', 't': 'turn', 'u': 'undo'}
     categories = ['Test Games', 'Solitaire Games']
     name = 'Solitaire Base'
     
@@ -275,7 +276,7 @@ class Solitaire(game.Game):
             self.human.tell('Invalid arguments to build command: {!r}.'.format(arguments))
             return True
         # get the details on the card to be freed.
-        card = self.deck.find(card_arguments)
+        card = self.deck.find(card_arguments[0])
         # free the card
         if self.free_check(card):
             self.transfer([card], self.cells)
@@ -442,7 +443,7 @@ class Solitaire(game.Game):
             moving_stack = self.super_stack(card)
             for pile in self.tableau:
                 if pile and self.build_check(card, pile[-1], moving_stack, False):
-                    self.do_build(str(card), str(pile[-1]))
+                    self.do_build('{} {}'.format(str(card), str(pile[-1])))
                     break
             else:
                 # check freeing
@@ -472,7 +473,7 @@ class Solitaire(game.Game):
         elif not card.up:
             error = 'The {} is face down and cannot be moved.'.format(card.name)
         # check for open lanes
-        if not self.tableau.count([]):
+        elif not self.tableau.count([]):
             error = 'There are no open lanes.'
         # check for a valid stack
         elif not moving_stack:
@@ -733,7 +734,7 @@ def lane_one(game, card, moving_stack):
     # check for open space to move the stack
     max_lane = move_one_size(game, to_lane = True)
     if len(moving_stack) > max_lane:
-        error = 'You cannot move that {} cards to a lane at the moment.'.format(max_lane)
+        error = 'You can only move {} cards to a lane at the moment.'.format(max_lane)
     return error
     
 def move_one_size(game, to_lane = False):

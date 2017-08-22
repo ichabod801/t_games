@@ -6,6 +6,8 @@
 
 Redo the game I've played alot, and start playing them.
 	solitaire (functions instead of sub-classing)
+		get multi-input using semi-colons in player.ask
+	switch back to folders for player data.
 How to write a game documentation.
 
 == Long Term To Do List ==
@@ -54,7 +56,10 @@ games gipfed:   3
 
 == Gipf Planning ==
 
-Gambling would make for a good crossover category. connect four <-> roulette, craps <-> solitaire dice, slap jack <-> blackjack, slot machines <-> number guessing game.
+Gambling would make for a good crossover category. connect four <-> roulette, craps <-> solitaire dice, slap jack <-> blackjack, slot machines <-> number guessing game. solitaire_dice <-> solitaire
+
+pig            -> solitaire dice (pick one of two rolls)
+solitaire dice -> freecell       (free ride)
 
 == 108 Games ==
 
