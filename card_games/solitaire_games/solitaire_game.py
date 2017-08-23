@@ -727,6 +727,21 @@ def deal_free(game):
     """
     for card_ndx in range(len(game.deck.cards)):
         game.deck.deal(game.tableau[card_ndx % len(game.tableau)])
+
+def lane_king(game, card, moving_stack):
+    """
+    Check moving only kings into a lane. (bool)
+    
+    Parameters:
+    game: The game being played. (Solitaire)
+    card: The card to move into the lane. (TrackingCard)
+    moving_stack: The cards on top of the card moving. (list of TrackingCard)
+    """
+    error = ''
+    # check for the moving card being a king.
+    if card.rank != 'K':
+        error = 'You can only moving kinds into an empty lane.'
+    return error
         
 def lane_one(game, card, moving_stack):
     """
@@ -785,6 +800,21 @@ def pair_down(self, mover, target):
     error = ''
     if not mover.below(target):
         error = 'The {} is not one rank lower than the {}'
+        error = error.format(mover.name, target.name)
+    return error
+    
+def pair_suit(self, mover, target):
+    """
+    Build in suits. (str)
+    
+    Parameters:
+    game: The game buing played. (Solitaire)
+    mover: The card to move. (TrackingCard)
+    target: The destination card. (TrackingCard)
+    """
+    error = ''
+    if mover.suit != target.suit:
+        error = 'The {} is not the same suit as the {}'
         error = error.format(mover.name, target.name)
     return error
 

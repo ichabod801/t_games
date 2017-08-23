@@ -154,6 +154,7 @@ class Human(Player):
             else:
                 break
         self.load_results()
+        self.held_inputs = []
 
     def load_results(self):
         """Load the player's history of play. (None)"""
@@ -196,6 +197,7 @@ class Tester(Human):
             with open(self.file_name, 'w') as player_data:
                 player_data.write('')
         self.load_results()
+        self.held_inputs = []
 
 
 BOT_NAMES = {'a': 'Ash/Abby/Adam/Alan/Alice/Ada/Adele/Alonzo/Angus/Astro',

@@ -113,6 +113,21 @@ class FreeCell(solitaire.Solitaire):
         self.dealers = [solitaire.deal_free]
 
 
+class BakersGame(FreeCell):
+    """
+    A game of Baker's Game. (FreeCell)
+    """
+
+    aka = ['Brain Jam']
+    name = "Baker's Game"
+
+    def set_checkers(self):
+        """Set up the game specific rules. (None)"""
+        super(BakersGame, self).set_checkers()
+        # Set the rules for this variation.
+        self.pair_checkers = [solitaire.pair_down, solitaire.pair_suit]
+
+
 if __name__ == '__main__':
     import tgames.player as player
     try:
