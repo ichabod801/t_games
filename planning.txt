@@ -51,13 +51,16 @@ other/other: RPS(LS), number guessing game
 An asterisk means the game has been coded. An exclamation point means the game has been coded and is in the gipf graph.
 
 games planned: 63
-games coded:    4
+games coded:    5
 games gipfed:   3
 
 == Gipf Planning ==
 
-Gambling would make for a good crossover category. connect four <-> roulette, craps <-> solitaire dice, slap jack <-> blackjack, slot machines <-> number guessing game. solitaire_dice <-> solitaire
+Gambling would make for a good crossover category. connect four <-> roulette, craps <-> solitaire dice, slap jack <-> blackjack, slot machines <-> number guessing game. solitaire_dice <-> solitaire.
 
+Don't depend on gambling. Allow for links across other categores where they make sense.
+
+klondike       -> solitaire dice (place one card from the stock at the end of the stock)
 pig            -> solitaire dice (pick one of two rolls)
 solitaire dice -> freecell       (free ride)
 
@@ -82,4 +85,4 @@ unknown: three musketeer's (gamut of games), fencing (101 basic games), darts (1
 games planned: 36
 games needed:   9
 
-unformed ideas: rubik's sudoku? (2d, 9x9 rubik's sytle puzzle). OS hacking. Wizardry? Strago?
+unformed ideas: rubik's sudoku? (2d, 9x9 rubik's sytle puzzle). OS hacking. Wizardry? Stratego?

@@ -140,6 +140,20 @@ class Card(object):
             diff += len(self.ranks) - 1
         return diff == n
 
+class CRand(object):
+    """
+    Implementation of C's rand function. (object)
+    """
+
+    def __init__(self, seed = None):
+        if seed is None:
+            seed = random.randint(0, 32767)
+        self.state = seed
+
+    def __call__(self):
+        self.state = (214013 * self.state + 2531011) % (2 ** 31)
+        return self.state // (2 ** 16)
+
 class Deck(object):
     """
     A standard deck of cards. (object)
@@ -164,8 +178,8 @@ class Deck(object):
         """
         # Add the standard cards.
         self.cards = []
-        for rank in Card.ranks:
-            for suit in Card.suit:
+        for rank in Card.ranks[1:]:
+            for suit in Card.suits:
                 self.cards.append(Card(rank, suit))
         self.card_re = Card.card_re
         # Add any requested jokers.
@@ -195,10 +209,19 @@ class Deck(object):
         self.discards.append(card)
         card.up = False
 
-    def shuffle(self):
+    def shuffle(self, number = None):
         """Shuffle the discards back into the deck. (None)"""
         self.cards.extend(self.discards)
-        random.shuffle(self.cards)
+        if number is None:
+            random.shuffle(self.cards)
+        else:
+            rand = CRand(number)
+            self.cards.sort(key = lambda card: (card.ranks.index(card.rank), card.suit))
+            while self.cards:
+                swap = rand() % len(self.cards)
+                self.cards[swap], self.cards[-1] = self.cards[-1], self.cards[swap]
+                self.discards.append(self.cards.pop())
+            self.cards = self.discards[::-1]
         self.discards = []
 
 
@@ -413,9 +436,9 @@ class TrackingDeck(Deck):
             card.game_location = self.cards
             card.up = False
 
-    def shuffle(self):
+    def shuffle(self, number = None):
         """Shuffle the discards back into the deck. (None)"""
-        super(TrackingDeck, self).shuffle()
+        super(TrackingDeck, self).shuffle(number = number)
         for card in self.cards:
             card.deck_location = self.cards
             card.game_location = self.cards
@@ -441,3 +464,11 @@ class TrackingDeck(Deck):
         # clear the other piles
         self.discards = []
         self.in_play = []
+
+if __name__ == '__main__':
+    deck = Deck()
+    deck.shuffle(617)
+    for card in deck.cards:
+        card.up = True
+        print(card, end = ' ')
+    print()

@@ -530,7 +530,7 @@ class Solitaire(game.Game):
         num_cells: The number of cells in the game. (int)
         turn_count: The number of cards to turn from the stock each time. (int)
         max_passes: The number of allowed passes through the stock. (int)
-        wrap_ranks: Flag for building by rank wrappng from king to ace. (bool)
+        wrap_ranks: Flag for building by rank wrapping from king to ace. (bool)
         """
         # initialize specified attributes
         self.num_cells = num_cells
@@ -539,7 +539,12 @@ class Solitaire(game.Game):
         self.max_passes = max_passes
         # initialize derived attributes
         self.deck = cards.TrackingDeck(self, *deck_specs)
-        self.deck.shuffle()
+        deal_num = self.human.ask('Enter the deal number, or return for a random deal: ').strip()
+        if deal_num.isdigit:
+            deal_num = int(deal_num)
+        else:
+            deal_num = None
+        self.deck.shuffle(number = deal_num)
         self.tableau = [[] for ndx in range(num_tableau)]
         self.foundations = [[] for ndx in range(num_foundations)]
         self.reserve = [[] for ndx in range(num_reserve)]

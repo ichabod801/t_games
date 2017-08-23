@@ -39,34 +39,49 @@ piles: The number of tableau piles. 4-10, defaults to 8.
 
 
 class FreeCell(solitaire.Solitaire):
+    """
+    A game of FreeCell. (Solitaire)
+
+    Overridden Methods:
+    handle_options
+    set_up
+    """
 
     categories = ['Card Games', 'Solitaire Games', 'FreeCell Games']
     name = 'FreeCell'
 
     def handle_options(self):
         """Process the game options."""
+        # Set the defaults.
         self.num_tableau = 8
         self.num_cells = 4
+        # Check provided options.
         self.raw_options = self.raw_options.strip().lower()
-        if self.raw_options = 'none':
+        # Check for sticking with the defaults.
+        if self.raw_options == 'none':
             pass
+        # Check for interface provided options.
         elif self.raw_options:
             for word in self.raw_options.split():
                 if '=' in word:
                     option, value = word.split('=', maxsplit = 1)
+                    # Number of free cells.
                     if option == 'cells':
                         if value.isdigit and int(value) in range(1, 11):
                             self.num_cells = int(value)
                         else:
                             self.human.tell('Invalid cells option value: {}.'.format(value))
+                    # Number of tableau piles.
                     elif option == 'piles':
                         if value.isdigit and int(value) in range(4, 11):
                             self.num_tableau = int(value)
                         else:
                             self.human.tell('Invalid piles option value: {}.'.format(value))
+        # Check for manual input of options.
         else:
             change = self.human.ask('Would you like to change the options? ')
             if change.lower() in utility.YES:
+                # Number of free cells.
                 while True:
                     cells = self.human.ask('How many free cells (1-10, return for 4)? ')
                     if not cells.strip():
@@ -77,6 +92,7 @@ class FreeCell(solitaire.Solitaire):
                         self.human.tell('That is not a valid number of cells.')
                         continue
                     break
+                # Number of tableau piles.
                 while True:
                     piles = self.human.ask('How many tableau piles (4-10, return for 8)? ')
                     if not piles.strip():
