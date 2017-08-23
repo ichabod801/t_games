@@ -457,6 +457,10 @@ class Solitaire(game.Game):
                 else:
                     # error out if nothing else works
                     print('There are no valid moves for the {}.'.format(card.name))
+
+    def handle_options(self):
+        """Handle game options and set the player list. (None)"""
+        self.options = {}
     
     def lane_check(self, card, moving_stack, show_error = True):
         """
@@ -515,39 +519,42 @@ class Solitaire(game.Game):
                 reserve_text.append('  ')
         return ' '.join(reserve_text)
 
-    def set_solitaire(self, deck_specs = [], num_tableau = 7, num_foundations = 4, num_reserve = 0, 
-        num_cells = 0, turn_count = 3, max_passes = -1, wrap_ranks = False):
+    def set_checkers(self):
+        """Set the game specific rules. (None)"""
+        # checkers
+        self.build_checkers = []
+        self.free_checkers = []
+        self.lane_checkers = []
+        self.pair_checkers = []
+        self.sort_checkers = []
+        # dealers
+        self.dealers = [deal_free]
+
+    def set_solitaire(self):
         """
         Special initialization for solitaire games. (None)
         
-        For an ulimited number of passes through the deck, set max_passes to -1.
-        
-        Parameters:
-        deck_specs: The parameters for the deck of cards for the game. (list)
-        num_tableau: The number of tableau piles in the game. (int)
-        num_foundations: The number of foundation piles in the game. (int)
-        num_reserve: The number of reserve piles in the game. (int)
-        num_cells: The number of cells in the game. (int)
-        turn_count: The number of cards to turn from the stock each time. (int)
-        max_passes: The number of allowed passes through the stock. (int)
-        wrap_ranks: Flag for building by rank wrapping from king to ace. (bool)
+        For an ulimited number of passes through the stock, set max_passes to -1.
         """
+        options = {'deck-specs': [], 'num-tableau': 7, 'num-foundations': 4, 'num-reserve': 0,
+            'num-cells': 0, 'turn-count': 3, 'max-passes': -1, 'wrap-ranks': False}
+        options.update(self.options)
         # initialize specified attributes
-        self.num_cells = num_cells
-        self.wrap_ranks = wrap_ranks
-        self.turn_count = turn_count
-        self.max_passes = max_passes
+        self.num_cells = options['num-cells']
+        self.wrap_ranks = options['wrap-ranks']
+        self.turn_count = options['turn-count']
+        self.max_passes = options['max-passes']
         # initialize derived attributes
-        self.deck = cards.TrackingDeck(self, *deck_specs)
+        self.deck = cards.TrackingDeck(self, *options['deck-specs'])
         deal_num = self.human.ask('Enter the deal number, or return for a random deal: ').strip()
-        if deal_num.isdigit:
+        if deal_num.isdigit():
             deal_num = int(deal_num)
         else:
             deal_num = None
         self.deck.shuffle(number = deal_num)
-        self.tableau = [[] for ndx in range(num_tableau)]
-        self.foundations = [[] for ndx in range(num_foundations)]
-        self.reserve = [[] for ndx in range(num_reserve)]
+        self.tableau = [[] for ndx in range(options['num-tableau'])]
+        self.foundations = [[] for ndx in range(options['num-foundations'])]
+        self.reserve = [[] for ndx in range(options['num-reserve'])]
         # initialize default attributes
         # piles
         self.cells = []
@@ -558,19 +565,12 @@ class Solitaire(game.Game):
         self.moves = []
         self.undo_count = 0
         self.commands = []
-        # checkers
-        self.build_checkers = []
-        self.free_checkers = []
-        self.lane_checkers = []
-        self.pair_checkers = []
-        self.sort_checkers = []
-        # dealers
-        self.dealers = []
+        # game specific rules
+        self.set_checkers()
 
     def set_up(self):
         """Set up the game. (None)"""
         self.set_solitaire()
-        self.dealers = [deal_free]
         self.deal()
     
     def sort_check(self, card, foundation, show_error = True):

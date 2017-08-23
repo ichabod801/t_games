@@ -51,6 +51,7 @@ class Player(object):
         """
         self.name = name
         self.game = None
+        self.held_inputs = []
 
     def ask(self, prompt):
         """
@@ -59,7 +60,13 @@ class Player(object):
         Parameters:
         prompt: The question being asked of the player. (str)
         """
-        return input(prompt)
+        if not self.held_inputs:
+            answer = input(prompt)
+            if ';' in answer:
+                self.held_inputs = [part.strip() for part in answer.split(';')]
+            else:
+                return answer
+        return self.held_inputs.pop(0)
 
     def store_results(self, game_name, result):
         """

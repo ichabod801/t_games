@@ -6,7 +6,6 @@
 
 Redo the game I've played alot, and start playing them.
 	solitaire (functions instead of sub-classing)
-		get multi-input using semi-colons in player.ask
 	switch back to folders for player data.
 How to write a game documentation.
 
@@ -29,7 +28,15 @@ board/chase: fox and geese, tafl
 board/displace: mancala, chess (wrapper for Sunfish), battleships!
 board/race: backgammon, snakes and ladders
 board/space: connect four, halma
-card/solitaire: port my solitaire suite (19, drop storehouse, add supercell, rename sarah)
+card/solitaire/adding and pairing: golf, pyramid
+card/solitaire/bisley: bisley, martha
+card/solitaire/canfield: canfield, duchess
+card/solitaire/castle: beleaguered castle, siegecraft
+card/solitaire/fan: la belle lucie, shamrocks
+card/solitaire/forty thieves: forty thieves, maria
+card/solitaire/free cell: free cell, penguin
+card/solitaire/klondike: agnes, dawson (sarah), klondike
+card/solitaire/spider: spider, spiderette
 card/trick: hearts, spades
 card/matching: cribbage, snip snap snorem
 card/shedding: crazy eights, spit
@@ -50,7 +57,7 @@ other/other: RPS(LS), number guessing game
 
 An asterisk means the game has been coded. An exclamation point means the game has been coded and is in the gipf graph.
 
-games planned: 63
+games planned: 61
 games coded:    5
 games gipfed:   3
 
@@ -83,6 +90,6 @@ tile games: Domino's, maj hong with characters.
 unknown: three musketeer's (gamut of games), fencing (101 basic games), darts (101), nim (101), boggle, mille bornes
 
 games planned: 36
-games needed:   9
+games needed:  11
 
 unformed ideas: rubik's sudoku? (2d, 9x9 rubik's sytle puzzle). OS hacking. Wizardry? Stratego?

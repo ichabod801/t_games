@@ -53,8 +53,9 @@ class FreeCell(solitaire.Solitaire):
     def handle_options(self):
         """Process the game options."""
         # Set the defaults.
-        self.num_tableau = 8
-        self.num_cells = 4
+        self.options = {}
+        self.options['num-tableau'] = 8
+        self.options['num-cells'] = 4
         # Check provided options.
         self.raw_options = self.raw_options.strip().lower()
         # Check for sticking with the defaults.
@@ -68,13 +69,13 @@ class FreeCell(solitaire.Solitaire):
                     # Number of free cells.
                     if option == 'cells':
                         if value.isdigit and int(value) in range(1, 11):
-                            self.num_cells = int(value)
+                            self.options['num-cells'] = int(value)
                         else:
                             self.human.tell('Invalid cells option value: {}.'.format(value))
                     # Number of tableau piles.
                     elif option == 'piles':
                         if value.isdigit and int(value) in range(4, 11):
-                            self.num_tableau = int(value)
+                            self.options['num-tableau'] = int(value)
                         else:
                             self.human.tell('Invalid piles option value: {}.'.format(value))
         # Check for manual input of options.
@@ -84,39 +85,32 @@ class FreeCell(solitaire.Solitaire):
                 # Number of free cells.
                 while True:
                     cells = self.human.ask('How many free cells (1-10, return for 4)? ')
-                    if not cells.strip():
-                        self.num_cells = 4
-                    elif cells.strip().isdigit() and int(cells) in range(1, 11):
-                        self.num_cells = int(cells)
-                    else:
+                    if cells.strip().isdigit() and int(cells) in range(1, 11):
+                        self.options['num-cells'] = int(cells)
+                    elif cells.strip():
                         self.human.tell('That is not a valid number of cells.')
                         continue
                     break
                 # Number of tableau piles.
                 while True:
                     piles = self.human.ask('How many tableau piles (4-10, return for 8)? ')
-                    if not piles.strip():
-                        self.num_tableau = 8
-                    elif piles.strip().isdigit() and int(piles) in range(1, 11):
-                        self.num_tableau = int(piles)
-                    else:
+                    if piles.strip().isdigit() and int(piles) in range(1, 11):
+                        self.options['num-tableau'] = int(piles)
+                    elif piles.strip():
                         self.human.tell('That is not a valid number of piles.')
                         continue
                     break
 
-
-    def set_up(self):
-        """Set up the game for play."""
-        # Basic solitaire set up.
-        self.set_solitaire(num_tableau = 8, num_cells = 4)
+    def set_checkers(self):
+        """Set up the game specific rules. (None)"""
+        super(FreeCell, self).set_checkers()
         # Set the game specific rules checkers.
         self.build_checkers = [solitaire.build_one]
         self.lane_checkers = [solitaire.lane_one]
         self.pair_checkers = [solitaire.pair_down, solitaire.pair_alt_color]
         self.sort_checkers = [solitaire.sort_ace, solitaire.sort_up]
-        # Set the deck and deal the cards.
+        # Set the dealers
         self.dealers = [solitaire.deal_free]
-        self.deal()
 
 
 if __name__ == '__main__':
