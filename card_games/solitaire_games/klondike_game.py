@@ -42,7 +42,7 @@ class Klondike(solitaire.Solitaire):
     """
 
     aka = ['Seven Up', 'Sevens']
-    categories ['Card Games', 'Solitaire Games', 'Klondike Games']
+    categories = ['Card Games', 'Solitaire Games', 'Klondike Games']
     credits = CREDITS
     name = 'Klondike'
     rules = RULES

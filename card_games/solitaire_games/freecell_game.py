@@ -3,8 +3,15 @@ freecell_game.py
 
 FreeCell and related games.
 
+Constants:
+CREDITS: Credits for FreeCell. (str)
+CREDITS_BAKER: Credits for Baker's Game. (str)
+RULES: Rules for FreeCell. (str)
+RULES_BAKER: Rules for Baker's Game. (str)
+
 Classes:
-FreeCell: A game of freecell. (Solitaire)
+FreeCell: A game of FreeCell. (Solitaire)
+BakersGame: A game of Baker's Game. (FreeCell)
 """
 
 
@@ -12,11 +19,19 @@ import tgames.card_games.solitaire_games.solitaire_game as solitaire
 import tgames.utility as utility
 
 
+# Credits for FreeCell.
 CREDITS = """
 Game Design/Original Programming: Paul Alfille
 Python Implementation: Craig "Ichabod" O'Brien
 """
 
+# Credits for Baker's Game.
+CREDITS_BAKER = """
+Game Design: Traditional
+Python Implementation: Craig "Ichabod" O'Brien
+"""
+
+# Rules for FreeCell.
 RULES = """
 Cards on the tableau build down in rank and alternating in color. Cards are
 sorted to the foundation by suit in ascending rank order. Any card at the top
@@ -29,7 +44,28 @@ keeps track of how large a stack you could move one card at a time, and allows
 you to move a stack that size as one move. For example, if you two free cells,
 you can move a stack of three cards one at a time: one each to a free cell,
 then third to the destination card, then the two cards back off the free
-cells. So if you have two empty free cells, the game lets you move two cards
+cells. So if you have two empty free cells, the game lets you move three cards
+as one.
+
+Options:
+cells: The number of free cells available. 1-10, defaults to 4.
+piles: The number of tableau piles. 4-10, defaults to 8.
+"""
+
+# Rules for Baker's Game.
+RULES_BAKER = """
+Cards on the tableau build down in rank and matching suit. Cards are sorted to
+the foundation by suit in ascending rank order. Any card at the top of a 
+tableau pile may be moved to one of the free cells. Empty tableau piles may be
+filled with any card from the top of another tableau pile or one of the free 
+cells.
+
+Technically, cards may only be moved one at a time. However, the computer
+keeps track of how large a stack you could move one card at a time, and allows
+you to move a stack that size as one move. For example, if you two free cells,
+you can move a stack of three cards one at a time: one each to a free cell,
+then third to the destination card, then the two cards back off the free
+cells. So if you have two empty free cells, the game lets you move three cards
 as one.
 
 Options:
@@ -116,10 +152,19 @@ class FreeCell(solitaire.Solitaire):
 class BakersGame(FreeCell):
     """
     A game of Baker's Game. (FreeCell)
+
+    Baker's Game is the game that inspired the creation of FreeCell. It is called
+    Baker's Game after C.L. Baker, who described it to Martin Gardner. Baker did
+    not claim to have created the game.
+
+    Overridden Methods:
+    set_checkers
     """
 
     aka = ['Brain Jam']
+    credits = CREDITS_BAKER
     name = "Baker's Game"
+    rules = RULES_BAKER
 
     def set_checkers(self):
         """Set up the game specific rules. (None)"""

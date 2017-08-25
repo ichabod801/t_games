@@ -15,6 +15,7 @@ load_games: Load all of the games defined locally. (tuple of dict)
 
 from __future__ import print_function
 
+import glob
 import itertools
 import math
 import operator
@@ -548,10 +549,19 @@ def load_games():
     case game names and aliases. The second is tree of categories, each one with
     a dictionary of sub-categories and a list of games in that category.
     """
+    # Find the Python game files.
+    game_files = []
+    base = '*/'
+    while True:
+        new_files = glob.glob(base + '*_game.py')
+        if new_files:
+            game_files.extend(new_files)
+            base += '*/'
+        else:
+            break
     # Import the Python files.
-    for package in [name for name in os.listdir('.') if name.endswith('_games')]:
-        for module in [name for name in os.listdir(package) if name.endswith('_game.py')]:
-            __import__('{}.{}'.format(package, module[:-3]))
+    for game_file in game_files:
+        __import__(game_file.replace(os.sep, '.')[:-3])
     # Search through all of the game.Game sub-classes.
     categories = {'sub-categories': {}, 'games': []}
     games = {}
