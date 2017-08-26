@@ -399,7 +399,7 @@ def excel_column(n):
     return column
 
 if __name__ == '__main__':
-    interface = Interface(player.Tester('Ichabod','relaxation','super-green'))
+    interface = Interface(player.Tester())
     interface.menu()
 
 

@@ -9,8 +9,12 @@ Deck: A standard deck of cards. (object)
 TrackingCard: A card that tracks it's location. (Card)
 """
 
+
+from __future__ import print_function
+
 import random
 import re
+
 
 class Card(object):
     """

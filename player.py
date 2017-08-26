@@ -123,7 +123,7 @@ class Human(Player):
 
     Attributes:
     color: The player's favorite color. (str)
-    file_name: The local file with the player's data. (str)
+    folder_name: The local file with the player's data. (str)
     quest: The player's quest. (str)
 
     Overridden Methods:
@@ -143,11 +143,12 @@ class Human(Player):
                 self.quest = input('What is your quest? ')
                 self.color = input('What is your favorite color? ')
             # Check for previous log in.
-            self.file_name = '{}-{}-{}.txt'.format(self.name, self.quest, self.color).lower()
-            if not os.path.exists(self.file_name):
+            self.folder_name = '{}-{}-{}'.format(self.name, self.quest, self.color).lower()
+            if not os.path.exists(self.folder_name):
                 new_player = input('I have not heard of you. Are you a new player? ')
                 if new_player.lower() in utility.YES:
-                    with open(self.file_name, 'w') as player_data:
+                    os.mkdir(self.folder_name)
+                    with open(os.path.join(self.folder_name, 'results.txt'), 'w') as player_data:
                         player_data.write('')
                     break
                 print()
@@ -159,7 +160,7 @@ class Human(Player):
     def load_results(self):
         """Load the player's history of play. (None)"""
         self.results = []
-        with open(self.file_name) as player_data:
+        with open(os.path.join(self.folder_name, 'results.txt')) as player_data:
             for line in player_data:
                 results = line.strip().split(',')
                 self.results.append(results[:1] + [int(x) for x in results[1:]])
@@ -176,7 +177,7 @@ class Human(Player):
         self.results.append([game_name] + results)
         # Store in the player's file.
         results_text = ','.join([str(x) for x in results])
-        with open(self.file_name, 'a') as player_data:
+        with open(os.path.join(self.folder_name, 'results.txt'), 'a') as player_data:
             player_data.write('{},{}\n'.format(game_name, results_text))
 
 class Tester(Human):

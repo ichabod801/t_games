@@ -5,9 +5,11 @@
 == Short Term To Do List ==
 
 Redo the game I've played alot, and start playing them.
-	solitaire (functions instead of sub-classing)
 	switch back to folders for player data.
+	negative scores for solitaire?
 How to write a game documentation.
+Klondike bot
+Alpha-beta bot.
 
 == Long Term To Do List ==
 
@@ -34,8 +36,8 @@ card/solitaire/canfield: canfield, duchess
 card/solitaire/castle: beleaguered castle, siegecraft
 card/solitaire/fan: la belle lucie, shamrocks
 card/solitaire/forty thieves: forty thieves, maria
-card/solitaire/free cell: free cell, penguin
-card/solitaire/klondike: agnes, dawson (sarah), klondike
+card/solitaire/free cell: free cell*, penguin, baker's game*
+card/solitaire/klondike: agnes, klondike*
 card/solitaire/spider: spider, spiderette
 card/trick: hearts, spades
 card/matching: cribbage, snip snap snorem
@@ -86,7 +88,7 @@ other/simulation: santa paravia, oregon trail, basket ball (robot wars?), lunar/
 other/rouge-like: rogue
 other/word: 20 questions
 puzzles: Sliding puzzle, mastermind, math quiz, mine sweeper
-tile games: Domino's, maj hong with characters.
+tile games: Domino's, maj hong with characters (as graph of distribution to show heights).
 unknown: three musketeer's (gamut of games), fencing (101 basic games), darts (101), nim (101), boggle, mille bornes
 
 games planned: 36
