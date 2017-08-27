@@ -4,9 +4,6 @@
 
 == Short Term To Do List ==
 
-Redo the game I've played alot, and start playing them.
-	switch back to folders for player data.
-	negative scores for solitaire?
 How to write a game documentation.
 Klondike bot
 Alpha-beta bot.
@@ -69,7 +66,9 @@ Gambling would make for a good crossover category. connect four <-> roulette, cr
 
 Don't depend on gambling. Allow for links across other categores where they make sense.
 
+freecell       -> penguin        (move any card to an empty foundation, turn on wrap_ranks)
 klondike       -> solitaire dice (place one card from the stock at the end of the stock)
+penguin        -> klondike       (move any one card)
 pig            -> solitaire dice (pick one of two rolls)
 solitaire dice -> freecell       (free ride)
 

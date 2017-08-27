@@ -507,7 +507,9 @@ class Solitaire(game.Game):
         player.tell(self)
         move = player.ask('What is your move? ')
         keep_playing = self.handle_cmd(move)
-        self.scores[self.human.name] = len(self.moves) + 2 * self.undo_count
+        move_count = len(self.moves) + 2 * self.undo_count
+        sorted_count = sum([len(foundation) for foundation in self.foundations])
+        self.scores[self.human.name] = 801 - move_count + sorted_count * 2
     
     def reserve_text(self):
         """Generate text for the reserve piles. (str)"""

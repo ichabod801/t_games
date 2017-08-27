@@ -1,0 +1,96 @@
+This documentation is to assist people in writing games for the tgames system.
+
+== The File ==
+
+The Python (.py) file for the game should be stored in a sub-folder of the tgames folder. Preferably this would be in a folder appropriate for the category of the game. This way if someone wants to find the code for the game, they'll know where to look. Note that the folder structure for tgames generally ignores the terminal category (that is, games in board games/displace games are in the board_games folder with the games in board games/space games). For the same reason, the title of the file should be indicative of the name of the game. The filename must end in '_game.py' or the tgames interface will not load it.
+
+You can create your own folder of games if you want, especially if you are introducing new categories. If you do, you should put in a blank __init__.py file, so that the relative imports work for both Python 2.x and Python 3.x.
+
+== The Class ==
+
+Games are programmed as classes, specifically classes that inherit from game.Game. If your game class does not inherit from Game, it will not be loaded by the interface. The inheritance does not have to be direct. For example, the FreeCell class directly inherits from the Solitaire class, which inherits directly from Game.
+
+The tgames package is based on object orientend programming (OOP). If you are not familiar with OOP and classes in Python, DO NOT WRITE GAMES FOR TGAMES. You will only hurt yourself, and I cannot be held responsible for any resulting medical bills.
+
+=== Attributes ===
+
+There are several class attributes that need to be set, in order for the game to display correctly in the interface.
+
+==== Names ====
+
+The name class attribute is a string that gives the name of the game. This is the name that will be displayed in the menu interface. This should be the name the game is most commonly known by. If your game has other names it is known by, these should go into the aka class attribute, which is a list of strings. Names in the aka list are available for use with the play command from the interface.
+
+Be careful to make the various names of the game unique. The game classes are stored in a dictionary by name. If your game shares a name or aka with another game in the system, one of them will be overwritten by the other one.
+
+==== Rules & Credits ====
+
+Each game class should have two class attributes: rules and credits. These are typically stored as multi-line strings that are module level constants. Then the constant is assigned to the class attribute. That solves any formatting problems with indented multi-line strings.
+
+The rules should clearly describe how to play the game, including any special commands used in the game, and any options for the game (see Methods/handle_options, below). The credits should indicate who invented the game and who programmed the tgames Python implementation (presumably you). If the inventor of the game is not generally known, list it as 'Traditional.' If the game was originally a computer game, credit the person who wrote the original implementation as well.
+
+==== Categories ====
+
+The categories class attribute determines where in the interface menu the game will be displayed. If the game fits in one of the existing categories, put it there (and be sure to spell it correctly). You can create your own categories if you want. The interface will detect them and create them for you.
+
+Note that the categories class attribute is a list of strings. The first item is the top category, then the sub-category, and then the sub-sub-category, if any.
+
+==== Help ====
+
+If you want to provide additional help text beyond the rules it would go in the help class attribute. This is not common, but you can make use of it if you want.
+
+The help class attribute is a dictionary of help text keyed to help categories. If the user types 'help foo', whatever text is in self.help['foo'] is displayed.
+
+=== Methods ===
+
+You will need to override the player_turn and game_over methods to make your game work. In most cases, you will want to override set_up as well. If you game has options that can be set before play, you will need to override the handle_options method. You may also want to create do_foo methods, and override the default method.
+
+The way the program flows through these methods is as follows: When the game class is initialized, the handle_options method is called to process any options given from the interface, and to give the user a chance to enter in the options if they were not provided through the interface. Then the play method is called, which calls the set_up method. This sets up the game, initializing any game components. Most importantly, this is where the list of players is set up. Then the players are rotated through, calling player_turn for each one in turn. This is where the player move is obtained and processed. The player_turn may (and should) call handle_cmd to process any commands with a do_foo method, or the default method if the command is not recognized. Note that player_turn is called repeatedly until it returns False. Then game_over is called, and if it returns False, player_turn is called for the next player in order. If game_over returns True, the game is over and results are returned from the play method to the interface. The interface will then ask if the user wants to play the same game again. If they do, play is called again, calling set_up again and cycling through player_turn again. Note that handle_options is not called again at that point. So things that can be set and used over several plays of the game should be processed in handle_options, but things that need to be reset every time the game is played should be handled in set_up.
+
+When interacting with players, you should use the player.ask method in place of the input function, and the player.tell method in place of the print function. There are interface features in those methods that will be lost if you use plain input or print. When designing computer players (bots), you should use the ask and tell methods and the same prompts/text as the human player gets to determine where the bot is in the game sequence. Note that bots have a game method, which provides direct access to the game class instance. This will allow them to access the computer implementations of the scores and board and other game features for making decisions.
+
+==== set_up ===
+
+This sets up whatever is needed to play the game, and is not already handled by the base Game class. If you have a game board or a deck of cards to keep track of, here is where you would set them up.
+
+The players attribute, which is a list of Player sub-class instances, should be ready when set_up is over. It doesn't need to be done in set_up. You might set that up in handle_options, if the player can choose the bots to play against. Note that there is a human attribute of the game instance if you need to pull the user into the player list. You will have to keep track of the bots yourself. 
+
+You will want to order the players here, unless you want the same order if the user choses to play again. Note that the player scores are not reset until after set_up is called. That way you can use the scores from the previous games to order the players for the current game. Pig does this so that the loser of the previous game goes first.
+
+In any case, remember that set_up is called before each game, while handle_options is called only when the game object is initialized by the interface.
+
+==== player_turn ====
+
+This is where the meat of your game is going to happen. This is where you will ask the player for their move and process that move.  The current player is passed as the player parameter to this function. Use the player.ask method to get a move from them, and the player.tell method to send the results of the move to them.
+
+The return value for player_turn is a flag for continuing the turn. That is, if player_turn returns True, player_turns is called again with the SAME player, and without incrementing the turns attribute of the game class, that tracks how many player turns have been completed. If player_turn returns False, that player's turn ends, the turns attribute is incremented, the game_over method is checked. If game_over returns False, player_turn is called again with the next player in the players attribute.
+
+The player.ask method returns a string, and you can process that string however you want. However, if the response from the player is not a valid move, you should send it to the handle_cmd method, and you should return the result of the handle_cmd method. This will process any commands that are common to all games, such as rules, rpn, and quit. Note that if the response from the player is not recognized by handle_cmd, it gets sent to the default method. You can override that to handle anything that your processing does not recognize. For example, the Solitaire class overrides default so that if a player enters a card without stating what they want to do with it, the game class can guess what move they intended.
+
+You can have handle_cmd deal with the whole game. The handle_cmd method takes the first word of the player's response, finds a do_foo method for that word, and passes the rest of the player's response to that method. For example, if the player types in 'kill the orc', handle_cmd will look for a do_kill method. If do_kill exists, handle_cmd will call self.do_kill('the orc'). If do_kill does not exist, handle_cmd will call self.default('kill the orc'). So you can create do_foo methods to handle the various moves the player might make. The Solitaire class does exactly that.
+
+Resist creating a loop in player_turn to handle multiple parts of a player's turn. That will interfere with the processing of other commmands, like quit. The player_turn method is already being called in a loop, as long as it returns False. Make use of that loop.
+
+Making use of the player_turn loop or do_foo methods will require creating instances attributes. Be sure to check the doc_string for the Game class (and the Solitaire class if you are making a solitaire game) so that you do not overwrite any attributes already being used. Instance attributes tracking the player's turn are also useful for bots. They can access them through their game attribute, which is easier than having them parse information from strings sent to player.tell.
+
+You should set the score for the player at the end of each turn. If the player calls the quit command, the game will end without going through game_over. So you want the score to be ready if that happens. The scores attribute is a dictionary of player scores, keyed to their names. So self.scores[player.name] will give you the current player's score.
+
+==== game_over ====
+
+The game_over method is called at the end of each player's turn (when player_turn returns False). It should return True if the game is over, and it should return False if the game should continue. 
+
+It should also set the win_loss_draw attribute of the game instance. That attribute is per player from the perspective of the human, and is a list of three integers. The first integer is how many players the human did better than, the second is how many players the human did worse than, and the third is how many players the human did the same as. Generally this would be based on the the scores attribute, but it should be whatever the game rules dictate. So if a player wins against three bots, it would be [0, 3, 0]. If he beats one bot but loses to the other two, it would be [1, 2, 0]. If he ties for first, it would be [2, 0, 1]. The interface counts the game as a win if the second number in win_loss_draw is 0.
+
+==== handle_options ====
+
+This method handles the options for the game: how many bots to play against, how good they are, any house rules that are commonly associated with the game. There are three main cases to catch: no options, options from the interface, and options from the user.
+
+Any options passed from the interface should be in the raw_options attribute of the game instance. If raw_options == 'none' you should not change any options. This is generally from gipfing to the game (see do_gipf, below). 
+
+If raw_options is non-empty, it will be any options that were sent to the game from the interface. Options should be expressed as either a dash separated phrase ('even-turns') or an option, an equals sign, and a value with no spaces ('num_cells=5'). That way you can just loop through self.raw_options.split(), and handle each option as it comes up. It's good to have some code for options you don't recognize, to warn the user that they will be ignored.
+
+If raw_options is empty, give the user the chance to set the options through a series of questions and answers. These would of course use self.human.ask(). Note that there is a tuple of possible answers meaning yes in utility.YES, which you can use for yes/no questions to provide a richer interface. Generally, if response.lower() is not in utility.YES, you assume it's no. If there is more than one question to ask to set the options, you should ask if the player wants to change the options first. That way they can just say no and go quickly to playing the game.
+
+This part can be boring and tedious to program, but it provides a richer interface for the user, and is expected of games in the tgames package.
+
+==== do_gipf ====
+
