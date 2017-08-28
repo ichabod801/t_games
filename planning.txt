@@ -4,8 +4,9 @@
 
 == Short Term To Do List ==
 
-How to write a game documentation.
-Klondike bot
+Klondike options.
+Klondike bot.
+Some more games.
 Alpha-beta bot.
 
 == Long Term To Do List ==

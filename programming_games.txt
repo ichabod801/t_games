@@ -1,4 +1,4 @@
-This documentation is to assist people in writing games for the tgames system.
+This documentation is to assist people in writing games for the tgames system. It is not meant to teach you everything about writing games for tgames, just to give you a good overview of what to do. You should also check out the code of some of the games already programmed as well as the base Game class.
 
 == The File ==
 
@@ -90,7 +90,24 @@ If raw_options is non-empty, it will be any options that were sent to the game f
 
 If raw_options is empty, give the user the chance to set the options through a series of questions and answers. These would of course use self.human.ask(). Note that there is a tuple of possible answers meaning yes in utility.YES, which you can use for yes/no questions to provide a richer interface. Generally, if response.lower() is not in utility.YES, you assume it's no. If there is more than one question to ask to set the options, you should ask if the player wants to change the options first. That way they can just say no and go quickly to playing the game.
 
+If the player changes the options, either from the interface or by answering questions, you need to adjust the flags attribute of the game. You should do 'self.flags |= 1' to indicate that options were changed for the game. 
+
 This part can be boring and tedious to program, but it provides a richer interface for the user, and is expected of games in the tgames package.
 
 ==== do_gipf ====
 
+Gipf is the first game in a series by Kris Burm. In that series of games you have potential moves. If you make a potential move, your opponent can challenge the move. The challenge is decided by playing one of the other games in the series.
+
+That concept has been brought into the tgames system as the gipf command. For each game there are two or more games you can gipf to. If you win the game you gipf to, you can make a special move in the game you gipfed from. Generally there are different special moves for different games.
+
+You can program this into your games if you want. There is a gipf_check method of the game class that is useful for adding gipf to your game. You pass it the arguments of the gipf command (the arguments parameter of do_gipf), and a tuple of names of games that can be gipfed to. It will handle finding the game based on names or aliases, running the game, and setting the flags attributes of both games. It will return which game was played (using the same name or alias you provided as a parameter) and how many player-to-player losses there were. Then you determine which game they chose and whether or not they won, and if they won a valid game let them make a special move.
+
+Note that if they don't choose a valid game, you should give a non-sequitor or confused response to the user. The exact response should be unique to your game.
+
+== Bots ==
+
+If your game is not purely a solitaire game, you will need to create bots to play against. Bots are typically sub-classes of the Bot class in player.py, which is in turn a sub-class of Player. You'll note from the class definition that Bots pick random names for themselves that are not already chosen by another player. You can provide an initial to force the first letter of the name. Some games do this so that it is possible to distinguish which strategy each bot is using. You are free to give your bots other names, but keep in mind that each player (bot or human) should have a unique name. This is necessary because the scores for the game are kept in a dictionary keyed to player name.
+
+Your game should not distinguish between humans and bots. For thing, doing so could mess up tournaments (see the tournament method of the game class). Bots have game attribute which links back to the game instance they are a part of, so they have access to all game information. (Yes, this means that bots can cheat, but it is considered bad form to program them to do so.) Generally, the ask and tell methods are used to tell where in the game flow the bot is, and then the game attribute is used to get information to choose what move to make. Theoretically, you could parse all the information you need from input to the tell method, but the game attribute was provided to remove the need for that.
+
+You'll want to inform the human player of what happens during the bot's turn. This should be done using self.game.human.tell(). If you construct your text well in the game, you can usually just replace 'you' with the bot's name and maybe switch some other pronouns in what comes into the bot's tell method, and then send that to the human's tell method.

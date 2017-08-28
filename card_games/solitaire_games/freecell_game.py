@@ -99,6 +99,7 @@ class FreeCell(solitaire.Solitaire):
             pass
         # Check for interface provided options.
         elif self.raw_options:
+            self.flags |= 1
             for word in self.raw_options.split():
                 if '=' in word:
                     option, value = word.split('=', maxsplit = 1)
@@ -118,6 +119,7 @@ class FreeCell(solitaire.Solitaire):
         else:
             change = self.human.ask('Would you like to change the options? ')
             if change.lower() in utility.YES:
+                self.flags |= 1
                 # Number of free cells.
                 while True:
                     cells = self.human.ask('How many free cells (1-10, return for 4)? ')
