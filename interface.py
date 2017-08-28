@@ -147,7 +147,7 @@ class Interface(other_cmd.OtherCmd):
         """
         # Get the game name and options.
         if '/' in arguments:
-            game_name, options = arguments.split('/', maxsplit = 1)
+            game_name, options = arguments.split('/', 1)
         else:
             game_name = arguments
             options = ''

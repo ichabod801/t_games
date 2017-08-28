@@ -193,9 +193,10 @@ class Tester(Human):
         self.name = name
         self.quest = quest
         self.color = color
-        self.file_name = '{}-{}-{}.txt'.format(self.name, self.quest, self.color).lower()
-        if not os.path.exists(self.file_name):
-            with open(self.file_name, 'w') as player_data:
+        self.folder_name = '{}-{}-{}'.format(self.name, self.quest, self.color).lower()
+        if not os.path.exists(self.folder_name):
+            os.mkdir(self.folder_name)
+            with open(os.path.join(self.folder_name, 'results.txt'), 'w') as player_data:
                 player_data.write('')
         self.load_results()
         self.held_inputs = []
@@ -223,7 +224,7 @@ BOT_NAMES = {'a': 'Ash/Abby/Adam/Alan/Alice/Ada/Adele/Alonzo/Angus/Astro',
     't': 'Tabitha/Theresa/Tracy/Trinity/Tamala/Tanner/Tariq/Ted/Tyler/Tyrone',
     'u': 'Ulla/Uma/Ursula/Ursuline/Uta/Ulric/Umberto/Uriah/Usher/Urban',
     'v': 'Vincent/Valerie/Venus/Vivian/Vera/Veronica/Victor/Viggo/Vikram/Vladimir',
-    'w': 'Wally/Wednesday/Wana/Wendy/Willow/Winnie/Waylon/Wayne/William/Woflgang',
+    'w': 'Wally/Wednesday/Wana/Wendy/Willow/Winnie/Waylon/Wayne/William/Wolfgang',
     'x': 'Xander/Xavier/Xena/Xhosa/Ximena/Xiang/Xaria/Xanthus/Xenon/Xerxes',
     'y': 'Yamina/Yasmin/Yoland/Yvette/Yadira/Yaakov/Yitzhak/Yves/Yannick/Yaron',
     'z': 'Zahara/Zelda/Zoe/Zuma/Zenaida/Zachary/Zafar/Zane/Zebulon/Zen'}

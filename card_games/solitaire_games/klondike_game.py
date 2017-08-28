@@ -78,6 +78,7 @@ class Klondike(solitaire.Solitaire):
         """Set the game options. (None)"""
         # Set the defaults.
         self.switched = True
+        self.options = {}
         # Check for options
         if self.raw_options.lower() == 'none':
             pass
