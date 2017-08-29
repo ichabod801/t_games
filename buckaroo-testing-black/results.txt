@@ -1,3 +1,7 @@
 Klondike,0,1,0,650,4
 Klondike,1,0,0,787,1
 Klondike,0,1,0,673,5
+Klondike,1,0,0,757,1
+Klondike,1,0,0,750,1
+Klondike,0,1,0,708,5
+Klondike,1,0,0,770,1

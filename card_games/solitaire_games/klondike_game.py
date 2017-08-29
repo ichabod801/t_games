@@ -54,8 +54,7 @@ class Klonbot(player.Bot):
     The bot is designed to run several games by deal number and record the wins. 
     To play one random game, set the start parameter to -1.
 
-    !! It seems to work, but when it actually wins it causes an error. This seems
-    to be in Solitaire, consistently in line 686.
+    !! Add a final check to see if cards can be moved around to sort out cards.
 
     Attributes:
     last_num: The last deal number to be played. (int)
@@ -112,16 +111,17 @@ class Klonbot(player.Bot):
                 self.made_moves = set()
         # Check that all specified deals have been played.
         elif 'play again' in prompt:
-            if self.next_num > self.last_num of self.next_num == -1:
+            if self.next_num > self.last_num or self.next_num == -1:
                 reponse = 'no way'
             else:
-                response = 'sure'
+                response = 'y'
         # Get the next move.
         elif 'move' in prompt:
             response = self.next_move()
         # Raise error on unrecognized prompt.
         else:
             raise RuntimeError('Unrecognized prompt to Klonbot: {}'.format(prompt))
+        #print('Klonbot:', response)
         return response
 
     def move_check(self, card, targets, foundations):
@@ -141,7 +141,7 @@ class Klonbot(player.Bot):
             return 'sort', ''
         # Check for other sorts.
         for target in foundations:
-            if card.above(target) and card.suit == target.suit:
+            if card.above(target) and card.suit == target.suit and card == card.game_location[-1]:
                 return 'sort', ''
         # Fill empty lanes with kings.
         if card.rank == 'K' and len(targets) < 7:
@@ -179,6 +179,7 @@ class Klonbot(player.Bot):
                 return full_move
         # If you can't move turn the stock, but give up if you've done it too much.
         if self.turn_count > 8:
+            print('Lost')
             return 'quit'
         else:
             self.turn_count += 1
@@ -186,13 +187,15 @@ class Klonbot(player.Bot):
 
     def tell(self, *args, **kwargs):
         """Echo the game output to the user. (None)"""
-        super(Klonbot, self).tell(*args, **kwargs)
+        #super(Klonbot, self).tell(*args, **kwargs)
+        text = str(args[0])
         # Watch for mistakes.
-        if 'is not' in str(args[0]):
+        if 'is not' in text or 'cannot' in text:
             raise RuntimeError('Apparentl illegal move by Klonbot.')
         # Record winning games.
-        elif 'You won' in str(args[0]):
+        elif 'You won' in text:
             self.wins.append(self.next_num - 1)
+            print(text)
 
 
 class Klondike(solitaire.Solitaire):
@@ -282,12 +285,14 @@ def deal_klondike(game):
         game.deck.deal(game.stock)
     game.stock.reverse()
 
-def sim_test():
+def sim_test(start = 1, end = 10):
     bot = Klonbot()
     sim = Klondike(bot, 'none')
-    results = sim.play()
-    print(results)
-    print([card.rank + card.suit for card in sim.waste + sim.stock[::-1]])
+    for game_num in range(1, end + 1):
+        bot.next_num = game_num
+        results = sim.play()
+        print(results)
+    #print([card.rank + card.suit for card in sim.waste + sim.stock[::-1]])
     return bot, sim
 
 
