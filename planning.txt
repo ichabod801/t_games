@@ -4,7 +4,6 @@
 
 == Short Term To Do List ==
 
-Klondike bot.
 Some more games.
 Alpha-beta bot.
 
