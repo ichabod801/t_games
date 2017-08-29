@@ -108,7 +108,7 @@ class Card(object):
 
     def __repr__(self):
         """Debugging text representation. (str)"""
-        return 'Card({}, {})'.format(self.rank, self.suit)
+        return 'Card({!r}, {!r})'.format(self.rank, self.suit)
 
     def __str__(self):
         """Human readable text representation. (str)"""

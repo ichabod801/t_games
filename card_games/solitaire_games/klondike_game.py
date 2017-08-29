@@ -8,6 +8,7 @@ CREDITS: Credits for Klondike. (str)
 RULES: Rules for Klondike. (str)
 
 Classes:
+Klonbot: A bot to play Klondike stupidly. (Bot)
 Klondike: A game of Klondike. (Solitaire)
 
 Functions:
@@ -15,6 +16,7 @@ deal_klondike: Deal deal a triangle in the tableau. (None)
 """
 
 
+import tgames.player as player
 import tgames.card_games.solitaire_games.solitaire_game as solitaire
 import tgames.utility as utility
 
@@ -37,6 +39,160 @@ switch-one: You can switch to turning over one card at a time, but only for
     one last pass through the deck. (use the switch command)
 turn-one: Cards from the stock are turned over one at a time.
 """
+
+
+class Klonbot(player.Bot):
+    """
+    A bot to play Klondike stupidly. (Bot)
+
+    In college I knew people who played Klondike by playing every card they could
+    as soon as they could. But you can have better outcomes by delaying some 
+    moves, especially when managing the stock. So I used to say, "I could not only
+    write a program to play Solitaire, I could write a program to play Solitaire
+    for you." Here it is.
+
+    The bot is designed to run several games by deal number and record the wins. 
+    To play one random game, set the start parameter to -1.
+
+    !! It seems to work, but when it actually wins it causes an error. This seems
+    to be in Solitaire, consistently in line 686.
+
+    Attributes:
+    last_num: The last deal number to be played. (int)
+    made_moves: The moves made this game, to prevent loops. (set of str)
+    next_num: The next deal number to be played. (int)
+    turn_count: The number of consecutive turns of the stock. (int)
+    wins: The deal numbers for games that were won. (list of int)
+
+    Methods:
+    move_check: Check a given card for possible moves. (str, str)
+    next_move: Get the next move to make. (str)
+
+    Overridden Methods:
+    __init__
+    ask
+    tell
+    """
+
+    def __init__(self, start = 1, end = 10):
+        """
+        Set up the bot. (None)
+
+        To play one random deal, set start to -1.
+
+        Parameters:
+        start: The first deal number to play. (int)
+        end: The last deal number to play. (int)
+        """
+        super(Klonbot, self).__init__()
+        # Set up tracking variables
+        self.turn_count = 0
+        self.made_moves = set()
+        self.next_num = start
+        self.last_num = end
+        self.wins = []
+
+    def ask(self, prompt):
+        """
+        Answer questions from the game. (str)
+
+        Parameters:
+        prompt: The question from the game. (str)
+        """
+        # Do not set options. !! I could add an options attribute to allow this.
+        if 'options' in prompt:
+            response = 'nope'
+        # Provide the next deal number unless set for random game.
+        elif 'deal number' in prompt:
+            if self.next_num == -1:
+                response = ''
+            else:
+                response = str(self.next_num)
+                self.next_num += 1
+                self.made_moves = set()
+        # Check that all specified deals have been played.
+        elif 'play again' in prompt:
+            if self.next_num > self.last_num of self.next_num == -1:
+                reponse = 'no way'
+            else:
+                response = 'sure'
+        # Get the next move.
+        elif 'move' in prompt:
+            response = self.next_move()
+        # Raise error on unrecognized prompt.
+        else:
+            raise RuntimeError('Unrecognized prompt to Klonbot: {}'.format(prompt))
+        return response
+
+    def move_check(self, card, targets, foundations):
+        """
+        Check a given card for possible moves. (str, str)
+
+        The return value is the move name and the target card, if any. If the move
+        returned is empty, no valid move was found.
+
+        Parameters:
+        card: The card to check for moves. (Card)
+        targets: The cards you can build on. (list of Card)
+        foundations: The cards you can sort to. (list of Card)
+        """
+        # Sort aces.
+        if card.rank == 'A':
+            return 'sort', ''
+        # Check for other sorts.
+        for target in foundations:
+            if card.above(target) and card.suit == target.suit:
+                return 'sort', ''
+        # Fill empty lanes with kings.
+        if card.rank == 'K' and len(targets) < 7:
+            return 'lane', ''
+        # Check for building on the tableau.
+        for target in targets:
+            if card.below(target) and card.color != target.color:
+                return 'build', target
+        # Return empty strings if no move found.
+        return '', ''
+
+    def next_move(self):
+        """Get the next move to make. (str)"""
+        # Get places to move to.
+        foundations = [stack[-1] for stack in self.game.foundations if stack]
+        targets = [stack[-1] for stack in self.game.tableau if stack]
+        # Get the cards that can move.
+        movers = []
+        for stack in self.game.tableau:
+            if stack:
+                for card in stack:
+                    if card.up and not (card.rank == 'K' and stack[0] == card):
+                        movers.append(card)
+                        break
+        possibles = movers + targets
+        if self.game.waste:
+            possibles.append(self.game.waste[-1])
+        # Check each card for possible moves.
+        for card in possibles:
+            move, target = self.move_check(card, targets, foundations)
+            full_move = '{} {} {}'.format(move, card, target)
+            if move and full_move not in self.made_moves:
+                self.made_moves.add(full_move)
+                self.turn_count = 0
+                return full_move
+        # If you can't move turn the stock, but give up if you've done it too much.
+        if self.turn_count > 8:
+            return 'quit'
+        else:
+            self.turn_count += 1
+            return 'turn'
+
+    def tell(self, *args, **kwargs):
+        """Echo the game output to the user. (None)"""
+        super(Klonbot, self).tell(*args, **kwargs)
+        # Watch for mistakes.
+        if 'is not' in str(args[0]):
+            raise RuntimeError('Apparentl illegal move by Klonbot.')
+        # Record winning games.
+        elif 'You won' in str(args[0]):
+            self.wins.append(self.next_num - 1)
 
 
 class Klondike(solitaire.Solitaire):
@@ -126,6 +282,14 @@ def deal_klondike(game):
         game.deck.deal(game.stock)
     game.stock.reverse()
 
+def sim_test():
+    bot = Klonbot()
+    sim = Klondike(bot, 'none')
+    results = sim.play()
+    print(results)
+    print([card.rank + card.suit for card in sim.waste + sim.stock[::-1]])
+    return bot, sim
+
 
 if __name__ == '__main__':
     import tgames.player as player
@@ -134,5 +298,8 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    klondike = Klondike(player.Player(name), '')
-    klondike.play()
+    if name.lower() == 'sim':
+        bot, sim = sim_test()
+    else:
+        klondike = Klondike(player.Player(name), '')
+        klondike.play()
