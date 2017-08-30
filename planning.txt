@@ -5,6 +5,10 @@
 == Short Term To Do List ==
 
 Some more games.
+	RPS bots
+	canfield
+	black jack
+	hamurabi
 Alpha-beta bot.
 
 == Long Term To Do List ==
