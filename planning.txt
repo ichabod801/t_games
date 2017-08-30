@@ -6,6 +6,7 @@
 
 Some more games.
 	RPS bots
+	implement full credits.
 	canfield
 	black jack
 	hamurabi

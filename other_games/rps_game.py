@@ -3,11 +3,15 @@ rps_game.py
 
 Rock-paper-scissors.
 
+!! Implement the Iocaine Powder bot.
+
 Constants:
 CREDITS: Credits for Rock-Paper-Scissors. (str)
+RULES: Rulse for Rock-Paper-Scissors. (str)
 
 Classes:
 Bart: Good old rock. Nothing beats rock. (Bot)
+Memor: An RPS bot with a memory. (Bot)
 Randy: A random RPS bot. (Bot)
 Lisa: An anti-Bart bot. (Ramdy)
 RPS: A game of rock-paper-scissors. (Game)
@@ -96,24 +100,25 @@ class Memor(player.Bot):
         Parameters:
         taken_names: The names already taken. (list of str)
         """
-        super(Randy, self).__init__(taken_names, initial = 'r')
-        self.file_path = os.path.join(self.game.human.folder_path, 'rps_memor_data{}.txt')
+        super(Memor, self).__init__(taken_names, initial = 'm')
+        self.file_path = 'rps_memor_data{}.txt'
         self.losses = {}
         self.memory = {}
 
     def __del__(self):
         """Garbage collect the instance. (None)"""
-        with open(self.file_path, 'w') as data_file:
-            for move, count in self.memory.items():
-                data_file.write('{}:{}\n'.format(move, count))
+        if '{}' not in self.file_path:
+            with open(self.file_path, 'w') as data_file:
+                for move, count in self.memory.items():
+                    data_file.write('{}:{}\n'.format(move, count))
 
     def ask(self, prompt):
         if not self.memory:
             self.set_up()
         if prompt == 'What is your move? ':
-            moves, counts = zip(self.memory.items())
+            moves, counts = zip(*self.memory.items())
             cum = [sum(counts[:index]) for index in range(1, len(moves) + 1)]
-            choice = randint(1, sum(counts))
+            choice = random.random() * cum[-1]
             guess = moves[bisect.bisect(cum, choice)]
             return random.choice(self.losses[guess])
         else:
@@ -130,9 +135,11 @@ class Memor(player.Bot):
         data_tag = ''
         if self.game.wins == self.game.lizard_spock:
             data_tag = '_ls'
-        self.file_path = self.file_path.format(data_tag)
-        if os.path.exists(self.file_path):
-            self.load_data()
+        if hasattr(self.game.human, 'folder_path'):
+            self.file_path = os.path.join(self.game.human.folder_path, self.file_path.format(data_tag))
+            if os.path.exists(self.file_path):
+                self.load_data()
+        self.losses = {move: [] for move in self.game.wins}
         for move, beats in self.game.wins.items():
             for loss in beats:
                 self.losses[loss].append(move)
@@ -245,16 +252,17 @@ class RPS(game.Game):
             # Check for bot win.
             if move in self.wins[bot_move]:
                 self.human.tell('{} beats {}, you lose.'.format(bot_move, move))
-                self.win_loss_draw[1] = 1
+                self.win_loss_draw[1] += 1
             # Check for human win.
             elif bot_move in self.wins[move]:
                 self.human.tell('{} beats {}, you win!'.format(move, bot_move))
-                self.win_loss_draw[0] = 1
+                self.win_loss_draw[0] += 1
             # Otherwise assume tie.
             else:
                 self.human.tell('You both played {}, play again.'.format(move))
                 self.win_loss_draw[2] += 1
-            # Update the bot.
+            # Update the players.
+            self.human.tell('The score is now {}-{}-{}.'.format(*self.win_loss_draw))
             self.bot.tell(move)
         return sum(self.win_loss_draw[:2]) == self.match
 
