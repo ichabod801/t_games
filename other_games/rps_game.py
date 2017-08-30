@@ -27,6 +27,7 @@ import tgames.utility as utility
 CREDITS = """
 Game Design: Traditional
 Game Programming: Craig "Ichabod" O'Brien
+Special Thanks: Matt Groening
 """
 
 # Rules for Rock-Paper-Scissors.
@@ -40,8 +41,12 @@ Spock. Lizard beats paper and Spock and loses to rock and scissors. Spock
 beats scissors and rock and loses to paper and lizard.
 
 Options:
+bart: Play against the Bart bot.
+lisa: Play against the Lisa bot.
 lizard-spock: Add the lizard and Spock moves.
 match=: The number of rounds played. Defaults to 1.
+memor: Play against the Memor bot (the default)
+randy: Play against the Randy bot.
 """
 
 
@@ -78,8 +83,6 @@ class Memor(player.Bot):
     """
     An RPS bot with a memory. (Bot)
 
-    !! I need to think this through more. How to make it work with generalization.
-
     Overridden Methods:
     __init__
     ask
@@ -94,21 +97,19 @@ class Memor(player.Bot):
         taken_names: The names already taken. (list of str)
         """
         super(Randy, self).__init__(taken_names, initial = 'r')
-        self.file_path = os.path.join(self.game.human.folder_path, 'rps_memor_data.txt')
+        self.file_path = os.path.join(self.game.human.folder_path, 'rps_memor_data{}.txt')
         self.losses = {}
-        for move, beats in self.game.wins.items():
-            for loss in beats:
-                self.losses[loss].append(move)
-        self.memory = {move: 1 for move in self.game.wins}
-        if os.path.exists(self.file_path):
-            self.memory.update(self.load_data())
+        self.memory = {}
 
     def __del__(self):
         """Garbage collect the instance. (None)"""
         with open(self.file_path, 'w') as data_file:
-            for move, count
+            for move, count in self.memory.items():
+                data_file.write('{}:{}\n'.format(move, count))
 
     def ask(self, prompt):
+        if not self.memory:
+            self.set_up()
         if prompt == 'What is your move? ':
             moves, counts = zip(self.memory.items())
             cum = [sum(counts[:index]) for index in range(1, len(moves) + 1)]
@@ -117,6 +118,25 @@ class Memor(player.Bot):
             return random.choice(self.losses[guess])
         else:
             return ''
+
+    def load_data(self):
+        with open(self.file_path) as data_file:
+            for line in data_file:
+                key, value = line.split(':')
+                if key in self.memory:
+                    self.memory[key] = int(value)
+
+    def set_up(self):
+        data_tag = ''
+        if self.game.wins == self.game.lizard_spock:
+            data_tag = '_ls'
+        self.file_path = self.file_path.format(data_tag)
+        if os.path.exists(self.file_path):
+            self.load_data()
+        for move, beats in self.game.wins.items():
+            for loss in beats:
+                self.losses[loss].append(move)
+        self.memory = {move: 1 for move in self.game.wins}
 
     def tell(self, text):
         if text in self.memory:
@@ -191,6 +211,7 @@ class RPS(game.Game):
     A game of rock-paper-scissors. (Game)
 
     Class Attributes:
+    bots: The bots available as options for play. (dict of str: Bot)
     lizard_spock: A wins attribute for the lizard-spock option. (dict)
     wins: What each move beats. (dict of str: list of str)
 
@@ -207,6 +228,7 @@ class RPS(game.Game):
     """
 
     aka = ['rps', 'rock paper scissors', 'roshambo']
+    bots = {'bart': Bart, 'lisa': Lisa, 'memor': Memor, 'randy': Randy}
     categories = ['Other Games', 'Other Games']
     credits = CREDITS
     lizard_spock = {'rock': ['scissors', 'lizard'], 'scissors': ['paper', 'lizard'], 
@@ -239,7 +261,8 @@ class RPS(game.Game):
     def handle_options(self):
         """Handle any game options. (None)"""
         # Set default options
-        self.bot_class = Randy
+        self.bot_class = Memor
+        self.match = 3
         # Check for no options
         if self.raw_options == 'none':
             pass
@@ -247,20 +270,27 @@ class RPS(game.Game):
         elif self.raw_options:
             self.flags |= 1
             for word in raw_options.lower().split():
+                # Lizard Spock
                 if word == 'lizard-spock':
                     self.wins = self.lizard_spock
+                # Match
                 elif word.startswith('match='):
                     try:
                         self.match = int(word.split('=')[1])
                     except ValueError:
                         self.human.tell('Invalid value for match option: {!r}.'.format(word.split('=')[1]))
+                # Bots.
+                elif word in self.bots:
+                    self.bot_class = self.bots[word]
         # Ask for options.
         else:
             if self.human.ask('Would you like to change the options? ').lower().strip() in utility.YES:
                 self.flags |= 1
+                # Check for lizard Spock.
                 lizard_spock = self.human.ask('Would you like to add lizard and Spock? ')
                 if lizard_spock in utility.YES:
                     self.wins = self.lizard_spock
+                # Check for match number.
                 while True:
                     match = self.human.ask('How many games to play in match (return for 1)?').strip()
                     if not match:
@@ -268,6 +298,19 @@ class RPS(game.Game):
                     elif match.isdigit():
                         self.match = int(match)
                         break
+                # Check for bot opponent.
+                while True:
+                    bot = self.human.ask('Which bot would you like to play against (return for Memor)? ')
+                    bot = bot.lower().strip()
+                    if bot in self.bots:
+                        self.bot_class = self.bots[bot]
+                        break
+                    elif not bot:
+                        break
+                    else:
+                        self.human.tell('I do not recognize that type of bot.')
+                        known = ', '.join(sorted(self.bots.keys()))
+                        self.human.tell('The bots I know are:', known)
         # Set up players.
         self.bot = self.bot_class([self.human.name])
         self.players = [self.human, self.bot]
