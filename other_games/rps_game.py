@@ -7,11 +7,15 @@ Constants:
 CREDITS: Credits for Rock-Paper-Scissors. (str)
 
 Classes:
+Bart: Good old rock. Nothing beats rock. (Bot)
 Randy: A random RPS bot. (Bot)
+Lisa: An anti-Bart bot. (Ramdy)
 RPS: A game of rock-paper-scissors. (Game)
 """
 
 
+import bisect
+import os
 import random
 
 import tgames.game as game
@@ -41,6 +45,84 @@ match=: The number of rounds played. Defaults to 1.
 """
 
 
+class Bart(player.Bot):
+    """
+    Good old rock. Nothing beats rock. (Bot)
+
+    Overridden Methods:
+    __init__
+    ask
+    tell
+    """
+
+    def __init__(self, taken_names):
+        """
+        Set up the bot. (None)
+
+        Parameters:
+        taken_names: The names already taken. (list of str)
+        """
+        super(Bart, self).__init__(taken_names, initial = 'b')
+
+    def ask(self, prompt):
+        if prompt == 'What is your move? ':
+            return 'rock'
+        else:
+            return ''
+
+    def tell(self, text):
+        pass
+
+
+class Memor(player.Bot):
+    """
+    An RPS bot with a memory. (Bot)
+
+    !! I need to think this through more. How to make it work with generalization.
+
+    Overridden Methods:
+    __init__
+    ask
+    tell
+    """
+
+    def __init__(self, taken_names):
+        """
+        Set up the bot. (None)
+
+        Parameters:
+        taken_names: The names already taken. (list of str)
+        """
+        super(Randy, self).__init__(taken_names, initial = 'r')
+        self.file_path = os.path.join(self.game.human.folder_path, 'rps_memor_data.txt')
+        self.losses = {}
+        for move, beats in self.game.wins.items():
+            for loss in beats:
+                self.losses[loss].append(move)
+        self.memory = {move: 1 for move in self.game.wins}
+        if os.path.exists(self.file_path):
+            self.memory.update(self.load_data())
+
+    def __del__(self):
+        """Garbage collect the instance. (None)"""
+        with open(self.file_path, 'w') as data_file:
+            for move, count
+
+    def ask(self, prompt):
+        if prompt == 'What is your move? ':
+            moves, counts = zip(self.memory.items())
+            cum = [sum(counts[:index]) for index in range(1, len(moves) + 1)]
+            choice = randint(1, sum(counts))
+            guess = moves[bisect.bisect(cum, choice)]
+            return random.choice(self.losses[guess])
+        else:
+            return ''
+
+    def tell(self, text):
+        if text in self.memory:
+            self.memory[text] += 1
+
+
 class Randy(player.Bot):
     """
     A random RPS bot. (Bot)
@@ -58,14 +140,50 @@ class Randy(player.Bot):
         Parameters:
         taken_names: The names already taken. (list of str)
         """
-        super(Randy, self).__init__([human_name], initial = 'r')
+        super(Randy, self).__init__(taken_names, initial = 'r')
 
     def ask(self, prompt):
         if prompt == 'What is your move? ':
             return random.choice(list(self.game.wins.keys()))
+        else:
+            return ''
 
     def tell(self, text):
         pass
+
+
+class Lisa(Randy):
+    """
+    An anti-Bart bot. (Bot)
+
+    Overridden Methods:
+    __init__
+    ask
+    tell
+    """
+
+    def __init__(self, taken_names):
+        """
+        Set up the bot. (None)
+
+        Parameters:
+        taken_names: The names already taken. (list of str)
+        """
+        super(Lisa, self).__init__(taken_names, initial = 'l')
+        self.last_attack = ''
+
+    def ask(self, prompt):
+        if prompt == 'What is your move? ':
+            if self.last_attack == 'rock':
+                return 'paper'
+            else:
+                return super(Lisa, self).ask(prompt)
+        else:
+            return ''
+
+    def tell(self, text):
+        if text in self.game.wins:
+            self.last_attack = text
         
 
 class RPS(game.Game):

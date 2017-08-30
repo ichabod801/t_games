@@ -43,8 +43,8 @@ card/trick: hearts, spades
 card/matching: cribbage, snip snap snorem
 card/shedding: crazy eights, spit
 card/rummy: rummy, tonk
-card/accumulating: war, slapjack
-card/other: ace-jack, peace and love
+card/accumulating: war, ninety-nine
+card/other: golf ii, peace and love
 dice/jeopardy: pig!, zip
 dice/category: yacht, poker dice
 dice/liar: dudo, liar's dice
@@ -69,11 +69,68 @@ Gambling would make for a good crossover category. connect four <-> roulette, cr
 
 Don't depend on gambling. Allow for links across other categores where they make sense.
 
-freecell       -> penguin        (move any card to an empty foundation, turn on wrap_ranks)
-klondike       -> solitaire dice (place one card from the stock at the end of the stock)
-penguin        -> klondike       (move any one card)
-pig            -> solitaire dice (pick one of two rolls)
-solitaire dice -> freecell       (free ride)
+Games with an asterisk * after them on the left are already on the right twice.
+
+adventure             -> wumpus
+agnes*                -> maria
+backgammon            -> snakes and ladders
+battleships           -> chess                (win if you sink their battleship)
+beleaguered castle    -> war
+bisley                -> martha
+blackjack             -> bacarat
+blackjack             -> ninety-nine
+chess*                -> mancala              (take a row and move it one square left or right)
+connect four          -> roulette
+connect four          -> halma
+craps*                -> zip
+crazy eights          -> spit
+cribbage              -> backgammon
+duchess               -> canfield
+dudo                  -> liar's dice
+freecell*             -> penguin              (move any card to an empty foundation, turn on wrap_ranks)
+forty thieves         -> freecell
+ghost                 -> hangman              (switch the ghost word to the hangman word)
+global thermonuclear* -> peace and love
+global thermonuclear* -> siegecraft
+halma                 -> chess
+hamurabi              -> pyramid
+klondike*             -> agnes
+klondike              -> solitaire dice       (place one card from the stock at the end of the stock)
+la belle lucie        -> agnes
+maria                 -> forty thieves
+maria                 -> martha
+martha*               -> duchess
+mexico                -> craps
+ninety-nine*          -> blackjack
+number guessing*      -> slot machine
+peace and love        -> golf ii
+penguin               -> klondike             (move any one card)
+pig                   -> solitaire dice       (pick one of two rolls)
+pig                   -> zip
+pyramid               -> golf
+rock-paper-scissors   -> number guessing
+roulette              -> connect four
+roulette              -> slot machine
+rummy                 -> tonk
+siege craft           -> beleaguered castle
+shamrocks             -> la belle lucie
+slot machine*         -> number guessing
+snakes and ladders*   -> global thermonuclear
+snip snap snorem      -> cribbage
+spades                -> hearts
+spit                  -> klondike
+solitaire dice*       -> freecell             (free ride)
+solitaire dice        -> mate
+space traders         -> hamurabi
+spider                -> spiderette
+spiderette            -> snakes and ladders
+tafl                  -> fox and geese
+war                   -> global thermonuclear
+war                   -> ninety-nine
+yacht                 -> poker dice
+zip*                  -> craps
+
+Pairing within sub-category is done. Next, pair within category but across sub-category.
 
 == 108 Games ==
 
