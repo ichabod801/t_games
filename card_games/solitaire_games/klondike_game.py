@@ -266,7 +266,7 @@ class Klondike(solitaire.Solitaire):
         self.pair_checkers = [solitaire.pair_down, solitaire.pair_alt_color]
         self.sort_checkers = [solitaire.sort_ace, solitaire.sort_up]
         # Set the dealers
-        self.dealers = [deal_klondike]
+        self.dealers = [deal_klondike, solitaire.deal_stock_all]
 
 
 def deal_klondike(game):
@@ -280,10 +280,6 @@ def deal_klondike(game):
     for card_ndx in range(len(game.tableau)):
         for tableau_ndx in range(card_ndx, len(game.tableau)):
             game.deck.deal(game.tableau[tableau_ndx], card_ndx == tableau_ndx)
-    # Move the rest of the deck into the stock, in the same order.
-    while game.deck.cards:
-        game.deck.deal(game.stock)
-    game.stock.reverse()
 
 def sim_test(start = 1, end = 10):
     bot = Klonbot()

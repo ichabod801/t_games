@@ -21,6 +21,7 @@ import os
 import random
 from string import ascii_uppercase
 
+import tgames.full_credits as full_credits
 import tgames.game as game
 import tgames.other_cmd as other_cmd
 import tgames.player as player
@@ -123,7 +124,7 @@ class Interface(other_cmd.OtherCmd):
         Parameters:
         arguments: This parameter is ignored. (str)
         """
-        self.human.tell(CREDITS)
+        self.human.tell(full_credits.FULL_CREDITS)
         self.human.ask('Press Enter to continue: ')
         return True
 

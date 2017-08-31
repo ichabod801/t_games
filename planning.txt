@@ -5,12 +5,11 @@
 == Short Term To Do List ==
 
 Some more games.
-	RPS bots
-	implement full credits.
-	canfield
+	canfield (options, rules, comments)
 	black jack
 	hamurabi
 always use < for previous menu and ! for quit.
+random interface command: play a random game.
 any gipfing necessary
 Alpha-beta bot.
 	tic-tac-toe
@@ -24,7 +23,7 @@ Program the games planned for text_games round 2.
 	Gipf implmentation
 	How to write a game documentation.
 Clean Up
-    documentation
+    documentation (style guide)
     output (one blank line)
 Play testing
 108 Games

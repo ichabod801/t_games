@@ -13,7 +13,7 @@ data_to_text: Convert CREDITS_DATA to formatted text. (str)
 
 
 CREDITS_DATA = [('Interface Programming', """Craig "Ichabod" O'Brien"""),
-    ('Game Design', """Humans; Paul Alfille, Sid Sackson, Gregory Yob"""),
+    ('Game Design', """Humans; Paul Alfille, Richard A. Canfield, Sid Sackson, Gregory Yob"""),
     ('Game Programming', """Craig "Ichabod" O'Brien"""),
     ('Bot Design', """Roger Johnson, Reiner Knizia, Todd Neller, Craig O'Brien, Clifton Presser"""),
     ('Bot Programming', """Craig "Ichabod" O'Brien"""),

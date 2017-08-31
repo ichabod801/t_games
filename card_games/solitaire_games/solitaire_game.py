@@ -731,6 +731,29 @@ def deal_free(game):
     for card_ndx in range(len(game.deck.cards)):
         game.deck.deal(game.tableau[card_ndx % len(game.tableau)])
 
+def deal_start_foundation(game):
+    """
+    Deal an initial foundation card. (None)
+
+    Parameters:
+    game: The game to deal the cards for. (Solitaire)
+    """
+    card = game.deck.cards[-1]
+    foundation = game.find_foundation(card)
+    game.deck.deal(foundation, True)
+    game.foundation_rank = card.rank
+
+def deal_stock_all(game):
+    """
+    Move the rest of the deck into the stock, in the same order. (None)
+
+    Parameters:
+    game: The game to deal the cards for. (Solitaire)
+    """
+    while game.deck.cards:
+        game.deck.deal(game.stock)
+    game.stock.reverse()
+
 def lane_king(game, card, moving_stack):
     """
     Check moving only kings into a lane. (bool)
@@ -743,7 +766,7 @@ def lane_king(game, card, moving_stack):
     error = ''
     # check for the moving card being a king.
     if card.rank != 'K':
-        error = 'You can only moving kinds into an empty lane.'
+        error = 'You can only move kings into an empty lane.'
     return error
         
 def lane_one(game, card, moving_stack):
@@ -834,6 +857,22 @@ def sort_ace(game, card, foundation):
     # check for match to foundation pile
     if not foundation and card.rank_num != 1:
         error = 'Only aces can be sorted to empty foundations.'
+    return error
+
+def sort_rank(game, card, foundation):
+    """
+    Sort starting with a specific rank. (bool)
+    
+    Parameters:
+    game: The game being played. (Solitiaire)
+    card: The card to be sorted. (TrackingCard)
+    foundation: The target foundation. (list of TrackingCard)
+    """
+    error = ''
+    # check for match to foundation pile
+    if not foundation and card.rank != game.foundation_rank:
+        rank_name = card.rank_names[card.rank_num].lower()
+        error = 'Only {}s can be sorted to empty foundations.'.format(rank_name)
     return error
 
 def sort_up(game, card, foundation):
