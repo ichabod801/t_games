@@ -10,7 +10,11 @@ Some more games.
 	canfield
 	black jack
 	hamurabi
+always use < for previous menu and ! for quit.
+any gipfing necessary
 Alpha-beta bot.
+	tic-tac-toe
+	connect four
 
 == Long Term To Do List ==
 
@@ -56,7 +60,7 @@ gambling/other: roulette, slot machines
 other/adventure: hunt the wumpus!, adventure
 other/simulation: hamurabi, my space traders (with bot traders), global thermonuclear war
 other/word: hangman, ghost (small word list?)
-other/other: RPS(LS), number guessing game 
+other/other: RPS(LS)*, number guessing game 
 
 An asterisk means the game has been coded. An exclamation point means the game has been coded and is in the gipf graph.
 
@@ -66,72 +70,130 @@ games gipfed:   3
 
 == Gipf Planning ==
 
-Gambling would make for a good crossover category. connect four <-> roulette, craps <-> solitaire dice, slap jack <-> blackjack, slot machines <-> number guessing game. solitaire_dice <-> solitaire.
-
-Don't depend on gambling. Allow for links across other categores where they make sense.
-
-Games with an asterisk * after them on the left are already on the right twice.
-
-adventure             -> wumpus
-agnes*                -> maria
+adventure             -> hunt the wumpus
+adventure             -> zip
+agnes                 -> maria
+agnes                 -> space traders
+bacarat               -> mexico
+bacarat               -> rock-paper-scissors
+backgammon            -> connect four
 backgammon            -> snakes and ladders
+baker's game          -> pyramid
+baker's game          -> tafl
 battleships           -> chess                (win if you sink their battleship)
 beleaguered castle    -> war
+beleaguered castle    -> shamrocks
+bisley                -> blackjack
 bisley                -> martha
 blackjack             -> bacarat
 blackjack             -> ninety-nine
-chess*                -> mancala              (take a row and move it one square left or right)
+canfield              -> baker's game
+canfield              -> blackjack
+chess                 -> mancala              (take a row and move it one square left or right)
+chess                 -> mate
 connect four          -> roulette
 connect four          -> halma
-craps*                -> zip
+craps                 -> zip
+craps                 -> crazy eights
+crazy eights          -> mexico
 crazy eights          -> spit
 cribbage              -> backgammon
+cribbage              -> tonk
 duchess               -> canfield
+duchess               -> maria
 dudo                  -> liar's dice
-freecell*             -> penguin              (move any card to an empty foundation, turn on wrap_ranks)
+dudo                  -> poker dice
+freecell              -> hamurabi
+freecell              -> penguin              (move any card to an empty foundation, turn on wrap_ranks)
+forty thieves         -> bisley
 forty thieves         -> freecell
+fox and geese         -> dudo
+fox and geese         -> ghost
 ghost                 -> hangman              (switch the ghost word to the hangman word)
-global thermonuclear* -> peace and love
-global thermonuclear* -> siegecraft
+ghost                 -> rock-paper-scissors
+global thermonuclear  -> peace and love
+global thermonuclear  -> siegecraft
+golf                  -> duchess
+golf                  -> spider
+golf ii               -> golf
+golf ii               -> spades
 halma                 -> chess
+halma                 -> mancala
+hamurabi              -> cribage
 hamurabi              -> pyramid
-klondike*             -> agnes
+hangman               -> fox and geese
+hangman               -> ghost
+hearts                -> rummy
+hearts                -> shamrocks
+hunt the wumpus       -> hangman
+klondike              -> agnes
 klondike              -> solitaire dice       (place one card from the stock at the end of the stock)
 la belle lucie        -> agnes
+la belle lucie        -> canfield
+liar's dice           -> la belle lucie
+liar's dice           -> yacht
+mancala               -> backgammon
+mancala               -> hearts
 maria                 -> forty thieves
 maria                 -> martha
-martha*               -> duchess
+martha                -> bisley
+martha                -> duchess
+mate                  -> dudo
+mate                  -> siegecraft
+mexico                -> adventure
 mexico                -> craps
-ninety-nine*          -> blackjack
-number guessing*      -> slot machine
+ninety-nine           -> blackjack
+ninety-nine           -> golf ii
+number guessing       -> snip snap snorem
+number guessing       -> slot machine
 peace and love        -> golf ii
+peace and love        -> space traders
 penguin               -> klondike             (move any one card)
+penguin               -> tafl
 pig                   -> solitaire dice       (pick one of two rolls)
 pig                   -> zip
+poker dice            -> liar's dice
+poker dice            -> roulette
 pyramid               -> golf
+pyramid               -> spider
 rock-paper-scissors   -> number guessing
+rock-paper-scissors   -> peace and love
 roulette              -> connect four
 roulette              -> slot machine
+rummy                 -> baker's game
 rummy                 -> tonk
 siege craft           -> beleaguered castle
+siege craft           -> forty thieves
 shamrocks             -> la belle lucie
-slot machine*         -> number guessing
-snakes and ladders*   -> global thermonuclear
+shamrocks             -> penguin
+slot machine          -> bacarat
+slot machine          -> number guessing
+snakes and ladders    -> global thermonuclear
+snakes and ladders    -> rummy
 snip snap snorem      -> cribbage
+snip snap snorem      -> yacht
+spades                -> crazy eights
 spades                -> hearts
 spit                  -> klondike
-solitaire dice*       -> freecell             (free ride)
+spit                  -> snip snap snorem
+solitaire dice        -> freecell             (free ride)
 solitaire dice        -> mate
+space traders         -> adventure
 space traders         -> hamurabi
+spider                -> beleaguered castle
 spider                -> spiderette
 spiderette            -> snakes and ladders
+spiderette            -> spit
 tafl                  -> fox and geese
+tafl                  -> halma
+tonk                  -> spiderette
+tonk                  -> war
 war                   -> global thermonuclear
 war                   -> ninety-nine
 yacht                 -> poker dice
-zip*                  -> craps
-
-Pairing within sub-category is done. Next, pair within category but across sub-category.
+yacht                 -> spades
+zip                   -> craps
+zip                   -> yacht
 
 == 108 Games ==
 

@@ -241,6 +241,7 @@ class RPS(game.Game):
     lizard_spock = {'rock': ['scissors', 'lizard'], 'scissors': ['paper', 'lizard'], 
         'paper': ['rock', 'spock'], 'lizard': ['paper', 'spock'], 'spock': ['scissors', 'rock']}
     name = 'Rock-Paper-Scissors'
+    rules = RULES
     wins = {'rock': ['scissors'], 'scissors': ['paper'], 'paper': ['rock']}
 
     def game_over(self):
@@ -277,7 +278,7 @@ class RPS(game.Game):
         # Check for passed options.
         elif self.raw_options:
             self.flags |= 1
-            for word in raw_options.lower().split():
+            for word in self.raw_options.lower().split():
                 # Lizard Spock
                 if word == 'lizard-spock':
                     self.wins = self.lizard_spock
@@ -300,12 +301,14 @@ class RPS(game.Game):
                     self.wins = self.lizard_spock
                 # Check for match number.
                 while True:
-                    match = self.human.ask('How many games to play in match (return for 1)?').strip()
+                    match = self.human.ask('How many games to play in match (return for 3)? ').strip()
                     if not match:
                         break
                     elif match.isdigit():
                         self.match = int(match)
                         break
+                    else:
+                        self.human.tell('Please enter an integer.')
                 # Check for bot opponent.
                 while True:
                     bot = self.human.ask('Which bot would you like to play against (return for Memor)? ')

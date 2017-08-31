@@ -421,8 +421,9 @@ class Solitaire(game.Game):
         check = sum([len(foundation) for foundation in self.foundations])
         target = len(self.deck.cards) + len(self.deck.in_play) + len(self.deck.discards)
         if check == target:
-            message = 'Congratulations! You won in {} moves (with {} undos).'
-            self.human.tell(message.format(len(self.moves) + 2 * self.undo_count, self.undo_count))
+            message = 'Congratulations! You won in {} moves (with {} undos), for a score of {}.'
+            moves = len(self.moves) + 2 * self.undo_count
+            self.human.tell(message.format(moves, self.undo_count, self.scores[self.human.name]))
             self.win_loss_draw[0] = 1
             return True
         else:
