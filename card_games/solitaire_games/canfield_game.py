@@ -110,7 +110,7 @@ class Canfield(solitaire.Solitaire):
             self.build_checkers = []
             self.lane_checkers = []
             self.pair_checkers = [solitaire.pair_down]
-        elif self.raw_options == 'rainbow':
+        elif self.raw_options.startswith('rainbow'):
             self.pair_checkers = [solitaire.pair_down]
         # Set the dealers.
         self.dealers = [solitaire.deal_reserve_n(13), solitaire.deal_start_foundation, deal_tableau1, 
