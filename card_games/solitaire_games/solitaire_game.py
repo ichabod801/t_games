@@ -7,10 +7,11 @@ Classes:
 Solitaire: A generalized solitaire game. (game.game)
 
 Functions:
-pair_alt_color: Build in alternating colors. (str)
+pair_alt_color: Build in alternating colors. (str) ?? order of functions?
 pair_down: Build sequentially down in rank. (str)
 build_one: Build moving one card at a time. (bool)
 deal_free: Deal all the cards out onto the tableau. (None)
+deal_reserve_n: Create a dealer that deals n cards to the reserve (None)
 lane_one: Check moving one card at a time into a lane. (bool)
 move_one_size: Calculate maximum stack under "move one" rules. (int)
 sort_ace: Sort starting with the ace. (bool)
@@ -730,6 +731,18 @@ def deal_free(game):
     """
     for card_ndx in range(len(game.deck.cards)):
         game.deck.deal(game.tableau[card_ndx % len(game.tableau)])
+
+def deal_reserve_n(n):
+    """
+    Create a dealer that deals n cards to the reserve (None)
+
+    Parameters:
+    n: The number of cards to deal to the reserve. (int)
+    """
+    def dealer(game):
+        for card_index in range(n):
+            game.deck.deal(game.reserve[0], card_index == n - 1)
+    return dealer
 
 def deal_start_foundation(game):
     """

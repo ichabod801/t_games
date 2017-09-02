@@ -5,7 +5,7 @@
 == Short Term To Do List ==
 
 Some more games.
-	canfield (options, rules, comments)
+	canfield (options)
 	black jack
 	hamurabi
 always use < for previous menu and ! for quit.
