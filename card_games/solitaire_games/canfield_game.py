@@ -43,6 +43,9 @@ Options:
 Chameleon: A 12 card reserve and three foundation piles. Tableau building is
     down regarless of suit, and partial stacks may be moved. The stock is
     turned one card at a time, but with only one pass through the stock.
+Rainbow: Tableau building is down regardless of suit.
+Rainbow-One: As Rainbow, but cards from the stock are dealt one card at a
+    time, with two passes through the stock allowed.
 """
 
 
@@ -62,7 +65,7 @@ class Canfield(solitaire.Solitaire):
     credits = CREDITS
     name = 'Canfield'
     rules = RULES
-    variants = ('chameleon')
+    variants = ('chameleon', 'rainbow', 'rainbow-one')
 
     def handle_options(self):
         """Set up the game options. (None)"""
@@ -73,7 +76,7 @@ class Canfield(solitaire.Solitaire):
         if not self.raw_options:
             question = 'Which variant would you like to play (return for standard rules)? '
             while True:
-                varaint = self.human.ask(question).strip().lower()
+                variant = self.human.ask(question).strip().lower()
                 if not variant:
                     break
                 elif variant in self.variants:
@@ -84,12 +87,14 @@ class Canfield(solitaire.Solitaire):
                     self.human.tell(message, ', '.join(self.variants))
         if self.raw_options:
             if self.raw_options.lower() == 'chameleon':
-                print('chameleon detected')
                 self.options['num-tableau'] = 3
                 self.options['turn-count'] = 1
                 self.options['max-passes'] = 1
-            else:
-                self.huma.tell('Unrecognized Canfield variant: {}.'.format(self.raw_options))
+            elif self.raw_options.lower() == 'rainbow-one':
+                self.options['turn-count'] = 1
+                self.options['max-passes'] = 2
+            elif self.raw_options.lower() not in self.variants:
+                self.human.tell('Unrecognized Canfield variant: {}.'.format(self.raw_options))
 
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
@@ -104,6 +109,8 @@ class Canfield(solitaire.Solitaire):
         if self.raw_options == 'chameleon':
             self.build_checkers = []
             self.lane_checkers = []
+            self.pair_checkers = [solitaire.pair_down]
+        elif self.raw_options == 'rainbow':
             self.pair_checkers = [solitaire.pair_down]
         # Set the dealers.
         self.dealers = [solitaire.deal_reserve_n(13), solitaire.deal_start_foundation, deal_tableau1, 
@@ -151,7 +158,7 @@ def lane_reserve(game, card, moving_stack):
     # check for the moving card being on top of a reserve pile.
     if not any(game.reserve) and card != game.waste[-1]:
         error = 'If the reserve is empty, you can only lane cards from the waste.'
-    elif card not in [stack[-1] for stack in game.reserve]:
+    elif any(game.reserve) and card not in [stack[-1] for stack in game.reserve]:
         error = 'You can only move cards from the reserve into an empty lane.'
     return error
 

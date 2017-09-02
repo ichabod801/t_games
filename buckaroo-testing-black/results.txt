@@ -6,3 +6,6 @@ Klondike,1,0,0,750,1
 Klondike,0,1,0,708,5
 Klondike,1,0,0,770,1
 Canfield,0,1,0,761,4
+Canfield,0,1,0,655,4
+Canfield,0,1,0,634,6
+Canfield,0,1,0,660,4
