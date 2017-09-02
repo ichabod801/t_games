@@ -65,7 +65,7 @@ class Canfield(solitaire.Solitaire):
     credits = CREDITS
     name = 'Canfield'
     rules = RULES
-    variants = ('chameleon', 'rainbow', 'rainbow-one')
+    variants = ('chameleon', 'rainbow', 'rainbow-one', 'selective')
 
     def handle_options(self):
         """Set up the game options. (None)"""
@@ -105,6 +105,9 @@ class Canfield(solitaire.Solitaire):
         self.lane_checkers = [lane_reserve]
         self.pair_checkers = [solitaire.pair_down, solitaire.pair_alt_color]
         self.sort_checkers = [solitaire.sort_rank, solitaire.sort_up]
+        # Set the dealers.
+        self.dealers = [solitaire.deal_reserve_n(13), solitaire.deal_start_foundation, deal_tableau1, 
+            solitaire.deal_stock_all]
         # Check for variant rules.
         if self.raw_options == 'chameleon':
             self.build_checkers = []
@@ -112,9 +115,8 @@ class Canfield(solitaire.Solitaire):
             self.pair_checkers = [solitaire.pair_down]
         elif self.raw_options.startswith('rainbow'):
             self.pair_checkers = [solitaire.pair_down]
-        # Set the dealers.
-        self.dealers = [solitaire.deal_reserve_n(13), solitaire.deal_start_foundation, deal_tableau1, 
-            solitaire.deal_stock_all]
+        elif self.raw_options == 'selective':
+            self.dealers = [solitaire.deal_reserve_n(13), deal_selective, solitaire.deal_stock_all]
 
 
 def build_whole(game, mover, target, moving_stack):
@@ -132,6 +134,31 @@ def build_whole(game, mover, target, moving_stack):
         if mover.game_location[mover_index - 1].up:
             error = 'Only complete stacks may be moved on the tableau.'
     return error
+
+def deal_selective(game):
+    """
+    Deal tableau cards with selection of the starting foundation card. (function)
+
+    Parameters:
+    game: The game to deal cards for. (Solitaire)
+    """
+    # Get the possible foundation cards.
+    starters = game.deck.cards[-len(game.tableau) - 1:]
+    starter_text = ', '.join([card.rank + card.suit for card in starters])
+    # Get the player's choice for a foundation card.
+    message = 'Which of these cards would you like on the foundation: {}? '.format(starter_text)
+    while True:
+        founder = game.human.ask(message).strip()
+        if founder in starters:
+            break
+        game.human.tell('That is not one of the available cards.')
+    # Deal the foundation card chosen.
+    founder = game.deck.find(founder)
+    target = game.find_foundation(founder)
+    game.deck.force(founder, target)
+    game.foundation_rank = founder.rank
+    # Deal the rest of the cards.
+    deal_tableau1(game)
 
 def deal_tableau1(game):
     """

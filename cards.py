@@ -91,7 +91,7 @@ class Card(object):
             return (self.rank, self.suit) == (other.rank, other.suit)
         # Compare strings by str
         elif isinstance(other, str):
-            return str(self) == other.upper()
+            return self.rank + self.suit == other.upper()
         else:
             return NotImplemented
 
