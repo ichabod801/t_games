@@ -732,16 +732,22 @@ def deal_free(game):
     for card_ndx in range(len(game.deck.cards)):
         game.deck.deal(game.tableau[card_ndx % len(game.tableau)])
 
-def deal_reserve_n(n):
+def deal_reserve_n(n, up = False):
     """
     Create a dealer that deals n cards to the reserve (None)
 
+    The top card is always dealt face up.
+
+    !! Generalize for different number of reserve stacks.
+
     Parameters:
     n: The number of cards to deal to the reserve. (int)
+    up: A flag for dealing the cards face up. (bool)
     """
     def dealer(game):
         for card_index in range(n):
-            game.deck.deal(game.reserve[0], card_index == n - 1)
+            game.deck.deal(game.reserve[0], up)
+        game.reserve[0][-1].up = True
     return dealer
 
 def deal_start_foundation(game):

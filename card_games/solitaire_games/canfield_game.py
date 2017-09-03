@@ -53,6 +53,8 @@ Selective: You are given five cards. You get to choose one to go on the
 Storehouse: The foundations start filled with twos. The stock is turned up one
     card at a time, with two passes through the stock allowed. The tableau is
     build down by suit.
+Superior: The reserve is visible and empty tableau piles may be filled with 
+    cards from the waste or reserve.
 """
 
 
@@ -63,6 +65,9 @@ class Canfield(solitaire.Solitaire):
     Class Attributes:
     variants: The recognized variants of Canfield. (tuple of str)
 
+    Methods:
+    superior_text: Generate text for the reserve in the superior variant. (str)
+
     Overridden Methods:
     handle_options
     set_checkers
@@ -72,7 +77,7 @@ class Canfield(solitaire.Solitaire):
     credits = CREDITS
     name = 'Canfield'
     rules = RULES
-    variants = ('chameleon', 'rainbow', 'rainbow-one', 'selective')
+    variants = ('chameleon', 'rainbow', 'rainbow-one', 'selective', 'storehouse', 'superior')
 
     def handle_options(self):
         """Set up the game options. (None)"""
@@ -129,6 +134,14 @@ class Canfield(solitaire.Solitaire):
             self.pair_checkers[1] = solitaire.pair_suit
             self.dealers = [deal_twos_foundations, solitaire.deal_reserve_n(13), deal_tableau1,
                 solitaire.deal_stock_all]
+        elif self.raw_options == 'superior':
+            self.lane_checkers = []
+            self.dealers[0] = solitaire.deal_reserve_n(13, True)
+            self.reserve_text = self.superior_text
+
+    def superior_text(self):
+        """Generate text for the reserve in the superior variant. (str)"""
+        return ' '.join([str(card) for card in self.reserve[0]])
 
 
 def build_whole(game, mover, target, moving_stack):
