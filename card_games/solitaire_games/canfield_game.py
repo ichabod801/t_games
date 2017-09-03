@@ -9,6 +9,8 @@ Canfield: A game of Canfield. (Solitaire)
 Functions:
 build_whole: Check that only complete tableau stacks are moved. (str)
 deal_tableau1: Deal one card face up to each tableau pile. (None)
+deal_twos_foundations: Deal the twos to the foundations. (None)
+deal_selective: Deal tableau cards with selection of a foundation card. (None)
 lane_reserve: Check only laning cards from the reserve. (str)
 """
 
@@ -46,6 +48,11 @@ Chameleon: A 12 card reserve and three foundation piles. Tableau building is
 Rainbow: Tableau building is down regardless of suit.
 Rainbow-One: As Rainbow, but cards from the stock are dealt one card at a
     time, with two passes through the stock allowed.
+Selective: You are given five cards. You get to choose one to go on the
+    foundations. The rest start the tableau piles.
+Storehouse: The foundations start filled with twos. The stock is turned up one
+    card at a time, with two passes through the stock allowed. The tableau is
+    build down by suit.
 """
 
 
@@ -86,14 +93,15 @@ class Canfield(solitaire.Solitaire):
                     message = 'I do not recognize that variant. The variants I know are:'
                     self.human.tell(message, ', '.join(self.variants))
         if self.raw_options:
-            if self.raw_options.lower() == 'chameleon':
+            self.raw_options = self.raw_options.lower()
+            if self.raw_options == 'chameleon':
                 self.options['num-tableau'] = 3
                 self.options['turn-count'] = 1
                 self.options['max-passes'] = 1
-            elif self.raw_options.lower() == 'rainbow-one':
+            elif self.raw_options in ('rainbow-one', 'storehouse'):
                 self.options['turn-count'] = 1
                 self.options['max-passes'] = 2
-            elif self.raw_options.lower() not in self.variants:
+            elif self.raw_options not in self.variants:
                 self.human.tell('Unrecognized Canfield variant: {}.'.format(self.raw_options))
 
     def set_checkers(self):
@@ -117,6 +125,10 @@ class Canfield(solitaire.Solitaire):
             self.pair_checkers = [solitaire.pair_down]
         elif self.raw_options == 'selective':
             self.dealers = [solitaire.deal_reserve_n(13), deal_selective, solitaire.deal_stock_all]
+        elif self.raw_options == 'storehouse':
+            self.pair_checkers[1] = solitaire.pair_suit
+            self.dealers = [deal_twos_foundations, solitaire.deal_reserve_n(13), deal_tableau1,
+                solitaire.deal_stock_all]
 
 
 def build_whole(game, mover, target, moving_stack):
@@ -137,7 +149,7 @@ def build_whole(game, mover, target, moving_stack):
 
 def deal_selective(game):
     """
-    Deal tableau cards with selection of the starting foundation card. (function)
+    Deal tableau cards with selection of the starting foundation card. (None)
 
     Parameters:
     game: The game to deal cards for. (Solitaire)
@@ -169,6 +181,18 @@ def deal_tableau1(game):
     """
     for stack in game.tableau:
         game.deck.deal(stack, True)
+
+def deal_twos_foundations(game):
+    """
+    Deal the twos to the foundations. (None)
+
+    Parameters:
+    game: The game to deal cards for. (Solitaire)
+    """
+    for suit in game.deck.suits:
+        deuce = game.deck.find('2' + suit)
+        target = game.find_foundation(deuce)
+        game.deck.force(deuce, target)
 
 def lane_reserve(game, card, moving_stack):
     """
