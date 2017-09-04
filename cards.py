@@ -229,6 +229,65 @@ class Deck(object):
         self.discards = []
 
 
+class Hand(object):
+    """
+    A hand of cards held by a player. (object)
+
+    Attributes:
+    cards: The cards in the hand. (list of Card)
+    deck: The deck the cards in the hand come from. (Deck)
+
+    Methods:
+    discard: Discard a card back to the deck. (None)
+    draw: Draw a card from the deck. (None)
+    score: Score the hand. (int)
+
+    Overridden Methods:
+    __init__
+    __repr__
+    __str__
+    """
+
+    def __init__(self, deck):
+        """Set up the link to the deck. (None)"""
+        self.deck = deck
+        self.cards = []
+
+    def __repr__(self):
+        """Debugging text representation. (str)"""
+        return '<Hand: {}>'.format(self)
+
+    def __str__(self):
+        """Human readable text representation. (str)"""
+        return ', '.join([card.rank + card.suit for card in self.cards])
+
+    def draw(self):
+        """Draw a card from the deck. (None)"""
+        self.cards.append(self.deck.deal())
+
+    def discard(self, card = None):
+        """
+        Discard a card back to the deck. (None)
+
+        card: The card to discard, or None to discard all cards. (Card or None)
+        """
+        # Discard all cards.
+        if card is None:
+            for card in self.cards:
+                self.deck.discard(card)
+            self.cards = []
+        # Discard a specified card.
+        else:
+            card_index = self.cards.index(card)
+            self.deck.discard(self.cards[card_index])
+            del self.cards[card_index]
+
+    def score(self):
+        """Score the hand. (int)"""
+        # Default score is high card.
+        return max([self.deck.ranks.index(card.rank) for card in self.cards])
+
+
 class TrackingCard(Card):
     """
     A card that tracks it's location. (Card)

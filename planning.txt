@@ -5,12 +5,12 @@
 == Short Term To Do List ==
 
 Some more games.
-	canfield (options)
 	black jack
 	hamurabi
 always use < for previous menu and ! for quit.
 random interface command: play a random game.
 any gipfing necessary
+num_variants, welcome screen
 Alpha-beta bot.
 	tic-tac-toe
 	connect four
@@ -19,7 +19,7 @@ Alpha-beta bot.
 
 Program the games planned for text_games round 2.
 	Try for every category gets one before any gets two.
-	Gipf planning
+	Gipf planning [done]
 	Gipf implmentation
 	How to write a game documentation.
 Clean Up
@@ -36,7 +36,7 @@ board/race: backgammon, snakes and ladders
 board/space: connect four, halma
 card/solitaire/adding and pairing: golf, pyramid
 card/solitaire/bisley: bisley, martha
-card/solitaire/canfield: canfield, duchess
+card/solitaire/canfield: canfield*, duchess
 card/solitaire/castle: beleaguered castle, siegecraft
 card/solitaire/fan: la belle lucie, shamrocks
 card/solitaire/forty thieves: forty thieves, maria
@@ -64,7 +64,7 @@ other/other: RPS(LS)*, number guessing game
 An asterisk means the game has been coded. An exclamation point means the game has been coded and is in the gipf graph.
 
 games planned: 61
-games coded:    5
+games coded:    8
 games gipfed:   3
 
 == Gipf Planning ==
