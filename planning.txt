@@ -14,6 +14,7 @@ num_variants, welcome screen
 Alpha-beta bot.
 	tic-tac-toe
 	connect four
+winning/losing scores for stats: low-mean/median-high
 
 == Long Term To Do List ==
 
@@ -26,6 +27,7 @@ Clean Up
     documentation (style guide)
     output (one blank line)
 Play testing
+Release
 108 Games
 
 == Games to Program ==

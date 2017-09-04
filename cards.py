@@ -6,7 +6,9 @@ Cards and decks of cards for tgames.
 Classes:
 Card: A standard playing card, with a suit and a rank. (object)
 Deck: A standard deck of cards. (object)
+Hand: A hand of cards held by a player. (object)
 TrackingCard: A card that tracks it's location. (Card)
+TrackingDeck: A deck that keeps track of the location of its cards. (Deck)
 """
 
 
@@ -173,22 +175,25 @@ class Deck(object):
     shuffle: Shuffle the discards back into the deck. (None)
     """
 
-    def __init__(self, jokers = 0):
+    def __init__(self, jokers = 0, decks = 0):
         """
         Fill the deck with a standard set of cards. (None)
 
         Parameters:
-        jokers: The number of jokers in the deck.
+        jokers: The number of jokers in the deck. (int)
+        decks: The number of idential decks shuffled together. (int)
         """
         # Add the standard cards.
         self.cards = []
-        for rank in Card.ranks[1:]:
-            for suit in Card.suits:
-                self.cards.append(Card(rank, suit))
+        for deck in range(self.decks):
+            for rank in Card.ranks[1:]:
+                for suit in Card.suits:
+                    self.cards.append(Card(rank, suit))
         self.card_re = Card.card_re
         # Add any requested jokers.
-        for suit_index in range(jokers):
-            self.cards.append(Card('X', Card.suits[suit_index % len(Card.suits)]))
+        for deck in range(self.decks):
+            for suit_index in range(jokers):
+                self.cards.append(Card('X', Card.suits[suit_index % len(Card.suits)]))
         # Start with an empty discard pile.
         self.discards = []
 
@@ -259,10 +264,15 @@ class Hand(object):
 
     def __str__(self):
         """Human readable text representation. (str)"""
-        return ', '.join([card.rank + card.suit for card in self.cards])
+        return ', '.join([str(card) for card in self.cards])
 
-    def draw(self):
-        """Draw a card from the deck. (None)"""
+    def draw(self, up = True):
+        """
+        Draw a card from the deck. (None)
+
+        Parameters:
+        up: A flag for dealing the card face up. (None)
+        """
         self.cards.append(self.deck.deal())
 
     def discard(self, card = None):
@@ -286,6 +296,10 @@ class Hand(object):
         """Score the hand. (int)"""
         # Default score is high card.
         return max([self.deck.ranks.index(card.rank) for card in self.cards])
+
+    def show_player(self):
+        """Show the hand to the player playing it. (str)"""
+        return ', '.join([card.rank + card.suit for card in self.cards])
 
 
 class TrackingCard(Card):
@@ -354,7 +368,7 @@ class TrackingCard(Card):
 
 class TrackingDeck(Deck):
     """
-    A deck that keeps track of the location of the cards in it.
+    A deck that keeps track of the location of the cards in it. (Deck)
 
     !! max_rank works differently, and may cause a problem in solitaire games.
     !! left implementing some solitaire methods until proven necessary.
