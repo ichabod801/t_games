@@ -18,9 +18,42 @@ class Blackjack(game.Game):
     A game of Blackjack. (game.Game)
     """
 
+    aliases = {'b': 'bet', 'h': 'hit'}
+    ordinals = ('first', 'second', 'third', 'fourth')
+
+    def deal(self):
+        """Deal the hands. (None)"""
+        self.dealer_hand = Hand(self.deck)
+        self.dealer_hand.draw(False)
+        self.dealer_hand.draw()
+        self.player_hands = [Hand(self.deck)]
+        self.player_hand[0].draw()
+        self.player_hand[0].draw()
+
+    def do_hit(self, arguments):
+        """
+        Deal a card to the player. (bool)
+
+        Parameters:
+        arguments: The number of the hand to hit. (str)
+        """
+        if arguments.strip().isdigit:
+            hand_index = 0
+        else:
+            hand_index = int(arguments) - 1
+            if hand_index >= len(self.player_hands):
+                self.human.tell('Invalid hand index ({}).'.format(hand_index + 1))
+                return False
+        hand = self.player_hands[hand_index]
+        hand.draw()
+        score = hand.score()
+        if score > 21:
+            self.human.tell('You busted with {}.'.format(score))
+        elif score 
+
     def do_bet(self, arguments):
         """
-        Handle bets.
+        Record the player's bet. (bool)
 
         Parameters:
         arguments: The amount bet. (str)
@@ -65,11 +98,14 @@ class Blackjack(game.Game):
 
     def show_status(self):
         """Show the current game situation to the player. (None)"""
+        text = "\nYou have {} bucks.".format(self.scores[self.human.name])
         if self.phase == 'bet':
-            text = 'You have {} bucks. The dealer is waiting for your bet.'
-            text.format(self.scores[self.human.name])
+            text += '\nThe dealer is waiting for your bet.'
         elif self.phase == 'play':
-            text = '???'
+            text += "\nThe dealer's hand is {}.".format(self.dealer_hand)
+            text += '\nYour hand is {} ({}).'.format(self.player_hand[0], self.player_hand[0].score())
+            for hand_index, hand in self.player_hands[1:]:
+                text += '\nYour {} hand is {}.'.format(self.ordinals[hand_index + 1], hand)
         self.human.tell(text)
 
 
