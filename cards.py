@@ -185,13 +185,13 @@ class Deck(object):
         """
         # Add the standard cards.
         self.cards = []
-        for deck in range(self.decks):
+        for deck in range(decks):
             for rank in Card.ranks[1:]:
                 for suit in Card.suits:
                     self.cards.append(Card(rank, suit))
         self.card_re = Card.card_re
         # Add any requested jokers.
-        for deck in range(self.decks):
+        for deck in range(decks):
             for suit_index in range(jokers):
                 self.cards.append(Card('X', Card.suits[suit_index % len(Card.suits)]))
         # Start with an empty discard pile.
@@ -273,7 +273,7 @@ class Hand(object):
         Parameters:
         up: A flag for dealing the card face up. (None)
         """
-        self.cards.append(self.deck.deal())
+        self.cards.append(self.deck.deal(up = up))
 
     def discard(self, card = None):
         """
@@ -295,7 +295,7 @@ class Hand(object):
     def score(self):
         """Score the hand. (int)"""
         # Default score is high card.
-        return max([self.deck.ranks.index(card.rank) for card in self.cards])
+        return max([Card.ranks.index(card.rank) for card in self.cards])
 
     def show_player(self):
         """Show the hand to the player playing it. (str)"""
