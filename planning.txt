@@ -15,6 +15,7 @@ Alpha-beta bot.
 	tic-tac-toe
 	connect four
 winning/losing scores for stats: low-mean/median-high
+use a flag for completely quitting tgames
 
 == Long Term To Do List ==
 

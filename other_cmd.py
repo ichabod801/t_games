@@ -66,7 +66,7 @@ class OtherCmd(object):
         Parameters:
         text: The raw text input by the user. (str)
         """
-        command, space, arguments = text.partition(' ')
+        command, space, arguments = text.strip().partition(' ')
         command = command.lower()
         command = self.aliases.get(command, command)
         method = 'do_' + command

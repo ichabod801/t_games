@@ -89,6 +89,25 @@ class Blackjack(game.Game):
                 hand.status = 'standing'
                 self.human.tell('You now have 21 with {}.'.format(hand))
 
+    def do_quit(self, arguments):
+        """
+        Stop playing before losing all your money. (bool)
+
+        Parameters:
+        arguments: The number of the hand to hit. (str)
+        """
+        self.flags |= 4
+        if self.scores[self.human.name] > self.stake:
+            self.win_loss_draw[0] = 1
+            self.force_end = 'win'
+        elif self.scores[self.human.name] < self.stake:
+            self.win_loss_draw[1] = 1
+            self.force_end = 'draw'
+        else:
+            self.win_loss_draw[2] = 1
+            self.force_end = 'loss'
+        return False
+
     def do_stand(self, arguments):
         """
         Set a hand as done. (bool)
@@ -273,4 +292,4 @@ if __name__ == '__main__':
         bot, sim = sim_test()
     else:
         blackjack = Blackjack(player.Player(name), '')
-        blackjack.play()
+        print(blackjack.play())
