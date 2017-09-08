@@ -12,3 +12,4 @@ Canfield,0,1,0,660,4
 Canfield,1,0,0,766,0
 Canfield,0,1,0,740,4
 Canfield,0,1,0,749,4
+Blackjack,0,1,0,91,4

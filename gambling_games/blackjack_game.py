@@ -4,9 +4,14 @@ blackjack_game.py
 Blackjack.
 
 to-do:
-do_quit
-clean up comments
 flesh out rules
+    split: split pair, equal bet. option: idental ranks not values, doubling/more splits may be restricted.
+        bjs are counted as 21. Can't hit split aces (option to allow)
+    surrender: must be first decision. half-bet back. allowing it is an option. not if dealer bj
+    multiple starting hands (1-3)
+    note: dealer check's black jack. If they've got it, game ends. Either you have bj and push, or you lose.
+    insurance: If dealer has an ace, side bet they have bj. 2:1. If you have bj, pays out even. up to half bet.
+    no negative bets.
 flesh out the options
 
 Classes:
@@ -22,16 +27,43 @@ import tgames.game as game
 class Blackjack(game.Game):
     """
     A game of Blackjack. (game.Game)
+
+    Class Attributes:
+    ordinals: Ordinal words for displaying multiple hands. (tuple of str)
+
+    Attributes:
+    dealer_hand: The dealer's cards. (BlackjackHand)
+    phase: The current point in the game turn, betting or getting cards. (str)
+    player_hands: The player's cards, in one more hands. (list of BlackjackHand)
+
+    Methods:
+    deal: Deal the hands. (None)
+    do_bet: Record the player's bet. (bool)
+    do_hit: Deal a card to the player. (bool)
+    do_stand: Set a hand as done. (bool)
+
+    Overridden Methods:
+    do_quit
+    game_over
+    handle_options
     """
 
-    aliases = {'b': 'bet', 'h': 'hit', 's': 'stand'}
+    # Alternate words for commands
+    aliases = {'b': 'bet', 'd': 'double', 'h': 'hit', 'q': 'quit', 's': 'stand'}
+    # Interface categories for the game.
+    categories = ['Gambling Games', 'Card Games']
+    # The name of the game.
+    name = 'Blackjack'
+    # Ordinal words for displaying multiple hands.
     ordinals = ('first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth')
 
     def deal(self):
         """Deal the hands. (None)"""
+        # Deal the dealer's cards.
         self.dealer_hand = BlackjackHand(self.deck)
         self.dealer_hand.draw(False)
         self.dealer_hand.draw()
+        # Deal the player's cards.
         self.player_hands = [BlackjackHand(self.deck)]
         self.player_hands[0].draw()
         self.player_hands[0].draw()
@@ -41,26 +73,78 @@ class Blackjack(game.Game):
         """
         Record the player's bet. (bool)
 
+        !! I will want a way for them to place one bet for all hands (default?)
+
         Parameters:
         arguments: The amount bet. (str)
         """
+        # Check for proper timing.
         if self.phase != 'bet':
             self.human.tell('You have already bet this hand.')
             return False
+        # Parse the arguments.
         int_args = self.parse_arguments('bet', arguments, max_args = 2)
         if not int_args:
             return False
         bet, hand_index = int_args
+        # Check for valid bet ammount.
         if self.limit and bet > self.limit:
             self.human.tell('The betting limit is {} bucks.'.format(self.limit))
         elif bet > self.scores[self.human.name]:
             self.human.tell('You only have {} bucks left to bet.'.format(self.scores[self.human.name]))
         else:
+            # Record the bet.
             self.bets[hand_index] = bet
             self.scores[self.human.name] -= self.bets[hand_index]
+            # Check for all bets in.
             if min(self.bets) > 0:
                 self.deal()
                 self.phase = 'play'
+
+    def do_double(self, arguments):
+        """
+        Double your bet for one last card. (bool)
+
+        Parameters:
+        arguments: The bet increase and the hand. (str)
+        """
+        # Check for proper timing.
+        if self.phase != 'play':
+            self.human.tell('No hands have been dealt yet.')
+            return False
+        # Parse the arguments.
+        if not arguments.strip():
+            int_args = [self.bets[0], 0]
+        else:
+            int_args = self.parse_arguments('bet', arguments, max_args = 2)
+            if not int_args:
+                return False
+        bet, hand_index = int_args
+        hand = self.player_hands[hand_index]
+        # Check for valid bet amount.
+        if bet > self.scores[self.human.name]:
+            self.human.tell('You only have {} bucks to bet.'.format(self.scores[self.human.name]))
+        elif self.true_double and bet != self.bets[hand_index]:
+            self.human.tell('You can only bet the original bet ({})'.format(self.bets[hand_index]))
+        elif bet > self.bets[hand_index]:
+            self.human.tell('You can only bet up to your original bet ({}).'.format(self.bets[hand_index]))
+        # Make sure the hand can receive cards.
+        elif hand.status != 'open':
+            self.human.tell('That hand is {}, you cannot double it.'.format(hand.status))
+        else:
+            # Increase the bet
+            self.bets[hand_index] += bet
+            self.scores[self.human.name] -= bet
+            # Deal the card.
+            hand.draw()
+            score = hand.score()
+            self.human.tell('You draw the {}.'.format(hand.cards[-1].name))
+            # Check for a busted hand.
+            if score > 21:
+                self.human.tell('You busted with {} ({}).'.format(score, hand))
+                hand.status = 'busted'
+            else:
+                hand.status = 'standing'
 
     def do_hit(self, arguments):
         """
@@ -69,22 +153,28 @@ class Blackjack(game.Game):
         Parameters:
         arguments: The number of the hand to hit. (str)
         """
+        # Check for proper timing.
         if self.phase != 'play':
             self.human.tell('No hands have been dealt yet.')
             return False
+        # Parse the arguments.
         int_args = self.parse_arguments('hit', arguments)
         if not int_args:
             return False
         hand_index = int_args[0]
+        # Make sure hand can receive cards.
         hand = self.player_hands[hand_index]
         if hand.status != 'open':
             self.human.tell('That hand is {}, you cannot hit it.'.format(hand.status))
         else:
+            # Draw the card.
             hand.draw()
             score = hand.score()
+            # Check for busted hand.
             if score > 21:
-                self.human.tell('You busted with {}.'.format(score))
+                self.human.tell('You busted with {} ({}).'.format(score, hand))
                 hand.status = 'busted'
+            # Check for forced stand.
             elif score == 21:
                 hand.status = 'standing'
                 self.human.tell('You now have 21 with {}.'.format(hand))
@@ -115,46 +205,68 @@ class Blackjack(game.Game):
         Parameters:
         arguments: The number of the hand to hit. (str)
         """
+        # Check timing.
         if self.phase != 'play':
             self.human.tell('No hands have been dealt yet.')
             return False
+        # Parse arguments.
         int_args = self.parse_arguments('hit', arguments)
         if not int_args:
             return False
         hand_index = int_args[0]
+        # Check that the hand is not arleady standing or busted.
         hand = self.player_hands[hand_index]
         if hand.status != 'open':
             self.human.tell('That hand is {}, you cannot stand with it.'.format(hand.status))
         else:
+            # Set the hand to standing.
             hand.status = 'standing'
 
     def game_over(self):
-        """Determine the end of game."""
+        """Determine the end of game. (bool)"""
         return self.scores[self.human.name] == 0
 
     def handle_options(self):
         """Handle the game options. (None)"""
+        # Set the default options.
         self.stake = 100
         self.limit = 5
         self.decks = 4
         self.bets = [0]
+        self.true_double = False
 
     def parse_arguments(self, command, arguments, max_args = 1):
+        """
+        Parse integer arguments to command. (list of int)
+
+        This function assumes that the last argument is an optional hand indicator.
+
+        Parameters:
+        command: The command used. (str)
+        arguments: The arguments passed to the command. (str)
+        max_args: The maximum number of arguments allowed. (int)
+        """
+        # Check for integer arguments.
         try:
             int_args = [int(arg) for arg in arguments.split()]
         except ValueError:
             message = 'Invalid argument to {} ({}): must be no more than {} integers.'
             self.human.tell(message.format(command, arguments, max_args))
             return []
+        # Check for correct number of arguments.
         if max_args - len(int_args) == 1:
+            # Add default hand index if necessary.
             int_args.append(1)
         if len(int_args) != max_args:
             self.human.tell('Need more arguments to the {0} command. See help {0}.'.format(command))
             return []
+        # Check for a valid hand index.
         if int_args[-1] > len(self.player_hands):
             self.human.tell('Invalid hand index ({}).'.format(int_args[-1]))
             return []
+        # Adjust hand index to 0 indexing
         int_args[-1] -= 1
+        # Return integer arguments.
         return int_args
 
     def player_turn(self, player):
@@ -164,13 +276,18 @@ class Blackjack(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
+        # Show the current game state.
         self.show_status()
+        # Get and handle the user input.
         move = self.human.ask("What's your play? ")
         hand_done = self.handle_cmd(move)
+        # Check for the end of the turn.
         statuses = [hand.status for hand in self.player_hands]
         if 'open' not in statuses:
+            # Check for show down with dealer.
             if 'standing' in statuses:
                 self.showdown()
+            # Reset game tracking.
             self.phase = 'bet'
             self.bets = [0]
             return False
@@ -179,36 +296,49 @@ class Blackjack(game.Game):
 
     def set_up(self):
         """Set up the game. (None)"""
+        # Set up tracking variables.
         self.scores = {self.human.name: self.stake}
+        self.phase = 'bet'
+        # Set up the deck.
         self.deck = cards.Deck(decks = self.decks)
         self.deck.shuffle()
+        # Set up default hands.
         self.dealer_hand = BlackjackHand(self.deck)
         self.player_hands = [BlackjackHand(self.deck)]
-        self.phase = 'bet'
 
     def show_status(self):
         """Show the current game situation to the player. (None)"""
+        # Show the stake left.
         text = "\nYou have {} bucks.".format(self.scores[self.human.name])
+        # Show the right stuff for the current phase.
         if self.phase == 'bet':
+            # Show that bets are still pending.
             text += '\nThe dealer is waiting for your bet.'
         elif self.phase == 'play':
+            # Show all of the hands.
             text += "\nThe dealer's hand is {}.".format(self.dealer_hand)
             text += '\nYour hand is {} ({}).'.format(self.player_hands[0], self.player_hands[0].score())
             for hand_index, hand in self.player_hands[1:]:
                 text += '\nYour {} hand is {}.'.format(self.ordinals[hand_index + 1], hand)
+        # Send the information to the human.
         self.human.tell(text)
 
     def showdown(self):
         """Show and hit the dealer's hand and resolve the round. (None)"""
+        # Reveal the dealer's hole card.
         self.dealer_hand.cards[0].up = True
         self.human.tell('The dealer has {}.'.format(self.dealer_hand))
+        # Draw up to 17.
         while self.dealer_hand.score() < 17:
             self.dealer_hand.draw()
             self.human.tell('The dealer draws the {}.'.format(self.dealer_hand.cards[-1].name))
+        # Get and show the dealer's final hand value.
         dealer_value = self.dealer_hand.score()
         self.human.tell("The dealer's hand is {}.".format(dealer_value))
+        # Check for dealer bust.
         if dealer_value > 21:
             self.human.tell('The dealer busted.')
+        # Pay out winning hands
         for hand_index, hand in enumerate(self.player_hands):
             payout = self.wins(hand)
             if payout > 1:
@@ -218,30 +348,43 @@ class Blackjack(game.Game):
             else:
                 self.human.tell('You lost with {}.'.format(hand))
             self.scores[self.human.name] += int(self.bets[hand_index] * payout)
+        # Discard all hands.
         self.dealer_hand.discard()
         for hand in self.player_hands:
             hand.discard()
             hand.status = 'open'
 
     def wins(self, hand):
+        """
+        Determine if a hand wins and it's payout. (float)
+
+        Parameters:
+        hand: The hand to check for a win. (BlackjackHand)
+        """
+        # Get the hand value
         hand_value = hand.score()
         hand_bj = hand_value == 21 and len(hand.cards) == 2
+        # Get the dealer's value
         dealer_value = self.dealer_hand.score()
         dealer_bj = dealer_value == 21 and len(self.dealer_hand.cards) == 2
+        # Check for a win.
         if hand_value > dealer_value or dealer_value > 21:
             if hand_bj:
                 payout = 2.5
             else:
                 payout = 2
+        # Check for a push
         elif hand_value == dealer_value:
             if hand_bj and dealer_bj:
                 payout = 1
+            # Blackjack beats 21
             elif hand_bj:
                 payout = 2.5
             elif dealer_bj:
                 payout = 0
             else:
                 payout = 1
+        # Otherwise it's a loss
         else:
             payout = 0
         return payout
@@ -255,21 +398,30 @@ class BlackjackHand(cards.Hand):
     card_values: A mapping of card ranks to score values. (dict of str: int)
 
     Attributes:
-    soft: A flag for the hand being soft (ace = 11).
+    soft: A flag for the hand being soft (ace = 11). (bool)
+    status: Is the hand open, standing, or busted. (str)
 
     Overridden Methods:
     score
     """
 
+    # A mapping of card ranks to score values.
     card_values = dict(zip('23456789TAJQK', list(range(2, 12)) + [10] * 3))
 
     def __init__(self, deck):
+        """
+        Set up the hand. (None)
+
+        Parameters:
+        deck: The deck the hand's cards come from. (Deck)
+        """
         super(BlackjackHand, self).__init__(deck)
         self.status = 'open'
 
     def score(self):
         """Score the hand. (int)"""
         score = sum([self.card_values[card.rank] for card in self.cards])
+        # check for hard hand and adjust ace values.
         if score > 21:
             ace_count = len([card for card in self.cards if card.rank == 'A'])
             while score > 21 and ace_count:
