@@ -116,7 +116,7 @@ class Blackjack(game.Game):
         if not arguments.strip():
             int_args = [self.bets[0], 0]
         else:
-            int_args = self.parse_arguments('bet', arguments, max_args = 2)
+            int_args = self.parse_arguments('double', arguments, max_args = 2)
             if not int_args:
                 return False
         bet, hand_index = int_args
@@ -125,12 +125,14 @@ class Blackjack(game.Game):
         if bet > self.scores[self.human.name]:
             self.human.tell('You only have {} bucks to bet.'.format(self.scores[self.human.name]))
         elif self.true_double and bet != self.bets[hand_index]:
-            self.human.tell('You can only bet the original bet ({})'.format(self.bets[hand_index]))
+            self.human.tell('You can only double the original bet ({})'.format(self.bets[hand_index]))
         elif bet > self.bets[hand_index]:
-            self.human.tell('You can only bet up to your original bet ({}).'.format(self.bets[hand_index]))
+            self.human.tell('You can only double up to your original bet ({}).'.format(self.bets[hand_index]))
         # Make sure the hand can receive cards.
         elif hand.status != 'open':
             self.human.tell('That hand is {}, you cannot double it.'.format(hand.status))
+        elif not self.double_split and hand.split:
+            self.human.tell('You cannot double a split hand.')
         else:
             # Increase the bet
             self.bets[hand_index] += bet
@@ -198,6 +200,47 @@ class Blackjack(game.Game):
             self.force_end = 'loss'
         return False
 
+    def do_split(self, arguments):
+        """
+        Set a hand as done. (bool)
+
+        Parameters:
+        arguments: The number of the hand to hit. (str)
+        """
+        # Check timing.
+        if self.phase != 'play':
+            self.human.tell('No hands have been dealt yet.')
+            return False
+        # Parse arguments.
+        int_args = self.parse_arguments('split', arguments)
+        if not int_args:
+            return False
+        hand_index = int_args[0]
+        hand = self.player_hands[hand_index]
+        # Check for valid split.
+        if len(hand.cards) != 2:
+            self.human.tell('You can only split a hand of two cards.')
+        elif not self.rank_split and hand.card[0].rank != hand.card[1].rank:
+            self.human.tell('You may only split cards of the same rank.')
+        elif hand.card_values[hand.cards[0].rank] != hand.card_values[hand.cards[1].rank]:
+            self.human.tell('You may only split cards of the same value.')
+        elif not self.resplit and hand.split:
+            self.human.tell('You may not split a hand that was already split.')
+        else:
+            # Split the hands.
+            new_hand = hand.split()
+            self.player_hands.append(new_hand)
+            self.bets.append(self.bets[hand_index])
+            # Draw new cards.
+            hand.draw()
+            self.human.tell('The original hand drew the {}.'.format(hand.cards[-1].name))
+            new_hand.draw()
+            self.human.tell('The new hand dred the {}.'.format(new_hand.cards[-1].name))
+            # Stop hitting spit aces, if thems the rules.
+            if not self.hit_split_ace and hand.cards[0].rank == 'A':
+                hand.status = 'standing'
+                new_hand.status = 'standing'
+
     def do_stand(self, arguments):
         """
         Set a hand as done. (bool)
@@ -234,6 +277,10 @@ class Blackjack(game.Game):
         self.decks = 4
         self.bets = [0]
         self.true_double = False
+        self.split_rank = False
+        self.resplit = True
+        self.double_split = True
+        self.hit_split_ace = False
 
     def parse_arguments(self, command, arguments, max_args = 1):
         """
@@ -363,10 +410,10 @@ class Blackjack(game.Game):
         """
         # Get the hand value
         hand_value = hand.score()
-        hand_bj = hand_value == 21 and len(hand.cards) == 2
+        hand_bj = hand.blackjack()
         # Get the dealer's value
         dealer_value = self.dealer_hand.score()
-        dealer_bj = dealer_value == 21 and len(self.dealer_hand.cards) == 2
+        dealer_bj = self.dealer_hand.blackjack()
         # Check for a win.
         if hand_value > dealer_value or dealer_value > 21:
             if hand_bj:
@@ -417,6 +464,11 @@ class BlackjackHand(cards.Hand):
         """
         super(BlackjackHand, self).__init__(deck)
         self.status = 'open'
+        self.split = False
+
+    def blackjack(self):
+        """Check the hand for a blackjack. (bool)"""
+        return self.score() == 21 and len(self.cards) == 2 and not self.split
 
     def score(self):
         """Score the hand. (int)"""
@@ -431,6 +483,14 @@ class BlackjackHand(cards.Hand):
         else:
             self.soft = True
         return score
+
+    def split(self):
+        """Split the hand. (int)"""
+        new_hand = BlackjackHand(self.deck)
+        new_hand.cards.append(self.cards.pop())
+        self.split = True
+        new_hand.split = True
+        return new_hand
 
 
 if __name__ == '__main__':
