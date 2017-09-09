@@ -11,11 +11,13 @@ always use < for previous menu and ! for quit.
 random interface command: play a random game.
 any gipfing necessary
 num_variants, welcome screen
+don't ask for play again on quit (?)
 Alpha-beta bot.
 	tic-tac-toe
 	connect four
 winning/losing scores for stats: low-mean/median-high
 use a flag for completely quitting tgames
+P-Machine
 
 == Long Term To Do List ==
 

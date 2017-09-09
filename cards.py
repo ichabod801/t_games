@@ -204,6 +204,8 @@ class Deck(object):
         Parameters:
         up: A flag for dealing the card face up. (bool)
         """
+        if not self.cards:
+            self.shuffle()
         card = self.cards.pop()
         card.up = up
         return card

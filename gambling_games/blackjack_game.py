@@ -4,6 +4,7 @@ blackjack_game.py
 Blackjack.
 
 to-do:
+write some rules
 flesh out rules
     split: split pair, equal bet. option: idental ranks not values, doubling/more splits may be restricted.
         bjs are counted as 21. Can't hit split aces (option to allow)
@@ -12,6 +13,7 @@ flesh out rules
     note: dealer check's black jack. If they've got it, game ends. Either you have bj and push, or you lose.
     insurance: If dealer has an ace, side bet they have bj. 2:1. If you have bj, pays out even. up to half bet.
     no negative bets.
+hints
 flesh out the options
 
 Classes:
@@ -49,7 +51,7 @@ class Blackjack(game.Game):
     """
 
     # Alternate words for commands
-    aliases = {'b': 'bet', 'd': 'double', 'h': 'hit', 'q': 'quit', 's': 'stand'}
+    aliases = {'b': 'bet', 'd': 'double', 'h': 'hit', 'q': 'quit', 's': 'stand', 'sp': 'split'}
     # Interface categories for the game.
     categories = ['Gambling Games', 'Card Games']
     # The name of the game.
@@ -220,11 +222,11 @@ class Blackjack(game.Game):
         # Check for valid split.
         if len(hand.cards) != 2:
             self.human.tell('You can only split a hand of two cards.')
-        elif not self.rank_split and hand.card[0].rank != hand.card[1].rank:
+        elif self.split_rank and hand.cards[0].rank != hand.cards[1].rank:
             self.human.tell('You may only split cards of the same rank.')
         elif hand.card_values[hand.cards[0].rank] != hand.card_values[hand.cards[1].rank]:
             self.human.tell('You may only split cards of the same value.')
-        elif not self.resplit and hand.split:
+        elif not self.resplit and hand.was_split:
             self.human.tell('You may not split a hand that was already split.')
         else:
             # Split the hands.
@@ -365,8 +367,9 @@ class Blackjack(game.Game):
             # Show all of the hands.
             text += "\nThe dealer's hand is {}.".format(self.dealer_hand)
             text += '\nYour hand is {} ({}).'.format(self.player_hands[0], self.player_hands[0].score())
-            for hand_index, hand in self.player_hands[1:]:
-                text += '\nYour {} hand is {}.'.format(self.ordinals[hand_index + 1], hand)
+            hand_text = '\nYour {} hand is {} ({}).'
+            for hand_index, hand in enumerate(self.player_hands[1:]):
+                text += hand_text.format(self.ordinals[hand_index + 1], hand, hand.score())
         # Send the information to the human.
         self.human.tell(text)
 
@@ -414,8 +417,11 @@ class Blackjack(game.Game):
         # Get the dealer's value
         dealer_value = self.dealer_hand.score()
         dealer_bj = self.dealer_hand.blackjack()
+        # Check for a bust.
+        if hand_value > 21:
+            payout = 0
         # Check for a win.
-        if hand_value > dealer_value or dealer_value > 21:
+        elif hand_value > dealer_value or dealer_value > 21:
             if hand_bj:
                 payout = 2.5
             else:
@@ -464,11 +470,11 @@ class BlackjackHand(cards.Hand):
         """
         super(BlackjackHand, self).__init__(deck)
         self.status = 'open'
-        self.split = False
+        self.was_split = False
 
     def blackjack(self):
         """Check the hand for a blackjack. (bool)"""
-        return self.score() == 21 and len(self.cards) == 2 and not self.split
+        return self.score() == 21 and len(self.cards) == 2 and not self.was_split
 
     def score(self):
         """Score the hand. (int)"""
@@ -488,8 +494,8 @@ class BlackjackHand(cards.Hand):
         """Split the hand. (int)"""
         new_hand = BlackjackHand(self.deck)
         new_hand.cards.append(self.cards.pop())
-        self.split = True
-        new_hand.split = True
+        self.was_split = True
+        new_hand.was_split = True
         return new_hand
 
 
