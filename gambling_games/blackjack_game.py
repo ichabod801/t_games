@@ -5,15 +5,13 @@ Blackjack.
 
 to-do:
 write some rules
-flesh out rules
-    surrender: must be first decision. half-bet back. allowing it is an option. not if dealer bj
-    multiple starting hands (1-3)
-    note: dealer check's black jack. If they've got it, game ends. Either you have bj and push, or you lose.
-    insurance: If dealer has an ace, side bet they have bj. 2:1. If you have bj, pays out even. up to half bet.
-    no negative bets.
 hints
 flesh out the options
-side bets
+
+!! Side bets would be nice, but I'm not implementing them now.
+
+Constants:
+CREDITS: Credits for Blackjack.
 
 Classes:
 Blackjack: A game of Blackjack. (game.Game)
@@ -23,6 +21,13 @@ BlackjackHand: A hand of Blackjack. (cards.Hand)
 
 import tgames.cards as cards
 import tgames.game as game
+
+
+# Credits for Blackjack.
+CREDITS = """
+Game Design: Traditional (U.S. Casinos)
+Game Programming: Craig "Ichabod" O'Brien
+"""
 
 
 class Blackjack(game.Game):
@@ -41,7 +46,13 @@ class Blackjack(game.Game):
     deal: Deal the hands. (None)
     do_bet: Record the player's bet. (bool)
     do_hit: Deal a card to the player. (bool)
+    do_split: Split a pair into two hands. (bool)
     do_stand: Set a hand as done. (bool)
+    do_surrender: Concede the hand for half the bet back. (bool)
+    parse_arguments: Parse integer arguments to command. (list of int)
+    show_status: Show the current game situation to the player. (None)
+    showdown: Show and hit the dealer's hand and resolve the round. (None)
+    wins: Determine if a hand wins and it's payout. (float)
 
     Overridden Methods:
     do_quit
@@ -50,12 +61,14 @@ class Blackjack(game.Game):
     """
 
     # Alternate names for the game.
-    akas = ['twenty-one', '21']
+    aka = ['twenty-one', '21']
     # Alternate words for commands
     aliases = {'b': 'bet', 'd': 'double', 'h': 'hit', 'q': 'quit', 's': 'stand', 'sp': 'split',
         'su': 'surrender'}
     # Interface categories for the game.
     categories = ['Gambling Games', 'Card Games']
+    # Credits for the game.
+    credits = CREDITS
     # The name of the game.
     name = 'Blackjack'
     # Ordinal words for displaying multiple hands.
@@ -68,10 +81,36 @@ class Blackjack(game.Game):
         self.dealer_hand.draw(False)
         self.dealer_hand.draw()
         # Deal the player's cards.
-        self.player_hands = [BlackjackHand(self.deck)]
-        self.player_hands[0].draw()
-        self.player_hands[0].draw()
-        self.player_hands[0].status = 'open'
+        self.player_hands = [BlackjackHand(self.deck) for hand in range(self.hand_count)]
+        for hand in self.player_hands:
+            hand.draw()
+            hand.draw()
+            hand.status = 'open'
+            hand.was_split = False
+        # Check for insurance.
+        if self.dealer_hand.cards[-1].rank == 'A':
+            self.human.tell('The dealer is showing an ace.')
+            self.human.tell('Your hand is {}.'.format(self.player_hands[0]))
+            for hand_index, hand in self.player_hands[1:]:
+                self.human.tell('Your {} hand is {}.'.format(self.ordinals[hand_index + 1], hand))
+            while True:
+                insure = self.human.ask('How much insurance would you like? ')
+                if not insure.strip():
+                    insure = '0'
+                if insure.strip().is_digit() and int(insure) <= min(self.bets) / 2:
+                    self.insurance = int(insure)
+                    break
+                else:
+                    self.human.tell('That is not a valid insurance ammount.')
+        else:
+            self.insurance = 0
+        # Check for dealer blackjack.
+        if self.dealer_hand.blackjack():
+            self.human.tell('The dealer has blackjack.')
+            for hand in self.player_hands:
+                hand.status = 'standing'
+            self.showdown()
+            self.phase = 'bet'
 
     def do_bet(self, arguments):
         """
@@ -207,7 +246,7 @@ class Blackjack(game.Game):
 
     def do_split(self, arguments):
         """
-        Set a hand as done. (bool)
+        Split a pair into two hands. (bool)
 
         Parameters:
         arguments: The number of the hand to hit. (str)
@@ -272,7 +311,7 @@ class Blackjack(game.Game):
 
     def do_surrender(self, arguments):
         """
-        Deal a card to the player. (bool)
+        Concede the hand for half the bet back. (bool)
 
         Parameters:
         arguments: The number of the hand to hit. (str)
@@ -311,7 +350,7 @@ class Blackjack(game.Game):
         self.stake = 100
         self.limit = 8
         self.decks = 4
-        self.bets = [0]
+        self.hand_count = 1
         self.true_double = False
         self.split_rank = False
         self.resplit = True
@@ -373,7 +412,7 @@ class Blackjack(game.Game):
                 self.showdown()
             # Reset game tracking.
             self.phase = 'bet'
-            self.bets = [0]
+            self.bets = [0] * self.hand_count
             return False
         else:
             return hand_done
@@ -382,6 +421,8 @@ class Blackjack(game.Game):
         """Set up the game. (None)"""
         # Set up tracking variables.
         self.scores = {self.human.name: self.stake}
+        self.bets = [0] * self.hand_count
+        self.insurance = 0
         self.phase = 'bet'
         # Set up the deck.
         self.deck = cards.Deck(decks = self.decks)
@@ -434,12 +475,14 @@ class Blackjack(game.Game):
                 else:
                     self.human.tell('You lost with {}.'.format(hand))
             self.scores[self.human.name] += int(self.bets[hand_index] * payout)
+        # Check for insurance.
+        if self.insurance and self.dealer_hand.blackjack():
+            self.human.tell('You won {} bucks from your insurance.'.format(self.insurance * 2))
+            self.scores[self.human.name] += self.insurance * 2
         # Discard all hands.
         self.dealer_hand.discard()
         for hand in self.player_hands:
             hand.discard()
-            hand.status = 'open'
-            hand.was_split = False
 
     def wins(self, hand):
         """
