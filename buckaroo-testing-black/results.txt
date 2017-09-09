@@ -14,3 +14,7 @@ Canfield,0,1,0,740,4
 Canfield,0,1,0,749,4
 Blackjack,0,1,0,91,4
 Blackjack,1,0,0,112,6
+Blackjack,0,1,0,70,4
+Blackjack,0,1,0,72,4
+Blackjack,1,0,0,108,6
+Blackjack,1,0,0,104,4

@@ -49,6 +49,8 @@ class Blackjack(game.Game):
     handle_options
     """
 
+    # Alternate names for the game.
+    akas = ['twenty-one', '21']
     # Alternate words for commands
     aliases = {'b': 'bet', 'd': 'double', 'h': 'hit', 'q': 'quit', 's': 'stand', 'sp': 'split',
         'su': 'surrender'}
@@ -184,37 +186,6 @@ class Blackjack(game.Game):
                 hand.status = 'standing'
                 self.human.tell('You now have 21 with {}.'.format(hand))
 
-    def do_surrender(self, arguments):
-        """
-        Deal a card to the player. (bool)
-
-        Parameters:
-        arguments: The number of the hand to hit. (str)
-        """
-        # Check for proper timing.
-        if not self.surrender:
-            self.human.tell('Surrender is not allowed in this game.')
-            return False
-        if self.phase != 'play':
-            self.human.tell('No hands have been dealt yet.')
-            return False
-        # Parse the arguments.
-        int_args = self.parse_arguments('surrender', arguments)
-        if not int_args:
-            return False
-        hand_index = int_args[0]
-        # Make sure hand has no actions taken on it.
-        hand = self.player_hands[hand_index]
-        if hand.status != 'open':
-            self.human.tell('That hand is {}, you cannot hit it.'.format(hand.status))
-        elif hand.split:
-            self.human.tell('You cannot surrender a split hand.')
-        elif len(hand.cards) > 2:
-            self.human.tell('You cannot surrender a hand that has been hit.')
-        else:
-            hand.status = 'surrendered'
-            self.scores[self.human.name] += int(self.bet[hand_index] / 2)
-
     def do_quit(self, arguments):
         """
         Stop playing before losing all your money. (bool)
@@ -299,6 +270,37 @@ class Blackjack(game.Game):
             # Set the hand to standing.
             hand.status = 'standing'
 
+    def do_surrender(self, arguments):
+        """
+        Deal a card to the player. (bool)
+
+        Parameters:
+        arguments: The number of the hand to hit. (str)
+        """
+        # Check for proper timing.
+        if not self.surrender:
+            self.human.tell('Surrender is not allowed in this game.')
+            return False
+        if self.phase != 'play':
+            self.human.tell('No hands have been dealt yet.')
+            return False
+        # Parse the arguments.
+        int_args = self.parse_arguments('surrender', arguments)
+        if not int_args:
+            return False
+        hand_index = int_args[0]
+        # Make sure hand has no actions taken on it.
+        hand = self.player_hands[hand_index]
+        if hand.status != 'open':
+            self.human.tell('That hand is {}, you cannot hit it.'.format(hand.status))
+        elif hand.was_split:
+            self.human.tell('You cannot surrender a split hand.')
+        elif len(hand.cards) > 2:
+            self.human.tell('You cannot surrender a hand that has been hit.')
+        else:
+            hand.status = 'surrendered'
+            self.scores[self.human.name] += int(self.bets[hand_index] / 2)
+
     def game_over(self):
         """Determine the end of game. (bool)"""
         return self.scores[self.human.name] == 0
@@ -315,7 +317,7 @@ class Blackjack(game.Game):
         self.resplit = True
         self.double_split = True
         self.hit_split_ace = False
-        self.surrender = False
+        self.surrender = True # for testing, should be false.
 
     def parse_arguments(self, command, arguments, max_args = 1):
         """
@@ -437,6 +439,7 @@ class Blackjack(game.Game):
         for hand in self.player_hands:
             hand.discard()
             hand.status = 'open'
+            hand.was_split = False
 
     def wins(self, hand):
         """
@@ -484,6 +487,7 @@ class BlackjackHand(cards.Hand):
     Attributes:
     soft: A flag for the hand being soft (ace = 11). (bool)
     status: Is the hand open, standing, or busted. (str)
+    was_split: A flag indicating the hand comes from a split. (bool)
 
     Overridden Methods:
     score
