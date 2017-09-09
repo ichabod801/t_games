@@ -6,8 +6,6 @@ Blackjack.
 to-do:
 write some rules
 flesh out rules
-    split: split pair, equal bet. option: idental ranks not values, doubling/more splits may be restricted.
-        bjs are counted as 21. Can't hit split aces (option to allow)
     surrender: must be first decision. half-bet back. allowing it is an option. not if dealer bj
     multiple starting hands (1-3)
     note: dealer check's black jack. If they've got it, game ends. Either you have bj and push, or you lose.
@@ -15,6 +13,7 @@ flesh out rules
     no negative bets.
 hints
 flesh out the options
+side bets
 
 Classes:
 Blackjack: A game of Blackjack. (game.Game)
@@ -51,7 +50,8 @@ class Blackjack(game.Game):
     """
 
     # Alternate words for commands
-    aliases = {'b': 'bet', 'd': 'double', 'h': 'hit', 'q': 'quit', 's': 'stand', 'sp': 'split'}
+    aliases = {'b': 'bet', 'd': 'double', 'h': 'hit', 'q': 'quit', 's': 'stand', 'sp': 'split',
+        'su': 'surrender'}
     # Interface categories for the game.
     categories = ['Gambling Games', 'Card Games']
     # The name of the game.
@@ -75,7 +75,8 @@ class Blackjack(game.Game):
         """
         Record the player's bet. (bool)
 
-        !! I will want a way for them to place one bet for all hands (default?)
+        !! I will want a way for them to place one bet for all hands (default? -1?)
+        !! also set a default bet.
 
         Parameters:
         arguments: The amount bet. (str)
@@ -183,6 +184,37 @@ class Blackjack(game.Game):
                 hand.status = 'standing'
                 self.human.tell('You now have 21 with {}.'.format(hand))
 
+    def do_surrender(self, arguments):
+        """
+        Deal a card to the player. (bool)
+
+        Parameters:
+        arguments: The number of the hand to hit. (str)
+        """
+        # Check for proper timing.
+        if not self.surrender:
+            self.human.tell('Surrender is not allowed in this game.')
+            return False
+        if self.phase != 'play':
+            self.human.tell('No hands have been dealt yet.')
+            return False
+        # Parse the arguments.
+        int_args = self.parse_arguments('surrender', arguments)
+        if not int_args:
+            return False
+        hand_index = int_args[0]
+        # Make sure hand has no actions taken on it.
+        hand = self.player_hands[hand_index]
+        if hand.status != 'open':
+            self.human.tell('That hand is {}, you cannot hit it.'.format(hand.status))
+        elif hand.split:
+            self.human.tell('You cannot surrender a split hand.')
+        elif len(hand.cards) > 2:
+            self.human.tell('You cannot surrender a hand that has been hit.')
+        else:
+            hand.status = 'surrendered'
+            self.scores[self.human.name] += int(self.bet[hand_index] / 2)
+
     def do_quit(self, arguments):
         """
         Stop playing before losing all your money. (bool)
@@ -275,7 +307,7 @@ class Blackjack(game.Game):
         """Handle the game options. (None)"""
         # Set the default options.
         self.stake = 100
-        self.limit = 5
+        self.limit = 8
         self.decks = 4
         self.bets = [0]
         self.true_double = False
@@ -283,6 +315,7 @@ class Blackjack(game.Game):
         self.resplit = True
         self.double_split = True
         self.hit_split_ace = False
+        self.surrender = False
 
     def parse_arguments(self, command, arguments, max_args = 1):
         """
@@ -390,13 +423,14 @@ class Blackjack(game.Game):
             self.human.tell('The dealer busted.')
         # Pay out winning hands
         for hand_index, hand in enumerate(self.player_hands):
-            payout = self.wins(hand)
-            if payout > 1:
-                self.human.tell('You won with {}.'.format(hand))
-            elif payout == 1:
-                self.human.tell('You pushed with {}.'.format(hand))
-            else:
-                self.human.tell('You lost with {}.'.format(hand))
+            if hand.status == 'standing':
+                payout = self.wins(hand)
+                if payout > 1:
+                    self.human.tell('You won with {}.'.format(hand))
+                elif payout == 1:
+                    self.human.tell('You pushed with {}.'.format(hand))
+                else:
+                    self.human.tell('You lost with {}.'.format(hand))
             self.scores[self.human.name] += int(self.bets[hand_index] * payout)
         # Discard all hands.
         self.dealer_hand.discard()
@@ -417,11 +451,8 @@ class Blackjack(game.Game):
         # Get the dealer's value
         dealer_value = self.dealer_hand.score()
         dealer_bj = self.dealer_hand.blackjack()
-        # Check for a bust.
-        if hand_value > 21:
-            payout = 0
         # Check for a win.
-        elif hand_value > dealer_value or dealer_value > 21:
+        if hand_value > dealer_value or dealer_value > 21:
             if hand_bj:
                 payout = 2.5
             else:
