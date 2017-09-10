@@ -4,7 +4,9 @@ blackjack_game.py
 Blackjack.
 
 to-do:
+redo bet
 write some rules
+detect player blackjack
 hints
 flesh out the options
 
@@ -97,8 +99,9 @@ class Blackjack(game.Game):
                 insure = self.human.ask('How much insurance would you like? ')
                 if not insure.strip():
                     insure = '0'
-                if insure.strip().is_digit() and int(insure) <= min(self.bets) / 2:
+                if insure.strip().isdigit() and int(insure) <= min(self.bets) / 2:
                     self.insurance = int(insure)
+                    self.scores[self.human.name] -= self.insurance
                     break
                 else:
                     self.human.tell('That is not a valid insurance ammount.')
@@ -107,10 +110,13 @@ class Blackjack(game.Game):
         # Check for dealer blackjack.
         if self.dealer_hand.blackjack():
             self.human.tell('The dealer has blackjack.')
+            # Check for insurance.
+            if self.insurance:
+                self.human.tell('You won {} bucks from your insurance.'.format(self.insurance * 2))
+                self.scores[self.human.name] += self.insurance * 2
             for hand in self.player_hands:
                 hand.status = 'standing'
             self.showdown()
-            self.phase = 'bet'
 
     def do_bet(self, arguments):
         """
@@ -118,6 +124,7 @@ class Blackjack(game.Game):
 
         !! I will want a way for them to place one bet for all hands (default? -1?)
         !! also set a default bet.
+        !! answer: special input for bet.
 
         Parameters:
         arguments: The amount bet. (str)
@@ -143,7 +150,11 @@ class Blackjack(game.Game):
             # Check for all bets in.
             if min(self.bets) > 0:
                 self.deal()
-                self.phase = 'play'
+                # Check for dealer blackjack (discarded hands after showdown)
+                if not self.dealer_hand.cards:
+                    self.phase = 'bet'
+                else:
+                    self.phase = 'play'
 
     def do_double(self, arguments):
         """
@@ -279,7 +290,7 @@ class Blackjack(game.Game):
             hand.draw()
             self.human.tell('The original hand drew the {}.'.format(hand.cards[-1].name))
             new_hand.draw()
-            self.human.tell('The new hand dred the {}.'.format(new_hand.cards[-1].name))
+            self.human.tell('The new hand drew the {}.'.format(new_hand.cards[-1].name))
             # Stop hitting spit aces, if thems the rules.
             if not self.hit_split_ace and hand.cards[0].rank == 'A':
                 hand.status = 'standing'
@@ -342,7 +353,10 @@ class Blackjack(game.Game):
 
     def game_over(self):
         """Determine the end of game. (bool)"""
-        return self.scores[self.human.name] == 0
+        loss = self.scores[self.human.name] == 0 and self.phase == 'bet'
+        if loss:
+            self.win_loss_draw[1] = 1
+        return loss
 
     def handle_options(self):
         """Handle the game options. (None)"""
@@ -407,8 +421,8 @@ class Blackjack(game.Game):
         # Check for the end of the turn.
         statuses = [hand.status for hand in self.player_hands]
         if 'open' not in statuses:
-            # Check for show down with dealer.
-            if 'standing' in statuses:
+            # Check for show down with dealer (unless already done for dealer blackjack).
+            if 'standing' in statuses and self.phase != 'bet':
                 self.showdown()
             # Reset game tracking.
             self.phase = 'bet'
@@ -474,11 +488,7 @@ class Blackjack(game.Game):
                     self.human.tell('You pushed with {}.'.format(hand))
                 else:
                     self.human.tell('You lost with {}.'.format(hand))
-            self.scores[self.human.name] += int(self.bets[hand_index] * payout)
-        # Check for insurance.
-        if self.insurance and self.dealer_hand.blackjack():
-            self.human.tell('You won {} bucks from your insurance.'.format(self.insurance * 2))
-            self.scores[self.human.name] += self.insurance * 2
+                self.scores[self.human.name] += int(self.bets[hand_index] * payout)
         # Discard all hands.
         self.dealer_hand.discard()
         for hand in self.player_hands:
