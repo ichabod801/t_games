@@ -46,11 +46,11 @@ class Blackjack(game.Game):
 
     Methods:
     deal: Deal the hands. (None)
-    do_bet: Record the player's bet. (bool)
     do_hit: Deal a card to the player. (bool)
     do_split: Split a pair into two hands. (bool)
     do_stand: Set a hand as done. (bool)
     do_surrender: Concede the hand for half the bet back. (bool)
+    get_bet: Record the player's bet. (None)
     parse_arguments: Parse integer arguments to command. (list of int)
     show_status: Show the current game situation to the player. (None)
     showdown: Show and hit the dealer's hand and resolve the round. (None)
@@ -117,44 +117,6 @@ class Blackjack(game.Game):
             for hand in self.player_hands:
                 hand.status = 'standing'
             self.showdown()
-
-    def do_bet(self, arguments):
-        """
-        Record the player's bet. (bool)
-
-        !! I will want a way for them to place one bet for all hands (default? -1?)
-        !! also set a default bet.
-        !! answer: special input for bet.
-
-        Parameters:
-        arguments: The amount bet. (str)
-        """
-        # Check for proper timing.
-        if self.phase != 'bet':
-            self.human.tell('You have already bet this hand.')
-            return False
-        # Parse the arguments.
-        int_args = self.parse_arguments('bet', arguments, max_args = 2)
-        if not int_args:
-            return False
-        bet, hand_index = int_args
-        # Check for valid bet ammount.
-        if self.limit and bet > self.limit:
-            self.human.tell('The betting limit is {} bucks.'.format(self.limit))
-        elif bet > self.scores[self.human.name]:
-            self.human.tell('You only have {} bucks left to bet.'.format(self.scores[self.human.name]))
-        else:
-            # Record the bet.
-            self.bets[hand_index] = bet
-            self.scores[self.human.name] -= self.bets[hand_index]
-            # Check for all bets in.
-            if min(self.bets) > 0:
-                self.deal()
-                # Check for dealer blackjack (discarded hands after showdown)
-                if not self.dealer_hand.cards:
-                    self.phase = 'bet'
-                else:
-                    self.phase = 'play'
 
     def do_double(self, arguments):
         """
@@ -358,6 +320,31 @@ class Blackjack(game.Game):
             self.win_loss_draw[1] = 1
         return loss
 
+    def get_bet(self):
+        """Get the bet from the user. (None)"""
+        while True:
+            bet_text = self.human.ask('How much would you like to bet this round (return for max): ')
+            try:
+                bets = [int(x) for x in bet_text.split()]
+            except ValueError:
+                self.human.tell('Integers only, please.')
+                continue
+            if len(best) == 1:
+                bets = bets * len(self.player_hands)
+            # Check for valid number of bets.
+            if len(bets) != len(self.player_hands):
+                self.human.tell('Enter one bet per hand, or one bet to bet the same for all hands.')
+            # Check for valid bet ammount.
+            elif self.limit and max(bets) > self.limit:
+                self.human.tell('The betting limit is {} bucks.'.format(self.limit))
+            elif min(bets) < 1:
+                self.human.tell('All bets must be positive.')
+            elif sum(bets) > self.scores[self.human.name]:
+                self.human.tell('You only have {} bucks left to bet.'.format(self.scores[self.human.name]))
+            else:
+                self.bets = bets
+                break
+
     def handle_options(self):
         """Handle the game options. (None)"""
         # Set the default options.
@@ -413,6 +400,11 @@ class Blackjack(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
+        # Make sure the bet has been recorded.
+        if self.phase == 'bet':
+            self.get_bet()
+            self.deal()
+            self.phase = 'play'
         # Show the current game state.
         self.show_status()
         # Get and handle the user input.
@@ -449,17 +441,12 @@ class Blackjack(game.Game):
         """Show the current game situation to the player. (None)"""
         # Show the stake left.
         text = "\nYou have {} bucks.".format(self.scores[self.human.name])
-        # Show the right stuff for the current phase.
-        if self.phase == 'bet':
-            # Show that bets are still pending.
-            text += '\nThe dealer is waiting for your bet.'
-        elif self.phase == 'play':
-            # Show all of the hands.
-            text += "\nThe dealer's hand is {}.".format(self.dealer_hand)
-            text += '\nYour hand is {} ({}).'.format(self.player_hands[0], self.player_hands[0].score())
-            hand_text = '\nYour {} hand is {} ({}).'
-            for hand_index, hand in enumerate(self.player_hands[1:]):
-                text += hand_text.format(self.ordinals[hand_index + 1], hand, hand.score())
+        # Show all of the hands.
+        text += "\nThe dealer's hand is {}.".format(self.dealer_hand)
+        text += '\nYour hand is {} ({}).'.format(self.player_hands[0], self.player_hands[0].score())
+        hand_text = '\nYour {} hand is {} ({}).'
+        for hand_index, hand in enumerate(self.player_hands[1:]):
+            text += hand_text.format(self.ordinals[hand_index + 1], hand, hand.score())
         # Send the information to the human.
         self.human.tell(text)
 
