@@ -52,6 +52,7 @@ class Blackjack(game.Game):
     do_surrender: Concede the hand for half the bet back. (bool)
     get_bet: Record the player's bet. (None)
     parse_arguments: Parse integer arguments to command. (list of int)
+    reset: Reset the game for the next deal. (None)
     show_status: Show the current game situation to the player. (None)
     showdown: Show and hit the dealer's hand and resolve the round. (None)
     wins: Determine if a hand wins and it's payout. (float)
@@ -60,6 +61,8 @@ class Blackjack(game.Game):
     do_quit
     game_over
     handle_options
+    player_turn
+    set_up
     """
 
     # Alternate names for the game.
@@ -322,14 +325,23 @@ class Blackjack(game.Game):
 
     def get_bet(self):
         """Get the bet from the user. (None)"""
+        self.human.tell('\nYou have {} bucks.'.format(self.scores[self.human.name]))
         while True:
             bet_text = self.human.ask('How much would you like to bet this round (return for max): ')
             try:
                 bets = [int(x) for x in bet_text.split()]
             except ValueError:
-                self.human.tell('Integers only, please.')
-                continue
-            if len(best) == 1:
+                if bet_text.lower().strip() in ('q', 'quit'):
+                    self.bets = [0] * len(self.player_hands)
+                    self.human.held_inputs = ['quit']
+                    return None
+                else:
+                    self.human.tell('Integers only, please.')
+                    continue
+            # Handle default bets.
+            if not bets:
+                bets = [self.limit]
+            if len(bets) == 1:
                 bets = bets * len(self.player_hands)
             # Check for valid number of bets.
             if len(bets) != len(self.player_hands):
@@ -343,7 +355,9 @@ class Blackjack(game.Game):
                 self.human.tell('You only have {} bucks left to bet.'.format(self.scores[self.human.name]))
             else:
                 self.bets = bets
+                self.scores[self.human.name] -= sum(bets)
                 break
+        self.status = 'play'
 
     def handle_options(self):
         """Handle the game options. (None)"""
@@ -401,27 +415,38 @@ class Blackjack(game.Game):
         player: The player whose turn it is. (Player)
         """
         # Make sure the bet has been recorded.
+        # !! problems with dealer getting 21
         if self.phase == 'bet':
             self.get_bet()
             self.deal()
-            self.phase = 'play'
-        # Show the current game state.
-        self.show_status()
-        # Get and handle the user input.
-        move = self.human.ask("What's your play? ")
-        hand_done = self.handle_cmd(move)
-        # Check for the end of the turn.
+        # Check for active hands
         statuses = [hand.status for hand in self.player_hands]
-        if 'open' not in statuses:
-            # Check for show down with dealer (unless already done for dealer blackjack).
-            if 'standing' in statuses and self.phase != 'bet':
-                self.showdown()
-            # Reset game tracking.
-            self.phase = 'bet'
-            self.bets = [0] * self.hand_count
+        if 'open' in statuses:
+            # Show the current game state.
+            self.show_status()
+            # Get and handle the user input.
+            move = self.human.ask("What's your play? ")
+            self.human.tell()
+            return self.handle_cmd(move)
+        # Check for showdown
+        elif 'standing' in statuses:
+            self.showdown()
             return False
         else:
-            return hand_done
+            self.reset()
+            return False
+
+    def reset(self):
+        """Reset the game for the next deal. (None)"""
+        # Reset tracking variables.
+        self.bets = [0]
+        self.insurance = 0
+        self.phase = 'bet'
+        # Discard all cards.
+        self.dealer_hand.discard()
+        for hand in self.player_hands:
+            hand.discard()
+            hand.status = 'empty'
 
     def set_up(self):
         """Set up the game. (None)"""
@@ -476,10 +501,7 @@ class Blackjack(game.Game):
                 else:
                     self.human.tell('You lost with {}.'.format(hand))
                 self.scores[self.human.name] += int(self.bets[hand_index] * payout)
-        # Discard all hands.
-        self.dealer_hand.discard()
-        for hand in self.player_hands:
-            hand.discard()
+        self.reset()
 
     def wins(self, hand):
         """
