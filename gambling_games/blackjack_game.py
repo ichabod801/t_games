@@ -4,15 +4,15 @@ blackjack_game.py
 Blackjack.
 
 to-do:
-write some rules
 detect player blackjack
-hints
 flesh out the options
+hints?
 
 !! Side bets would be nice, but I'm not implementing them now.
 
 Constants:
 CREDITS: Credits for Blackjack.
+RULES: Rules for Blackjack.
 
 Classes:
 Blackjack: A game of Blackjack. (game.Game)
@@ -28,6 +28,40 @@ import tgames.game as game
 CREDITS = """
 Game Design: Traditional (U.S. Casinos)
 Game Programming: Craig "Ichabod" O'Brien
+"""
+
+# Rules for Blackjack.
+RULES = """
+The goal is to get a higher total than the dealer, without going over 21. Face
+cards count as 10, aces can be 1 or 11, and all other cards are face value. A
+two card hand worth 21 is called "blackjack," and beats all other hands. 
+Winning with blackjack pays out at 3:2.
+
+After you bet, you get two cards up, and the dealer gets one card up and one 
+card down. If either you or the dealer has blackjack, that is dealt with right
+away. Otherwise you can continue to get hit (get another card) until you are
+ready to stand (stay with the cards you have). If you go over 21 you lose.
+
+You may increase your bet up to double at any point, on the condition that you
+get one and only more card. If you have a pair, you may split it into two 
+hands, and get another card for each hand (you must bet the same amount for
+the second hand). As the first action of your hand, you may surrender to get
+half of your bet back.
+
+If you stand, the dealer reveals their hole card, and draws cards until they
+get 17 or higher. If they bust (go over 21) or get a lower value than you, you
+win.
+
+COMMANDS:
+Double (d): Increse your bet up to double and get one more card. If you are 
+    not doubling the bet, specify the bet after the command.
+Hit (h): Get annother card.
+Split (sp): Split a pair to create two hands. 
+Stand (s): Stick with the cards you have.
+Surrender (su): Give up your hand in exchange for half your bet back.
+
+Any command may take a hand number from 1 to n, for times when you have more
+than one hand. If no hand number is given, the first hand is assumed.
 """
 
 
@@ -77,6 +111,8 @@ class Blackjack(game.Game):
     name = 'Blackjack'
     # Ordinal words for displaying multiple hands.
     ordinals = ('first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth')
+    # The rules of the game.
+    rules = RULES
 
     def deal(self):
         """Deal the hands. (None)"""
@@ -120,6 +156,12 @@ class Blackjack(game.Game):
                 hand.status = 'standing'
             self.showdown()
         else:
+            # Check for player blackjack.
+            for hand_index, hand in enumerate(self.player_hands:)
+                if hand.blackjack():
+                    self.human.tell('You won with blackjack ({}).'.format(hand))
+                    self.scores[self.human.name] += int(self.bets[hand_index] * 2 / 3)
+                    hand.status = 'paid'
             self.phase = 'play'
 
     def do_double(self, arguments):
