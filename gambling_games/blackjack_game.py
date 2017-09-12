@@ -4,7 +4,6 @@ blackjack_game.py
 Blackjack.
 
 to-do:
-detect player blackjack
 flesh out the options
 hints?
 
@@ -415,7 +414,8 @@ class Blackjack(game.Game):
         self.resplit = True
         self.double_split = True
         self.hit_split_ace = False
-        self.surrender = True # for testing, should be false.
+        self.surrender = False
+        self.soft_17 = True
 
     def parse_arguments(self, command, arguments, max_args = 1):
         """
@@ -526,6 +526,10 @@ class Blackjack(game.Game):
         self.human.tell('The dealer has {}.'.format(self.dealer_hand))
         # Draw up to 17.
         while self.dealer_hand.score() < 17:
+            self.dealer_hand.draw()
+            self.human.tell('The dealer draws the {}.'.format(self.dealer_hand.cards[-1].name))
+        # Hit on soft 17.
+        if self.soft_17 and self.dealer_hand.score() == 17 and self.dealer_hand.soft:
             self.dealer_hand.draw()
             self.human.tell('The dealer draws the {}.'.format(self.dealer_hand.cards[-1].name))
         # Get and show the dealer's final hand value.
