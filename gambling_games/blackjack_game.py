@@ -137,7 +137,7 @@ class Blackjack(game.Game):
                 insure = self.human.ask('How much insurance would you like? ')
                 if not insure.strip():
                     insure = '0'
-                if insure.strip().isdigit() and int(insure) <= min(self.bets) / 2:
+                if insure.strip().isdigit() and 0 <= int(insure) <= min(self.bets) / 2:
                     self.insurance = int(insure)
                     self.scores[self.human.name] -= self.insurance
                     break
@@ -157,10 +157,10 @@ class Blackjack(game.Game):
             self.showdown()
         else:
             # Check for player blackjack.
-            for hand_index, hand in enumerate(self.player_hands:)
+            for hand_index, hand in enumerate(self.player_hands):
                 if hand.blackjack():
                     self.human.tell('You won with blackjack ({}).'.format(hand))
-                    self.scores[self.human.name] += int(self.bets[hand_index] * 2 / 3)
+                    self.scores[self.human.name] += int(self.bets[hand_index] * 2.5)
                     hand.status = 'paid'
             self.phase = 'play'
 
@@ -489,7 +489,6 @@ class Blackjack(game.Game):
         self.dealer_hand.discard()
         for hand in self.player_hands:
             hand.discard()
-            hand.status = 'empty'
         self.player_hands = [BlackjackHand(self.deck) for hand in range(self.hand_count)]
 
     def set_up(self):
@@ -610,7 +609,7 @@ class BlackjackHand(cards.Hand):
         deck: The deck the hand's cards come from. (Deck)
         """
         super(BlackjackHand, self).__init__(deck)
-        self.status = 'open'
+        self.status = 'empty'
         self.was_split = False
 
     def blackjack(self):
