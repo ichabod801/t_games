@@ -149,7 +149,7 @@ class Blackjack(game.Game):
             if value.isdigit() and int(value) > 0:
                 self.limit = int(value)
                 break
-            elif value = '0':
+            elif value == '0':
                 self.limit = MAX_INT
             else:
                 self.human.tell('Please enter a non-negative integer.')
@@ -199,7 +199,7 @@ class Blackjack(game.Game):
         if self.dealer_hand.cards[-1].rank == 'A':
             self.human.tell('The dealer is showing an ace.')
             self.human.tell('Your hand is {}.'.format(self.player_hands[0]))
-            for hand_index, hand in self.player_hands[1:]:
+            for hand_index, hand in enumerate(self.player_hands[1:]):
                 self.human.tell('Your {} hand is {}.'.format(self.ordinals[hand_index + 1], hand))
             while True:
                 insure = self.human.ask('How much insurance would you like? ')
@@ -363,6 +363,7 @@ class Blackjack(game.Game):
             new_hand = hand.split()
             self.player_hands.append(new_hand)
             self.bets.append(self.bets[hand_index])
+            self.scores[self.human.name] -= self.bets[-1]
             # Draw new cards.
             hand.draw()
             self.human.tell('The original hand drew the {}.'.format(hand.cards[-1].name))
@@ -444,7 +445,7 @@ class Blackjack(game.Game):
                 bets = [int(x) for x in bet_text.split()]
             except ValueError:
                 if bet_text.lower().strip() in ('q', 'quit'):
-                    self.bets = [0] * len(self.player_hands)
+                    self.bets = [0] * self.hand_count
                     self.human.held_inputs = ['quit']
                     return None
                 else:
@@ -454,9 +455,9 @@ class Blackjack(game.Game):
             if not bets:
                 bets = [self.limit]
             if len(bets) == 1:
-                bets = bets * len(self.player_hands)
+                bets = bets * self.hand_count
             # Check for valid number of bets.
-            if len(bets) != len(self.player_hands):
+            if len(bets) != self.hand_count:
                 self.human.tell('Enter one bet per hand, or one bet to bet the same for all hands.')
             # Check for valid bet ammount.
             elif self.limit and max(bets) > self.limit:
@@ -547,7 +548,7 @@ class Blackjack(game.Game):
                         self.human.tell('Invalid stake ({}).'.format(value))
                 elif option == 'limit':
                     if 0 < value <= self.stake:
-                        self.limit = limit
+                        self.limit = value
                     elif not value:
                         self.limit = MAX_INT
                     else:
@@ -661,7 +662,7 @@ class Blackjack(game.Game):
             self.dealer_hand.draw()
             self.human.tell('The dealer draws the {}.'.format(self.dealer_hand.cards[-1].name))
         # Hit on soft 17.
-        if self.soft_17 and self.dealer_hand.score() == 17 and self.dealer_hand.soft:
+        if self.hit_soft_17 and self.dealer_hand.score() == 17 and self.dealer_hand.soft:
             self.dealer_hand.draw()
             self.human.tell('The dealer draws the {}.'.format(self.dealer_hand.cards[-1].name))
         # Get and show the dealer's final hand value.
