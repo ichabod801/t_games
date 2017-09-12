@@ -94,6 +94,8 @@ If the player changes the options, either from the interface or by answering que
 
 This part can be boring and tedious to program, but it provides a richer interface for the user, and is expected of games in the tgames package.
 
+If there are a lot of options for the game, it is standard to separate out handling options from the interface and options from the user. This is typically done with two methods named ask_options and parse_options (see dice_games/pig_game.py or gambling_games/blackjack_game.py for examples).
+
 ==== do_gipf ====
 
 Gipf is the first game in a series by Kris Burm. In that series of games you have potential moves. If you make a potential move, your opponent can challenge the move. The challenge is decided by playing one of the other games in the series.

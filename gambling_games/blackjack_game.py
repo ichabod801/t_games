@@ -5,12 +5,13 @@ Blackjack.
 
 to-do:
 flesh out the options
-hints?
+hints? with warning.
 
 !! Side bets would be nice, but I'm not implementing them now.
 
 Constants:
 CREDITS: Credits for Blackjack.
+MAX_INT: The maximum integer for use in Blackjack.
 RULES: Rules for Blackjack.
 
 Classes:
@@ -18,6 +19,8 @@ Blackjack: A game of Blackjack. (game.Game)
 BlackjackHand: A hand of Blackjack. (cards.Hand)
 """
 
+
+import sys
 
 import tgames.cards as cards
 import tgames.game as game
@@ -28,6 +31,12 @@ CREDITS = """
 Game Design: Traditional (U.S. Casinos)
 Game Programming: Craig "Ichabod" O'Brien
 """
+
+# The maximum integer for use in Blackjack.
+try:
+    MAX_INT = sys.maxint
+except AttributeError:
+    MAX_INT = sys.maxsize
 
 # Rules for Blackjack.
 RULES = """
@@ -61,6 +70,19 @@ Surrender (su): Give up your hand in exchange for half your bet back.
 
 Any command may take a hand number from 1 to n, for times when you have more
 than one hand. If no hand number is given, the first hand is assumed.
+
+OPTIONS:
+decks=: The number of decks shuffled together. (defaults to 4)
+hands=: The number hands simultaneously played. (defaults to 1, can be 2 or 3)
+hit-split-ace: You can hit a split ace.
+limit=: The maximum bet. (defaults to 8)
+no-double-split: You cannot double split hands.
+no-resplit: You cannot split hands that were already split.
+s17: The dealer stands on a soft 17.
+split-rank: You can only split cards of the same rank.
+stake=: The number of bucks the player starts with. (defaults to 100)
+surrender: You may surrender (as first action, get back half bet).
+true-double: You cannot double less than the original bet.
 """
 
 
@@ -112,6 +134,53 @@ class Blackjack(game.Game):
     ordinals = ('first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth')
     # The rules of the game.
     rules = RULES
+
+    def ask_options(self):
+        """Get options from the user. (None)"""
+        while True:
+            value = self.human.ask('How many bucks would you like to start with (return = 100)? ').strip()
+            if value.isdigit() and int(value) > 0:
+                self.stake = int(value)
+                break
+            elif value:
+                self.human.tell('Please enter a positive integer.')
+        while True:
+            value = self.human.ask('What should the maximum bet be (return = 8)? ').strip()
+            if value.isdigit() and int(value) > 0:
+                self.limit = int(value)
+                break
+            elif value = '0':
+                self.limit = MAX_INT
+            else:
+                self.human.tell('Please enter a non-negative integer.')
+        while True:
+            value = self.human.ask('How many should be in the shoe (return = 4)? ').strip()
+            if value.isdigit() and int(value) > 0:
+                self.decks = int(value)
+                break
+            elif value:
+                self.human.tell('Please enter a positive integer.')
+        while True:
+            value = self.human.ask('How many hands would you like to play (return = 1)? ').strip()
+            if value.isdigit() and 1 <= int(value) <= 3:
+                self.decks = int(value)
+                break
+            elif value:
+                self.human.tell('Please enter a number from 1 to 3.')
+        boolean = self.human.ask('Should you only be able to double with a full double bet? ').strip()
+        self.true_double = boolean.lower() in utility.YES
+        boolean = self.human.ask('Should you only be able to split when ranks match? ').strip()
+        self.split_ranks = boolean.lower() in utility.YES
+        boolean = self.human.ask('Should you be able to split an already split hand? ').strip()
+        self.resplit = boolean.lower() in utility.YES
+        boolean = self.human.ask('Should you be able to double after a split? ').strip()
+        self.double_split = boolean.lower() in utility.YES
+        boolean = self.human.ask('Should you be able to hit a split ace? ').strip()
+        self.hit_split_ace = boolean.lower() in utility.YES
+        boolean = self.human.ask('Should you be able to surrender? ').strip()
+        self.surrender = boolean.lower() in utility.YES
+        boolean = self.human.ask('Should the dealer have to hit a soft 17? ').strip()
+        self.hit_soft_17 = boolean.lower() in utility.YES
 
     def deal(self):
         """Deal the hands. (None)"""
@@ -415,7 +484,16 @@ class Blackjack(game.Game):
         self.double_split = True
         self.hit_split_ace = False
         self.surrender = False
-        self.soft_17 = True
+        self.hit_soft_17 = True
+        # Handle no options
+        if self.raw_options and self.raw_options.lower() != 'None':
+            self.flags |= 1
+            self.parse_options()
+        else:
+            options = self.human.ask('Would you like to change the options? ')
+            if options in utility.YES:
+                self.flags |= 1
+                self.ask_options()
 
     def parse_arguments(self, command, arguments, max_args = 1):
         """
@@ -450,6 +528,60 @@ class Blackjack(game.Game):
         int_args[-1] -= 1
         # Return integer arguments.
         return int_args
+
+    def parse_options(self):
+        """Handle options passed from the interface. (None)"""
+        # Loop through the options provided.
+        for word in self.raw_options.lower().split():
+            # Check for options with values.
+            if '=' in word:
+                option, value = word.split('=')
+                if value.isdigit():
+                    value = int(value)
+                else:
+                    self.human.tell('Invalid option value {!r}.'.format(value))
+                if option == 'stake':
+                    if value > 0:
+                        self.stake = value
+                    else:
+                        self.human.tell('Invalid stake ({}).'.format(value))
+                elif option == 'limit':
+                    if 0 < value <= self.stake:
+                        self.limit = limit
+                    elif not value:
+                        self.limit = MAX_INT
+                    else:
+                        self.human.tell('Invalid limit ({}).'.format(value))
+                elif option == 'decks':
+                    if value > 0:
+                        self.decks = value
+                    else:
+                        self.human.tell('You must use a positive number of decks.'.format(value))
+                elif option == 'hands':
+                    if 1 <= value <= 3:
+                        self.hand_count = value
+                    else:
+                        self.human.tell('You can only play 1-3 hands.'.format(value))
+                else:
+                    self.human.tell('Unrecognized option: {}.'.format(option))
+            # Check for options with flags.
+            else:
+                if word == 'true-double':
+                    self.true_double = True
+                elif word == 'split-rank':
+                    self.split_rank = True
+                elif word == 'no-resplit':
+                    self.resplit = False
+                elif word == 'no-double-split':
+                    self.double_split = False
+                elif word == 'hit-split-ace':
+                    self.hit_split_ace = True
+                elif word == 'surrender':
+                    self.surrender = True
+                elif word == 's17':
+                    self.hit_soft_17 = False
+                else:
+                    self.human.tell('Unrecognized option: {}.'.format(option))
 
     def player_turn(self, player):
         """
