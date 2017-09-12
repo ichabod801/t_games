@@ -4,7 +4,6 @@ blackjack_game.py
 Blackjack.
 
 to-do:
-redo bet
 write some rules
 detect player blackjack
 hints
@@ -120,6 +119,8 @@ class Blackjack(game.Game):
             for hand in self.player_hands:
                 hand.status = 'standing'
             self.showdown()
+        else:
+            self.phase = 'play'
 
     def do_double(self, arguments):
         """
@@ -439,7 +440,7 @@ class Blackjack(game.Game):
     def reset(self):
         """Reset the game for the next deal. (None)"""
         # Reset tracking variables.
-        self.bets = [0]
+        self.bets = [0] * self.hand_count
         self.insurance = 0
         self.phase = 'bet'
         # Discard all cards.
@@ -447,6 +448,7 @@ class Blackjack(game.Game):
         for hand in self.player_hands:
             hand.discard()
             hand.status = 'empty'
+        self.player_hands = [BlackjackHand(self.deck) for hand in range(self.hand_count)]
 
     def set_up(self):
         """Set up the game. (None)"""
