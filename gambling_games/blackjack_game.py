@@ -159,6 +159,7 @@ class Blackjack(game.Game):
             # Check for player blackjack.
             for hand_index, hand in enumerate(self.player_hands):
                 if hand.blackjack():
+                    self.human.tell('The dealer is showing {}.'.format(self.dealer_hand.cards[-1]))
                     self.human.tell('You won with blackjack ({}).'.format(hand))
                     self.scores[self.human.name] += int(self.bets[hand_index] * 2.5)
                     hand.status = 'paid'
