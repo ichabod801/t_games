@@ -641,6 +641,7 @@ class BlackjackHand(cards.Hand):
         new_hand.cards.append(self.cards.pop())
         self.was_split = True
         new_hand.was_split = True
+        new_hand.status = 'open'
         return new_hand
 
 
