@@ -160,6 +160,8 @@ class Blackjack(game.Game):
                 break
             elif value:
                 self.human.tell('Please enter a positive integer.')
+            else:
+                break
         while True:
             value = self.human.ask('What should the maximum bet be (return = 8)? ').strip()
             if value.isdigit() and int(value) > 0:
@@ -167,8 +169,11 @@ class Blackjack(game.Game):
                 break
             elif value == '0':
                 self.limit = MAX_INT
-            else:
+                break
+            elif value:
                 self.human.tell('Please enter a non-negative integer.')
+            else:
+                break
         while True:
             value = self.human.ask('How many should be in the shoe (return = 4)? ').strip()
             if value.isdigit() and int(value) > 0:
@@ -176,6 +181,8 @@ class Blackjack(game.Game):
                 break
             elif value:
                 self.human.tell('Please enter a positive integer.')
+            else:
+                break
         while True:
             value = self.human.ask('How many hands would you like to play (return = 1)? ').strip()
             if value.isdigit() and 1 <= int(value) <= 3:
@@ -183,6 +190,8 @@ class Blackjack(game.Game):
                 break
             elif value:
                 self.human.tell('Please enter a number from 1 to 3.')
+            else:
+                break
         boolean = self.human.ask('Should you only be able to double with a full double bet? ').strip()
         self.true_double = boolean.lower() in utility.YES
         boolean = self.human.ask('Should you only be able to split when ranks match? ').strip()
