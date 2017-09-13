@@ -263,7 +263,7 @@ class Blackjack(game.Game):
         # Make sure the hand can receive cards.
         elif hand.status != 'open':
             self.human.tell('That hand is {}, you cannot double it.'.format(hand.status))
-        elif not self.double_split and hand.split:
+        elif not self.double_split and hand.was_split:
             self.human.tell('You cannot double a split hand.')
         else:
             # Increase the bet
