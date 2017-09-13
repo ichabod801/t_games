@@ -7,11 +7,14 @@ to-do:
 hints? with warning.
 
 !! Side bets would be nice, but I'm not implementing them now.
+!! Implement a cut card.
 
 Constants:
-CREDITS: Credits for Blackjack.
-MAX_INT: The maximum integer for use in Blackjack.
-RULES: Rules for Blackjack.
+CREDITS: Credits for Blackjack. (str)
+HINT_KEYS: The meanings of the entries in the hint tables. (dict of str:str)
+HINTS: Condensed tables of hints. (str)
+MAX_INT: The maximum integer for use in Blackjack. (int)
+RULES: Rules for Blackjack. (str)
 
 Classes:
 Blackjack: A game of Blackjack. (game.Game)
@@ -23,6 +26,7 @@ import sys
 
 import tgames.cards as cards
 import tgames.game as game
+import tgames.utility as utility
 
 
 # Credits for Blackjack.
@@ -32,11 +36,13 @@ Game Programming: Craig "Ichabod" O'Brien
 The hints were taken from a table on Wikipedia.
 """
 
-HINT_KEY = {'Dh': 'Double (else Hit)', 'Ds': 'Double (else Stand)', 'H': 'Hit', 'S': 'Stand', 
+# The meanings of the entries in the hint tables.
+HINT_KEYS = {'Dh': 'Double (else Hit)', 'Ds': 'Double (else Stand)', 'H': 'Hit', 'S': 'Stand', 
     'Sp': 'Split', 'Su': 'Surrender (else Hit)'}
 
+# Condensed tables of hints.
 HINTS = """S45H2Su3S5H3Su1H1S5H5S5H7S3H5Dh18H3Dh4H45
-S14Ds1S5Ds5S2H4Ds4H7Ds3H7Ds3H8Ds2H8Ds2H5
+S14Ds1S5Ds5S2H4Dh4H7Dh3H7Dh3H8Dh2H8Dh2H5
 Sp10S10Sp5S1Sp2S2Sp16H4Sp5H5Dh8H5Sp2H5Sp6H4Sp6H4"""
 
 # The maximum integer for use in Blackjack.
@@ -344,17 +350,23 @@ class Blackjack(game.Game):
         column = BlackjackHand.card_values[self.dealer_hand.cards[-1].rank] - 2
         # Determine the table and row to use.
         values = [BlackjackHand.card_values[card.rank] for card in hand.cards]
-        if len(values) == 2 and values[0] == values[1]:
+        if hand.score() == 21:
+            self.human.tell('Stand, you idiot.')
+            return False
+        elif len(values) == 2 and values[0] == values[1]:
+            print('pair')
             table = self.hints['pair']
             row = values[0] - 2
         elif hand.soft:
+            print('ace')
             table = self.hints['ace']
             row = hand.score() - 13
         else:
+            print('base')
             table = self.hints['base']
             row = hand.score() - 5
         # Display the hint.
-        self.human.tell(HINT_KEYS[table[row][column]]])
+        self.human.tell(HINT_KEYS[table[row][column]])
         if self.flags & 1:
             self.human.tell('Hints may not be valid with the current options.')
 
@@ -546,9 +558,9 @@ class Blackjack(game.Game):
         # Split out the condensed tables.
         base_text, ace_text, pair_text = HINTS.split('\n')
         # Parse and save the tables.
-        self.hints = {'base': reversed(load_table(base_text))}
-        self.hints['ace'] = reversed(load_table(ace_text))
-        self.hints['pair'] = reversed(load_table(pair_text))
+        self.hints = {'base': list(reversed(self.load_table(base_text)))}
+        self.hints['ace'] = list(reversed(self.load_table(ace_text)))
+        self.hints['pair'] = list(reversed(self.load_table(pair_text)))
 
     def load_table(self, text, columns = 10):
         """
@@ -562,7 +574,7 @@ class Blackjack(game.Game):
         key = ''
         count = 0
         # Loop through the characters.
-        for char in text:
+        for char in text + 'x':
             # Pull out the repetitions.
             if char.isdigit():
                 count = count * 10 + int(char)
@@ -725,6 +737,8 @@ class Blackjack(game.Game):
         # Set up default hands.
         self.dealer_hand = BlackjackHand(self.deck)
         self.player_hands = [BlackjackHand(self.deck)]
+        # Load hints.
+        self.load_hints()
 
     def show_status(self):
         """Show the current game situation to the player. (None)"""
@@ -836,6 +850,7 @@ class BlackjackHand(cards.Hand):
         super(BlackjackHand, self).__init__(deck)
         self.status = 'empty'
         self.was_split = False
+        self.soft = False
 
     def blackjack(self):
         """Check the hand for a blackjack. (bool)"""
@@ -845,14 +860,11 @@ class BlackjackHand(cards.Hand):
         """Score the hand. (int)"""
         score = sum([self.card_values[card.rank] for card in self.cards])
         # check for hard hand and adjust ace values.
-        if score > 21:
-            ace_count = len([card for card in self.cards if card.rank == 'A'])
-            while score > 21 and ace_count:
-                score -= 10
-                ace_count -= 1
-                self.soft = False
-        else:
-            self.soft = True
+        ace_count = len([card for card in self.cards if card.rank == 'A'])
+        while score > 21 and ace_count:
+            score -= 10
+            ace_count -= 1
+        self.soft = bool(ace_count)
         return score
 
     def split(self):
