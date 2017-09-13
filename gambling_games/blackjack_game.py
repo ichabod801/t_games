@@ -4,7 +4,6 @@ blackjack_game.py
 Blackjack.
 
 to-do:
-flesh out the options
 hints? with warning.
 
 !! Side bets would be nice, but I'm not implementing them now.
@@ -30,7 +29,15 @@ import tgames.game as game
 CREDITS = """
 Game Design: Traditional (U.S. Casinos)
 Game Programming: Craig "Ichabod" O'Brien
+The hints were taken from a table on Wikipedia.
 """
+
+HINT_KEY = {'Dh': 'Double (else Hit)', 'Ds': 'Double (else Stand)', 'H': 'Hit', 'S': 'Stand', 
+    'Sp': 'Split', 'Su': 'Surrender (else Hit)'}
+
+HINTS = """S45H2Su3S5H3Su1H1S5H5S5H7S3H5Dh18H3Dh4H45
+S14Ds1S5Ds5S2H4Ds4H7Ds3H7Ds3H8Ds2H8Ds2H5
+Sp10S10Sp5S1Sp2S2Sp16H4Sp5H5Dh8H5Sp2H5Sp6H4Sp6H4"""
 
 # The maximum integer for use in Blackjack.
 try:
@@ -101,10 +108,13 @@ class Blackjack(game.Game):
     Methods:
     deal: Deal the hands. (None)
     do_hit: Deal a card to the player. (bool)
+    do_hint: Get a suggested play for your position. (bool)
     do_split: Split a pair into two hands. (bool)
     do_stand: Set a hand as done. (bool)
     do_surrender: Concede the hand for half the bet back. (bool)
     get_bet: Record the player's bet. (None)
+    load_hints: Parse the hint table from the condensed string. (None)
+    load_table: Load a condensed table. (list of list of str)
     parse_arguments: Parse integer arguments to command. (list of int)
     reset: Reset the game for the next deal. (None)
     show_status: Show the current game situation to the player. (None)
@@ -313,6 +323,41 @@ class Blackjack(game.Game):
                 hand.status = 'standing'
                 self.human.tell('You now have 21 with {}.'.format(hand))
 
+    def do_hint(self, arguments):
+        """
+        Get a suggested play for your position. (bool)
+
+        Parameters:
+        arguments: The number of the hand to hit. (str)
+        """
+        # Check for proper timing.
+        if self.phase != 'play':
+            self.human.tell('No hands have been dealt yet.')
+            return False
+        # Parse the arguments.
+        int_args = self.parse_arguments('hint', arguments)
+        if not int_args:
+            return False
+        hand_index = int_args[0]
+        hand = self.player_hands[hand_index]
+        # Determine which column to use.
+        column = BlackjackHand.card_values[self.dealer_hand.cards[-1].rank] - 2
+        # Determine the table and row to use.
+        values = [BlackjackHand.card_values[card.rank] for card in hand.cards]
+        if len(values) == 2 and values[0] == values[1]:
+            table = self.hints['pair']
+            row = values[0] - 2
+        elif hand.soft:
+            table = self.hints['ace']
+            row = hand.score() - 13
+        else:
+            table = self.hints['base']
+            row = hand.score() - 5
+        # Display the hint.
+        self.human.tell(HINT_KEYS[table[row][column]]])
+        if self.flags & 1:
+            self.human.tell('Hints may not be valid with the current options.')
+
     def do_quit(self, arguments):
         """
         Stop playing before losing all your money. (bool)
@@ -495,6 +540,48 @@ class Blackjack(game.Game):
             if options in utility.YES:
                 self.flags |= 1
                 self.ask_options()
+
+    def load_hints(self):
+        """Parse the hint table from the condensed string. (None)"""
+        # Split out the condensed tables.
+        base_text, ace_text, pair_text = HINTS.split('\n')
+        # Parse and save the tables.
+        self.hints = {'base': reversed(load_table(base_text))}
+        self.hints['ace'] = reversed(load_table(ace_text))
+        self.hints['pair'] = reversed(load_table(pair_text))
+
+    def load_table(self, text, columns = 10):
+        """
+        Load a condensed table. (list of list of str)
+
+        Parameters:
+        text: The table condensed to a string. (str)
+        """
+        # Set up the parsing loop.
+        table = [[]]
+        key = ''
+        count = 0
+        # Loop through the characters.
+        for char in text:
+            # Pull out the repetitions.
+            if char.isdigit():
+                count = count * 10 + int(char)
+            # Fill in the table when you find a new key.
+            elif count:
+                for key_index in range(count):
+                    table[-1].append(key)
+                    if len(table[-1]) == columns:
+                        table.append([])
+                key = char
+                count = 0
+            # Pull out the keys
+            else:
+                key += char
+        # Trim empty rows.
+        if not table[-1]:
+            table.pop()
+        # Return the table.
+        return table
 
     def parse_arguments(self, command, arguments, max_args = 1):
         """

@@ -33,3 +33,4 @@ Blackjack,1,0,0,124,7
 Blackjack,0,1,0,64,5
 Blackjack,1,0,0,108,5
 Blackjack,1,0,0,140,7
+Blackjack,1,0,0,104,5
