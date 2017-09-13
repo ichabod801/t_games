@@ -4,7 +4,6 @@ blackjack_game.py
 Blackjack.
 
 to-do:
-hints? with warning.
 
 !! Side bets would be nice, but I'm not implementing them now.
 !! Implement a cut card.
@@ -741,7 +740,7 @@ class Blackjack(game.Game):
         self.insurance = 0
         self.phase = 'bet'
         # Set up the deck.
-        self.deck = cards.Deck(decks = self.decks)
+        self.deck = cards.Deck(decks = self.decks, shuffle_size = 17 * self.decks)
         self.deck.shuffle()
         # Set up default hands.
         self.dealer_hand = BlackjackHand(self.deck)

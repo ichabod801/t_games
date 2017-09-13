@@ -168,6 +168,7 @@ class Deck(object):
     card_re: A regular expression to match a card.
     cards: The cards in the deck. (list of card)
     discards: The cards in the discard pile. (list of card)
+    shuffle_size: The number of cards left that triggers a shuffle. (int)
 
     Methods:
     deal: Deal a card from the deck. (Card)
@@ -175,7 +176,7 @@ class Deck(object):
     shuffle: Shuffle the discards back into the deck. (None)
     """
 
-    def __init__(self, jokers = 0, decks = 0):
+    def __init__(self, jokers = 0, decks = 0, shuffle_size = 0):
         """
         Fill the deck with a standard set of cards. (None)
 
@@ -183,6 +184,7 @@ class Deck(object):
         jokers: The number of jokers in the deck. (int)
         decks: The number of idential decks shuffled together. (int)
         """
+        self.shuffle_size = shuffle_size
         # Add the standard cards.
         self.cards = []
         for deck in range(decks):
@@ -204,7 +206,7 @@ class Deck(object):
         Parameters:
         up: A flag for dealing the card face up. (bool)
         """
-        if not self.cards:
+        if len(self.cards) <= self.shuffle_size:
             self.shuffle()
         card = self.cards.pop()
         card.up = up
