@@ -64,6 +64,10 @@ category you are currently in, or just 'stats' for stats for all of the games
 you have played.
 
 You can get this help text by typing help or ?
+
+You can play a random game by typing 'random'. This will be a random game from
+the category your in currently in the menu system. To play any random game, 
+use 'random all'.
 """
 
 
@@ -80,6 +84,10 @@ class Interface(other_cmd.OtherCmd):
     Methods:
     do_credits: Show the programming credits for the interface. (bool)
     do_help: Show the general help text for tgames. (bool)
+    do_play: Play a game with the specified options, if any. (bool)
+    do_random: Play a random game. (bool)
+    do_rules: Show the rules for the specified game. (bool)
+    do_stats: Show game statistics. (bool)
     load_games: Load all of the games defined locally. (None)
     menu: Run the game selection menu. (None)
     play_game: Play a selected game. (None)
@@ -97,6 +105,16 @@ class Interface(other_cmd.OtherCmd):
         self.human = human
         self.games, self.categories = game.load_games()
         self.valve = RandomValve()
+
+    def category_games(self):
+        """Get all of the games in the current category. (list of game.Game)"""
+        search = [self.focus]
+        games = []
+        while search:
+            category = search.pop()
+            games.extend(category['games'])
+            search.extend(list(category['sub-categories'].values()))
+        return games
 
     def default(self, line):
         """
@@ -162,6 +180,20 @@ class Interface(other_cmd.OtherCmd):
             self.human.tell("\nI don't know how to play that game.")
         return True
 
+    def do_random(self, arguments):
+        """
+        Play a random game. (bool)
+
+        Parameters:
+        arguments: The arguments for the command. (str)
+        """
+        if args.strip().lower() == 'all':
+            game_class = random.choice(list(self.games.values()))
+        else:
+            game_class = random.choice(self.category_games())
+        self.play_game(game_class, '')
+        self.human.tell()
+
     def do_rules(self, arguments):
         """
         Show the rules for the specified game. (bool)
@@ -205,18 +237,11 @@ class Interface(other_cmd.OtherCmd):
             self.show_stats(relevant, gipf = gipf, xyzzy = xyzzy)
         # Handle category stats.
         elif arguments.lower() == 'cat':
-            # Find all of the games in the category
-            search = [self.focus]
-            games = []
-            while search:
-                category = search.pop()
-                games.extend(category['games'])
-                search.extend(list(category['sub-categories'].values()))
-            names = [game.name for game in games]
-            # Get and show the overall stats.
+            # Find the relevant games.
+            names = [game.name for game in self.category_games()]
             relevant = [result for result in self.human.results if result[0] in names]
+            # Show the over and individual game stats.
             self.show_stats(relevant, 'Category Statistics', gipf = gipf, xyzzy = xyzzy)
-            # Show the stats for the individual games.
             games = sorted(set([result[0] for result in relevant]))
             for game in games:
                 relevant = [result for result in self.human.results if result[0] == game]

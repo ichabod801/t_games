@@ -572,9 +572,10 @@ def load_games():
         games[game_class.name.lower()] = game_class
         for alias in game_class.aka:
             games[alias.lower()] = game_class
-        # Store game by category
-        # !! Once I have non-test games, hide the test games.
+        # Store game by category (except test games).
         category = categories
+        if game_class.categories[0] == 'Test Games':
+            continue
         for game_category in game_class.categories:
             if game_category not in category['sub-categories']:
                 category['sub-categories'][game_category] = {'sub-categories': {}, 'games': []}

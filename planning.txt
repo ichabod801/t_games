@@ -6,14 +6,14 @@
 
 random interface command: play a random game.
 any gipfing necessary
-use ask_int where appropriate
+use ask_int where appropriate (allow for commands)
 num_variants, welcome screen
-don't ask for play again on quit (?)
 Alpha-beta bot.
 	tic-tac-toe
 	connect four
 games interface command to list games (with aliases?)
 winning/losing scores for stats: low-mean/median-high
+redo aliases to update going down the inheritance chain.
 use a flag for completely quitting tgames (no: held_inputs = ['n', '!'])
 P-Machine
 
