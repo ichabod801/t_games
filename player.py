@@ -35,6 +35,7 @@ class Player(object):
 
     Methods:
     ask: Get information from the player. (str)
+    ask_int: Get an integer response from the human. (int)
     store_results: Store a game result. (None)
     tell: Give information to the player. (None)
 
@@ -67,6 +68,29 @@ class Player(object):
             else:
                 return answer
         return self.held_inputs.pop(0)
+
+    def ask_int(self, prompt, low = None, high = None):
+        """
+        Get an integer response from the human. (int)
+
+        Parameters:
+        prompt: The question asking for the interger. (str)
+        low: The lowest acceptable value for the integer. (int or None)
+        high: The highest acceptable value for the integer. (int or None)
+        """
+        while True:
+            response = self.ask(prompt).strip()
+            if not response.isdigit():
+                self.tell('Please enter an integer.')
+                continue
+            response = int(response)
+            if low is not None and response < low:
+                self.human.tell('That number is too low. The lowest valid response is {}.'.format(low))
+            elif high is not None and response > high:
+                self.human.tell('That number is too high. The highest valid response is {}'.format(high))
+            else:
+                break
+        return response
 
     def store_results(self, game_name, result):
         """

@@ -3,10 +3,11 @@ blackjack_game.py
 
 Blackjack.
 
-to-do:
-
-!! Side bets would be nice, but I'm not implementing them now.
-!! Implement a cut card.
+!! Side bets would be nice, but I'm not implementing them now. I need to 
+    reckon how to do it first. It needs to have pre/post deal bets with
+    varied payouts. Or is it just pre? That would simplify a litte.
+    So: dictionary of side bets made, names match methods, check after
+    deal. Some you check later, like Bust It! Maybe check at showdown too.
 
 Constants:
 CREDITS: Credits for Blackjack. (str)

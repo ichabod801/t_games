@@ -10,6 +10,7 @@ Some more games.
 always use < for previous menu and ! for quit.
 random interface command: play a random game.
 any gipfing necessary
+use ask_int where appropriate
 num_variants, welcome screen
 don't ask for play again on quit (?)
 Alpha-beta bot.
