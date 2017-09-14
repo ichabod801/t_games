@@ -187,7 +187,7 @@ class Interface(other_cmd.OtherCmd):
         Parameters:
         arguments: The arguments for the command. (str)
         """
-        if args.strip().lower() == 'all':
+        if arguments.strip().lower() == 'all':
             game_class = random.choice(list(self.games.values()))
         else:
             game_class = random.choice(self.category_games())

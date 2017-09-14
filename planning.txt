@@ -4,8 +4,11 @@
 
 == Short Term To Do List ==
 
-random interface command: play a random game.
 any gipfing necessary
+	canfield -> blackjack (build a jack on any thing)
+	freecell -> hamurabi (build a freecell card anywhere)
+	pig -> solitaire dice (pick one of two rolls)
+	solitaire dice -> freecell (free ride)
 use ask_int where appropriate (allow for commands)
 num_variants, welcome screen
 Alpha-beta bot.
@@ -16,6 +19,7 @@ winning/losing scores for stats: low-mean/median-high
 redo aliases to update going down the inheritance chain.
 use a flag for completely quitting tgames (no: held_inputs = ['n', '!'])
 P-Machine
+gipf help: only if you've gipfed already.
 
 == Long Term To Do List ==
 
@@ -90,7 +94,7 @@ bisley                -> martha
 blackjack             -> bacarat
 blackjack             -> ninety-nine
 canfield              -> baker's game
-canfield              -> blackjack
+canfield              -> blackjack            (build a jack on any thing)
 chess                 -> mancala              (take a row and move it one square left or right)
 chess                 -> mate
 connect four          -> roulette

@@ -574,13 +574,12 @@ def load_games():
             games[alias.lower()] = game_class
         # Store game by category (except test games).
         category = categories
-        if game_class.categories[0] == 'Test Games':
-            continue
-        for game_category in game_class.categories:
-            if game_category not in category['sub-categories']:
-                category['sub-categories'][game_category] = {'sub-categories': {}, 'games': []}
-            category = category['sub-categories'][game_category]
-        category['games'].append(game_class)
+        if game_class.categories[0] != 'Test Games':
+            for game_category in game_class.categories:
+                if game_category not in category['sub-categories']:
+                    category['sub-categories'][game_category] = {'sub-categories': {}, 'games': []}
+                category = category['sub-categories'][game_category]
+            category['games'].append(game_class)
         # Search the full hierarchy of sub-classes.
         search.extend(game_class.__subclasses__())
     return games, categories
