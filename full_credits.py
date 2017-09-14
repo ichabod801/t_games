@@ -12,6 +12,7 @@ data_to_text: Convert CREDITS_DATA to formatted text. (str)
 """
 
 
+# The sections and people who worked on those sections.
 CREDITS_DATA = [('Interface Programming', """Craig "Ichabod" O'Brien"""),
     ('Game Design', """Humans; Paul Alfille, Richard A. Canfield, Doug Dyment, Sid Sackson, 
         Gregory Yob"""),

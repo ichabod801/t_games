@@ -85,9 +85,9 @@ class Player(object):
                 continue
             response = int(response)
             if low is not None and response < low:
-                self.human.tell('That number is too low. The lowest valid response is {}.'.format(low))
+                self.tell('That number is too low. The lowest valid response is {}.'.format(low))
             elif high is not None and response > high:
-                self.human.tell('That number is too high. The highest valid response is {}'.format(high))
+                self.tell('That number is too high. The highest valid response is {}'.format(high))
             else:
                 break
         return response

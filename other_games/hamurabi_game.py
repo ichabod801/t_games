@@ -76,9 +76,9 @@ class Hamurabi(game.Game):
         """Check for the end of the game. (bool)"""
         # check for impeachment
         if self.feed // 20 < self.population:
-            self.starved = self.population - feed // 20
+            self.starved = self.population - self.feed // 20
             self.total_starved += self.starved
-            self.average_starved += self.starved / self.population / self.game_length
+            self.average_starved += self.starved / float(self.population) / self.game_length
             if self.starved > self.impeachment * self.population / 100.0:
                 message = 'You starved {} people in one year!!\n'.format(self.starved)
                 message += 'Due to this extreme mismanagement, you have not only been impeached and\n'
@@ -90,15 +90,15 @@ class Hamurabi(game.Game):
             land_per = self.acres // self.population
             status = "In your 10-year term of office {:.2f} percent of the population starved per year\n"
             status += "on average. That is a total of {} people died!!\n"
-            status.format(self.average_starved, self.total_starved)
+            status = status.format(self.average_starved, self.total_starved)
             status += '\nYou started with {} acres per person and ended with {} acres per person.\n'
-            status.format(10, land_per) + '\n'
+            status = status.format(10, land_per)
             # check for impeachment
             if self.average_starved > 0.33 or land_per < 7:
                 status += 'Due to this extreme mismanagement, you have not only been impeached and\n'
                 status += 'thrown out of office, but you have also been declared a national fink!!!!'
                 self.win_loss_draw[1] = 1
-            elif no self.win_loss_draw[1]:
+            elif not self.win_loss_draw[1]:
                 # check for level of win
                 self.win_loss_draw[0] = 1
                 if self.average_starved > 0.10 or land_per < 9:
@@ -111,17 +111,16 @@ class Hamurabi(game.Game):
                     status += "Your performance could have been somewhat better, but really wasn't too\n"
                     status += "bad at all. {} people would dearly like to see you assassinated, but we\n"
                     status += "all have our trivial problems."
-                    status.format(hate)
+                    status = status.format(hate)
                     self.scores[self.human.name] = 2
                 else:
                     status += "A fantastic performance!!! Charlemange, Disreli, and Jefferson combined\n"
                     status += "could not have done better!"
-                    self.scores = [3]
+                    self.scores[self.human.name] = 3
             self.human.tell(status)
         else:
             self.starved = 0
-            return False
-        return True
+        return sum(self.win_loss_draw)
 
     def handle_options(self):
         """Handle the game options. (None)"""
@@ -142,7 +141,7 @@ class Hamurabi(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        self.show_status()
+        acre_cost = self.show_status()
         # Get the player choices.
         # Get acres to buy.
         buy = self.human.ask_int('How many acres would you like to buy? ', 0, self.storage / acre_cost)
@@ -155,13 +154,11 @@ class Hamurabi(game.Game):
         # Get bushels to release.
         bushel_question = 'How many bushels would you like to feed to your people? '
         self.feed = self.human.ask_int(bushel_question, 0, self.storage)
-        self.acres -= self.feed
-        self.storage += self.feed * acre_cost
+        self.storage -= self.feed
         # Get seed to plant.
         max_seed = min(self.acres, self.storage * 2, self.population * 10)
         if max_seed:
             self.seed = self.human.ask_int('How many acres do you wish to plant with seed? ', 0, max_seed)
-            self.seed = int(self.seed)
             self.storage -= self.seed // 2
         # determine values for next turn
         self.bushels_per_acre = random.randint(1, 5)
@@ -172,19 +169,6 @@ class Hamurabi(game.Game):
         self.immigrants = random.randint(1, 5)
         self.immigrants *= (self.immigration * self.acres + self.storage)
         self.immigrants = int((self.immigrants / float(self.population) / 100.0) + 1)
-        # check for impeachment
-        if feed // 20 < self.population:
-            self.starved = self.population - feed // 20
-            self.total_starved += self.starved
-            self.average_starved += self.starved / self.population / self.game_length
-            if self.starved > self.impeachment * self.population / 100.0:
-                message = 'You starved {} people in one year!!\n'.format(self.starved)
-                message += 'Due to this extreme mismanagement, you have not only been impeached and thrown\n'
-                message += 'out of office, but you have also been declared a national fink!!!!'
-                self.human.tell(message)
-                # self.game_over = True
-        else:
-            self.starved = 0
 
     def set_up(self):
         """Set up the game. (None)"""
@@ -207,14 +191,14 @@ class Hamurabi(game.Game):
         self.human.tell(intro.format(self.game_length))
 
     def show_status(self):
-        """Show the current game status. (None)"""
-        # Start with the overviewl
-        status += '\nHamurabi, I beg to report to you, in year {}, {} people starved and {} came to the '
+        """Show the current game status. (int)"""
+        # Start with the overview
+        status = '\nHamurabi, I beg to report to you, in year {}, {} people starved and {} came to the '
         status += 'city.\n'
-        status.format(self.turn, self.starved, self.imigrants)
+        status = status.format(self.turns, self.starved, self.immigrants)
         self.population += self.immigrants - self.starved
         # Check for plague.
-        if self.turn > 1 and random.random() <= self.plague_chance / 100.0:
+        if self.turns > 1 and random.random() <= self.plague_chance / 100.0:
             status += 'A horrible plague struck! Half the people died.\n'
             self.population = self.population // 2
         # Add general stats.
@@ -228,3 +212,4 @@ class Hamurabi(game.Game):
         status += 'Land is trading at {} bushels per acre.'.format(acre_cost)
         # Tell the human.
         self.human.tell(status)
+        return acre_cost

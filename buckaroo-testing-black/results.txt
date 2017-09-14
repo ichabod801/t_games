@@ -38,3 +38,5 @@ Blackjack,0,1,0,40,4
 Blackjack,0,1,0,0,1
 Blackjack,1,0,0,112,4
 Blackjack,0,1,0,92,5
+Hamurabi,0,0,0,0,0
+Hamurabi,1,0,0,3,0
