@@ -290,7 +290,11 @@ class Interface(other_cmd.OtherCmd):
         # Add a quit option.
         choices.append('Quit')
         # Get letters for the choices.
-        pairs = [(excel_column(n + 1), selection) for n, selection in enumerate(choices)]
+        pairs = [[excel_column(n + 1), selection] for n, selection in enumerate(choices)]
+        # Special characters for special choices
+        pairs[-1][0] = '!'
+        if pairs[-2][1] == 'Previous Menu':
+            pairs[-2][0] = '<'
         # Display the menu.
         for letter, choice in pairs:
             self.human.tell('{}: {}'.format(letter, choice))

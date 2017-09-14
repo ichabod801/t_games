@@ -4,10 +4,6 @@
 
 == Short Term To Do List ==
 
-Some more games.
-	black jack
-	hamurabi
-always use < for previous menu and ! for quit.
 random interface command: play a random game.
 any gipfing necessary
 use ask_int where appropriate
@@ -16,6 +12,7 @@ don't ask for play again on quit (?)
 Alpha-beta bot.
 	tic-tac-toe
 	connect four
+games interface command to list games (with aliases?)
 winning/losing scores for stats: low-mean/median-high
 use a flag for completely quitting tgames (no: held_inputs = ['n', '!'])
 P-Machine
@@ -60,10 +57,10 @@ dice/category: yacht, poker dice
 dice/liar: dudo, liar's dice
 dice/other: solitaire dice*, mate
 gambling/dice: craps, mexico
-gambling/cards: black jack, baccarat
+gambling/cards: blackjack*, baccarat
 gambling/other: roulette, slot machines
 other/adventure: hunt the wumpus!, adventure
-other/simulation: hamurabi, my space traders (with bot traders), global thermonuclear war
+other/simulation: hamurabi*, my space traders (with bot traders), global thermonuclear war
 other/word: hangman, ghost (small word list?)
 other/other: RPS(LS)*, number guessing game 
 
