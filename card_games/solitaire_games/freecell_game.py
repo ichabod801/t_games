@@ -97,8 +97,11 @@ class FreeCell(solitaire.Solitaire):
         # Hamurabi
         if game == 'hamurabi':
             if not losses:
+                self.human.tell(self)
                 cell_check = self.cell_text()
-                tableau_check = [str(card) for stack[-1] in self.tableau if stack]
+                tableau_check = [str(stack[-1]) for stack in self.tableau if stack]
+                pair_hold = self.pair_checkers
+                self.pair_checkers = []
                 while True:
                     cards_raw = self.human.ask('Enter a free cell card and a card to build it on: ')
                     cards = cards_raw.upper().split()
@@ -106,8 +109,9 @@ class FreeCell(solitaire.Solitaire):
                         self.human.tell('You must build with a free cell card.')
                     elif cards[1] not in tableau_check:
                         self.human.tell('You must build to the top of a tableau pile.')
-                    elif self.do_build(cards_raw):
+                    elif not self.do_build(cards_raw):
                         break
+                self.pair_checkers = pair_hold
         else:
             self.human.tell('There are no valid moves for the gipf of spades.')
 

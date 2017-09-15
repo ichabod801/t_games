@@ -47,3 +47,11 @@ Baker's Game,0,1,0,752,20
 Baker's Game,1,0,0,814,16
 Blackjack,1,0,0,108,20
 Blackjack,1,0,0,116,20
+Hamurabi,1,0,0,3,16
+Hamurabi,1,0,0,3,16
+Hamurabi,0,1,0,0,16
+FreeCell,1,0,0,809,8
+Hamurabi,1,0,0,1,16
+FreeCell,1,0,0,805,8
+Hamurabi,0,1,0,0,16
+Hamurabi,1,0,0,1,16

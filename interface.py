@@ -336,6 +336,8 @@ class Interface(other_cmd.OtherCmd):
         Parameters:
         results: The game results to generate stats for. (list of list)
         title: The title to print for the statistics. (str)
+        gipf: A flag for including games gipfed from. (bool)
+        xyzzy: A flag for including xyzzy wins. (bool)
         """
         # Check for empty results.
         if not results:
@@ -348,6 +350,10 @@ class Interface(other_cmd.OtherCmd):
             results = [result for result in results if not result[5] & 8]
         if not xyzzy:
             results = [result for result in results if not result[5] & 128]
+        # Check for no valid results.
+        if not results:
+            self.human.tell('No game results to show.')
+            return None
         # Calculate total win-loss-draw and get data for streaks.
         # Prep for loop.
         wins = []

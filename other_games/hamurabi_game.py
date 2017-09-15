@@ -74,18 +74,18 @@ class Hamurabi(game.Game):
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
+        self.starved = self.population - self.feed // 20
+        self.total_starved += self.starved
+        self.average_starved += self.total_starved / float(self.population) / self.game_length
         # check for impeachment
         if self.feed // 20 < self.population:
-            self.starved = self.population - self.feed // 20
-            self.total_starved += self.starved
-            self.average_starved += self.starved / float(self.population) / self.game_length
             if self.starved > self.impeachment * self.population / 100.0:
                 message = 'You starved {} people in one year!!\n'.format(self.starved)
                 message += 'Due to this extreme mismanagement, you have not only been impeached and\n'
                 message += 'thrown out of office, but you have also been declared a national fink!!!!'
                 self.human.tell(message)
                 self.win_loss_draw[1] = 1
-        elif self.turns == self.game_length:
+        if self.turns == self.game_length and not self.win_loss_draw[1]:
             # show end of game summary
             land_per = self.acres // self.population
             status = "In your 10-year term of office {:.2f} percent of the population starved per year\n"
@@ -118,8 +118,6 @@ class Hamurabi(game.Game):
                     status += "could not have done better!"
                     self.scores[self.human.name] = 3
             self.human.tell(status)
-        else:
-            self.starved = 0
         return sum(self.win_loss_draw)
 
     def handle_options(self):
@@ -179,7 +177,7 @@ class Hamurabi(game.Game):
         self.acres = self.start_acres
         self.seed = self.start_acres
         self.rats = self.start_rats
-        self.game_length = float(self.game_length)
+        self.game_length = self.game_length
         # Set other tracking variables
         self.starved = 0
         self.total_starved = 0
