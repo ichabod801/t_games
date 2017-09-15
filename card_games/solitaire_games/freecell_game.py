@@ -86,6 +86,31 @@ class FreeCell(solitaire.Solitaire):
     categories = ['Card Games', 'Solitaire Games', 'FreeCell Games']
     name = 'FreeCell'
 
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        game, losses = self.gipf_check(arguments, ('hamurabi',))
+        # Hamurabi
+        if game == 'hamurabi':
+            if not losses:
+                cell_check = self.cell_text()
+                tableau_check = [str(card) for stack[-1] in self.tableau if stack]
+                while True:
+                    cards_raw = self.human.ask('Enter a free cell card and a card to build it on: ')
+                    cards = cards_raw.upper().split()
+                    if cards[0] not in cell_check:
+                        self.human.tell('You must build with a free cell card.')
+                    elif cards[1] not in tableau_check:
+                        self.human.tell('You must build to the top of a tableau pile.')
+                    elif self.do_build(cards_raw):
+                        break
+        else:
+            self.human.tell('There are no valid moves for the gipf of spades.')
+
     def handle_options(self):
         """Process the game options."""
         # Set the defaults.

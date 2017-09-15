@@ -5,8 +5,6 @@
 == Short Term To Do List ==
 
 any gipfing necessary
-	canfield -> baker's game (make one build by suit)
-	canfield -> blackjack (build a jack on any other card)
 	freecell -> hamurabi (build a freecell card anywhere)
 	pig -> solitaire dice (pick one of two rolls)
 	solitaire dice -> freecell (free ride)
@@ -204,15 +202,17 @@ zip                   -> yacht
 
 battleships              Gesundheit
 canfield                 I'm sorry, I don't speak Flemish.
+freecell                 There are no valid moves for the gipf of spades.
 pig                      Say what?
 wumpus                   You're hunting a wumpus, not a gipf.
 
 Does not compute.
 ValueError: gipf
-Look, I only speak two languages: English and Bad English
+Look, I only speak two languages: English and Bad English.
 I'm sorry, I didn't catch that.
 Yeah, just go two blocks up and take a right. You can't miss it.
 Tamsk.
+Girls in pillow fights? Come on, this is a family game.
 
 == 108 Games ==
 
