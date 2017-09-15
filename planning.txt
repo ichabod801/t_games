@@ -5,7 +5,8 @@
 == Short Term To Do List ==
 
 any gipfing necessary
-	canfield -> blackjack (build a jack on any thing)
+	canfield -> baker's game (make one build by suit)
+	canfield -> blackjack (build a jack on any other card)
 	freecell -> hamurabi (build a freecell card anywhere)
 	pig -> solitaire dice (pick one of two rolls)
 	solitaire dice -> freecell (free ride)
@@ -43,7 +44,7 @@ board/race: backgammon, snakes and ladders
 board/space: connect four, halma
 card/solitaire/adding and pairing: golf, pyramid
 card/solitaire/bisley: bisley, martha
-card/solitaire/canfield: canfield*, duchess
+card/solitaire/canfield: canfield!, duchess
 card/solitaire/castle: beleaguered castle, siegecraft
 card/solitaire/fan: la belle lucie, shamrocks
 card/solitaire/forty thieves: forty thieves, maria
@@ -71,8 +72,8 @@ other/other: RPS(LS)*, number guessing game
 An asterisk means the game has been coded. An exclamation point means the game has been coded and is in the gipf graph.
 
 games planned: 61
-games coded:    8
-games gipfed:   3
+games coded:   10
+games gipfed:   4
 
 == Gipf Planning ==
 
@@ -93,7 +94,7 @@ bisley                -> blackjack
 bisley                -> martha
 blackjack             -> bacarat
 blackjack             -> ninety-nine
-canfield              -> baker's game
+canfield              -> baker's game         (make one build by suit)
 canfield              -> blackjack            (build a jack on any thing)
 chess                 -> mancala              (take a row and move it one square left or right)
 chess                 -> mate
@@ -200,6 +201,18 @@ yacht                 -> poker dice
 yacht                 -> spades
 zip                   -> craps
 zip                   -> yacht
+
+battleships              Gesundheit
+canfield                 I'm sorry, I don't speak Flemish.
+pig                      Say what?
+wumpus                   You're hunting a wumpus, not a gipf.
+
+Does not compute.
+ValueError: gipf
+Look, I only speak two languages: English and Bad English
+I'm sorry, I didn't catch that.
+Yeah, just go two blocks up and take a right. You can't miss it.
+Tamsk.
 
 == 108 Games ==
 

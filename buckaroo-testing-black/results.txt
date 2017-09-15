@@ -43,3 +43,7 @@ Hamurabi,1,0,0,3,0
 Sorter,1,0,0,0,0
 Hunt the Wumpus,0,1,0,17,0
 Battleships,1,0,0,9,0
+Baker's Game,0,1,0,752,20
+Baker's Game,1,0,0,814,16
+Blackjack,1,0,0,108,20
+Blackjack,1,0,0,116,20

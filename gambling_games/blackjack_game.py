@@ -553,7 +553,9 @@ class Blackjack(game.Game):
         self.surrender = False
         self.hit_soft_17 = True
         # Handle no options
-        if self.raw_options and self.raw_options.lower() != 'None':
+        if self.raw_options.lower() == 'none':
+            pass
+        elif self.raw_options:
             self.flags |= 1
             self.parse_options()
         else:
@@ -672,7 +674,7 @@ class Blackjack(game.Game):
                     else:
                         self.human.tell('You can only play 1-3 hands.'.format(value))
                 else:
-                    self.human.tell('Unrecognized option: {}.'.format(option))
+                    self.human.tell('Unrecognized option: {}.'.format(word))
             # Check for options with flags.
             else:
                 if word == 'true-double':
@@ -690,7 +692,7 @@ class Blackjack(game.Game):
                 elif word == 's17':
                     self.hit_soft_17 = False
                 else:
-                    self.human.tell('Unrecognized option: {}.'.format(option))
+                    self.human.tell('Unrecognized option: {}.'.format(word))
 
     def player_turn(self, player):
         """

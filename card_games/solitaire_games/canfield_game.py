@@ -79,6 +79,39 @@ class Canfield(solitaire.Solitaire):
     rules = RULES
     variants = ('chameleon', 'rainbow', 'rainbow-one', 'selective', 'storehouse', 'superior')
 
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        game, losses = self.gipf_check(arguments, ("baker's game", 'blackjack'))
+        if game == "baker's game":
+            if not losses:
+                pair_hold = self.pair_checkers
+                self.pair_checkers = [solitaire.pair_down, solitaire.pair_suit]
+                go = True
+                while go:
+                    cards = self.human.ask('Enter two cards of the same suit to build: ')
+                    go = self.do_build(cards)
+                self.pair_checkers = pair_hold
+        elif game == 'blackjack':
+            if not losses:
+                pair_hold = self.pair_checkers
+                self.pair_checkers = []
+                go = True
+                while go:
+                    cards = self.human.ask('Enter a jack and anything to build it on: ')
+                    if cards.strip().upper()[0] != 'J':
+                        self.human.tell('The first card must be a jack.')
+                        continue
+                    go = self.do_build(cards)
+                self.pair_checkers = pair_hold
+        else:
+            self.human.tell("I'm sorry, I don't speak Flemish.")
+        return True
+
     def handle_options(self):
         """Set up the game options. (None)"""
         # Set the default options.

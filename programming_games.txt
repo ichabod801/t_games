@@ -90,6 +90,8 @@ If raw_options is non-empty, it will be any options that were sent to the game f
 
 If raw_options is empty, give the user the chance to set the options through a series of questions and answers. These would of course use self.human.ask(). Note that there is a tuple of possible answers meaning yes in utility.YES, which you can use for yes/no questions to provide a richer interface. Generally, if response.lower() is not in utility.YES, you assume it's no. If there is more than one question to ask to set the options, you should ask if the player wants to change the options first. That way they can just say no and go quickly to playing the game.
 
+Note that if raw_options is 'none', the default options should be used without giving the user an opportunity to change them. This is necessary for the gipf graph.
+
 If the player changes the options, either from the interface or by answering questions, you need to adjust the flags attribute of the game. You should do 'self.flags |= 1' to indicate that options were changed for the game. 
 
 This part can be boring and tedious to program, but it provides a richer interface for the user, and is expected of games in the tgames package.
