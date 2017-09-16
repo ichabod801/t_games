@@ -55,3 +55,6 @@ Hamurabi,1,0,0,1,16
 FreeCell,1,0,0,805,8
 Hamurabi,0,1,0,0,16
 Hamurabi,1,0,0,1,16
+Solitaire Dice,0,0,1,290,16
+Solitaire Dice,1,0,0,560,16
+Pig,1,0,0,101,8

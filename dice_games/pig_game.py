@@ -541,6 +541,7 @@ class Pig(game.Game):
                 self.turn_score += int(choice)
                 message = 'You rolled a {}. Your turn score is now {}.'
                 self.human.tell(message.format(choice, self.turn_score))
+                go = True
         else:
             self.human.tell('Say what?')
             go = True
