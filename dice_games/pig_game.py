@@ -499,7 +499,7 @@ class Pig(game.Game):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
-        game, losses = self.gipf_check(arguments, ('battleships', 'wumpus'))
+        game, losses = self.gipf_check(arguments, ('battleships', 'wumpus', 'solitaire dice'))
         # Battleships.
         if game == 'battleships':
             if not losses:
@@ -525,6 +525,22 @@ class Pig(game.Game):
                         go = True
             else:
                 go = True
+        elif game == 'solitaire dice':
+            if not losses:
+                first = self.die.roll()
+                while True:
+                    second = self.die.roll()
+                    if second != first:
+                        break
+                while True:
+                    choice = self.human.ask('Do you want to roll a {} or a {}? '.format(first, second))
+                    if choice.isdigit() and int(choice) in (first, second):
+                        break
+                    else:
+                        self.human.tell('Please pick one of the two numbers offered.')
+                self.turn_score += int(choice)
+                message = 'You rolled a {}. Your turn score is now {}.'
+                self.human.tell(message.format(choice, self.turn_score))
         else:
             self.human.tell('Say what?')
             go = True
