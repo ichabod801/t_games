@@ -17,6 +17,7 @@ redo aliases to update going down the inheritance chain.
 use a flag for completely quitting tgames (no: held_inputs = ['n', '!'])
 P-Machine
 gipf help: only if you've gipfed already.
+prevent chosing deal # on gipfing.
 
 == Long Term To Do List ==
 

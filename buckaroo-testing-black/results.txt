@@ -58,3 +58,8 @@ Hamurabi,1,0,0,1,16
 Solitaire Dice,0,0,1,290,16
 Solitaire Dice,1,0,0,560,16
 Pig,1,0,0,101,8
+FreeCell,1,0,0,813,16
+Solitaire Dice,0,0,1,350,8
+FreeCell,1,0,0,802,16
+FreeCell,1,0,0,808,16
+Solitaire Dice,0,0,1,90,8
