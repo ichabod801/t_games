@@ -5,7 +5,6 @@
 == Short Term To Do List ==
 
 any gipfing necessary
-	pig -> solitaire dice (pick one of two rolls)
 	solitaire dice -> freecell (free ride)
 use ask_int where appropriate (allow for commands)
 num_variants, welcome screen
@@ -203,6 +202,7 @@ battleships              Gesundheit
 canfield                 I'm sorry, I don't speak Flemish.
 freecell                 There are no valid moves for the gipf of spades.
 pig                      Say what?
+solitaire dice           I don't understand.
 wumpus                   You're hunting a wumpus, not a gipf.
 
 Does not compute.
@@ -212,6 +212,7 @@ I'm sorry, I didn't catch that.
 Yeah, just go two blocks up and take a right. You can't miss it.
 Tamsk.
 Girls in pillow fights? Come on, this is a family game.
+No hablo Ingles.
 
 == 108 Games ==
 

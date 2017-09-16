@@ -64,6 +64,7 @@ class SolitaireDice(game.Game):
     Attributes:
     die: The die that is rolled. (dice.Die)
     discards: The numbers discarded and how many times. (dict of int: int)
+    free_free: A flag for a 'free' free ride. (bool)
     message: A message to show the user in show_status. (str)
     mode: Where we are in the player's turn. (str)
     roll: The current roll. (list of int)
@@ -100,7 +101,7 @@ class SolitaireDice(game.Game):
         if len(self.discards) == 3:
             allowed_discards = [d for d in self.discards if d in self.roll]
             # Check for a free ride.
-            if not allowed_discards:
+            if not allowed_discards or self.free_free:
                 player.tell('Free ride! You may discard any die you want.')
                 allowed_discards = set(self.roll)
         else:
@@ -134,10 +135,25 @@ class SolitaireDice(game.Game):
             if len(self.discards) < 3 or discard in self.discards:
                 self.discards[discard] = self.discards.get(discard, 0) + 1
             self.roll.remove(discard)
+            self.free_free = False
             self.mode = 'split'
         # Handle other commands.
         else:
             return self.handle_cmd(discard)
+
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        game, losses = self.gipf_check(arguments, ('freecell',))
+        if game == 'freecell':
+            if not losses:
+                self.free_free = True
+        else:
+            self.human.tell("I don't understand.")
 
     def game_over(self):
         """Check for any number being discarded 8 times. (bool)"""
@@ -197,6 +213,7 @@ class SolitaireDice(game.Game):
         self.die = dice.Die()
         self.totals = [0] * 13
         self.discards = {}
+        self.free_free = False
         self.mode = 'roll'
 
     def show_status(self, player):

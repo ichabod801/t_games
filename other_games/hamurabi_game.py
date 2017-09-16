@@ -4,6 +4,7 @@ hamurabi_game.py
 The computer classic Hamurabi.
 
 !! check that all attributes need to be attributes.
+!! does not give access to other commands.
 
 Constants:
 CREDITS: The credits for Hamurabi. (str)
