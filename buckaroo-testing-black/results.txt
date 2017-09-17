@@ -63,3 +63,8 @@ Solitaire Dice,0,0,1,350,8
 FreeCell,1,0,0,802,16
 FreeCell,1,0,0,808,16
 Solitaire Dice,0,0,1,90,8
+Hamurabi,0,1,0,0,4
+Hamurabi,0,1,0,0,4
+Solitaire Dice,0,0,1,500,0
+Hamurabi,0,1,0,0,4
+Blackjack,0,1,0,52,4

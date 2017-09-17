@@ -290,7 +290,7 @@ class Game(OtherCmd):
             # Update tracking.
             self.turns += 1
             # Check for the end of game.
-            if self.game_over() or self.force_end:
+            if self.force_end or self.game_over():
                 break
         # Clean up the game.
         self.clean_up()

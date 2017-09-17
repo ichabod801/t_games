@@ -4,8 +4,6 @@
 
 == Short Term To Do List ==
 
-any gipfing necessary
-	solitaire dice -> freecell (free ride)
 use ask_int where appropriate (allow for commands)
 num_variants, welcome screen
 Alpha-beta bot.
@@ -13,11 +11,13 @@ Alpha-beta bot.
 	connect four
 games interface command to list games (with aliases?)
 winning/losing scores for stats: low-mean/median-high
+store number of turns in results
 redo aliases to update going down the inheritance chain.
 use a flag for completely quitting tgames (no: held_inputs = ['n', '!'])
 P-Machine
 gipf help: only if you've gipfed already.
 prevent chosing deal # on gipfing.
+user defined shortcuts in interface (set pig3 play pig / x medium satan)
 
 == Long Term To Do List ==
 

@@ -69,7 +69,7 @@ class Player(object):
                 return answer
         return self.held_inputs.pop(0)
 
-    def ask_int(self, prompt, low = None, high = None):
+    def ask_int(self, prompt, low = None, high = None, valid = [], default = None):
         """
         Get an integer response from the human. (int)
 
@@ -77,19 +77,31 @@ class Player(object):
         prompt: The question asking for the interger. (str)
         low: The lowest acceptable value for the integer. (int or None)
         high: The highest acceptable value for the integer. (int or None)
+        valid: The valid values for the integer. (container of int)
+        default: The default choice. (int or None)
         """
+        if self.game.force_end:
+            return [x for x in valid + [low, high, default, 0] if x is not None][0]
         while True:
             response = self.ask(prompt).strip()
-            if not response.isdigit():
-                self.tell('Please enter an integer.')
-                continue
-            response = int(response)
-            if low is not None and response < low:
-                self.tell('That number is too low. The lowest valid response is {}.'.format(low))
-            elif high is not None and response > high:
-                self.tell('That number is too high. The highest valid response is {}'.format(high))
+            if not response and default is not None:
+                return default
+            try:
+                response = int(response)
+            except ValueError:
+                self.game.handle_cmd(response)
+                if self.game.force_end:
+                    return [x for x in valid + [low, high, default, 0] if x is not None][0]
             else:
-                break
+                if low is not None and response < low:
+                    self.tell('That number is too low. The lowest valid response is {}.'.format(low))
+                elif high is not None and response > high:
+                    self.tell('That number is too high. The highest valid response is {}'.format(high))
+                elif valid and response not in valid:
+                    self.tell('{} is not a valid choice.'.format(response))
+                    self.tell('You must choose one of {}.'.format(', '.join([str(x) for x in valid])))
+                else:
+                    break
         return response
 
     def store_results(self, game_name, result):

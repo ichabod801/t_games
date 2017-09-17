@@ -293,7 +293,11 @@ class Interface(other_cmd.OtherCmd):
             results = self.game.play()
             self.human.store_results(self.game.name, results)
             self.do_stats(self.game.name)
-            if self.human.ask('Would you like to play again? ').lower() not in ('yes', 'y', '1'):
+            again = self.human.ask('Would you like to play again? ').strip().lower()
+            if again == '!':
+                self.human.held_inputs = ['!']
+                break
+            elif again not in utility.YES:
                 break
 
     def show_menu(self, category):

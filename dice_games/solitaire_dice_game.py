@@ -108,38 +108,16 @@ class SolitaireDice(game.Game):
             allowed_discards = set(self.roll)
         # Get the required/requested discard.
         if len(allowed_discards) == 1:
-            discard = str(list(allowed_discards)[0])
+            discard = allowed_discards.pop()
             self.message += '\nYou must discard a {}.'.format(discard)
         else:
-            discard = player.ask('Which number would you like to discard? ')
-        # Check for discard and split.
-        split_check = self.three_numbers_re.match(discard.strip())
-        if split_check:
-            discard = split_check.groups()[0]
-            self.held_split = ' '.join(split_check.groups()[1:])
-        else:
-            self.held_split = ''
-        # Handle the discard.
-        if discard.strip().isdigit():
-            discard = int(discard)
-            # Check for discard being rolled.
-            if discard not in self.roll:
-                self.message += 'You did not roll a {}, so you cannot discard it.'.format(discard)
-                return False
-            # Check for invalid discard.
-            elif discard not in allowed_discards:
-                self.message += '\n{} is an invalid discard.'.format(discard)
-                self.message += '\nYou must discard one of {}.'.format(str(allowed_discards)[1:-1])
-                return False
-            # Process valid discards (don't store free rides).
-            if len(self.discards) < 3 or discard in self.discards:
-                self.discards[discard] = self.discards.get(discard, 0) + 1
-            self.roll.remove(discard)
-            self.free_free = False
-            self.mode = 'split'
-        # Handle other commands.
-        else:
-            return self.handle_cmd(discard)
+            discard = player.ask_int('Which number would you like to discard? ', valid = allowed_discards)
+        # Process valid discards (don't store free rides).
+        if len(self.discards) < 3 or discard in self.discards:
+            self.discards[discard] = self.discards.get(discard, 0) + 1
+        self.roll.remove(discard)
+        self.free_free = False
+        self.mode = 'split'
 
     def do_gipf(self, arguments):
         """
@@ -254,12 +232,7 @@ class SolitaireDice(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        # Get the requested split.
-        if self.held_split:
-            split = self.held_split
-            self.held_split = ''
-        else:
-            split = player.ask('Choose two numbers to make a pair: ')
+        split = player.ask('Choose two numbers to make a pair: ')
         # Check for a valid split.
         split_check = self.two_numbers_re.match(split.strip())
         if split_check:
