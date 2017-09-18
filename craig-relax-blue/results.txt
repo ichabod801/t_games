@@ -17,3 +17,5 @@ FreeCell,1,0,0,807,0
 FreeCell,1,0,0,814,0
 FreeCell,1,0,0,818,0
 FreeCell,1,0,0,817,0
+FreeCell,1,0,0,797,0
+FreeCell,1,0,0,779,0

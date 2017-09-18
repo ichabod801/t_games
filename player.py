@@ -14,6 +14,7 @@ from __future__ import print_function
 
 import os
 import random
+import re
 import string
 
 import tgames.utility as utility
@@ -42,6 +43,8 @@ class Player(object):
     Overridden Methods:
     __init__
     """
+
+    int_re = re.compile('[, \t]?(-?\d+)')
 
     def __init__(self, name):
         """
@@ -100,6 +103,58 @@ class Player(object):
                 elif valid and response not in valid:
                     self.tell('{} is not a valid choice.'.format(response))
                     self.tell('You must choose one of {}.'.format(', '.join([str(x) for x in valid])))
+                else:
+                    break
+        return response
+
+    def ask_int_list(self, prompt, low = None, high = None, valid = [], valid_lens = [], default = None):
+        """
+        Get a multiple integer response from the human. (int)
+
+        Parameters:
+        prompt: The question asking for the interger. (str)
+        low: The lowest acceptable value for the integer. (list or None)
+        high: The highest acceptable value for the integer. (laist or None)
+        valid: The valid values for the integer. (list of int)
+        valid_lens: The valid numbers of values. (list of int)
+        default: The default choice. (list or None)
+        """
+        if self.game.force_end:
+            return [x for x in valid + [[low], [high], default, [0]] if x is not None][0]
+        while True:
+            response = self.ask(prompt).strip()
+            if not response and default is not None:
+                return default
+            try:
+                # !! this does not recognize other commands, and will pull ints from them.
+                response = [int(num) for num in self.int_re.findall(response)]
+            except ValueError:
+                self.game.handle_cmd(response)
+                if self.game.force_end:
+                    return [x for x in valid + [[low], [high], default, [0]] if x is not None][0]
+            else:
+                if low is not None and min(response) < low:
+                    self.tell('{} is too low. The lowest valid response is {}.'.format(min(response), low))
+                elif high is not None and max(response) > high:
+                    highest = max(response)
+                    self.tell('{} is too high. The highest valid response is {}'.format(highest, high))
+                elif valid:
+                    for number in set(response):
+                        if response.count(number) > valid.count(number):
+                            self.tell("You have more {}'s than allowed".format(number))
+                            self.tell("You must choose from:", ', '.join(valid))
+                            break
+                    else:
+                        break
+                elif valid_lens and len(response) not in valid_lens:
+                    self.tell('That is an invalid number of integers.')
+                    if len(valid_lens) == 1:
+                        plural = 's' if valid_lens[0] > 1 else ''
+                        self.tell('Please enter {} integer{}.'.format(str(valid_lens[0]), plural))
+                    else:
+                        message = 'Please enter {}, or {} integers.'
+                        len_text = [str(x) for x in valid_liens[:-1]]
+                        self.tell(message.format(', '.join(len_text, valid_lens[-1])))
                 else:
                     break
         return response

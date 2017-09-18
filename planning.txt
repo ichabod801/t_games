@@ -4,7 +4,7 @@
 
 == Short Term To Do List ==
 
-use ask_int where appropriate (allow for commands)
+use ask_int where appropriate (blackjack)
 num_variants, welcome screen
 Alpha-beta bot.
 	tic-tac-toe
@@ -214,6 +214,8 @@ Yeah, just go two blocks up and take a right. You can't miss it.
 Tamsk.
 Girls in pillow fights? Come on, this is a family game.
 No hablo Ingles.
+No thank you.
+I'm sorry, I quit gipfing for Lent.
 
 == 108 Games ==
 

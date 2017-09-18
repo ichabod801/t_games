@@ -505,37 +505,19 @@ class Blackjack(game.Game):
     def get_bet(self):
         """Get the bet from the user. (None)"""
         self.human.tell('\nYou have {} bucks.'.format(self.scores[self.human.name]))
-        while True:
-            bet_text = self.human.ask('How much would you like to bet this round (return for max): ')
-            try:
-                bets = [int(x) for x in bet_text.split()]
-            except ValueError:
-                if bet_text.lower().strip() in ('q', 'quit'):
-                    self.bets = [0] * self.hand_count
-                    self.human.held_inputs = ['quit']
-                    return None
-                else:
-                    self.human.tell('Integers only, please.')
-                    continue
-            # Handle default bets.
-            if not bets:
-                bets = [self.limit]
-            if len(bets) == 1:
-                bets = bets * self.hand_count
-            # Check for valid number of bets.
-            if len(bets) != self.hand_count:
-                self.human.tell('Enter one bet per hand, or one bet to bet the same for all hands.')
-            # Check for valid bet ammount.
-            elif self.limit and max(bets) > self.limit:
-                self.human.tell('The betting limit is {} bucks.'.format(self.limit))
-            elif min(bets) < 1:
-                self.human.tell('All bets must be positive.')
-            elif sum(bets) > self.scores[self.human.name]:
-                self.human.tell('You only have {} bucks left to bet.'.format(self.scores[self.human.name]))
-            else:
-                self.bets = bets
-                self.scores[self.human.name] -= sum(bets)
-                break
+        prompt = 'How much would you like to bet this round (return for max): '
+        max_bet = min(self.limit, self.scores[self.human.name])
+        if self.hand_count == 1:
+            num_bets = [1]
+        else:
+            num_bets = [1, self.hand_count]
+        bets = self.human.ask_int_list(prompt, low = 1, high = max_bet, default = [self.limit],
+            valid_lens = num_bets)
+        # Handle single bets.
+        if len(bets) == 1:
+            bets = bets * self.hand_count
+        self.bets = bets
+        self.scores[self.human.name] -= sum(bets)
         self.status = 'play'
 
     def handle_options(self):
