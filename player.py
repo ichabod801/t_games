@@ -92,9 +92,7 @@ class Player(object):
             try:
                 response = int(response)
             except ValueError:
-                self.game.handle_cmd(response)
-                if self.game.force_end:
-                    return [x for x in valid + [low, high, default, 0] if x is not None][0]
+                break
             else:
                 if low is not None and response < low:
                     self.tell('That number is too low. The lowest valid response is {}.'.format(low))
@@ -125,14 +123,8 @@ class Player(object):
             response = self.ask(prompt).strip()
             if not response and default is not None:
                 return default
-            try:
-                # !! this does not recognize other commands, and will pull ints from them.
+            if self.int_re.match(response):
                 response = [int(num) for num in self.int_re.findall(response)]
-            except ValueError:
-                self.game.handle_cmd(response)
-                if self.game.force_end:
-                    return [x for x in valid + [[low], [high], default, [0]] if x is not None][0]
-            else:
                 if low is not None and min(response) < low:
                     self.tell('{} is too low. The lowest valid response is {}.'.format(min(response), low))
                 elif high is not None and max(response) > high:
@@ -157,6 +149,8 @@ class Player(object):
                         self.tell(message.format(', '.join(len_text, valid_lens[-1])))
                 else:
                     break
+            else:
+                break
         return response
 
     def store_results(self, game_name, result):

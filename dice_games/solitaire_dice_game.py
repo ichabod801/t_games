@@ -112,12 +112,15 @@ class SolitaireDice(game.Game):
             self.message += '\nYou must discard a {}.'.format(discard)
         else:
             discard = player.ask_int('Which number would you like to discard? ', valid = allowed_discards)
-        # Process valid discards (don't store free rides).
-        if len(self.discards) < 3 or discard in self.discards:
-            self.discards[discard] = self.discards.get(discard, 0) + 1
-        self.roll.remove(discard)
-        self.free_free = False
-        self.mode = 'split'
+        if isinstance(discard, int):
+            # Process valid discards (don't store free rides).
+            if len(self.discards) < 3 or discard in self.discards:
+                self.discards[discard] = self.discards.get(discard, 0) + 1
+            self.roll.remove(discard)
+            self.free_free = False
+            self.mode = 'split'
+        else:
+            return self.handle_cmd(response)
 
     def do_gipf(self, arguments):
         """
@@ -165,8 +168,7 @@ class SolitaireDice(game.Game):
         self.show_status(player)
         # Discard one die.
         if self.mode == 'discard':
-            if not self.discard_mode(player):
-                return False
+            return self.discard_mode(player)
         # Split into pairs.
         if self.mode == 'split':
             if not self.split_mode(player):
