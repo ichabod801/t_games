@@ -18,6 +18,7 @@ Hamurabi: A game of Humurabi. (game.Game)
 import random
 
 import tgames.game as game
+import tgames.utility as utility
 
 
 # The credits for Hamurabi.
@@ -68,10 +69,13 @@ class Hamurabi(game.Game):
     """
 
     aka = ['The Sumer Game']
+    aliases = {'b': 'buy', 'f': 'feed', 'n': 'next', 'p': 'plant', 's': 'sell'}
     credits = CREDITS
     categories = ['Other Games', 'Simulation Games']
     name = 'Hamurabi'
     rules = RULES
+    year_intro = '\nHamurabi, I beg to report to you, in year {}, {} people starved and {} came to the '
+    year_intro += 'city.\nYou havested {} bushels per acre.\nRats ate {} bushels.'
 
     def do_buy(self, arguments):
         """
@@ -92,6 +96,7 @@ class Hamurabi(game.Game):
         else:
             self.storage -= acres * self.acre_cost
             self.acres += acres
+        return True
 
     def do_feed(self, arguments):
         """
@@ -110,8 +115,55 @@ class Hamurabi(game.Game):
         elif bales > self.storage:
             self.human.tell("You don't have that many bales to release.")
         else:
-            self.feed = bales
-            self.storage -= self.bales
+            self.feed += bales
+            self.storage -= bales
+        return True
+
+    def do_next(self, arguments):
+        """
+        Move on to the next turn. (bool)
+
+        Parameters:
+        arguments: The ingored arguments to the next command. (str)
+        """
+        # Check for tasks done.
+        if self.feed == 0:
+            feed_check = self.human.ask('You have not fed anyone. Are you sure you want to continue? ')
+            if feed_check.lower() not in utility.YES:
+                return False
+        if self.seed == 0:
+            seed_check = self.human.ask("No seed has been planted. Are you sure you want to continue? ")
+            if feed_check.lower() not in utility.YES:
+                return False    
+        # Determine values for next turn.
+        # Update grain values.
+        self.bushels_per_acre = random.randint(1, 5)
+        if random.random() <= self.rat_chance / 100.0:
+            self.rats = int(self.storage / 2 / random.randint(1, 2))
+        else:
+            self.rats = 0
+        self.storage += self.seed * self.bushels_per_acre - self.rats
+        # Update population values.
+        self.immigrants = random.randint(1, 5)
+        self.immigrants *= (self.immigration * self.acres + self.storage)
+        self.immigrants = int((self.immigrants / float(self.population) / 100.0) + 1)
+        self.starved = max(0, int(self.population - self.feed // 20.0))
+        self.total_starved += self.starved
+        self.average_starved += self.total_starved / float(self.population) / self.game_length
+        self.population += self.immigrants - self.starved
+        # Update real estate values.
+        self.acre_cost = random.randint(17,26)
+        # Update user.
+        format_params = (self.turns + 1, self.starved, self.immigrants, self.bushels_per_acre, self.rats)
+        self.human.tell(self.year_intro.format(*format_params))
+        # Check for plague.
+        if self.turns > 1 and random.random() <= self.plague_chance / 100.0:
+            self.human.tell('A horrible plague struck! Half the people died.\n')
+            self.population = self.population // 2
+        # Reset tracking.
+        self.feed = 0
+        self.seed = 0
+        return False
 
     def do_plant(self, arguments):
         """
@@ -127,15 +179,16 @@ class Hamurabi(game.Game):
             return False
         if acres < 0:
             self.human.tell("You can't plant negative acres.")
-        elif acres > self.acres:
+        elif acres > self.acres - self.seed:
             self.human.tell("You don't have that many acres to plant.")
         elif acres > self.storage * 2:
             self.human.tell("You don't have enough seed to plant that many acres.")
         elif acres > self.population * 10:
             self.human.tell("You don't have enough people to plant that much seed.")
         else:
-            self.seed = acres
-            self.storage -= self.seed // 2
+            self.seed += acres
+            self.storage -= acres // 2
+        return True
 
     def do_sell(self, arguments):
         """
@@ -145,32 +198,29 @@ class Hamurabi(game.Game):
         arguments: The number of acres to sell. (str)
         """
         try:
-            acres = int(arguments)
+            sell = int(arguments)
         except ValueError:
             self.human.tell('Invalid argument to sell: {!r}.'.format(arguments))
             return False
-        if acres < 0:
+        if sell < 0:
             self.human.tell("You can't sell negative acres.")
-        elif acres > self.storage / self.acre_cost:
+        elif sell > self.acres:
             self.human.tell("You don't have that many acres to sell.")
         else:
             self.acres -= sell
-            self.storage += sell * acre_cost
+            self.storage += sell * self.acre_cost
+        return True
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
-        self.starved = self.population - self.feed // 20
-        self.total_starved += self.starved
-        self.average_starved += self.total_starved / float(self.population) / self.game_length
         # check for impeachment
-        if self.feed // 20 < self.population:
-            if self.starved > self.impeachment * self.population / 100.0:
+        if self.starved > self.impeachment * self.population / 100.0:
                 message = 'You starved {} people in one year!!\n'.format(self.starved)
                 message += 'Due to this extreme mismanagement, you have not only been impeached and\n'
                 message += 'thrown out of office, but you have also been declared a national fink!!!!'
                 self.human.tell(message)
                 self.win_loss_draw[1] = 1
-        if self.turns == self.game_length and not self.win_loss_draw[1]:
+        elif self.turns == self.game_length and not self.win_loss_draw[1]:
             # show end of game summary
             land_per = self.acres // self.population
             status = "In your 10-year term of office {:.2f} percent of the population starved per year\n"
@@ -214,7 +264,7 @@ class Hamurabi(game.Game):
         self.plague_chance = 15
         self.rat_chance = 40
         self.start_acres = 1000
-        self.start_population = 95
+        self.start_population = 100
         self.start_rats = 200
 
     def player_turn(self, player):
@@ -226,41 +276,16 @@ class Hamurabi(game.Game):
         """
         self.show_status()
         # Get the player choices.
-        # Get acres to buy.
-        buy = self.human.ask_int('How many acres would you like to buy? ', 0, self.storage / acre_cost)
-        self.storage -= buy * acre_cost
-        self.acres += buy
-        # Get acres to sell.
-        sell = self.human.ask_int('How many acres would you like to sell? ', 0, self.acres)
-        self.acres -= sell
-        self.storage += sell * acre_cost
-        # Get bushels to release.
-        bushel_question = 'How many bushels would you like to feed to your people? '
-        self.feed = self.human.ask_int(bushel_question, 0, self.storage)
-        self.storage -= self.feed
-        # Get seed to plant.
-        max_seed = min(self.acres, self.storage * 2, self.population * 10)
-        if max_seed:
-            self.seed = self.human.ask_int('How many acres do you wish to plant with seed? ', 0, max_seed)
-            self.storage -= self.seed // 2
-        # determine values for next turn
-        self.bushels_per_acre = random.randint(1, 5)
-        if random.random() <= self.rat_chance / 100.0:
-            self.rats = int(self.storage / 2 / random.randint(1, 2))
-        else:
-            self.rats = 0
-        self.immigrants = random.randint(1, 5)
-        self.immigrants *= (self.immigration * self.acres + self.storage)
-        self.immigrants = int((self.immigrants / float(self.population) / 100.0) + 1)
+        return self.handle_cmd(self.human.ask('What would you like to do? '))
 
     def set_up(self):
         """Set up the game. (None)"""
         # Set non-optional parameters
         self.bushels_per_acre = 3
+        self.acre_cost = random.randint(17,26)
         # Set tracking based on optional parameters
         self.population = self.start_population
         self.acres = self.start_acres
-        self.seed = self.start_acres
         self.rats = self.start_rats
         self.game_length = self.game_length
         # Set other tracking variables
@@ -268,30 +293,25 @@ class Hamurabi(game.Game):
         self.total_starved = 0
         self.average_starved = 0
         self.immigrants = 5
-        self.storage = 0
+        self.storage = min(self.start_acres, self.population * 10) * self.bushels_per_acre - self.rats
+        self.seed = 0
+        self.feed = 0
         # Display the introduction.
-        intro = 'Try your hand at ruling ancient Sumeria for a {}-year term of office.'
+        intro = '\nTry your hand at ruling ancient Sumeria for a {}-year term of office.'
         self.human.tell(intro.format(self.game_length))
+        format_params = (self.turns + 1, self.starved, self.immigrants, self.bushels_per_acre, self.rats)
+        self.human.tell(self.year_intro.format(*format_params))
 
     def show_status(self):
         """Show the current game status. (int)"""
-        # Start with the overview
-        status = '\nHamurabi, I beg to report to you, in year {}, {} people starved and {} came to the '
-        status += 'city.\n'
-        status = status.format(self.turns, self.starved, self.immigrants)
-        self.population += self.immigrants - self.starved
-        # Check for plague.
-        if self.turns > 1 and random.random() <= self.plague_chance / 100.0:
-            status += 'A horrible plague struck! Half the people died.\n'
-            self.population = self.population // 2
-        # Add general stats.
-        status += 'The population is now {}.\n'.format(self.population)
-        status += 'The city now owns {} acres.\n'.format(self.acres)
-        status += 'You harvested {} bushels per acre.\n'.format(self.bushels_per_acre)
-        status += 'Rats ate {} bushels.\n'.format(self.rats)
-        self.storage += self.seed * self.bushels_per_acre - self.rats
+        # Display general stats.
+        if self.feed:
+            starving = int(self.population - self.feed // 20.0)
+        else:
+            starving = self.population
+        status = '\nThe population is now {} ({} starving).\n'.format(self.population, starving)
+        status += 'The city now owns {} acres ({} planted).\n'.format(self.acres, self.seed)
         status += 'You now have {} bushels in storage.\n'.format(self.storage)
-        self.acre_cost = random.randint(17,26)
-        status += 'Land is trading at {} bushels per acre.'.format(acre_cost)
+        status += 'Land is trading at {} bushels per acre.\n'.format(self.acre_cost)
         # Tell the human.
         self.human.tell(status)

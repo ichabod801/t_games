@@ -21,6 +21,7 @@ import math
 import operator
 import os
 import random
+import re
 
 from tgames.other_cmd import OtherCmd
 from tgames.player import Player
@@ -80,6 +81,8 @@ class Game(OtherCmd):
     categories = ['Test Games', 'Solitaire']
     credits = 'No credits have been specified for this game.'
     help = {}
+    # A regular expression for catching floats (SRE_Pattern)
+    float_re = re.compile('-?\d*\.\d+')
     name = 'Null'
     # The operators used by rpn.
     operators = {'|': (abs, 1), '+': (operator.add, 2), 'C': (utility.choose, 2), '/%': (divmod, 2), 
@@ -167,6 +170,9 @@ class Game(OtherCmd):
             if word in self.operators:
                 # process operator
                 op, n_params = self.operators[word]
+                if len(stack) < n_params:
+                    self.human.tell('Too few parameters for {}.'.format(word))
+                    break
                 params = stack[-n_params:]
                 stack = stack[:-n_params]
                 result = op(*params)

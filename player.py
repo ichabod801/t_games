@@ -69,7 +69,7 @@ class Player(object):
             if ';' in answer:
                 self.held_inputs = [part.strip() for part in answer.split(';')]
             else:
-                return answer
+                return answer.strip()
         return self.held_inputs.pop(0)
 
     def ask_int(self, prompt, low = None, high = None, valid = [], default = None):
