@@ -241,6 +241,7 @@ class RPS(game.Game):
     lizard_spock = {'rock': ['scissors', 'lizard'], 'scissors': ['paper', 'lizard'], 
         'paper': ['rock', 'spock'], 'lizard': ['paper', 'spock'], 'spock': ['scissors', 'rock']}
     name = 'Rock-Paper-Scissors'
+    num_variants = 1
     rules = RULES
     wins = {'rock': ['scissors'], 'scissors': ['paper'], 'paper': ['rock']}
 

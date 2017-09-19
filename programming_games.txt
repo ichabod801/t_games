@@ -34,6 +34,10 @@ The categories class attribute determines where in the interface menu the game w
 
 Note that the categories class attribute is a list of strings. The first item is the top category, then the sub-category, and then the sub-sub-category, if any.
 
+==== Number of Variants ====
+
+The num_variants attribute should reflect the number of possible different rule sets available by changing the options. It defaults to 0. Note that changes which affect the difficulty of the game, but do not impact the rules of play, should not be counted. For example, there are 70 possible layouts available in Freecell using the options. However, these are not counted in Freecell.num_variants, since the do not change the rules of play. [I need a clearer explanation of this].
+
 ==== Help ====
 
 If you want to provide additional help text beyond the rules it would go in the help class attribute. This is not common, but you can make use of it if you want.

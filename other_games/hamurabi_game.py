@@ -32,6 +32,13 @@ RULES = """
 You have ten turns to run ancient Sumeria. Each turn you can buy or sell land,
 buy or sell grain, how much to feed your people, and how much grain to plant.
 You will have to deal with disasters such as rats and plagues.
+
+Commands:
+buy (b): Buy the specified number of acres.
+feed (f): Release the specified number of bales of grain to the people.
+next (n): Finish your turn and go to the next year.
+plant (p): Plant seed in the specified number of acres.
+sell (s): Sell the specified number of acres.
 """
 
 
@@ -60,6 +67,11 @@ class Hamurabi(game.Game):
     total_starved: The number of people starved in all years. (int)
 
     Methods:
+    do_buy: Buy land with grain. (bool)
+    do_feed: Feed the people. (bool)
+    do_next: Move on to the next turn. (bool)
+    do_plant: Seed the land for the next harvest. (bool)
+    do_sell: Sell land for grain. (bool)
     show_status: Show the current game status. (None)
 
     Overridden Methods:

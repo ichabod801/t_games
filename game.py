@@ -45,8 +45,10 @@ class Game(OtherCmd):
     aka: Other names for the game. (list of str)
     credits: The design and programming credits for this game. (str)
     categories: The categories of the game. (list of str)
+    float_re: A regular expression matching floats. (SRE_Pattern)
     help: The help text for the game. (dict of str: str)
     name: The primary name of the game. (str)
+    num_variants: The number of possible variants of the game. (str)
     rules_text: The rules of the game. (str)
 
     Attributes:
@@ -81,9 +83,10 @@ class Game(OtherCmd):
     categories = ['Test Games', 'Solitaire']
     credits = 'No credits have been specified for this game.'
     help = {}
-    # A regular expression for catching floats (SRE_Pattern)
+    # A regular expression for catching floats.
     float_re = re.compile('-?\d*\.\d+')
     name = 'Null'
+    num_variants = 0
     # The operators used by rpn.
     operators = {'|': (abs, 1), '+': (operator.add, 2), 'C': (utility.choose, 2), '/%': (divmod, 2), 
         '!': (math.factorial, 1), '//': (operator.floordiv, 2), '*': (operator.mul, 2), 

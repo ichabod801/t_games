@@ -440,6 +440,7 @@ class Pig(game.Game):
     general_bots = {'value': PigBotValue, 'base-pace-race': PigBotBasePaceRace, 'bpr': PigBotBasePaceRace,
         'scoring-turns': PigBotScoringTurns, 't': PigBotScoringTurns, 'pace-race': PigBotPaceRace,
         'pr': PigBotPaceRace, 'rolls': PigBotRolls}
+    num_variants = 1
     preset_bots = {'knizia': (PigBotValue, (20,)),'stupid': (PigBotValue, ()), 'easy': (PigBotScoringTurns, ()),
         'medium': (PigBotBasePaceRace, ()), 'hard': (PigBotPaceRace, ()), 'satan': (PigBotBasePaceRace, (6, 6, 6)),
         'x': (PigBotRolls, (3,))}

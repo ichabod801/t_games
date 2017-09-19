@@ -4,13 +4,10 @@
 
 == Short Term To Do List ==
 
-use ask_int where appropriate (blackjack)
-	redo to return int(s) or other command. [done]
-	reimplement in solitaire dice/blackjack [done]
-	redo hamurabi to fit the game paradigm.
-		buy/sell, feed, plant, next turn
 num_variants, welcome screen
+hamurabi rules rewrite (commands)
 test importing and playing (from other directory)
+thorough ask_int check
 Alpha-beta bot.
 	tic-tac-toe
 	connect four

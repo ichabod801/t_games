@@ -210,6 +210,7 @@ class Klondike(solitaire.Solitaire):
     categories = ['Card Games', 'Solitaire Games', 'Klondike Games']
     credits = CREDITS
     name = 'Klondike'
+    num_variants = 2
     rules = RULES
 
     def do_switch(self, arguments):

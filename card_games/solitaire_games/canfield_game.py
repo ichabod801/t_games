@@ -76,6 +76,7 @@ class Canfield(solitaire.Solitaire):
     aka = ['Demon']
     credits = CREDITS
     name = 'Canfield'
+    num_variants = 6
     rules = RULES
     variants = ('chameleon', 'rainbow', 'rainbow-one', 'selective', 'storehouse', 'superior')
 
