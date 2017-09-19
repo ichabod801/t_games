@@ -73,6 +73,90 @@ class Hamurabi(game.Game):
     name = 'Hamurabi'
     rules = RULES
 
+    def do_buy(self, arguments):
+        """
+        Buy land with grain. (bool)
+
+        Parameters:
+        arguments: The number of acres to buy. (str)
+        """
+        try:
+            acres = int(arguments)
+        except ValueError:
+            self.human.tell('Invalid argument to buy: {!r}.'.format(arguments))
+            return False
+        if acres < 0:
+            self.human.tell("You can't buy negative acres.")
+        elif acres > self.storage / self.acre_cost:
+            self.human.tell("You don't have enough grain to buy that many acres.")
+        else:
+            self.storage -= acres * self.acre_cost
+            self.acres += acres
+
+    def do_feed(self, arguments):
+        """
+        Feed the people. (bool)
+
+        Parameters:
+        arguments: The number of bales of grain to release. (str)
+        """
+        try:
+            bales = int(arguments)
+        except ValueError:
+            self.human.tell('Invalid argument to feed: {!r}.'.format(arguments))
+            return False
+        if bales < 0:
+            self.human.tell("People vomitting on you is not supported in this version.")
+        elif bales > self.storage:
+            self.human.tell("You don't have that many bales to release.")
+        else:
+            self.feed = bales
+            self.storage -= self.bales
+
+    def do_plant(self, arguments):
+        """
+        Seed the land for the next harvest. (bool)
+
+        Parameters:
+        arguments: The number of acres to buy. (str)
+        """
+        try:
+            acres = int(arguments)
+        except ValueError:
+            self.human.tell('Invalid argument to plant: {!r}.'.format(arguments))
+            return False
+        if acres < 0:
+            self.human.tell("You can't plant negative acres.")
+        elif acres > self.acres:
+            self.human.tell("You don't have that many acres to plant.")
+        elif acres > self.storage * 2:
+            self.human.tell("You don't have enough seed to plant that many acres.")
+        elif acres > self.population * 10:
+            self.human.tell("You don't have enough people to plant that much seed.")
+        else:
+            self.seed = acres
+            self.storage -= self.seed // 2
+
+    def do_sell(self, arguments):
+        """
+        Sell land for grain. (bool)
+
+        Parameters:
+        arguments: The number of acres to sell. (str)
+        """
+        try:
+            acres = int(arguments)
+        except ValueError:
+            self.human.tell('Invalid argument to sell: {!r}.'.format(arguments))
+            return False
+        if acres < 0:
+            self.human.tell("You can't sell negative acres.")
+        elif acres > self.storage / self.acre_cost:
+            self.human.tell("You don't have that many acres to sell.")
+        else:
+            self.acres -= sell
+            self.storage += sell * acre_cost
+
     def game_over(self):
         """Check for the end of the game. (bool)"""
         self.starved = self.population - self.feed // 20
@@ -140,7 +224,7 @@ class Hamurabi(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        acre_cost = self.show_status()
+        self.show_status()
         # Get the player choices.
         # Get acres to buy.
         buy = self.human.ask_int('How many acres would you like to buy? ', 0, self.storage / acre_cost)
@@ -207,8 +291,7 @@ class Hamurabi(game.Game):
         status += 'Rats ate {} bushels.\n'.format(self.rats)
         self.storage += self.seed * self.bushels_per_acre - self.rats
         status += 'You now have {} bushels in storage.\n'.format(self.storage)
-        acre_cost = random.randint(17,26)
+        self.acre_cost = random.randint(17,26)
         status += 'Land is trading at {} bushels per acre.'.format(acre_cost)
         # Tell the human.
         self.human.tell(status)
-        return acre_cost
