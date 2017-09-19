@@ -6,7 +6,7 @@
 
 use ask_int where appropriate (blackjack)
 	redo to return int(s) or other command. [done]
-	reimplement in solitaire dice/blackjack
+	reimplement in solitaire dice/blackjack [sodi done]
 	redo hamurabi to fit the game paradigm.
 		buy/sell, feed, plant, next turn
 num_variants, welcome screen

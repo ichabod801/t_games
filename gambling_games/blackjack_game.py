@@ -513,12 +513,15 @@ class Blackjack(game.Game):
             num_bets = [1, self.hand_count]
         bets = self.human.ask_int_list(prompt, low = 1, high = max_bet, default = [self.limit],
             valid_lens = num_bets)
-        # Handle single bets.
-        if len(bets) == 1:
-            bets = bets * self.hand_count
-        self.bets = bets
-        self.scores[self.human.name] -= sum(bets)
-        self.status = 'play'
+        if isinstance(bets, list):
+            # Handle single bets.
+            if len(bets) == 1:
+                bets = bets * self.hand_count
+            self.bets = bets
+            self.scores[self.human.name] -= sum(bets)
+            self.status = 'play'
+        else:
+            return self.handle_cmd(bets)
 
     def handle_options(self):
         """Handle the game options. (None)"""
