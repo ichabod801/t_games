@@ -120,7 +120,7 @@ class SolitaireDice(game.Game):
             self.free_free = False
             self.mode = 'split'
         else:
-            return self.handle_cmd(response)
+            return self.handle_cmd(discard)
 
     def do_gipf(self, arguments):
         """
@@ -171,8 +171,7 @@ class SolitaireDice(game.Game):
             return self.discard_mode(player)
         # Split into pairs.
         if self.mode == 'split':
-            if not self.split_mode(player):
-                return False
+            return self.split_mode(player)
 
     def roll_mode(self, player):
         """
@@ -234,18 +233,10 @@ class SolitaireDice(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        split = player.ask('Choose two numbers to make a pair: ')
-        # Check for a valid split.
-        split_check = self.two_numbers_re.match(split.strip())
-        if split_check:
-            split = [int(die) for die in split_check.groups()]
-            if split[0] == split[1]:
-                in_check = self.roll.count(split[0]) >= 2
-            else:
-                in_check = split[0] in self.roll and split[1] in self.roll
-            if not in_check:
-                self.message += '\nYou did not roll both those numbers.'
-                return False
+        # Get the split
+        prompt = 'Choose two numbers to make a pair: '
+        split = player.ask_int_list(prompt, valid = self.roll, valid_lens = [2])
+        if isinstance(split, list):
             # Handle a valid split
             self.totals[sum(split)] += 1
             self.roll.remove(split[0])
@@ -254,6 +245,7 @@ class SolitaireDice(game.Game):
             self.update_score(player, split)
             self.mode = 'roll'
         else:
+            # Handle other commands
             return self.handle_cmd(split)
 
     def update_score(self, player, split):

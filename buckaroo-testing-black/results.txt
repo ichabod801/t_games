@@ -69,3 +69,5 @@ Solitaire Dice,0,0,1,500,0
 Hamurabi,0,1,0,0,4
 Blackjack,0,1,0,52,4
 Solitaire Dice,0,1,0,-80,0
+Solitaire Dice,0,1,0,-800,4
+Solitaire Dice,0,1,0,-400,4

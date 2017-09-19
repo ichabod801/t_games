@@ -10,6 +10,7 @@ use ask_int where appropriate (blackjack)
 	redo hamurabi to fit the game paradigm.
 		buy/sell, feed, plant, next turn
 num_variants, welcome screen
+test importing and playing (from other directory)
 Alpha-beta bot.
 	tic-tac-toe
 	connect four
