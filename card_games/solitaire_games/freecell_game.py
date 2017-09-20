@@ -150,23 +150,13 @@ class FreeCell(solitaire.Solitaire):
             if change.lower() in utility.YES:
                 self.flags |= 1
                 # Number of free cells.
-                while True:
-                    cells = self.human.ask('How many free cells (1-10, return for 4)? ')
-                    if cells.strip().isdigit() and int(cells) in range(1, 11):
-                        self.options['num-cells'] = int(cells)
-                    elif cells.strip():
-                        self.human.tell('That is not a valid number of cells.')
-                        continue
-                    break
+                prompt = 'How many free cells (1-10, return for 4)? '
+                cells = self.human.ask_int(prompt, low = 1, high = 10, default = 4, cmd = False)
+                self.options['num-cells'] = cells
                 # Number of tableau piles.
-                while True:
-                    piles = self.human.ask('How many tableau piles (4-10, return for 8)? ')
-                    if piles.strip().isdigit() and int(piles) in range(1, 11):
-                        self.options['num-tableau'] = int(piles)
-                    elif piles.strip():
-                        self.human.tell('That is not a valid number of piles.')
-                        continue
-                    break
+                prompt = 'How many tableau piles (4-10, return for 8)? '
+                piles = self.human.ask_int(prompt, low = 4, high = 10, default = 8, cmd = False)
+                self.options['num-tableau'] = piles
 
     def set_checkers(self):
         """Set up the game specific rules. (None)"""

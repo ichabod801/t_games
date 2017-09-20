@@ -5,7 +5,8 @@
 == Short Term To Do List ==
 
 test importing and playing (from other directory)
-thorough ask_int check. [done through blackjack]
+thorough ask_int check. [done through canfield]
+	test blackjack (opts)
 Alpha-beta bot.
 	tic-tac-toe
 	connect four
