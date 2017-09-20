@@ -4,10 +4,8 @@
 
 == Short Term To Do List ==
 
-num_variants, welcome screen
-hamurabi rules rewrite (commands)
 test importing and playing (from other directory)
-thorough ask_int check
+thorough ask_int check. [done through blackjack]
 Alpha-beta bot.
 	tic-tac-toe
 	connect four

@@ -154,57 +154,53 @@ class Blackjack(game.Game):
     def ask_options(self):
         """Get options from the user. (None)"""
         while True:
-            value = self.human.ask('How many bucks would you like to start with (return = 100)? ').strip()
-            if value.isdigit() and int(value) > 0:
-                self.stake = int(value)
+            prompt = 'How many bucks would you like to start with (return = 100)? '
+            value = self.human.ask_int(prompt, low = 1, default = 100).strip()
+            if isinstance(value, int):
+                self.stake = value
                 break
-            elif value:
-                self.human.tell('Please enter a positive integer.')
             else:
-                break
+                self.handle_cmd(value)
         while True:
-            value = self.human.ask('What should the maximum bet be (return = 8)? ').strip()
-            if value.isdigit() and int(value) > 0:
-                self.limit = int(value)
+            prompt = 'What should the maximum bet be (return = 8)? '
+            value = self.human.ask_int(prompt, low = 0, default = 8)
+            if isinstance(value, int):
+                if value:
+                    self.limit = value
+                else:
+                    self.limit = MAX_INT
                 break
-            elif value == '0':
-                self.limit = MAX_INT
-                break
-            elif value:
-                self.human.tell('Please enter a non-negative integer.')
             else:
-                break
+                self.handle_cmd(value)
         while True:
-            value = self.human.ask('How many should be in the shoe (return = 4)? ').strip()
-            if value.isdigit() and int(value) > 0:
-                self.decks = int(value)
+            prompt = 'How many decks should be in the shoe (return = 4)? '
+            value = self.human.ask_int(prompt, low = 1, max = 8, default = 4)
+            if isinstance(value, int):
+                self.decks = value
                 break
-            elif value:
-                self.human.tell('Please enter a positive integer.')
             else:
-                break
+                self.handle_cmd(value)
         while True:
-            value = self.human.ask('How many hands would you like to play (return = 1)? ').strip()
-            if value.isdigit() and 1 <= int(value) <= 3:
-                self.decks = int(value)
+            prompt = 'How many hands would you like to play (return = 1)? '
+            value = self.human.ask_int(prompt, valid = (1, 2, 3))
+            if isinstance(value, int):
+                self.hand_count = value
                 break
-            elif value:
-                self.human.tell('Please enter a number from 1 to 3.')
             else:
-                break
-        boolean = self.human.ask('Should you only be able to double with a full double bet? ').strip()
+                self.handle_cmd(value)
+        boolean = self.human.ask('Should you only be able to double with a full double bet? ')
         self.true_double = boolean.lower() in utility.YES
-        boolean = self.human.ask('Should you only be able to split when ranks match? ').strip()
+        boolean = self.human.ask('Should you only be able to split when ranks match? ')
         self.split_ranks = boolean.lower() in utility.YES
-        boolean = self.human.ask('Should you be able to split an already split hand? ').strip()
+        boolean = self.human.ask('Should you be able to split an already split hand? ')
         self.resplit = boolean.lower() in utility.YES
-        boolean = self.human.ask('Should you be able to double after a split? ').strip()
+        boolean = self.human.ask('Should you be able to double after a split? ')
         self.double_split = boolean.lower() in utility.YES
-        boolean = self.human.ask('Should you be able to hit a split ace? ').strip()
+        boolean = self.human.ask('Should you be able to hit a split ace? ')
         self.hit_split_ace = boolean.lower() in utility.YES
-        boolean = self.human.ask('Should you be able to surrender? ').strip()
+        boolean = self.human.ask('Should you be able to surrender? ')
         self.surrender = boolean.lower() in utility.YES
-        boolean = self.human.ask('Should the dealer have to hit a soft 17? ').strip()
+        boolean = self.human.ask('Should the dealer have to hit a soft 17? ')
         self.hit_soft_17 = boolean.lower() in utility.YES
 
     def deal(self):
@@ -227,15 +223,14 @@ class Blackjack(game.Game):
             for hand_index, hand in enumerate(self.player_hands[1:]):
                 self.human.tell('Your {} hand is {}.'.format(self.ordinals[hand_index + 1], hand))
             while True:
-                insure = self.human.ask('How much insurance would you like? ')
-                if not insure.strip():
-                    insure = '0'
-                if insure.strip().isdigit() and 0 <= int(insure) <= min(self.bets) / 2:
-                    self.insurance = int(insure)
+                prompt = 'How much insurance would you like? '
+                insure = self.human.ask_int(prompt, low = 0, high = min(self.bets) / 2, default = 0)
+                if isinstance(insure, int):
+                    self.insurance = insure
                     self.scores[self.human.name] -= self.insurance
                     break
                 else:
-                    self.human.tell('That is not a valid insurance ammount.')
+                    self.handle_cmd(insure)
         else:
             self.insurance = 0
         # Check for dealer blackjack.
