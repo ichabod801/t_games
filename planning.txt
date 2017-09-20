@@ -6,7 +6,7 @@
 
 test importing and playing (from other directory)
 thorough ask_int check. [done through rps]
-	test blackjack (+opts), freecell (opts), pig (opts, sodi gipf), rps(opts)
+	test blackjack (+opts), freecell (opts), pig (opts, sodi gipf), rps(opts), solitaire (deal #)
 Alpha-beta bot.
 	tic-tac-toe
 	connect four
