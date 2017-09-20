@@ -467,12 +467,9 @@ class Pig(game.Game):
                 if bot_type in self.general_bots:
                     bot_class = self.general_bots[bot_type]
                     parameters = []
-                    try:
-                        for parameter in bot_class.parameters:
-                            text = '\nWhat value do you want for the {} parameter? '.format(parameter)
-                            parameters.append(int(self.human.ask(text)))
-                    except ValueError:
-                        self.human.tell('\nBot parameters should integers.')
+                    for parameter in bot_class.parameters:
+                        text = '\nWhat value do you want for the {} parameter? '.format(parameter)
+                        parameters.append(self.human.ask_int(text, cmd = False))
                     self.players.append(bot_class(*parameters, taken_names = taken_names))
                     taken_names.append(self.players[-1].name)
                 # Add in preset bots.
@@ -533,13 +530,9 @@ class Pig(game.Game):
                     second = self.die.roll()
                     if second != first:
                         break
-                while True:
-                    choice = self.human.ask('Do you want to roll a {} or a {}? '.format(first, second))
-                    if choice.isdigit() and int(choice) in (first, second):
-                        break
-                    else:
-                        self.human.tell('Please pick one of the two numbers offered.')
-                self.turn_score += int(choice)
+                prompt = 'Do you want to roll a {} or a {}? '.format(first, second)
+                choice = self.human.ask_int(prompt, valid = [first, second], cmd = False)
+                self.turn_score += choice
                 message = 'You rolled a {}. Your turn score is now {}.'
                 self.human.tell(message.format(choice, self.turn_score))
                 go = True
