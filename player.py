@@ -72,7 +72,7 @@ class Player(object):
                 return answer.strip()
         return self.held_inputs.pop(0)
 
-    def ask_int(self, prompt, low = None, high = None, valid = [], default = None):
+    def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
         """
         Get an integer response from the human. (int)
 
@@ -82,6 +82,7 @@ class Player(object):
         high: The highest acceptable value for the integer. (int or None)
         valid: The valid values for the integer. (container of int)
         default: The default choice. (int or None)
+        cmd: A flag for returning commands for processing. (bool)
         """
         if self.game.force_end:
             return [x for x in valid + [low, high, default, 0] if x is not None][0]
@@ -92,7 +93,10 @@ class Player(object):
             try:
                 response = int(response)
             except ValueError:
-                break
+                if cmd:
+                    break
+                else:
+                    self.tell('Integers only please.')
             else:
                 if low is not None and response < low:
                     self.tell('That number is too low. The lowest valid response is {}.'.format(low))

@@ -153,41 +153,16 @@ class Blackjack(game.Game):
 
     def ask_options(self):
         """Get options from the user. (None)"""
-        while True:
-            prompt = 'How many bucks would you like to start with (return = 100)? '
-            value = self.human.ask_int(prompt, low = 1, default = 100).strip()
-            if isinstance(value, int):
-                self.stake = value
-                break
-            else:
-                self.handle_cmd(value)
-        while True:
-            prompt = 'What should the maximum bet be (return = 8)? '
-            value = self.human.ask_int(prompt, low = 0, default = 8)
-            if isinstance(value, int):
-                if value:
-                    self.limit = value
-                else:
-                    self.limit = MAX_INT
-                break
-            else:
-                self.handle_cmd(value)
-        while True:
-            prompt = 'How many decks should be in the shoe (return = 4)? '
-            value = self.human.ask_int(prompt, low = 1, max = 8, default = 4)
-            if isinstance(value, int):
-                self.decks = value
-                break
-            else:
-                self.handle_cmd(value)
-        while True:
-            prompt = 'How many hands would you like to play (return = 1)? '
-            value = self.human.ask_int(prompt, valid = (1, 2, 3))
-            if isinstance(value, int):
-                self.hand_count = value
-                break
-            else:
-                self.handle_cmd(value)
+        prompt = 'How many bucks would you like to start with (return = 100)? '
+        self.stake = self.human.ask_int(prompt, low = 1, default = 100, cmd = False)
+        prompt = 'What should the maximum bet be (return = 8)? '
+        self.limit = self.human.ask_int(prompt, low = 0, default = 8, cmd = False)
+        if not self.limit:
+            self.limit = MAX_INT
+        prompt = 'How many decks should be in the shoe (return = 4)? '
+        self.decks = self.human.ask_int(prompt, low = 1, max = 8, default = 4, cmd = False)
+        prompt = 'How many hands would you like to play (return = 1)? '
+        self.hand_count = self.human.ask_int(prompt, valid = (1, 2, 3), cmd = False)
         boolean = self.human.ask('Should you only be able to double with a full double bet? ')
         self.true_double = boolean.lower() in utility.YES
         boolean = self.human.ask('Should you only be able to split when ranks match? ')
