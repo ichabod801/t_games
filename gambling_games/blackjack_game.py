@@ -160,7 +160,7 @@ class Blackjack(game.Game):
         if not self.limit:
             self.limit = MAX_INT
         prompt = 'How many decks should be in the shoe (return = 4)? '
-        self.decks = self.human.ask_int(prompt, low = 1, max = 8, default = 4, cmd = False)
+        self.decks = self.human.ask_int(prompt, low = 1, high = 8, default = 4, cmd = False)
         prompt = 'How many hands would you like to play (return = 1)? '
         self.hand_count = self.human.ask_int(prompt, valid = (1, 2, 3), cmd = False)
         boolean = self.human.ask('Should you only be able to double with a full double bet? ')
@@ -333,15 +333,12 @@ class Blackjack(game.Game):
             self.human.tell('Stand, you idiot.')
             return False
         elif len(values) == 2 and values[0] == values[1]:
-            print('pair')
             table = self.hints['pair']
             row = values[0] - 2
         elif hand.soft:
-            print('ace')
             table = self.hints['ace']
             row = hand.score() - 13
         else:
-            print('base')
             table = self.hints['base']
             row = hand.score() - 5
         # Display the hint.
@@ -481,7 +478,7 @@ class Blackjack(game.Game):
             num_bets = [1]
         else:
             num_bets = [1, self.hand_count]
-        bets = self.human.ask_int_list(prompt, low = 1, high = max_bet, default = [self.limit],
+        bets = self.human.ask_int_list(prompt, low = 1, high = max_bet, default = [max_bet],
             valid_lens = num_bets)
         if isinstance(bets, list):
             # Handle single bets.
@@ -490,6 +487,7 @@ class Blackjack(game.Game):
             self.bets = bets
             self.scores[self.human.name] -= sum(bets)
             self.status = 'play'
+            return True
         else:
             return self.handle_cmd(bets)
 
@@ -657,9 +655,10 @@ class Blackjack(game.Game):
         player: The player whose turn it is. (Player)
         """
         # Make sure the bet has been recorded.
-        # !! problems with dealer getting 21
         if self.phase == 'bet':
-            self.get_bet()
+            go = self.get_bet()
+            if not go:
+                return False
             self.deal()
         # Check for active hands
         statuses = [hand.status for hand in self.player_hands]

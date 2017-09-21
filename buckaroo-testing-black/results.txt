@@ -75,3 +75,10 @@ Blackjack,0,1,0,88,4
 Hamurabi,0,1,0,0,6
 Hamurabi,0,1,0,0,0
 Hamurabi,1,0,0,2,0
+Blackjack,1,0,0,113,5
+FreeCell,0,1,0,797,5
+FreeCell,1,0,0,819,1
+Solitaire Dice,0,0,1,0,16
+Pig,2,0,0,103,9
+Rock-Paper-Scissors,1,4,2,0,1
+FreeCell,1,0,0,792,0

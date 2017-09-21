@@ -553,7 +553,7 @@ class Solitaire(game.Game):
         deal_num = -1
         if self.raw_options.lower() != 'none':
             prompt = 'Enter the deal number, or return for a random deal: '
-            deal_num = self.human.ask_int(prompt, low = 1, default = -1)
+            deal_num = self.human.ask_int(prompt, low = 1, default = -1, cmd = False)
         if deal_num == -1:
             deal_num = None
         self.deck.shuffle(number = deal_num)

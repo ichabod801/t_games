@@ -302,7 +302,7 @@ class RPS(game.Game):
                     self.wins = self.lizard_spock
                 # Check for match number.
                 prompt = 'How many games to play in match (return for 3)? '
-                self.match = self.human.ask(prompt, low = 1, default = 3)
+                self.match = self.human.ask_int(prompt, low = 1, default = 3, cmd = False)
                 # Check for bot opponent.
                 while True:
                     bot = self.human.ask('Which bot would you like to play against (return for Memor)? ')

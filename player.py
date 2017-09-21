@@ -84,7 +84,7 @@ class Player(object):
         default: The default choice. (int or None)
         cmd: A flag for returning commands for processing. (bool)
         """
-        if self.game.force_end:
+        if cmd and self.game.force_end:
             return [x for x in valid + [low, high, default, 0] if x is not None][0]
         while True:
             response = self.ask(prompt).strip()
@@ -109,7 +109,8 @@ class Player(object):
                     break
         return response
 
-    def ask_int_list(self, prompt, low = None, high = None, valid = [], valid_lens = [], default = None):
+    def ask_int_list(self, prompt, low = None, high = None, valid = [], valid_lens = [], default = None,
+        cmd = True):
         """
         Get a multiple integer response from the human. (int)
 
@@ -120,8 +121,9 @@ class Player(object):
         valid: The valid values for the integer. (list of int)
         valid_lens: The valid numbers of values. (list of int)
         default: The default choice. (list or None)
+        cmd: A flag for returning commands for processing. (bool)
         """
-        if self.game.force_end:
+        if cmd and self.game.force_end:
             return [x for x in valid + [[low], [high], default, [0]] if x is not None][0]
         while True:
             response = self.ask(prompt).strip()
@@ -154,7 +156,10 @@ class Player(object):
                 else:
                     break
             else:
-                break
+                if cmd:
+                    break
+                else: 
+                    self.tell('Please enter the requested integers.')
         return response
 
     def store_results(self, game_name, result):
