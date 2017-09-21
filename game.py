@@ -560,7 +560,7 @@ def load_games():
     """
     # Find the Python game files.
     game_files = []
-    base = '*/'
+    base = utility.LOC + '/*/'
     while True:
         new_files = glob.glob(base + '*_game.py')
         if new_files:

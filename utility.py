@@ -2,6 +2,7 @@
 Utility functions for tgames.
 
 Constants:
+LOC: tgames location. (str)
 YES: Synonyms for 'yes'. (set of str)
 
 Functions:
@@ -16,7 +17,11 @@ streaks: Calculates longest streaks for a sequence. (dict of float: int)
 
 import collections
 import math
+import os
 
+
+# tgames location.
+LOC = os.path.dirname(os.path.abspath(__file__))
 # Yes
 YES = set(['yes', 'y', '1', 'yup', 'sure', 'affirmative', 'yeah', 'indubitably', 'yep', 'aye', 'ok'])
 YES.update(['okay', 'darn tootin', 'roger'])

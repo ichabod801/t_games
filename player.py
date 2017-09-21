@@ -237,7 +237,8 @@ class Human(Player):
                 self.quest = input('What is your quest? ')
                 self.color = input('What is your favorite color? ')
             # Check for previous log in.
-            self.folder_name = '{}-{}-{}'.format(self.name, self.quest, self.color).lower()
+            base_name = '{}-{}-{}'.format(self.name, self.quest, self.color).lower()
+            self.folder_name = os.path.join(utility.LOC, base_name)
             if not os.path.exists(self.folder_name):
                 new_player = input('I have not heard of you. Are you a new player? ')
                 if new_player.lower() in utility.YES:
