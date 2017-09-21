@@ -560,17 +560,17 @@ def load_games():
     """
     # Find the Python game files.
     game_files = []
-    base = utility.LOC + '/*/'
+    base = '{0}{1}*{1}'.format(utility.LOC, os.sep)
     while True:
         new_files = glob.glob(base + '*_game.py')
         if new_files:
             game_files.extend(new_files)
-            base += '*/'
+            base += '*' + os.sep
         else:
             break
     # Import the Python files.
     for game_file in game_files:
-        __import__(game_file.replace(os.sep, '.')[:-3])
+        __import__(game_file[len(utility.LOC) - 6:-3].replace(os.sep, '.'))
     # Search through all of the game.Game sub-classes.
     categories = {'sub-categories': {}, 'games': []}
     games = {}
