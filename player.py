@@ -210,6 +210,115 @@ class Bot(Player):
             if self.name not in taken_names:
                 break
 
+class AlphaBetaBot(Bot):
+    """
+    A robot player using alpha-beta pruning. (Bot)
+
+    The AlphaBetaBot assumes you have a board game, and the board has a get_moves
+    method which returns all legal moves, a copy method which returns an 
+    indepent copy of the board, and a check_win method that returns 'game on'
+    until the game is over.
+
+    Attributes:
+    depth: The depth of the search. (int)
+    fudge: A fudge factor to avoid early capitulation. (int or float)
+
+    Methods:
+    alpha_beta: Tree search with alpha-beta pruning. (tuple)
+    eval_board: Evaluate the board. (int)
+
+    Overridden Methods:
+    __init__
+    """
+
+    def __init__(self, name, depth, fudge, taken_names = [], initial = ''):
+        """
+        Set up the bot. (None)
+
+        Parameters:
+        name: The name of the bot. (str)
+        depth: The depth of the search. (int)
+        fudge: A fudge factor to avoid early capitulation. (int or float)
+        """
+        # parent initialization
+        super(AlphaBetaBot, self).__init__(name, taken_names, initial)
+        # attribute initialization
+        self.depth = depth
+        self.fudge = fudge
+
+    def alpha_beta(self, board, depth, alpha, beta, max_player):
+        """
+        Tree search with alpha-beta pruning. (tuple)
+
+        The return value is a tuple of the best move found and the estimated board
+        value for that move.
+
+        Parameters:
+        board: The board position at this point in the tree. (ConnectFourBoard)
+        depth: How many more iterations of the search there should be. (int)
+        alpha: The best score for the maximizing player. (int)
+        beta: The best score for the minimizing player. (int)
+        max_player: Flag for evaluating the maximizing player. (int)
+        """
+        # get the correct player index ?? not used
+        if max_player:
+            player_index = self.game.players.index(self)
+        else:
+            player_index = 1 - self.game.players.index(self)
+        # initialize loops
+        best_move = None
+        # check for terminal node
+        if depth == 0 or board.check_win() != 'game on':
+            #print()
+            value = self.eval_board(board)
+            fudge = self.fudge * (self.depth - depth)
+            # ?? this is meant to prevent giving up in a forced win situation. Not sure it works.
+            value -= fudge
+            return None, value
+        elif max_player:
+            # maximize loop
+            board_value = -MAX_INT
+            for move in board.get_moves():
+                # evaluate the move
+                clone = board.copy()
+                clone.make_move(move)
+                sub_move, move_value = self.alpha_beta(clone, depth - 1, alpha, beta, False)
+                # check for better move
+                if move_value > board_value:
+                    board_value = move_value
+                    best_move = move
+                # adjust and check alpha
+                alpha = max(alpha, board_value)
+                if beta <= alpha:
+                    break
+        else:
+            # minimize loop
+            board_value = MAX_INT
+            for move in board.get_moves():
+                # evaluate the move
+                clone = board.copy()
+                clone.make_move(move)
+                sub_move, move_value = self.alpha_beta(clone, depth - 1, alpha, beta, True)
+                # check for worse move
+                if move_value < board_value:
+                    board_value = move_value
+                    best_move = move
+                # adjust and check beta
+                beta = min(beta, board_value)
+                if beta <= alpha:
+                    break
+        # return best move found with board value
+        return best_move, board_value
+
+    def eval_board(self, board):
+        """
+        Evaluate the board. (int)
+
+        Parameters:
+        board: The board to evaluate. (board.GridBoard)
+        """
+        return NotImplemented
+
 
 class Human(Player):
     """

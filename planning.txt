@@ -4,7 +4,6 @@
 
 == Short Term To Do List ==
 
-test importing and playing (from other directory)
 Alpha-beta bot.
 	tic-tac-toe
 	connect four
