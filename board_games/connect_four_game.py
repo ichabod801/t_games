@@ -244,18 +244,6 @@ class ConnectFour(game.Game):
 
     def handle_options(self):
         """Determine and handle the options for the game. (None)"""
-        # get symbols
-        if not self.symbols:
-            for player in self.players:
-                invalid = ''.join(self.symbols)
-                while True:
-                    symbol = player.ask('What symbol would you like to use? ')
-                    if symbol in invalid:
-                        player.tell('That symbols is already being used by another player.')
-                    else:
-                        break
-                self.symbols.append(symbol)
-        self.board.pieces = self.symbols
         # Set default options.
         bot_level = 'medium'
         # Handle no options.
@@ -285,6 +273,17 @@ class ConnectFour(game.Game):
             self.players = [self.human, C4BotGamma()]
         else:
             self.players = [self.human, C4BotGamma(depth = 8)]
+        # get symbols
+        if not self.symbols:
+            for player in self.players:
+                invalid = ''.join(self.symbols)
+                while True:
+                    symbol = player.ask('What symbol would you like to use? ')
+                    if symbol in invalid:
+                        player.tell('That symbols is already being used by another player.')
+                    else:
+                        break
+                self.symbols.append(symbol)
         
     def player_turn(self, player):
         """
@@ -298,7 +297,7 @@ class ConnectFour(game.Game):
         # get the move
         open_columns = [move[0] + 1 for move in self.board.get_moves()]
         prompt = 'Which column would you like to play in? '
-        column_index = player.get_int(prompt, valid = open_columns)
+        column_index = player.ask_int(prompt, valid = open_columns)
         self.board.make_move((column_index - 1, self.symbols[self.players.index(player)]))
 
     def set_up(self):
@@ -312,6 +311,7 @@ class ConnectFour(game.Game):
             self.symbols.reverse()
         # reset board
         self.board = C4Board(7, 6)
+        self.board.pieces = self.symbols
 
 class C4BotAlphaBeta(player.AlphaBetaBot):
     """
@@ -319,26 +319,44 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
 
     Methods:
     eval_player: Evaluate one player's position. (int)
-    find_threes: Find all three pieces in a row. (list of tuple)
-    find_twos: Find all two pieces in a row. (list of tuple)
+    find_shorts: Find all two or three pieces in a row. (tuple of list of tuple)
 
     Overridden Methods:
+    ask
+    ask_int
     eval_board
-    get_int
     """
 
     board_strength = [[3, 4, 5, 5, 4, 3], [4, 6, 8, 8, 6, 4], [5, 8, 11, 11, 8, 5], [7, 10, 13, 13, 10, 7],
         [5, 8, 11, 11, 8, 5], [4, 6, 8, 8, 6, 4], [3, 4, 5, 5, 4, 3]]
 
-    def __init__(self, name = '', depth = 6):
+    def ask(self, prompt):
         """
-        Set up the basic attributes. (None)
+        Get info from the bot. (str)
 
         Parameters:
-        name: The name of the bot. (str)
-        depth: The depth of the tree search. (int)
+        prompt: The information needed from the player. (str)
         """
-        super(C4BotAlphaBeta, self).__init__(name, depth = depth, fudge = 1)
+        if prompt == 'What symbol would you like to use? ':
+            self.symbol = random.choice('@#XO')
+            return self.symbol
+
+    def ask_int(self, prompt, valid = [], low = 0, high = 0):
+        """
+        Get an integer from the user. (str)
+
+        If valid is empty and high and low are both 0, any integer is considered
+        a valid input.
+
+        Parameters:
+        prompt: The text to prompt the user with. (str)
+        valid: The list of valid inputs. (list of int)
+        low: The lowest valid input. (int)
+        high: The highest valid input. (int)
+        """
+        clone = self.game.board.copy()
+        results = self.alpha_beta(clone, self.depth, -player.MAX_INT, player.MAX_INT, True)
+        return results[0][0] + 1
 
     def eval_board(self, board):
         """
@@ -351,13 +369,13 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
         player_index: The index of the player to evaluate the board for. (int)
         """
         if board.check_win() == 'win':
-            my_piece = self.game.symbols[self.index]
-            if my_piece == board.last_piece():
+            if self.symbol == board.last_piece():
                 result = 10000
             else:
                 result = -10000
         else:
-            result = self.eval_player(board, self.index) - self.eval_player(board, 1 - self.index)
+            index = self.game.players.index(self)
+            result = self.eval_player(board, index) - self.eval_player(board, 1 - index)
         """print(board)
         print(result)
         print()"""
@@ -408,23 +426,6 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
                 elif forward in locations:
                     twos.append((coordinate, forward))
         return twos, threes
-
-    def get_int(self, prompt, valid = [], low = 0, high = 0):
-        """
-        Get an integer from the user. (str)
-
-        If valid is empty and high and low are both 0, any integer is considered
-        a valid input.
-
-        Parameters:
-        prompt: The text to prompt the user with. (str)
-        valid: The list of valid inputs. (list of int)
-        low: The lowest valid input. (int)
-        high: The highest valid input. (int)
-        """
-        clone = self.game.board.copy()
-        results = self.alpha_beta(clone, self.depth, -player.MAX_INT, player.MAX_INT, True)
-        return results[0][0] + 1
 
 class C4BotGamma(C4BotAlphaBeta):
     """

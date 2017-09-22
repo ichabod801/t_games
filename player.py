@@ -231,17 +231,18 @@ class AlphaBetaBot(Bot):
     __init__
     """
 
-    def __init__(self, name, depth, fudge, taken_names = [], initial = ''):
+    def __init__(self, depth, fudge, taken_names = [], initial = ''):
         """
         Set up the bot. (None)
 
         Parameters:
-        name: The name of the bot. (str)
         depth: The depth of the search. (int)
         fudge: A fudge factor to avoid early capitulation. (int or float)
+        taken_names: Names already used by a player. (list of str)
+        initial: The first letter of the bot's name. (str)
         """
         # parent initialization
-        super(AlphaBetaBot, self).__init__(name, taken_names, initial)
+        super(AlphaBetaBot, self).__init__(taken_names, initial)
         # attribute initialization
         self.depth = depth
         self.fudge = fudge
