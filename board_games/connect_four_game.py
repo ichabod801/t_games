@@ -25,10 +25,10 @@ from __future__ import print_function
 import random
 import string
 
-import tgames.board
-import tgames.game
-import tgames.player
-import tgames.utility
+import tgames.board as board
+import tgames.game as game
+import tgames.player as player
+import tgames.utility as utility
 
 
 # The design and programming credits for Connect Four.
@@ -268,12 +268,13 @@ class ConnectFour(game.Game):
                     self.human.tell('That is not a valid bot level. Please pick easy, medium, or hard.')
         # Set the bot.
         if bot_level in ('easy', 'e'):
-            self.players = [self.human, C4BotAlphaBeta()]
+            self.players = [self.human, C4BotAlphaBeta(taken_names = [self.human.name])]
         elif bot_level in ('medium', 'm'):
-            self.players = [self.human, C4BotGamma()]
+            self.players = [self.human, C4BotGamma(taken_names = [self.human.name])]
         else:
-            self.players = [self.human, C4BotGamma(depth = 8)]
+            self.players = [self.human, C4BotGamma(depth = 8, taken_names = [self.human.name])]
         # get symbols
+        self.symbols = []
         if not self.symbols:
             for player in self.players:
                 invalid = ''.join(self.symbols)
@@ -293,7 +294,7 @@ class ConnectFour(game.Game):
         player: The player to play a turn for. (Player)
         """
         # show the board
-        player.screen_print(str(self))
+        player.tell(self)
         # get the move
         open_columns = [move[0] + 1 for move in self.board.get_moves()]
         prompt = 'Which column would you like to play in? '
@@ -322,6 +323,7 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
     find_shorts: Find all two or three pieces in a row. (tuple of list of tuple)
 
     Overridden Methods:
+    __init__
     ask
     ask_int
     eval_board
@@ -329,6 +331,18 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
 
     board_strength = [[3, 4, 5, 5, 4, 3], [4, 6, 8, 8, 6, 4], [5, 8, 11, 11, 8, 5], [7, 10, 13, 13, 10, 7],
         [5, 8, 11, 11, 8, 5], [4, 6, 8, 8, 6, 4], [3, 4, 5, 5, 4, 3]]
+
+    def __init__(self, depth = 6, fudge = 1, taken_names = [], initial = ''):
+        """
+        Set up the bot. (None)
+
+        Parameters:
+        depth: The depth of the search. (int)
+        fudge: A fudge factor to avoid early capitulation. (int or float)
+        taken_names: Names already used by a player. (list of str)
+        initial: The first letter of the bot's name. (str)
+        """
+        super(C4BotAlphaBeta, self).__init__(depth, fudge, taken_names, initial)
 
     def ask(self, prompt):
         """
@@ -355,7 +369,7 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
         high: The highest valid input. (int)
         """
         clone = self.game.board.copy()
-        results = self.alpha_beta(clone, self.depth, -player.MAX_INT, player.MAX_INT, True)
+        results = self.alpha_beta(clone, self.depth, -utility.MAX_INT, utility.MAX_INT, True)
         return results[0][0] + 1
 
     def eval_board(self, board):

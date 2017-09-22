@@ -18,10 +18,19 @@ streaks: Calculates longest streaks for a sequence. (dict of float: int)
 import collections
 import math
 import os
+import sys
 
 
 # tgames location.
 LOC = os.path.dirname(os.path.abspath(__file__))
+
+# maximum integer.
+try:
+    MAX_INT = sys.maxint
+except AttributeError:
+    MAX_INT = sys.maxsize
+
+
 # Yes
 YES = set(['yes', 'y', '1', 'yup', 'sure', 'affirmative', 'yeah', 'indubitably', 'yep', 'aye', 'ok'])
 YES.update(['okay', 'darn tootin', 'roger'])

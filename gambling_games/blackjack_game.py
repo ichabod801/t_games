@@ -13,7 +13,6 @@ Constants:
 CREDITS: Credits for Blackjack. (str)
 HINT_KEYS: The meanings of the entries in the hint tables. (dict of str:str)
 HINTS: Condensed tables of hints. (str)
-MAX_INT: The maximum integer for use in Blackjack. (int)
 RULES: Rules for Blackjack. (str)
 
 Classes:
@@ -21,8 +20,6 @@ Blackjack: A game of Blackjack. (game.Game)
 BlackjackHand: A hand of Blackjack. (cards.Hand)
 """
 
-
-import sys
 
 import tgames.cards as cards
 import tgames.game as game
@@ -44,12 +41,6 @@ HINT_KEYS = {'Dh': 'Double (else Hit)', 'Ds': 'Double (else Stand)', 'H': 'Hit',
 HINTS = """S45H2Su3S5H3Su1H1S5H5S5H7S3H5Dh18H3Dh4H45
 S14Ds1S5Ds5S2H4Dh4H7Dh3H7Dh3H8Dh2H8Dh2H5
 Sp10S10Sp5S1Sp2S2Sp16H4Sp5H5Dh8H5Sp2H5Sp6H4Sp6H4"""
-
-# The maximum integer for use in Blackjack.
-try:
-    MAX_INT = sys.maxint
-except AttributeError:
-    MAX_INT = sys.maxsize
 
 # Rules for Blackjack.
 RULES = """
@@ -158,7 +149,7 @@ class Blackjack(game.Game):
         prompt = 'What should the maximum bet be (return = 8)? '
         self.limit = self.human.ask_int(prompt, low = 0, default = 8, cmd = False)
         if not self.limit:
-            self.limit = MAX_INT
+            self.limit = utility.MAX_INT
         prompt = 'How many decks should be in the shoe (return = 4)? '
         self.decks = self.human.ask_int(prompt, low = 1, high = 8, default = 4, cmd = False)
         prompt = 'How many hands would you like to play (return = 1)? '
@@ -613,7 +604,7 @@ class Blackjack(game.Game):
                     if 0 < value <= self.stake:
                         self.limit = value
                     elif not value:
-                        self.limit = MAX_INT
+                        self.limit = utility.MAX_INT
                     else:
                         self.human.tell('Invalid limit ({}).'.format(value))
                 elif option == 'decks':

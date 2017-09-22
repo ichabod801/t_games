@@ -4,9 +4,6 @@
 
 == Short Term To Do List ==
 
-Alpha-beta bot.
-	tic-tac-toe
-	connect four
 games interface command to list games (with aliases?)
 winning/losing scores for stats: low-mean/median-high
 store number of turns in results

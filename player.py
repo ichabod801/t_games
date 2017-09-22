@@ -278,7 +278,7 @@ class AlphaBetaBot(Bot):
             return None, value
         elif max_player:
             # maximize loop
-            board_value = -MAX_INT
+            board_value = -utility.MAX_INT
             for move in board.get_moves():
                 # evaluate the move
                 clone = board.copy()
@@ -294,7 +294,7 @@ class AlphaBetaBot(Bot):
                     break
         else:
             # minimize loop
-            board_value = MAX_INT
+            board_value = utility.MAX_INT
             for move in board.get_moves():
                 # evaluate the move
                 clone = board.copy()

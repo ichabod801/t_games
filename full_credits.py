@@ -14,8 +14,8 @@ data_to_text: Convert CREDITS_DATA to formatted text. (str)
 
 # The sections and people who worked on those sections.
 CREDITS_DATA = [('Interface Programming', """Craig "Ichabod" O'Brien"""),
-    ('Game Design', """Humans; Paul Alfille, Richard A. Canfield, Doug Dyment, Sid Sackson, 
-        Gregory Yob"""),
+    ('Game Design', """Humans; Paul Alfille, Richard A. Canfield, Doug Dyment, Ned Strongin, Sid Sackson, 
+        Gregory Yob, Howard Wexler"""),
     ('Game Programming', """Craig "Ichabod" O'Brien"""),
     ('Bot Design', """Roger Johnson, Reiner Knizia, Todd Neller, Craig O'Brien, Clifton Presser"""),
     ('Bot Programming', """Craig "Ichabod" O'Brien"""),

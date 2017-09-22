@@ -82,3 +82,5 @@ Solitaire Dice,0,0,1,0,16
 Pig,2,0,0,103,9
 Rock-Paper-Scissors,1,4,2,0,1
 FreeCell,1,0,0,792,0
+Connect Four,1,0,0,0,0
+Connect Four,0,1,0,0,0
