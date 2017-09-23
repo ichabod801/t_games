@@ -4,11 +4,13 @@
 
 == Short Term To Do List ==
 
+connect four options (sizes and pop out (negative columns to pop))
 games interface command to list games (with aliases?)
 winning/losing scores for stats: low-mean/median-high
-store number of turns in results
+store number of turns in results, minutes?pyth
 redo aliases to update going down the inheritance chain.
 use a flag for completely quitting tgames (no: held_inputs = ['n', '!'])
+num_options (options that can be set) rather than num_variants?
 P-Machine
 gipf help: only if you've gipfed already.
 prevent chosing deal # on gipfing.

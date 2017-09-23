@@ -5,6 +5,8 @@ Base player classes for tgames.
 
 Classes:
 Player: The base player class. (object)
+Bot: A computer player. (Player)
+AlphaBetaBot: A robot player using alpha-beta pruning. (Bot)
 Human: A human being, with stored data. (Player)
 Tester: A preset test account. (Human)
 """

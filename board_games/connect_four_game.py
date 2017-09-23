@@ -48,9 +48,11 @@ orthogonally or diagonally, is the winner. If all of the spaces on the board
 are filled, the game is a draw.
 
 Options:
+columns (c): How many columns the board should have (4-35, default 7).
 easy (e): Play against an easy bot.
 hard (h): Play against a hard bot.
-medium (m): Play against a bot that's just right.
+medium (m): Play against a bot that's just right (the default bot).
+rows: (r): How many rows the board should have (4-20, default 6).
 """
 
 
@@ -113,13 +115,21 @@ class C4Board(board.GridBoard):
         """
         Human readable text representation. (str)
         """
-        text = '+-------+\n'
+        ones, tens = '+', '+'
+        for column in range(1, self.columns + 1):
+            ones += str(column % 10)
+            tens += str(column // 10)
+        if self.columns > 9:
+            head_foot = '{}\n{}\n'.format(tens, ones)
+        else:
+            head_foot = ones + '+\n'
+        text = head_foot
         for row_index in range(self.rows - 1, -1, -1):
             row_text = '|'
             for column_index in range(self.columns):
                 row_text += str(self.cells[(column_index, row_index)])
             text += row_text + '|\n'
-        return text + '+1234567+\n'
+        return text + head_foot
                     
     def check_win(self):
         """
@@ -246,6 +256,8 @@ class ConnectFour(game.Game):
         """Determine and handle the options for the game. (None)"""
         # Set default options.
         bot_level = 'medium'
+        self.columns = 7
+        self.rows = 6
         # Handle no options.
         if self.raw_options.lower() == 'none':
             pass
@@ -258,14 +270,36 @@ class ConnectFour(game.Game):
                     bot_level = 'medium'
                 elif word in ('hard', 'h'):
                     bot_level = 'hard'
+                if '=' in word:
+                    option, value = words.split('=')
+                    try:
+                        int_value = int(value)
+                    except ValueError:
+                        self.human.tell('Invalid value for {} option: {!r}.'.format(option, value))
+                        continue
+                    if option in ('columns', 'c'):
+                        if 4 <= int_value <= 35:
+                            self.columns = int_value
+                        else:
+                            self.human.tell('The columns option must be 4 to 35.')
+                    elif option in ('rows', 'r'):
+                        if 4 <= int_value <= 20:
+                            self.rows = int_value
+                        else:
+                            self.human.tell('The rows option must be 4 to 20.')
         # Ask the user for option settings.
         else:
             if self.human.ask('Would you like to change the options? ').lower() in utility.YES:
+                prompt = 'What level bot would you like to play against (return for medium)? '
                 while True:
-                    bot_level = self.human.ask('What level bot would you like to play against? ')
+                    bot_level = self.human.ask(prompt)
                     if bot_level in ('easy', 'e', 'medium', 'm', 'hard', 'h'):
                         break
                     self.human.tell('That is not a valid bot level. Please pick easy, medium, or hard.')
+                prompt = 'How many columns should there be on the board (return for 7)? '
+                self.columns = self.human.ask_int(prompt, low = 4, high = 35, default = 7, cmd = False)
+                prompt = 'How many rows should there be on the board (return for 6)? '
+                self.rows = self.human.ask_int(prompt, low = 4, high = 20, default = 6, cmd = False)
         # Set the bot.
         if bot_level in ('easy', 'e'):
             self.players = [self.human, C4BotAlphaBeta(taken_names = [self.human.name])]
@@ -311,7 +345,7 @@ class ConnectFour(game.Game):
         if self.players != saved_players:
             self.symbols.reverse()
         # reset board
-        self.board = C4Board(7, 6)
+        self.board = C4Board(self.columns, self.rows)
         self.board.pieces = self.symbols
 
 class C4BotAlphaBeta(player.AlphaBetaBot):
