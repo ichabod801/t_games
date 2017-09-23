@@ -292,7 +292,9 @@ class ConnectFour(game.Game):
             if self.human.ask('Would you like to change the options? ').lower() in utility.YES:
                 prompt = 'What level bot would you like to play against (return for medium)? '
                 while True:
-                    bot_level = self.human.ask(prompt)
+                    bot_level = self.human.ask(prompt).lower()
+                    if not bot_level:
+                        bot_level = 'medium'
                     if bot_level in ('easy', 'e', 'medium', 'm', 'hard', 'h'):
                         break
                     self.human.tell('That is not a valid bot level. Please pick easy, medium, or hard.')
@@ -363,6 +365,8 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
     eval_board
     """
 
+    # !! needs to be expanded based on board size.
+    # !! no clear pattern. just continue the adds as they are.
     board_strength = [[3, 4, 5, 5, 4, 3], [4, 6, 8, 8, 6, 4], [5, 8, 11, 11, 8, 5], [7, 10, 13, 13, 10, 7],
         [5, 8, 11, 11, 8, 5], [4, 6, 8, 8, 6, 4], [3, 4, 5, 5, 4, 3]]
 
