@@ -99,11 +99,12 @@ class C4Board(board.GridBoard):
                     if row < self.rows - 3:
                         win = ((col, row), (col, row + 1), (col, row + 2), (col, row + 3))
                         self.wins.append(set(set([board.Coordinate(xy) for xy in win])))
-                    if col < self.rows - 3 and row < self.columns - 3:
-                        win = ((col, row), (col + 1, row + 1), (col + 2, row + 2), (col + 3, row + 3))
-                        self.wins.append(set([board.Coordinate(xy) for xy in win]))
-                        win = ((col + 3, row), (col + 2, row + 1), (col + 1, row + 2), (col, row + 3))
-                        self.wins.append(set([board.Coordinate(xy) for xy in win]))
+                        if col < self.columns - 3:
+                            win = ((col, row), (col + 1, row + 1), (col + 2, row + 2), (col + 3, row + 3))
+                            self.wins.append(set([board.Coordinate(xy) for xy in win]))
+                        if col > 2:
+                            win = ((col, row), (col - 1, row + 1), (col - 2, row + 2), (col - 3, row + 3))
+                            self.wins.append(set([board.Coordinate(xy) for xy in win]))
 
     def __repr__(self):
         """
@@ -337,6 +338,8 @@ class ConnectFour(game.Game):
         open_columns = [move[0] + 1 for move in self.board.get_moves()]
         prompt = 'Which column would you like to play in? '
         column_index = player.ask_int(prompt, valid = open_columns)
+        if isinstance(column_index, str):
+            return self.handle_cmd(column_index)
         self.board.make_move((column_index - 1, self.symbols[self.players.index(player)]))
 
     def set_up(self):
