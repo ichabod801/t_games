@@ -254,6 +254,7 @@ class ConnectFour(game.Game):
 
     def handle_options(self):
         """Determine and handle the options for the game. (None)"""
+        # !! refactor, too long.
         # Set default options.
         bot_level = 'medium'
         self.columns = 7
@@ -304,11 +305,12 @@ class ConnectFour(game.Game):
                 self.rows = self.human.ask_int(prompt, low = 4, high = 20, default = 6, cmd = False)
         # Set the bot.
         if bot_level in ('easy', 'e'):
-            self.players = [self.human, C4BotAlphaBeta(taken_names = [self.human.name])]
+            self.bot = C4BotAlphaBeta(taken_names = [self.human.name])
         elif bot_level in ('medium', 'm'):
-            self.players = [self.human, C4BotGamma(taken_names = [self.human.name])]
+            self.bot = C4BotGamma(taken_names = [self.human.name])
         else:
-            self.players = [self.human, C4BotGamma(depth = 8, taken_names = [self.human.name])]
+            self.bot = C4BotGamma(depth = 8, taken_names = [self.human.name])
+        self.players = [self.human, self.bot]
         # get symbols
         self.symbols = []
         if not self.symbols:
@@ -349,6 +351,8 @@ class ConnectFour(game.Game):
         # reset board
         self.board = C4Board(self.columns, self.rows)
         self.board.pieces = self.symbols
+        # reset the bot
+        self.bot.set_up()
 
 class C4BotAlphaBeta(player.AlphaBetaBot):
     """
@@ -366,7 +370,7 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
     """
 
     # !! needs to be expanded based on board size.
-    # !! no clear pattern. just continue the adds as they are.
+    # !! pattern is across the bottom then up.
     board_strength = [[3, 4, 5, 5, 4, 3], [4, 6, 8, 8, 6, 4], [5, 8, 11, 11, 8, 5], [7, 10, 13, 13, 10, 7],
         [5, 8, 11, 11, 8, 5], [4, 6, 8, 8, 6, 4], [3, 4, 5, 5, 4, 3]]
 
@@ -479,6 +483,23 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
                     twos.append((coordinate, forward))
         return twos, threes
 
+    def set_up(self):
+        base = list(range(3, 4 + self.game.rows // 2))
+        if self.game.rows % 2:
+            base = base + [base[-1] + 2] + base[::-1]
+        else:
+            base[-1] += 1
+            base = base + base[::-1]
+        mod = [3] * len(base)
+        mod[:2] = [1, 2]
+        mod[-2:] = [2, 1]
+        board_strength = [base]
+        while len(board_strength) < self.game.columns / 2:
+            board_strength.append([a + b for a, b in zip(board_strength[-1], mod)])
+        while len(board_strength) < self.game.columns:
+            board_strength.append([a - b for a, b in zip(board_strength[-1], mod)])
+        self.board_strength = board_strength
+
 class C4BotGamma(C4BotAlphaBeta):
     """
     An alpha-beta Connect Four bot with a better eval function. (C4BotAlphaBeta)
@@ -545,91 +566,11 @@ class C4BotGamma(C4BotAlphaBeta):
         return score
 
 if __name__ == '__main__':
-    import options, user_text
-    OPTIONS = options.load_options()
-    USER_TEXT = user_text.load_text(OPTIONS['language'])
-    class DummyPlayer(player.Human):
-        def get_char(self, prompt, invalid):
-            return '#'
-        def get_yes_no(self, prompt):
-            return False
-    stuart = DummyPlayer('Ichabod', 'testing', 'green')
-    game = ConnectFour(stuart)
-    game.pre_play()
-    if game.players[1] == stuart:
-        game.players.reverse()
-        game.symbols.reverse()
-        for player_index, player in enumerate(game.players):
-            player.index = player_index
-    bot = game.players[1]
-    bot.depth = 2
-    bot_symbol = game.symbols[1]
-    board = game.board
-    """
-      E E
-      #EE
-    #EE####
-    does not detect as a win, after #'s move. Now it does.
-    """
-    board.make_move((3, '#'))
-    board.make_move((2, bot_symbol))
-    board.make_move((2, '#'))
-    print(board)
-    print(bot.eval_board(board), board.check_win())
-    board.make_move((3, bot_symbol))
-    print(board)
-    print(bot.eval_board(board), board.check_win())
-    board.make_move((4, '#'))
-    board.make_move((4, bot_symbol))
-    print(board)
-    print(bot.eval_board(board), board.check_win())
-    board.make_move((0, '#'))
-    board.make_move((1, bot_symbol))
-    print(board)
-    print(bot.eval_board(board), board.check_win())
-    board.make_move((5, '#'))
-    board.make_move((4, bot_symbol))
-    print(board)
-    print(bot.eval_board(board), board.check_win())
-    board.make_move((6, '#'))
-    print(board)
-    print(bot.eval_board(board), board.check_win())
-    this_win = set([(3, 0), (4, 0), (5, 0), (6, 0)])
-    """
-    +-------+
-    |       |
-    |       |
-    |  #22  |
-    | #222  |
-    |222##  |
-    |##2##2#|
-    +1234567+
-    does not take the win in column 5 (this position is wrong)
-
-    +-------+
-    |       |
-    |  2 #  |
-    |  #22  |
-    | #2222 |
-    |222### |
-    |##2##2#|
-    +1234567+
-    takes the win, but then the game calls it my win.
-    """
-    def test_board(pieces, text, board_class = C4Board):
-        # !! this needs to be game based
-        board = board_class()
-        board.pieces = pieces
-        raw_rows = text.split('|')
-        rows = [row for row in raw_rows if row and '+' not in row]
-        rows.reverse()
-        for row_index, row in enumerate(rows):
-            for column_index, piece in enumerate(row):
-                if piece != ' ':
-                    board.place(piece, (column_index, row_index))
-        return board
-    print()
-    board = test_board(['2', '#'], '+-------+|       ||    2  ||  #22  || #222  || 22##  ||##2##2#|+1234567+')
-    print(board)
-    print(board.check_win())
-    print(bot.eval_board(board))
+    from collections import namedtuple
+    Gaem = namedtuple('Gaem', ['columns', 'rows'])
+    game = Gaem(7, 6)
+    bot = C4BotAlphaBeta()
+    static = bot.board_strength
+    bot.game = game
+    bot.set_up()
+    print(static == bot.board_strength)
