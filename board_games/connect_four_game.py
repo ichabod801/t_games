@@ -484,8 +484,8 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
         return twos, threes
 
     def set_up(self):
-        base = list(range(3, 4 + self.game.rows // 2))
-        if self.game.rows % 2:
+        base = list(range(3, 3 + self.game.columns // 2))
+        if self.game.columns % 2:
             base = base + [base[-1] + 2] + base[::-1]
         else:
             base[-1] += 1
@@ -494,11 +494,13 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
         mod[:2] = [1, 2]
         mod[-2:] = [2, 1]
         board_strength = [base]
-        while len(board_strength) < self.game.columns / 2:
+        while len(board_strength) < self.game.rows / 2:
             board_strength.append([a + b for a, b in zip(board_strength[-1], mod)])
-        while len(board_strength) < self.game.columns:
+        if not self.game.rows % 2:
+            board_strength.append(board_strength[-1])
+        while len(board_strength) < self.game.rows:
             board_strength.append([a - b for a, b in zip(board_strength[-1], mod)])
-        self.board_strength = board_strength
+        self.board_strength = list(zip(*board_strength))
 
 class C4BotGamma(C4BotAlphaBeta):
     """
@@ -573,4 +575,6 @@ if __name__ == '__main__':
     static = bot.board_strength
     bot.game = game
     bot.set_up()
+    print(static)
+    print(bot.board_strength)
     print(static == bot.board_strength)
