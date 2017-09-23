@@ -52,6 +52,8 @@ columns (c): How many columns the board should have (4-35, default 7).
 easy (e): Play against an easy bot.
 hard (h): Play against a hard bot.
 medium (m): Play against a bot that's just right (the default bot).
+pop (p): Allow pop moves, where you remove a piece of yours that is at the
+    bottom of a column.
 rows: (r): How many rows the board should have (4-20, default 6).
 """
 
@@ -75,7 +77,7 @@ class C4Board(board.GridBoard):
     __str__
     """
 
-    def __init__(self, columns = 7, rows = 6, pieces = [], wins = []):
+    def __init__(self, columns = 7, rows = 6, pieces = [], wins = [], poppable = False):
         """
         Set up the board and the winning positions. (None)
 
@@ -88,6 +90,8 @@ class C4Board(board.GridBoard):
         # basic set up
         super(C4Board, self).__init__(columns, rows)
         self.pieces = pieces
+        self.poppable = poppable
+        self.pops = 0
         # set up winning positions
         self.wins = wins
         if not self.wins:
@@ -175,17 +179,25 @@ class C4Board(board.GridBoard):
         Get all legal moves from the current position. (list of (int, string))
         """
         # get the current piece
-        pieces_played = len([cell for cell in self.cells.values() if cell.piece])
+        pieces_played = len([cell for cell in self.cells.values() if cell.piece]) + self.pops
         current_piece = self.pieces[pieces_played % 2]
-        # return the current piece with the open columns
+        # get the open columns
         columns = [column for column in range(self.columns) if self.cells[(column, self.rows - 1)].piece is None]
+        # add the poppable columns, if popping is allowed.
+        if self.poppable:
+            valid_pops = []
+            for column in range(self.columns):
+                if self.cells[(column, 0)].piece == current_piece:
+                    valid_pops.append(-column - 1)
+            columns.extend(valid_pops)
+        # return the columns with the current piece.
         return [(column, current_piece) for column in columns]
 
     def last_piece(self):
         """
         Get the last piece played. (str)
         """
-        pieces_played = len([cell for cell in self.cells.values() if cell.piece])
+        pieces_played = len([cell for cell in self.cells.values() if cell.piece]) + self.pops
         return self.pieces[1 - pieces_played % 2]
 
     def make_move(self, move):
@@ -197,12 +209,32 @@ class C4Board(board.GridBoard):
         """
         # get the details of the move
         column, piece = move
-        height = self.column_height(column)
-        # attempt the move
-        if height < self.rows:
-            self.place(piece, (column, height))
+        if column < 0 and self.poppable:
+            self.pop(column, piece)
         else:
-            raise ValueError('Invalid move: column {} is full'.format(column + 1))
+            height = self.column_height(column)
+            # attempt the move
+            if height < self.rows:
+                self.place(piece, (column, height))
+            else:
+                raise ValueError('Invalid move: column {} is full'.format(column + 1))
+
+    def pop(self, column, piece):
+        """
+        Remove the bottom piece of a column. (None)
+
+        Parameters:
+        column: The negative (one indexed) column to pop. (int)
+        piece: The piece to pop. (str)
+        """
+        column = abs(column + 1)
+        if self.cells[(column, 0)].piece == piece:
+            for row in range(1, self.rows):
+                self.cells[(column, row - 1)].piece = self.cells[(column, row)].piece
+            self.cells[(column, self.rows - 1)].piece = None
+            self.pops += 1
+        else:
+            raise ValueError('Invalid pop: column {} does not start with {!r}.'.format(column + 1, piece))
 
 
 class ConnectFour(game.Game):
@@ -260,6 +292,7 @@ class ConnectFour(game.Game):
         bot_level = 'medium'
         self.columns = 7
         self.rows = 6
+        self.poppable = False
         # Handle no options.
         if self.raw_options.lower() == 'none':
             pass
@@ -272,6 +305,8 @@ class ConnectFour(game.Game):
                     bot_level = 'medium'
                 elif word in ('hard', 'h'):
                     bot_level = 'hard'
+                elif word in ('pop', 'p'):
+                    self.poppable = True
                 if '=' in word:
                     option, value = words.split('=')
                     try:
@@ -304,6 +339,8 @@ class ConnectFour(game.Game):
                 self.columns = self.human.ask_int(prompt, low = 4, high = 35, default = 7, cmd = False)
                 prompt = 'How many rows should there be on the board (return for 6)? '
                 self.rows = self.human.ask_int(prompt, low = 4, high = 20, default = 6, cmd = False)
+                pops = self.human.ask('Should pops be allowed? ')
+                self.poppable = pops.lower() in self.utility.YES
         # Set the bot.
         if bot_level in ('easy', 'e'):
             self.bot = C4BotAlphaBeta(taken_names = [self.human.name])
@@ -352,7 +389,7 @@ class ConnectFour(game.Game):
         if self.players != saved_players:
             self.symbols.reverse()
         # reset board
-        self.board = C4Board(self.columns, self.rows)
+        self.board = C4Board(self.columns, self.rows, poppable = self.poppable)
         self.board.pieces = self.symbols
         # reset the bot
         self.bot.set_up()
