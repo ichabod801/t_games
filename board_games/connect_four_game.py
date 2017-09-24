@@ -140,20 +140,26 @@ class C4Board(board.GridBoard):
         """
         See if the game has been won. (str)
         """
-        # get the last played piece
-        last_piece = self.last_piece()
         # get the locations with those pieces
-        played = set([cell.location for cell in self.cells.values() if cell.piece == last_piece])
-        # check against the winning positions
-        for win in self.wins: 
-            if len(win.intersection(played)) == 4:
-                 return 'win'
+        winners = []
+        for piece in self.pieces:
+            played = set([cell.location for cell in self.cells.values() if cell.piece == piece])
+            # check against the winning positions
+            for win in self.wins: 
+                if len(win.intersection(played)) == 4:
+                     winners.append(piece)
+                     break
         # check for a draw
-        filled = [cell for cell in self.cells.values() if cell.piece]
-        if len(filled) == self.columns * self.rows:
-            return 'draw'
+        full = [cell for cell in self.cells.values() if cell.piece]
+        filled = len(full) == self.columns * self.rows
+        if filled or len(winners) == 2:
+            result = 'draw'
+        elif winners:
+            result = winners[0]
+        else:
+            result = 'game on'
         # default to game on
-        return 'game on'
+        return result
 
     def column_height(self, column):
         """
@@ -273,14 +279,15 @@ class ConnectFour(game.Game):
         """Check for the end of the game. (bool)"""
         win = self.board.check_win()
         player = self.players[1 - self.turns % 2]
+        piece = self.pieces[1 - self.turns % 2]
+        human_piece = self.pieces[self.players.index(self.human)]
         if win != 'game on':
-            if win == 'win':
-                if player == self.human:
-                    self.win_loss_draw[0] = 1
-                else:
-                    self.win_loss_draw[1] = 1
-            else:
+            if win == draw:
                 self.win_loss_draw[2] = 1
+            if win == human_piece:
+                self.win_loss_draw[0] = 1
+            else:
+                self.win_loss_draw[1] = 1
             return True
         else:
             return False
@@ -464,14 +471,16 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
         board: The board to evaluate. (Connect4Board)
         player_index: The index of the player to evaluate the board for. (int)
         """
-        if board.check_win() == 'win':
-            if self.symbol == board.last_piece():
-                result = 10000
-            else:
-                result = -10000
-        else:
+        status = board.check_win()
+        if status == 'game_on':
             index = self.game.players.index(self)
             result = self.eval_player(board, index) - self.eval_player(board, 1 - index)
+        elif status == 'draw':
+            result = 0
+        elif status == self.symbol:
+            result = 10000
+        else:
+            result = -10000
         """print(board)
         print(result)
         print()"""
