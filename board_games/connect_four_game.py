@@ -188,7 +188,7 @@ class C4Board(board.GridBoard):
             valid_pops = []
             for column in range(self.columns):
                 if self.cells[(column, 0)].piece == current_piece:
-                    valid_pops.append(-column - 1)
+                    valid_pops.append(-column - 2)
             columns.extend(valid_pops)
         # return the columns with the current piece.
         return [(column, current_piece) for column in columns]
@@ -227,7 +227,7 @@ class C4Board(board.GridBoard):
         column: The negative (one indexed) column to pop. (int)
         piece: The piece to pop. (str)
         """
-        column = abs(column + 1)
+        column = abs(column + 2)
         if self.cells[(column, 0)].piece == piece:
             for row in range(1, self.rows):
                 self.cells[(column, row - 1)].piece = self.cells[(column, row)].piece
