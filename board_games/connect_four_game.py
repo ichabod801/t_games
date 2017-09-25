@@ -279,10 +279,10 @@ class ConnectFour(game.Game):
         """Check for the end of the game. (bool)"""
         win = self.board.check_win()
         player = self.players[1 - self.turns % 2]
-        piece = self.pieces[1 - self.turns % 2]
-        human_piece = self.pieces[self.players.index(self.human)]
+        piece = self.symbols[1 - self.turns % 2]
+        human_piece = self.symbols[self.players.index(self.human)]
         if win != 'game on':
-            if win == draw:
+            if win == 'draw':
                 self.win_loss_draw[2] = 1
             if win == human_piece:
                 self.win_loss_draw[0] = 1
@@ -472,7 +472,7 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
         player_index: The index of the player to evaluate the board for. (int)
         """
         status = board.check_win()
-        if status == 'game_on':
+        if status == 'game on':
             index = self.game.players.index(self)
             result = self.eval_player(board, index) - self.eval_player(board, 1 - index)
         elif status == 'draw':

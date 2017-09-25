@@ -90,3 +90,6 @@ Connect Four,1,0,0,0,0
 Connect Four,0,0,1,0,0
 Connect Four,1,0,0,0,0
 Connect Four,0,1,0,0,0
+Connect Four,1,0,0,0,0
+Connect Four,1,0,0,0,0
+Connect Four,1,0,0,0,0

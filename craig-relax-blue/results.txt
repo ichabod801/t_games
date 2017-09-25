@@ -29,3 +29,6 @@ Pig,3,0,0,100,1
 Pig,1,2,0,51,1
 FreeCell,1,0,0,803,0
 FreeCell,1,0,0,814,0
+FreeCell,1,0,0,814,0
+FreeCell,1,0,0,804,0
+FreeCell,1,0,0,818,0
