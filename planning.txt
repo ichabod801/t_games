@@ -4,9 +4,8 @@
 
 == Short Term To Do List ==
 
-games interface command to list games (with aliases?)
 winning/losing scores for stats: low-mean/median-high
-store number of turns in results, minutes?pyth
+store number of turns in results, minutes? no on minutes. speed is for video games.
 redo aliases to update going down the inheritance chain.
 use a flag for completely quitting tgames (no: held_inputs = ['n', '!'])
 num_options (options that can be set) rather than num_variants?
@@ -34,7 +33,7 @@ Release
 board/chase: fox and geese, tafl
 board/displace: mancala, chess (wrapper for Sunfish), battleships!
 board/race: backgammon, snakes and ladders
-board/space: connect four, halma
+board/space: connect four*, halma
 card/solitaire/adding and pairing: golf, pyramid
 card/solitaire/bisley: bisley, martha
 card/solitaire/canfield: canfield!, duchess
@@ -65,7 +64,7 @@ other/other: RPS(LS)*, number guessing game
 An asterisk means the game has been coded. An exclamation point means the game has been coded and is in the gipf graph.
 
 games planned: 61
-games coded:   10
+games coded:   11
 games gipfed:   4
 
 == Gipf Planning ==

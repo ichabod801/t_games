@@ -366,6 +366,18 @@ class Interface(other_cmd.OtherCmd):
         # Return the meaning of the menu letters.
         return dict(pairs)
 
+    def show_scores(self, scores, score_type):
+        """
+        Show the base statistics for a set of scores or turns. (None)
+
+        Parameters:
+        scores: A list of scores or turns. (list of int)
+        score_type: The type of scores or turns being shown. (str)
+        """
+        if scores:
+            score_stats = [min(scores), utility.mean(scores), utility.median(scores), max(scores)]
+            self.human.tell('{}: {} - {:.1f} / {} - {}'.format(score_type, *score_stats))
+
     def show_stats(self, results, title = '', gipf = False, xyzzy = False):
         """
         Show the statistics for a set of game results. (None)
@@ -386,9 +398,9 @@ class Interface(other_cmd.OtherCmd):
         if not title:
             title = results[0][0] + ' Statistics'
         if not gipf:
-            results = [result for result in results if not result[5] & 8]
+            results = [result for result in results if not result[6] & 8]
         if not xyzzy:
-            results = [result for result in results if not result[5] & 128]
+            results = [result for result in results if not result[6] & 128]
         # Check for no valid results.
         if not results:
             self.human.tell('No game results to show.')
@@ -399,7 +411,7 @@ class Interface(other_cmd.OtherCmd):
         game_wld = [0, 0, 0]
         player_wld = [0, 0, 0]
         # Loop through results storing totals and streak data.
-        for name, win, loss, draw, score, flags in results:
+        for name, win, loss, draw, score, turns, flags in results:
             if not loss and not win:
                 game_wld[2] += 1
                 wins.append(0)
@@ -414,8 +426,6 @@ class Interface(other_cmd.OtherCmd):
             player_wld[2] += draw
         # Get streaks.
         current_streak, streak_type, longest_streaks = utility.streaks(wins)
-        # Get score data.
-        scores = [result[4] for result in results]
         # Display the statistics to the user.
         # Display the title.
         self.human.tell(title)
@@ -424,10 +434,13 @@ class Interface(other_cmd.OtherCmd):
         self.human.tell('Overall Win-Loss-Draw: {}-{}-{}'.format(*game_wld))
         self.human.tell('Player Win-Loss-Draw: {}-{}-{}'.format(*player_wld))
         # Display scores.
-        self.human.tell('Lowest Score: {}'.format(min(scores)))
-        self.human.tell('Average Score: {:.1f}'.format(utility.mean(scores)))
-        self.human.tell('Median Score: {}'.format(utility.median(scores)))
-        self.human.tell('Highest Score: {}'.format(max(scores)))
+        self.show_scores([rez[4] for rez in results], 'Overall Scores')
+        self.show_scores([rez[4] for rez in results if rez[1] and not rez[2]], 'Winning Scores')
+        self.show_scores([rez[4] for rez in results if rez[2]], 'Losing Scores')
+        # Display turns.
+        self.show_scores([rez[5] for rez in results], 'Overall Turns')
+        self.show_scores([rez[5] for rez in results if rez[1] and not rez[2]], 'Winning Turns')
+        self.show_scores([rez[5] for rez in results if rez[2]], 'Losing Turns')
         # Display streaks.
         if longest_streaks[1]:
             self.human.tell('Longest winning streak: {}'.format(longest_streaks[1]))
