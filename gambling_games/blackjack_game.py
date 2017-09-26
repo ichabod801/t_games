@@ -127,7 +127,7 @@ class Blackjack(game.Game):
     """
 
     # Alternate names for the game.
-    aka = ['twenty-one', '21']
+    aka = ['Twenty-One', '21']
     # Alternate words for commands
     aliases = {'b': 'bet', 'd': 'double', 'h': 'hit', 'q': 'quit', 's': 'stand', 'sp': 'split',
         'su': 'surrender'}

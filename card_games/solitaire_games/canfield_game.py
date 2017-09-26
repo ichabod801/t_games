@@ -74,6 +74,7 @@ class Canfield(solitaire.Solitaire):
     """
 
     aka = ['Demon']
+    categories = categories = ['Card Games', 'Solitaire Games', 'Canfield Games']
     credits = CREDITS
     name = 'Canfield'
     num_variants = 6

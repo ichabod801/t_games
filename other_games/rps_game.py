@@ -234,7 +234,7 @@ class RPS(game.Game):
     set_up
     """
 
-    aka = ['rps', 'rock paper scissors', 'roshambo']
+    aka = ['RPS', 'Rock Paper Scissors', 'Roshambo']
     bots = {'bart': Bart, 'lisa': Lisa, 'memor': Memor, 'randy': Randy}
     categories = ['Other Games', 'Other Games']
     credits = CREDITS

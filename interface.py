@@ -63,11 +63,13 @@ and the name of the game. You can also type 'stats cat' for all games in the
 category you are currently in, or just 'stats' for stats for all of the games
 you have played.
 
-You can get this help text by typing help or ?
-
 You can play a random game by typing 'random'. This will be a random game from
 the category your in currently in the menu system. To play any random game, 
-use 'random all'.
+use 'random all'. You can get a list of available games with the games
+command. It is context sensitive, and will only show the games for the 
+category that you are in.
+
+You can get this help text by typing help or ?
 """
 
 
@@ -152,6 +154,31 @@ class Interface(other_cmd.OtherCmd):
         self.human.tell(full_credits.FULL_CREDITS)
         self.human.ask('Press Enter to continue: ')
         return True
+
+    def do_games(self, arguments):
+        """
+        List the available games in the current category. (None)
+
+        Parameters:
+        arguments: This parameter is ignored. (str)
+        """
+        # Get the games in the current context.
+        games = self.focus['games'][:]
+        search = list(self.focus['sub-categories'].values())
+        while search:
+            sub_category = search.pop()
+            games.extend(sub_category['games'])
+            search.extend(sub_category['sub-categories'].values())
+        # Sort the games alphabetically.
+        games.sort(key = lambda game: game.name)
+        # Print the game list with aliases.
+        for game in games:
+            if game.aka:
+                self.human.tell('{} ({})'.format(game.name, ', '.join(game.aka)))
+            else:
+                self.human.tell(game.name)
+        self.human.ask('\nPress Enter to continue: ')
+        self.human.tell()
 
     def do_help(self, arguments):
         """
@@ -266,6 +293,7 @@ class Interface(other_cmd.OtherCmd):
             # Show the menu and get the possible choices.
             menu_map = self.show_menu(self.focus)
             letter = self.human.ask('What is your selection? ').strip()
+            self.human.tell()
             # Check for menu choices.
             if letter.upper() in menu_map:
                 choice = menu_map[letter.upper()]

@@ -4,7 +4,6 @@
 
 == Short Term To Do List ==
 
-connect four options (sizes and pop out (negative columns to pop))
 games interface command to list games (with aliases?)
 winning/losing scores for stats: low-mean/median-high
 store number of turns in results, minutes?pyth
