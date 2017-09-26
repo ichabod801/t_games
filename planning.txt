@@ -4,8 +4,7 @@
 
 == Short Term To Do List ==
 
-winning/losing scores for stats: low-mean/median-high
-store number of turns in results, minutes? no on minutes. speed is for video games.
+crazy eights
 redo aliases to update going down the inheritance chain.
 use a flag for completely quitting tgames (no: held_inputs = ['n', '!'])
 num_options (options that can be set) rather than num_variants?
