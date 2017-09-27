@@ -27,9 +27,9 @@ class C8Bot(player.Bot):
                 suit = self.game.suit
             else:
                 suit = discard.suit
-            suit_matches = [card for card in hand if card.suit == suit and card.rank != '8']
-            rank_matches = [card for card in hand if card.rank == discard.rank]
-            eights = [card for card in hand if card.rank == '8']
+            suit_matches = [card for card in hand.cards if card.suit == suit and card.rank != '8']
+            rank_matches = [card for card in hand.cards if card.rank == discard.rank and card.rank != '8']
+            eights = [card for card in hand.cards if card.rank == '8']
             suits = [(len([card for card in hand.cards if card.suit == suit]), suit) for suit in 'CDHS']
             suits.sort(reverse = True)
             if suit_matches:
@@ -57,6 +57,9 @@ class C8Bot(player.Bot):
         else:
             raise ValueError('Invalid prompt to C8Bot: {!r}'.format(prompt))
 
+    def tell(self, text):
+        pass
+
 
 class CrazyEights(game.Game):
     """
@@ -78,9 +81,12 @@ class CrazyEights(game.Game):
     set_up
     """
 
+    categories = ['Card Games', 'Shedding Games']
+    name = 'Crazy Eights'
+
     def deal(self):
         """Deal the cards to the players. (None)"""
-        if for hand in self.hands.values():
+        for hand in self.hands.values():
             hand.discard()
         self.deck.shuffle()
         self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
@@ -91,11 +97,14 @@ class CrazyEights(game.Game):
         for card in range(hand_size):
             for player in self.players:
                 self.hands[player.name].draw()
+        self.hands[self.human.name].cards.sort()
+        self.hands[self.human.name].cards.sort(key = lambda card: card.suit)
+        self.deck.discard(self.deck.deal())
 
     def game_over(self):
         """Check for the game being over. (bool)"""
         if max(self.scores.values()) > self.goal:
-            scores = [score: name for name, score in self.scores.items()]
+            scores = [(score, name) for name, score in self.scores.items()]
             scores.sort(reverse = True)
             self.human.tell('{1} won the game with {0} points.'.format(*scores[0]))
             human_score = self.scores[self.human.name]
@@ -135,11 +144,11 @@ class CrazyEights(game.Game):
         player: The player whose turn it is. (Player)
         """
         # Get the relevant cards.
-        hand = self.hands[self.player.name]
+        hand = self.hands[player.name]
         discard = self.deck.discards[-1]
         # Show the game status.
-        player.tell('The card to you is {}.'.format(discard))
-        if self.deck.discards[-1].rank == '8':
+        player.tell('The card to you is {}.'.format(discard.rank + discard.suit))
+        if self.deck.discards[-1].rank == '8' and self.suit:
             player.tell('The suit to you is {}.'.format(self.suit))
         player.tell('Your hand is {}.'.format(hand))
         # Get and process the move.
@@ -153,8 +162,8 @@ class CrazyEights(game.Game):
                 return False
             else:
                 return True
-        elif move in self.hand.cards:
-            if move[0].upper() == discard.rank and move[1].upper() in (discard.suit, self.suit):
+        elif move in hand.cards:
+            if move[0].upper() in (discard.rank, '8') or move[1].upper() in (discard.suit, self.suit):
                 hand.discard(move)
                 # Handle crazy eights.
                 if '8' in move:
@@ -182,12 +191,14 @@ class CrazyEights(game.Game):
         round_scores = {player.name: 0 for player in self.players}
         winner = ''
         low_score = 10000
-        for name, hand in self.hands:
+        for name, hand in self.hands.items():
             for card in hand.cards:
                 if card.rank == '8':
                     round_scores[name] += 50
-                if card.rank in 'TJQK':
+                elif card.rank in 'TJQK':
                     round_scores[name] += 10
+                elif card.rank == 'A':
+                    round_scores[name] += 1
                 else:
                     round_scores[name] += int(card.rank)
             if round_scores[name] < low_score:
@@ -195,16 +206,17 @@ class CrazyEights(game.Game):
                 winner = name
                 low_score = round_scores[name]
             self.human.tell('{} had {} points in their hand.'.format(name, round_scores[name]))
+        winner_bump = 0
         for name in round_scores:
             round_scores[name] -= low_score
             winner_bump += round_scores[name]
-        self.human.tell('{} scores {} points.'.format('winner', winner_bump))
+        self.human.tell('{} scores {} points.'.format(winner, winner_bump))
         self.scores[winner] += winner_bump
 
     def set_up(self):
         """Set up the game. (None)"""
         # Set up the deck.
-        if len(self.player) < 6:
+        if len(self.players) < 6:
             self.deck = cards.Deck()
         else:
             self.deck = cards.Deck(decks = 2)

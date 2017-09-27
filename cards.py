@@ -104,7 +104,7 @@ class Card(object):
     def __lt__(self, other):
         """For sorting by rank. (bool)"""
         if isinstance(other, Card):
-            return self.ranks.index(rank) < other.rank.index(rank)
+            return self.ranks.index(self.rank) < self.ranks.index(other.rank)
         else:
             return self.rank < other  # ?? do I want this? from class where rank is int.
 
@@ -176,7 +176,7 @@ class Deck(object):
     shuffle: Shuffle the discards back into the deck. (None)
     """
 
-    def __init__(self, jokers = 0, decks = 0, shuffle_size = 0):
+    def __init__(self, jokers = 0, decks = 1, shuffle_size = 0):
         """
         Fill the deck with a standard set of cards. (None)
 
