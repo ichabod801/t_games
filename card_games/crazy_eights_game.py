@@ -184,6 +184,7 @@ class CrazyEights(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
+        self.human.tell()
         # Get the relevant cards.
         hand = self.hands[player.name]
         discard = self.deck.discards[-1]
@@ -197,6 +198,7 @@ class CrazyEights(game.Game):
         # Draw cards.
         if move.lower() in ('d', 'draw'):
             hand.draw()
+            player.tell('You drew the {}.'.format(hand.cards[-1]))
             # Sort the human's cards.
             if player.name == self.human.name:
                 hand.cards.sort()
@@ -245,6 +247,7 @@ class CrazyEights(game.Game):
         winner = ''
         low_score = 10000
         # Score each hand.
+        self.human.tell()
         for name, hand in self.hands.items():
             for card in hand.cards:
                 if card.rank == '8':
@@ -267,8 +270,10 @@ class CrazyEights(game.Game):
             round_scores[name] -= low_score
             winner_bump += round_scores[name]
         # Lowest score scores the relative total.
-        self.human.tell('{} scores {} points.'.format(winner, winner_bump))
+        self.human.tell('\n{} scores {} points.'.format(winner, winner_bump))
         self.scores[winner] += winner_bump
+        for player in self.players:
+            self.human.tell('{} has {} points.'.format(player.name, self.scores[player.name]))
 
     def set_up(self):
         """Set up the game. (None)"""

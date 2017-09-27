@@ -1,1 +1,2 @@
 Crazy Eights,0,2,0,81,231,2
+Crazy Eights,1,1,0,109,192,2
