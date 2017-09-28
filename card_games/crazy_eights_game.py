@@ -47,6 +47,7 @@ deck and the game is started again.
 The first player to get 50 points times the number of players wins the game.
 
 Options:
+one-alert: A warning is given when a player has one card.
 players=: The number of players in the game, counting the human. (default = 5)
 smart=: The number of smart bots in the game. (default = 2)
 """
@@ -280,12 +281,15 @@ class CrazyEights(game.Game):
         # Set the default options.
         num_players = 5
         num_smart = 2
+        self.one_alert = False
         # Check for no options.
         if self.raw_options.lower() == 'none':
             pass
         # Check for passed options.
         elif self.raw_options:
             for word in self.raw_options.lower().split():
+                if word == 'one-alert':
+                    self.one_alert = True
                 if '=' in word:
                     option, value = word.split('=')
                     if option == 'players':
@@ -309,6 +313,8 @@ class CrazyEights(game.Game):
                 default = min(2, max_smart)
                 num_smart = self.human.ask_int(query, low = 0, high = max_smart, default = default,
                     cmd = False)
+                answer = self.human.ask('Should there be an alert when a player is down to one card? ')
+                self.one_alert = answer in utility.YES
         # Set up the players.
         self.players = [self.human]
         taken_names = [self.human.name]
@@ -378,6 +384,9 @@ class CrazyEights(game.Game):
                     self.human.tell('{} played their last card.'.format(player.name))
                     self.score()
                     self.deal()
+                # Check for one card warning.
+                elif self.one_alert and len(hand.cards) == 1:
+                    self.human.tell('{} has one card left.'.format(player.name))
             # Warn for invalid plays.
             else:
                 player.tell('That is not a valid play.')
