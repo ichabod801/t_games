@@ -59,6 +59,14 @@ class Player(object):
         self.game = None
         self.held_inputs = []
 
+    def __repr__(self):
+        """Debugging text representation. (str)"""
+        return '<{} {}>'.format(self.__class__.__name__, self.name)
+
+    def __str__(self):
+        """Human readable representation. (str)"""
+        return self.name
+
     def ask(self, prompt):
         """
         Get information from the player. (str)

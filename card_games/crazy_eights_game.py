@@ -9,6 +9,8 @@ CrazyEights: A game of Crazy Eights (game.Game)
 """
 
 
+import random
+
 import tgames.cards as cards
 import tgames.game as game
 import tgames.player as player
@@ -27,6 +29,9 @@ class C8Bot(player.Bot):
     suit: The suit for the bot to match. (str)
     suits: The suits in hand and their counts. (list of (int, str))
     suit_matches: The bot's cards that match the suit to play. (list of Card)
+
+    Methods:
+    get_status
 
     Overridden Methods:
     ask
@@ -93,8 +98,7 @@ class C8Bot(player.Bot):
         self.suits = [(len([c for c in self.hand.cards if c.suit == suit]), suit) for suit in 'CDHS']
         self.suits.sort(reverse = True)
         # Get the recent plays.
-        # !! could cause problems with reshuffles.
-        self.plays = self.game.deck.discards[-len(self.game.players):]
+        self.plays = self.game.history[-len(self.game.players):]
 
     def tell(self, text):
         """
@@ -106,6 +110,64 @@ class C8Bot(player.Bot):
         pass
 
 
+class C8SmartBot(C8Bot):
+    """
+    A smarter bot for Crazy Eights. (C8Bot)
+
+    Overridden Methods:
+    ask
+    """
+
+    def ask(self, prompt):
+        """
+        Get information from the player. (str)
+
+        Parameters:
+        prompt: The question being asked of the player. (str)
+        """
+        self.get_status()
+        # Playing a card.
+        if prompt == 'What is your play? ':
+            # Check for suit having been switched.
+            suit_switch = self.plays[0].suit != self.suit or '8' in [card.rank for card in self.plays]
+            # Get playable cards.
+            maybes = [c for c in self.hand.cards if c.suit == self.suit or c.rank in (self.discard.rank, '8')]
+            maybes = {card: 0 for card in maybes}
+            # Calculate the value of each card (cards left in that suit + 2 if switching after another switch)
+            final_card = None
+            best_count = -5
+            for card in maybes:
+                if card.rank == '8':
+                    # Penalize eights by one point to hold them until needed.
+                    maybes[card] = self.suits[0][0] - 1
+                    if card.suit == self.suits[0][1]:
+                        maybes[card] -= 1
+                    if suit_switch and self.suits[0][1] != self.suits:
+                        maybes[card] += 2
+                else:
+                    maybes[card] = len([c for c in self.hand.cards if c.suit == card.suit]) - 1
+                    if suit_switch and card.suit != self.suits:
+                        maybes[card] += 2
+                if maybes[card] > best_count:
+                    best_count = maybes[card]
+                    final_card = card
+            # Make the move
+            if final_card is None:
+                self.game.human.tell('{} drew a card.'.format(self.name))
+                return 'draw'
+            else:
+                self.game.human.tell('{} played the {}.'.format(self.name, final_card))
+                return str(final_card)
+        # Choosing a suit.
+        elif prompt == 'What suit do you choose? ':
+            suit = self.suits[0][1]
+            self.game.human.tell('The new suit to match is {}.'.format(suit)) 
+            return suit
+        # Raise an error if you weren't programmed to handle the question.
+        else:
+            raise ValueError('Invalid prompt to C8SmartBot: {!r}'.format(prompt))
+
+
 class CrazyEights(game.Game):
     """
     A game of Crazy Eights. (game.Game)
@@ -114,6 +176,7 @@ class CrazyEights(game.Game):
     deck: The deck of cards used in the game. (cards.Deck)
     goal: The number of points needed to win the game. (int)
     hands: The player's hands. (dict of str: cards.Hand)
+    history: The cards played so far. (list of cards.Card)
     suit: The suit called with the last eight. (str)
 
     Methods:
@@ -152,6 +215,7 @@ class CrazyEights(game.Game):
         self.hands[self.human.name].cards.sort(key = lambda card: card.suit)
         # Discard the starting card.
         self.deck.discard(self.deck.deal())
+        self.history.append(self.deck.discards[-1])
 
     def game_over(self):
         """Check for the game being over. (bool)"""
@@ -178,13 +242,13 @@ class CrazyEights(game.Game):
     def handle_options(self):
         """Handle the game options. (None)"""
         # Set the default options.
-        num_players = 3
-        num_smart = 0
+        num_players = 5
+        num_smart = 2
         # Set up the players.
         self.players = [self.human]
         taken_names = [self.human.name]
         for bot in range(num_smart):
-            self.players.append(C8BotSmart(taken_names))
+            self.players.append(C8SmartBot(taken_names))
             taken_names.append(self.players[-1].name)
         for bot in range(num_players - len(self.players)):
             self.players.append(C8Bot(taken_names))
@@ -231,6 +295,7 @@ class CrazyEights(game.Game):
             # Check for valid play.
             if move[0].upper() in (discard.rank, '8') or move[1].upper() in (discard.suit, self.suit):
                 hand.discard(move)
+                self.history.append(self.deck.discards[-1])
                 # Handle crazy eights.
                 if '8' in move:
                     while True:
@@ -297,8 +362,11 @@ class CrazyEights(game.Game):
             self.deck = cards.Deck()
         else:
             self.deck = cards.Deck(decks = 2)
+        # Set up the tracking variables.
+        self.history = []
+        self.suit = ''
         # Deal the hands.
         self.hands = {}
         self.deal()
-        # Set up the tracking variable.
-        self.suit = ''
+        # Randomize the players.
+        random.shuffle(self.players)
