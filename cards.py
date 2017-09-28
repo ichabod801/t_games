@@ -212,15 +212,16 @@ class Deck(object):
         card.up = up
         return card
 
-    def discard(self, card):
+    def discard(self, card, up = False):
         """
         Discard a card to the discard pile. (None)
 
         Parameters:
         card: The card to discard. (Card)
+        up: A flag for discarding face up. (bool)
         """
         self.discards.append(card)
-        card.up = False
+        card.up = up
 
     def shuffle(self, number = None):
         """Shuffle the discards back into the deck. (None)"""

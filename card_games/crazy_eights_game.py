@@ -249,8 +249,9 @@ class CrazyEights(game.Game):
         self.hands[self.human.name].cards.sort()
         self.hands[self.human.name].cards.sort(key = lambda card: card.suit)
         # Discard the starting card.
-        self.deck.discard(self.deck.deal())
+        self.deck.discard(self.deck.deal(), up = True)
         self.history.append(self.deck.discards[-1])
+        self.human.tell('The starting card is the {}.'.format(self.deck.discards[-1]))
 
     def game_over(self):
         """Check for the game being over. (bool)"""
@@ -289,12 +290,12 @@ class CrazyEights(game.Game):
                     option, value = word.split('=')
                     if option == 'players':
                         if value.isdigit():
-                            self.num_players = int(value)
+                            num_players = max(int(value), 2)
                         else:
                             self.human.tell('Invalid value for players option: {!r}'.format(value))
                     elif option == 'smart':
                         if value.isdigit():
-                            self.num_smart = int(value)
+                            num_smart = int(value)
                         else:
                             self.human.tell('Invalid value for smart option: {!r}'.format(value))
         # Ask for options:
@@ -302,11 +303,11 @@ class CrazyEights(game.Game):
             options = self.human.ask('Would you like to change the options? ')
             if options in utility.YES:
                 query = 'How many players should there be, including you (return for 5)? '
-                self.num_players = self.human.ask_int(query, low = 2, default = 5, cmd = False)
+                num_players = self.human.ask_int(query, low = 2, default = 5, cmd = False)
                 query = 'How many smart bots should there be (return for 2)? '
-                max_smart = self.num_players - 1
+                max_smart = num_players - 1
                 default = min(2, max_smart)
-                self.num_smart = self.human.ask_int(query, low = 0, high = max_smart, default = default,
+                num_smart = self.human.ask_int(query, low = 0, high = max_smart, default = default,
                     cmd = False)
         # Set up the players.
         self.players = [self.human]
@@ -318,7 +319,7 @@ class CrazyEights(game.Game):
             self.players.append(C8Bot(taken_names))
             taken_names.append(self.players[-1].name)
         # Catch invalid num_smart.
-        self.players = self.players[:self.num_players]
+        self.players = self.players[:num_players]
         # Set the winning score.
         self.goal = 50 * num_players
 
