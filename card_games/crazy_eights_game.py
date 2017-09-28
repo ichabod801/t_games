@@ -19,7 +19,14 @@ class C8Bot(player.Bot):
     A basic Crazy Eights bot. (player.Bot)
 
     Attributes:
+    discard: The card that was discarded. (cards.Card)
+    eights: The eights that the bot has in hand. (list of cards.Card)
+    hand: The bot's hand of cards. (cards.Hand)
     held_suit: The suit to switch to after playing an 8. (str)
+    rank_matches: The bot's cards that match the rank to play. (list of Card)
+    suit: The suit for the bot to match. (str)
+    suits: The suits in hand and their counts. (list of (int, str))
+    suit_matches: The bot's cards that match the suit to play. (list of Card)
 
     Overridden Methods:
     ask
@@ -33,38 +40,24 @@ class C8Bot(player.Bot):
         Parameters:
         prompt: The question being asked of the player. (str)
         """
+        self.get_status()
         # Playing a card.
         if prompt == 'What is your play? ':
-            # Get the relevant cards.
-            discard = self.game.deck.discards[-1]
-            hand = self.game.hands[self.name]
-            # Get the current suit.
-            if self.game.suit:
-                suit = self.game.suit
-            else:
-                suit = discard.suit
-            # Calculate the legal plays.
-            suit_matches = [card for card in hand.cards if card.suit == suit and card.rank != '8']
-            rank_matches = [card for card in hand.cards if card.rank == discard.rank and card.rank != '8']
-            eights = [card for card in hand.cards if card.rank == '8']
-            # Calculate the frequencies of suits in hand.
-            suits = [(len([card for card in hand.cards if card.suit == suit]), suit) for suit in 'CDHS']
-            suits.sort(reverse = True)
             # Play a suit match if possible.
-            if suit_matches:
-                suit_matches.sort()
-                card = str(suit_matches[-1])
+            if self.suit_matches:
+                self.suit_matches.sort()
+                card = str(self.suit_matches[-1])
             # Otherwise play a rank match.
-            elif rank_matches:
-                rank_suits = [card.suit for card in rank_matches]
-                for count, suit in suits:
-                    if suit in rank_suits:
-                        card = discard.rank + suit
+            elif self.rank_matches:
+                self.rank_suits = [card.suit for card in self.rank_matches]
+                for count, suit in self.suits:
+                    if suit in self.rank_suits:
+                        card = self.discard.rank + self.suit
                         break
             # Play eights as a last resort.
             elif eights:
-                card = str(eights[0])
-                self.held_suit = suits[0][1]
+                card = str(self.eights[0])
+                self.held_suit = self.suits[0][1]
             # Draw if you can't play anything.
             else:
                 card = 'draw'
@@ -80,6 +73,27 @@ class C8Bot(player.Bot):
         # Raise an error if you weren't programmed to handle the question.
         else:
             raise ValueError('Invalid prompt to C8Bot: {!r}'.format(prompt))
+
+    def get_status(self):
+        """Calculate the status of the game. (None)"""
+        # Get the relevant cards.
+        self.discard = self.game.deck.discards[-1]
+        self.hand = self.game.hands[self.name]
+        # Get the current suit.
+        if self.game.suit:
+            self.suit = self.game.suit
+        else:
+            self.suit = discard.suit
+        # Calculate the legal plays.
+        self.suit_matches = [c for c in self.hand.cards if c.suit == suit and c.rank != '8']
+        self.rank_matches = [c for c in self.hand.cards if c.rank == discard.rank and c.rank != '8']
+        self.eights = [card for card in hand.cards if card.rank == '8']
+        # Calculate the frequencies of suits in hand.
+        self.suits = [(len([c for c in self.hand.cards if c.suit == suit]), suit) for suit in 'CDHS']
+        self.suits.sort(reverse = True)
+        # Get the recent plays.
+        # !! could cause problems with reshuffles.
+        self.plays = self.game.deck.discard[-len(self.game.players):]
 
     def tell(self, text):
         """
@@ -270,7 +284,7 @@ class CrazyEights(game.Game):
             round_scores[name] -= low_score
             winner_bump += round_scores[name]
         # Lowest score scores the relative total.
-        self.human.tell('\n{} scores {} points.'.format(winner, winner_bump))
+        self.human.tell('\n{} scores {} points.\n'.format(winner, winner_bump))
         self.scores[winner] += winner_bump
         for player in self.players:
             self.human.tell('{} has {} points.'.format(player.name, self.scores[player.name]))
