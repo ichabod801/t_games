@@ -52,10 +52,10 @@ class C8Bot(player.Bot):
                 self.rank_suits = [card.suit for card in self.rank_matches]
                 for count, suit in self.suits:
                     if suit in self.rank_suits:
-                        card = self.discard.rank + self.suit
+                        card = self.discard.rank + suit
                         break
             # Play eights as a last resort.
-            elif eights:
+            elif self.eights:
                 card = str(self.eights[0])
                 self.held_suit = self.suits[0][1]
             # Draw if you can't play anything.
@@ -63,6 +63,7 @@ class C8Bot(player.Bot):
                 card = 'draw'
                 self.game.human.tell('{} drew a card.'.format(self.name))
             if card != 'draw':
+                #self.game.human.tell(self.discard, self.suit, self.hand)
                 self.game.human.tell('{} played the {}.'.format(self.name, card))
             return card
         # Choosing a suit.
@@ -83,17 +84,17 @@ class C8Bot(player.Bot):
         if self.game.suit:
             self.suit = self.game.suit
         else:
-            self.suit = discard.suit
+            self.suit = self.discard.suit
         # Calculate the legal plays.
-        self.suit_matches = [c for c in self.hand.cards if c.suit == suit and c.rank != '8']
-        self.rank_matches = [c for c in self.hand.cards if c.rank == discard.rank and c.rank != '8']
-        self.eights = [card for card in hand.cards if card.rank == '8']
+        self.suit_matches = [c for c in self.hand.cards if c.suit == self.suit and c.rank != '8']
+        self.rank_matches = [c for c in self.hand.cards if c.rank == self.discard.rank and c.rank != '8']
+        self.eights = [card for card in self.hand.cards if card.rank == '8']
         # Calculate the frequencies of suits in hand.
         self.suits = [(len([c for c in self.hand.cards if c.suit == suit]), suit) for suit in 'CDHS']
         self.suits.sort(reverse = True)
         # Get the recent plays.
         # !! could cause problems with reshuffles.
-        self.plays = self.game.deck.discard[-len(self.game.players):]
+        self.plays = self.game.deck.discards[-len(self.game.players):]
 
     def tell(self, text):
         """
