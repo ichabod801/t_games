@@ -3,8 +3,13 @@ crazy_eights_game.py
 
 A game of Crazy Eights.
 
+Constants:
+CREDITS: The credits for Crazy Eights. (str)
+RULES: The rules for Crazy Eights. (str)
+
 Classes:
 C8Bot: A basic Crazy Eights bot. (player.Bot)
+C8SmartBot: A smarter bot for Crazy Eights. (C8Bot)
 CrazyEights: A game of Crazy Eights (game.Game)
 """
 
@@ -14,7 +19,37 @@ import random
 import tgames.cards as cards
 import tgames.game as game
 import tgames.player as player
+import tgames.utility as utility
 
+
+# The credits for Crazy Eights.
+CREDITS = """
+Game Design: Traditional (Venezuela)
+Game Programming: Craig "Ichabod" O'Brien
+"""
+
+# The rules for Crazy Eights.
+RULES = """
+Each player is dealt 8 cards, 7 in a two player game. The top card of the deck
+is discarded face up. Each player in turn must discard a card face up that
+matches the suit or rank of the top card on the discard pile. Any 8 may always
+be played, and allows the player to pick a new suit to match. If a player 
+can't (or doesn't want to) play any cards, they may draw from the deck until 
+they can (or choose to) play a card.
+
+When a player runs out of cards, the cards in all the other hands are added up
+(face cards are 10, eights are 50, all other cards are face value), and the
+player who ran out of cards wins. If the deck runs out of cards, the player 
+with the least points in their hand scores the difference between their points
+and the points in each hand. After scoring, all cards are shuffled into the
+deck and the game is started again. 
+
+The first player to get 50 points times the number of players wins the game.
+
+Options:
+players=: The number of players in the game, counting the human. (default = 5)
+smart=: The number of smart bots in the game. (default = 2)
+"""
 
 class C8Bot(player.Bot):
     """
@@ -244,6 +279,35 @@ class CrazyEights(game.Game):
         # Set the default options.
         num_players = 5
         num_smart = 2
+        # Check for no options.
+        if self.raw_options.lower() == 'none':
+            pass
+        # Check for passed options.
+        elif self.raw_options:
+            for word in self.raw_options.lower().split():
+                if '=' in word:
+                    option, value = word.split('=')
+                    if option == 'players':
+                        if value.isdigit():
+                            self.num_players = int(value)
+                        else:
+                            self.human.tell('Invalid value for players option: {!r}'.format(value))
+                    elif option == 'smart':
+                        if value.isdigit():
+                            self.num_smart = int(value)
+                        else:
+                            self.human.tell('Invalid value for smart option: {!r}'.format(value))
+        # Ask for options:
+        else:
+            options = self.human.ask('Would you like to change the options? ')
+            if options in utility.YES:
+                query = 'How many players should there be, including you (return for 5)? '
+                self.num_players = self.human.ask_int(query, low = 2, default = 5, cmd = False)
+                query = 'How many smart bots should there be (return for 2)? '
+                max_smart = self.num_players - 1
+                default = min(2, max_smart)
+                self.num_smart = self.human.ask_int(query, low = 0, high = max_smart, default = default,
+                    cmd = False)
         # Set up the players.
         self.players = [self.human]
         taken_names = [self.human.name]
@@ -253,6 +317,8 @@ class CrazyEights(game.Game):
         for bot in range(num_players - len(self.players)):
             self.players.append(C8Bot(taken_names))
             taken_names.append(self.players[-1].name)
+        # Catch invalid num_smart.
+        self.players = self.players[:self.num_players]
         # Set the winning score.
         self.goal = 50 * num_players
 
