@@ -213,6 +213,7 @@ class CrazyEights(game.Game):
     goal: The number of points needed to win the game. (int)
     hands: The player's hands. (dict of str: cards.Hand)
     history: The cards played so far. (list of cards.Card)
+    one_alert: A flag for alerts when a player has one card. (bool)
     suit: The suit called with the last eight. (str)
 
     Methods:
@@ -241,7 +242,7 @@ class CrazyEights(game.Game):
         if len(self.players) == 2:
             hand_size = 7
         else:
-            hand_size = 8
+            hand_size = 5
         # Deal the cards.
         for card in range(hand_size):
             for player in self.players:
@@ -282,6 +283,7 @@ class CrazyEights(game.Game):
         num_players = 5
         num_smart = 2
         self.one_alert = False
+        self.empty_deck = 'score'
         # Check for no options.
         if self.raw_options.lower() == 'none':
             pass
@@ -290,7 +292,11 @@ class CrazyEights(game.Game):
             for word in self.raw_options.lower().split():
                 if word == 'one-alert':
                     self.one_alert = True
-                if '=' in word:
+                elif word == 'pass':
+                    self.empty_deck = 'pass'
+                elif word == 'reshuffle':
+                    self.empyt_deck = 'reshuffle'
+                elif '=' in word:
                     option, value = word.split('=')
                     if option == 'players':
                         if value.isdigit():
@@ -315,6 +321,15 @@ class CrazyEights(game.Game):
                     cmd = False)
                 answer = self.human.ask('Should there be an alert when a player is down to one card? ')
                 self.one_alert = answer in utility.YES
+                query = 'What should be done with an empty deck: reshuffle, score, or pass? '
+                while True:
+                    answer = self.human.ask(query).lower()
+                    if not answer.strip():
+                        answer = 'score'
+                    if answer in ('reshuffle', 'score', 'pass'):
+                        self.empty_deck = answer
+                        break
+                    self.human.tell('That is not a valid answer.')
         # Set up the players.
         self.players = [self.human]
         taken_names = [self.human.name]
@@ -349,6 +364,9 @@ class CrazyEights(game.Game):
         move = player.ask('What is your play? ')
         # Draw cards.
         if move.lower() in ('d', 'draw'):
+            if self.empty_deck == 'pass' and not self.deck.cards:
+                player.tell('You cannot draw, you must pass.')
+                return True
             hand.draw()
             player.tell('You drew the {}.'.format(hand.cards[-1]))
             # Sort the human's cards.
@@ -358,8 +376,10 @@ class CrazyEights(game.Game):
             # Check for empty deck.
             if not self.deck.discards:
                 player.tell('You drew the last card.')
-                self.score()
-                self.deal()
+                if self.empty_deck == 'score':
+                    self.score()
+                if self.empty_deck != 'pass'
+                    self.deal()
                 return False
             else:
                 return True
