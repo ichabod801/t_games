@@ -6,6 +6,8 @@
 
 crazy eights
 connect four if __name__
+catch debug errors
+ask valid
 redo aliases to update going down the inheritance chain.
 use a flag for completely quitting tgames (no: held_inputs = ['n', '!'])
 num_options (options that can be set) rather than num_variants?

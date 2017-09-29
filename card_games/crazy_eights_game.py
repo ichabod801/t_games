@@ -216,6 +216,7 @@ class CrazyEights(game.Game):
     hands: The player's hands. (dict of str: cards.Hand)
     history: The cards played so far. (list of cards.Card)
     one_alert: A flag for alerts when a player has one card. (bool)
+    pass_count: How many players have passed in a row. (bool)
     suit: The suit called with the last eight. (str)
 
     Methods:
@@ -241,13 +242,14 @@ class CrazyEights(game.Game):
         """
         # Keep the discard if requested.
         if keep_one:
+            self.human.tell('Reshuffling the deck.')
             keeper = self.deck.discards[-1]
-        # Empty the current hands.
-        for hand in self.hands.values():
-            hand.discard()
-        # Reset the hands and the deck.
+        else:
+            # Empty the current hands.
+            for hand in self.hands.values():
+                hand.discard()
+        # Reset and the deck.
         self.deck.shuffle()
-        self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
         # Set the discard pile.
         if keep_one:
             self.deck.discards = [keeper]
@@ -256,18 +258,18 @@ class CrazyEights(game.Game):
             self.deck.discard(self.deck.deal(), up = True)
             self.history.append(self.deck.discards[-1])
             self.human.tell('The starting card is the {}.'.format(self.deck.discards[-1]))
-        # Determine the number of cards to deal.
-        if len(self.players) == 2:
-            hand_size = 7
-        else:
-            hand_size = 5
-        # Deal the cards.
-        for card in range(hand_size):
-            for player in self.players:
-                self.hands[player.name].draw()
-        # Sort the human's hand for readability.
-        self.hands[self.human.name].cards.sort()
-        self.hands[self.human.name].cards.sort(key = lambda card: card.suit)
+            # Determine the number of cards to deal.
+            if len(self.players) == 2:
+                hand_size = 7
+            else:
+                hand_size = 5
+            # Deal the cards.
+            for card in range(hand_size):
+                for player in self.players:
+                    self.hands[player.name].draw()
+            # Sort the human's hand for readability.
+            self.hands[self.human.name].cards.sort()
+            self.hands[self.human.name].cards.sort(key = lambda card: card.suit)
 
     def game_over(self):
         """Check for the game being over. (bool)"""
@@ -310,7 +312,7 @@ class CrazyEights(game.Game):
                 elif word == 'pass':
                     self.empty_deck = 'pass'
                 elif word == 'reshuffle':
-                    self.empyt_deck = 'reshuffle'
+                    self.empty_deck = 'reshuffle'
                 elif '=' in word:
                     option, value = word.split('=')
                     if option == 'players':
@@ -394,13 +396,13 @@ class CrazyEights(game.Game):
                 hand.cards.sort()
                 hand.cards.sort(key = lambda card: card.suit)
             # Check for empty deck.
-            if not self.deck.discards:
+            if not self.deck.cards:
                 player.tell('You drew the last card.')
                 if self.empty_deck == 'score':
                     self.score()
                 if self.empty_deck != 'pass':
                     self.deal(self.empty_deck == 'reshuffle')
-                return False
+                return self.empty_deck != 'score'
             else:
                 return True
         # Play cards.
@@ -476,15 +478,15 @@ class CrazyEights(game.Game):
         """Set up the game. (None)"""
         # Set up the deck.
         if len(self.players) < 6:
-            self.deck = cards.Deck()
+            self.deck = cards.Deck(shuffle_size = -1)
         else:
-            self.deck = cards.Deck(decks = 2)
+            self.deck = cards.Deck(decks = 2, shuffle_size = -1)
         # Set up the tracking variables.
         self.history = []
         self.suit = ''
         self.pass_count = 0
         # Deal the hands.
-        self.hands = {}
+        self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
         self.deal()
         # Randomize the players.
         random.shuffle(self.players)

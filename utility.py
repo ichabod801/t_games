@@ -33,7 +33,7 @@ except AttributeError:
 
 # Yes
 YES = set(['yes', 'y', '1', 'yup', 'sure', 'affirmative', 'yeah', 'indubitably', 'yep', 'aye', 'ok'])
-YES.update(['okay', 'darn tootin', 'roger'])
+YES.update(['okay', 'darn tootin', 'roger', 'da', 'si'])
 
 
 def choose(n, r):

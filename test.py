@@ -20,5 +20,5 @@ def test(held_inputs = []):
     menu.menu()
 
 if __name__ == '__main__':
-    #test()
-    test(['crazy eights'])
+    test()
+    #test(['crazy eights'])
