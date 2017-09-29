@@ -48,7 +48,9 @@ The first player to get 50 points times the number of players wins the game.
 
 Options:
 one-alert: A warning is given when a player has one card.
+pass: When the deck runs out players who can't play just pass their turn.
 players=: The number of players in the game, counting the human. (default = 5)
+reshuffle: Reshuffle the discards when the deck runs out instead of scoring.
 smart=: The number of smart bots in the game. (default = 2)
 """
 
@@ -230,14 +232,30 @@ class CrazyEights(game.Game):
     categories = ['Card Games', 'Shedding Games']
     name = 'Crazy Eights'
 
-    def deal(self):
-        """Deal the cards to the players. (None)"""
+    def deal(self, keep_one = False):
+        """
+        Deal the cards to the players. (None)
+
+        Parameters:
+        keep_one: A flag for keeping the top card of the discard pile. (bool)
+        """
+        # Keep the discard if requested.
+        if keep_one:
+            keeper = self.deck.discards[-1]
         # Empty the current hands.
         for hand in self.hands.values():
             hand.discard()
         # Reset the hands and the deck.
         self.deck.shuffle()
         self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
+        # Set the discard pile.
+        if keep_one:
+            self.deck.discards = [keeper]
+            self.deck.cards.remove(keeper)
+        else:
+            self.deck.discard(self.deck.deal(), up = True)
+            self.history.append(self.deck.discards[-1])
+            self.human.tell('The starting card is the {}.'.format(self.deck.discards[-1]))
         # Determine the number of cards to deal.
         if len(self.players) == 2:
             hand_size = 7
@@ -250,10 +268,6 @@ class CrazyEights(game.Game):
         # Sort the human's hand for readability.
         self.hands[self.human.name].cards.sort()
         self.hands[self.human.name].cards.sort(key = lambda card: card.suit)
-        # Discard the starting card.
-        self.deck.discard(self.deck.deal(), up = True)
-        self.history.append(self.deck.discards[-1])
-        self.human.tell('The starting card is the {}.'.format(self.deck.discards[-1]))
 
     def game_over(self):
         """Check for the game being over. (bool)"""
@@ -279,6 +293,7 @@ class CrazyEights(game.Game):
 
     def handle_options(self):
         """Handle the game options. (None)"""
+        # !! refactor due to size
         # Set the default options.
         num_players = 5
         num_smart = 2
@@ -351,6 +366,7 @@ class CrazyEights(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
+        # !! refactor due to size
         self.human.tell()
         # Get the relevant cards.
         hand = self.hands[player.name]
@@ -366,6 +382,10 @@ class CrazyEights(game.Game):
         if move.lower() in ('d', 'draw'):
             if self.empty_deck == 'pass' and not self.deck.cards:
                 player.tell('You cannot draw, you must pass.')
+                self.pass_count += 1
+                if self.pass_count >= len(self.players):
+                    self.score()
+                    self.deal()
                 return True
             hand.draw()
             player.tell('You drew the {}.'.format(hand.cards[-1]))
@@ -378,8 +398,8 @@ class CrazyEights(game.Game):
                 player.tell('You drew the last card.')
                 if self.empty_deck == 'score':
                     self.score()
-                if self.empty_deck != 'pass'
-                    self.deal()
+                if self.empty_deck != 'pass':
+                    self.deal(self.empty_deck == 'reshuffle')
                 return False
             else:
                 return True
@@ -389,6 +409,7 @@ class CrazyEights(game.Game):
             if move[0].upper() in (discard.rank, '8') or move[1].upper() in (discard.suit, self.suit):
                 hand.discard(move)
                 self.history.append(self.deck.discards[-1])
+                self.pass_count = 0
                 # Handle crazy eights.
                 if '8' in move:
                     while True:
@@ -461,6 +482,7 @@ class CrazyEights(game.Game):
         # Set up the tracking variables.
         self.history = []
         self.suit = ''
+        self.pass_count = 0
         # Deal the hands.
         self.hands = {}
         self.deal()
