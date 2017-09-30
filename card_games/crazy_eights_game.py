@@ -405,6 +405,20 @@ class CrazyEights(game.Game):
                 return self.empty_deck != 'score'
             else:
                 return True
+        # Pass
+        if move.lower() in ('p', 'pass'):
+            if not self.deck.cards and self.empty_deck == 'pass':
+                self.human.tell('{} passes.'.format(player.name))
+                self.pass_count += 1
+                if self.pass_count >= len(self.players):
+                    self.score()
+                    self.deal()
+                return True
+            elif self.empty_deck == 'pass':
+                player.tell('You may not pass until the deck is empty.')
+            else:
+                player.tell('None shall pass.')
+            return False
         # Play cards.
         elif move in hand.cards:
             # Check for valid play.
