@@ -102,10 +102,12 @@ class C8Bot(player.Bot):
                 card = str(self.eights[0])
                 self.held_suit = self.suits[0][1]
             # Draw if you can't play anything.
-            else:
+            elif self.game.deck.cards:
                 card = 'draw'
                 self.game.human.tell('{} drew a card.'.format(self.name))
-            if card != 'draw':
+            else:
+                card = 'pass'
+            if card in self.hand.cards:
                 #self.game.human.tell(self.discard, self.suit, self.hand)
                 self.game.human.tell('{} played the {}.'.format(self.name, card))
             return card
@@ -191,8 +193,11 @@ class C8SmartBot(C8Bot):
                     final_card = card
             # Make the move
             if final_card is None:
-                self.game.human.tell('{} drew a card.'.format(self.name))
-                return 'draw'
+                if self.game.deck.cards:
+                    self.game.human.tell('{} drew a card.'.format(self.name))
+                    return 'draw'
+                else:
+                    return 'pass'
             else:
                 self.game.human.tell('{} played the {}.'.format(self.name, final_card))
                 return str(final_card)
@@ -231,7 +236,9 @@ class CrazyEights(game.Game):
     """
 
     categories = ['Card Games', 'Shedding Games']
+    credits = CREDITS
     name = 'Crazy Eights'
+    rules = RULES
 
     def deal(self, keep_one = False):
         """
@@ -325,6 +332,10 @@ class CrazyEights(game.Game):
                             num_smart = int(value)
                         else:
                             self.human.tell('Invalid value for smart option: {!r}'.format(value))
+                    else:
+                        self.human.tell('Invalid option for Crazy Eights: {}=.'.format(option))
+                else:
+                    self.human.tell('Invalid option for Crazy Eights: {}.'.format(word))
         # Ask for options:
         else:
             options = self.human.ask('Would you like to change the options? ')
@@ -368,7 +379,7 @@ class CrazyEights(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        # !! refactor due to size
+        # !! refactor due to size.
         self.human.tell()
         # Get the relevant cards.
         hand = self.hands[player.name]
@@ -384,11 +395,12 @@ class CrazyEights(game.Game):
         if move.lower() in ('d', 'draw'):
             if self.empty_deck == 'pass' and not self.deck.cards:
                 player.tell('You cannot draw, you must pass.')
+                self.human.tell('{} passes.'.format(player.name))
                 self.pass_count += 1
                 if self.pass_count >= len(self.players):
                     self.score()
                     self.deal()
-                return True
+                return False
             hand.draw()
             player.tell('You drew the {}.'.format(hand.cards[-1]))
             # Sort the human's cards.
@@ -413,12 +425,12 @@ class CrazyEights(game.Game):
                 if self.pass_count >= len(self.players):
                     self.score()
                     self.deal()
-                return True
+                return False
             elif self.empty_deck == 'pass':
                 player.tell('You may not pass until the deck is empty.')
             else:
                 player.tell('None shall pass.')
-            return False
+            return True
         # Play cards.
         elif move in hand.cards:
             # Check for valid play.
@@ -473,7 +485,7 @@ class CrazyEights(game.Game):
                     round_scores[name] += int(card.rank)
             # Track the lowest hand to find the winner.
             if round_scores[name] < low_score:
-                # !! does not track tied winners well.
+                # !! does not track tied winners well (that is, at all).
                 winner = name
                 low_score = round_scores[name]
             self.human.tell('{} had {} points in their hand.'.format(name, round_scores[name]))
