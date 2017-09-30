@@ -397,7 +397,7 @@ class CrazyEights(game.Game):
                 hand.cards.sort(key = lambda card: card.suit)
             # Check for empty deck.
             if not self.deck.cards:
-                player.tell('You drew the last card.')
+                self.human.tell('The deck is empty.')
                 if self.empty_deck == 'score':
                     self.score()
                 if self.empty_deck != 'pass':
