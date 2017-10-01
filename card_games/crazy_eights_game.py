@@ -491,8 +491,10 @@ class CrazyEights(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        # !! refactor due to size.
         self.human.tell()
+        # Get the relevant cards.
+        hand = self.hands[player.name]
+        discard = self.deck.discards[-1]
         # Show the game status.
         player.tell('The card to you is {}.'.format(discard.rank + discard.suit))
         if self.deck.discards[-1].rank == '8' and self.suit:
