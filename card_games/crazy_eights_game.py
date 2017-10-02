@@ -131,9 +131,11 @@ class C8Bot(player.Bot):
         else:
             self.suit = self.discard.suit
         # Calculate the legal plays.
-        self.suit_matches = [c for c in self.hand.cards if c.suit == self.suit and c.rank != '8']
-        self.rank_matches = [c for c in self.hand.cards if c.rank == self.discard.rank and c.rank != '8']
-        self.eights = [card for card in self.hand.cards if card.rank == '8']
+        self.suit_matches = [c for c in self.hand.cards if c.suit == self.suit 
+            and c.rank != self.change_rank]
+        self.rank_matches = [c for c in self.hand.cards if c.rank == self.discard.rank 
+            and c.rank != self.change_rank]
+        self.eights = [card for card in self.hand.cards if card.rank == self.change_rank]
         # Calculate the frequencies of suits in hand.
         self.suits = [(len([c for c in self.hand.cards if c.suit == suit]), suit) for suit in 'CDHS']
         self.suits.sort(reverse = True)
@@ -169,15 +171,17 @@ class C8SmartBot(C8Bot):
         # Playing a card.
         if prompt == 'What is your play? ':
             # Check for suit having been switched.
-            suit_switch = self.plays[0].suit != self.suit or '8' in [card.rank for card in self.plays]
+            suit_switch = self.plays[0].suit != self.suit
+            suit_switch = suit_switch or self.game.change_rank in [card.rank for card in self.plays]
             # Get playable cards.
-            maybes = [c for c in self.hand.cards if c.suit == self.suit or c.rank in (self.discard.rank, '8')]
+            valid_ranks = (self.discard.rank, self.game.change_rank)
+            maybes = [c for c in self.hand.cards if c.suit == self.suit or c.rank in valid_ranks]
             maybes = {card: 0 for card in maybes}
             # Calculate the value of each card (cards left in that suit + 2 if switching after another switch)
             final_card = None
             best_count = -5
             for card in maybes:
-                if card.rank == '8':
+                if card.rank == self.game.change_rank:
                     # Penalize eights by one point to hold them until needed.
                     maybes[card] = self.suits[0][0] - 1
                     if card.suit == self.suits[0][1]:
@@ -240,6 +244,7 @@ class CrazyEights(game.Game):
     set_up
     """
 
+    aka = ['Rockaway', 'Swedish Rummy', 'Switch']
     categories = ['Card Games', 'Shedding Games']
     credits = CREDITS
     name = 'Crazy Eights'
@@ -365,6 +370,7 @@ class CrazyEights(game.Game):
         num_smart = 2
         self.one_alert = False
         self.empty_deck = 'score'
+        self.change_rank = '8'
         # Check for no options.
         if self.raw_options.lower() == 'none':
             pass
@@ -449,12 +455,17 @@ class CrazyEights(game.Game):
         hand = self.hands[player.name]
         discard = self.deck.discards[-1]
         # Check for valid play.
-        if card_text[0].upper() in (discard.rank, '8') or card_text[1].upper() in (discard.suit, self.suit):
+        valid_ranks = (discard.rank, self.change_rank)
+        if self.suit:
+            valid_suit = self.suit
+        else:
+            valid_suit = discard.suit
+        if card_text[0].upper() in (discard.rank, valid_ranks) or card_text[1].upper() in valid_suit:
             hand.discard(card_text)
             self.history.append(self.deck.discards[-1])
             self.pass_count = 0
             # Handle crazy eights.
-            if '8' in card_text:
+            if self.change_rank in card_text:
                 while True:
                     suit = player.ask('What suit do you choose? ').upper()
                     if suit and suit[0] in 'CDHS':
@@ -490,7 +501,7 @@ class CrazyEights(game.Game):
         discard = self.deck.discards[-1]
         # Show the game status.
         player.tell('The card to you is {}.'.format(discard.rank + discard.suit))
-        if self.deck.discards[-1].rank == '8' and self.suit:
+        if self.deck.discards[-1].rank == self.change_rank and self.suit:
             player.tell('The suit to you is {}.'.format(self.suit))
         player.tell('Your hand is {}.'.format(hand))
         # Get and process the move.
@@ -518,7 +529,7 @@ class CrazyEights(game.Game):
         self.human.tell()
         for name, hand in self.hands.items():
             for card in hand.cards:
-                if card.rank == '8':
+                if card.rank == self.change_rank:
                     round_scores[name] += 50
                 elif card.rank in 'TJQK':
                     round_scores[name] += 10
