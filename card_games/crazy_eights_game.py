@@ -47,6 +47,7 @@ deck and the game is started again.
 The first player to get 50 points times the number of players wins the game.
 
 Options:
+change=: The rank that allows you to change suits. (default = 8)
 one-alert: A warning is given when a player has one card.
 pass: When the deck runs out players who can't play just pass their turn.
 players=: The number of players in the game, counting the human. (default = 5)
@@ -131,11 +132,11 @@ class C8Bot(player.Bot):
         else:
             self.suit = self.discard.suit
         # Calculate the legal plays.
-        self.suit_matches = [c for c in self.hand.cards if c.suit == self.suit 
-            and c.rank != self.change_rank]
-        self.rank_matches = [c for c in self.hand.cards if c.rank == self.discard.rank 
-            and c.rank != self.change_rank]
-        self.eights = [card for card in self.hand.cards if card.rank == self.change_rank]
+        self.suit_matches = [card for card in self.hand.cards if card.suit == self.suit 
+            and card.rank != self.game.change_rank]
+        self.rank_matches = [card for card in self.hand.cards if card.rank == self.discard.rank 
+            and card.rank != self.game.change_rank]
+        self.eights = [card for card in self.hand.cards if card.rank == self.game.change_rank]
         # Calculate the frequencies of suits in hand.
         self.suits = [(len([c for c in self.hand.cards if c.suit == suit]), suit) for suit in 'CDHS']
         self.suits.sort(reverse = True)
@@ -224,6 +225,8 @@ class CrazyEights(game.Game):
     goal: The number of points needed to win the game. (int)
     hands: The player's hands. (dict of str: cards.Hand)
     history: The cards played so far. (list of cards.Card)
+    num_players: The number of players requested. (int)
+    num_smart: The number of smart bots requested. (int)
     one_alert: A flag for alerts when a player has one card. (bool)
     pass_count: How many players have passed in a row. (bool)
     suit: The suit called with the last eight. (str)
@@ -256,16 +259,19 @@ class CrazyEights(game.Game):
         if options in utility.YES:
             self.flags |= 1
             query = 'How many players should there be, including you (return for 5)? '
-            num_players = self.human.ask_int(query, low = 2, default = 5, cmd = False)
+            self.num_players = self.human.ask_int(query, low = 2, default = 5, cmd = False)
             query = 'How many smart bots should there be (return for 2)? '
             max_smart = num_players - 1
             default = min(2, max_smart)
-            num_smart = self.human.ask_int(query, low = 0, high = max_smart, default = default,
+            self.num_smart = self.human.ask_int(query, low = 0, high = max_smart, default = default,
                 cmd = False)
             answer = self.human.ask('Should there be an alert when a player is down to one card? ')
             self.one_alert = answer in utility.YES
             query = 'What should be done with an empty deck: reshuffle, score, or pass? '
             self.empty_deck = self.human.ask_valid(query, ['reshuffle', 'score', 'pass'], 'score')
+            query = 'What ranks allows changing suits (return for 8)? '
+            self.change_rank = self.human.ask_valid(query, list(cards.Card.ranks[1:].lower()), '8')
+            self.change_rank = self.change_rank.upper()
 
     def deal(self, keep_one = False):
         """
@@ -366,8 +372,8 @@ class CrazyEights(game.Game):
         """Handle the game options. (None)"""
         # !! refactor due to size
         # Set the default options.
-        num_players = 5
-        num_smart = 2
+        self.num_players = 5
+        self.num_smart = 2
         self.one_alert = False
         self.empty_deck = 'score'
         self.change_rank = '8'
@@ -384,16 +390,16 @@ class CrazyEights(game.Game):
         # Set up the players.
         self.players = [self.human]
         taken_names = [self.human.name]
-        for bot in range(num_smart):
+        for bot in range(self.num_smart):
             self.players.append(C8SmartBot(taken_names))
             taken_names.append(self.players[-1].name)
-        for bot in range(num_players - len(self.players)):
+        for bot in range(self.num_players - len(self.players)):
             self.players.append(C8Bot(taken_names))
             taken_names.append(self.players[-1].name)
         # Catch invalid num_smart.
-        self.players = self.players[:num_players]
+        self.players = self.players[:self.num_players]
         # Set the winning score.
-        self.goal = 50 * num_players
+        self.goal = 50 * self.num_players
 
     def parse_options(self):
         """Parse the options passed from the interface. (None)"""
@@ -408,14 +414,19 @@ class CrazyEights(game.Game):
                 option, value = word.split('=')
                 if option == 'players':
                     if value.isdigit():
-                        num_players = max(int(value), 2)
+                        self.num_players = max(int(value), 2)
                     else:
                         self.human.tell('Invalid value for players option: {!r}'.format(value))
                 elif option == 'smart':
                     if value.isdigit():
-                        num_smart = int(value)
+                        self.num_smart = int(value)
                     else:
                         self.human.tell('Invalid value for smart option: {!r}'.format(value))
+                elif option == 'change':
+                    if value in list(cards.Card.ranks[1:].lower()):
+                        self.change_rank = value.upper()
+                    else:
+                        self.human.tell('Invalid value for change option: {!r}'.format(value))
                 else:
                     self.human.tell('Invalid option for Crazy Eights: {}=.'.format(option))
             else:
@@ -460,12 +471,12 @@ class CrazyEights(game.Game):
             valid_suit = self.suit
         else:
             valid_suit = discard.suit
-        if card_text[0].upper() in (discard.rank, valid_ranks) or card_text[1].upper() in valid_suit:
+        if card_text[0].upper() in valid_ranks or card_text[1].upper() in valid_suit:
             hand.discard(card_text)
             self.history.append(self.deck.discards[-1])
             self.pass_count = 0
             # Handle crazy eights.
-            if self.change_rank in card_text:
+            if self.change_rank in card_text.upper():
                 while True:
                     suit = player.ask('What suit do you choose? ').upper()
                     if suit and suit[0] in 'CDHS':
