@@ -172,6 +172,32 @@ class Player(object):
                     self.tell('Please enter the requested integers.')
         return response
 
+    def ask_valid(self, prompt, valid, default = '', lower = True):
+        """
+        Get and validate responses from the user. (str)
+
+        Note that default must be in valid.
+
+        Parameters:
+        prompt: The question to ask the user. (str)
+        valid: The valid responses from the user. (container of str)
+        default: The default value for the response. (str)
+        lower: A flag for case insensitive matching. (bool)
+        """
+        while True:
+            # Get the response.
+            response = self.ask(prompt)
+            if lower:
+                response = response.lower()
+            # Check the response.
+            if not response and default:
+                response = default
+            if response in valid:
+                return response
+            # Warn the user on invalid responses.
+            self.tell('That is not a valid response.')
+            self.tell('Please choose one of: {}.'.format(', '.join(valid)))
+
     def store_results(self, game_name, result):
         """
         Store game results. (None)

@@ -260,14 +260,7 @@ class CrazyEights(game.Game):
             answer = self.human.ask('Should there be an alert when a player is down to one card? ')
             self.one_alert = answer in utility.YES
             query = 'What should be done with an empty deck: reshuffle, score, or pass? '
-            while True:
-                answer = self.human.ask(query).lower()
-                if not answer.strip():
-                    answer = 'score'
-                if answer in ('reshuffle', 'score', 'pass'):
-                    self.empty_deck = answer
-                    break
-                self.human.tell('That is not a valid answer.')
+            self.empty_deck = self.human.ask_valid(query, ['reshuffle', 'score', 'pass'], 'score')
 
     def deal(self, keep_one = False):
         """

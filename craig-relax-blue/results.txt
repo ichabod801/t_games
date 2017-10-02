@@ -37,3 +37,4 @@ FreeCell,1,0,0,815,57,0
 Canfield,0,1,0,668,54,4
 FreeCell,1,0,0,816,53,0
 FreeCell,1,0,0,798,72,0
+FreeCell,1,0,0,792,76,0

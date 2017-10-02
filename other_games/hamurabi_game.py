@@ -145,7 +145,7 @@ class Hamurabi(game.Game):
                 return False
         if self.seed == 0:
             seed_check = self.human.ask("No seed has been planted. Are you sure you want to continue? ")
-            if feed_check.lower() not in utility.YES:
+            if seed_check.lower() not in utility.YES:
                 return False    
         # Determine values for next turn.
         # Update grain values.
