@@ -5,6 +5,14 @@
 == Short Term To Do List ==
 
 crazy eights
+	change-set (no choice of suit)
+	change-if-match
+	one-round
+	draw=
+	goal=
+	reverse=
+	skip=
+	multi-score
 connect four if __name__
 catch debug errors
 redo aliases to update going down the inheritance chain.

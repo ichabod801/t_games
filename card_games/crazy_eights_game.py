@@ -48,6 +48,7 @@ The first player to get 50 points times the number of players wins the game.
 
 Options:
 change=: The rank that allows you to change suits. (default = 8)
+change-match: The change suit card must match the discard's suit or rank.
 one-alert: A warning is given when a player has one card.
 pass: When the deck runs out players who can't play just pass their turn.
 players=: The number of players in the game, counting the human. (default = 5)
@@ -137,6 +138,9 @@ class C8Bot(player.Bot):
         self.rank_matches = [card for card in self.hand.cards if card.rank == self.discard.rank 
             and card.rank != self.game.change_rank]
         self.eights = [card for card in self.hand.cards if card.rank == self.game.change_rank]
+        # Check for change card matching
+        if self.game.change_match and self.discard.rank != self.game.change_rank:
+            self.eights = [card for card in self.eights if card.suit == self.suit]
         # Calculate the frequencies of suits in hand.
         self.suits = [(len([c for c in self.hand.cards if c.suit == suit]), suit) for suit in 'CDHS']
         self.suits.sort(reverse = True)
@@ -175,7 +179,10 @@ class C8SmartBot(C8Bot):
             suit_switch = self.plays[0].suit != self.suit
             suit_switch = suit_switch or self.game.change_rank in [card.rank for card in self.plays]
             # Get playable cards.
-            valid_ranks = (self.discard.rank, self.game.change_rank)
+            if self.game.change_match and self.discard.rank != self.game.change_rank:
+                valid_ranks = (self.discard.rank,)
+            else:
+                valid_ranks = (self.discard.rank, self.game.change_rank)
             maybes = [c for c in self.hand.cards if c.suit == self.suit or c.rank in valid_ranks]
             maybes = {card: 0 for card in maybes}
             # Calculate the value of each card (cards left in that suit + 2 if switching after another switch)
@@ -221,6 +228,7 @@ class CrazyEights(game.Game):
     A game of Crazy Eights. (game.Game)
 
     Attributes:
+    change_match: A flag for the change card having to match suit or rank. (bool)
     deck: The deck of cards used in the game. (cards.Deck)
     goal: The number of points needed to win the game. (int)
     hands: The player's hands. (dict of str: cards.Hand)
@@ -247,7 +255,7 @@ class CrazyEights(game.Game):
     set_up
     """
 
-    aka = ['Rockaway', 'Swedish Rummy', 'Switch']
+    aka = ['Rockaway', 'Swedish Rummy']
     categories = ['Card Games', 'Shedding Games']
     credits = CREDITS
     name = 'Crazy Eights'
@@ -272,6 +280,8 @@ class CrazyEights(game.Game):
             query = 'What ranks allows changing suits (return for 8)? '
             self.change_rank = self.human.ask_valid(query, list(cards.Card.ranks[1:].lower()), '8')
             self.change_rank = self.change_rank.upper()
+            query = 'Should the change suits card have to match the current suit? '
+            self.change_match = self.human.ask(query) in utility.YES
 
     def deal(self, keep_one = False):
         """
@@ -377,6 +387,7 @@ class CrazyEights(game.Game):
         self.one_alert = False
         self.empty_deck = 'score'
         self.change_rank = '8'
+        self.change_match = False
         # Check for no options.
         if self.raw_options.lower() == 'none':
             pass
@@ -410,6 +421,8 @@ class CrazyEights(game.Game):
                 self.empty_deck = 'pass'
             elif word == 'reshuffle':
                 self.empty_deck = 'reshuffle'
+            elif word == 'change-match':
+                self.change_match = True
             elif '=' in word:
                 option, value = word.split('=')
                 if option == 'players':
@@ -466,7 +479,10 @@ class CrazyEights(game.Game):
         hand = self.hands[player.name]
         discard = self.deck.discards[-1]
         # Check for valid play.
-        valid_ranks = (discard.rank, self.change_rank)
+        if self.change_match:
+            valid_ranks = (discard.rank,)
+        else:
+            valid_ranks = (discard.rank, self.change_rank)
         if self.suit:
             valid_suit = self.suit
         else:
@@ -581,3 +597,12 @@ class CrazyEights(game.Game):
         self.deal()
         # Randomize the players.
         random.shuffle(self.players)
+
+if __name__ == '__main__':
+    try:
+        input = raw_input
+    except NameError:
+        pass
+    name = input('What is your name? ')
+    crazy_eights = CrazyEights(player.Player(name), 'change-match')
+    crazy_eights.play()
