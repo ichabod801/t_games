@@ -12,6 +12,7 @@ crazy eights
 	goal=
 	reverse=
 	skip=
+	starting-cards= (5/7 default)
 	multi-score
 connect four if __name__
 catch debug errors

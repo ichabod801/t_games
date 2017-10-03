@@ -49,6 +49,7 @@ The first player to get 50 points times the number of players wins the game.
 Options:
 change=: The rank that allows you to change suits. (default = 8)
 change-match: The change suit card must match the discard's suit or rank.
+change-set: The change suit card only changes to it's own suit.
 one-alert: A warning is given when a player has one card.
 pass: When the deck runs out players who can't play just pass their turn.
 players=: The number of players in the game, counting the human. (default = 5)
@@ -169,6 +170,8 @@ class C8SmartBot(C8Bot):
         """
         Get information from the player. (str)
 
+        !! account for change-set
+
         Parameters:
         prompt: The question being asked of the player. (str)
         """
@@ -229,6 +232,7 @@ class CrazyEights(game.Game):
 
     Attributes:
     change_match: A flag for the change card having to match suit or rank. (bool)
+    change_set: A flag for the change chard only changing to it's own suit. (bool)
     deck: The deck of cards used in the game. (cards.Deck)
     goal: The number of points needed to win the game. (int)
     hands: The player's hands. (dict of str: cards.Hand)
@@ -282,6 +286,8 @@ class CrazyEights(game.Game):
             self.change_rank = self.change_rank.upper()
             query = 'Should the change suits card have to match the current suit? '
             self.change_match = self.human.ask(query) in utility.YES
+            query = "Should the change suits card just change to it's own suit? "
+            self.change_set = self.human.ask(query) in utility.YES
 
     def deal(self, keep_one = False):
         """
@@ -307,7 +313,7 @@ class CrazyEights(game.Game):
         else:
             self.deck.discard(self.deck.deal(), up = True)
             self.history.append(self.deck.discards[-1])
-            self.human.tell('The starting card is the {}.'.format(self.deck.discards[-1]))
+            self.human.tell('\nThe starting card is the {}.'.format(self.deck.discards[-1]))
             # Determine the number of cards to deal.
             if len(self.players) == 2:
                 hand_size = 7
@@ -388,6 +394,7 @@ class CrazyEights(game.Game):
         self.empty_deck = 'score'
         self.change_rank = '8'
         self.change_match = False
+        self.change_set = False
         # Check for no options.
         if self.raw_options.lower() == 'none':
             pass
@@ -423,6 +430,8 @@ class CrazyEights(game.Game):
                 self.empty_deck = 'reshuffle'
             elif word == 'change-match':
                 self.change_match = True
+            elif word == 'change-set':
+                self.change_set = True
             elif '=' in word:
                 option, value = word.split('=')
                 if option == 'players':
@@ -492,7 +501,7 @@ class CrazyEights(game.Game):
             self.history.append(self.deck.discards[-1])
             self.pass_count = 0
             # Handle crazy eights.
-            if self.change_rank in card_text.upper():
+            if self.change_rank in card_text.upper() and not self.change_set:
                 while True:
                     suit = player.ask('What suit do you choose? ').upper()
                     if suit and suit[0] in 'CDHS':
