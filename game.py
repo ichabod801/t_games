@@ -292,12 +292,14 @@ class Game(OtherCmd):
         self.flags &= 1 # reset everything but the options flag.
         self.set_up()
         # Loop through the players repeatedly.
-        for player in itertools.cycle(self.players):
+        self.player_index = 0
+        while True:
             # Loop through player actions until their turn is done.
-            while self.player_turn(player):
+            while self.player_turn(self.players[self.player_index]):
                 pass
             # Update tracking.
             self.turns += 1
+            self.player_index = (self.player_index + 1) % len(self.players)
             # Check for the end of game.
             if self.force_end or self.game_over():
                 break

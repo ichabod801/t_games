@@ -38,3 +38,8 @@ Canfield,0,1,0,668,54,4
 FreeCell,1,0,0,816,53,0
 FreeCell,1,0,0,798,72,0
 FreeCell,1,0,0,792,76,0
+FreeCell,1,0,0,794,69,0
+FreeCell,1,0,0,810,59,0
+Pig,1,2,0,57,22,1
+Solitaire Dice,1,0,0,690,44,0
+Battleships,1,0,0,5,43,0
