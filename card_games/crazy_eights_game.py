@@ -50,6 +50,8 @@ Options:
 change=: The rank that allows you to change suits. (default = 8)
 change-match: The change suit card must match the discard's suit or rank.
 change-set: The change suit card only changes to it's own suit.
+multi-score: Each players scores the points in the largest hand minus the
+    points in their own hand.
 one-alert: A warning is given when a player has one card.
 one-round: Only play one round.
 pass: When the deck runs out players who can't play just pass their turn.
@@ -238,6 +240,7 @@ class CrazyEights(game.Game):
     goal: The number of points needed to win the game. (int)
     hands: The player's hands. (dict of str: cards.Hand)
     history: The cards played so far. (list of cards.Card)
+    multi-score: A flag for almost everyone scoring each round. (bool)
     num_players: The number of players requested. (int)
     num_smart: The number of smart bots requested. (int)
     one_alert: A flag for alerts when a player has one card. (bool)
@@ -274,7 +277,7 @@ class CrazyEights(game.Game):
             query = 'How many players should there be, including you (return for 5)? '
             self.num_players = self.human.ask_int(query, low = 2, default = 5, cmd = False)
             query = 'How many smart bots should there be (return for 2)? '
-            max_smart = num_players - 1
+            max_smart = self.num_players - 1
             default = min(2, max_smart)
             self.num_smart = self.human.ask_int(query, low = 0, high = max_smart, default = default,
                 cmd = False)
@@ -291,6 +294,8 @@ class CrazyEights(game.Game):
             self.change_set = self.human.ask(query) in utility.YES
             if self.human.ask('Should the game end after one round? ') in utility.YES:
                 self.goal = 1
+            query = 'Should every one score the most points minus their points each round? '
+            self.multi_score = self.human.ask(query) in utility.YES
 
     def deal(self, keep_one = False):
         """
@@ -398,6 +403,7 @@ class CrazyEights(game.Game):
         self.change_rank = '8'
         self.change_match = False
         self.change_set = False
+        self.multi_score = False
         # Check for no options.
         if self.raw_options.lower() == 'none':
             pass
@@ -438,6 +444,8 @@ class CrazyEights(game.Game):
                 self.change_set = True
             elif word == 'one-round':
                 self.goal = 1
+            elif word == 'multi-score':
+                self.multi_score = True
             elif '=' in word:
                 option, value = word.split('=')
                 if option == 'players':
@@ -585,14 +593,24 @@ class CrazyEights(game.Game):
                 winner = name
                 low_score = round_scores[name]
             self.human.tell('{} had {} points in their hand.'.format(name, round_scores[name]))
-        # Get score relative to lowest score and total it.
-        winner_bump = 0
-        for name in round_scores:
-            round_scores[name] -= low_score
-            winner_bump += round_scores[name]
-        # Lowest score scores the relative total.
-        self.human.tell('\n{} scores {} points.\n'.format(winner, winner_bump))
-        self.scores[winner] += winner_bump
+        if self.multi_score:
+            self.human.tell()
+            # Get the max score.
+            max_score = max(round_scores.values())
+            for name, score in round_scores.items():
+                indy_score = max_score - score
+                self.scores[name] += indy_score
+                self.human.tell('{} scores {} points.'.format(name, indy_score))
+            self.human.tell()
+        else:
+            # Get score relative to lowest score and total it.
+            winner_bump = 0
+            for name in round_scores:
+                round_scores[name] -= low_score
+                winner_bump += round_scores[name]
+            # Lowest score scores the relative total.
+            self.human.tell('\n{} scores {} points.\n'.format(winner, winner_bump))
+            self.scores[winner] += winner_bump
         for player in self.players:
             self.human.tell('{} has {} points.'.format(player.name, self.scores[player.name]))
 

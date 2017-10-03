@@ -5,13 +5,11 @@
 == Short Term To Do List ==
 
 crazy eights
-	one-round
 	draw=
 	goal=
 	reverse=
 	skip=
 	starting-cards= (5/7 default)
-	multi-score
 connect four if __name__
 catch debug errors
 redo aliases to update going down the inheritance chain.
