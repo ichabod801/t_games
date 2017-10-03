@@ -51,6 +51,7 @@ change=: The rank that allows you to change suits. (default = 8)
 change-match: The change suit card must match the discard's suit or rank.
 change-set: The change suit card only changes to it's own suit.
 one-alert: A warning is given when a player has one card.
+one-round: Only play one round.
 pass: When the deck runs out players who can't play just pass their turn.
 players=: The number of players in the game, counting the human. (default = 5)
 reshuffle: Reshuffle the discards when the deck runs out instead of scoring.
@@ -288,6 +289,8 @@ class CrazyEights(game.Game):
             self.change_match = self.human.ask(query) in utility.YES
             query = "Should the change suits card just change to it's own suit? "
             self.change_set = self.human.ask(query) in utility.YES
+            if self.human.ask('Should the game end after one round? ') in utility.YES:
+                self.goal = 1
 
     def deal(self, keep_one = False):
         """
@@ -386,10 +389,10 @@ class CrazyEights(game.Game):
 
     def handle_options(self):
         """Handle the game options. (None)"""
-        # !! refactor due to size
         # Set the default options.
         self.num_players = 5
         self.num_smart = 2
+        self.goal = 0
         self.one_alert = False
         self.empty_deck = 'score'
         self.change_rank = '8'
@@ -417,7 +420,8 @@ class CrazyEights(game.Game):
         # Catch invalid num_smart.
         self.players = self.players[:self.num_players]
         # Set the winning score.
-        self.goal = 50 * self.num_players
+        if not self.goal:
+            self.goal = 50 * self.num_players
 
     def parse_options(self):
         """Parse the options passed from the interface. (None)"""
@@ -432,6 +436,8 @@ class CrazyEights(game.Game):
                 self.change_match = True
             elif word == 'change-set':
                 self.change_set = True
+            elif word == 'one-round':
+                self.goal = 1
             elif '=' in word:
                 option, value = word.split('=')
                 if option == 'players':

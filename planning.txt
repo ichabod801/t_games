@@ -5,8 +5,6 @@
 == Short Term To Do List ==
 
 crazy eights
-	change-set (no choice of suit)
-	change-if-match
 	one-round
 	draw=
 	goal=
