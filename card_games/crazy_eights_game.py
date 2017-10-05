@@ -122,6 +122,9 @@ class C8Bot(player.Bot):
             suit, self.held_suit = self.held_suit, None
             self.game.human.tell('The new suit to match is {}.'.format(suit)) 
             return suit
+        # Avoid forced draw.
+        elif prompt.endswith('(return to draw)? '):
+            return str(random.choice(self.rank_matches))
         # Raise an error if you weren't programmed to handle the question.
         else:
             raise ValueError('Invalid prompt to C8Bot: {!r}'.format(prompt))
@@ -224,6 +227,9 @@ class C8SmartBot(C8Bot):
             suit = self.suits[0][1]
             self.game.human.tell('The new suit to match is {}.'.format(suit)) 
             return suit
+        # Avoid forced draw.
+        elif prompt.endswith('(return to draw)? '):
+            return str(random.choice(self.rank_matches))
         # Raise an error if you weren't programmed to handle the question.
         else:
             raise ValueError('Invalid prompt to C8SmartBot: {!r}'.format(prompt))
@@ -298,6 +304,9 @@ class CrazyEights(game.Game):
                 self.goal = 1
             query = 'Should every one score the most points minus their points each round? '
             self.multi_score = self.human.ask(query) in utility.YES
+            query = 'What rank should force the next player to draw cards (return for none)? '
+            self.draw_rank = self.human.ask_valid(query, list(cards.Card.ranks[1:].lower()), ' ')
+            self.draw_rank = self.draw_rank.strip()
 
     def deal(self, keep_one = False):
         """
@@ -381,16 +390,16 @@ class CrazyEights(game.Game):
         """
         # Check the hand for playable cards.
         hand = self.hands[player.name]
-        playable = [card for card in hand if card.rank == self.draw_rank]
+        playable = [card for card in hand.cards if card.rank == self.draw_rank]
         # Calculate the number of cards to draw.
-        cards_to_draw = Cards.ranks.index(self.draw_rank)
+        cards_to_draw = cards.Card.ranks.index(self.draw_rank)
         back_index = -2
         while self.history[back_index].rank == self.draw_rank:
             back_index -= 1
         cards_to_draw *= abs(back_index + 1)
         # Check for chance to play.
         if not playable:
-            self.player.tell('You must draw {} cards.'.format(cards_to_draw))
+            player.tell('You must draw {} cards.'.format(cards_to_draw))
             self.forced_draw = False
         if playable:
             player.tell('You must play a {} or draw {} cards.'.format(self.draw_rank, cards_to_draw))
@@ -401,9 +410,11 @@ class CrazyEights(game.Game):
                     self.forced_draw = False
                     break
                 elif play in hand.cards:
-                    hand.discard(card_text)
+                    hand.discard(play)
                     self.history.append(self.deck.discards[-1])
                     self.pass_count = 0
+                    # !! not checking for special cards. refactor that out.
+                    # !! can draw and then play 2, have forced_draw track the number
                     cards_to_draw = 0 # to stop the drawing loop after this if block.
                     break
                 else:
@@ -515,6 +526,11 @@ class CrazyEights(game.Game):
                 elif option == 'change':
                     if value in list(cards.Card.ranks[1:].lower()):
                         self.change_rank = value.upper()
+                    else:
+                        self.human.tell('Invalid value for change option: {!r}'.format(value))
+                elif option == 'draw':
+                    if value in list(cards.Card.ranks[1:].lower()):
+                        self.draw_rank = value.upper()
                     else:
                         self.human.tell('Invalid value for change option: {!r}'.format(value))
                 else:
@@ -685,6 +701,7 @@ class CrazyEights(game.Game):
         self.history = []
         self.suit = ''
         self.pass_count = 0
+        self.forced_draw = False
         # Deal the hands.
         self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
         self.deal()
