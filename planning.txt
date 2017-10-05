@@ -10,6 +10,7 @@ crazy eights
 	reverse=
 	skip=
 	starting-cards= (5/7 default)
+	draw-one
 connect four if __name__
 catch debug errors
 redo aliases to update going down the inheritance chain.

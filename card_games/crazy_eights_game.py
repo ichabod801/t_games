@@ -124,7 +124,9 @@ class C8Bot(player.Bot):
             return suit
         # Avoid forced draw.
         elif prompt.endswith('(return to draw)? '):
-            return str(random.choice(self.rank_matches))
+            card = random.choice(self.rank_matches)
+            self.human.tell('{} played the {}.'.format(self.name, card.rank + card.suit))
+            return str(card)
         # Raise an error if you weren't programmed to handle the question.
         else:
             raise ValueError('Invalid prompt to C8Bot: {!r}'.format(prompt))
@@ -229,7 +231,9 @@ class C8SmartBot(C8Bot):
             return suit
         # Avoid forced draw.
         elif prompt.endswith('(return to draw)? '):
-            return str(random.choice(self.rank_matches))
+            card = random.choice(self.rank_matches)
+            self.human.tell('{} played the {}.'.format(self.name, card.rank + card.suit))
+            return str(card)
         # Raise an error if you weren't programmed to handle the question.
         else:
             raise ValueError('Invalid prompt to C8SmartBot: {!r}'.format(prompt))
@@ -576,7 +580,9 @@ class CrazyEights(game.Game):
             self.suit = ''
         # Handle forced draws.
         if self.draw_rank and self.draw_rank in card_text.upper():
+            print('forced_draw =', self.forced_draw)
             self.forced_draw += cards.Card.ranks.index(card_text[0].upper())
+            print('forced_draw =', self.forced_draw)
         # Check for playing their last card.
         if not hand.cards:
             self.human.tell('{} played their last card.'.format(player.name))
