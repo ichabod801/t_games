@@ -261,8 +261,8 @@ class CrazyEights(game.Game):
     force_draw: Draw extra cards due to special rank of previous play. (bool)
     parse_options: Parse the options passed from the interface. (None)
     pass_turn: Pass the turn. (bool)
-    play_card: Play a card. (bool)
     score: Score the round's winner. (None)
+    validate_card: Validate a card to play. (bool)
 
     Overridden Methods:
     game_over
@@ -391,38 +391,26 @@ class CrazyEights(game.Game):
         # Check the hand for playable cards.
         hand = self.hands[player.name]
         playable = [card for card in hand.cards if card.rank == self.draw_rank]
-        # Calculate the number of cards to draw.
-        cards_to_draw = cards.Card.ranks.index(self.draw_rank)
-        back_index = -2
-        while self.history[back_index].rank == self.draw_rank:
-            back_index -= 1
-        cards_to_draw *= abs(back_index + 1)
         # Check for chance to play.
         if not playable:
-            player.tell('You must draw {} cards.'.format(cards_to_draw))
-            self.forced_draw = False
+            player.tell('You must draw {} cards.'.format(self.forced_draw))
         if playable:
-            player.tell('You must play a {} or draw {} cards.'.format(self.draw_rank, cards_to_draw))
+            player.tell('You must play a {} or draw {} cards.'.format(self.draw_rank, self.forced_draw))
             query = 'Which {} would you like to play (return to draw)? '.format(self.draw_rank)
             while True:
                 play = player.ask(query)
                 if not play or play.lower() in ('d', 'draw'):
-                    self.forced_draw = False
                     break
                 elif play in hand.cards:
-                    hand.discard(play)
-                    self.history.append(self.deck.discards[-1])
-                    self.pass_count = 0
-                    # !! not checking for special cards. refactor that out.
-                    # !! can draw and then play 2, have forced_draw track the number
-                    cards_to_draw = 0 # to stop the drawing loop after this if block.
-                    break
+                    self.play_card(player, play)
+                    return False
                 else:
                     message = 'That is not a valid play. Please draw or play a {}.'
                     player.tell(message.format(self.draw_rank))
         # Draw the cards.
-        for card in range(cards_to_draw):
+        for card in range(self.forced_draw):
             hand.draw()
+            self.forced_draw = 0
             self.human.tell('{} drew a card.'.format(player.name))
             if not self.deck.cards:
                 self.human.tell('The deck is empty.')
@@ -432,6 +420,10 @@ class CrazyEights(game.Game):
                     self.deal(self.empty_deck == 'reshuffle')
                 if self.empty_deck != 'reshuffle':
                     return False
+        # Sort the human's cards.
+        if player.name == self.human.name:
+            hand.cards.sort()
+            hand.cards.sort(key = lambda card: card.suit)
         return False
 
     def game_over(self):
@@ -565,51 +557,35 @@ class CrazyEights(game.Game):
         Play a card. (bool)
 
         Parameters:
-        player: The player playing the card. (Player)
-        card_text: The card the player entered. (str)
+        player: The player whose turn it is. (Player)
+        card_text: The card to play. (str)
         """
-        # Get the relevant cards.
         hand = self.hands[player.name]
-        discard = self.deck.discards[-1]
-        # Check for valid play.
-        if self.change_match:
-            valid_ranks = (discard.rank,)
+        hand.discard(card_text)
+        self.history.append(self.deck.discards[-1])
+        self.pass_count = 0
+        # Handle crazy eights.
+        if self.change_rank in card_text.upper() and not self.change_set:
+            while True:
+                suit = player.ask('What suit do you choose? ').upper()
+                if suit and suit[0] in 'CDHS':
+                    self.suit = suit[0]
+                    break
+                player.tell('Please enter a valid suit (C, D, H, or S).')
         else:
-            valid_ranks = (discard.rank, self.change_rank)
-        if self.suit:
-            valid_suit = self.suit
-        else:
-            valid_suit = discard.suit
-        if card_text[0].upper() in valid_ranks or card_text[1].upper() in valid_suit:
-            hand.discard(card_text)
-            self.history.append(self.deck.discards[-1])
-            self.pass_count = 0
-            # Handle crazy eights.
-            if self.change_rank in card_text.upper() and not self.change_set:
-                while True:
-                    suit = player.ask('What suit do you choose? ').upper()
-                    if suit and suit[0] in 'CDHS':
-                        self.suit = suit[0]
-                        break
-                    player.tell('Please enter a valid suit (C, D, H, or S).')
-            else:
-                self.suit = ''
-            # Handle forced draws.
-            self.forced_draw = self.draw_rank and self.draw_rank in card_text
-            # Check for playing their last card.
-            if not hand.cards:
-                self.human.tell('{} played their last card.'.format(player.name))
-                self.score()
-                self.deal()
-                self.forced_draw = False
-            # Check for one card warning.
-            elif self.one_alert and len(hand.cards) == 1:
-                self.human.tell('{} has one card left.'.format(player.name))
-        # Warn for invalid plays.
-        else:
-            player.tell('That is not a valid play.')
-            return True
-        return False
+            self.suit = ''
+        # Handle forced draws.
+        if self.draw_rank and self.draw_rank in card_text.upper():
+            self.forced_draw += cards.Card.ranks.index(card_text[0].upper())
+        # Check for playing their last card.
+        if not hand.cards:
+            self.human.tell('{} played their last card.'.format(player.name))
+            self.score()
+            self.deal()
+            self.forced_draw = 0
+        # Check for one card warning.
+        elif self.one_alert and len(hand.cards) == 1:
+            self.human.tell('{} has one card left.'.format(player.name))
 
     def player_turn(self, player):
         """
@@ -640,7 +616,7 @@ class CrazyEights(game.Game):
             return self.pass_turn(player)
         # Play cards.
         elif move in hand.cards:
-            return self.play_card(player, move)
+            return self.validate_card(player, move)
         # Handle other commands.
         else:
             return self.handle_cmd(move)
@@ -701,12 +677,40 @@ class CrazyEights(game.Game):
         self.history = []
         self.suit = ''
         self.pass_count = 0
-        self.forced_draw = False
+        self.forced_draw = 0
         # Deal the hands.
         self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
         self.deal()
         # Randomize the players.
         random.shuffle(self.players)
+
+    def validate_card(self, player, card_text):
+        """
+        Validate a card to play. (bool)
+
+        Parameters:
+        player: The player playing the card. (Player)
+        card_text: The card the player entered. (str)
+        """
+        # Get the relevant cards.
+        hand = self.hands[player.name]
+        discard = self.deck.discards[-1]
+        # Check for valid play.
+        if self.change_match:
+            valid_ranks = (discard.rank,)
+        else:
+            valid_ranks = (discard.rank, self.change_rank)
+        if self.suit:
+            valid_suit = self.suit
+        else:
+            valid_suit = discard.suit
+        if card_text[0].upper() in valid_ranks or card_text[1].upper() in valid_suit:
+            self.play_card(player, card_text)
+        # Warn for invalid plays.
+        else:
+            player.tell('That is not a valid play.')
+            return True
+        return False
 
 if __name__ == '__main__':
     try:

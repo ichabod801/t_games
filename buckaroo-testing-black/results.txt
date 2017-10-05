@@ -24,3 +24,5 @@ Crazy Eights,3,1,0,252,183,1
 Crazy Eights,1,1,0,138,292,1
 Crazy Eights,0,4,0,0,6,7
 Crazy Eights,0,4,0,0,3,7
+Crazy Eights,2,2,0,139,90,1
+Crazy Eights,4,0,0,312,127,1
