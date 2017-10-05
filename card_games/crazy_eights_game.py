@@ -125,7 +125,7 @@ class C8Bot(player.Bot):
         # Avoid forced draw.
         elif prompt.endswith('(return to draw)? '):
             card = random.choice(self.rank_matches)
-            self.human.tell('{} played the {}.'.format(self.name, card.rank + card.suit))
+            self.game.human.tell('{} played the {}.'.format(self.name, card.rank + card.suit))
             return str(card)
         # Raise an error if you weren't programmed to handle the question.
         else:
@@ -232,7 +232,7 @@ class C8SmartBot(C8Bot):
         # Avoid forced draw.
         elif prompt.endswith('(return to draw)? '):
             card = random.choice(self.rank_matches)
-            self.human.tell('{} played the {}.'.format(self.name, card.rank + card.suit))
+            self.game.human.tell('{} played the {}.'.format(self.name, card.rank + card.suit))
             return str(card)
         # Raise an error if you weren't programmed to handle the question.
         else:
@@ -329,6 +329,7 @@ class CrazyEights(game.Game):
                 hand.discard()
         # Reset and the deck.
         self.deck.shuffle()
+        self.forced_draw = 0
         # Set the discard pile.
         if keep_one:
             self.deck.discards = [keeper]
@@ -398,6 +399,9 @@ class CrazyEights(game.Game):
         # Check for chance to play.
         if not playable:
             player.tell('You must draw {} cards.'.format(self.forced_draw))
+            if not self.deck.cards:
+                player.tell('There are no cards to draw so you must pass.')
+                return self.pass_turn(player)
         if playable:
             player.tell('You must play a {} or draw {} cards.'.format(self.draw_rank, self.forced_draw))
             query = 'Which {} would you like to play (return to draw)? '.format(self.draw_rank)
@@ -412,18 +416,19 @@ class CrazyEights(game.Game):
                     message = 'That is not a valid play. Please draw or play a {}.'
                     player.tell(message.format(self.draw_rank))
         # Draw the cards.
-        for card in range(self.forced_draw):
-            hand.draw()
-            self.forced_draw = 0
-            self.human.tell('{} drew a card.'.format(player.name))
-            if not self.deck.cards:
-                self.human.tell('The deck is empty.')
-                if self.empty_deck == 'score':
-                    self.score()
-                if self.empty_deck != 'pass':
-                    self.deal(self.empty_deck == 'reshuffle')
-                if self.empty_deck != 'reshuffle':
-                    return False
+        if self.deck.cards:
+            for card in range(self.forced_draw):
+                hand.draw()
+                self.forced_draw = 0
+                self.human.tell('{} drew a card.'.format(player.name))
+                if not self.deck.cards:
+                    self.human.tell('The deck is empty.')
+                    if self.empty_deck == 'score':
+                        self.score()
+                    if self.empty_deck != 'pass':
+                        self.deal(self.empty_deck == 'reshuffle')
+                    if self.empty_deck != 'reshuffle':
+                        return False
         # Sort the human's cards.
         if player.name == self.human.name:
             hand.cards.sort()
@@ -580,9 +585,7 @@ class CrazyEights(game.Game):
             self.suit = ''
         # Handle forced draws.
         if self.draw_rank and self.draw_rank in card_text.upper():
-            print('forced_draw =', self.forced_draw)
             self.forced_draw += cards.Card.ranks.index(card_text[0].upper())
-            print('forced_draw =', self.forced_draw)
         # Check for playing their last card.
         if not hand.cards:
             self.human.tell('{} played their last card.'.format(player.name))
