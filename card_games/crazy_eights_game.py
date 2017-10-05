@@ -237,6 +237,7 @@ class CrazyEights(game.Game):
     change_match: A flag for the change card having to match suit or rank. (bool)
     change_set: A flag for the change chard only changing to it's own suit. (bool)
     deck: The deck of cards used in the game. (cards.Deck)
+    forced_draw: A flag for the next player being forced to draw cards. (bool)
     goal: The number of points needed to win the game. (int)
     hands: The player's hands. (dict of str: cards.Hand)
     history: The cards played so far. (list of cards.Card)
@@ -251,6 +252,7 @@ class CrazyEights(game.Game):
     ask_options: Get game options from the user. (None)
     deal: Deal the cards to the players. (None)
     draw: Draw a card. (bool)
+    force_draw: Draw extra cards due to special rank of previous play. (bool)
     parse_options: Parse the options passed from the interface. (None)
     pass_turn: Pass the turn. (bool)
     play_card: Play a card. (bool)
@@ -370,6 +372,57 @@ class CrazyEights(game.Game):
         else:
             return True
 
+    def force_draw(self, player):
+        """
+        Draw extra cards due to special rank of previous play. (bool)
+
+        Parameters:
+        player: The player to draw a card for. (player.Player)
+        """
+        # Check the hand for playable cards.
+        hand = self.hands[player.name]
+        playable = [card for card in hand if card.rank == self.draw_rank]
+        # Calculate the number of cards to draw.
+        cards_to_draw = Cards.ranks.index(self.draw_rank)
+        back_index = -2
+        while self.history[back_index].rank == self.draw_rank:
+            back_index -= 1
+        cards_to_draw *= abs(back_index + 1)
+        # Check for chance to play.
+        if not playable:
+            self.player.tell('You must draw {} cards.'.format(cards_to_draw))
+            self.forced_draw = False
+        if playable:
+            player.tell('You must play a {} or draw {} cards.'.format(self.draw_rank, cards_to_draw))
+            query = 'Which {} would you like to play (return to draw)? '.format(self.draw_rank)
+            while True:
+                play = player.ask(query)
+                if not play or play.lower() in ('d', 'draw'):
+                    self.forced_draw = False
+                    break
+                elif play in hand.cards:
+                    hand.discard(card_text)
+                    self.history.append(self.deck.discards[-1])
+                    self.pass_count = 0
+                    cards_to_draw = 0 # to stop the drawing loop after this if block.
+                    break
+                else:
+                    message = 'That is not a valid play. Please draw or play a {}.'
+                    player.tell(message.format(self.draw_rank))
+        # Draw the cards.
+        for card in range(cards_to_draw):
+            hand.draw()
+            self.human.tell('{} drew a card.'.format(player.name))
+            if not self.deck.cards:
+                self.human.tell('The deck is empty.')
+                if self.empty_deck == 'score':
+                    self.score()
+                if self.empty_deck != 'pass':
+                    self.deal(self.empty_deck == 'reshuffle')
+                if self.empty_deck != 'reshuffle':
+                    return False
+        return False
+
     def game_over(self):
         """Check for the game being over. (bool)"""
         # Win if someone scored enough points.
@@ -401,6 +454,7 @@ class CrazyEights(game.Game):
         self.one_alert = False
         self.empty_deck = 'score'
         self.change_rank = '8'
+        self.draw_rank = ''
         self.change_match = False
         self.change_set = False
         self.multi_score = False
@@ -524,11 +578,14 @@ class CrazyEights(game.Game):
                     player.tell('Please enter a valid suit (C, D, H, or S).')
             else:
                 self.suit = ''
+            # Handle forced draws.
+            self.forced_draw = self.draw_rank and self.draw_rank in card_text
             # Check for playing their last card.
             if not hand.cards:
                 self.human.tell('{} played their last card.'.format(player.name))
                 self.score()
                 self.deal()
+                self.forced_draw = False
             # Check for one card warning.
             elif self.one_alert and len(hand.cards) == 1:
                 self.human.tell('{} has one card left.'.format(player.name))
@@ -554,13 +611,16 @@ class CrazyEights(game.Game):
         if self.deck.discards[-1].rank == self.change_rank and self.suit:
             player.tell('The suit to you is {}.'.format(self.suit))
         player.tell('Your hand is {}.'.format(hand))
+        # Check for forced draw.
+        if self.forced_draw:
+            return self.force_draw(player)
         # Get and process the move.
         move = player.ask('What is your play? ')
         # Draw cards.
         if move.lower() in ('d', 'draw'):
             return self.draw(player)
         # Pass
-        if move.lower() in ('p', 'pass'):
+        elif move.lower() in ('p', 'pass'):
             return self.pass_turn(player)
         # Play cards.
         elif move in hand.cards:
