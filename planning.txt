@@ -4,8 +4,6 @@
 
 == Short Term To Do List ==
 
-crazy eights
-	draw-one
 connect four if __name__
 catch debug errors
 redo aliases to update going down the inheritance chain.

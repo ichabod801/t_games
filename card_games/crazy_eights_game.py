@@ -52,6 +52,7 @@ change-match: The change suit card must match the discard's suit or rank.
 change-set: The change suit card only changes to it's own suit.
 draw=: The rank that forces the next player to draw that many cards without
     playing any.
+draw-one: A player who can't play only has to draw one card.
 multi-score: Each players scores the points in the largest hand minus the
     points in their own hand.
 one-alert: A warning is given when a player has one card.
@@ -182,7 +183,7 @@ class C8SmartBot(C8Bot):
         """
         Get information from the player. (str)
 
-        !! account for change-set
+        !! account for change-set. Hell account for all options.
 
         Parameters:
         prompt: The question being asked of the player. (str)
@@ -251,6 +252,7 @@ class CrazyEights(game.Game):
     change_match: A flag for the change card having to match suit or rank. (bool)
     change_set: A flag for the change chard only changing to it's own suit. (bool)
     deck: The deck of cards used in the game. (cards.Deck)
+    draw_one: A flag for only having to draw one card when unable to play. (bool)
     draw_rank: The rank that forces a player to draw. (str)
     forced_draw: A flag for the next player being forced to draw cards. (bool)
     goal: The number of points needed to win the game. (int)
@@ -315,6 +317,8 @@ class CrazyEights(game.Game):
                 self.goal = 1
             query = 'Should every one score the most points minus their points each round? '
             self.multi_score = self.human.ask(query) in utility.YES
+            query = 'Should a player who cannot play only have to draw one card? '
+            self.draw_one = self.human.ask(query) in utility.YES
             query = 'What rank should force the next player to draw cards (return for none)? '
             self.draw_rank = self.human.ask_valid(query, list(cards.Card.ranks[1:].lower()), ' ').strip()
             query = 'What rank should reverse the order of play (return for none)? '
@@ -395,7 +399,7 @@ class CrazyEights(game.Game):
                 self.deal(self.empty_deck == 'reshuffle')
             return self.empty_deck != 'score'
         else:
-            return True
+            return not self.draw_one
 
     def force_draw(self, player):
         """
@@ -449,7 +453,7 @@ class CrazyEights(game.Game):
     def game_over(self):
         """Check for the game being over. (bool)"""
         # Win if someone scored enough points.
-        if max(self.scores.values()) > self.goal:
+        if max(self.scores.values()) >= self.goal:
             # Find the winner.
             scores = [(score, name) for name, score in self.scores.items()]
             scores.sort(reverse = True)
@@ -482,6 +486,7 @@ class CrazyEights(game.Game):
         self.skip_rank = ''
         self.change_match = False
         self.change_set = False
+        self.draw_one = False
         self.multi_score = False
         # Check for no options.
         if self.raw_options.lower() == 'none':
@@ -525,6 +530,8 @@ class CrazyEights(game.Game):
                 self.goal = 1
             elif word == 'multi-score':
                 self.multi_score = True
+            elif word == 'draw-one':
+                self.draw_one = True
             elif '=' in word:
                 option, value = word.split('=')
                 if option == 'players':
