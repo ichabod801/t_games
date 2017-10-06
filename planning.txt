@@ -4,7 +4,6 @@
 
 == Short Term To Do List ==
 
-connect four if __name__
 catch debug errors
 redo aliases to update going down the inheritance chain.
 use a flag for completely quitting tgames (no: held_inputs = ['n', '!'])

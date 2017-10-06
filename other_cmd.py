@@ -13,6 +13,9 @@ OtherCmd: An object for handing text commands. (object)
 """
 
 
+import traceback
+
+
 class OtherCmd(object):
     """
     An object for handing text commands. (object)
@@ -54,7 +57,13 @@ class OtherCmd(object):
         Parameters:
         arguments: The debugging information needed. (str)
         """
-        self.human.tell(eval(arguments))
+        try:
+            result = eval(arguments)
+        except (Exception, AttributeError, ImportError, NameError, TypeError, ValueError):
+            self.human.tell('\nThere was an exception raised while processing that command:')
+            self.human.tell(traceback.format_exc(), end = '')
+        else:
+            self.human.tell(repr(result))
         return True
 
     def handle_cmd(self, text):
