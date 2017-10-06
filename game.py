@@ -80,6 +80,7 @@ class Game(OtherCmd):
     """
 
     aka = []
+    aliases = {'!': 'quit', '&': 'debug', '=': 'rpn', '?': 'help'}
     categories = ['Test Games', 'Solitaire']
     credits = 'No credits have been specified for this game.'
     help = {}
@@ -103,6 +104,10 @@ class Game(OtherCmd):
         self.interface = interface
         self.raw_options = options.strip()
         self.flags = 0
+        self.aliases = {}
+        for cls in reversed(self.__class__.__mro__):
+            if hasattr(cls, 'aliases'):
+                self.aliases.update(cls.aliases)
         self.handle_options()
         if not hasattr(self, 'players'):
             self.players = [self.human]

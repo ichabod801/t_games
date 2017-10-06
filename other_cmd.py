@@ -27,7 +27,7 @@ class OtherCmd(object):
     handle_cmd: Check text input for a valid command. (bool)
     """
 
-    aliases = {}
+    aliases = {'&': 'debug'}
 
     def __init__(self, human):
         """

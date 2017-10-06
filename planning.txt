@@ -4,7 +4,6 @@
 
 == Short Term To Do List ==
 
-catch debug errors
 redo aliases to update going down the inheritance chain.
 use a flag for completely quitting tgames (no: held_inputs = ['n', '!'])
 num_options (options that can be set) rather than num_variants?
@@ -45,7 +44,7 @@ card/solitaire/klondike: agnes, klondike*
 card/solitaire/spider: spider, spiderette
 card/trick: hearts, spades
 card/matching: cribbage, snip snap snorem
-card/shedding: crazy eights, spit
+card/shedding: crazy eights*, spit
 card/rummy: rummy, tonk
 card/accumulating: war, ninety-nine
 card/other: golf ii, peace and love
@@ -64,7 +63,7 @@ other/other: RPS(LS)*, number guessing game
 An asterisk means the game has been coded. An exclamation point means the game has been coded and is in the gipf graph.
 
 games planned: 61
-games coded:   11
+games coded:   12
 games gipfed:   4
 
 == Gipf Planning ==
