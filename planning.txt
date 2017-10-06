@@ -5,7 +5,6 @@
 == Short Term To Do List ==
 
 crazy eights
-	skip=
 	draw-one
 connect four if __name__
 catch debug errors

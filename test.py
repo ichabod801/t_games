@@ -21,4 +21,4 @@ def test(held_inputs = []):
 
 if __name__ == '__main__':
     #test()
-    test(['crazy eights / reverse=a'])
+    test(['crazy eights / skip=q'])

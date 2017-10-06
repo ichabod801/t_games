@@ -60,6 +60,7 @@ pass: When the deck runs out players who can't play just pass their turn.
 players=: The number of players in the game, counting the human. (default = 5)
 reshuffle: Reshuffle the discards when the deck runs out instead of scoring.
 reverse=: The rank that reverses the order of play.
+skip=: The rank that skips the next player.
 smart=: The number of smart bots in the game. (default = 2)
 """
 
@@ -261,6 +262,7 @@ class CrazyEights(game.Game):
     one_alert: A flag for alerts when a player has one card. (bool)
     pass_count: How many players have passed in a row. (bool)
     reverse_rank: The rank that reverses the order of play. (str)
+    skip_rank: The rank that skips the next player. (str)
     suit: The suit called with the last eight. (str)
 
     Methods:
@@ -314,11 +316,12 @@ class CrazyEights(game.Game):
             query = 'Should every one score the most points minus their points each round? '
             self.multi_score = self.human.ask(query) in utility.YES
             query = 'What rank should force the next player to draw cards (return for none)? '
-            self.draw_rank = self.human.ask_valid(query, list(cards.Card.ranks[1:].lower()), ' ')
-            self.draw_rank = self.draw_rank.strip()
+            self.draw_rank = self.human.ask_valid(query, list(cards.Card.ranks[1:].lower()), ' ').strip()
             query = 'What rank should reverse the order of play (return for none)? '
             self.reverse_rank = self.human.ask_valid(query, list(cards.Card.ranks[1:].lower()), ' ')
             self.reverse_rank = self.reverse_rank.strip()
+            query = 'What rank should skip the next player (return for none)? '
+            self.skip_rank = self.human.ask_valid(query, list(cards.Card.ranks[1:].lower()), ' ').strip()
 
     def deal(self, keep_one = False):
         """
@@ -476,6 +479,7 @@ class CrazyEights(game.Game):
         self.change_rank = '8'
         self.draw_rank = ''
         self.reverse_rank = ''
+        self.skip_rank = ''
         self.change_match = False
         self.change_set = False
         self.multi_score = False
@@ -548,6 +552,11 @@ class CrazyEights(game.Game):
                         self.reverse_rank = value.upper()
                     else:
                         self.human.tell('Invalid value for reverse option: {!r}'.format(value))
+                elif option == 'skip':
+                    if value in list(cards.Card.ranks[1:].lower()):
+                        self.skip_rank = value.upper()
+                    else:
+                        self.human.tell('Invalid value for skip option: {!r}'.format(value))
                 else:
                     self.human.tell('Invalid option for Crazy Eights: {}=.'.format(option))
             else:
@@ -583,8 +592,10 @@ class CrazyEights(game.Game):
         player: The player whose turn it is. (Player)
         card_text: The card to play. (str)
         """
+        # Play the card.
         hand = self.hands[player.name]
         hand.discard(card_text)
+        # Update the tracking variables.
         self.history.append(self.deck.discards[-1])
         self.pass_count = 0
         # Handle crazy eights.
@@ -604,6 +615,9 @@ class CrazyEights(game.Game):
         if card_text[0].upper() == self.reverse_rank:
             self.players.reverse()
             self.player_index = self.players.index(player)
+        # Check for skipping players.
+        if card_text[0].upper() == self.skip_rank:
+            self.player_index = (self.player_index + 1) % len(self.players)
         # Check for playing their last card.
         if not hand.cards:
             self.human.tell('{} played their last card.'.format(player.name))
