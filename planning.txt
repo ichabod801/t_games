@@ -5,11 +5,7 @@
 == Short Term To Do List ==
 
 crazy eights
-	draw=
-	goal=
-	reverse=
 	skip=
-	starting-cards= (5/7 default)
 	draw-one
 connect four if __name__
 catch debug errors

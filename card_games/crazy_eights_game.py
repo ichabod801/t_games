@@ -50,6 +50,8 @@ Options:
 change=: The rank that allows you to change suits. (default = 8)
 change-match: The change suit card must match the discard's suit or rank.
 change-set: The change suit card only changes to it's own suit.
+draw=: The rank that forces the next player to draw that many cards without
+    playing any.
 multi-score: Each players scores the points in the largest hand minus the
     points in their own hand.
 one-alert: A warning is given when a player has one card.
@@ -57,6 +59,7 @@ one-round: Only play one round.
 pass: When the deck runs out players who can't play just pass their turn.
 players=: The number of players in the game, counting the human. (default = 5)
 reshuffle: Reshuffle the discards when the deck runs out instead of scoring.
+reverse=: The rank that reverses the order of play.
 smart=: The number of smart bots in the game. (default = 2)
 """
 
@@ -247,6 +250,7 @@ class CrazyEights(game.Game):
     change_match: A flag for the change card having to match suit or rank. (bool)
     change_set: A flag for the change chard only changing to it's own suit. (bool)
     deck: The deck of cards used in the game. (cards.Deck)
+    draw_rank: The rank that forces a player to draw. (str)
     forced_draw: A flag for the next player being forced to draw cards. (bool)
     goal: The number of points needed to win the game. (int)
     hands: The player's hands. (dict of str: cards.Hand)
@@ -256,6 +260,7 @@ class CrazyEights(game.Game):
     num_smart: The number of smart bots requested. (int)
     one_alert: A flag for alerts when a player has one card. (bool)
     pass_count: How many players have passed in a row. (bool)
+    reverse_rank: The rank that reverses the order of play. (str)
     suit: The suit called with the last eight. (str)
 
     Methods:
@@ -311,6 +316,9 @@ class CrazyEights(game.Game):
             query = 'What rank should force the next player to draw cards (return for none)? '
             self.draw_rank = self.human.ask_valid(query, list(cards.Card.ranks[1:].lower()), ' ')
             self.draw_rank = self.draw_rank.strip()
+            query = 'What rank should reverse the order of play (return for none)? '
+            self.reverse_rank = self.human.ask_valid(query, list(cards.Card.ranks[1:].lower()), ' ')
+            self.reverse_rank = self.reverse_rank.strip()
 
     def deal(self, keep_one = False):
         """
@@ -467,6 +475,7 @@ class CrazyEights(game.Game):
         self.empty_deck = 'score'
         self.change_rank = '8'
         self.draw_rank = ''
+        self.reverse_rank = ''
         self.change_match = False
         self.change_set = False
         self.multi_score = False
@@ -533,7 +542,12 @@ class CrazyEights(game.Game):
                     if value in list(cards.Card.ranks[1:].lower()):
                         self.draw_rank = value.upper()
                     else:
-                        self.human.tell('Invalid value for change option: {!r}'.format(value))
+                        self.human.tell('Invalid value for draw option: {!r}'.format(value))
+                elif option == 'reverse':
+                    if value in list(cards.Card.ranks[1:].lower()):
+                        self.reverse_rank = value.upper()
+                    else:
+                        self.human.tell('Invalid value for reverse option: {!r}'.format(value))
                 else:
                     self.human.tell('Invalid option for Crazy Eights: {}=.'.format(option))
             else:
@@ -586,6 +600,10 @@ class CrazyEights(game.Game):
         # Handle forced draws.
         if self.draw_rank and self.draw_rank in card_text.upper():
             self.forced_draw += cards.Card.ranks.index(card_text[0].upper())
+        # Check for reversing the order of play.
+        if card_text[0].upper() == self.reverse_rank:
+            self.players.reverse()
+            self.player_index = self.players.index(player)
         # Check for playing their last card.
         if not hand.cards:
             self.human.tell('{} played their last card.'.format(player.name))
