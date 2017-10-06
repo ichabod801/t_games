@@ -617,13 +617,10 @@ class C4BotGamma(C4BotAlphaBeta):
         return score
 
 if __name__ == '__main__':
-    from collections import namedtuple
-    Gaem = namedtuple('Gaem', ['columns', 'rows'])
-    game = Gaem(7, 6)
-    bot = C4BotAlphaBeta()
-    static = bot.board_strength
-    bot.game = game
-    bot.set_up()
-    print(static)
-    print(bot.board_strength)
-    print(static == bot.board_strength)
+    try:
+        input = raw_input
+    except NameError:
+        pass
+    name = input('What is your name? ')
+    connect_four = ConnectFour(player.Player(name), '')
+    connect_four.play()
