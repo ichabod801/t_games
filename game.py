@@ -80,7 +80,7 @@ class Game(OtherCmd):
     """
 
     aka = []
-    aliases = {'!': 'quit', '&': 'debug', '=': 'rpn', '?': 'help'}
+    aliases = {'!': 'quit_quit', '&': 'debug', '=': 'rpn', '?': 'help', 'q': 'quit'}
     categories = ['Test Games', 'Solitaire']
     credits = 'No credits have been specified for this game.'
     help = {}
@@ -157,12 +157,23 @@ class Game(OtherCmd):
         Quit the game, which counts as a loss. (bool)
 
         Parameters:
-        arguments: This parameter is ignored. (str)
+        arguments: The modifiers to the quit. (str)
         """
         self.flags |= 4
         self.force_end = 'loss'
         self.win_loss_draw = [0, max(len(self.players) - 1, 1), 0]
+        if arguments.lower() in ('!', 'quit', 'q'):
+            self.human.held_inputs = ['!']
         return False
+
+    def do_quit_quit(self, arguments):
+        """
+        Quit the game and the interface. (bool)
+
+        Parameters:
+        arguments: The ignored parameters. (str)
+        """
+        return self.do_quit('quit')
 
     def do_rpn(self, arguments):
         """

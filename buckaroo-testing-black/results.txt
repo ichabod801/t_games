@@ -31,3 +31,6 @@ Crazy Eights,3,1,0,62,108,1
 Crazy Eights,0,3,1,0,115,1
 Crazy Eights,0,3,1,0,284,1
 FreeCell,0,1,0,801,5,6
+Pig,0,1,0,53,17,4
+Pig,0,1,0,21,5,6
+Solitaire Dice,0,1,0,0,1,4
