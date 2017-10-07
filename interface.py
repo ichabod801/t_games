@@ -303,11 +303,13 @@ class Interface(other_cmd.OtherCmd):
         while True:
             # Show the menu and get the possible choices.
             menu_map = self.show_menu(self.focus)
-            letter = self.human.ask('What is your selection? ').strip()
+            response = self.human.ask('What is your selection? ').strip()
+            letter, slash, options = response.partition('/')
+            letter = letter.strip().upper()
             self.human.tell()
             # Check for menu choices.
-            if letter.upper() in menu_map:
-                choice = menu_map[letter.upper()]
+            if letter in menu_map:
+                choice = menu_map[letter]
                 # Check for sub-category choices.
                 if choice[:-9] in self.focus['sub-categories']:
                     previous.append(self.focus)
@@ -319,10 +321,10 @@ class Interface(other_cmd.OtherCmd):
                     break
                 # Assume anything else is a game to play.
                 else:
-                    self.play_game(self.games[choice.lower()])
+                    self.play_game(self.games[choice.lower()], options.strip())
             # Check for non-menu choices.
             else:
-                self.handle_cmd(letter)
+                self.handle_cmd(response)
 
     def play_game(self, game_class, options = ''):
         """

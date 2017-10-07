@@ -4,9 +4,8 @@
 
 == Short Term To Do List ==
 
-P-Machine
-user defined shortcuts in interface (set pig3 play pig / x medium satan)
-Add options after / for menu selections.
+Roulette
+Ninety-Nine
 
 == Long Term To Do List ==
 
