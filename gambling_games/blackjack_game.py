@@ -137,6 +137,8 @@ class Blackjack(game.Game):
     credits = CREDITS
     # The name of the game.
     name = 'Blackjack'
+    # The number of settable options.
+    num_options = 11
     # Ordinal words for displaying multiple hands.
     ordinals = ('first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth')
     # The rules of the game.

@@ -107,6 +107,7 @@ class Battleships(game.Game):
     categories = ['Board Games', 'Displace Games']
     credits = CREDITS
     name = 'Battleships'
+    num_options = 1
     rules = RULES
 
     def do_gipf(self, arguments):

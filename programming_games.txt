@@ -34,9 +34,9 @@ The categories class attribute determines where in the interface menu the game w
 
 Note that the categories class attribute is a list of strings. The first item is the top category, then the sub-category, and then the sub-sub-category, if any.
 
-==== Number of Variants ====
+==== Number of Options ====
 
-The num_variants attribute should reflect the number of possible different rule sets available by changing the options. It defaults to 0. Note that changes which affect the difficulty of the game, but do not impact the rules of play, should not be counted. For example, there are 70 possible layouts available in Freecell using the options. However, these are not counted in Freecell.num_variants, since the do not change the rules of play. [I need a clearer explanation of this].
+The num_options attribute should reflect the number of settable options. It defaults to 0. Note that options which basically affect the same thing should count as one option. So if you have easy, medium, and hard options for setting the strength of the bot, those three count as one option.
 
 ==== Help ====
 

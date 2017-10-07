@@ -85,6 +85,7 @@ class FreeCell(solitaire.Solitaire):
 
     categories = ['Card Games', 'Solitaire Games', 'FreeCell Games']
     name = 'FreeCell'
+    num_options = 2
 
     def do_gipf(self, arguments):
         """
@@ -185,6 +186,7 @@ class BakersGame(FreeCell):
     aka = ['Brain Jam']
     credits = CREDITS_BAKER
     name = "Baker's Game"
+    num_options = 2
     rules = RULES_BAKER
 
     def set_checkers(self):

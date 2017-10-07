@@ -48,7 +48,7 @@ class Game(OtherCmd):
     float_re: A regular expression matching floats. (SRE_Pattern)
     help: The help text for the game. (dict of str: str)
     name: The primary name of the game. (str)
-    num_variants: The number of possible variants of the game. (str)
+    num_options: The number of settable options for the game. (str)
     rules_text: The rules of the game. (str)
 
     Attributes:
@@ -87,7 +87,7 @@ class Game(OtherCmd):
     # A regular expression for catching floats.
     float_re = re.compile('-?\d*\.\d+')
     name = 'Null'
-    num_variants = 0
+    num_options = 0
     # The operators used by rpn.
     operators = {'|': (abs, 1), '+': (operator.add, 2), 'C': (utility.choose, 2), '/%': (divmod, 2), 
         '!': (math.factorial, 1), '//': (operator.floordiv, 2), '*': (operator.mul, 2), 
@@ -500,6 +500,7 @@ class Sorter(Game):
 
     credits = 'Design and programming by Craig "Ichabod" O''Brien.'
     name = 'Sorter'
+    num_options = 1
     rules = 'Each turn, swap two numbers. If you can sort the list with a minimum of swaps, you win.'
 
     def game_over(self):

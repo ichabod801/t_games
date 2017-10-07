@@ -265,6 +265,7 @@ class ConnectFour(game.Game):
     categories = ['Board Games', 'Space Games']
     credits = CREDITS
     name = 'Connect Four'
+    num_options = 4
     rules = RULES
 
     def __str__(self):

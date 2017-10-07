@@ -77,7 +77,7 @@ class Canfield(solitaire.Solitaire):
     categories = categories = ['Card Games', 'Solitaire Games', 'Canfield Games']
     credits = CREDITS
     name = 'Canfield'
-    num_variants = 6
+    num_options = 7 # There are basically seven things the options modify.
     rules = RULES
     variants = ('chameleon', 'rainbow', 'rainbow-one', 'selective', 'storehouse', 'superior')
 
