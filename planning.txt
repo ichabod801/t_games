@@ -4,10 +4,7 @@
 
 == Short Term To Do List ==
 
-num_options (options that can be set) rather than num_variants?
 P-Machine
-gipf help: only if you've gipfed already.
-prevent chosing deal # on gipfing.
 user defined shortcuts in interface (set pig3 play pig / x medium satan)
 Add options after / for menu selections.
 
@@ -63,6 +60,17 @@ An asterisk means the game has been coded. An exclamation point means the game h
 games planned: 61
 games coded:   12
 games gipfed:   4
+
+Note that bsd games has 24 of what I would call games. I need to at least beat that before releasing.
+
+coded by penultimate category:
+
+board: 2
+card: 1
+card/solitaire: 4 (which has about twice the terminal categories of any other penultimate category)
+dice: 2
+gambling: 1
+other: 2
 
 == Gipf Planning ==
 
@@ -216,7 +224,7 @@ board/race: parchesi, maze generator
 board/space: Tic-Tac-Toe (MNK), 3D tic-tac-toe, quantum tic-tac-toe, niner, reversi
 board/theme: the landlord game
 board/war: Star Trek text game, swords (melee), sorcery (wizard)
-dice/jeopardy: two die pig
+dice/jeopardy: two die pig, piglett
 card/matching: memory
 cards/shedding: psychotic eights (crazy eights with random options, but 8s do something)
 card/solitaire/freecell: supercell (freecell with random down cards)
@@ -229,7 +237,7 @@ puzzles: Sliding puzzle, mastermind, math quiz, mine sweeper
 tile games: Domino's, maj hong with characters (as graph of distribution to show heights).
 unknown: three musketeer's (gamut of games), fencing (101 basic games), darts (101), nim (101), boggle, mille bornes
 
-games planned: 38
-games needed:   9
+games planned: 39
+games needed:   8
 
 unformed ideas: rubik's sudoku? (2d, 9x9 rubik's sytle puzzle). OS hacking. Wizardry? Stratego?

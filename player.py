@@ -3,6 +3,8 @@ player.py
 
 Base player classes for tgames.
 
+!! reorganize this so the human stuff is in Human.
+
 Classes:
 Player: The base player class. (object)
 Bot: A computer player. (Player)
@@ -58,6 +60,7 @@ class Player(object):
         self.name = name
         self.game = None
         self.held_inputs = []
+        self.shortcuts = {}
 
     def __repr__(self):
         """Debugging text representation. (str)"""
@@ -79,7 +82,9 @@ class Player(object):
             if ';' in answer:
                 self.held_inputs = [part.strip() for part in answer.split(';')]
             else:
-                return answer.strip()
+                first, space, rest = answer.strip().partition(' ')
+                first = self.shortcuts.get(first, first)
+                return '{} {}'.format(first, rest).strip()
         return self.held_inputs.pop(0)
 
     def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
@@ -391,11 +396,14 @@ class Human(Player):
                     os.mkdir(self.folder_name)
                     with open(os.path.join(self.folder_name, 'results.txt'), 'w') as player_data:
                         player_data.write('')
+                    with open(os.path.join(self.folder_name, 'shortcuts.txt'), 'w') as player_data:
+                        player_data.write('')
                     break
                 print()
             else:
                 break
         self.load_results()
+        self.load_shortcuts()
         self.held_inputs = []
 
     def load_results(self):
@@ -405,6 +413,14 @@ class Human(Player):
             for line in player_data:
                 results = line.strip().split(',')
                 self.results.append(results[:1] + [int(x) for x in results[1:]])
+
+    def load_shortcuts(self):
+        """Load the player's interface shortcuts. (None)"""
+        self.shortcuts = {}
+        with open(os.path.join(self.folder_name, 'shortcuts.txt')) as player_data:
+            for line in player_data:
+                shortcut, text = line.strip().split('\t')
+                self.shortcuts[shortcut] = text
 
     def store_results(self, game_name, results):
         """
@@ -420,6 +436,20 @@ class Human(Player):
         results_text = ','.join([str(x) for x in results])
         with open(os.path.join(self.folder_name, 'results.txt'), 'a') as player_data:
             player_data.write('{},{}\n'.format(game_name, results_text))
+
+    def store_shortcut(self, shortcut, text):
+        """
+        Store new shortcuts. (None)
+
+        Parameters:
+        shortcut: The word that is the short cut. (str)
+        text: The text the shortcut expands into. (str)
+        """
+        # Store locally
+        self.shortcuts[shortcut] = text
+        # Store in the player's file.
+        with open(os.path.join(self.folder_name, 'shortcuts.txt'), 'a') as player_data:
+            player_data.write('{}\t{}\n'.format(shortcut, text))
 
 class Tester(Human):
     """
@@ -440,6 +470,7 @@ class Tester(Human):
             with open(os.path.join(self.folder_name, 'results.txt'), 'w') as player_data:
                 player_data.write('')
         self.load_results()
+        self.load_shortcuts()
         self.held_inputs = []
 
 

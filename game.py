@@ -80,7 +80,7 @@ class Game(OtherCmd):
     """
 
     aka = []
-    aliases = {'!': 'quit_quit', '&': 'debug', '=': 'rpn', '?': 'help', 'q': 'quit'}
+    aliases = {'!!': 'quit_quit', '&': 'debug', '=': 'rpn', '?': 'help', '!': 'quit'}
     categories = ['Test Games', 'Solitaire']
     credits = 'No credits have been specified for this game.'
     help = {}

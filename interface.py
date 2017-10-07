@@ -69,6 +69,13 @@ use 'random all'. You can get a list of available games with the games
 command. It is context sensitive, and will only show the games for the 
 category that you are in.
 
+You can create shortcuts using the set command. The first word after the set
+command is the shortcut, the rest is what it stands for. Once it is set, any
+time the first word of a line is a shortcut, it will be replaced with the 
+appropriate text. For example, after 'set fc play freecell', you can just
+enter 'fc' to play freecell. You could even type 'fc / cells = 5', which 
+will translate to 'play freecell / cells = 5'.
+
 You can get this help text by typing help or ?
 """
 
@@ -108,6 +115,10 @@ class Interface(other_cmd.OtherCmd):
         self.human = human
         self.games, self.categories = game.load_games()
         self.valve = RandomValve()
+        self.aliases = {}
+        for cls in reversed(self.__class__.__mro__):
+            if hasattr(cls, 'aliases'):
+                self.aliases.update(cls.aliases)
         # Display the intro.
         self.human.tell("\nWelcome to Ichabod's Text Game Extravaganza!")
         unique_games = set(self.games.values())

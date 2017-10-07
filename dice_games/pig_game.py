@@ -12,6 +12,8 @@ If you write a new kind of bot, it will not be usable unless you:
 !! Piglet: coin tosses to 10 points, heads = 1, tails = turn end.
     Dan Fendel, Diane Resek, Lynne Alper, and Sherry Fraser.
 !! Two die pig, seven ends turn.
+!! New roll-n bot: rolls n times and stops, ignoring ones.
+    So if the third roll is 1, the next turn he'll roll twice and stop.
 
 Constants:
 CREDITS: The credits for the game, progamming, and bots. (str)

@@ -64,7 +64,18 @@ class OtherCmd(object):
             self.human.tell(traceback.format_exc(), end = '')
         else:
             self.human.tell(repr(result))
+            self.human.tell()
         return True
+
+    def do_set(self, arguments):
+        """
+        Set a shortcut. (None)
+
+        Parameters:
+        arguments: The shortcut to set. (str)
+        """
+        shortcut, space, text = arguments.strip().partition(' ')
+        self.human.store_shortcut(shortcut, text)
 
     def handle_cmd(self, text):
         """
