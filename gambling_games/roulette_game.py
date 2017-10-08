@@ -43,6 +43,7 @@ class Roulette(game.Game):
         '33', '35']
     categories = ['Gambling Games', 'Other Games']
     name = 'Roulette'
+    num_options = 2
     red = ['1', '3', '5', '7', '9', '12', '14', '16', '18', '19', '21', '23', '25', '27', '30', '32', '34', 
         '36']
 
@@ -72,6 +73,51 @@ class Roulette(game.Game):
                 self.human.tell('All bets must be decimal integers.')
         return '', 0
 
+    def do_quit(self, arguments):
+        """
+        Stop playing before losing all your money. (bool)
+
+        Parameters:
+        arguments: The number of the hand to hit. (str)
+        """
+        self.flags |= 4
+        if self.scores[self.human.name] > self.stake:
+            self.win_loss_draw[0] = 1
+            self.force_end = 'win'
+        elif self.scores[self.human.name] < self.stake:
+            self.win_loss_draw[1] = 1
+            self.force_end = 'draw'
+        else:
+            self.win_loss_draw[2] = 1
+            self.force_end = 'loss'
+        return False
+
+    def do_split(self, arguments):
+        """
+        Make a bet on a two adjacent numbers. (bool)
+
+        Parameters:
+        arguments: The number to bet on and the bet. (str)
+        """
+        numbers, bet = self.check_bet(arguments)
+        if numbers:
+            pair = numbers.split('-')
+            if len(pair) != 2:
+                self.human.tell('You must enter two numbers for a split bet.')
+            elif pair[0] not in numbers:
+                self.human.tell('{} is not in this layout.'.format(pair[0]))
+            elif pair[1] not in numbers:
+                self.human.tell('{} is not in this layout.'.format(pair[1]))
+            else:
+                low = int(pair[0])
+                high = int(pair[1])
+                if low and high and abs(high - low) in (1, 3):
+                    self.scores[self.human.name] -= bet
+                    self.bets.append(('split', pair, bet))
+                else:
+                    self.human.tell('{} and {} are not adjacent on the layout.'.format(low, high))
+        return True
+
     def do_straight(self, arguments):
         """
         Make a bet on a single number. (bool)
@@ -85,7 +131,8 @@ class Roulette(game.Game):
                 self.human.tell('That number is not in this layout.')
             else:
                 self.scores[self.human.name] -= bet
-                self.bets.append(('straight', target, bet))
+                self.bets.append(('straight', number, bet))
+        return True
 
     def do_spin(self, arguments):
         """
@@ -96,12 +143,20 @@ class Roulette(game.Game):
         """
         for spin in range(random.randint(3, 5)):
             self.human.tell('Spinning...')
-            time.wait(5)
+            time.sleep(1)
         self.human.tell('Clickety clackity...')
-        time.wait(5)
+        time.sleep(1)
         winner = random.choice(self.numbers)
         self.human.tell('The winning number is {}.'.format(winner))
         self.pay_out(winner)
+
+    def game_over(self):
+        """Determine the end of game. (bool)"""
+        if self.scores[self.human.name] == 0:
+            self.win_loss_draw[1] = 1
+            return True
+        else:
+            return False
 
     def handle_options(self):
         """Handle the game options. (None)"""
@@ -154,13 +209,16 @@ class Roulette(game.Game):
         """
         total_winnings = 0
         for bet_type, target, bet in self.bets:
-            if bet_type == 'straight':
-                if target == winner:
-                    self.human.tell('Your straight bet on {} won!'.format(target))
-                    winnings = bet * 35
-                    self.human.tell('You won {} bucks!'.format(winnings))
-                    self.scores[self.human.name] += winnings
-                    total_winnings += winnings
+            winning = getattr(self, 'winning_{}'.format(bet_type))
+            payout = winning(target)
+            if payout:
+                self.human.tell('Your {} bet on {} won!'.format(bet_type, target))
+                winnings = payout * bet
+                self.human.tell('You won {} bucks!'.format(winnings))
+                self.scores[self.human.name] += winnings
+                total_winnings += winnings
+            else:
+                self.human.tell('Your {} bet on {} lost.'.format(bet_type, target))
         self.bets = []
         if total_winnings:
             self.human.tell('Your total winnings this spin were {} bucks.'.format(total_winnings))
@@ -174,10 +232,38 @@ class Roulette(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        player.tell('You have {} bucks.'.format(self.scores[player.name]))
+        player.tell('\nYou have {} bucks.'.format(self.scores[player.name]))
         move = player.ask('Enter a bet or spin: ')
         return self.handle_cmd(move)
 
     def set_up(self):
         """Set up the game. (None)"""
         self.scores = {self.human.name: self.stake}
+        self.bets = []
+
+    def winning_split(tself, arget, winner):
+        """
+        Check a split bet for winning. (int)
+
+        Parameters:
+        target: The two numbers being bet on. (tuple of str)
+        winner: The winning number. (str)
+        """
+        if winner in target:
+            return 17
+        else:
+            return 0
+
+    def winning_straight(self, target, winner):
+        """
+        Check a straight bet for winning. (int)
+
+        Parameters:
+        target: The number being bet on. (str)
+        winner: The winning number. (str)
+        """
+        if winner == target:
+            return 35
+        else:
+            return 0
+
