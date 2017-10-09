@@ -38,7 +38,7 @@ class Roulette(game.Game):
     set_up
     """
 
-    aliases = {'single': 'straight'}
+    aliases = {'double-street': 'double', 'single': 'straight', 'six': 'double', 'six-line': 'double'}
     black = ['2', '4', '6', '8', '10', '11', '13', '15', '17', '20', '22', '24', '26', '28', '29', '31',
         '33', '35']
     categories = ['Gambling Games', 'Other Games']
@@ -73,6 +73,25 @@ class Roulette(game.Game):
                 self.human.tell('All bets must be decimal integers.')
         return '', 0
 
+    def check_two_numbers(self, pair, bet_type):
+        """
+        Check for two numbers in the layout. (bool)
+
+        Parameters:
+        pair: The two numbers separated by a dash. (str)
+        bet_type: The type of bet trying to be made. (str)
+        """
+        pair = numbers.split('-')
+        if len(pair) != 2:
+            self.human.tell('You must enter two numbers for a {} bet.'.format(bet_type))
+        elif pair[0] not in numbers:
+            self.human.tell('{} is not in this layout.'.format(pair[0]))
+        elif pair[1] not in numbers:
+            self.human.tell('{} is not in this layout.'.format(pair[1]))
+        else:
+            return True
+        return False
+
     def do_quit(self, arguments):
         """
         Stop playing before losing all your money. (bool)
@@ -92,7 +111,7 @@ class Roulette(game.Game):
             self.force_end = 'loss'
         return False
 
-    def do_split(self, arguments):
+    def do_corner(self, arguments):
         """
         Make a bet on a two adjacent numbers. (bool)
 
@@ -100,38 +119,59 @@ class Roulette(game.Game):
         arguments: The number to bet on and the bet. (str)
         """
         numbers, bet = self.check_bet(arguments)
-        if numbers:
-            pair = numbers.split('-')
-            if len(pair) != 2:
-                self.human.tell('You must enter two numbers for a split bet.')
-            elif pair[0] not in numbers:
-                self.human.tell('{} is not in this layout.'.format(pair[0]))
-            elif pair[1] not in numbers:
-                self.human.tell('{} is not in this layout.'.format(pair[1]))
+        if numbers and self.check_two_numbers(numbers, 'corner'):
+            low, high = sorted([int(x) for x in numbers.split('-')])
+            if high - low == 4 and low % 3:
+                self.scores[self.human.name] -= bet
+                targets = [str(number) for number in (low, low + 1, high - 1, high)]
+                self.bets.append(('corner bet on {}'.format(numbers), targets, bet))
             else:
-                low = int(pair[0])
-                high = int(pair[1])
-                if low and high and abs(high - low) in (1, 3):
-                    self.scores[self.human.name] -= bet
-                    self.bets.append(('split', pair, bet))
-                else:
-                    self.human.tell('{} and {} are not adjacent on the layout.'.format(low, high))
+                message = '{} and {} are not the low and high of a square of numbers.'
+                self.human.tell(message.format(low, high))
         return True
 
-    def do_straight(self, arguments):
+    def do_double(self, arguments):
         """
-        Make a bet on a single number. (bool)
+        Make a bet on two consecutive rows of numbers. (bool)
 
         Parameters:
-        arguments: The number to bet on and the bet. (str)
+        arguments: The range to bet on and the bet. (str)
         """
-        number, bet = self.check_bet(arguments)
-        if number:
-            if number not in self.numbers:
-                self.human.tell('That number is not in this layout.')
-            else:
+        words = arguments.lower().split()
+        if words[1] in ('street', 'line'):
+            arguments = '{} {}'.format(words[0], ' '.join(words[2:]))
+        if words[0] = 'double':
+            bet_type = 'double street'
+        else:
+            bet_type = 'six line'
+        numbers, bet = self.check_bet(arguments)
+        if numbers and self.check_two_numbers(numbers, bet_type):
+            low, high = sorted([int(x) for x in numbers.split('-')])
+            if high - low = 5 and not high % 3:
                 self.scores[self.human.name] -= bet
-                self.bets.append(('straight', number, bet))
+                targets = [str(number) for number in range(low, high + 1)]
+                self.bets.append(('{} on {}'.format(bet_type, numbers), targets, bet))
+        return True
+
+    def do_layout(self, arguments):
+        """
+        Show the current layout. (bool)
+
+        Parameters:
+        arguments: The ignored arguments to the command. (str)
+        """
+        if self.layout == 'american':
+            text = '\n  0  |  00  \n'
+        else:
+            text = '\n      0     \n'
+        for number in range(1, 37):
+            if str(text) in self.red:
+                text += ' {:2} '.format(number)
+            else:
+                text += '({:2})'.format(number)
+            if not number % 3:
+                text += '\n'
+        self.human.tell(text)
         return True
 
     def do_spin(self, arguments):
@@ -149,6 +189,84 @@ class Roulette(game.Game):
         winner = random.choice(self.numbers)
         self.human.tell('The winning number is {}.'.format(winner))
         self.pay_out(winner)
+
+    def do_split(self, arguments):
+        """
+        Make a bet on a two adjacent numbers. (bool)
+
+        Parameters:
+        arguments: The number to bet on and the bet. (str)
+        """
+        # need to add zeros
+        numbers, bet = self.check_bet(arguments)
+        if numbers and self.check_two_numbers(numbers, 'split'):
+            low = int(pair[0])
+            high = int(pair[1])
+            valid = False
+            valid = valid or (low and high and abs(high - low) in (1, 3) and min(low, high) % 3)
+            valid = valid or (self.layout == 'american' and numbers in ('0-1', '0-2', '00-2', '00-3'))
+            valid = valid or (self.layout == 'french' and numbers in ('0-1', '0-2', '0-3'))
+            if valid:
+                self.scores[self.human.name] -= bet
+                self.bets.append(('split bet on {}'.format(numbers), pair, bet))
+            else:
+                self.human.tell('{} and {} are not adjacent on the layout.'.format(low, high))
+        return True
+
+    def do_straight(self, arguments):
+        """
+        Make a bet on a single number. (bool)
+
+        Parameters:
+        arguments: The numbers to bet on and the bet. (str)
+        """
+        number, bet = self.check_bet(arguments)
+        if number:
+            if number not in self.numbers:
+                self.human.tell('That number is not in this layout.')
+            else:
+                self.scores[self.human.name] -= bet
+                self.bets.append(('straight bet on {}'.format(number), [number], bet))
+        return True
+
+    def do_street(self, arguments):
+        """
+        Make a bet on a three number row. (bool)
+
+        Parameters:
+        arguments: The number to bet on and the bet. (str)
+        """
+        number, bet = self.check_bet(arguments)
+        if number:
+            numbers = number.split('-')
+            end = int(numbers[-1])
+            if end % 3:
+                self.human.tell('A valid street must end in a multiple of three.')
+            else:
+                text = '{}-{}-{}'.format(end - 2, end - 1, end)
+                self.scores[self.human.name] -= bet
+                self.bets.append(('street bet on {}'.format(text), text.split('-'), bet))
+        return True
+
+    def do_trio(self, arguments):
+        """
+        Make a bet on a zero and two numbers next to it. (bool)
+
+        Parameters:
+        arguments: The number to bet on and the bet. (str)
+        """
+        numbers, bet = self.check_bet(arguments)
+        if numbers:
+            if self.layout == 'american':
+                valid = numbers in ('0-1-2', '0-00-2', '00-2-3')
+            else:
+                valid = numbers in ('0-1-2', '0-2-3')
+            if valid:
+                self.scores[self.human.name] -= bet
+                self.bets.append(('trio bet on {}'.format(number), numbers.split('-'), bet))
+            else:
+                self.human.tell('That is not a valid trio on this layout.')
+        return True
 
     def game_over(self):
         """Determine the end of game. (bool)"""
@@ -208,17 +326,15 @@ class Roulette(game.Game):
         winner: The winning number. (str)
         """
         total_winnings = 0
-        for bet_type, target, bet in self.bets:
-            winning = getattr(self, 'winning_{}'.format(bet_type))
-            payout = winning(target)
-            if payout:
-                self.human.tell('Your {} bet on {} won!'.format(bet_type, target))
-                winnings = payout * bet
+        for text, target, bet in self.bets:
+            if winner in target:
+                self.human.tell('Your {} won!'.format(text))
+                winnings = bet * 36 // len(target)
                 self.human.tell('You won {} bucks!'.format(winnings))
                 self.scores[self.human.name] += winnings
                 total_winnings += winnings
             else:
-                self.human.tell('Your {} bet on {} lost.'.format(bet_type, target))
+                self.human.tell('Your {} lost.'.format(text, target))
         self.bets = []
         if total_winnings:
             self.human.tell('Your total winnings this spin were {} bucks.'.format(total_winnings))
@@ -240,30 +356,4 @@ class Roulette(game.Game):
         """Set up the game. (None)"""
         self.scores = {self.human.name: self.stake}
         self.bets = []
-
-    def winning_split(tself, arget, winner):
-        """
-        Check a split bet for winning. (int)
-
-        Parameters:
-        target: The two numbers being bet on. (tuple of str)
-        winner: The winning number. (str)
-        """
-        if winner in target:
-            return 17
-        else:
-            return 0
-
-    def winning_straight(self, target, winner):
-        """
-        Check a straight bet for winning. (int)
-
-        Parameters:
-        target: The number being bet on. (str)
-        winner: The winning number. (str)
-        """
-        if winner == target:
-            return 35
-        else:
-            return 0
 

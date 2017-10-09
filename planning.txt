@@ -5,6 +5,11 @@
 == Short Term To Do List ==
 
 Roulette
+	Write all the bets
+	write a layout command to show the layout
+	write a bets command to show the current bets (numbered)
+	write a unbet command to remove a bet
+	gipfing
 Ninety-Nine
 A round of one per penultimate category, two for solitaire.
 Rinse and repeat
@@ -96,7 +101,7 @@ canfield              -> baker's game         (make one build by suit)
 canfield              -> blackjack            (build a jack on any thing)
 chess                 -> mancala              (take a row and move it one square left or right)
 chess                 -> mate
-connect four          -> roulette
+connect four          -> roulette             (your opponent's next move is random)
 connect four          -> halma
 craps                 -> zip
 craps                 -> crazy eights
@@ -163,7 +168,7 @@ pyramid               -> golf
 pyramid               -> spider
 rock-paper-scissors   -> number guessing
 rock-paper-scissors   -> peace and love
-roulette              -> connect four
+roulette              -> connect four         (make a corner bet, one of them will win at 4:1)
 roulette              -> slot machine
 rummy                 -> baker's game
 rummy                 -> tonk
@@ -243,3 +248,7 @@ games planned: 39
 games needed:   8
 
 unformed ideas: rubik's sudoku? (2d, 9x9 rubik's sytle puzzle). OS hacking. Wizardry? Stratego?
+
+other solitaire games: Yukon, Poker, Baker's Dozen, Good Measure, Little Spider, Accordion [thespruce.com]
+	cruel, tripeaks [solitairecentral.com]
+	including all of the above would flesh out the 108 games. (double check that count and redo the list)
