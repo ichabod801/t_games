@@ -42,3 +42,5 @@ Blackjack,1,0,0,208,3,5
 Roulette,0,1,0,95,1,0
 Roulette,0,1,0,95,2,4
 Roulette,0,1,0,85,3,4
+Roulette,0,1,0,85,2,7
+Roulette,1,0,0,175,4,6

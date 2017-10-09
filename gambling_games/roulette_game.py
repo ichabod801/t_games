@@ -38,7 +38,8 @@ class Roulette(game.Game):
     set_up
     """
 
-    aliases = {'double-street': 'double', 'single': 'straight', 'six': 'double', 'six-line': 'double'}
+    aliases = {'double-street': 'double', 'first': 'basket', 'single': 'straight', 'six': 'double', 
+        'six-line': 'double'}
     black = ['2', '4', '6', '8', '10', '11', '13', '15', '17', '20', '22', '24', '26', '28', '29', '31',
         '33', '35']
     categories = ['Gambling Games', 'Other Games']
@@ -81,12 +82,12 @@ class Roulette(game.Game):
         pair: The two numbers separated by a dash. (str)
         bet_type: The type of bet trying to be made. (str)
         """
-        pair = numbers.split('-')
+        pair = pair.split('-')
         if len(pair) != 2:
             self.human.tell('You must enter two numbers for a {} bet.'.format(bet_type))
-        elif pair[0] not in numbers:
+        elif pair[0] not in self.numbers:
             self.human.tell('{} is not in this layout.'.format(pair[0]))
-        elif pair[1] not in numbers:
+        elif pair[1] not in self.numbers:
             self.human.tell('{} is not in this layout.'.format(pair[1]))
         else:
             return True
@@ -105,7 +106,7 @@ class Roulette(game.Game):
         numbers, bet = self.check_bet(' '.join(words))
         if numbers and self.layout == 'french':
             self.scores[self.human.name] -= bet
-            self.bets.append('basket bet', ('0', '1', '2', '3'), bet)
+            self.bets.append(('basket bet', ('0', '1', '2', '3'), bet))
         elif numbers:
             self.human.tell('That bet can only be made on a French layout.')
         return True
@@ -120,7 +121,7 @@ class Roulette(game.Game):
         numbers, bet = self.check_bet('black {}'.format(arguments))
         if numbers:
             self.scores[self.human.name] -= bet
-            self.bets.append('black bet', self.black, bet)
+            self.bets.append(('black bet', self.black, bet))
         return True
 
     def do_column(self, arguments):
@@ -148,7 +149,7 @@ class Roulette(game.Game):
 
     def do_corner(self, arguments):
         """
-        Make a bet on a two adjacent numbers. (bool)
+        Make a bet on a square of numbers. (bool)
 
         Parameters:
         arguments: The number to bet on and the bet. (str)
@@ -217,7 +218,7 @@ class Roulette(game.Game):
         numbers, bet = self.check_bet('even {}'.format(arguments))
         if numbers:
             self.scores[self.human.name] -= bet
-            self.bets.append('even bet', [str(number) for number in range(2, 37, 2)], bet)
+            self.bets.append(('even bet', [str(number) for number in range(2, 37, 2)], bet))
         return True
 
     def do_high(self, arguments):
@@ -230,7 +231,7 @@ class Roulette(game.Game):
         numbers, bet = self.check_bet('high {}'.format(arguments))
         if numbers:
             self.scores[self.human.name] -= bet
-            self.bets.append('high bet', [str(number) for number in range(19, 37)], bet)
+            self.bets.append(('high bet', [str(number) for number in range(19, 37)], bet))
         return True
 
     def do_layout(self, arguments):
@@ -264,7 +265,7 @@ class Roulette(game.Game):
         numbers, bet = self.check_bet('low {}'.format(arguments))
         if numbers:
             self.scores[self.human.name] -= bet
-            self.bets.append('low bet', [str(number) for number in range(1, 19)], bet)
+            self.bets.append(('low bet', [str(number) for number in range(1, 19)], bet))
         return True
 
     def do_odd(self, arguments):
@@ -277,7 +278,7 @@ class Roulette(game.Game):
         numbers, bet = self.check_bet('odd {}'.format(arguments))
         if numbers:
             self.scores[self.human.name] -= bet
-            self.bets.append('odd bet', [str(number) for number in range(1, 37, 2)], bet)
+            self.bets.append(('odd bet', [str(number) for number in range(1, 37, 2)], bet))
         return True
 
     def do_prime(self, arguments):
@@ -329,7 +330,7 @@ class Roulette(game.Game):
         numbers, bet = self.check_bet('red {}'.format(arguments))
         if numbers:
             self.scores[self.human.name] -= bet
-            self.bets.append('red bet', self.red, bet)
+            self.bets.append(('red bet', self.red, bet))
         return True
 
     def do_snake(self, arguments):
@@ -343,7 +344,7 @@ class Roulette(game.Game):
         if numbers:
             self.scores[self.human.name] -= bet
             targets = ['1', '5', '9', '12', '14', '16', '19', '23', '27', '30', '32', '34']
-            self.bets.append('snake bet', targets, bet)
+            self.bets.append(('snake bet', targets, bet))
         return True
 
     def do_spin(self, arguments):
@@ -431,7 +432,7 @@ class Roulette(game.Game):
         numbers, bet = self.check_bet(' '.join(words))
         if numbers and self.layout == 'french':
             self.scores[self.human.name] -= bet
-            self.bets.append('top line bet', ('0', '00', '1', '2', '3'), bet)
+            self.bets.append(('top line bet', ('0', '00', '1', '2', '3'), bet))
         elif numbers:
             self.human.tell('That bet can only be made on an American layout.')
         return True
