@@ -6,9 +6,9 @@
 
 Roulette
 	Write all the bets
-	write a layout command to show the layout
 	write a bets command to show the current bets (numbered)
 	write a unbet command to remove a bet
+	UK rule: 1/2 back on 1:1 bets.
 	gipfing
 Ninety-Nine
 A round of one per penultimate category, two for solitaire.
