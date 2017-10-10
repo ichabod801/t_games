@@ -296,7 +296,7 @@ class Roulette(game.Game):
                 primes.remove(low)
                 primes.remove(high)
                 self.scores[self.human.name] -= bet
-                self.bets.append(('prime bet excluding {}'.format(numbers), pair, bet))
+                self.bets.append(('prime bet excluding {}'.format(numbers), primes, bet))
             else:
                 self.human.tell('{} and {} are not distinct prime numbers.'.format(low, high))
         return True
@@ -373,13 +373,13 @@ class Roulette(game.Game):
         numbers, bet = self.check_bet(arguments)
         if numbers and self.check_two_numbers(numbers, 'split'):
             low, high = sorted([int(x) for x in numbers.split('-')])
-            valid = False
-            valid = valid or (low and high and abs(high - low) in (1, 3) and min(low, high) % 3)
+            valid = (low and high and abs(high - low) == 1 and min(low, high) % 3)
+            valid = valid or (low and high and abs(high - low) == 3)
             valid = valid or (self.layout == 'american' and numbers in ('0-1', '0-2', '00-2', '00-3'))
             valid = valid or (self.layout == 'french' and numbers in ('0-1', '0-2', '0-3'))
             if valid:
                 self.scores[self.human.name] -= bet
-                self.bets.append(('split bet on {}'.format(numbers), pair, bet))
+                self.bets.append(('split bet on {}'.format(numbers), numbers.split('-'), bet))
             else:
                 self.human.tell('{} and {} are not adjacent on the layout.'.format(low, high))
         return True
@@ -421,7 +421,7 @@ class Roulette(game.Game):
 
     def do_top(self, arguments):
         """
-        Make a four number bet incluidng 0. (bool)
+        Make a five number bet incluidng the zeros. (bool)
 
         Parameters:
         arguments: The ammount to bet. (str)
@@ -430,7 +430,7 @@ class Roulette(game.Game):
         if words[0].lower() != 'line':
             words = ['line'] + words
         numbers, bet = self.check_bet(' '.join(words))
-        if numbers and self.layout == 'french':
+        if numbers and self.layout == 'american':
             self.scores[self.human.name] -= bet
             self.bets.append(('top line bet', ('0', '00', '1', '2', '3'), bet))
         elif numbers:
@@ -518,7 +518,7 @@ class Roulette(game.Game):
         for text, target, bet in self.bets:
             if winner in target:
                 self.human.tell('Your {} won!'.format(text))
-                winnings = bet * 36 // len(target)
+                winnings = bet * (36 // len(target))
                 self.human.tell('You won {} bucks!'.format(winnings))
                 self.scores[self.human.name] += winnings
                 total_winnings += winnings

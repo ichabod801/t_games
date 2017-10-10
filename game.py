@@ -173,6 +173,7 @@ class Game(OtherCmd):
         Parameters:
         arguments: The ignored parameters. (str)
         """
+        self.human.held_inputs = ['!']
         return self.do_quit('quit')
 
     def do_rpn(self, arguments):

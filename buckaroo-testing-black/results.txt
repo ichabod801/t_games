@@ -44,3 +44,7 @@ Roulette,0,1,0,95,2,4
 Roulette,0,1,0,85,3,4
 Roulette,0,1,0,85,2,7
 Roulette,1,0,0,175,4,6
+Roulette,0,1,0,95,2,4
+Roulette,0,1,0,75,4,4
+Roulette,1,0,0,121,4,6
+Blackjack,0,0,1,100,15,4
