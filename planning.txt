@@ -5,7 +5,6 @@
 == Short Term To Do List ==
 
 Roulette
-	Write all the bets
 	write a bets command to show the current bets (numbered)
 	write a unbet command to remove a bet
 	UK rule: 1/2 back on 1:1 bets.

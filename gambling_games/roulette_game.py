@@ -111,6 +111,19 @@ class Roulette(game.Game):
             self.human.tell('That bet can only be made on a French layout.')
         return True
 
+    def do_bets(self, arguments):
+        """
+        Show the current bets. (bool)
+
+        Parameters:
+        arguments: The ignored arguments. (str)
+        """
+        text = '\n'
+        for bet_index, bet in enumerate(self.bets):
+            text += '{}: {} ({} bucks)\n'.format(bet_index + 1, bet[0], bet[2])
+        self.human.tell(text[:-1])
+        return True
+
     def do_black(self, arguments):
         """
         Bet on black. (bool)
@@ -331,6 +344,27 @@ class Roulette(game.Game):
         if numbers:
             self.scores[self.human.name] -= bet
             self.bets.append(('red bet', self.red, bet))
+        return True
+
+    def do_remove(self, arguments):
+        """
+        Remove a bet. (bool)
+
+        Parameters:
+        arguments: the number of the bet to remove. (str)
+        """
+        if not arguments.strip():
+            arguments = str(len(self.bets))
+        if arguments.strip().isdigit():
+            bet_index = int(arguments) - 1
+            if bet_index < len(self.bets):
+                self.scores[self.human.name] += self.bets[bet_index][2]
+                self.human.tell('The {} was removed.'.format(self.bets[bet_index][0]))
+                self.bets.remove(self.bets[bet_index])
+            else:
+                self.human.tell('There are not that many bets.')
+        else:
+            self.human.tell('You must specify the bet with a postive integer.')
         return True
 
     def do_snake(self, arguments):
