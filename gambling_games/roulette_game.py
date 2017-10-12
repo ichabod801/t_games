@@ -432,19 +432,7 @@ class Roulette(game.Game):
         int_args = self.int_re.findall(arguments)
         if len(int_args) == 2:
             number, bet = self.check_bet(' '.join(int_args))
-            if bet * 5 > self.scores[self.human.name]:
-                self.human.tell('You do not have enough money for the full bet.')
-            elif number:
-                if number in self.numbers:
-                    if self.layout == 'french':
-                        wheel = self.french
-                    else:
-                        wheel = self.american
-                    location = wheel.index(number)
-                    for index in range(location - 2, location + 3):
-                        slot = wheel[index % len(wheel)]
-                        self.bets.append(('single on {}'.format(slot), [slot], bet))
-                    self.scores[self.human.name] -= 5 * bet
+            self.neighborhood(number, 5, bet)
         elif self.layout == 'french' and int_args:
             numbers, bet = self.check_bet('neighbors {}'.format(int_args[0]))
             if bet * 9 > self.scores[self.human.name]:
@@ -463,6 +451,16 @@ class Roulette(game.Game):
         else:
             self.human.tell('You must provide an ammount to bet.')
         return True
+
+    def do_niner(self, arguments):
+        """
+        Make a bet on a neighborhood of niner. (bool)
+
+        Parameters:
+        arguments: the number in the center and the bet. (str)
+        """
+        number, bet = self.check_bet(arguments)
+        self.neighborhood(number, 9, bet)
 
     def do_odd(self, arguments):
         """
@@ -570,6 +568,16 @@ class Roulette(game.Game):
         else:
             self.human.tell('You must specify the bet with a postive integer.')
         return True
+
+    def do_seven(self, arguments):
+        """
+        Make a bet on a neighborhood of seven. (bool)
+
+        Parameters:
+        arguments: the number in the center and the bet. (str)
+        """
+        number, bet = self.check_bet(arguments)
+        self.neighborhood(number, 7, bet)
 
     def do_snake(self, arguments):
         """
@@ -814,6 +822,29 @@ class Roulette(game.Game):
                 self.uk_rule = self.human.ask(query) in utility.YES
         if self.layout == 'american':
             self.numbers.append('00')
+
+    def neighborhood(self, number, width, bet):
+        """
+        Bet on adjacent numbers on the wheel. (None)
+
+        Parameters:
+        number: The center of the neighborhood. (str)
+        width: How many numbers there are in the neighborhood. (int)
+        bet: The amount of each bet. (int)
+        """
+        if bet * width > self.scores[self.human.name]:
+            self.human.tell('You do not have enough money for the full bet.')
+        elif number:
+            if number in self.numbers:
+                if self.layout == 'french':
+                    wheel = self.french
+                else:
+                    wheel = self.american
+                location = wheel.index(number)
+                for index in range(location - width // 2, location + width // 2 + 1):
+                    slot = wheel[index % len(wheel)]
+                    self.bets.append(('single on {}'.format(slot), [slot], bet))
+                self.scores[self.human.name] -= width * bet
 
     def pay_out(self, winner):
         """

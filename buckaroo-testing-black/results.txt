@@ -69,3 +69,6 @@ Roulette,0,1,0,94,26,7
 Roulette,0,1,0,79,4,5
 Roulette,1,0,0,158,2,4
 Roulette,1,0,0,282,3,4
+Roulette,0,1,0,95,4,4
+Roulette,1,0,0,121,6,4
+Roulette,0,1,0,93,3,4
