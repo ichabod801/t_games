@@ -7,6 +7,7 @@ Roulette: A game of roulette. (game.Game)
 
 
 import random
+import re
 import time
 
 import tgames.game as game
@@ -51,6 +52,7 @@ class Roulette(game.Game):
     french = ['0', '32', '15', '19', '4', '21', '2', '25', '17', '34', '6', '27', '13', '36', '11', '30', 
         '8', '23', '10', '5', '24', '16', '33', '1', '20', '14', '31', '9', '22', '18', '29', '7', '28', 
         '12', '35', '3', '26']
+    int_re = re.compile('\d+')
     name = 'Roulette'
     num_options = 3
     red = ['1', '3', '5', '7', '9', '12', '14', '16', '18', '19', '21', '23', '25', '27', '30', '32', '34', 
@@ -417,15 +419,16 @@ class Roulette(game.Game):
             self.bets.append(('low bet', [str(number) for number in range(1, 19)], bet))
         return True
 
-    def do_neighbors(self, argument):
+    def do_neighbors(self, arguments):
         """
         Make a neighbors of zero bet or a 'and the neighbors' bet. (bool)
 
         Parameters:
         arguments: The amount to bet. (str)
         """
-        if arguments.strip():
-            number, bet = self.check_bet(arguments)
+        int_args = self.int_re.findall(arguments)
+        if len(int_args) == 2:
+            number, bet = self.check_bet(' '.join(int_args))
             if bet * 5 > self.scores[self.human.name]:
                 self.human.tell('You do not have enough money for the full bet.')
             elif number:
@@ -438,22 +441,24 @@ class Roulette(game.Game):
                     for index in range(location - 2, location + 3):
                         slot = wheel[index % len(wheel)]
                         self.bets.append(('single on {}'.format(slot), [slot], bet))
-        if self.layout == 'french':
-            words = arguments.split()
-            numbers, bet = self.check_bet('neighbors {}'.format(words[-1]))
+                    self.scores[self.human.name] -= 5 * bet
+        elif self.layout == 'french' and int_args:
+            numbers, bet = self.check_bet('neighbors {}'.format(int_args[0]))
             if bet * 9 > self.scores[self.human.name]:
                 self.human.tell('You do not have enough money for the full bet.')
             elif numbers:
-                self.bets.append(('trio', ['0', '2', '3'], bet * 2))
-                self.bets.append(('split', ['4', '7'], bet))
-                self.bets.append(('split', ['12', '15'], bet))
-                self.bets.append(('split', ['18', '21'], bet))
-                self.bets.append(('split', ['19', '22'], bet))
-                self.bets.append(('corner', ['25', '26', '28', '29'], bet * 2))
-                self.bets.append(('split', ['32', '35'], bet))
-                self.sores[self.human.name] -= 9 * bet
-        else:
+                self.bets.append(('trio bet on 0-2-3', ['0', '2', '3'], bet * 2))
+                self.bets.append(('split bet on 4-7', ['4', '7'], bet))
+                self.bets.append(('split bet on 12-5', ['12', '15'], bet))
+                self.bets.append(('split bet on 18-21', ['18', '21'], bet))
+                self.bets.append(('split bet on 19-22', ['19', '22'], bet))
+                self.bets.append(('corner bet on 25-29', ['25', '26', '28', '29'], bet * 2))
+                self.bets.append(('split bet on 32-35', ['32', '35'], bet))
+                self.scores[self.human.name] -= 9 * bet
+        elif int_args:
             self.human.tell('This bet is only available on the French layout.')
+        else:
+            self.human.tell('You must provide an ammount to bet.')
         return True
 
     def do_odd(self, arguments):
@@ -476,17 +481,16 @@ class Roulette(game.Game):
         Parameters:
         arguments: The amount to bet. (str)
         """
-        words = arguments.split()
-        numbers, bet = self.check_bet('orphans {}'.format(words[-1]))
+        numbers, bet = self.check_bet('orphans {}'.format(argument))
         if bet * 5 > self.scores[self.human.name]:
             self.human.tell('You do not have enough money for the full bet.')
         elif numbers:
-            self.bets.append(('single', ['1'], bet))
-            self.bets.append(('split', ['6', '9'], bet))
-            self.bets.append(('split', ['14', '17'], bet))
-            self.bets.append(('split', ['17', '20'], bet))
-            self.bets.append(('split', ['31', '34'], bet))
-            self.sores[self.human.name] -= 5 * bet
+            self.bets.append(('single bet on 1', ['1'], bet))
+            self.bets.append(('split bet on 6-9', ['6', '9'], bet))
+            self.bets.append(('split bet on 14-17', ['14', '17'], bet))
+            self.bets.append(('split bet on 17-20', ['17', '20'], bet))
+            self.bets.append(('split bet on 31-34', ['31', '34'], bet))
+            self.scores[self.human.name] -= 5 * bet
         return True
 
     def do_prime(self, arguments):
@@ -657,31 +661,35 @@ class Roulette(game.Game):
         Parameters:
         arguments: The amount to bet. (str)
         """
-        words = arguments.split()
-        numbers, bet = self.check_bet('third {}'.format(words[-1]))
-        full_bet = bet * 6
-        if '5-8-10-11' in arguments.lower() or 'Ferrari' in arguments.lower():
-            full_bet = bet * 10
-        if full_bet > self.scores[self.human.name]:
-            self.human.tell('You do not have enough money for the full bet.')
-        elif numbers:
-            self.bets.append(('split', ['5', '8'], bet))
-            self.bets.append(('split', ['10', '11'], bet))
-            self.bets.append(('split', ['13', '16'], bet))
-            self.bets.append(('split', ['23', '24'], bet))
-            self.bets.append(('split', ['27', '30'], bet))
-            self.bets.append(('split', ['33', '36'], bet))
-            if '5-8-10-11' in arguments.lower():
-                self.bets.append(('single', ['5'], bet))
-                self.bets.append(('single', ['8'], bet))
-                self.bets.append(('single', ['10'], bet))
-                self.bets.append(('single', ['11'], bet))
-            elif 'Ferrari' in arguments.lower():
-                self.bets.append(('single', ['8'], bet))
-                self.bets.append(('single', ['11'], bet))
-                self.bets.append(('single', ['23'], bet))
-                self.bets.append(('single', ['30'], bet))
-            self.scores[self.human.name] -= full_bet
+        int_args = self.int_re.findall(arguments)
+        if int_args:
+            numbers, bet = self.check_bet('third {}'.format(int_args[-1]))
+            full_bet = bet * 6
+            if '5-8-10-11' in arguments or 'ferrari' in arguments.lower():
+                full_bet = bet * 10
+            if full_bet > self.scores[self.human.name]:
+                self.human.tell('You do not have enough money for the full bet.')
+            elif numbers:
+                self.bets.append(('split bet on 5-8', ['5', '8'], bet))
+                self.bets.append(('split bet on 10-11', ['10', '11'], bet))
+                self.bets.append(('split bet on 13-16', ['13', '16'], bet))
+                self.bets.append(('split bet on 23-24', ['23', '24'], bet))
+                self.bets.append(('split bet on 27-30', ['27', '30'], bet))
+                self.bets.append(('split bet on 33-36', ['33', '36'], bet))
+                if '5-8-10-11' in arguments:
+                    self.bets.append(('single bet on 5', ['5'], bet))
+                    self.bets.append(('single bet on 8', ['8'], bet))
+                    self.bets.append(('single bet on 10', ['10'], bet))
+                    self.bets.append(('single bet on 11', ['11'], bet))
+                elif 'ferrari' in arguments.lower():
+                    self.bets.append(('single bet on 8', ['8'], bet))
+                    self.bets.append(('single bet on 11', ['11'], bet))
+                    self.bets.append(('single bet on 23', ['23'], bet))
+                    self.bets.append(('single bet on 30', ['30'], bet))
+                self.scores[self.human.name] -= full_bet
+        else:
+            self.human.tell('You must give an amount to bet.')
+        return True
 
     def do_top(self, arguments):
         """
@@ -728,24 +736,26 @@ class Roulette(game.Game):
         Parameters:
         arguments: The amount to bet. (str)
         """
-        if self.layout = 'french':
-            words = arguments.split()
-            numbers, bet = self.check_bet('zero {}'.format(words[-1]))
+        int_args = self.int_re.findall(arguments)
+        if self.layout == 'french' and int_args:
+            numbers, bet = self.check_bet('zero {}'.format(int_args[-1]))
             full_bet = bet * 4
             if 'naca' in arguments.lower():
                 full_bet = bet * 5
             if full_bet > self.scores[self.human.name]:
                 self.human.tell('You do not have enough money for the full bet.')
             elif numbers:
-                self.bets.append(('split', ['0', '3'], bet))
-                self.bets.append(('split', ['12', '15'], bet))
-                self.bets.append(('single', ['26'], bet))
-                self.bets.append(('split', ['32', '35'], bet))
+                self.bets.append(('split bet on 0-3', ['0', '3'], bet))
+                self.bets.append(('split bet on 12-15', ['12', '15'], bet))
+                self.bets.append(('single bet on 26', ['26'], bet))
+                self.bets.append(('split bet on 32-35', ['32', '35'], bet))
                 if 'naca' in arguments.lower():
-                    self.bets.append(('single', ['19'], bet))
+                    self.bets.append(('single bet on 19', ['19'], bet))
                 self.scores[self.human.name] -= full_bet
-        else:
+        elif int_args:
             self.human.tell('This bet is only available on the French layout.')
+        else:
+            self.human.tell('You must give an amount to bet.')
 
     def game_over(self):
         """Determine the end of game. (bool)"""
