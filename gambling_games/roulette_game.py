@@ -218,39 +218,41 @@ class Roulette(game.Game):
                 if num % 3 != 1:
                     bets.append((text.format(num - 1, num), [number, str(num - 1)], bet))
                 # street
+                if num % 3:
+                    end = num + 3 - (num % 3)
+                else:
+                    end = num
                 if num:
-                    end = num + (num % 3)
                     targets = [str(n) for n in range(end - 2, end + 1)]
                     bets.append(('street bet on {}-{}-{}'.format(*targets), targets, bet))
                 # trio / basket / top line
-                if not num:
-                    if number == '0':
-                        bets.append(('trio bet on 0-1-2', ['0', '1', '2'], bet))
-                        if self.layout == 'french':
-                            bets.append(('trio bet on 0-2-3', ['0', '2', '3'], bet))
-                        bets.append(('basket bet', ['0', '1', '2', '3'], bet))
-                    else:
-                        bets.append(('trio bet on 00-2-3', ['00', '2', '3'], bet))
-                        bets.append(('trio bet on 0-00-2', ['0', '00', '2'], bet))
-                        bets.append(('top line bet', ['0', '00', '1', '2', '3'], bet))
+                if num < 4:
+                    sub_bets = [('trio bet on 0-1-2', ['0', '1', '2'], bet)]
+                    if self.layout == 'french':
+                        sub_bets.append(('trio bet on 0-2-3', ['0', '2', '3'], bet))
+                        sub_bets.append(('basket bet', ['0', '1', '2', '3'], bet))
+                    if self.layout == 'american':
+                        sub_bets.append(('trio bet on 00-2-3', ['00', '2', '3'], bet))
+                        sub_bets.append(('trio bet on 0-00-2', ['0', '00', '2'], bet))
+                        sub_bets.append(('top line bet', ['0', '00', '1', '2', '3'], bet))
+                    bets.extend([bet for bet in sub_bets if number in bet[1]])
                 # up left corner
                 text = 'corner bet on {}-{}'
                 if num > 3 and num % 3 != 1:
-                    targets = [str(n) for n in range(num - 4, num + 1)]
+                    targets = [str(n) for n in (num - 4, num - 3, num - 1, num)]
                     bets.append((text.format(num - 4, num), targets, bet))
                 # up right corner
                 if num > 3 and num % 3:
-                    targets = [str(n) for n in range(num - 3, num + 2)]
+                    targets = [str(n) for n in (num - 3, num - 2, num, num + 1)]
                     bets.append((text.format(num - 3, num + 1), targets, bet))
                 # down right corner
                 if num < 34 and num % 3:
-                    targets = [str(n) for n in range(num, num + 5)]
+                    targets = [str(n) for n in (num, num + 1, num + 3, num + 4)]
                     bets.append((text.format(num, num + 4), targets, bet))
                 # down left corner
-                if num < 34 and num % 3:
-                    targets = [str(n) for n in range(num, num + 5)]
-                    bets.append((text.format(num, num + 4), targets, bet))
-                end = num + (num % 3)
+                if num < 34 and num % 3 != 1:
+                    targets = [str(n) for n in (num - 1, num, num + 2, num + 3)]
+                    bets.append((text.format(num - 1, num + 3), targets, bet))
                 text = 'double street bet on {}-{}'
                 # up double street
                 if num > 3:
@@ -265,6 +267,7 @@ class Roulette(game.Game):
                     prog_bets = []
                     for text, targets, bet in bets:
                         prog_bets.append((text, targets, bet * len(targets)))
+                    bets = prog_bets
                 # check bet against what player has
                 total_bet = sum([bet for text, targets, bet in bets])
                 if total_bet > self.scores[self.human.name]:

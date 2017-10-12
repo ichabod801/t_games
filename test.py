@@ -21,4 +21,4 @@ def test(held_inputs = []):
 
 if __name__ == '__main__':
     #test()
-    test(['roulette / french'])
+    test(['roulette / none'])
