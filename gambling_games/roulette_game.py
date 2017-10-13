@@ -1,6 +1,10 @@
 """
 roulette_game.py
 
+Constants:
+CREDITS: The credits for roulette. (str)
+RULES: The rules of roulette. (str)
+
 Classes:
 Roulette: A game of roulette. (game.Game)
 """
@@ -14,12 +18,63 @@ import tgames.game as game
 import tgames.utility as utility
 
 
+CREDITS = """
+Game Design: Traditional (French)
+Game Programming: Craig "Ichabod" O'Brien
+"""
+
+RULES = """
+You may make one or more bets on the numbers 0-36 (and 00 depending on the 
+layout). One of the numbers is chosen at random, and bets including that 
+number are paid out. Traditionally the number is chosen by spinning a small
+wheel (the literal translation of roulette) with a pocket for each number, and
+rolling a ball into a bowl with the wheel at the bottom.
+
+Bets are typically made with a command, a number or set of numbers separated
+by dashes, and the ammount bet. Payouts are made based on the number of
+numbers bet on, assuming the zeroes do not exist (the zeros give the house
+its edge). There are inside bets on individual numbers or groups of numbers
+based on a layout of the numbers in three columns. There are outside bets 
+based on the features of the number, including high/low, even/odd and red/
+black (each number has a color, with the zeroes being green). There are also 
+called bets that are groups of other bets.
+
+The bets are listed below. The number in brackets is the number of numbers 
+that must be specified for the bet. Bets with a capital F in the brackets may
+only be made on the French layout, and bets with a capital A may only be made
+on the American layout (see options).
+
+INSIDE BETS:
+Basket/First Four: A bet on the first two rows of numbers (0, 1, 2, 3). [0F]
+Black/Noir: Bet on the black numbers. [0]
+Column: Bet on a column of 12 numbers. The column can be specified with 1/2/3,
+    P/M/D (Premiere, Moyenne, Derniere) or F/S/T (First, Second, Third). [1]
+Corner: Bet on four numbers in a square. Specify the highest and lowest
+    numbers in the square. [2]
+
+OUTSIDE BETS:
+
+CALLED BETS:
+Complete: Make every inside bet that contains the specified number. May be
+    done as 'complete progressive,' which multiplies each bet by the number
+    of numbers in the bet. [1]
+
+OTHER COMMANDS:
+Bets: Show a numbered list of the current bets.
+
+OPTIONS:
+"""
+
+
 class Roulette(game.Game):
     """
     A game of roulette.
 
     Class Attributes:
+    american: The order of the wheel in the American layout. (list of str)
     black: The black numbers. (list of str)
+    french: The order of the wheel in the French layout. (list of str)
+    int_re: A regular expression to capture numbers. (re.SRE_Pattern)
     red: The red numbers. (list of str)
 
     Attributes
@@ -30,6 +85,13 @@ class Roulette(game.Game):
 
     Methods:
     check_bet: Do common checking for valid bets. (str, int)
+    check_two_numbers: Check for two numbers in the layout. (bool)
+    do_basket: Make a four number bet incluidng 0. (bool)
+    do_bets: Show a numbered list of the current bets. (bool)
+    do_black: Bet on black. (bool)
+    do_column: Bet on a column. (bool)
+    do_complete: Make all inside bets on a given number. (bool)
+    do_corner: Make a bet on a square of numbers. (bool)
     do_spin: Spin the wheel. (bool)
     do_straight: Make a bet on a single number. (bool)
 
@@ -43,15 +105,19 @@ class Roulette(game.Game):
         'first': 'basket', 'impair': 'odd', 'le': 'third', 'manque': 'low', 'noir': 'black', 
         'orphelins': 'orphans', 'pair': 'even', 'passe': 'high', 'rouge': 'red', 'single': 'straight', 
         'six': 'double', 'six-line': 'double', 'tiers': 'third', 'voisins': 'neighbors'}
+    # The order of the wheel in the American layout.
     american = ['0', '28', '9', '26', '30', '11', '7', '20', '32', '17', '5', '22', '34', '15', '3', '24', 
         '36', '13', '1', '00', '27', '10', '25', '29', '12', '8', '19', '31', '18', '6', '21', '33', '16', 
         '4', '23', '35', '14', '2']
+    # The black numbers.
     black = ['2', '4', '6', '8', '10', '11', '13', '15', '17', '20', '22', '24', '26', '28', '29', '31',
         '33', '35']
     categories = ['Gambling Games', 'Other Games']
+    # The order of the wheel in the French layout.
     french = ['0', '32', '15', '19', '4', '21', '2', '25', '17', '34', '6', '27', '13', '36', '11', '30', 
         '8', '23', '10', '5', '24', '16', '33', '1', '20', '14', '31', '9', '22', '18', '29', '7', '28', 
         '12', '35', '3', '26']
+    # A regular expression to capture numbers.
     int_re = re.compile('\d+')
     name = 'Roulette'
     num_options = 3
@@ -69,10 +135,12 @@ class Roulette(game.Game):
         arguments: The arguments to the bet command. (str)
         """
         args = arguments.split()
+        # Check for number and bet
         if len(args) != 2:
             self.human.tell('Invalid number of arguments to a bet command.')
         else:
             target, bet = args
+            # Check for a valid bet.
             if bet.isdigit():
                 bet = int(bet)
                 max_bet = min(self.max_bet, self.scores[self.human.name])
@@ -82,6 +150,7 @@ class Roulette(game.Game):
                     self.human.tell('That bet is too large. You may only bet {} bucks.'.format(max_bet))
             else:
                 self.human.tell('All bets must be decimal integers.')
+        # Return dummy (False) values on failure.
         return '', 0
 
     def check_two_numbers(self, pair, bet_type):
@@ -93,8 +162,10 @@ class Roulette(game.Game):
         bet_type: The type of bet trying to be made. (str)
         """
         pair = pair.split('-')
+        # Check for two numbers.
         if len(pair) != 2:
             self.human.tell('You must enter two numbers for a {} bet.'.format(bet_type))
+        # Check that they are on the wheel.
         elif pair[0] not in self.numbers:
             self.human.tell('{} is not in this layout.'.format(pair[0]))
         elif pair[1] not in self.numbers:
@@ -110,10 +181,13 @@ class Roulette(game.Game):
         Parameters:
         arguments: The ammount to bet. (str)
         """
+        # Handle aliases.
         words = arguments.split()
         if words[0].lower() != 'four':
             words = ['basket'] + words
+        # Check the bet.
         numbers, bet = self.check_bet(' '.join(words))
+        # Check the layout.
         if numbers and self.layout == 'french':
             self.scores[self.human.name] -= bet
             self.bets.append(('basket bet', ('0', '1', '2', '3'), bet))
@@ -123,7 +197,7 @@ class Roulette(game.Game):
 
     def do_bets(self, arguments):
         """
-        Show the current bets. (bool)
+        Show a numbered list of the current bets. (bool)
 
         Parameters:
         arguments: The ignored arguments. (str)
@@ -141,8 +215,10 @@ class Roulette(game.Game):
         Parameters:
         arguments: The amount to bet. (str)
         """
+        # Check the bet.
         numbers, bet = self.check_bet('black {}'.format(arguments))
         if numbers:
+            # Make the bet.
             self.scores[self.human.name] -= bet
             self.bets.append(('black bet', self.black, bet))
         return True
@@ -154,8 +230,10 @@ class Roulette(game.Game):
         Parameters:
         arguments: The column and the bet. (str)
         """
+        # Check the bet
         column, bet = self.check_bet(arguments)
         if column:
+            # Get the numbers for the column
             targets = []
             if column.lower() in ('1', 'p', 'f'):
                 targets = [str(number) for number in range(1, 37, 3)]
@@ -164,9 +242,11 @@ class Roulette(game.Game):
             elif column.lower in ('3', 'd', 't'):
                 targets = [str(number) for number in range(2, 37, 3)]
             if targets:
+                # Make the bet.
                 self.scores[self.human.name] -= bet
                 self.bets.append(('column bet on {}'.format(column), targets, bet))
             else:
+                # Warn on invalid column
                 self.human.tell('That is not a valid column. Please use 1/2/3, P/M/D, or F/S/T.')
         return True
 
@@ -177,14 +257,17 @@ class Roulette(game.Game):
         Parameters:
         arguments: The number to bet on and the bet. (str)
         """
+        # Check for progressive bets.
         words = arguments.split()
         progressive = 'progressive' in words
         if progressive:
             words.remove('progressive')
+        # Check the bet
         number, bet = self.check_bet(' '.join(words))
         if number:
             if number in self.numbers:
                 num = int(number)
+                # single bet
                 bets = [('single bet on {}'.format(num), [number], bet)]
                 text = 'split bet on {}-{}'
                 # up split
@@ -273,9 +356,11 @@ class Roulette(game.Game):
                 if total_bet > self.scores[self.human.name]:
                     self.human.tell('You do not have enough bucks for the total bet.')
                 else:
+                    # Maket the bets.
                     self.bets.extend(bets)
                     self.scores[self.human.name] -= total_bet
             else:
+                # Warning for an invalid number.
                 self.human.tell('That number is not in the current layout.')
         return True
 
@@ -286,10 +371,14 @@ class Roulette(game.Game):
         Parameters:
         arguments: The number to bet on and the bet. (str)
         """
+        # Check the bet.
         numbers, bet = self.check_bet(arguments)
+        # Check for two numbers.
         if numbers and self.check_two_numbers(numbers, 'corner'):
+            # Check for a valid corner.
             low, high = sorted([int(x) for x in numbers.split('-')])
             if high - low == 4 and low % 3:
+                # Make the bet.
                 self.scores[self.human.name] -= bet
                 targets = [str(number) for number in (low, low + 1, high - 1, high)]
                 self.bets.append(('corner bet on {}'.format(numbers), targets, bet))
