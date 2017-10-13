@@ -5,8 +5,7 @@
 == Short Term To Do List ==
 
 Roulette
-	called bets
-	progressive max bets
+	comments
 	gipfing
 Ninety-Nine
 A round of one per penultimate category, two for solitaire.
