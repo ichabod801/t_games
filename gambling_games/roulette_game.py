@@ -37,7 +37,8 @@ its edge). There are inside bets on individual numbers or groups of numbers
 based on a layout of the numbers in three columns. There are outside bets 
 based on the features of the number, including high/low, even/odd and red/
 black (each number has a color, with the zeroes being green). There are also 
-called bets that are groups of other bets.
+called bets that are groups of other bets. Once all of your bets are placed,
+use the spin command to spin the wheel to detrmine the winning number.
 
 The bets are listed below. The number in brackets is the number of numbers 
 that must be specified for the bet. Bets with a capital F in the brackets may
@@ -46,18 +47,26 @@ on the American layout (see options).
 
 INSIDE BETS:
 Basket/First Four: A bet on the first two rows of numbers (0, 1, 2, 3). [0F]
-Black/Noir: Bet on the black numbers. [0]
 Column: Bet on a column of 12 numbers. The column can be specified with 1/2/3,
     P/M/D (Premiere, Moyenne, Derniere) or F/S/T (First, Second, Third). [1]
 Corner: Bet on four numbers in a square. Specify the highest and lowest
     numbers in the square. [2]
+Double Street/Six Line: Bet on six numbers that form two rows. Specify the
+    first number of the first row and the last number of the second row. [2]
+Dozen: Bet on the first, second, or third dozen. Use 1/2/3, P/M/D, or F/S/T
+    to specify the dozen (seel Column bet). [1]
 
 OUTSIDE BETS:
+Black/Noir: Bet on the black numbers. [0]
+Even: Bet on the even numbers. [0]
+High/19-36: Bet on the high numbers (over 18). [0]
 
 CALLED BETS:
 Complete: Make every inside bet that contains the specified number. May be
     done as 'complete progressive,' which multiplies each bet by the number
     of numbers in the bet. [1]
+Final/Finals/Finale: Bet on all non-zero numbers ending with the specified
+    digit. [1]
 
 OTHER COMMANDS:
 Bets: Show a numbered list of the current bets.
@@ -92,6 +101,11 @@ class Roulette(game.Game):
     do_column: Bet on a column. (bool)
     do_complete: Make all inside bets on a given number. (bool)
     do_corner: Make a bet on a square of numbers. (bool)
+    do_double: Make a bet on two consecutive rows of numbers. (bool)
+    do_dozen: Bet on a consecutive dozen. (bool)
+    do_even: Bet on the the even numbers. (bool)
+    do_final: Bet on numbers ending with a specified digit. (bool)
+    do_high: Bet on the the high half of the range. (bool)
     do_spin: Spin the wheel. (bool)
     do_straight: Make a bet on a single number. (bool)
 
@@ -102,9 +116,10 @@ class Roulette(game.Game):
     """
 
     aliases = {'1-18': 'low', '19-36': 'high', 'double-street': 'double', 'douzaine': 'dozen', 
-        'first': 'basket', 'impair': 'odd', 'le': 'third', 'manque': 'low', 'noir': 'black', 
-        'orphelins': 'orphans', 'pair': 'even', 'passe': 'high', 'rouge': 'red', 'single': 'straight', 
-        'six': 'double', 'six-line': 'double', 'tiers': 'third', 'voisins': 'neighbors'}
+        'finale': 'final', 'finals': 'final' 'first': 'basket', 'impair': 'odd', 'le': 'third', 
+        'manque': 'low', 'noir': 'black', 'orphelins': 'orphans', 'pair': 'even', 'passe': 'high', 
+        'rouge': 'red', 'single': 'straight', 'six': 'double', 'six-line': 'double', 'tiers': 'third', 
+        'voisins': 'neighbors'}
     # The order of the wheel in the American layout.
     american = ['0', '28', '9', '26', '30', '11', '7', '20', '32', '17', '5', '22', '34', '15', '3', '24', 
         '36', '13', '1', '00', '27', '10', '25', '29', '12', '8', '19', '31', '18', '6', '21', '33', '16', 
@@ -394,13 +409,18 @@ class Roulette(game.Game):
         Parameters:
         arguments: The range to bet on and the bet. (str)
         """
+        # Handle extra words and aliases.
         words = arguments.lower().split()
         if words[0] in ('street', 'line'):
             arguments = ' '.join(words[1:])
+        # Check the bet.
         numbers, bet = self.check_bet(arguments)
+        # Check for two numbers.
         if numbers and self.check_two_numbers(numbers, 'double street'):
+            # Check for valid double street.
             low, high = sorted([int(x) for x in numbers.split('-')])
             if high - low == 5 and not high % 3:
+                # Make the bet.
                 self.scores[self.human.name] -= bet
                 targets = [str(number) for number in range(low, high + 1)]
                 self.bets.append(('double street bet on {}'.format(numbers), targets, bet))
@@ -411,21 +431,25 @@ class Roulette(game.Game):
         Bet on a consecutive dozen. (bool)
 
         Parameters:
-        arguments: The column and the bet. (str)
+        arguments: The dozen and the bet. (str)
         """
-        column, bet = self.check_bet(arguments)
-        if column:
+        # Check the bet.
+        dozen, bet = self.check_bet(arguments)
+        if dozen:
+            # Get the numbers in the dozen.
             targets = []
-            if column.lower() in ('1', 'p', 'f'):
+            if dozen.lower() in ('1', 'p', 'f'):
                 targets = [str(number) for number in range(1, 13)]
-            elif column.lower in ('2', 'm', 's'):
+            elif dozen.lower in ('2', 'm', 's'):
                 targets = [str(number) for number in range(12, 25)]
-            elif column.lower in ('3', 'd', 't'):
+            elif dozen.lower in ('3', 'd', 't'):
                 targets = [str(number) for number in range(24, 37)]
             if targets:
+                # Make the bet.
                 self.scores[self.human.name] -= bet
-                self.bets.append(('dozen bet on {}'.format(column), targets, bet))
+                self.bets.append(('dozen bet on {}'.format(dozen), targets, bet))
             else:
+                # Warn the user if the dozen is invalid.
                 self.human.tell('That is not a valid dozen. Please use 1/2/3, P/M/D, or F/S/T.')
         return True
 
@@ -436,27 +460,35 @@ class Roulette(game.Game):
         Parameters:
         arguments: The amount to bet. (str)
         """
+        # Check the bet.
         numbers, bet = self.check_bet('even {}'.format(arguments))
         if numbers:
+            # Make the bet.
             self.scores[self.human.name] -= bet
             self.bets.append(('even bet', [str(number) for number in range(2, 37, 2)], bet))
         return True
 
-    def do_finals(self, arguments):
+    def do_final(self, arguments):
         """
         Bet on numbers ending in a particular digit. (bool)
 
         Parameters:
         arguments: The final number and the amount to bet. (str)
         """
+        # Check the bet.
         number, bet = self.check_bet(arguments)
         if number:
+            # Check the digit.
             if number in '1234567890':
+                # Get the numbers to bet on.
                 numbers = [n for n in self.numbers if n.endswith(number) and n not in '00']
+                # Check the full bet.
                 full_bet = bet * len(numbers)
                 if full_bet > self.scores[self.human.name]:
+                    # Warn if user can't afford the full bet.
                     self.human.tell('You do not have enough bucks for the full bet.')
                 else:
+                    # Make the bets.
                     for number in numbers:
                         self.bets.append(('single bet on {}'.format(number), [number], bet))
                     self.scores[self.human.name] -= self.bet
@@ -471,8 +503,10 @@ class Roulette(game.Game):
         Parameters:
         arguments: The amount to bet. (str)
         """
+        # Check the bet.
         numbers, bet = self.check_bet('high {}'.format(arguments))
         if numbers:
+            # Make the bet.
             self.scores[self.human.name] -= bet
             self.bets.append(('high bet', [str(number) for number in range(19, 37)], bet))
         return True
