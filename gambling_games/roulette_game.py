@@ -552,6 +552,7 @@ class Roulette(game.Game):
         """
         # Check/play the gipf game.
         game, losses = self.gipf_check(arguments, ('connect four',)) # slot machine when done.
+        print(game, losses)
         if game == 'connect four':
             if not losses:
                 # Get a a corner bet
@@ -563,12 +564,12 @@ class Roulette(game.Game):
                         self.human.tell('Please enter two numbers separated by a dash')
                     if low > 0 and high - low == 4:
                         targets = [str(n) for n in (low, low + 1, high - 1, high)]
-                        # Make on of the four win.
+                        # Make one of the four win.
                         self.forced_spin = targets[:]
                         # Set the bet to 1:1
                         targets = targets * 4 + targets[:2]
-                        self.bets.append('Corner bet on {}-{}.'.format(low, high), targets, 1)
-                        self.scores[self.human.name] -= 4
+                        self.bets.append(('Corner bet on {}-{}.'.format(low, high), targets, 1))
+                        self.scores[self.human.name] -= 1
                         break
                     else:
                         self.human.tell('That is not a valid corner bet.')

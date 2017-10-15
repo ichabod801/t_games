@@ -74,3 +74,14 @@ Roulette,1,0,0,121,6,4
 Roulette,0,1,0,93,3,4
 Connect Four,0,1,1,0,58,0
 Roulette,1,0,0,105,15,12
+Connect Four,1,0,0,0,30,0
+Connect Four,0,1,0,0,18,0
+Roulette,1,0,0,105,3,12
+Connect Four,0,1,0,0,30,0
+Roulette,1,0,0,105,3,12
+Connect Four,0,1,0,0,31,0
+Roulette,1,0,0,105,3,12
+Connect Four,0,1,0,0,48,0
+Roulette,0,1,0,95,3,12
+Connect Four,0,1,0,0,26,0
+Roulette,1,0,0,156,4,12

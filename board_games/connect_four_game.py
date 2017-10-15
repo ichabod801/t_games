@@ -285,7 +285,7 @@ class ConnectFour(game.Game):
         if win != 'game on':
             if win == 'draw':
                 self.win_loss_draw[2] = 1
-            if win == human_piece:
+            elif win == human_piece:
                 self.win_loss_draw[0] = 1
             else:
                 self.win_loss_draw[1] = 1
