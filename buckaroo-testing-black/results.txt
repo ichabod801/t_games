@@ -72,3 +72,5 @@ Roulette,1,0,0,282,3,4
 Roulette,0,1,0,95,4,4
 Roulette,1,0,0,121,6,4
 Roulette,0,1,0,93,3,4
+Connect Four,0,1,1,0,58,0
+Roulette,1,0,0,105,15,12

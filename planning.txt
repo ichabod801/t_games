@@ -5,8 +5,7 @@
 == Short Term To Do List ==
 
 Roulette
-	comments
-	gipfing
+	gipfing (and connect four)
 Ninety-Nine
 A round of one per penultimate category, two for solitaire.
 Rinse and repeat
@@ -206,6 +205,7 @@ battleships              Gesundheit
 canfield                 I'm sorry, I don't speak Flemish.
 freecell                 There are no valid moves for the gipf of spades.
 pig                      Say what?
+Roulette                 That bet is not available on this layout.
 solitaire dice           I don't understand.
 wumpus                   You're hunting a wumpus, not a gipf.
 

@@ -163,7 +163,7 @@ class Roulette(game.Game):
     """
 
     aliases = {'1-18': 'low', '19-36': 'high', 'double-street': 'double', 'douzaine': 'dozen', 
-        'finale': 'final', 'finals': 'final' 'first': 'basket', 'impair': 'odd', 'jeu': 'zero', 
+        'finale': 'final', 'finals': 'final', 'first': 'basket', 'impair': 'odd', 'jeu': 'zero', 
         'le': 'third', 'manque': 'low', 'noir': 'black', 'orphelins': 'orphans', 'pair': 'even', 
         'passe': 'high', 'rouge': 'red', 'single': 'straight', 'six': 'double', 'six-line': 'double', 
         'square': 'corner', 'tiers': 'third', 'voisins': 'neighbors'}
@@ -543,6 +543,38 @@ class Roulette(game.Game):
                 self.human.tell('That is not a valid final digit.')
         return True
 
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        # Check/play the gipf game.
+        game, losses = self.gipf_check(arguments, ('connect four',)) # slot machine when done.
+        if game == 'connect four':
+            if not losses:
+                # Get a a corner bet
+                while True:
+                    corner = self.human.ask('Pick a square on the layout (low-high): ')
+                    try:
+                        low, high = sorted([int(word) for word in corner.split('-')])
+                    except ValueError:
+                        self.human.tell('Please enter two numbers separated by a dash')
+                    if low > 0 and high - low == 4:
+                        targets = [str(n) for n in (low, low + 1, high - 1, high)]
+                        # Make on of the four win.
+                        self.forced_spin = targets[:]
+                        # Set the bet to 1:1
+                        targets = targets * 4 + targets[:2]
+                        self.bets.append('Corner bet on {}-{}.'.format(low, high), targets, 1)
+                        self.scores[self.human.name] -= 4
+                        break
+                    else:
+                        self.human.tell('That is not a valid corner bet.')
+        else:
+            self.human.tell("That bet is not available on this layout.")
+
     def do_high(self, arguments):
         """
         Bet on the the high half of the range. (bool)
@@ -816,7 +848,11 @@ class Roulette(game.Game):
         self.human.tell('Clickety clackity...')
         time.sleep(1)
         # Get the winning number.
-        winner = random.choice(self.numbers)
+        if self.forced_spin:
+            winner = random.choice(self.forced_spin)
+            self.forced_spin = []
+        else:
+            winner = random.choice(self.numbers)
         self.human.tell('The winning number is {}.'.format(winner))
         # Pay any winning bets.
         self.pay_out(winner)
@@ -1143,6 +1179,7 @@ class Roulette(game.Game):
         """Set up the game. (None)"""
         self.scores = {self.human.name: self.stake}
         self.bets = []
+        self.forced_spin = []
 
 
 if __name__ == '__main__':
