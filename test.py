@@ -20,5 +20,5 @@ def test(held_inputs = []):
     menu.menu()
 
 if __name__ == '__main__':
-    #test()
-    test(['roulette / none'])
+    test()
+    #test(['roulette / none'])

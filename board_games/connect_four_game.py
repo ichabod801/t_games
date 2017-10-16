@@ -276,6 +276,21 @@ class ConnectFour(game.Game):
         """Post-game clean up. (None)"""
         self.human.tell(self)
 
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        # Check/play the gipf game.
+        game, losses = self.gipf_check(arguments, ('roulette',)) # slot machine when done.
+        print(game, losses)
+        if game == 'roulette':
+            if not losses:
+                self.bot_random = True
+        return True
+
     def game_over(self):
         """Check for the end of the game. (bool)"""
         win = self.board.check_win()
@@ -370,22 +385,28 @@ class ConnectFour(game.Game):
                         break
                 self.symbols.append(symbol)
         
-    def player_turn(self, player):
+    def player_turn(self, now_player):
         """
         Play one turn for the given player. (None)
 
         Parameters:
-        player: The player to play a turn for. (Player)
+        now_player: The player to play a turn for. (Player)
         """
         # show the board
-        player.tell(self)
+        now_player.tell(self)
         # get the move
         open_columns = [move[0] + 1 for move in self.board.get_moves()]
-        prompt = 'Which column would you like to play in? '
-        column_index = player.ask_int(prompt, valid = open_columns)
+        if self.bot_random and isinstance(now_player, player.Bot):
+            self.human.tell(now_player.name, 'random')
+            column_index = random.choice(open_columns)
+            self.bot_random = False
+        else:
+            self.human.tell(now_player.name, 'ask_int')
+            prompt = 'Which column would you like to play in? '
+            column_index = now_player.ask_int(prompt, valid = open_columns)
         if isinstance(column_index, str):
             return self.handle_cmd(column_index)
-        self.board.make_move((column_index - 1, self.symbols[self.players.index(player)]))
+        self.board.make_move((column_index - 1, self.symbols[self.players.index(now_player)]))
 
     def set_up(self):
         """
@@ -401,6 +422,7 @@ class ConnectFour(game.Game):
         self.board.pieces = self.symbols
         # reset the bot
         self.bot.set_up()
+        self.bot_random = False
 
 class C4BotAlphaBeta(player.AlphaBetaBot):
     """

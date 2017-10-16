@@ -14,9 +14,6 @@ Rinse and repeat
 
 Program the games planned for text_games round 2.
 	Try for every category gets one before any gets two.
-	Gipf planning [done]
-	Gipf implmentation
-	How to write a game documentation.
 Clean Up
     documentation (style guide)
     output (one blank line)
