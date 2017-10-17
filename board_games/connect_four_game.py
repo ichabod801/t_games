@@ -284,11 +284,13 @@ class ConnectFour(game.Game):
         arguments: The name of the game to gipf to. (str)
         """
         # Check/play the gipf game.
-        game, losses = self.gipf_check(arguments, ('roulette',)) # slot machine when done.
-        print(game, losses)
+        game, losses = self.gipf_check(arguments, ('roulette',)) # +halma when done.
+        #print(game, losses)
         if game == 'roulette':
             if not losses:
                 self.bot_random = True
+        else:
+            self.human.tell("Yeah, just go two blocks up and take a right. You can't miss it.")
         return True
 
     def game_over(self):
@@ -397,11 +399,9 @@ class ConnectFour(game.Game):
         # get the move
         open_columns = [move[0] + 1 for move in self.board.get_moves()]
         if self.bot_random and isinstance(now_player, player.Bot):
-            self.human.tell(now_player.name, 'random')
             column_index = random.choice(open_columns)
             self.bot_random = False
         else:
-            self.human.tell(now_player.name, 'ask_int')
             prompt = 'Which column would you like to play in? '
             column_index = now_player.ask_int(prompt, valid = open_columns)
         if isinstance(column_index, str):

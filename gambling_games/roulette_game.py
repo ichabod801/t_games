@@ -551,8 +551,7 @@ class Roulette(game.Game):
         arguments: The name of the game to gipf to. (str)
         """
         # Check/play the gipf game.
-        game, losses = self.gipf_check(arguments, ('connect four',)) # slot machine when done.
-        print(game, losses)
+        game, losses = self.gipf_check(arguments, ('connect four',)) # +slot machine when done.
         if game == 'connect four':
             if not losses:
                 # Get a a corner bet

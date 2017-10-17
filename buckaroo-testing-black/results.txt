@@ -93,3 +93,17 @@ Connect Four,0,1,0,0,19,8
 Connect Four,0,1,0,0,7,0
 Roulette,1,0,0,101,19,4
 Connect Four,0,1,0,0,21,10
+Roulette,1,0,0,101,18,4
+Connect Four,0,1,0,0,17,8
+Roulette,1,0,0,101,19,4
+Connect Four,0,1,0,0,16,8
+Roulette,1,0,0,101,19,4
+Connect Four,0,1,0,0,16,8
+Roulette,1,0,0,101,18,4
+Connect Four,0,1,0,0,18,8
+Roulette,1,0,0,101,27,4
+Connect Four,1,0,0,0,14,8
+Roulette,1,0,0,101,18,4
+Connect Four,0,1,0,0,22,8
+Roulette,1,0,0,101,18,4
+Connect Four,1,0,0,0,14,8

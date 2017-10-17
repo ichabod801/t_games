@@ -4,8 +4,6 @@
 
 == Short Term To Do List ==
 
-Roulette
-	gipfing (and connect four)
 Ninety-Nine
 A round of one per penultimate category, two for solitaire.
 Rinse and repeat
@@ -200,6 +198,7 @@ zip                   -> yacht
 
 battleships              Gesundheit
 canfield                 I'm sorry, I don't speak Flemish.
+connect four             Yeah, just go two blocks up and take a right. You can't miss it.
 freecell                 There are no valid moves for the gipf of spades.
 pig                      Say what?
 Roulette                 That bet is not available on this layout.
@@ -210,7 +209,6 @@ Does not compute.
 ValueError: gipf
 Look, I only speak two languages: English and Bad English.
 I'm sorry, I didn't catch that.
-Yeah, just go two blocks up and take a right. You can't miss it.
 Tamsk.
 Girls in pillow fights? Come on, this is a family game.
 No hablo Ingles.
