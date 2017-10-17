@@ -46,7 +46,7 @@ dice/liar: dudo, liar's dice
 dice/other: solitaire dice*, mate
 gambling/dice: craps, mexico
 gambling/cards: blackjack*, baccarat
-gambling/other: roulette, slot machines
+gambling/other: roulette*, slot machines
 other/adventure: hunt the wumpus!, adventure
 other/simulation: hamurabi*, my space traders (with bot traders), global thermonuclear war
 other/word: hangman, ghost (small word list?)
@@ -55,7 +55,7 @@ other/other: RPS(LS)*, number guessing game
 An asterisk means the game has been coded. An exclamation point means the game has been coded and is in the gipf graph.
 
 games planned: 61
-games coded:   12
+games coded:   13
 games gipfed:   4
 
 Note that bsd games has 24 of what I would call games. I need to at least beat that before releasing.
