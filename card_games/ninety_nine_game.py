@@ -13,6 +13,8 @@ Bot99: A bot for Ninety-Nine. (player.Bot)
 """
 
 
+import random
+
 import tgames.cards as cards
 import tgames.game as game
 import tgames.player as player
@@ -64,6 +66,7 @@ class NinetyNine(game.Game):
     set_up
     """
 
+    aka = ['99']
     aliases = {'p': 'pass'}
     credits = CREDITS
     name = 'Ninety-Nine'
@@ -73,7 +76,7 @@ class NinetyNine(game.Game):
         """Deal a new hand of cards. (None)"""
         for hand in self.hands.values():
             hand.discard()
-        deck.shuffle()
+        self.deck.shuffle()
         for card in range(3):
             for hand in self.hands.values():
                 hand.draw()
@@ -114,7 +117,7 @@ class NinetyNine(game.Game):
             if not self.scores[player.name]:
                 self.scores[player.name] = min(self.scores.values()) - 1
         self.players = [player for player in self.players if self.scores[player.name] > 0]
-        if in_game == 1:
+        if len(self.players) == 1:
             human_score = self.scores[self.human.name]
             for score in self.scores.values():
                 if score < human_score:
@@ -128,7 +131,7 @@ class NinetyNine(game.Game):
     def handle_options(self):
         """Handle the game options(None)"""
         # Set default options.
-        self.card_values = {rank: (rank_index,) for rank_index, rank in cards.Card.ranks}
+        self.card_values = {rank: (rank_index,) for rank_index, rank in enumerate(cards.Card.ranks)}
         self.card_values['A'] = (1, 11)
         self.card_values['4'] = (0,)
         self.card_values['9'] = (99,) # go to 99
@@ -138,6 +141,7 @@ class NinetyNine(game.Game):
         self.card_values['K'] = (0,)
         self.reverse_rank = '4'
         self.skip_rank = '3'
+        self.players = [self.human, Bot99(), Bot99(), Bot99()]
 
     def player_turn(self, player):
         """
@@ -147,6 +151,8 @@ class NinetyNine(game.Game):
         player: The player whose turn it is. (Player)
         """
         hand = self.hands[player.name]
+        player.tell('The total to you is {}.'.format(self.total))
+        player.tell('Your hand is: {}'.format(hand))
         move = player.ask('What is your move? ')
         card, space, new_total = move.partition(' ')
         card = card.upper()
@@ -157,9 +163,9 @@ class NinetyNine(game.Game):
                 player.tell('Invalid total provided.')
             else:
                 values = self.card_values[card[0]]
-                if new_total - total in values or (new_total == 99 and 99 in values): 
+                if new_total - self.total in values or (new_total == 99 and 99 in values): 
                     hand.discard(card)
-                    self.human.tell('{} plays the {}.'.format(player.name, card))
+                    self.human.tell('{} played the {}.'.format(player.name, card))
                     self.total = new_total
                     if card[0] == self.reverse_rank:
                         self.players.reverse()
@@ -179,11 +185,12 @@ class NinetyNine(game.Game):
 
     def set_up(self):
         """Set up the game. (None)"""
+        random.shuffle(self.players)
         # Hand out tokens.
         self.scores = {player.name: 3 for player in self.players}
         # Set up deck and hands.
         self.deck = cards.Deck()
-        self.hands = {player.name: cards.Hand() for player in self.players}
+        self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
         # Deal three cards to each player.
         self.deal()
         # Set the tracking variables
@@ -196,6 +203,7 @@ class Bot99(player.Bot):
 
     Overridden Methods:
     ask
+    tell
     """
 
     def ask(self, prompt):
@@ -208,7 +216,7 @@ class Bot99(player.Bot):
         hand = self.game.hands[self.name]
         total = self.game.total
         possibles = []
-        for card in hand:
+        for card in hand.cards:
             for value in self.game.card_values[card.rank]:
                 if total + value < 100:
                     possibles.append((total + value, card))
@@ -216,6 +224,15 @@ class Bot99(player.Bot):
                     possibles.append((99, card))
         if possibles:
             possibles.sort()
-            return str(possibles[0][1])
+            return '{1} {0}'.format(*possibles[0])
         else:
             return 'pass'
+
+    def tell(self, text):
+        """
+        Give information to the player. (None)
+
+        Parameters:
+        text: The inforamtion to give to the player. (str)
+        """
+        pass
