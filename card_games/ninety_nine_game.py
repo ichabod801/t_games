@@ -14,6 +14,7 @@ Bot99: A bot for Ninety-Nine. (player.Bot)
 
 
 import random
+import re
 
 import tgames.cards as cards
 import tgames.game as game
@@ -26,11 +27,13 @@ Game Programming: Craig "Ichabod" O'Brien
 """
 
 RULES = """
-Each turn you play a card, adding it's value to the running total. If you 
-can't play a card without taking the total over 99, you must pass, and lose
-one of your three tokens. At that point the hands are redealt and the total
-is reset to zero. If you lose all of your tokens, you are out of the game.
-The last player with tokens wins.
+Each turn you play a card, adding it's value to the running total. You must 
+correctly state the new total when you play a card. For example, if the total 
+to you is 81, and you wanted to play the five of diamonds, you would enter 
+'5d 86' If you can't play a card without taking the total over 99, you must 
+pass, and lose one of your three tokens. At that point the hands are redealt 
+and the total is reset to zero. If you lose all of your tokens, you are out 
+of the game. The last player with tokens wins.
 
 Cards are face value with face cards being 10, with the following exceptions:
     A: 1 or 11
@@ -74,6 +77,7 @@ class NinetyNine(game.Game):
     aliases = {'p': 'pass'}
     credits = CREDITS
     name = 'Ninety-Nine'
+    nn_re = re.compile('([1-9atjqk][cdhs]).*?(-?\d\d?)', re.I)
     rules = RULES
 
     def clean_up(self):
@@ -183,14 +187,12 @@ class NinetyNine(game.Game):
         player.tell('The total to you is {}.'.format(self.total))
         player.tell('Your hand is: {}'.format(hand))
         move = player.ask('What is your move? ')
-        card, space, new_total = move.partition(' ')
-        card = card.upper()
-        if card in hand.cards:
-            try:
-                new_total = int(new_total)
-            except:
-                player.tell('Invalid total provided.')
-            else:
+        parsed = self.nn_re.search(move)
+        if parsed:
+            card, new_total = parsed.groups()
+            card = card.upper()
+            new_total = int(new_total)
+            if card in hand.cards:
                 values = self.card_values[card[0]]
                 valid_add = (new_total < 100) and (new_total - self.total in values)
                 if valid_add or (new_total == 99 and 99 in values): 
@@ -209,7 +211,9 @@ class NinetyNine(game.Game):
                     hand.draw()
                     return False
                 else:
-                    player.tell('Incorrect or invalid value provided.')
+                    player.tell('Incorrect or invalid total provided.')
+            else:
+                player.tell('You do not have that card.')
         else:
             return self.handle_cmd(move)
         return True
