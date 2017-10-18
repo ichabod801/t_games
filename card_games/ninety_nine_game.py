@@ -40,6 +40,8 @@ Cards are face value with face cards being 10, with the following exceptions:
 
 In addition, a 4 reverses the order of play and a 3 skips the next player's 
 turn.
+
+The tokens command will show you how many tokens each player has left.
 """
 
 
@@ -57,9 +59,11 @@ class NinetyNine(game.Game):
 
     Methods:
     deal: Deal a new hand of cards. (None)
-    do_pass: Handle passing the turn. (bool)
+    do_pass: Pass the turn, lose a token. (bool)
+    do_tokens: Show how many tokens are left. (bool)
 
     Overridden Methods:
+    clean_up
     do_quit
     handle_options
     player_turn
@@ -72,6 +76,11 @@ class NinetyNine(game.Game):
     name = 'Ninety-Nine'
     rules = RULES
 
+    def clean_up(self):
+        """Clean up the game. (None)"""
+        self.players.extend(self.out_of_the_game)
+        self.out_of_the_game = []
+
     def deal(self):
         """Deal a new hand of cards. (None)"""
         for hand in self.hands.values():
@@ -83,7 +92,7 @@ class NinetyNine(game.Game):
 
     def do_pass(self, arguments):
         """
-        Handle passing the turn. (bool)
+        Pass the turn and lose a token. (bool)
 
         Parameters:
         arguments: The ignored arguments to the command. (None)
@@ -92,8 +101,29 @@ class NinetyNine(game.Game):
         self.scores[player.name] -= 1
         message = '{} loses a token. They now have {} tokens.'
         self.human.tell(message.format(player.name, self.scores[player.name]))
+        if not self.scores[player.name]:
+            for name, value in self.scores.items():
+                if value < 1:
+                    self.scores[name] = value - 1
+            next_player = self.players[(self.player_index + 1) % len(self.players)]
+            self.players.remove(player)
+            self.out_of_the_game.append(player)
+            self.player_index = self.players.index(next_player) - 1
+            self.human.tell('{} is out of the game.'.format(player.name))
         self.deal()
         self.total = 0
+
+    def do_tokens(self, arguments):
+        """
+        Show how many tokens are left. (bool)
+
+        Parameters:
+        arguments: The ignored arguments to the command. (None)
+        """
+        self.human.tell()
+        for player in self.players:
+            self.human.tell('{} has {} tokens left.'.format(player.name, self.scores[player.name]))
+        return True
 
     def do_quit(self, arguments):
         """
@@ -113,10 +143,6 @@ class NinetyNine(game.Game):
 
     def game_over(self):
         """Check for the game being over. (bool)"""
-        for player in self.players:
-            if not self.scores[player.name]:
-                self.scores[player.name] = min(self.scores.values()) - 1
-        self.players = [player for player in self.players if self.scores[player.name] > 0]
         if len(self.players) == 1:
             human_score = self.scores[self.human.name]
             for score in self.scores.values():
@@ -141,7 +167,9 @@ class NinetyNine(game.Game):
         self.card_values['K'] = (0,)
         self.reverse_rank = '4'
         self.skip_rank = '3'
-        self.players = [self.human, Bot99(), Bot99(), Bot99()]
+        self.players = [self.human]
+        for bot in range(3):
+            self.players.append(Bot99([player.name for player in self.players]))
 
     def player_turn(self, player):
         """
@@ -150,6 +178,7 @@ class NinetyNine(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
+        self.human.tell()
         hand = self.hands[player.name]
         player.tell('The total to you is {}.'.format(self.total))
         player.tell('Your hand is: {}'.format(hand))
@@ -163,10 +192,12 @@ class NinetyNine(game.Game):
                 player.tell('Invalid total provided.')
             else:
                 values = self.card_values[card[0]]
-                if new_total - self.total in values or (new_total == 99 and 99 in values): 
+                valid_add = (new_total < 100) and (new_total - self.total in values)
+                if valid_add or (new_total == 99 and 99 in values): 
                     hand.discard(card)
-                    self.human.tell('{} played the {}.'.format(player.name, card))
                     self.total = new_total
+                    message = '{} played the {}, the total is {}.'
+                    self.human.tell(message.format(player.name, card, self.total))
                     if card[0] == self.reverse_rank:
                         self.players.reverse()
                         self.player_index = self.players.index(player)
@@ -178,7 +209,7 @@ class NinetyNine(game.Game):
                     hand.draw()
                     return False
                 else:
-                    player.tell('Incorrect value provided.')
+                    player.tell('Incorrect or invalid value provided.')
         else:
             return self.handle_cmd(move)
         return True
@@ -186,6 +217,7 @@ class NinetyNine(game.Game):
     def set_up(self):
         """Set up the game. (None)"""
         random.shuffle(self.players)
+        self.out_of_the_game = []
         # Hand out tokens.
         self.scores = {player.name: 3 for player in self.players}
         # Set up deck and hands.
@@ -224,7 +256,7 @@ class Bot99(player.Bot):
                     possibles.append((99, card))
         if possibles:
             possibles.sort()
-            return '{1} {0}'.format(*possibles[0])
+            return '{1} {0}'.format(*possibles[-1])
         else:
             return 'pass'
 

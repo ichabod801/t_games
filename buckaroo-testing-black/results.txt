@@ -108,3 +108,7 @@ Connect Four,0,1,0,0,22,8
 Roulette,1,0,0,101,18,4
 Connect Four,1,0,0,0,14,8
 Ninety-Nine,0,1,0,3,1,4
+Ninety-Nine,0,3,0,-3,99,2
+Ninety-Nine,3,0,0,1,128,0
+Ninety-Nine,3,0,0,1,117,0
+Ninety-Nine,1,2,0,-2,50,0
