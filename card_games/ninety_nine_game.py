@@ -115,10 +115,10 @@ class NinetyNine(game.Game):
         for hand in self.hands.values():
             hand.discard()
         self.deck.shuffle()
-        # Deal three cards to each player.
+        # Deal three cards to each player still in the game.
         for card in range(3):
-            for hand in self.hands.values():
-                hand.draw()
+            for player in self.players:
+                self.hands[player.name].draw()
 
     def do_gipf(self, arguments):
         """
@@ -157,10 +157,10 @@ class NinetyNine(game.Game):
                     if value < 1:
                         self.scores[name] = value - 1
                 # Remove the player without messing up player tracking.
-                # !! discard their hand
                 next_player = self.players[(self.player_index + 1) % len(self.players)]
                 self.players.remove(player)
                 self.out_of_the_game.append(player)
+                self.hands[player.name].discard()
                 self.player_index = self.players.index(next_player) - 1
                 self.human.tell('{} is out of the game.'.format(player.name))
             # Reset the game.
