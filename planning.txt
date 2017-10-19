@@ -5,6 +5,13 @@
 == Short Term To Do List ==
 
 Ninety-Nine
+	options
+	comment check
+	better bot
+	gipfing (to and from blackjack)
+Prep for long haul
+	make cards.py more user friendly.
+	consider argparse for options. Or DIY.
 A round of one per penultimate category, two for solitaire.
 Rinse and repeat
 
@@ -66,7 +73,7 @@ board: 2
 card: 1
 card/solitaire: 4 (which has about twice the terminal categories of any other penultimate category)
 dice: 2
-gambling: 1
+gambling: 2
 other: 2
 
 == Gipf Planning ==
@@ -87,7 +94,7 @@ beleaguered castle    -> shamrocks
 bisley                -> blackjack
 bisley                -> martha
 blackjack             -> bacarat
-blackjack             -> ninety-nine
+blackjack             -> ninety-nine          (the dealer can't draw (their turn is skipped))
 canfield              -> baker's game         (make one build by suit)
 canfield              -> blackjack            (build a jack on any thing)
 chess                 -> mancala              (take a row and move it one square left or right)
@@ -143,7 +150,7 @@ mate                  -> dudo
 mate                  -> siegecraft
 mexico                -> adventure
 mexico                -> craps
-ninety-nine           -> blackjack
+ninety-nine           -> blackjack            (pass without losing a token)
 ninety-nine           -> golf ii
 number guessing       -> snip snap snorem
 number guessing       -> slot machine
