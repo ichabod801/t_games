@@ -5,7 +5,6 @@
 == Short Term To Do List ==
 
 Ninety-Nine
-	comment check
 	better bot
 	gipfing (to and from blackjack)
 Prep for long haul
@@ -13,6 +12,7 @@ Prep for long haul
 	consider argparse for options. Or DIY.
 	you/your translator for bots
 	isolate bots?
+	set_up/clean_up for bots
 A round of one per penultimate category, two for solitaire.
 Rinse and repeat
 

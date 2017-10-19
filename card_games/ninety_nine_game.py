@@ -207,8 +207,9 @@ class NinetyNine(game.Game):
         self.skip_rank = '3'
         self.jokers = 0
         self.players = [self.human]
-        for bot in range(3):
+        for bot in range(2):
             self.players.append(Bot99([player.name for player in self.players]))
+        self.players.append(Bot99Medium([player.name for player in self.players]))
         # Handle no options.
         if self.raw_options.lower() == 'none':
             pass
@@ -454,9 +455,62 @@ class Bot99(player.Bot):
     """
     A bot for Ninety-Nine. (player.Bot)
 
+    Methods:
+    get_possibles: Get the possible plays. (list of tuple)
+
     Overridden Methods:
     ask
     tell
+    """
+
+    def ask(self, prompt):
+        """
+        Get information from the player. (str)
+
+        Parameters:
+        prompt: The information to get from the player. (str)
+        """
+        # Figure out which cards can be played and how.
+        possibles = self.get_possibles()
+        if possibles:
+            # Play the highest possible total, if you can play.
+            possibles.sort()
+            return '{1} {0}'.format(*possibles[-1])
+        else:
+            # Pass if you can't play.
+            return 'pass'
+
+    def get_possibles(self):
+        """Get the possible plays. (list of tuple)"""
+        # Get the game state.
+        total = self.game.total
+        hand = self.game.hands[self.name]
+        # Figure out which cards can be played and how.
+        possibles = []
+        for card in hand.cards:
+            for value in self.game.card_values[card.rank]:
+                if total + value < 100:
+                    possibles.append((total + value, card))
+                elif value == 99:
+                    possibles.append((99, card))
+        return possibles
+
+    def tell(self, text):
+        """
+        Give information to the player. (None)
+
+        Parameters:
+        text: The inforamtion to give to the player. (str)
+        """
+        pass
+
+
+class Bot99Medium(Bot99):
+    """
+    A better bot for Ninety-Nine. (player.Bot)
+
+    Overridden Methods:
+    ask
     """
 
     def ask(self, prompt):
@@ -470,26 +524,22 @@ class Bot99(player.Bot):
         hand = self.game.hands[self.name]
         total = self.game.total
         # Figure out which cards can be played and how.
-        possibles = []
-        for card in hand.cards:
-            for value in self.game.card_values[card.rank]:
-                if total + value < 100:
-                    possibles.append((total + value, card))
-                elif value == 99:
-                    possibles.append((99, card))
-        if possibles:
-            # Play the highest possible total, if you can play.
-            possibles.sort()
-            return '{1} {0}'.format(*possibles[-1])
+        possibles = self.get_possibles()
+        # Get the cards to keep
+        keepers, players = [], []
+        for value, card in possibles:
+            card_value = self.game.card_values[card.rank]
+            if min(card_value) < 1 or max(card_value) == 99:
+                keepers.append((value, card))
+            else:
+                players.append((value, card))
+        # Play the highest possible total, if you can play.
+        if players:
+            players.sort()
+            return '{1} {0}'.format(*players[-1])
+        elif keepers:
+            keepers.sort()
+            return '{1} {0}'.format(*keepers[-1])
         else:
             # Pass if you can't play.
             return 'pass'
-
-    def tell(self, text):
-        """
-        Give information to the player. (None)
-
-        Parameters:
-        text: The inforamtion to give to the player. (str)
-        """
-        pass
