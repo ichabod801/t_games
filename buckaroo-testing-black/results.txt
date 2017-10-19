@@ -118,3 +118,9 @@ Ninety-Nine,0,3,0,3,3,5
 Ninety-Nine,1,2,0,-2,92,1
 Ninety-Nine,3,0,0,1,104,1
 Ninety-Nine,3,0,0,1,158,3
+Blackjack,1,0,0,116,23,4
+Ninety-Nine,3,0,0,3,154,11
+Blackjack,1,0,0,108,20,4
+Ninety-Nine,3,0,0,1,95,11
+Blackjack,0,1,0,92,21,4
+Ninety-Nine,3,0,0,2,103,11

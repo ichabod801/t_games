@@ -133,6 +133,7 @@ class NinetyNine(game.Game):
                 self.free_pass = True
         else:
             self.human.tell('Girls in pillow fights? Come on, this is a family game.')
+        return True
 
     def do_pass(self, arguments):
         """
@@ -156,6 +157,7 @@ class NinetyNine(game.Game):
                     if value < 1:
                         self.scores[name] = value - 1
                 # Remove the player without messing up player tracking.
+                # !! discard their hand
                 next_player = self.players[(self.player_index + 1) % len(self.players)]
                 self.players.remove(player)
                 self.out_of_the_game.append(player)
