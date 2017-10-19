@@ -116,3 +116,4 @@ Ninety-Nine,2,1,0,-1,97,0
 Ninety-Nine,2,1,0,-1,168,1
 Ninety-Nine,0,3,0,3,3,5
 Ninety-Nine,1,2,0,-2,92,1
+Ninety-Nine,3,0,0,1,104,1

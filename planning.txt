@@ -5,7 +5,6 @@
 == Short Term To Do List ==
 
 Ninety-Nine
-	options
 	comment check
 	better bot
 	gipfing (to and from blackjack)
@@ -13,6 +12,7 @@ Prep for long haul
 	make cards.py more user friendly.
 	consider argparse for options. Or DIY.
 	you/your translator for bots
+	isolate bots?
 A round of one per penultimate category, two for solitaire.
 Rinse and repeat
 
@@ -23,6 +23,7 @@ Program the games planned for text_games round 2.
 Clean Up
     documentation (style guide)
     output (one blank line)
+    double bangs
 Play testing
 Release
 108 Games

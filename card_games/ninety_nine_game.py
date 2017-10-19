@@ -19,6 +19,7 @@ import re
 import tgames.cards as cards
 import tgames.game as game
 import tgames.player as player
+import tgames.utility as utility
 
 
 CREDITS = """
@@ -88,6 +89,7 @@ class NinetyNine(game.Game):
     Overridden Methods:
     clean_up
     do_quit
+    game_over
     handle_options
     player_turn
     set_up
@@ -108,9 +110,11 @@ class NinetyNine(game.Game):
 
     def deal(self):
         """Deal a new hand of cards. (None)"""
+        # Shuffle all the cards back into the deck.
         for hand in self.hands.values():
             hand.discard()
         self.deck.shuffle()
+        # Deal three cards to each player.
         for card in range(3):
             for hand in self.hands.values():
                 hand.draw()
@@ -122,19 +126,24 @@ class NinetyNine(game.Game):
         Parameters:
         arguments: The ignored arguments to the command. (None)
         """
+        # Remove a token.
         player = self.players[self.player_index]
         self.scores[player.name] -= 1
         message = '{} loses a token. They now have {} tokens.'
         self.human.tell(message.format(player.name, self.scores[player.name]))
+        # Check for removing the player from the game..
         if not self.scores[player.name]:
+            # Adjust scoring (last player out should score higher).
             for name, value in self.scores.items():
                 if value < 1:
                     self.scores[name] = value - 1
+            # Remove the player without messing up player tracking.
             next_player = self.players[(self.player_index + 1) % len(self.players)]
             self.players.remove(player)
             self.out_of_the_game.append(player)
             self.player_index = self.players.index(next_player) - 1
             self.human.tell('{} is out of the game.'.format(player.name))
+        # Reset the game.
         self.deal()
         self.total = 0
 
@@ -168,7 +177,9 @@ class NinetyNine(game.Game):
 
     def game_over(self):
         """Check for the game being over. (bool)"""
+        # Play until only one player is in the game.
         if len(self.players) == 1:
+            # Set the win-loss-draw.
             human_score = self.scores[self.human.name]
             for score in self.scores.values():
                 if score < human_score:
@@ -181,6 +192,7 @@ class NinetyNine(game.Game):
 
     def handle_options(self):
         """Handle the game options(None)"""
+        # !! needs options for the number of bots.
         # Set default options.
         self.card_values = {rank: (rank_index,) for rank_index, rank in enumerate(cards.Card.ranks)}
         self.card_values['A'] = (1, 11)
@@ -197,8 +209,10 @@ class NinetyNine(game.Game):
         self.players = [self.human]
         for bot in range(3):
             self.players.append(Bot99([player.name for player in self.players]))
+        # Handle no options.
         if self.raw_options.lower() == 'none':
             pass
+        # Handle passed options.
         elif self.raw_options:
             self.flags |= 1
             self.raw_options = self.raw_options.lower()
@@ -259,6 +273,7 @@ class NinetyNine(game.Game):
                         self.human.tell('Invalid option to Ninety-Nine: {}=.'.format(option))
                 else:
                     self.human.tell('Invalid option to Ninety-Nine: {}.'.format(option))
+        # Handle asked options.
         else:
             self.flags |= 1
             if self.human.ask('Would you like to change the options? ') in utility.YES:
@@ -371,39 +386,52 @@ class NinetyNine(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        self.human.tell()
+        # Get the relevant hand of cards.
         hand = self.hands[player.name]
+        # Display the current game status.
+        self.human.tell()
         player.tell('The total to you is {}.'.format(self.total))
         player.tell('Your hand is: {}'.format(hand))
+        # Get the players move.
         move = player.ask('What is your move? ')
         parsed = self.nn_re.search(move)
         if parsed:
+            # Handle standard moves
             card, new_total = parsed.groups()
             card = card.upper()
             new_total = int(new_total)
+            # Check for a valid card.
             if card in hand.cards:
+                # Check for a valid total
                 values = self.card_values[card[0]]
                 valid_add = (new_total < 100) and (new_total - self.total in values)
                 if valid_add or (new_total == 99 and 99 in values): 
+                    # Play the card.
                     hand.discard(card)
                     self.total = new_total
                     message = '{} played the {}, the total is {}.'
                     self.human.tell(message.format(player.name, card, self.total))
+                    # Handle reversing the order of play.
                     if card[0] == self.reverse_rank:
                         self.players.reverse()
                         self.player_index = self.players.index(player)
                         self.human.tell('The order of play is reversed.')
+                    # Handle skipping a player's turn.
                     if card[0] == self.skip_rank:
                         self.player_index = (self.player_index + 1) % len(self.players)
                         name = self.players[self.player_index].name
                         self.human.tell("{}'s turn is skipped.".format(name))
+                    # Draw a card.
                     hand.draw()
                     return False
                 else:
+                    # Warn on bad total.
                     player.tell('Incorrect or invalid total provided.')
             else:
+                # Warn if the player doesn't have the card.
                 player.tell('You do not have that card.')
         else:
+            # Handle other commands.
             return self.handle_cmd(move)
         return True
 
@@ -438,8 +466,10 @@ class Bot99(player.Bot):
         Parameters:
         prompt: The information to get from the player. (str)
         """
+        # Get the game state.
         hand = self.game.hands[self.name]
         total = self.game.total
+        # Figure out which cards can be played and how.
         possibles = []
         for card in hand.cards:
             for value in self.game.card_values[card.rank]:
@@ -448,9 +478,11 @@ class Bot99(player.Bot):
                 elif value == 99:
                     possibles.append((99, card))
         if possibles:
+            # Play the highest possible total, if you can play.
             possibles.sort()
             return '{1} {0}'.format(*possibles[-1])
         else:
+            # Pass if you can't play.
             return 'pass'
 
     def tell(self, text):

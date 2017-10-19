@@ -41,9 +41,9 @@ free cells.
 
 Technically, cards may only be moved one at a time. However, the computer
 keeps track of how large a stack you could move one card at a time, and allows
-you to move a stack that size as one move. For example, if you two free cells,
-you can move a stack of three cards one at a time: one each to a free cell,
-then third to the destination card, then the two cards back off the free
+you to move a stack that size as one move. For example, if you have two free 
+cells, you can move a stack of three cards one at a time: one each to a free 
+cell, then third to the destination card, then the two cards back off the free
 cells. So if you have two empty free cells, the game lets you move three cards
 as one.
 
