@@ -10,6 +10,7 @@ RULES: The rules of Ninety-Nine.
 Classes:
 NinetyNine: A game of Ninety-Nine. (game.Game)
 Bot99: A bot for Ninety-Nine. (player.Bot)
+Bot99Medium: A better bot for Ninety-Nine. (Bot99)
 """
 
 
@@ -119,6 +120,20 @@ class NinetyNine(game.Game):
             for hand in self.hands.values():
                 hand.draw()
 
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        game, losses = self.gipf_check(arguments, ('blackjack',)) # golf ii when it's done.
+        if game == 'blackjack':
+            if not losses:
+                self.free_pass = True
+        else:
+            self.human.tell('Girls in pillow fights? Come on, this is a family game.')
+
     def do_pass(self, arguments):
         """
         Pass the turn and lose a token. (bool)
@@ -126,26 +141,29 @@ class NinetyNine(game.Game):
         Parameters:
         arguments: The ignored arguments to the command. (None)
         """
-        # Remove a token.
-        player = self.players[self.player_index]
-        self.scores[player.name] -= 1
-        message = '{} loses a token. They now have {} tokens.'
-        self.human.tell(message.format(player.name, self.scores[player.name]))
-        # Check for removing the player from the game..
-        if not self.scores[player.name]:
-            # Adjust scoring (last player out should score higher).
-            for name, value in self.scores.items():
-                if value < 1:
-                    self.scores[name] = value - 1
-            # Remove the player without messing up player tracking.
-            next_player = self.players[(self.player_index + 1) % len(self.players)]
-            self.players.remove(player)
-            self.out_of_the_game.append(player)
-            self.player_index = self.players.index(next_player) - 1
-            self.human.tell('{} is out of the game.'.format(player.name))
-        # Reset the game.
-        self.deal()
-        self.total = 0
+        if self.free_pass:
+            self.free_pass = False
+        else:
+            # Remove a token.
+            player = self.players[self.player_index]
+            self.scores[player.name] -= 1
+            message = '{} loses a token. They now have {} tokens.'
+            self.human.tell(message.format(player.name, self.scores[player.name]))
+            # Check for removing the player from the game..
+            if not self.scores[player.name]:
+                # Adjust scoring (last player out should score higher).
+                for name, value in self.scores.items():
+                    if value < 1:
+                        self.scores[name] = value - 1
+                # Remove the player without messing up player tracking.
+                next_player = self.players[(self.player_index + 1) % len(self.players)]
+                self.players.remove(player)
+                self.out_of_the_game.append(player)
+                self.player_index = self.players.index(next_player) - 1
+                self.human.tell('{} is out of the game.'.format(player.name))
+            # Reset the game.
+            self.deal()
+            self.total = 0
 
     def do_tokens(self, arguments):
         """
@@ -207,6 +225,7 @@ class NinetyNine(game.Game):
         self.skip_rank = '3'
         self.jokers = 0
         self.players = [self.human]
+        self.free_pass = False
         for bot in range(2):
             self.players.append(Bot99([player.name for player in self.players]))
         self.players.append(Bot99Medium([player.name for player in self.players]))
@@ -507,7 +526,7 @@ class Bot99(player.Bot):
 
 class Bot99Medium(Bot99):
     """
-    A better bot for Ninety-Nine. (player.Bot)
+    A better bot for Ninety-Nine. (Bot99)
 
     Overridden Methods:
     ask

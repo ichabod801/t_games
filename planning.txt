@@ -209,6 +209,7 @@ battleships              Gesundheit
 canfield                 I'm sorry, I don't speak Flemish.
 connect four             Yeah, just go two blocks up and take a right. You can't miss it.
 freecell                 There are no valid moves for the gipf of spades.
+ninety-nine              Girls in pillow fights? Come on, this is a family game.
 pig                      Say what?
 Roulette                 That bet is not available on this layout.
 solitaire dice           I don't understand.
