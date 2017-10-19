@@ -12,6 +12,7 @@ Ninety-Nine
 Prep for long haul
 	make cards.py more user friendly.
 	consider argparse for options. Or DIY.
+	you/your translator for bots
 A round of one per penultimate category, two for solitaire.
 Rinse and repeat
 

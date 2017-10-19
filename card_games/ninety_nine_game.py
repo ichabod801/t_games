@@ -97,7 +97,7 @@ class NinetyNine(game.Game):
     aliases = {'p': 'pass'}
     credits = CREDITS
     name = 'Ninety-Nine'
-    nn_re = re.compile('([1-9atjqk][cdhs]).*?(-?\d\d?)', re.I)
+    nn_re = re.compile('([1-9atjqkx][cdhs]).*?(-?\d\d?)', re.I)
     num_options = 7
     rules = RULES
 
@@ -202,37 +202,37 @@ class NinetyNine(game.Game):
         elif self.raw_options:
             self.flags |= 1
             self.raw_options = self.raw_options.lower()
-            self.raw_options = self.raw_options.replace('joker-rules', 'zero=9 reverse=k face=4 jokers=2')
-            self.raw_options = self.raw_options.replace('chicago', 'zero=9 skip=9 99=K minus=10')
+            self.raw_options = self.raw_options.replace('joker-rules', 'zero=9 reverse=k face=4/T jokers=2')
+            self.raw_options = self.raw_options.replace('chicago', 'zero=9 skip=9 99=K minus=T')
             for word in self.raw_options.lower().split():
                 if '=' in word:
-                    option, value = word.split('=', maxsplit = 1)
+                    option, value = word.split('=', 1)
                     if option == '99':
                         for rank in value.split('/'):
                             if rank.upper() in cards.Card.ranks:
                                 self.card_values[rank.upper()] = (99,)
                             else:
                                 self.human.tell('Invalid value for 99 option: {!r}'.format(rank))
-                    if option == 'face':
+                    elif option == 'face':
                         for rank in value.split('/'):
                             if rank.upper() in cards.Card.ranks:
                                 card_value = min(cards.Card.ranks.index(rank.upper()), 10)
                                 self.card_values[rank.upper()] = (card_value,)
                             else:
                                 self.human.tell('Invalid value for minus option: {!r}'.format(rank))
-                    if option == 'jokers':
+                    elif option == 'jokers':
                         if value.isdigit():
                             self.jokers = int(value)
                         else:
                             self.human.tell('Invalid value for jokers option: {!r}.'.format(value))
-                    if option == 'minus':
+                    elif option == 'minus':
                         for rank in value.split('/'):
                             if rank.upper() in cards.Card.ranks:
                                 card_value = min(cards.Card.ranks.index(rank.upper()), 10)
                                 self.card_values[rank.upper()] = (-card_value,)
                             else:
                                 self.human.tell('Invalid value for minus option: {!r}'.format(rank))
-                    if option == 'plus-minus':
+                    elif option == 'plus-minus':
                         for rank in value.split('/'):
                             if rank.upper() in cards.Card.ranks:
                                 card_value = min(cards.Card.ranks.index(rank.upper()), 10)
