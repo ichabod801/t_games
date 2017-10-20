@@ -124,3 +124,9 @@ Blackjack,1,0,0,108,20,4
 Ninety-Nine,3,0,0,1,95,11
 Blackjack,0,1,0,92,21,4
 Ninety-Nine,3,0,0,2,103,11
+Ninety-Nine,1,2,0,-2,113,2
+Blackjack,0,1,0,60,18,12
+Ninety-Nine,0,3,0,-3,157,0
+Blackjack,0,1,0,92,9,12
+Ninety-Nine,3,0,0,1,183,2
+Blackjack,0,0,1,100,18,12

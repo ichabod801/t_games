@@ -268,6 +268,21 @@ class Blackjack(game.Game):
             else:
                 hand.status = 'standing'
 
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        game, losses = self.gipf_check(arguments, ('ninety-nine',)) # bacarat when it's done.
+        if game == 'ninety-nine':
+            if not losses:
+                self.dealer_skip = True
+        else:
+            self.human.tell('ValueError: gipf')
+        return True
+
     def do_hit(self, arguments):
         """
         Deal a card to the player. (bool)
@@ -689,6 +704,7 @@ class Blackjack(game.Game):
         self.bets = [0] * self.hand_count
         self.insurance = 0
         self.phase = 'bet'
+        self.dealer_skip = False
         # Set up the deck.
         self.deck = cards.Deck(decks = self.decks, shuffle_size = 17 * self.decks)
         self.deck.shuffle()
@@ -716,14 +732,17 @@ class Blackjack(game.Game):
         # Reveal the dealer's hole card.
         self.dealer_hand.cards[0].up = True
         self.human.tell('The dealer has {}.'.format(self.dealer_hand))
-        # Draw up to 17.
-        while self.dealer_hand.score() < 17:
-            self.dealer_hand.draw()
-            self.human.tell('The dealer draws the {}.'.format(self.dealer_hand.cards[-1].name))
-        # Hit on soft 17.
-        if self.hit_soft_17 and self.dealer_hand.score() == 17 and self.dealer_hand.soft:
-            self.dealer_hand.draw()
-            self.human.tell('The dealer draws the {}.'.format(self.dealer_hand.cards[-1].name))
+        if self.dealer_skip:
+            self.dealer_skip = False
+        else:
+            # Draw up to 17.
+            while self.dealer_hand.score() < 17:
+                self.dealer_hand.draw()
+                self.human.tell('The dealer draws the {}.'.format(self.dealer_hand.cards[-1].name))
+            # Hit on soft 17.
+            if self.hit_soft_17 and self.dealer_hand.score() == 17 and self.dealer_hand.soft:
+                self.dealer_hand.draw()
+                self.human.tell('The dealer draws the {}.'.format(self.dealer_hand.cards[-1].name))
         # Get and show the dealer's final hand value.
         dealer_value = self.dealer_hand.score()
         self.human.tell("The dealer's hand is {}.".format(dealer_value))
