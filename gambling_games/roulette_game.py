@@ -1096,6 +1096,7 @@ class Roulette(game.Game):
         else:
             if self.human.ask('Would you like to change the options? ') in utility.YES:
                 self.flags |= 1
+                # !! doesn't ask max bet
                 query = 'What stake do you want to start with? '
                 self.stake = self.human.ask_int(query, low = 1, default = 100, cmd = False)
                 query = 'French or American (return for American)? '

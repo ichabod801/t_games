@@ -43,3 +43,6 @@ FreeCell,1,0,0,810,59,0
 Pig,1,2,0,57,22,1
 Solitaire Dice,1,0,0,690,44,0
 Battleships,1,0,0,5,43,0
+FreeCell,1,0,0,814,53,0
+FreeCell,1,0,0,787,80,0
+FreeCell,1,0,0,813,54,0

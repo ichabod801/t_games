@@ -4,9 +4,6 @@
 
 == Short Term To Do List ==
 
-Ninety-Nine
-	better bot
-	gipfing (to and from blackjack)
 Prep for long haul
 	make cards.py more user friendly.
 	consider argparse for options. Or DIY.
@@ -47,7 +44,7 @@ card/trick: hearts, spades
 card/matching: cribbage, snip snap snorem
 card/shedding: crazy eights*, spit
 card/rummy: rummy, tonk
-card/accumulating: war, ninety-nine
+card/accumulating: war, ninety-nine*
 card/other: golf ii, peace and love
 dice/jeopardy: pig!, zip
 dice/category: yacht, poker dice
@@ -64,7 +61,7 @@ other/other: RPS(LS)*, number guessing game
 An asterisk means the game has been coded. An exclamation point means the game has been coded and is in the gipf graph.
 
 games planned: 61
-games coded:   13
+games coded:   15
 games gipfed:   4
 
 Note that bsd games has 24 of what I would call games. I need to at least beat that before releasing.
@@ -72,11 +69,11 @@ Note that bsd games has 24 of what I would call games. I need to at least beat t
 coded by penultimate category:
 
 board: 2
-card: 1
+card: 2
 card/solitaire: 4 (which has about twice the terminal categories of any other penultimate category)
 dice: 2
 gambling: 2
-other: 2
+other: 3
 
 == Gipf Planning ==
 
@@ -206,6 +203,7 @@ zip                   -> craps
 zip                   -> yacht
 
 battleships              Gesundheit
+blackjack                ValueError: gipf
 canfield                 I'm sorry, I don't speak Flemish.
 connect four             Yeah, just go two blocks up and take a right. You can't miss it.
 freecell                 There are no valid moves for the gipf of spades.
@@ -216,11 +214,9 @@ solitaire dice           I don't understand.
 wumpus                   You're hunting a wumpus, not a gipf.
 
 Does not compute.
-ValueError: gipf
 Look, I only speak two languages: English and Bad English.
 I'm sorry, I didn't catch that.
 Tamsk.
-Girls in pillow fights? Come on, this is a family game.
 No hablo Ingles.
 No thank you.
 I'm sorry, I quit gipfing for Lent.
@@ -254,3 +250,167 @@ unformed ideas: rubik's sudoku? (2d, 9x9 rubik's sytle puzzle). OS hacking. Wiza
 other solitaire games: Yukon, Poker, Baker's Dozen, Good Measure, Little Spider, Accordion [thespruce.com]
 	cruel, tripeaks [solitairecentral.com]
 	including all of the above would flesh out the 108 games. (double check that count and redo the list)
+
+== Option Handling ==
+
+I need a common way to handle game options. I'm writing the same code over and over again. Something like argparse, but it's not clear how to get into the argparse internals to handle asking questions. Player.ask_int and Player.ask_valid are a start, but I think I can do better with dedicated option handling. In addition, this would make it viable to have a consistent way to store options in the results.
+
+=== Options so Far ===
+
+These are the options in the first 15 games, in functional terms. All of these would have to be handled, at a minimum. Other forms may be needed as I expand the number of games.
+
+	* Assign a lower case specified string to an attribute. (5)
+	* Assign a specified integer to an attribute. (18)
+	* Assign a boolean to an attribute. (16)
+	* Assign a specified integer to a dictionary key. (3)
+	* Assign several other options at once. (2)
+	* Assign based on aliases of the option. (4)
+	* Assign a specified card rank to an attribute. (6)
+	* Assign an integer based on a boolean question. (3)
+	* Assign multiple specified card ranks to a list attribute. (5)
+	* Create an object based on an option name, with specified parameters, and add it to a list. (1)
+	* Assign a list to an attribute. (1)
+	* Assign a value from a dictionary to an attribute. (1)
+	* Assign a dictionary to an attribute. (1)
+
+Validation that is done:
+
+	* Check that a string is in a list of strings. (3)
+	* Check that a string is a key in a dictionary. (1)
+	* Check that an integer is in a particular range. (4) 
+	* Check that an integer is higher than a particular value. (1)
+	* Check than an integer is in a calculated range. (1)
+
+Other things of note:
+
+	* Deal numbers, which are done outside of option handling. (1)
+	* Knowing which options can be meaninfully entered more than once, and using that when asking. (1)
+	* Sometimes two option names relate to one question. (1) [could be solved by redoing option.]
+	* It would be nice for it to parse = and / so there are no spacing restrictions. (Maybe = and ,?)
+	* Default handling should be there are no options.
+	* There need to be warnings generated that can be passed to game.human.tell().
+
+=== First Draft ===
+
+There would be an option set, with the following attributes:
+
+	* options: A list of options.
+	* groups: A list of option groups.
+	* settings: A dictionary of attributes and values to set.
+
+It would process the option text (using the groups), and then apply the options in order, pulling from the processed option text. When asking, it would ask the groups, then ask if you wanted to set individual options after that (if there are any). Everything will be placed into settings. The option set will translate the settings to the game object attributes.
+
+What about post processing? Currently, some optons specify an integer. That integer is then used to add a certain number of objects to a list. How much of that should be the responsibility of the option set, and how much should be the responsibility of the programmer? I think the answer is that anything that is done in two games should be the responsibility of the option set, and anything that is done three times must be responsibility of the option set.
+
+If the option set processes the options into it's own settings, the options can just be a named tuple or a dictionary. However the option is set up, it would have these attributes:
+
+	* name: The name of the option
+	* value: The value to be assigned (on a boolean)
+	* type: The type of specified values.
+	* default: The default value to assign.
+	* target: The attribute to assign to, if different from the name.
+	* aliases: Other names of the attribute.
+	* action: The way to assign it (assign/append/key=/class/map/multipend).
+	* question: The question to ask.
+	* range: The range of valid values
+	* validator: A function that validates. (or use object that overrides __contains__?)
+
+get option setting
+if no option setting:
+	option setting = default
+elif option setting is True and value is not none:
+	option setting = value
+else:
+	if delim in option setting:
+		option setting = [type(sub-option) for sub-option in option setting.split(delim)]
+	else:
+		option setting = type(option setting)
+
+if range and option setting not in range:
+	next option
+if validator and not validator(option setting):
+	next option
+
+if action == assign:
+	target = option setting
+elif action == append:
+	if not target:
+		target = []
+	target.append(option setting)
+elif action == key=
+	key = action.split(=)[1]
+	target[key] = value
+elif action == class:
+	if not target:
+		target = []
+	target.append(value(option setting))
+elif action == map:
+	target = value[option setting]
+elif action == multipend:
+	for dummy in range(option setting):
+		if isinstance(value, type):
+			target.append(value())
+		else:
+			target.append(value) # works now, but not consistent and may may want class in future.
+
+I need to separate what the value is from what is done with the value. So class is a bad action, and multipend should just repeatedly append the value. But multipend doesn't work if the instance is already created. And how to we distinguish between classes with parameters and without parameters? And I don't think there is any issue with classes except for bots. And note that bots need to use the list of names.
+
+I have thought before about a common bot syntax. Currently we have 'easy' for adding 1 easy bot, 'easy=n' for adding n easy bots, and 'easy=x/y/z' for adding an easy bot with the paramteres x, y, and z. Of course, the last two are ambiguous. So maybe we should have a flag for bot, and use xn for multiple bots. No, easyxn doesn't parse well.
+
+Here: use *n. Process it in the beginning to copy the string. Have a bot action. It pulls from the bot_classes dictionary and creates a bot with the specified parameters (or no parameters). So you have easy, easy*n, easy=x/y/z, and easy=x/y/z*n. Then you don't need multipend. Have an attribute (max_bots) to the option set class that tells if this is a one bot game or a multibot game.
+
+=== Second Draft ===
+
+lowercase options
+replace option groups
+remove spaces around = and /
+replace foo*n with n foo's
+split into tuples
+replace aliases
+sort/join/save
+parse into a dictionary of option: list of values
+
+get option setting
+if no option setting:
+	option setting = default
+elif option setting is True and value is not none:
+	option setting = value
+else:
+	if delim in option setting:
+		try:
+			option setting = [type(sub-option) for sub-option in option setting.split(delim)]
+		except:
+			next option
+	else:
+		try:
+			option setting = type(option setting)
+		except:
+			next option
+
+for value in option setting:
+	if range and value not in range:
+		next option
+	if validator value validator(option setting):
+		next option
+
+if action == assign:
+	target = option setting
+elif action == append:
+	if not target:
+		target = []
+	target.append(option setting)
+elif action == key=
+	key = action.split(=)[1]
+	target[key] = value
+elif action == map:
+	target = value[option setting]
+elif action == bot:
+	bots.append((game_instance.bot_classes[target], option setting))
+
+names = [human_name]
+for bot, params in bots:
+	game_instance.players.append(bot(*parmas, taken_names = names))
+for option, value in self:
+	setattr(game_instance, )
+
+Only real question is default for multi-bot games. For a multibot game, I think we just need to provide a default bot list, which is used if bots is empty. Well, just do that for any game.
