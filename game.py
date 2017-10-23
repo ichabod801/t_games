@@ -23,6 +23,7 @@ import os
 import random
 import re
 
+import tgames.options as options
 from tgames.other_cmd import OtherCmd
 from tgames.player import Player
 import tgames.utility as utility
@@ -71,6 +72,7 @@ class Game(OtherCmd):
     handle_options: Handle game options and set the player list. (None)
     play: Play the game. (list of int)
     player_turn: Handle a player's turn or other player actions. (bool)
+    set_options: Define the options for the game. (bool)
     set_up: Handle any pre-game tasks. (None)
     tournament: Run a tournament of the game. (dict)
 
@@ -108,6 +110,8 @@ class Game(OtherCmd):
         for cls in reversed(self.__class__.__mro__):
             if hasattr(cls, 'aliases'):
                 self.aliases.update(cls.aliases)
+        self.option_set = options.OptionSet()
+        self.set_options()
         self.handle_options()
         if not hasattr(self, 'players'):
             self.players = [self.human]
@@ -292,7 +296,7 @@ class Game(OtherCmd):
 
     def handle_options(self):
         """Handle game options and set the player list. (None)"""
-        pass
+        self.option_set.handle_options(self.raw_options)
 
     def play(self):
         """
@@ -337,6 +341,10 @@ class Game(OtherCmd):
         player: The player whose turn it is. (Player)
         """
         move = player.ask('What is your move, {}? '.format(player.name))
+
+    def set_options(self):
+        """Define the options for the game. (None)"""
+        pass
 
     def set_up(self):
         """Handle any pre-game tasks. (None)"""
