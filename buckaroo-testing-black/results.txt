@@ -1,132 +1,132 @@
-Crazy Eights,0,2,0,81,231,2
-Crazy Eights,1,1,0,109,192,2
-Crazy Eights,1,1,0,66,198,0
-Crazy Eights,1,1,0,74,198,0
-Crazy Eights,0,4,0,0,193,0
-Crazy Eights,2,0,0,163,171,2
-Crazy Eights,0,2,0,0,114,0
-Crazy Eights,0,4,0,102,277,0
-Crazy Eights,1,1,0,72,76,0
-Crazy Eights,0,2,2,0,162,2
-Crazy Eights,0,3,1,0,142,0
-Crazy Eights,3,1,0,209,464,2
-Crazy Eights,4,0,0,312,212,0
-Crazy Eights,0,2,2,0,116,2
-Crazy Eights,3,1,0,231,248,1
-Crazy Eights,0,4,0,0,320,1
-Crazy Eights,2,2,0,182,205,0
-Crazy Eights,2,0,0,261,173,3
-Crazy Eights,0,2,0,90,226,1
-Crazy Eights,3,1,0,218,207,1
-Crazy Eights,0,1,3,0,22,1
-Crazy Eights,4,0,0,338,309,1
-Crazy Eights,3,1,0,252,183,1
-Crazy Eights,1,1,0,138,292,1
-Crazy Eights,0,4,0,0,6,7
-Crazy Eights,0,4,0,0,3,7
-Crazy Eights,2,2,0,139,90,1
-Crazy Eights,4,0,0,312,127,1
-Crazy Eights,0,3,1,0,145,1
-Crazy Eights,3,1,0,62,108,1
-Crazy Eights,0,3,1,0,115,1
-Crazy Eights,0,3,1,0,284,1
-FreeCell,0,1,0,801,5,6
-Pig,0,1,0,53,17,4
-Pig,0,1,0,21,5,6
-Solitaire Dice,0,1,0,0,1,4
-Pig,0,3,0,74,37,1
-Pig,3,0,0,101,32,1
-Pig,3,0,0,103,54,1
-Blackjack,1,0,0,112,2,4
-Blackjack,1,0,0,208,3,5
-Roulette,0,1,0,95,1,0
-Roulette,0,1,0,95,2,4
-Roulette,0,1,0,85,3,4
-Roulette,0,1,0,85,2,7
-Roulette,1,0,0,175,4,6
-Roulette,0,1,0,95,2,4
-Roulette,0,1,0,75,4,4
-Roulette,1,0,0,121,4,6
-Blackjack,0,0,1,100,15,4
-Roulette,0,1,0,86,1,4
-Roulette,0,1,0,96,2,4
-Roulette,0,1,0,82,2,5
-Roulette,1,0,0,118,2,5
-Roulette,0,1,0,82,3,5
-Roulette,1,0,0,102,4,5
-Roulette,0,0,1,100,1,5
-Roulette,0,1,0,80,3,5
-Roulette,0,1,0,55,5,5
-Roulette,0,1,0,20,3,5
-Roulette,0,1,0,72,5,5
-Roulette,0,1,0,75,2,5
-Roulette,0,1,0,92,2,5
-Roulette,0,1,0,88,2,5
-Roulette,0,1,0,88,2,5
-Roulette,0,1,0,96,3,5
-Roulette,0,1,0,56,1,7
-Roulette,0,1,0,94,26,7
-Roulette,0,1,0,79,4,5
-Roulette,1,0,0,158,2,4
-Roulette,1,0,0,282,3,4
-Roulette,0,1,0,95,4,4
-Roulette,1,0,0,121,6,4
-Roulette,0,1,0,93,3,4
-Connect Four,0,1,1,0,58,0
-Roulette,1,0,0,105,15,12
-Connect Four,1,0,0,0,30,0
-Connect Four,0,1,0,0,18,0
-Roulette,1,0,0,105,3,12
-Connect Four,0,1,0,0,30,0
-Roulette,1,0,0,105,3,12
-Connect Four,0,1,0,0,31,0
-Roulette,1,0,0,105,3,12
-Connect Four,0,1,0,0,48,0
-Roulette,0,1,0,95,3,12
-Connect Four,0,1,0,0,26,0
-Roulette,1,0,0,156,4,12
-Roulette,0,0,1,100,1,4
-Roulette,1,0,0,101,18,4
-Roulette,1,0,0,101,18,4
-Roulette,1,0,0,101,18,4
-Connect Four,0,1,0,0,19,8
-Connect Four,0,1,0,0,7,0
-Roulette,1,0,0,101,19,4
-Connect Four,0,1,0,0,21,10
-Roulette,1,0,0,101,18,4
-Connect Four,0,1,0,0,17,8
-Roulette,1,0,0,101,19,4
-Connect Four,0,1,0,0,16,8
-Roulette,1,0,0,101,19,4
-Connect Four,0,1,0,0,16,8
-Roulette,1,0,0,101,18,4
-Connect Four,0,1,0,0,18,8
-Roulette,1,0,0,101,27,4
-Connect Four,1,0,0,0,14,8
-Roulette,1,0,0,101,18,4
-Connect Four,0,1,0,0,22,8
-Roulette,1,0,0,101,18,4
-Connect Four,1,0,0,0,14,8
-Ninety-Nine,0,1,0,3,1,4
-Ninety-Nine,0,3,0,-3,99,2
-Ninety-Nine,3,0,0,1,128,0
-Ninety-Nine,3,0,0,1,117,0
-Ninety-Nine,1,2,0,-2,50,0
-Ninety-Nine,2,1,0,-1,97,0
-Ninety-Nine,2,1,0,-1,168,1
-Ninety-Nine,0,3,0,3,3,5
-Ninety-Nine,1,2,0,-2,92,1
-Ninety-Nine,3,0,0,1,104,1
-Ninety-Nine,3,0,0,1,158,3
-Blackjack,1,0,0,116,23,4
-Ninety-Nine,3,0,0,3,154,11
-Blackjack,1,0,0,108,20,4
-Ninety-Nine,3,0,0,1,95,11
-Blackjack,0,1,0,92,21,4
-Ninety-Nine,3,0,0,2,103,11
-Ninety-Nine,1,2,0,-2,113,2
-Blackjack,0,1,0,60,18,12
-Ninety-Nine,0,3,0,-3,157,0
-Blackjack,0,1,0,92,9,12
-Ninety-Nine,3,0,0,1,183,2
-Blackjack,0,0,1,100,18,12
+Crazy Eights,0,2,0,81,231,2,
+Crazy Eights,1,1,0,109,192,2,
+Crazy Eights,1,1,0,66,198,0,
+Crazy Eights,1,1,0,74,198,0,
+Crazy Eights,0,4,0,0,193,0,
+Crazy Eights,2,0,0,163,171,2,
+Crazy Eights,0,2,0,0,114,0,
+Crazy Eights,0,4,0,102,277,0,
+Crazy Eights,1,1,0,72,76,0,
+Crazy Eights,0,2,2,0,162,2,
+Crazy Eights,0,3,1,0,142,0,
+Crazy Eights,3,1,0,209,464,2,
+Crazy Eights,4,0,0,312,212,0,
+Crazy Eights,0,2,2,0,116,2,
+Crazy Eights,3,1,0,231,248,1,
+Crazy Eights,0,4,0,0,320,1,
+Crazy Eights,2,2,0,182,205,0,
+Crazy Eights,2,0,0,261,173,3,
+Crazy Eights,0,2,0,90,226,1,
+Crazy Eights,3,1,0,218,207,1,
+Crazy Eights,0,1,3,0,22,1,
+Crazy Eights,4,0,0,338,309,1,
+Crazy Eights,3,1,0,252,183,1,
+Crazy Eights,1,1,0,138,292,1,
+Crazy Eights,0,4,0,0,6,7,
+Crazy Eights,0,4,0,0,3,7,
+Crazy Eights,2,2,0,139,90,1,
+Crazy Eights,4,0,0,312,127,1,
+Crazy Eights,0,3,1,0,145,1,
+Crazy Eights,3,1,0,62,108,1,
+Crazy Eights,0,3,1,0,115,1,
+Crazy Eights,0,3,1,0,284,1,
+FreeCell,0,1,0,801,5,6,
+Pig,0,1,0,53,17,4,
+Pig,0,1,0,21,5,6,
+Solitaire Dice,0,1,0,0,1,4,
+Pig,0,3,0,74,37,1,
+Pig,3,0,0,101,32,1,
+Pig,3,0,0,103,54,1,
+Blackjack,1,0,0,112,2,4,
+Blackjack,1,0,0,208,3,5,
+Roulette,0,1,0,95,1,0,
+Roulette,0,1,0,95,2,4,
+Roulette,0,1,0,85,3,4,
+Roulette,0,1,0,85,2,7,
+Roulette,1,0,0,175,4,6,
+Roulette,0,1,0,95,2,4,
+Roulette,0,1,0,75,4,4,
+Roulette,1,0,0,121,4,6,
+Blackjack,0,0,1,100,15,4,
+Roulette,0,1,0,86,1,4,
+Roulette,0,1,0,96,2,4,
+Roulette,0,1,0,82,2,5,
+Roulette,1,0,0,118,2,5,
+Roulette,0,1,0,82,3,5,
+Roulette,1,0,0,102,4,5,
+Roulette,0,0,1,100,1,5,
+Roulette,0,1,0,80,3,5,
+Roulette,0,1,0,55,5,5,
+Roulette,0,1,0,20,3,5,
+Roulette,0,1,0,72,5,5,
+Roulette,0,1,0,75,2,5,
+Roulette,0,1,0,92,2,5,
+Roulette,0,1,0,88,2,5,
+Roulette,0,1,0,88,2,5,
+Roulette,0,1,0,96,3,5,
+Roulette,0,1,0,56,1,7,
+Roulette,0,1,0,94,26,7,
+Roulette,0,1,0,79,4,5,
+Roulette,1,0,0,158,2,4,
+Roulette,1,0,0,282,3,4,
+Roulette,0,1,0,95,4,4,
+Roulette,1,0,0,121,6,4,
+Roulette,0,1,0,93,3,4,
+Connect Four,0,1,1,0,58,0,
+Roulette,1,0,0,105,15,12,
+Connect Four,1,0,0,0,30,0,
+Connect Four,0,1,0,0,18,0,
+Roulette,1,0,0,105,3,12,
+Connect Four,0,1,0,0,30,0,
+Roulette,1,0,0,105,3,12,
+Connect Four,0,1,0,0,31,0,
+Roulette,1,0,0,105,3,12,
+Connect Four,0,1,0,0,48,0,
+Roulette,0,1,0,95,3,12,
+Connect Four,0,1,0,0,26,0,
+Roulette,1,0,0,156,4,12,
+Roulette,0,0,1,100,1,4,
+Roulette,1,0,0,101,18,4,
+Roulette,1,0,0,101,18,4,
+Roulette,1,0,0,101,18,4,
+Connect Four,0,1,0,0,19,8,
+Connect Four,0,1,0,0,7,0,
+Roulette,1,0,0,101,19,4,
+Connect Four,0,1,0,0,21,10,
+Roulette,1,0,0,101,18,4,
+Connect Four,0,1,0,0,17,8,
+Roulette,1,0,0,101,19,4,
+Connect Four,0,1,0,0,16,8,
+Roulette,1,0,0,101,19,4,
+Connect Four,0,1,0,0,16,8,
+Roulette,1,0,0,101,18,4,
+Connect Four,0,1,0,0,18,8,
+Roulette,1,0,0,101,27,4,
+Connect Four,1,0,0,0,14,8,
+Roulette,1,0,0,101,18,4,
+Connect Four,0,1,0,0,22,8,
+Roulette,1,0,0,101,18,4,
+Connect Four,1,0,0,0,14,8,
+Ninety-Nine,0,1,0,3,1,4,
+Ninety-Nine,0,3,0,-3,99,2,
+Ninety-Nine,3,0,0,1,128,0,
+Ninety-Nine,3,0,0,1,117,0,
+Ninety-Nine,1,2,0,-2,50,0,
+Ninety-Nine,2,1,0,-1,97,0,
+Ninety-Nine,2,1,0,-1,168,1,
+Ninety-Nine,0,3,0,3,3,5,
+Ninety-Nine,1,2,0,-2,92,1,
+Ninety-Nine,3,0,0,1,104,1,
+Ninety-Nine,3,0,0,1,158,3,
+Blackjack,1,0,0,116,23,4,
+Ninety-Nine,3,0,0,3,154,11,
+Blackjack,1,0,0,108,20,4,
+Ninety-Nine,3,0,0,1,95,11,
+Blackjack,0,1,0,92,21,4,
+Ninety-Nine,3,0,0,2,103,11,
+Ninety-Nine,1,2,0,-2,113,2,
+Blackjack,0,1,0,60,18,12,
+Ninety-Nine,0,3,0,-3,157,0,
+Blackjack,0,1,0,92,9,12,
+Ninety-Nine,3,0,0,1,183,2,
+Blackjack,0,0,1,100,18,12,

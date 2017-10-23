@@ -412,7 +412,7 @@ class Human(Player):
         with open(os.path.join(self.folder_name, 'results.txt')) as player_data:
             for line in player_data:
                 results = line.strip().split(',')
-                self.results.append(results[:1] + [int(x) for x in results[1:]])
+                self.results.append(results[:1] + [int(x) for x in results[1:-1]] + results[-1:])
 
     def load_shortcuts(self):
         """Load the player's interface shortcuts. (None)"""

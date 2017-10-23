@@ -329,7 +329,8 @@ class Game(OtherCmd):
         self.clean_up()
         self.gipfed = []
         # Report the results.
-        return self.win_loss_draw + [self.scores[self.human.name], self.turns, self.flags]
+        results = [self.scores[self.human.name], self.turns, self.flags, self.option_set.settings_text]
+        return self.win_loss_draw + results
 
     def player_turn(self, player):
         """

@@ -551,11 +551,16 @@ class Solitaire(game.Game):
         # initialize derived attributes
         self.deck = cards.TrackingDeck(self, *options['deck-specs'])
         deal_num = -1
+        deal_text_index = self.option_set.settings_text.index('deal-num')
+        if deal_text_index != -1:
+            self.option_set.settings_text = self.option_set.settings_text[:(deal_text_index - 1)]
         if self.raw_options.lower() != 'none':
             prompt = 'Enter the deal number, or return for a random deal: '
             deal_num = self.human.ask_int(prompt, low = 1, default = -1, cmd = False)
         if deal_num == -1:
             deal_num = None
+        else:
+            self.option_set.settings_text += ' deal-num={}'.format(deal_num)
         self.deck.shuffle(number = deal_num)
         self.tableau = [[] for ndx in range(options['num-tableau'])]
         self.foundations = [[] for ndx in range(options['num-foundations'])]
