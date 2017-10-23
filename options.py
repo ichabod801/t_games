@@ -4,7 +4,12 @@ options.py
 Option handling for tgames.
 
 Classes:
+AllRange: A range that contains everything. (object)
 OptionSet: A set of options for a particular game. (object)
+
+Functions:
+lower: Convert a string to lower case. (str)
+upper: Convert a string to upper case. (str)
 """
 
 
@@ -104,13 +109,13 @@ class OptionSet(object):
         for alias in aliases:
             self.aliases[alias] = name
         # Convert empty parapmeters.
-        if not target:
+        if target == '':   # instead of 'not target' b/c target could be empty dictionary.
             target = name
         if value is None:
             value = True
         # Create and add the dictionary for the definition.
-        definition = {'name': name, 'converter': converter, 'default': default, 'target': target,
-            'action': action, 'question': question, 'valid': valid, 'check': check, 
+        definition = {'name': name, 'converter': converter, 'default': default, 'value': value, 
+            'target': target, 'action': action, 'question': question, 'valid': valid, 'check': check, 
             'error_text': error_text}
         self.definitions.append(definition)
 
@@ -124,12 +129,15 @@ class OptionSet(object):
         for definition in self.definitions:
             new_settings = {}
             if not prelim_settings[definition['name']]:
-                self.take_action(definition, definition['default'])
+                if definition['default'] is None:
+                    continue
+                else:
+                    self.take_action(definition, definition['default'])
             else:
                 error = 'Invalid {} parameter: {!r}.'
                 valid = definition['valid']
                 check = definition['check']
-                for setting in self.settings[definition['name']]:
+                for setting in prelim_settings[definition['name']]:
                     if setting is None:
                         self.take_action(definition, definition['value'])
                     elif '/' in setting:
@@ -176,7 +184,7 @@ class OptionSet(object):
         raw_settings: The option settings provided by the user or interface. (str)
         """
         # Convert the raw text to parsable text.
-        settings_text = raw_settings.lower().strip()
+        settings_text = raw_settings.strip()
         # Apply the settings.
         if settings_text == 'none':
             pass
@@ -218,6 +226,8 @@ class OptionSet(object):
                     words.expand([word] * repeat)
                 except ValueError:
                     self.errors.append('Invalid repeat value: {!r}.'.format(word))
+            else:
+                words.append(word)
         # Create option/setting tuples.
         pairs = []
         for word in words:
@@ -225,11 +235,11 @@ class OptionSet(object):
                 try:
                     name, setting = word.split('=')
                     # Apply any known aliases.
-                    pairs.append((self.aliases.get(name, name), setting))
+                    pairs.append((self.aliases.get(name.lower(), name.lower()), setting))
                 except ValueError:
                     self.errors.append('Syntax error with equals: {!r}.'.format(word))
             else:
-                pairs.append((word, None))
+                pairs.append((word.lower(), None))
         # Create standardized text.
         pairs.sort()
         text_pairs = [('='.join(pair) if pair[1] is not None else pair[0]) for pair in pairs]
@@ -256,11 +266,9 @@ class OptionSet(object):
             if target not in self.settings:
                 self.settings[target] = []
             self.settings[target].append(setting)
-        elif action == 'key=':
-            if target not in self.settings:
-                self.settings[target] = {}
+        elif action.startswith('key='):
             word, key = action.split('=')
-            self.settings[target][key] = setting
+            target[key] = setting
         elif action == 'map':
             self.settings[target] = defintion['value'][setting]
         elif action == 'bot':
@@ -272,13 +280,35 @@ class OptionSet(object):
             else:
                 self.settings['bots'].append((bot_class, [setting]))
 
+
+def lower(text):
+    """Convert a string to lower case. (str)"""
+    return text.lower()
+
+def upper(text):
+    """Convert a string to upper case. (str)"""
+    return text.upper()
+
 if __name__ == '__main__':
     class Dummy(object):
         pass
     game = Dummy()
     options = OptionSet(game)
-    options.add_option(name = 'yes')
+    options.add_option(name = 'yes', default = None)
     options.add_option(name = 'no', value = False, default = True)
     options.add_option(name = 'five', value = 5)
     options.handle_settings('no five')
     print(options.settings_text)
+    print(game.__dict__)
+    game2 = Dummy()
+    options2 = OptionSet(game2)
+    options2.add_option(name = 'lower', converter = lower)
+    game2.numbers = {}
+    options2.add_option(name = 'number', default = 0, action = 'key=five', target = game2.numbers)
+    options2.add_option(name = 'yes')
+    options2.add_option(name = 'no', value = False, default = True)
+    options2.add_group('maybe', 'yes no')
+    options2.handle_settings('lower = IMHO five maybe number = 108')
+    print()
+    print(options2.settings_text)
+    print(game2.__dict__)

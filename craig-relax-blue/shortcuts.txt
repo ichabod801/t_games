@@ -1,0 +1,2 @@
+pig3	pig / x medium satan
+fc	freecell / none
