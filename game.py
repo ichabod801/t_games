@@ -100,17 +100,17 @@ class Game(OtherCmd):
         'V': (math.sqrt, 1), 'tan': (math.tan, 1)}
     rules = 'No rules have been specified for this game.'
 
-    def __init__(self, human, options, interface = None):
+    def __init__(self, human, raw_options, interface = None):
         """Set up the game. (None)"""
         self.human = human
         self.interface = interface
-        self.raw_options = options.strip()
+        self.raw_options = raw_options.strip()
         self.flags = 0
         self.aliases = {}
         for cls in reversed(self.__class__.__mro__):
             if hasattr(cls, 'aliases'):
                 self.aliases.update(cls.aliases)
-        self.option_set = options.OptionSet()
+        self.option_set = options.OptionSet(self)
         self.set_options()
         self.handle_options()
         if not hasattr(self, 'players'):
@@ -296,7 +296,7 @@ class Game(OtherCmd):
 
     def handle_options(self):
         """Handle game options and set the player list. (None)"""
-        self.option_set.handle_options(self.raw_options)
+        self.option_set.handle_settings(self.raw_options)
 
     def play(self):
         """
