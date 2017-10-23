@@ -140,26 +140,26 @@ class OptionSet(object):
                 for setting in prelim_settings[definition['name']]:
                     if setting is None:
                         self.take_action(definition, definition['value'])
-                    elif '/' in setting:
+                    elif '/' in setting or isinstance(definition['default'], (list, tuple)):
                         try:
                             setting = [definition['converter'](item) for item in setting.split('/')]
-                            self.take_action(definition, setting)
                         except ValueError:
                             self.errors.append(error.format(definition['name'], setting))
-                            continue
-                        if not all(item in valid and check(item) for item in setting):
-                            self.errors.append(error.format(definition['name'], setting))
-                            continue
+                        else:
+                            if not all(item in valid and check(item) for item in setting):
+                                self.errors.append(error.format(definition['name'], setting))
+                            else:
+                                self.take_action(definition, setting)
                     else:
                         try:
                             setting = definition['converter'](setting)
-                            self.take_action(definition, setting)
                         except ValueError:
                             self.errors.append(error.format(definition['name'], setting))
-                            continue
-                        if not (setting in valid and check(setting)):
-                            self.errors.append(error.format(definition['name'], setting))
-                            continue
+                        else:
+                            if not (setting in valid and check(setting)):
+                                self.errors.append(error.format(definition['name'], setting))
+                            else:
+                                self.take_action(definition, setting)
 
     def ask_settings(self):
         """Get the setttings by asking the user. (None)"""
@@ -270,7 +270,7 @@ class OptionSet(object):
             word, key = action.split('=')
             target[key] = setting
         elif action == 'map':
-            self.settings[target] = defintion['value'][setting]
+            self.settings[target] = definition['value'][setting]
         elif action == 'bot':
             bot_class = self.game.bot_classes[definition['target']]
             if setting is True: # That is, there were no parameters given
@@ -290,6 +290,7 @@ def upper(text):
     return text.upper()
 
 if __name__ == '__main__':
+    import tgames.player as player
     class Dummy(object):
         pass
     game = Dummy()
@@ -299,6 +300,7 @@ if __name__ == '__main__':
     options.add_option(name = 'five', value = 5)
     options.handle_settings('no five')
     print(options.settings_text)
+    print(options.errors)
     print(game.__dict__)
     game2 = Dummy()
     options2 = OptionSet(game2)
@@ -311,4 +313,44 @@ if __name__ == '__main__':
     options2.handle_settings('lower = IMHO five maybe number = 108')
     print()
     print(options2.settings_text)
+    print(options2.errors)
     print(game2.__dict__)
+    game3 = Dummy()
+    options3 = OptionSet(game3)
+    options3.add_option(name = 'yes', aliases = ['y', 'da'])
+    options3.add_option(name = 'rank', converter = upper, valid = 'XA23456789TJQK')
+    options3.add_option(name = 'multi', converter = upper, valid = 'XA23456789TJQK')
+    options3.add_option(name = 'many', value = [1, 2, 3], default = [4, 5, 6])
+    options3.handle_settings('da rank = 5 multi=j/a/ k many')
+    print()
+    print(options3.settings_text)
+    print(options3.errors)
+    print(game3.__dict__)
+    numbers = {'one': 1, 'two': 2, 'five': 5}
+    game4 = Dummy()
+    options4 = OptionSet(game4)
+    options4.add_option(name = 'number', action = 'map', value = numbers, default = 'one')
+    options4.add_option(name = 'source', value = numbers, default = {})
+    options4.add_option(name = 'text', valid = ['one', 'two', 'five'])
+    options4.add_option(name = 'key', valid = numbers.keys())
+    options4.handle_settings('number = five source text = two key = three')
+    print()
+    print(options4.settings_text)
+    print(options4.errors)
+    print(game4.__dict__)
+    game5 = Dummy()
+    options5 = OptionSet(game5)
+    options5.add_option(name = 'low', converter = int, valid = range(1, 19))
+    options5.add_option(name = 'high', converter = int, check = lambda x: x > 18)
+    options5.add_option(name = 'coordinate', converter = int, default = [0, 1])
+    options5.handle_settings('low=8 high=8 coordinate =8')
+    print()
+    print(options5.settings_text)
+    print(options5.errors)
+    print(game5.__dict__)
+    game6 = Dummy()
+    game6.human = player.Tester()
+    options6 = OptionSet(game6)
+    options6.add_option(name = 'number', default = 0, question = 'Please enter an odd integer < 100: ',
+        converter = int, valid = range(0, 100), check = lambda x: x % 2)
+    options6.handle_settings('')
