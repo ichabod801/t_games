@@ -116,49 +116,6 @@ class FreeCell(solitaire.Solitaire):
         else:
             self.human.tell('There are no valid moves for the gipf of spades.')
 
-    def handle_options(self):
-        """Process the game options."""
-        # Set the defaults.
-        self.options = {}
-        self.options['num-tableau'] = 8
-        self.options['num-cells'] = 4
-        # Check provided options.
-        self.raw_options = self.raw_options.strip().lower()
-        # Check for sticking with the defaults.
-        if self.raw_options == 'none':
-            pass
-        # Check for interface provided options.
-        elif self.raw_options:
-            self.flags |= 1
-            for word in self.raw_options.split():
-                if '=' in word:
-                    option, value = word.split('=', maxsplit = 1)
-                    # Number of free cells.
-                    if option == 'cells':
-                        if value.isdigit and int(value) in range(1, 11):
-                            self.options['num-cells'] = int(value)
-                        else:
-                            self.human.tell('Invalid cells option value: {}.'.format(value))
-                    # Number of tableau piles.
-                    elif option == 'piles':
-                        if value.isdigit and int(value) in range(4, 11):
-                            self.options['num-tableau'] = int(value)
-                        else:
-                            self.human.tell('Invalid piles option value: {}.'.format(value))
-        # Check for manual input of options.
-        else:
-            change = self.human.ask('Would you like to change the options? ')
-            if change.lower() in utility.YES:
-                self.flags |= 1
-                # Number of free cells.
-                prompt = 'How many free cells (1-10, return for 4)? '
-                cells = self.human.ask_int(prompt, low = 1, high = 10, default = 4, cmd = False)
-                self.options['num-cells'] = cells
-                # Number of tableau piles.
-                prompt = 'How many tableau piles (4-10, return for 8)? '
-                piles = self.human.ask_int(prompt, low = 4, high = 10, default = 8, cmd = False)
-                self.options['num-tableau'] = piles
-
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
         super(FreeCell, self).set_checkers()
@@ -169,6 +126,16 @@ class FreeCell(solitaire.Solitaire):
         self.sort_checkers = [solitaire.sort_ace, solitaire.sort_up]
         # Set the dealers
         self.dealers = [solitaire.deal_free]
+
+    def set_options(self):
+        """Set the game options. (None)"""
+        self.options = {}
+        self.option_set.add_option(name = 'cells', action = 'key=num-cells', converter = int, default = 4,
+            valid = range(1, 11), target = self.options, 
+            question = 'How many free cells (1-10, return for 4)? ')
+        self.option_set.add_option(name = 'piles', action = 'key=num-tableau', convert = int, default = 8,
+            valid = range(4, 11), target = self.options,
+            question = 'How many tableau piles (4-10, return for 8)? ')
 
 
 class BakersGame(FreeCell):
