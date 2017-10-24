@@ -81,6 +81,7 @@ class Solitaire(game.Game):
     Overridden Methods:
     __str__
     default
+    set_options
     set_up
     """
 
@@ -459,10 +460,6 @@ class Solitaire(game.Game):
                 else:
                     # error out if nothing else works
                     print('There are no valid moves for the {}.'.format(card.name))
-
-    def handle_options(self):
-        """Handle game options and set the player list. (None)"""
-        self.options = {}
     
     def lane_check(self, card, moving_stack, show_error = True):
         """
@@ -534,6 +531,10 @@ class Solitaire(game.Game):
         # dealers
         self.dealers = [deal_free]
 
+    def set_options(self):
+        """Handle game options and set the player list. (None)"""
+        self.options = {}
+
     def set_solitaire(self):
         """
         Special initialization for solitaire games. (None)
@@ -551,7 +552,7 @@ class Solitaire(game.Game):
         # initialize derived attributes
         self.deck = cards.TrackingDeck(self, *options['deck-specs'])
         deal_num = -1
-        deal_text_index = self.option_set.settings_text.index('deal-num')
+        deal_text_index = self.option_set.settings_text.find('deal-num')
         if deal_text_index != -1:
             self.option_set.settings_text = self.option_set.settings_text[:(deal_text_index - 1)]
         if self.raw_options.lower() != 'none':

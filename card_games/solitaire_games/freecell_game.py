@@ -131,10 +131,10 @@ class FreeCell(solitaire.Solitaire):
         """Set the game options. (None)"""
         self.options = {}
         self.option_set.add_option(name = 'cells', action = 'key=num-cells', converter = int, default = 4,
-            valid = range(1, 11), target = self.options, 
+            valid = range(1, 15), target = self.options, 
             question = 'How many free cells (1-10, return for 4)? ')
-        self.option_set.add_option(name = 'piles', action = 'key=num-tableau', convert = int, default = 8,
-            valid = range(4, 11), target = self.options,
+        self.option_set.add_option(name = 'piles', action = 'key=num-tableau', converter = int, 
+            default = 8, valid = range(4, 14), target = self.options,
             question = 'How many tableau piles (4-10, return for 8)? ')
 
 

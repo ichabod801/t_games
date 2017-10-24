@@ -14,6 +14,7 @@ upper: Convert a string to upper case. (str)
 
 
 import collections
+import tgames.utility as utility
 
 
 class AllRange(object):
@@ -163,18 +164,30 @@ class OptionSet(object):
 
     def ask_settings(self):
         """Get the setttings by asking the user. (None)"""
-        for definition in self.definitions:
-            while True:
-                setting = self.game.human.ask(definition['question'])
-                try:
-                    setting = definition['converter'](setting)
-                except ValueError:
-                    pass
-                else:
-                    if setting in definition['valid'] and definition['check'](setting):
+        if self.game.human.ask('Would you like to change the options? ') in utility.YES:
+            self.game.flags |= 1
+            pairs = []
+            for definition in self.definitions:
+                while True:
+                    raw_setting = self.game.human.ask(definition['question']).strip()
+                    if not raw_setting:
+                        setting = definition['default']
                         break
-                self.game.human.tell('That input is not valid.')
-            self.take_action(definition, setting)
+                    try:
+                        setting = definition['converter'](raw_setting)
+                    except ValueError:
+                        pass
+                    else:
+                        if setting in definition['valid'] and definition['check'](setting):
+                            break
+                    self.game.human.tell('That input is not valid.')
+                self.take_action(definition, setting)
+                if raw_setting:
+                    pairs.append((definition['name'], raw_setting))
+            # Create standardized text.
+            pairs.sort()
+            text_pairs = [('='.join(pair) if pair[1] is not None else pair[0]) for pair in pairs]
+            self.settings_text = ' '.join(text_pairs)
 
     def handle_settings(self, raw_settings):
         """
@@ -187,8 +200,11 @@ class OptionSet(object):
         settings_text = raw_settings.strip()
         # Apply the settings.
         if settings_text == 'none':
-            pass
+            for definition in self.definitions:
+                if definition['default'] is not None:
+                    self.take_action(definition, definition['default'])
         elif settings_text:
+            self.game.flags |= 1
             prelim_settings = self.parse_settings(settings_text)
             self.apply_definitions(prelim_settings)
         else:
@@ -199,6 +215,9 @@ class OptionSet(object):
                 self.game.players = [self.game.human] + setting
             else:
                 setattr(self.game, option, setting)
+        # Warn of any errors.
+        if self.errors:
+            self.game.human.tell('\n'.join(self.errors))
 
     def parse_settings(self, settings_text):
         """
