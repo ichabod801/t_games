@@ -135,3 +135,6 @@ FreeCell,1,0,0,816,51,1,cells=5 piles=7
 FreeCell,1,0,0,829,40,1,cells=1 piles=13 deal-num=30
 FreeCell,1,0,0,831,37,1,cells=1 piles=13 deal-num=99
 FreeCell,1,0,0,809,65,2,
+Pig,2,1,0,94,41,1,medium satan x
+Pig,0,1,0,27,11,0,
+Pig,0,1,0,76,12,0,

@@ -73,8 +73,9 @@ class OptionSet(object):
         self.definitions = []
         self.errors = []
         self.groups = {}
-        self.settings = {}
+        self.settings = {'bots': []}
         self.settings_text = ''
+        self.default_bots = []
 
     def add_group(self, name, expansion):
         """
@@ -114,10 +115,20 @@ class OptionSet(object):
             target = name
         if value is None:
             value = True
+        # Check for question types.
+        if question.endswith('bool'):
+            question_type = 'bool'
+            question = question[:-4]
+        elif action = 'bot' and value is None:
+            question_type = 'bot-param'
+        elif action = 'bot':
+            question_type = 'bot-count'
+        else:
+            question_type = ''
         # Create and add the dictionary for the definition.
         definition = {'name': name, 'converter': converter, 'default': default, 'value': value, 
             'target': target, 'action': action, 'question': question, 'valid': valid, 'check': check, 
-            'error_text': error_text}
+            'error_text': error_text, 'question_type': question_type}
         self.definitions.append(definition)
 
     def apply_definitions(self, prelim_settings):
@@ -169,18 +180,26 @@ class OptionSet(object):
             pairs = []
             for definition in self.definitions:
                 while True:
-                    raw_setting = self.game.human.ask(definition['question']).strip()
-                    if not raw_setting:
-                        setting = definition['default']
+                    if definition['question_type'] == 'bool':
+                        setting = self.game.human.ask(deifintion['question']) in utility.YES
                         break
-                    try:
-                        setting = definition['converter'](raw_setting)
-                    except ValueError:
-                        pass
+                    elif definition['question_type'] == 'bot-param':
+                        pass # !! not finished
+                    elif definition['question_type'] == 'bot-count':
+                        pass # !! not finished
                     else:
-                        if setting in definition['valid'] and definition['check'](setting):
+                        raw_setting = self.game.human.ask(definition['question'])
+                        if not raw_setting:
+                            setting = definition['default']
                             break
-                    self.game.human.tell('That input is not valid.')
+                        try:
+                            setting = definition['converter'](raw_setting)
+                        except ValueError:
+                            pass
+                        else:
+                            if setting in definition['valid'] and definition['check'](setting):
+                                break
+                        self.game.human.tell('That input is not valid.')
                 self.take_action(definition, setting)
                 if raw_setting:
                     pairs.append((definition['name'], raw_setting))
@@ -209,10 +228,14 @@ class OptionSet(object):
             self.apply_definitions(prelim_settings)
         else:
             self.ask_settings()
+        # Check for unspecified bots.
+        if not self.settings['bots']:
+            self.settings['bots'] = self.default_bots
         # Transfer the settings to the game.
         for option, setting in self.settings.items():
-            if option == 'bot':
-                self.game.players = [self.game.human] + setting
+            if option == 'bots':
+                bots = [bot_class(*params) for bot_class, params in setting]
+                self.game.players = [self.game.human] + bots
             else:
                 setattr(self.game, option, setting)
         # Warn of any errors.

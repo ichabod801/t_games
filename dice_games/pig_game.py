@@ -163,6 +163,12 @@ class PigBotBasePaceRace(PigBot):
         taken_names: Names already used by a player. (list of str)
         """
         super(PigBotBasePaceRace, self).__init__(taken_names, 'b')
+        if (base, pace, race) == (6, 6, 6):
+            while True:
+                name = random.choice(SATAN_NAMES)
+                if name in taken_names:
+                    self.name = name
+                    break
         self.base = base
         self.pace = pace
         self.race = race
@@ -439,15 +445,9 @@ class Pig(game.Game):
     name = 'Pig'
     categories = ['Dice Games', 'Jeopardy Games']
     credits = CREDITS
-    general_bots = {'value': PigBotValue, 'base-pace-race': PigBotBasePaceRace, 'bpr': PigBotBasePaceRace,
-        'scoring-turns': PigBotScoringTurns, 't': PigBotScoringTurns, 'pace-race': PigBotPaceRace,
-        'pr': PigBotPaceRace, 'rolls': PigBotRolls}
+    bot_classes = {'value': PigBotValue, 'base-pace-race': PigBotBasePaceRace, 
+        'scoring-turns': PigBotScoringTurns, 'pace-race': PigBotPaceRace, 'rolls': PigBotRolls}
     num_options = 3
-    preset_bots = {'knizia': (PigBotValue, (20,)),'stupid': (PigBotValue, ()), 'easy': (PigBotScoringTurns, ()),
-        'medium': (PigBotBasePaceRace, ()), 'hard': (PigBotPaceRace, ()), 'satan': (PigBotBasePaceRace, (6, 6, 6)),
-        'x': (PigBotRolls, (3,))}
-    for bot_type, bot_class in general_bots.items():
-        preset_bots[bot_type] = (bot_class, ())
     rules = RULES
 
     def ask_options(self):
@@ -581,58 +581,8 @@ class Pig(game.Game):
 
     def handle_options(self):
         """Handle game options and set up players. (None)"""
-        # Set the defaults.
-        self.players = [self.human]
-        self.bad = 1
-        self.even_turns = False
-        if self.raw_options == 'none':
-            pass
-        elif self.raw_options:
-            self.parse_options()
-            self.flags |= 1
-        else:
-            self.ask_options()
-        # If no optional bots, default to a basic value bot.
-        if self.players == [self.human]:
-            self.players.append(PigBotValue(taken_names = [self.human.name]))
-        # Shuffle the players.
+        self.option_set.handle_settings(self.raw_options)
         random.shuffle(self.players)
-
-    def parse_options(self):
-        """Parse options from the play command. (None)"""
-        taken_names = [self.human.name]
-        for word in self.raw_options.lower().split():
-            # Six is the turn ender.
-            if word == 'six-bad':
-                self.bad = 6
-            # Even turns.
-            elif word == 'even-turns':
-                self.even_turns = True
-            # Check for preset bots.
-            elif word in self.preset_bots:
-                bot_class, parameters = self.preset_bots[word]
-                self.players.append(bot_class(*parameters, taken_names = taken_names))
-                if word == 'satan':
-                    new_name = random.choice([name for name in SATAN_NAMES if name not in taken_names])
-                    self.players[-1].name = new_name
-                taken_names.append(self.players[-1].name)
-            # Check for general bots.
-            elif '=' in word:
-                bot_type, values = word.split('=')
-                if bot_type in self.general_bots:
-                    try:
-                        parameters = [int(value) for value in values.split('/')]
-                        new_bot = self.general_bots[bot_type](*parameters, taken_names = taken_names)
-                        self.players.append(new_bot)
-                        taken_names.append(new_bot.name)
-                    except (ValueError, TypeError):
-                        self.human.tell('Invalid {} bot specification.'.format(bot_type))
-                else:
-                    # Warn about unknown bot types.
-                    self.human.tell("I don't know the {} bot.".format(bot_type))
-            else:
-                # Warn about unknown options.
-                self.human.tell("I don't recognize the {} option.".format(word))
 
     def player_turn(self, player):
         """
@@ -663,6 +613,38 @@ class Pig(game.Game):
             player.tell("{}'s score is now {}.\n".format(player.name, self.scores[player.name]))
             self.turn_score = 0
         return go
+
+    def set_options(self):
+        """Set up the game options. (None)"""
+        # Game rule options.
+        self.option_set.add_option(name = 'six-bad', target = 'bad', value = 6, default = 1,
+            question = 'Should one be the number that ends the turn? bool')
+        self.option_set.add_option(name = 'even-turns', target = 'even_turns',
+            question = 'Should each player get the same number of turns? bool')
+        # Parameterized bots.
+        self.option_set.add_option(name = 'value', action = 'bot', default = None)
+        self.option_set.add_option(name = 'base-pace-race', aliases = ['bpr'], action = 'bot', 
+            default = None)
+        self.option_set.add_option(name = 'scoring-turns', aliases = ['t'], action = 'bot', default = None)
+        self.option_set.add_option(name = 'pace-race', aliases = ['pr'], action = 'bot', default = None)
+        self.option_set.add_option(name = 'rolls', action = 'bot', default = None)
+        # Pre-set bots.
+        self.option_set.add_option(name = 'stupid', action = 'bot', target = 'value', value = (), 
+            default = None)
+        self.option_set.add_option(name = 'easy', action = 'bot', target = 'scoring-turns', value = (), 
+            default = None)
+        self.option_set.add_option(name = 'medium', action = 'bot', target = 'base-pace-race', value = (), 
+            default = None)
+        self.option_set.add_option(name = 'hard', action = 'bot', target = 'pace-race', value = (), 
+            default = None)
+        self.option_set.add_option(name = 'knizia', action = 'bot', target = 'value', value = (20,), 
+            default = None)
+        self.option_set.add_option(name = 'satan', action = 'bot', target = 'base-pace-race', 
+            value = (6, 6, 6), default = None)
+        self.option_set.add_option(name = 'x', action = 'bot', target = 'rolls', value = (3,), 
+            default = None)
+        # Default bots.
+        self.option_set.default_bots = [(PigBotBasePaceRace, ())]
 
     def set_up(self):
         """Set up the game. (None)"""
