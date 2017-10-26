@@ -218,7 +218,7 @@ class OptionSet(object):
                     query = 'How many {} bots would you like? '.format(definition['name'])
                     bot_num = self.game.human.ask_int(query, valid = range(11), default = 0, cmd = 0)
                     pairs.extend([(definition['name'], None)] * bot_num)
-                    setting = ()
+                    setting = definition['value']
                     for bot in range(bot_num):
                         self.take_action(definition, setting)
                 else:
@@ -263,13 +263,17 @@ class OptionSet(object):
             self.apply_definitions(prelim_settings)
         else:
             self.ask_settings()
+            self.game.human.tell()
         # Check for unspecified bots.
         if not self.settings['bots']:
             self.settings['bots'] = self.default_bots
         # Transfer the settings to the game.
         for option, setting in self.settings.items():
             if option == 'bots':
-                bots = [bot_class(*params) for bot_class, params in setting]
+                taken_names = [self.game.human.name]
+                bots = []
+                for bot_class, params in setting:
+                    bots.append(bot_class(*params, taken_names = taken_names))
                 self.game.players = [self.game.human] + bots
             else:
                 setattr(self.game, option, setting)
@@ -300,7 +304,7 @@ class OptionSet(object):
                 try:
                     setting, repeat = word.split('*')
                     repeat = int(repeat)
-                    words.expand([word] * repeat)
+                    words.extend([setting] * repeat)
                 except ValueError:
                     self.errors.append('Invalid repeat value: {!r}.'.format(word))
             else:

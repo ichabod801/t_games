@@ -450,44 +450,6 @@ class Pig(game.Game):
     num_options = 3
     rules = RULES
 
-    def ask_options(self):
-        """Get options from the user. (None)"""
-        taken_names = [self.human.name]
-        if self.human.ask('\nWould you like to change the options? ').lower() in utility.YES:
-            self.flags |= 1
-            # Six is the turn ender.
-            if self.human.ask('\nShould six be the number that ends the turn? ').lower() in utility.YES:
-                self.bad = 6
-            # Even turns.
-            elif self.human.ask('\nShould everyone get an even number of turns? ').lower() in utility.YES:
-                self.even_turns = True
-            # Add bots until the user doesn't want any more.
-            while self.human.ask('\nWould you like to add a bot? ').lower() in utility.YES:
-                # Get the bot type.
-                bot_type = self.human.ask('\nWhat type of bot would you like to add? ').lower()
-                # Get the parameters for general bots.
-                if bot_type in self.general_bots:
-                    bot_class = self.general_bots[bot_type]
-                    parameters = []
-                    for parameter in bot_class.parameters:
-                        text = '\nWhat value do you want for the {} parameter? '.format(parameter)
-                        parameters.append(self.human.ask_int(text, cmd = False))
-                    self.players.append(bot_class(*parameters, taken_names = taken_names))
-                    taken_names.append(self.players[-1].name)
-                # Add in preset bots.
-                elif bot_type in self.preset_bots:
-                    bot_class, parameters = self.preset_bots[bot_type]
-                    self.players.append(bot_class(*parameters, taken_names = taken_names))
-                    if bot_type == 'satan':
-                        name = random.choice([name for name in SATAN_NAMES if name not in taken_names])
-                        self.players[-1].name = name
-                    taken_names.append(self.players[-1].name)
-                # Give an infomative warning.
-                else:
-                    self.human.tell("\nI don't know that kind of bot.")
-                    known_bots = sorted(self.general_bots.keys(), self.present_bots.keys())
-                    self.human.tell('The bots I know are ' + ', '.join(known_bots))
-
     def clean_up(self):
         """Set the loser to go first next round. (None)"""
         self.players.sort(key = lambda player: self.scores[player.name])
@@ -566,6 +528,7 @@ class Pig(game.Game):
                 return False
             # Update win/loss/draw.
             human_score = self.scores[self.human.name]
+            winning_score = max(self.scores.values())
             for name, score in self.scores.items():
                 if name != self.human.name:
                     if score > human_score:
@@ -575,7 +538,7 @@ class Pig(game.Game):
                     else:
                         self.win_loss_draw[2] += 1
                 # Declare the winner when found.
-                if score > 99:
+                if score == winning_score:
                     self.human.tell('{} won with {} points.'.format(name, score))
             return True
 
@@ -622,16 +585,16 @@ class Pig(game.Game):
         self.option_set.add_option(name = 'even-turns', target = 'even_turns',
             question = 'Should each player get the same number of turns? bool')
         # Parameterized bots.
-        self.option_set.add_option(name = 'value', action = 'bot', default = (), converter = int, 
+        self.option_set.add_option(name = 'value', action = 'bot', default = None, converter = int, 
             check = lambda params: len(params) <= 1 and max(params) <= 100)
         self.option_set.add_option(name = 'base-pace-race', aliases = ['bpr'], action = 'bot', 
-            default = (), check = lambda params: len(params) <= 3 and max(params) <= 100, 
+            default = None, check = lambda params: len(params) <= 3 and max(params) <= 100, 
             converter = int)
-        self.option_set.add_option(name = 'scoring-turns', aliases = ['t'], action = 'bot', default = (),
+        self.option_set.add_option(name = 'scoring-turns', aliases = ['t'], action = 'bot', default = None,
             check = lambda params: len(params) <= 1 and max(params) <= 100, converter = int)
-        self.option_set.add_option(name = 'pace-race', aliases = ['pr'], action = 'bot', default = (),
+        self.option_set.add_option(name = 'pace-race', aliases = ['pr'], action = 'bot', default = None,
             check = lambda params: len(params) <= 2 and max(params) <= 100, converter = int)
-        self.option_set.add_option(name = 'rolls', action = 'bot', default = (),
+        self.option_set.add_option(name = 'rolls', action = 'bot', default = None,
             check = lambda params: len(params) <= 1 and max(params) <= 100, converter = int)
         # Pre-set bots.
         self.option_set.add_option(name = 'stupid', action = 'bot', target = 'value', value = (), 
