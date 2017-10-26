@@ -622,12 +622,17 @@ class Pig(game.Game):
         self.option_set.add_option(name = 'even-turns', target = 'even_turns',
             question = 'Should each player get the same number of turns? bool')
         # Parameterized bots.
-        self.option_set.add_option(name = 'value', action = 'bot', default = None)
+        self.option_set.add_option(name = 'value', action = 'bot', default = None, converter = int, 
+            check = lambda params: len(params) <= 1 and max(params) <= 100)
         self.option_set.add_option(name = 'base-pace-race', aliases = ['bpr'], action = 'bot', 
-            default = None)
-        self.option_set.add_option(name = 'scoring-turns', aliases = ['t'], action = 'bot', default = None)
-        self.option_set.add_option(name = 'pace-race', aliases = ['pr'], action = 'bot', default = None)
-        self.option_set.add_option(name = 'rolls', action = 'bot', default = None)
+            default = None, check = lambda params: len(params) <= 3 and max(params) <= 100, 
+            converter = int)
+        self.option_set.add_option(name = 'scoring-turns', aliases = ['t'], action = 'bot', default = None,
+            check = lambda params: len(params) <= 1 and max(params) <= 100, converter = int)
+        self.option_set.add_option(name = 'pace-race', aliases = ['pr'], action = 'bot', default = None,
+            check = lambda params: len(params) <= 2 and max(params) <= 100, converter = int)
+        self.option_set.add_option(name = 'rolls', action = 'bot', default = None,
+            check = lambda params: len(params) <= 1 and max(params) <= 100, converter = int)
         # Pre-set bots.
         self.option_set.add_option(name = 'stupid', action = 'bot', target = 'value', value = (), 
             default = None)

@@ -184,9 +184,27 @@ class OptionSet(object):
                         setting = self.game.human.ask(deifintion['question']) in utility.YES
                         break
                     elif definition['question_type'] == 'bot-param':
-                        pass # !! not finished
+                        bot_query = 'Would you like to add a {} bot? '.format(definiton['name'])
+                        param_query = 'What parameters should the {} bot have? '.format(definiton['name'])
+                        while True:
+                            if self.game.human.ask(bot_query) in utility.YES:
+                                raw_params = self.game.human.ask(param_query)
+                                if not raw_params:
+                                    params = ()
+                                    break
+                                try:
+                                    converter = definition['converter']
+                                    params = [converter(param) for param in raw_params.split()]
+                                except ValueError:
+                                    pass
+                                else:
+                                    if params in definition['valid'] and definition['check'](setting):
+                                        break
+                                self.game.human.tell('That input is not valid.')
                     elif definition['question_type'] == 'bot-count':
-                        pass # !! not finished
+                        query = 'How many {} bots would you like? '.format(definition['name'])
+                        bot_num = self.game.human.ask_int(query, valid = range(0, 11), default = 0)
+                        pairs.extend([(definition['name'], ())] * bot_num)
                     else:
                         raw_setting = self.game.human.ask(definition['question'])
                         if not raw_setting:
