@@ -110,26 +110,32 @@ class OptionSet(object):
         # Add option aliases to overall aliases
         for alias in aliases:
             self.aliases[alias] = name
+        # Check for question types.
+        if question.endswith('bool'):
+            question_type = 'bool'
+            question = question[:-4]
+        elif action == 'bot' and value is None:
+            question_type = 'bot-param'
+        elif action == 'bot':
+            question_type = 'bot-count'
+        else:
+            question_type = ''
         # Convert empty parapmeters.
         if target == '':   # instead of 'not target' b/c target could be empty dictionary.
             target = name
         if value is None:
             value = True
-        # Check for question types.
-        if question.endswith('bool'):
-            question_type = 'bool'
-            question = question[:-4]
-        elif action = 'bot' and value is None:
-            question_type = 'bot-param'
-        elif action = 'bot':
-            question_type = 'bot-count'
-        else:
-            question_type = ''
         # Create and add the dictionary for the definition.
         definition = {'name': name, 'converter': converter, 'default': default, 'value': value, 
             'target': target, 'action': action, 'question': question, 'valid': valid, 'check': check, 
             'error_text': error_text, 'question_type': question_type}
         self.definitions.append(definition)
+
+    def apply_defaults(self):
+        """Apply the default settings. (None)"""
+        for definition in self.definitions:
+            if definition['default'] is not None:
+                self.take_action(definition, definition['default'])
 
     def apply_definitions(self, prelim_settings):
         """
@@ -158,7 +164,7 @@ class OptionSet(object):
                         except ValueError:
                             self.errors.append(error.format(definition['name'], setting))
                         else:
-                            if not all(item in valid and check(item) for item in setting):
+                            if not (setting in valid and check(setting)):
                                 self.errors.append(error.format(definition['name'], setting))
                             else:
                                 self.take_action(definition, setting)
@@ -175,37 +181,48 @@ class OptionSet(object):
 
     def ask_settings(self):
         """Get the setttings by asking the user. (None)"""
+        # !! refactor this once I'm sure it's working. Perhaps the validity check?
         if self.game.human.ask('Would you like to change the options? ') in utility.YES:
             self.game.flags |= 1
             pairs = []
             for definition in self.definitions:
-                while True:
-                    if definition['question_type'] == 'bool':
-                        setting = self.game.human.ask(deifintion['question']) in utility.YES
-                        break
-                    elif definition['question_type'] == 'bot-param':
-                        bot_query = 'Would you like to add a {} bot? '.format(definiton['name'])
-                        param_query = 'What parameters should the {} bot have? '.format(definiton['name'])
-                        while True:
-                            if self.game.human.ask(bot_query) in utility.YES:
-                                raw_params = self.game.human.ask(param_query)
-                                if not raw_params:
-                                    params = ()
-                                    break
-                                try:
-                                    converter = definition['converter']
-                                    params = [converter(param) for param in raw_params.split()]
-                                except ValueError:
-                                    pass
-                                else:
-                                    if params in definition['valid'] and definition['check'](setting):
-                                        break
-                                self.game.human.tell('That input is not valid.')
-                    elif definition['question_type'] == 'bot-count':
-                        query = 'How many {} bots would you like? '.format(definition['name'])
-                        bot_num = self.game.human.ask_int(query, valid = range(0, 11), default = 0)
-                        pairs.extend([(definition['name'], ())] * bot_num)
+                if definition['question_type'] == 'bool':
+                    yes_no = self.game.human.ask(definition['question']) in utility.YES
+                    if yes_no:
+                        setting = definition['value']
+                        pairs.append((definition['name'], None))
                     else:
+                        setting = definition['default']
+                    self.take_action(definition, setting)
+                elif definition['question_type'] == 'bot-param':
+                    bot_query = 'Would you like to add a {} bot? '.format(definition['name'])
+                    param_query = 'What parameters should the {} bot have? '.format(definition['name'])
+                    while self.game.human.ask(bot_query) in utility.YES:
+                        while True:
+                            raw_params = self.game.human.ask(param_query)
+                            if not raw_params:
+                                setting = ()
+                                break
+                            try:
+                                converter = definition['converter']
+                                setting = [converter(param) for param in raw_params.split('/')]
+                            except ValueError:
+                                pass
+                            else:
+                                if setting in definition['valid'] and definition['check'](setting):
+                                    break
+                            self.game.human.tell('That input is not valid.')
+                        pairs.append((definition['name'], ''.join(raw_params.split())))
+                        self.take_action(definition, setting)
+                elif definition['question_type'] == 'bot-count':
+                    query = 'How many {} bots would you like? '.format(definition['name'])
+                    bot_num = self.game.human.ask_int(query, valid = range(11), default = 0, cmd = 0)
+                    pairs.extend([(definition['name'], None)] * bot_num)
+                    setting = ()
+                    for bot in range(bot_num):
+                        self.take_action(definition, setting)
+                else:
+                    while True:
                         raw_setting = self.game.human.ask(definition['question'])
                         if not raw_setting:
                             setting = definition['default']
@@ -218,13 +235,15 @@ class OptionSet(object):
                             if setting in definition['valid'] and definition['check'](setting):
                                 break
                         self.game.human.tell('That input is not valid.')
-                self.take_action(definition, setting)
-                if raw_setting:
-                    pairs.append((definition['name'], raw_setting))
+                    if raw_setting:
+                        pairs.append((definition['name'], raw_setting))
+                    self.take_action(definition, setting)
             # Create standardized text.
             pairs.sort()
             text_pairs = [('='.join(pair) if pair[1] is not None else pair[0]) for pair in pairs]
             self.settings_text = ' '.join(text_pairs)
+        else:
+            self.apply_defaults()
 
     def handle_settings(self, raw_settings):
         """
@@ -237,9 +256,7 @@ class OptionSet(object):
         settings_text = raw_settings.strip()
         # Apply the settings.
         if settings_text == 'none':
-            for definition in self.definitions:
-                if definition['default'] is not None:
-                    self.take_action(definition, definition['default'])
+            self.apply_defaults()
         elif settings_text:
             self.game.flags |= 1
             prelim_settings = self.parse_settings(settings_text)

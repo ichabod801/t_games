@@ -138,3 +138,8 @@ FreeCell,1,0,0,809,65,2,
 Pig,2,1,0,94,41,1,medium satan x
 Pig,0,1,0,27,11,0,
 Pig,0,1,0,76,12,0,
+Pig,1,0,0,103,13,0,
+Pig,3,0,0,101,32,1,medium satan x
+Pig,0,1,0,77,28,1,base-pace-race=10/10/10
+Pig,0,1,0,72,22,0,
+Pig,11,1,0,81,74,3,medium medium value=18

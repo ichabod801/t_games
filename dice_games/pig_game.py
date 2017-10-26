@@ -166,7 +166,7 @@ class PigBotBasePaceRace(PigBot):
         if (base, pace, race) == (6, 6, 6):
             while True:
                 name = random.choice(SATAN_NAMES)
-                if name in taken_names:
+                if name not in taken_names:
                     self.name = name
                     break
         self.base = base
@@ -618,20 +618,20 @@ class Pig(game.Game):
         """Set up the game options. (None)"""
         # Game rule options.
         self.option_set.add_option(name = 'six-bad', target = 'bad', value = 6, default = 1,
-            question = 'Should one be the number that ends the turn? bool')
+            question = 'Should six be the number that ends the turn? bool')
         self.option_set.add_option(name = 'even-turns', target = 'even_turns',
             question = 'Should each player get the same number of turns? bool')
         # Parameterized bots.
-        self.option_set.add_option(name = 'value', action = 'bot', default = None, converter = int, 
+        self.option_set.add_option(name = 'value', action = 'bot', default = (), converter = int, 
             check = lambda params: len(params) <= 1 and max(params) <= 100)
         self.option_set.add_option(name = 'base-pace-race', aliases = ['bpr'], action = 'bot', 
-            default = None, check = lambda params: len(params) <= 3 and max(params) <= 100, 
+            default = (), check = lambda params: len(params) <= 3 and max(params) <= 100, 
             converter = int)
-        self.option_set.add_option(name = 'scoring-turns', aliases = ['t'], action = 'bot', default = None,
+        self.option_set.add_option(name = 'scoring-turns', aliases = ['t'], action = 'bot', default = (),
             check = lambda params: len(params) <= 1 and max(params) <= 100, converter = int)
-        self.option_set.add_option(name = 'pace-race', aliases = ['pr'], action = 'bot', default = None,
+        self.option_set.add_option(name = 'pace-race', aliases = ['pr'], action = 'bot', default = (),
             check = lambda params: len(params) <= 2 and max(params) <= 100, converter = int)
-        self.option_set.add_option(name = 'rolls', action = 'bot', default = None,
+        self.option_set.add_option(name = 'rolls', action = 'bot', default = (),
             check = lambda params: len(params) <= 1 and max(params) <= 100, converter = int)
         # Pre-set bots.
         self.option_set.add_option(name = 'stupid', action = 'bot', target = 'value', value = (), 
