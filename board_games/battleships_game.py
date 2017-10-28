@@ -27,6 +27,7 @@ import random
 import re
 
 import tgames.game as game
+import tgames.options as options
 import tgames.player as player
 
 
@@ -97,9 +98,9 @@ class Battleships(game.Game):
     inventory_name: The name of the inventory of ships. (str)
 
     Overridden Methods:
-    handle_options
     game_over
     player_turn
+    set_options
     set_up
     """
 
@@ -172,36 +173,6 @@ class Battleships(game.Game):
             go = True
         return go
 
-    def handle_options(self):
-        """Handle game options and set the player list. (None)"""
-        # Set the defaults.
-        self.bot = BattleBot([self.human.name])
-        self.inventory_name = 'bradley'
-        # Check for options
-        if self.raw_options == 'none':
-            pass
-        elif self.raw_options:
-            self.flags |= 1
-            for word in self.raw_options.lower().split():
-                if word.startswith('inventory='):
-                    value = word[10:]
-                    if value in INVENTORIES:
-                        self.inventory_name = word[10:]
-                    else:
-                        self.human.tell('Invalid inventory option.')
-        # Get options from the player.
-        else:
-            while True:
-                inventory = self.human.ask('Which inventory would you like to use (return for Bradley)? ')
-                if not inventory.strip() or inventory in INVENTORIES:
-                    break
-                self.human.tell('The available inventories are Bradley, Bednar, Ichabod, and Wikipedia')
-            if inventory:
-                self.flags |= 1
-                self.inventory_name = inventory.lower()
-        # Set player list.
-        self.players = [self.human, self.bot]
-
     def game_over(self):
         """Check for the end of the game. (bool)"""
         # Check for a tie.
@@ -244,8 +215,17 @@ class Battleships(game.Game):
         self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
         self.human.tell(self.boards[self.human.name].show())
 
+    def set_options(self):
+        """Define the options for the game. (None)"""
+        self.options_set.default_bots = [(BattleBot, ())]
+        self.options.add_option(name = 'inventory', converter = options.lower, default = 'bradley',
+            target = 'inventory_name', valid = ['bradley', 'bednar', 'ichabod', 'wikipedia'],
+            question = 'Which inventory would you like to use (return for Bradley)? ',
+            error_text = 'The available inventories are Bradley, Bednar, Ichabod, and Wikipedia')
+
     def set_up(self):
         """Set up a board for each player. (None)"""
+        self.bot = self.players[1]
         self.boards = {self.bot.name: SeaBoard(self.bot, self.inventory_name)}
         self.boards[self.human.name] = SeaBoard(self.human, self.inventory_name)
 
