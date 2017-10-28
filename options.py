@@ -133,7 +133,7 @@ class OptionSet(object):
             question_type = ''
         # Convert empty parapmeters.
         if target == '':   # instead of 'not target' b/c target could be empty dictionary.
-            target = name
+            target = name.replace('-', '_')
         # Create and add the dictionary for the definition.
         definition = {'name': name, 'converter': converter, 'default': default, 'value': value, 
             'target': target, 'action': action, 'question': question, 'valid': valid, 'check': check, 
