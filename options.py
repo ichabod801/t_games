@@ -387,13 +387,13 @@ class OptionSet(object):
                     if name.lower() in self.aliases:
                         pairs.append((self.aliases[name.lower()], setting))
                     else:
-                        self.human.tell('Unrecognized option: {}.'.format(name))
+                        self.errors.append('Unrecognized option: {}.'.format(name))
                 except ValueError:
                     self.errors.append('Syntax error with equals: {!r}.'.format(word))
             elif word.lower() in self.aliases:
                 pairs.append((self.aliases[word.lower()], None))
             else:
-                self.human.tell('Unrecognized option: {}.'.format(word))
+                self.errors.append('Unrecognized option: {}.'.format(word))
         # Create standardized text.
         pairs.sort()
         text_pairs = [('='.join(pair) if pair[1] is not None else pair[0]) for pair in pairs]

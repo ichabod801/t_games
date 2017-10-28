@@ -551,25 +551,25 @@ class Blackjack(game.Game):
     def set_options(self):
         """Define the game options. (None)"""
         # Betting options.
-        self.option_set.add_option('stake', int, 100, check = lambda bucks: bucks > 0,
+        self.option_set.add_option('stake', [], int, 100, check = lambda bucks: bucks > 0,
             question = 'How much money would you like to start with (return for 100)? ')
-        self.option_set.add_option('limit', int, 8, check = lambda bucks: 0 < bucks,
+        self.option_set.add_option('limit', [], int, 8, check = lambda bucks: 0 < bucks,
             question = 'What should the maximum bet be (return for 8)? ')
         # Deal options.
-        self.option_set.add_option('decks', int, 4, valid = (1, 2, 4, 6, 8),
+        self.option_set.add_option('decks', [], int, 4, valid = (1, 2, 4, 6, 8),
             question = 'How many decks should be in the shoe (return for 4)? ')
-        self.option_set.add_option('hands', int, 1, check = lambda hands: 0 < hands < 4,
+        self.option_set.add_option('hands', [], int, 1, check = lambda hands: 0 < hands < 4,
             question = 'How hands would you like to play (return for 1)? ', target = 'hand_count')
         # Doubling options
         self.option_set.add_option('true-double', 
             question = 'Should a double have to be a true double? bool')
-        self.option_set.add_option('no-double-split', value = False, default = True
-            default = True, question = 'Should you be able to double a split hand? bool')
+        self.option_set.add_option('no-double-split', value = False, default = True, 
+            target = 'double_split', question = 'Should you be able to double a split hand? bool')
         # Splitting options.
         self.option_set.add_option('split-rank',
             question = 'Should you only be able to split hands of equal rank? bool')
         self.option_set.add_option('no-resplit', value = False, default = True, target = 'resplit',
-            default = True, question = 'Should you be able to split a split hand? bool')
+            question = 'Should you be able to split a split hand? bool')
         self.option_set.add_option('hit-split-ace',
             question = 'Should you be able to hit split aces? bool')
         # Showdown options.

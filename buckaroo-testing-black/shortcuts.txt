@@ -1,1 +1,2 @@
 pig3	pig / x medium satan
+test	blackjack / stake = 200 limit = 64 decks = 2 spam
