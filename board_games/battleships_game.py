@@ -217,8 +217,8 @@ class Battleships(game.Game):
 
     def set_options(self):
         """Define the options for the game. (None)"""
-        self.options_set.default_bots = [(BattleBot, ())]
-        self.options.add_option(name = 'inventory', converter = options.lower, default = 'bradley',
+        self.option_set.default_bots = [(BattleBot, ())]
+        self.option_set.add_option(name = 'inventory', converter = options.lower, default = 'bradley',
             target = 'inventory_name', valid = ['bradley', 'bednar', 'ichabod', 'wikipedia'],
             question = 'Which inventory would you like to use (return for Bradley)? ',
             error_text = 'The available inventories are Bradley, Bednar, Ichabod, and Wikipedia')

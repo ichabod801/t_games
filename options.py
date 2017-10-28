@@ -3,6 +3,8 @@ options.py
 
 Option handling for tgames.
 
+!! Needs to catch single items intended to be lists.
+
 Classes:
 AllRange: A range that contains everything. (object)
 OptionSet: A set of options for a particular game. (object)
@@ -118,6 +120,7 @@ class OptionSet(object):
         # Add option aliases to overall aliases
         for alias in aliases:
             self.aliases[alias] = name
+        self.aliases[name] = name
         # Check for question types.
         if question.endswith('bool'):
             question_type = 'bool'
@@ -381,11 +384,16 @@ class OptionSet(object):
                 try:
                     name, setting = word.split('=')
                     # Apply any known aliases.
-                    pairs.append((self.aliases.get(name.lower(), name.lower()), setting))
+                    if name.lower() in self.aliases:
+                        pairs.append((self.aliases[name.lower()], setting))
+                    else:
+                        self.human.tell('Unrecognized option: {}.'.format(name))
                 except ValueError:
                     self.errors.append('Syntax error with equals: {!r}.'.format(word))
+            elif word.lower() in self.aliases:
+                pairs.append((self.aliases[word.lower()], None))
             else:
-                pairs.append((word.lower(), None))
+                self.human.tell('Unrecognized option: {}.'.format(word))
         # Create standardized text.
         pairs.sort()
         text_pairs = [('='.join(pair) if pair[1] is not None else pair[0]) for pair in pairs]

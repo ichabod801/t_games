@@ -149,3 +149,4 @@ Pig,1,0,0,103,15,0,
 Pig,0,1,0,91,14,0,
 Pig,2,1,0,89,23,3,satan satan value=18
 Pig,3,0,0,100,37,1,pace-race=8/6 satan satan
+Battleships,1,0,0,1,56,1,inventory=wikipedia
