@@ -50,3 +50,4 @@ FreeCell,1,0,0,816,55,0,
 Pig,3,0,0,101,31,1,medium satan x
 FreeCell,1,0,0,816,50,0,
 Hunt the Wumpus,1,0,0,21,21,0,
+FreeCell,1,0,0,803,63,0,

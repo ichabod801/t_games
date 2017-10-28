@@ -46,9 +46,9 @@ The help class attribute is a dictionary of help text keyed to help categories. 
 
 === Methods ===
 
-You will need to override the player_turn and game_over methods to make your game work. In most cases, you will want to override set_up as well. If you game has options that can be set before play, you will need to override the handle_options method. You may also want to create do_foo methods, and override the default method.
+You will need to override the player_turn and game_over methods to make your game work. In most cases, you will want to override set_up as well. If you game has options that can be set before play, you will need to override the set_options method. You may also want to create do_foo methods, and override the default method.
 
-The way the program flows through these methods is as follows: When the game class is initialized, the handle_options method is called to process any options given from the interface, and to give the user a chance to enter in the options if they were not provided through the interface. Then the play method is called, which calls the set_up method. This sets up the game, initializing any game components. Most importantly, this is where the list of players is set up. Then the players are rotated through, calling player_turn for each one in turn. This is where the player move is obtained and processed. The player_turn may (and should) call handle_cmd to process any commands with a do_foo method, or the default method if the command is not recognized. Note that player_turn is called repeatedly until it returns False. Then game_over is called, and if it returns False, player_turn is called for the next player in order. If game_over returns True, the game is over and results are returned from the play method to the interface. The interface will then ask if the user wants to play the same game again. If they do, play is called again, calling set_up again and cycling through player_turn again. Note that handle_options is not called again at that point. So things that can be set and used over several plays of the game should be processed in handle_options, but things that need to be reset every time the game is played should be handled in set_up.
+The way the program flows through these methods is as follows: When the game class is initialized, the set_options method is called to define the options, and the handle_options method is called to process any options given from the interface, and to give the user a chance to enter in the options if they were not provided through the interface. Then the play method is called, which calls the set_up method. This sets up the game, initializing any game components. Most importantly, this is where the list of players is set up. Then the players are rotated through, calling player_turn for each one in turn. This is where the player move is obtained and processed. The player_turn may (and should) call handle_cmd to process any commands with a do_foo method, or the default method if the command is not recognized. Note that player_turn is called repeatedly until it returns False. Then game_over is called, and if it returns False, player_turn is called for the next player in order. If game_over returns True, the game is over and results are returned from the play method to the interface. The interface will then ask if the user wants to play the same game again. If they do, play is called again, calling set_up again and cycling through player_turn again. Note that handle_options is not called again at that point. So things that can be set and used over several plays of the game should be processed in handle_options, but things that need to be reset every time the game is played should be handled in set_up.
 
 When interacting with players, you should use the player.ask method in place of the input function, and the player.tell method in place of the print function. There are interface features in those methods that will be lost if you use plain input or print. When designing computer players (bots), you should use the ask and tell methods and the same prompts/text as the human player gets to determine where the bot is in the game sequence. Note that bots have a game method, which provides direct access to the game class instance. This will allow them to access the computer implementations of the scores and board and other game features for making decisions.
 
@@ -86,21 +86,11 @@ It should also set the win_loss_draw attribute of the game instance. That attrib
 
 ==== handle_options ====
 
-This method handles the options for the game: how many bots to play against, how good they are, any house rules that are commonly associated with the game. There are three main cases to catch: no options, options from the interface, and options from the user.
+This menu processes any options for the game based on the OptionSet defined in set_options. You generally don't want to override this, unless you want to completely override how options are handled. If you want to do some post option processing, you can either do that in set_up (which will do it each time the game is played), or you can use super to call the parent class handle_options, and then do the necessary processing.
 
-Any options passed from the interface should be in the raw_options attribute of the game instance. If raw_options == 'none' you should not change any options. This is generally from gipfing to the game (see do_gipf, below). 
+If raw_options.lower() == 'none', the default options will be applied. If raw_options is empty, handle_options will ask the user questions to determine the option settings. Otherwise, it will process the option settings given in raw_options.
 
-If raw_options is non-empty, it will be any options that were sent to the game from the interface. Options should be expressed as either a dash separated phrase ('even-turns') or an option, an equals sign, and a value with no spaces ('num_cells=5'). That way you can just loop through self.raw_options.split(), and handle each option as it comes up. It's good to have some code for options you don't recognize, to warn the user that they will be ignored.
-
-If raw_options is empty, give the user the chance to set the options through a series of questions and answers. These would of course use self.human.ask(). Note that there is a tuple of possible answers meaning yes in utility.YES, which you can use for yes/no questions to provide a richer interface. Generally, if response.lower() is not in utility.YES, you assume it's no. If there is more than one question to ask to set the options, you should ask if the player wants to change the options first. That way they can just say no and go quickly to playing the game.
-
-Note that if raw_options is 'none', the default options should be used without giving the user an opportunity to change them. This is necessary for the gipf graph.
-
-If the player changes the options, either from the interface or by answering questions, you need to adjust the flags attribute of the game. You should do 'self.flags |= 1' to indicate that options were changed for the game. 
-
-This part can be boring and tedious to program, but it provides a richer interface for the user, and is expected of games in the tgames package.
-
-If there are a lot of options for the game, it is standard to separate out handling options from the interface and options from the user. This is typically done with two methods named ask_options and parse_options (see dice_games/pig_game.py or gambling_games/blackjack_game.py for examples).
+If you do override handle_options, and the player changes the options, either from the interface or by answering questions, you need to adjust the flags attribute of the game. You should do 'self.flags |= 1' to indicate that options were changed for the game.
 
 ==== do_gipf ====
 
@@ -112,10 +102,65 @@ You can program this into your games if you want. There is a gipf_check method o
 
 Note that if they don't choose a valid game, you should give a non-sequitor or confused response to the user. The exact response should be unique to your game.
 
+==== set_options ====
+
+The set_option method defines the options availble for the game, for later use by handle_options. The options are stored and handled by a options.OptionSet instance, stored in the option_set attribute of the game. Each option in the OptionSet is stored as a dictionary of values. These are created using the add_option method of the OptionSet.
+
+For example, take the even-turns option in Pig. If that option is True, each player gets the same number of turns before the game is over. The simplest way to set that up would be: self.option_set.add_option(name = 'even-turns', target = 'even_turns'). The name is the name of the option the player would use, and the target is the attribute the option is stored in. The target defaults to the name, but in this case the name uses dashes, where attribute names need underscores. The default behavior for an option definition is to assign True if the option is provided, and False if it is not.
+
+We could reverse this option: call it odd-turns, which assigns False to even_turns if it is provided, and True if it is not. That would be set up with: self.option_set.add_option(name = 'odd-turns', target = 'even_turns', value = False, default = True). The value of the definition is what is assigned if the option is provided, and the default of the definition is what is assigned if the option is not provided. It doesn't have to be True or False, either. For example, the 'six-bad' option to Pig sets the bad attribute to 6, when it is normally one. That attribute is set up as self.option_set.add_option(name = 'six-bad', target = 'bad', value = 6, default = 1).
+
+You often want the user to provide the value of an option, rather than having it be pre-specified. For example, gambling games all have a stake option, to change how much money you have to start. So we want the user to provid a positive integer value. We can do this like so: self.option_set.add_option(name = 'stake', converter = int, check = lambda stake: stake > 0, default = 100). This means that the text value provided by the user would be converted using the built-in int function. Then if it is a valid integer, it is passed to the check function to make sure the value is greater than zero. Note that the default value is specifed as an integer, already converted. You can also specify a valid parameter to add_option, which would be a container with all of the valid choices in it.
+
+One thing that all of the above definitions are missing is a question. If no options are provided, the OptionSet will ask the user what the option settings should be. It needs a question for each option in order to do that. For the stake option to a gambling game, the question would be 'How much money do you want to start with (return for 100 bucks)? '. Note that last bit: if the user just hits return, the default is applied. If there are a lot of options, this allows the user to hit return until they get to the one they want to change.
+
+For the simple options where the user does not provide a value, we want to provide a simple yes/no question. OptionSet will reconginze these questions if you put 'bool' at the end of them. For example, the question for the six-bad option in Pig would be 'Should six be the number that ends the turn without scoring? bool'. Note that 'bool' comes at the very end, after the question mark. Also, note that if you say no to the question, the default of 1 is applied. Always phrase your bool questions so that no means apply the default. Since the answer is treated as 'no' if it is not in utility.YES, this again allows the user to just hit return to get the default.
+
+If the user provides a setting of several values separated by slashes ('/'), those values will be provided as a list. Each item in the list will be run through converter. However, the list as a whole will be checked for existence in valid and passed to the check function.
+
+Here are the details on all of the parameters to the add_option call, which are the values of the dictionary stored in the OptionSet:
+
+	* name: The name of the option. How the option is specified from the menu interface.
+	* aliases: A list of other names for the option.
+	* converter: A function that returns the option setting in the correct type. Defaults to str. Checks each item in a list setting.
+	* default: The default value to assign if the option is not specified by the user. If default is None, no action is taken unless the user provides the option.
+	* value: The value to provide if the option is given without specifying a setting. If the 'map' action is specified, this should be a dictionary that the values come from. For the 'bot' action, if value is None the user is expected to provide parameters to the bot class. Otherwise, the value for the 'bot' action should be a tuple of parameters to the bot class, to be provided using *args.
+	* target: The attribute the setting is to be stored in. Defaults to name. For the 'bot' action, the target is the key to the bot_class dictionary attribute of the game. The value of that key should be a
+	subclass of player.Bot.
+	* action: The action that is taken with the setting. Recognized actions are:
+		* assign: Assign the setting to the attribute.
+		* append: Append the setting to the attribute.
+		* key=foo: Assign the setting to the foo key of the attribute (target[foo] = setting).
+		* map: Uses the setting as a key (of the dictionary store in value) to get the actual setting. That is, target = value[setting].
+		* bot: This is a special action described below.
+	* question: The question to ask the user if no options are provided from the interface. If the question string ends in 'bool', 'bool' is removed from the question string, and the question is asked a yes/no question. A yes answer applies the value, and no answer applies the default.
+	* valid: A list or other container containing all of the valid responses. 'setting in valid' must be True for a setting to be applied. The default for valid is an AllRange object, such that 'foo in AllRange()' is always True. Looks for the full list for list settings.
+	* check: A function taking one parameter, that returns True if the parameter is a valid setting. Checks the full list for list settings.
+	* error_text: Extra text displayed when a user enters an invalid setting in response to the question.
+
+Bot options are handled through the bot action. For the bot action, the target of the option definition is used as a key for the game's bot_classes attribute. The bot_classes attribute should be a dictionary of string keys with values that subclasses of player.Bot. The setting provided is used as the parameters to create an instance of the bot class. If no setting is provided, the value of the option definiton is checked. If it is True (using the is operator, not the equality operator), the default parameters of the bot class are used. Otherwise the definition's value is used as the parameters for the bot class using *args. If a sequence is provided as a setting, it is used as the parameters for the bot class using *args. Otherwise, the setting is provided as a single parameter to the bot class. Bot classes created this way are appended to game.players.
+
+Bot options should have an default of None. That way, no bot will be added unless the player asks for it. To provide a default set for when the player specifies no bot options, change option_set.default_bots. The default_bots attribute should be a list of tuples. Each of the tuples should have a subclass of player.Bot and a tuple of parameters to be supplied with *args. For example, Pig set's it's options_set.default_bots to [(PigBotBasePaceRace, ())]. This creates a single default bot of the PigBotBasePaceRace class with the default parameters.
+
+Note that bots do not need questions. The questions for bots are generalized and based on their name.
+
+For example, say you have a game named Spam. You have two bot classes for the game, Foo and Bar, and each has two integer parameters defaulting to 2 and 3. You want to allow custom Foo and Bar bots, and three preset bots for easy, medium, and hard (Foo(1, 2), Foo(2, 3), and Bar(2, 3), respectively). The default would be 1 medium bot. Here's how you would set that up:
+
+	* Spam.bot_classes = {'foo': Foo, 'bar': Bar}
+	* Spam.option_set.default_bots = [(Foo, (2, 3))]
+	* Spam.option_set.add_option, once each with the following parameters:
+		* name = 'foo', converter = 'int', check = lambda x: len(x) < 3, default = None
+		* name = 'bar', converter = 'int', check = lambda x: len(x) < 3, default = None
+		* name = 'easy', converter = 'int', check = lambda x: len(x) < 3, default = None, target = 'foo', value = (1, 2)
+		* name = 'medium', converter = 'int', check = lambda x: len(x) < 3, default = None, target = 'foo', value = ()
+		* name = 'hard', converter = 'int', check = lambda x: len(x) < 3, default = None, target = 'bar', value = ()
+
+The first one is a class attribute, the rest are done in the set_options method. The converters and the checks make sure no more than two integers are provided as options. The defaults ensure that none of the bots are automatically added every game. The targets on the last three get the right class for the bots. The values on the last three specify the attributes for those bots, with '()' specifying the default attributes.
+
 == Bots ==
 
-If your game is not purely a solitaire game, you will need to create bots to play against. Bots are typically sub-classes of the Bot class in player.py, which is in turn a sub-class of Player. You'll note from the class definition that Bots pick random names for themselves that are not already chosen by another player. You can provide an initial to force the first letter of the name. Some games do this so that it is possible to distinguish which strategy each bot is using. You are free to give your bots other names, but keep in mind that each player (bot or human) should have a unique name. This is necessary because the scores for the game are kept in a dictionary keyed to player name.
+If your game is not purely a solitaire game, you will need to create bots to play against. Bots are typically sub-classes of the Bot class in player.py, which is in turn a sub-class of Player. You'll note from the class definition that Bots pick random names for themselves that are not already chosen by another player. You can provide an initial to force the first letter of the name. Some games do this so that it is possible to distinguish which strategy each bot is using. You are free to give your bots other names, but keep in mind that each player (bot or human) should have a unique name. This is necessary because the scores for the game are kept in a dictionary keyed to player name. Also note that your bot will be passed a taken_names parameter during standard option handling.
 
-Your game should not distinguish between humans and bots. For thing, doing so could mess up tournaments (see the tournament method of the game class). Bots have game attribute which links back to the game instance they are a part of, so they have access to all game information. (Yes, this means that bots can cheat, but it is considered bad form to program them to do so.) Generally, the ask and tell methods are used to tell where in the game flow the bot is, and then the game attribute is used to get information to choose what move to make. Theoretically, you could parse all the information you need from input to the tell method, but the game attribute was provided to remove the need for that.
+Your game should not distinguish between humans and bots. For one thing, doing so could mess up tournaments (see the tournament method of the game class). Bots have game attribute which links back to the game instance they are a part of, so they have access to all game information. (Yes, this means that bots can cheat, but it is considered bad form to program them to do so.) Generally, the ask and tell methods are used to tell where in the game flow the bot is, and then the game attribute is used to get information to choose what move to make. Theoretically, you could parse all the information you need from input to the tell method, but the game attribute was provided to remove the need for that.
 
 You'll want to inform the human player of what happens during the bot's turn. This should be done using self.game.human.tell(). If you construct your text well in the game, you can usually just replace 'you' with the bot's name and maybe switch some other pronouns in what comes into the bot's tell method, and then send that to the human's tell method.

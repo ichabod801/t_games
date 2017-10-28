@@ -27,7 +27,7 @@ class AllRange(object):
 
     def __contains__(self, item):
         """
-        Check for the item being in the range. (bool)
+        Always say the item is in the range. (bool)
 
         Parameters:
         item: The item to check for existence in the range. (object)
@@ -41,19 +41,27 @@ class OptionSet(object):
 
     Attributes:
     aliases: The aliases for the options. (list of str)
+    default_bots: The default bot players. (list of player.Bot)
     definitions: The option definitions for the game. (list of dict)
     errors: Any errors that come up in processing. (list of str)
     game: The game the options are for. (game.Game)
     groups: The option groups. (dict of str: str)
-    settings: The option settings provided. (collections.defaultdict)
+    settings: The option settings provided. (dict of str: object)
     settings_text: The standardized settings text. (str)
 
     Methods: 
     add_group: Add a new option group. (None)
     add_option: Add a new option definition. (None)
+    apply_defaults: Apply the default settings. (None)
     apply_definitions: Apply the option definitions to the text settings. (None)
+    ask_bool: Ask a boolean question. (list)
+    ask_bot_count: Ask a bot question, with count. (list)
+    ask_bot_param: Ask a bot question, with parameters. (list)
+    ask_parameter: Ask for an option parameter. (list)
+    ask_settings: Get the setttings by asking the user. (None)
     handle_settings: Handle text representing some option settings. (None)
     parse_settings: Parse the text settings. (dict of str: str)
+    take_action: Take the final action to apply the option setting. (None)
 
     Overridden Methods:
     __init__
@@ -89,7 +97,7 @@ class OptionSet(object):
         """
         self.groups[name] = expansion
 
-    def add_option(self, name, aliases = [], converter = str, default = False, value = None, target = '', 
+    def add_option(self, name, aliases = [], converter = str, default = False, value = True, target = '', 
         action = 'assign', question = '', valid = AllRange(), check = lambda x: True, error_text = ''):
         """
         Add a new option definition. (None)
@@ -123,8 +131,6 @@ class OptionSet(object):
         # Convert empty parapmeters.
         if target == '':   # instead of 'not target' b/c target could be empty dictionary.
             target = name
-        if value is None:
-            value = True
         # Create and add the dictionary for the definition.
         definition = {'name': name, 'converter': converter, 'default': default, 'value': value, 
             'target': target, 'action': action, 'question': question, 'valid': valid, 'check': check, 
@@ -146,98 +152,157 @@ class OptionSet(object):
         """
         for definition in self.definitions:
             new_settings = {}
+            # If the option was not specified, use the default (if any).
             if not prelim_settings[definition['name']]:
                 if definition['default'] is None:
                     continue
                 else:
                     self.take_action(definition, definition['default'])
             else:
+                # Loop through the settings for the option.
                 error = 'Invalid {} parameter: {!r}.'
                 valid = definition['valid']
                 check = definition['check']
                 for setting in prelim_settings[definition['name']]:
+                    # Add the value for simple options.
                     if setting is None:
                         self.take_action(definition, definition['value'])
+                    # Check for a list of settings.
                     elif '/' in setting or isinstance(definition['default'], (list, tuple)):
                         try:
                             setting = [definition['converter'](item) for item in setting.split('/')]
                         except ValueError:
+                            # Give an error message for invalid items in the list.
                             self.errors.append(error.format(definition['name'], setting))
                         else:
+                            # Check the list for validity.
                             if not (setting in valid and check(setting)):
                                 self.errors.append(error.format(definition['name'], setting))
                             else:
                                 self.take_action(definition, setting)
+                    # Check for a single item setting.
                     else:
                         try:
                             setting = definition['converter'](setting)
                         except ValueError:
+                            # Give an error message for invalid type of setting.
                             self.errors.append(error.format(definition['name'], setting))
                         else:
+                            # Check the setting for validity.
                             if not (setting in valid and check(setting)):
                                 self.errors.append(error.format(definition['name'], setting))
                             else:
                                 self.take_action(definition, setting)
 
+    def ask_bool(self):
+        """
+        Ask a boolean question. (list)
+
+        Parameters:
+        definition: The definition of the option to ask about. (dict)
+        """
+        pairs = []
+        yes_no = self.game.human.ask(definition['question']) in utility.YES
+        if yes_no:
+            setting = definition['value']
+            pairs = [(definition['name'], None)]
+        else:
+            setting = definition['default']
+        self.take_action(definition, setting)
+        return pairs
+
+    def ask_bot_count(self):
+        """
+        Ask a bot question, with count. (list)
+
+        Parameters:
+        definition: The definition of the option to ask about. (dict)
+        """
+        # Get the count.
+        query = 'How many {} bots would you like? '.format(definition['name'])
+        bot_num = self.game.human.ask_int(query, valid = range(11), default = 0, cmd = 0)
+        # Apply the count.
+        pairs = [(definition['name'], None)] * bot_num
+        setting = definition['value']
+        for bot in range(bot_num):
+            self.take_action(definition, setting)
+        return pairs
+
+    def ask_bot_param(self):
+        """
+        Ask a bot question, with parameters. (list)
+
+        Parameters:
+        definition: The definition of the option to ask about. (dict)
+        """
+        # Set up the loop.
+        pairs = []
+        bot_query = 'Would you like to add a {} bot? '.format(definition['name'])
+        param_query = 'What parameters should the {} bot have? '.format(definition['name'])
+        # Ask if they want to add one until they don't.
+        while self.game.human.ask(bot_query) in utility.YES:
+            # Ask for parameters until they enter a valid set.
+            while True:
+                raw_params = self.game.human.ask(param_query)
+                if not raw_params:
+                    setting = ()
+                    break
+                try:
+                    converter = definition['converter']
+                    setting = [converter(param) for param in raw_params.split('/')]
+                except ValueError:
+                    pass
+                else:
+                    if setting in definition['valid'] and definition['check'](setting):
+                        break
+                self.game.human.tell('That input is not valid.')
+            # Apply the bot and the parameters.
+            pairs.append((definition['name'], ''.join(raw_params.split())))
+            self.take_action(definition, setting)
+        return pairs
+
+    def ask_parameter(self):
+        """
+        Ask for an option parameter. (list)
+
+        Parameters:
+        definition: The definition of the option to ask about. (dict)
+        """
+        pairs = []
+        # Get a valid parameter.
+        while True:
+            raw_setting = self.game.human.ask(definition['question'])
+            if not raw_setting:
+                setting = definition['default']
+                break
+            try:
+                setting = definition['converter'](raw_setting)
+            except ValueError:
+                pass
+            else:
+                if setting in definition['valid'] and definition['check'](setting):
+                    break
+            self.game.human.tell('That input is not valid.')
+        # Apply the parameter.
+        if raw_setting:
+            pairs.append((definition['name'], raw_setting))
+        self.take_action(definition, setting)
+        return pairs
+
     def ask_settings(self):
         """Get the setttings by asking the user. (None)"""
-        # !! refactor this once I'm sure it's working. Perhaps the validity check?
         if self.game.human.ask('Would you like to change the options? ') in utility.YES:
             self.game.flags |= 1
             pairs = []
             for definition in self.definitions:
                 if definition['question_type'] == 'bool':
-                    yes_no = self.game.human.ask(definition['question']) in utility.YES
-                    if yes_no:
-                        setting = definition['value']
-                        pairs.append((definition['name'], None))
-                    else:
-                        setting = definition['default']
-                    self.take_action(definition, setting)
+                    pairs.extend(self.ask_bool(definition))
                 elif definition['question_type'] == 'bot-param':
-                    bot_query = 'Would you like to add a {} bot? '.format(definition['name'])
-                    param_query = 'What parameters should the {} bot have? '.format(definition['name'])
-                    while self.game.human.ask(bot_query) in utility.YES:
-                        while True:
-                            raw_params = self.game.human.ask(param_query)
-                            if not raw_params:
-                                setting = ()
-                                break
-                            try:
-                                converter = definition['converter']
-                                setting = [converter(param) for param in raw_params.split('/')]
-                            except ValueError:
-                                pass
-                            else:
-                                if setting in definition['valid'] and definition['check'](setting):
-                                    break
-                            self.game.human.tell('That input is not valid.')
-                        pairs.append((definition['name'], ''.join(raw_params.split())))
-                        self.take_action(definition, setting)
+                    pairs.extend(self.ask_bot_param(definition))
                 elif definition['question_type'] == 'bot-count':
-                    query = 'How many {} bots would you like? '.format(definition['name'])
-                    bot_num = self.game.human.ask_int(query, valid = range(11), default = 0, cmd = 0)
-                    pairs.extend([(definition['name'], None)] * bot_num)
-                    setting = definition['value']
-                    for bot in range(bot_num):
-                        self.take_action(definition, setting)
+                    pairs.extend(self.ask_bot_count(definition))
                 else:
-                    while True:
-                        raw_setting = self.game.human.ask(definition['question'])
-                        if not raw_setting:
-                            setting = definition['default']
-                            break
-                        try:
-                            setting = definition['converter'](raw_setting)
-                        except ValueError:
-                            pass
-                        else:
-                            if setting in definition['valid'] and definition['check'](setting):
-                                break
-                        self.game.human.tell('That input is not valid.')
-                    if raw_setting:
-                        pairs.append((definition['name'], raw_setting))
-                    self.take_action(definition, setting)
+                    pairs.extend(self.ask_parameter(definition))
             # Create standardized text.
             pairs.sort()
             text_pairs = [('='.join(pair) if pair[1] is not None else pair[0]) for pair in pairs]
