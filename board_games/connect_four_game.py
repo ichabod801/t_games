@@ -58,6 +58,221 @@ rows: (r): How many rows the board should have (4-20, default 6).
 """
 
 
+class C4BotAlphaBeta(player.AlphaBetaBot):
+    """
+    A Connect Four bot with a tree search and alpha beta pruning. (player.Bot)
+
+    Methods:
+    eval_player: Evaluate one player's position. (int)
+    find_shorts: Find all two or three pieces in a row. (tuple of list of tuple)
+
+    Overridden Methods:
+    __init__
+    ask
+    ask_int
+    eval_board
+    """
+
+    # !! needs to be expanded based on board size.
+    # !! pattern is across the bottom then up.
+    board_strength = [[3, 4, 5, 5, 4, 3], [4, 6, 8, 8, 6, 4], [5, 8, 11, 11, 8, 5], [7, 10, 13, 13, 10, 7],
+        [5, 8, 11, 11, 8, 5], [4, 6, 8, 8, 6, 4], [3, 4, 5, 5, 4, 3]]
+
+    def __init__(self, depth = 6, fudge = 1, taken_names = [], initial = ''):
+        """
+        Set up the bot. (None)
+
+        Parameters:
+        depth: The depth of the search. (int)
+        fudge: A fudge factor to avoid early capitulation. (int or float)
+        taken_names: Names already used by a player. (list of str)
+        initial: The first letter of the bot's name. (str)
+        """
+        super(C4BotAlphaBeta, self).__init__(depth, fudge, taken_names, initial)
+
+    def ask(self, prompt):
+        """
+        Get info from the bot. (str)
+
+        Parameters:
+        prompt: The information needed from the player. (str)
+        """
+        if prompt == 'What symbol would you like to use? ':
+            self.symbol = random.choice('@#XO')
+            return self.symbol
+
+    def ask_int(self, prompt, valid = [], low = 0, high = 0):
+        """
+        Get an integer from the user. (str)
+
+        If valid is empty and high and low are both 0, any integer is considered
+        a valid input.
+
+        Parameters:
+        prompt: The text to prompt the user with. (str)
+        valid: The list of valid inputs. (list of int)
+        low: The lowest valid input. (int)
+        high: The highest valid input. (int)
+        """
+        clone = self.game.board.copy()
+        results = self.alpha_beta(clone, self.depth, -utility.MAX_INT, utility.MAX_INT, True)
+        return results[0][0] + 1
+
+    def eval_board(self, board):
+        """
+        Evaluate the board. (int)
+
+        This is just the specified player's evaluation minus the other player's.
+
+        Parameters:
+        board: The board to evaluate. (Connect4Board)
+        player_index: The index of the player to evaluate the board for. (int)
+        """
+        status = board.check_win()
+        if status == 'game on':
+            index = self.game.players.index(self)
+            result = self.eval_player(board, index) - self.eval_player(board, 1 - index)
+        elif status == 'draw':
+            result = 0
+        elif status == self.symbol:
+            result = 10000
+        else:
+            result = -10000
+        """print(board)
+        print(result)
+        print()"""
+        return result
+
+    def eval_player(self, board, player_index):
+        """
+        Evaluate one player's position. (int)
+
+        The value of the board is the board value of all the pieces, plus 10 
+        for each two-in-a-row and 100 for each three-in-a-row. A win is worth
+        10,000, and a draw is worth 0.
+
+        Parameters:
+        board: The game board. (C4Board)
+        player_index: The index (turn order) of the player to evaluate. (int)
+        """
+        # get the player's piece symbol
+        piece = self.game.symbols[player_index]
+        # check board value of pieces
+        locations = [location for location, cell in board.cells.items() if cell.piece == piece]
+        score = 0
+        for column, row in locations:
+            score += self.board_strength[column][row]
+        # check for n-in-a-rows.
+        twos, threes = self.find_shorts(locations)
+        score += 10 * len(twos)
+        score += 100 * len(threes)
+        return score
+
+    def find_shorts(self, locations):
+        """
+        Find all two or three pieces in a row. (tuple of list of tuple)
+
+        Parameters:
+        locations: The locations of one player's pieces. (list of tuple)
+        """
+        twos, threes = [], []
+        # loop through cells, checking forward and backward
+        for coordinate in locations:
+            for offset in ((0, 1), (1, 1), (1, 0), (1, -1)):
+                forward = coordinate + offset
+                backward = coordinate - offset
+                # check for threes
+                if forward in locations and backward in locations:
+                    threes.append((backward, coordinate, forward))
+                # check for twos, only forward to avoid doubles
+                elif forward in locations:
+                    twos.append((coordinate, forward))
+        return twos, threes
+
+    def set_up(self):
+        base = list(range(3, 3 + self.game.columns // 2))
+        if self.game.columns % 2:
+            base = base + [base[-1] + 2] + base[::-1]
+        else:
+            base[-1] += 1
+            base = base + base[::-1]
+        mod = [3] * len(base)
+        mod[:2] = [1, 2]
+        mod[-2:] = [2, 1]
+        board_strength = [base]
+        while len(board_strength) < self.game.rows / 2:
+            board_strength.append([a + b for a, b in zip(board_strength[-1], mod)])
+        if not self.game.rows % 2:
+            board_strength.append(board_strength[-1])
+        while len(board_strength) < self.game.rows:
+            board_strength.append([a - b for a, b in zip(board_strength[-1], mod)])
+        self.board_strength = list(zip(*board_strength))
+
+
+class C4BotGamma(C4BotAlphaBeta):
+    """
+    An alpha-beta Connect Four bot with a better eval function. (C4BotAlphaBeta)
+
+    Eval based on two-way twos, one-way threes, and two-way threes; with modifications for those that are
+    currently playable and eventually playable.
+
+    Methods:
+    bin_shorts: Categorize n-in-a-rows by blockage. (dict of str: int)
+
+    Overridden Methods:
+    eval_player
+    """
+
+    bin_values = {'2-0': 50, '2-1': 25, '2-2': 0, '3-0': 200, '3-1': 100, '3-2': 0}
+
+    def bin_shorts(self, locations):
+        """
+        Categorize n-in-a-rows by blockage. (dict of str: int)
+
+        The keys of the return value are length of chain dash ends blocked.
+
+        Parameters:
+        locations: The locations of one player's pieces. (list of tuple)
+        """
+        raw_twos, raw_threes = self.find_shorts(locations)
+        bins = {'2-0': 0, '2-1': 0, '2-2': 0, '3-0': 0, '3-1': 0, '3-2': 0}
+        for chain in raw_twos + raw_threes:
+            offset = chain[1] - chain[0]
+            forward = chain[-1] + offset
+            backward = chain[0] - offset
+            blocks = 0
+            if forward not in self.game.board.cells or self.game.board.cells[forward].piece:
+                blocks += 1
+            if backward not in self.game.board.cells or self.game.board.cells[backward].piece:
+                blocks += 1
+            bins['{}-{}'.format(len(chain), blocks)] += 1
+        return bins
+
+    def eval_player(self, board, player_index):
+        """
+        Evaluate one player's position. (int)
+
+        The value of the board is based on piece location and two or threes in  a row, 
+        considering how blocked they are.
+
+        !! still needs to consider odd/even open ends (I think, check for strategy)
+
+        Parameters:
+        board: The game board. (C4Board)
+        player_index: The index (turn order) of the player to evaluate. (int)
+        """
+        # get the player's piece symbol
+        piece = self.game.symbols[player_index]
+        # check board value of pieces
+        locations = [location for location, cell in board.cells.items() if cell.piece == piece]
+        score = 0
+        for column, row in locations:
+            score += self.board_strength[column][row]
+        # check for n-in-a-rows.
+        bins = self.bin_shorts(locations)
+        for bin in bins:
+            score += bins[bin] * self.bin_values[bin]
+        return score
 class C4Board(board.GridBoard):
     """
     A board for Connect Four type games. (board.GridBoard)
@@ -313,11 +528,11 @@ class ConnectFour(game.Game):
 
     def handle_options(self):
         """Determine and handle the options for the game. (None)"""
-        super(ConnectFour, self).handle_options(self)
+        super(ConnectFour, self).handle_options()
         # Set the bot.
-        if bot_level == 'easy':
+        if self.bot_level == 'easy':
             self.bot = C4BotAlphaBeta(taken_names = [self.human.name])
-        elif bot_level == 'medium':
+        elif self.bot_level == 'medium':
             self.bot = C4BotGamma(taken_names = [self.human.name])
         else:
             self.bot = C4BotGamma(depth = 8, taken_names = [self.human.name])
@@ -342,10 +557,10 @@ class ConnectFour(game.Game):
         self.option_set.add_option('rows', ['r'], int, 6, valid = range(4, 20),
             question = 'How many rows should there be on theh board (return for 6)? ')
         self.option_set.add_option('pop', ['p'], target = 'poppable',
-            question = 'Should you be able to pop out the bottom piece in a row? ')
+            question = 'Should you be able to pop out the bottom piece in a row? bool')
         self.option_set.add_option('bot-level', ['b'], 
-            valid = ['easy', 'medium', 'hard'],
-            quesstion = 'How hard of a bot do you want to play against (return for medium?? ')
+            valid = ['easy', 'medium', 'hard'], default = 'medium', 
+            question = 'How hard of a bot do you want to play against (return for medium)? ')
         
     def player_turn(self, now_player):
         """
@@ -384,220 +599,6 @@ class ConnectFour(game.Game):
         self.bot.set_up()
         self.bot_random = False
 
-class C4BotAlphaBeta(player.AlphaBetaBot):
-    """
-    A Connect Four bot with a tree search and alpha beta pruning. (player.Bot)
-
-    Methods:
-    eval_player: Evaluate one player's position. (int)
-    find_shorts: Find all two or three pieces in a row. (tuple of list of tuple)
-
-    Overridden Methods:
-    __init__
-    ask
-    ask_int
-    eval_board
-    """
-
-    # !! needs to be expanded based on board size.
-    # !! pattern is across the bottom then up.
-    board_strength = [[3, 4, 5, 5, 4, 3], [4, 6, 8, 8, 6, 4], [5, 8, 11, 11, 8, 5], [7, 10, 13, 13, 10, 7],
-        [5, 8, 11, 11, 8, 5], [4, 6, 8, 8, 6, 4], [3, 4, 5, 5, 4, 3]]
-
-    def __init__(self, depth = 6, fudge = 1, taken_names = [], initial = ''):
-        """
-        Set up the bot. (None)
-
-        Parameters:
-        depth: The depth of the search. (int)
-        fudge: A fudge factor to avoid early capitulation. (int or float)
-        taken_names: Names already used by a player. (list of str)
-        initial: The first letter of the bot's name. (str)
-        """
-        super(C4BotAlphaBeta, self).__init__(depth, fudge, taken_names, initial)
-
-    def ask(self, prompt):
-        """
-        Get info from the bot. (str)
-
-        Parameters:
-        prompt: The information needed from the player. (str)
-        """
-        if prompt == 'What symbol would you like to use? ':
-            self.symbol = random.choice('@#XO')
-            return self.symbol
-
-    def ask_int(self, prompt, valid = [], low = 0, high = 0):
-        """
-        Get an integer from the user. (str)
-
-        If valid is empty and high and low are both 0, any integer is considered
-        a valid input.
-
-        Parameters:
-        prompt: The text to prompt the user with. (str)
-        valid: The list of valid inputs. (list of int)
-        low: The lowest valid input. (int)
-        high: The highest valid input. (int)
-        """
-        clone = self.game.board.copy()
-        results = self.alpha_beta(clone, self.depth, -utility.MAX_INT, utility.MAX_INT, True)
-        return results[0][0] + 1
-
-    def eval_board(self, board):
-        """
-        Evaluate the board. (int)
-
-        This is just the specified player's evaluation minus the other player's.
-
-        Parameters:
-        board: The board to evaluate. (Connect4Board)
-        player_index: The index of the player to evaluate the board for. (int)
-        """
-        status = board.check_win()
-        if status == 'game on':
-            index = self.game.players.index(self)
-            result = self.eval_player(board, index) - self.eval_player(board, 1 - index)
-        elif status == 'draw':
-            result = 0
-        elif status == self.symbol:
-            result = 10000
-        else:
-            result = -10000
-        """print(board)
-        print(result)
-        print()"""
-        return result
-
-    def eval_player(self, board, player_index):
-        """
-        Evaluate one player's position. (int)
-
-        The value of the board is the board value of all the pieces, plus 10 
-        for each two-in-a-row and 100 for each three-in-a-row. A win is worth
-        10,000, and a draw is worth 0.
-
-        Parameters:
-        board: The game board. (C4Board)
-        player_index: The index (turn order) of the player to evaluate. (int)
-        """
-        # get the player's piece symbol
-        piece = self.game.symbols[player_index]
-        # check board value of pieces
-        locations = [location for location, cell in board.cells.items() if cell.piece == piece]
-        score = 0
-        for column, row in locations:
-            score += self.board_strength[column][row]
-        # check for n-in-a-rows.
-        twos, threes = self.find_shorts(locations)
-        score += 10 * len(twos)
-        score += 100 * len(threes)
-        return score
-
-    def find_shorts(self, locations):
-        """
-        Find all two or three pieces in a row. (tuple of list of tuple)
-
-        Parameters:
-        locations: The locations of one player's pieces. (list of tuple)
-        """
-        twos, threes = [], []
-        # loop through cells, checking forward and backward
-        for coordinate in locations:
-            for offset in ((0, 1), (1, 1), (1, 0), (1, -1)):
-                forward = coordinate + offset
-                backward = coordinate - offset
-                # check for threes
-                if forward in locations and backward in locations:
-                    threes.append((backward, coordinate, forward))
-                # check for twos, only forward to avoid doubles
-                elif forward in locations:
-                    twos.append((coordinate, forward))
-        return twos, threes
-
-    def set_up(self):
-        base = list(range(3, 3 + self.game.columns // 2))
-        if self.game.columns % 2:
-            base = base + [base[-1] + 2] + base[::-1]
-        else:
-            base[-1] += 1
-            base = base + base[::-1]
-        mod = [3] * len(base)
-        mod[:2] = [1, 2]
-        mod[-2:] = [2, 1]
-        board_strength = [base]
-        while len(board_strength) < self.game.rows / 2:
-            board_strength.append([a + b for a, b in zip(board_strength[-1], mod)])
-        if not self.game.rows % 2:
-            board_strength.append(board_strength[-1])
-        while len(board_strength) < self.game.rows:
-            board_strength.append([a - b for a, b in zip(board_strength[-1], mod)])
-        self.board_strength = list(zip(*board_strength))
-
-class C4BotGamma(C4BotAlphaBeta):
-    """
-    An alpha-beta Connect Four bot with a better eval function. (C4BotAlphaBeta)
-
-    Eval based on two-way twos, one-way threes, and two-way threes; with modifications for those that are
-    currently playable and eventually playable.
-
-    Methods:
-    bin_shorts: Categorize n-in-a-rows by blockage. (dict of str: int)
-
-    Overridden Methods:
-    eval_player
-    """
-
-    bin_values = {'2-0': 50, '2-1': 25, '2-2': 0, '3-0': 200, '3-1': 100, '3-2': 0}
-
-    def bin_shorts(self, locations):
-        """
-        Categorize n-in-a-rows by blockage. (dict of str: int)
-
-        The keys of the return value are length of chain dash ends blocked.
-
-        Parameters:
-        locations: The locations of one player's pieces. (list of tuple)
-        """
-        raw_twos, raw_threes = self.find_shorts(locations)
-        bins = {'2-0': 0, '2-1': 0, '2-2': 0, '3-0': 0, '3-1': 0, '3-2': 0}
-        for chain in raw_twos + raw_threes:
-            offset = chain[1] - chain[0]
-            forward = chain[-1] + offset
-            backward = chain[0] - offset
-            blocks = 0
-            if forward not in self.game.board.cells or self.game.board.cells[forward].piece:
-                blocks += 1
-            if backward not in self.game.board.cells or self.game.board.cells[backward].piece:
-                blocks += 1
-            bins['{}-{}'.format(len(chain), blocks)] += 1
-        return bins
-
-    def eval_player(self, board, player_index):
-        """
-        Evaluate one player's position. (int)
-
-        The value of the board is based on piece location and two or threes in  a row, 
-        considering how blocked they are.
-
-        !! still needs to consider odd/even open ends (I think, check for strategy)
-
-        Parameters:
-        board: The game board. (C4Board)
-        player_index: The index (turn order) of the player to evaluate. (int)
-        """
-        # get the player's piece symbol
-        piece = self.game.symbols[player_index]
-        # check board value of pieces
-        locations = [location for location, cell in board.cells.items() if cell.piece == piece]
-        score = 0
-        for column, row in locations:
-            score += self.board_strength[column][row]
-        # check for n-in-a-rows.
-        bins = self.bin_shorts(locations)
-        for bin in bins:
-            score += bins[bin] * self.bin_values[bin]
-        return score
 
 if __name__ == '__main__':
     try:
