@@ -197,7 +197,7 @@ class OptionSet(object):
                             else:
                                 self.take_action(definition, setting)
 
-    def ask_bool(self):
+    def ask_bool(self, definition):
         """
         Ask a boolean question. (list)
 
@@ -214,7 +214,7 @@ class OptionSet(object):
         self.take_action(definition, setting)
         return pairs
 
-    def ask_bot_count(self):
+    def ask_bot_count(self, definition):
         """
         Ask a bot question, with count. (list)
 
@@ -231,7 +231,7 @@ class OptionSet(object):
             self.take_action(definition, setting)
         return pairs
 
-    def ask_bot_param(self):
+    def ask_bot_param(self, definition):
         """
         Ask a bot question, with parameters. (list)
 
@@ -264,7 +264,7 @@ class OptionSet(object):
             self.take_action(definition, setting)
         return pairs
 
-    def ask_parameter(self):
+    def ask_parameter(self, definition):
         """
         Ask for an option parameter. (list)
 

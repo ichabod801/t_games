@@ -564,19 +564,19 @@ class Blackjack(game.Game):
         self.option_set.add_option('true-double', 
             question = 'Should a double have to be a true double? bool')
         self.option_set.add_option('no-double-split', value = False, default = True, 
-            target = 'double_split', question = 'Should you be able to double a split hand? bool')
+            target = 'double_split', question = 'Should doubling a split hand be banned? bool')
         # Splitting options.
         self.option_set.add_option('split-rank',
             question = 'Should you only be able to split hands of equal rank? bool')
         self.option_set.add_option('no-resplit', value = False, default = True, target = 'resplit',
-            question = 'Should you be able to split a split hand? bool')
+            question = 'Should you be blocked from splitting a split hand? bool')
         self.option_set.add_option('hit-split-ace',
             question = 'Should you be able to hit split aces? bool')
         # Showdown options.
         self.option_set.add_option('surrender',
             question = 'Should you be able to surrender hands? bool')
         self.option_set.add_option('s17', value = False, default = True, target = 'hit_soft_17',
-            question = 'Should the dealer have to hit a soft 17? bool')
+            question = 'Should the dealer be able to stand on a soft 17? bool')
 
     def player_turn(self, player):
         """
