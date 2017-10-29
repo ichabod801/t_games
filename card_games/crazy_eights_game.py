@@ -18,6 +18,7 @@ import random
 
 import tgames.cards as cards
 import tgames.game as game
+import tgames.options as options
 import tgames.player as player
 import tgames.utility as utility
 
@@ -291,43 +292,6 @@ class CrazyEights(game.Game):
     num_options = 14
     rules = RULES
 
-    def ask_options(self):
-        """Get game options from the user. (None)"""
-        options = self.human.ask('Would you like to change the options? ')
-        if options in utility.YES:
-            self.flags |= 1
-            query = 'How many players should there be, including you (return for 5)? '
-            self.num_players = self.human.ask_int(query, low = 2, default = 5, cmd = False)
-            query = 'How many smart bots should there be (return for 2)? '
-            max_smart = self.num_players - 1
-            default = min(2, max_smart)
-            self.num_smart = self.human.ask_int(query, low = 0, high = max_smart, default = default,
-                cmd = False)
-            answer = self.human.ask('Should there be an alert when a player is down to one card? ')
-            self.one_alert = answer in utility.YES
-            query = 'What should be done with an empty deck: reshuffle, score, or pass? '
-            self.empty_deck = self.human.ask_valid(query, ['reshuffle', 'score', 'pass'], 'score')
-            query = 'What ranks allows changing suits (return for 8)? '
-            self.change_rank = self.human.ask_valid(query, list(cards.Card.ranks[1:].lower()), '8')
-            self.change_rank = self.change_rank.upper()
-            query = 'Should the change suits card have to match the current suit? '
-            self.change_match = self.human.ask(query) in utility.YES
-            query = "Should the change suits card just change to it's own suit? "
-            self.change_set = self.human.ask(query) in utility.YES
-            if self.human.ask('Should the game end after one round? ') in utility.YES:
-                self.goal = 1
-            query = 'Should every one score the most points minus their points each round? '
-            self.multi_score = self.human.ask(query) in utility.YES
-            query = 'Should a player who cannot play only have to draw one card? '
-            self.draw_one = self.human.ask(query) in utility.YES
-            query = 'What rank should force the next player to draw cards (return for none)? '
-            self.draw_rank = self.human.ask_valid(query, list(cards.Card.ranks[1:].lower()), ' ').strip()
-            query = 'What rank should reverse the order of play (return for none)? '
-            self.reverse_rank = self.human.ask_valid(query, list(cards.Card.ranks[1:].lower()), ' ')
-            self.reverse_rank = self.reverse_rank.strip()
-            query = 'What rank should skip the next player (return for none)? '
-            self.skip_rank = self.human.ask_valid(query, list(cards.Card.ranks[1:].lower()), ' ').strip()
-
     def deal(self, keep_one = False):
         """
         Deal the cards to the players. (None)
@@ -475,100 +439,53 @@ class CrazyEights(game.Game):
 
     def handle_options(self):
         """Handle the game options. (None)"""
-        # Set the default options.
-        self.num_players = 5
-        self.num_smart = 2
-        self.goal = 0
-        self.one_alert = False
-        self.empty_deck = 'score'
-        self.change_rank = '8'
-        self.draw_rank = ''
-        self.reverse_rank = ''
-        self.skip_rank = ''
-        self.change_match = False
-        self.change_set = False
-        self.draw_one = False
-        self.multi_score = False
-        # Check for no options.
-        if self.raw_options.lower() == 'none':
-            pass
-        # Check for passed options.
-        elif self.raw_options:
-            self.flags |= 1
-            self.parse_options()
-        # Ask for options:
-        else:
-            self.ask_options()
+        super(CrazyEights, self).handle_options()
         # Set up the players.
         self.players = [self.human]
         taken_names = [self.human.name]
-        for bot in range(self.num_smart):
-            self.players.append(C8SmartBot(taken_names))
-            taken_names.append(self.players[-1].name)
-        for bot in range(self.num_players - len(self.players)):
+        if not self.num_easy + self.num_medium:
+            self.num_medium = 10 # !! switch this to num_hard when a hard bot is available.
+        for bot in range(self.num_easy):
             self.players.append(C8Bot(taken_names))
             taken_names.append(self.players[-1].name)
-        # Catch invalid num_smart.
-        self.players = self.players[:self.num_players]
+        for bot in range(self.num_medium):
+            self.players.append(C8SmartBot(taken_names))
+            taken_names.append(self.players[-1].name)
         # Set the winning score.
         if not self.goal:
             self.goal = 50 * self.num_players
 
-    def parse_options(self):
-        """Parse the options passed from the interface. (None)"""
-        for word in self.raw_options.lower().split():
-            if word == 'one-alert':
-                self.one_alert = True
-            elif word == 'pass':
-                self.empty_deck = 'pass'
-            elif word == 'reshuffle':
-                self.empty_deck = 'reshuffle'
-            elif word == 'change-match':
-                self.change_match = True
-            elif word == 'change-set':
-                self.change_set = True
-            elif word == 'one-round':
-                self.goal = 1
-            elif word == 'multi-score':
-                self.multi_score = True
-            elif word == 'draw-one':
-                self.draw_one = True
-            elif '=' in word:
-                option, value = word.split('=')
-                if option == 'players':
-                    if value.isdigit():
-                        self.num_players = max(int(value), 2)
-                    else:
-                        self.human.tell('Invalid value for players option: {!r}'.format(value))
-                elif option == 'smart':
-                    if value.isdigit():
-                        self.num_smart = int(value)
-                    else:
-                        self.human.tell('Invalid value for smart option: {!r}'.format(value))
-                elif option == 'change':
-                    if value in list(cards.Card.ranks[1:].lower()):
-                        self.change_rank = value.upper()
-                    else:
-                        self.human.tell('Invalid value for change option: {!r}'.format(value))
-                elif option == 'draw':
-                    if value in list(cards.Card.ranks[1:].lower()):
-                        self.draw_rank = value.upper()
-                    else:
-                        self.human.tell('Invalid value for draw option: {!r}'.format(value))
-                elif option == 'reverse':
-                    if value in list(cards.Card.ranks[1:].lower()):
-                        self.reverse_rank = value.upper()
-                    else:
-                        self.human.tell('Invalid value for reverse option: {!r}'.format(value))
-                elif option == 'skip':
-                    if value in list(cards.Card.ranks[1:].lower()):
-                        self.skip_rank = value.upper()
-                    else:
-                        self.human.tell('Invalid value for skip option: {!r}'.format(value))
-                else:
-                    self.human.tell('Invalid option for Crazy Eights: {}=.'.format(option))
-            else:
-                self.human.tell('Invalid option for Crazy Eights: {}.'.format(word))
+    def set_options(self):
+        """Define the options for the game. (None)"""
+        self.option_set.add_option('one-alert', 
+            question = 'Should there be an alert when a player has only one card left? bool')
+        self.option_set.add_option('empty-deck', [], options.lower, default = 'score',
+            valid = ('pass', 'reshuffle', 'score'),
+            question = 'What should be done when the deck is empty (return for score)? ',
+            error_text = 'Valid responses are pass, reshuffle, or score.')
+        self.option_set.add_option('change-match',
+            question = 'Should the suit change card have to match the last card played? bool')
+        self.option_set.add_option('change-set',
+            question = 'Should the suit change card just change to its own suit? bool')
+        self.option_set.add_option('one-round', target = 'goal', value = 1, default = 0,
+            question = 'Should the game end after one round? bool')
+        self.option_set.add_option('multi-score',
+            question = 'Should everyone but the player with the highest hand score each time? bool')
+        self.option_set.add_option('draw-one',
+            question = 'Should you only have to draw one card if you cannot play a card? ')
+        self.option_set.add_option('easy', [], int, 2, valid = range(10),
+            question = 'How many easy bots should there be (return for 2)? ')
+        self.option_set.add_option('medium', [], int, 2, valid = range(10),
+            question = 'How many medium bots should there be (return for 2)? ')
+        rank_error = 'The valid card ranks are {}.'.format(', '.join(cards.Card.ranks))
+        self.option_set.add_option('change-rank', [], options.upper, '8', valid = cards.Card.ranks,
+            question = 'What rank should change the suit? ', error_text = rank_error)
+        self.option_set.add_option('draw-rank', [], options.upper, '', valid = cards.Card.ranks,
+            question = 'What rank should force the next player to draw? ', error_text = rank_error)
+        self.option_set.add_option('reverse-rank', [], options.upper, '', valid = cards.Card.ranks,
+            question = 'What rank should reverse the order of play? ', error_text = rank_error)
+        self.option_set.add_option('skip-rank', [], options.upper, '', valid = cards.Card.ranks,
+            question = 'What rank should skip the next player? ', error_text = rank_error)
 
     def pass_turn(self, player):
         """
