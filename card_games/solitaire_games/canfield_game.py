@@ -3,6 +3,8 @@ canfield_game.py
 
 game of Canfield.
 
+!! undo fails. No undo attribute. But works in freecell.
+
 Classes:
 Canfield: A game of Canfield. (Solitaire)
 

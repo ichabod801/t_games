@@ -153,3 +153,7 @@ Battleships,1,0,0,1,56,1,inventory=wikipedia
 Blackjack,1,0,0,240,140,5,decks=2 limit=64 stake=200
 Blackjack,0,1,0,71,220,7,hit-split-ace no-double-split no-resplit s17 split-rank surrender true-double
 Canfield,0,1,0,564,128,4,
+Canfield,1,0,0,681,113,1,variant=rainbow
+Canfield,0,1,0,750,111,5,variant=rainbow-one
+Canfield,0,1,0,736,31,5,variant=selective
+Canfield,0,1,0,762,79,7,variant=storehouse

@@ -259,6 +259,8 @@ class OptionSet(object):
                     if setting in definition['valid'] and definition['check'](setting):
                         break
                 self.game.human.tell('That input is not valid.')
+                if definition['error_text']:
+                    self.game.human.tell(definition['error_text'])
             # Apply the bot and the parameters.
             pairs.append((definition['name'], ''.join(raw_params.split())))
             self.take_action(definition, setting)
@@ -286,6 +288,8 @@ class OptionSet(object):
                 if setting in definition['valid'] and definition['check'](setting):
                     break
             self.game.human.tell('That input is not valid.')
+            if definition['error_text']:
+                self.game.human.tell(definition['error_text'])
         # Apply the parameter.
         if raw_setting:
             pairs.append((definition['name'], raw_setting))
