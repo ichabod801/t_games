@@ -374,7 +374,7 @@ class Solitaire(game.Game):
                 self.transfer(move_stack, old_location, track = False)
                 if undo_ndx:
                     self.undo_count -= 1
-                    self.undo(1)
+                    self.do_undo()
             # no move to undo
             else:
                 self.human.tell('There are no moves to undo.')

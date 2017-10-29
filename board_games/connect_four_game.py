@@ -262,6 +262,7 @@ class ConnectFour(game.Game):
     set_up
     """
 
+    bot_classes = {'alpha-beta': C4BotAlphaBeta, 'gamma': C4BotGamma}
     categories = ['Board Games', 'Space Games']
     credits = CREDITS
     name = 'Connect Four'
@@ -312,64 +313,11 @@ class ConnectFour(game.Game):
 
     def handle_options(self):
         """Determine and handle the options for the game. (None)"""
-        # !! refactor, too long.
-        # Set default options.
-        bot_level = 'medium'
-        self.columns = 7
-        self.rows = 6
-        self.poppable = False
-        # Handle no options.
-        if self.raw_options.lower() == 'none':
-            pass
-        # Handle options from the interface.
-        elif self.raw_options:
-            for word in self.raw_options.lower().split():
-                if word in ('easy', 'e'):
-                    bot_level = 'easy'
-                elif word in ('medium', 'm'):
-                    bot_level = 'medium'
-                elif word in ('hard', 'h'):
-                    bot_level = 'hard'
-                elif word in ('pop', 'p'):
-                    self.poppable = True
-                if '=' in word:
-                    option, value = words.split('=')
-                    try:
-                        int_value = int(value)
-                    except ValueError:
-                        self.human.tell('Invalid value for {} option: {!r}.'.format(option, value))
-                        continue
-                    if option in ('columns', 'c'):
-                        if 4 <= int_value <= 35:
-                            self.columns = int_value
-                        else:
-                            self.human.tell('The columns option must be 4 to 35.')
-                    elif option in ('rows', 'r'):
-                        if 4 <= int_value <= 20:
-                            self.rows = int_value
-                        else:
-                            self.human.tell('The rows option must be 4 to 20.')
-        # Ask the user for option settings.
-        else:
-            if self.human.ask('Would you like to change the options? ').lower() in utility.YES:
-                prompt = 'What level bot would you like to play against (return for medium)? '
-                while True:
-                    bot_level = self.human.ask(prompt).lower()
-                    if not bot_level:
-                        bot_level = 'medium'
-                    if bot_level in ('easy', 'e', 'medium', 'm', 'hard', 'h'):
-                        break
-                    self.human.tell('That is not a valid bot level. Please pick easy, medium, or hard.')
-                prompt = 'How many columns should there be on the board (return for 7)? '
-                self.columns = self.human.ask_int(prompt, low = 4, high = 35, default = 7, cmd = False)
-                prompt = 'How many rows should there be on the board (return for 6)? '
-                self.rows = self.human.ask_int(prompt, low = 4, high = 20, default = 6, cmd = False)
-                pops = self.human.ask('Should pops be allowed? ')
-                self.poppable = pops.lower() in self.utility.YES
+        super(ConnectFour, self).handle_options(self)
         # Set the bot.
-        if bot_level in ('easy', 'e'):
+        if bot_level == 'easy':
             self.bot = C4BotAlphaBeta(taken_names = [self.human.name])
-        elif bot_level in ('medium', 'm'):
+        elif bot_level == 'medium':
             self.bot = C4BotGamma(taken_names = [self.human.name])
         else:
             self.bot = C4BotGamma(depth = 8, taken_names = [self.human.name])
@@ -386,6 +334,18 @@ class ConnectFour(game.Game):
                     else:
                         break
                 self.symbols.append(symbol)
+
+    def set_options(self):
+        """Define the options for the game. (None)"""
+        self.option_set.add_option('columns', ['c'], int, 7, valid = range(4, 36),
+            question = 'How many columns should there be on the board (return for 7)? ')
+        self.option_set.add_option('rows', ['r'], int, 6, valid = range(4, 20),
+            question = 'How many rows should there be on theh board (return for 6)? ')
+        self.option_set.add_option('pop', ['p'], target = 'poppable',
+            question = 'Should you be able to pop out the bottom piece in a row? ')
+        self.option_set.add_option('bot-level', ['b'], 
+            valid = ['easy', 'medium', 'hard'],
+            quesstion = 'How hard of a bot do you want to play against (return for medium?? ')
         
     def player_turn(self, now_player):
         """
