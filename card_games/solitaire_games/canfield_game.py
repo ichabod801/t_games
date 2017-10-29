@@ -31,7 +31,7 @@ stock.
 
 Foundation piles are built up in rank by suit from whatever rank was put in 
 the first foundation pile, going from king to ace if necessary. Tableau piles 
-are build down in rank by alternating color. The top card of the reserve is
+are built down in rank by alternating color. The top card of the reserve is
 available for building, and you may turn over the stock to the waste three 
 cards at a time and use the top card of the waste. Empty piles on the 
 tableau may only be filled from the reserve. If the reserve is empty, cards
@@ -43,9 +43,9 @@ Options:
 variant=: Play one of the variants from the list below.
 
 Variants:
-Chameleon: A 12 card reserve and three foundation piles. Tableau building is
-    down regarless of suit, and partial stacks may be moved. The stock is
-    turned one card at a time, but with only one pass through the stock.
+Chameleon: A 12 card reserve and three tableau piles. Tableau building is down
+    regarless of suit, and partial stacks may be moved. The stock is turned
+    one card at a time, but with only one pass through the stock.
 Rainbow: Tableau building is down regardless of suit.
 Rainbow-One: As Rainbow, but cards from the stock are dealt one card at a
     time, with two passes through the stock allowed.
@@ -122,11 +122,11 @@ class Canfield(solitaire.Solitaire):
         self.options = {'num-tableau': 4, 'num-reserve': 1, 'wrap-ranks': True}
         # Set options based on variant (see also set_checkers).
         if self.option_set.settings_text:
-            if self.option_set.settings_text == 'chameleon':
+            if self.option_set.settings_text.endswith('chameleon'):
                 self.options['num-tableau'] = 3
                 self.options['turn-count'] = 1
                 self.options['max-passes'] = 1
-            elif self.option_set.settings_text in ('rainbow-one', 'storehouse'):
+            elif self.option_set.settings_text in ('variant=rainbow-one', 'variant=storehouse'):
                 self.options['turn-count'] = 1
                 self.options['max-passes'] = 2
 
@@ -143,19 +143,18 @@ class Canfield(solitaire.Solitaire):
         self.dealers = [solitaire.deal_reserve_n(13), solitaire.deal_start_foundation, deal_tableau1, 
             solitaire.deal_stock_all]
         # Check for variant rules.
-        if self.option_set.settings_text == 'chameleon':
+        if self.option_set.settings_text.endswith('chameleon'):
             self.build_checkers = []
-            self.lane_checkers = []
             self.pair_checkers = [solitaire.pair_down]
-        elif self.option_set.settings_text.startswith('rainbow'):
+        elif 'rainbow' in self.option_set.settings_text:
             self.pair_checkers = [solitaire.pair_down]
-        elif self.option_set.settings_text == 'selective':
+        elif self.option_set.settings_text == 'variant=selective':
             self.dealers = [solitaire.deal_reserve_n(13), deal_selective, solitaire.deal_stock_all]
-        elif self.option_set.settings_text == 'storehouse':
+        elif self.option_set.settings_text == 'variant=storehouse':
             self.pair_checkers[1] = solitaire.pair_suit
             self.dealers = [deal_twos_foundations, solitaire.deal_reserve_n(13), deal_tableau1,
                 solitaire.deal_stock_all]
-        elif self.option_set.settings_text == 'superior':
+        elif self.option_set.settings_text == 'variant=superior':
             self.lane_checkers = []
             self.dealers[0] = solitaire.deal_reserve_n(13, True)
             self.reserve_text = self.superior_text
