@@ -15,6 +15,7 @@ lane_reserve: Check only laning cards from the reserve. (str)
 """
 
 
+import tgames.options as options
 import tgames.card_games.solitaire_games.solitaire_game as solitaire
 
 
@@ -38,10 +39,10 @@ from the waste may be used to fill empty spots on the tableau.
 
 Stacks on the tableau may be moved, but only if the whole stack is moved.
 
-The options indicate which variant you want to play. Only the first option
-is recognized, all other options are ignored.
-
 Options:
+variant=: Play one of the variants from the list below.
+
+Variants:
 Chameleon: A 12 card reserve and three foundation piles. Tableau building is
     down regarless of suit, and partial stacks may be moved. The stock is
     turned one card at a time, but with only one pass through the stock.
@@ -116,33 +117,18 @@ class Canfield(solitaire.Solitaire):
 
     def handle_options(self):
         """Set up the game options. (None)"""
+        super(Canfield, self).handle_options()
         # Set the default options.
         self.options = {'num-tableau': 4, 'num-reserve': 1, 'wrap-ranks': True}
-        if self.raw_options.lower() == 'none':
-            return None
-        if not self.raw_options:
-            question = 'Which variant would you like to play (return for standard rules)? '
-            while True:
-                variant = self.human.ask(question).strip().lower()
-                if not variant:
-                    break
-                elif variant in self.variants:
-                    self.raw_options = variant
-                    break
-                else:
-                    message = 'I do not recognize that variant. The variants I know are:'
-                    self.human.tell(message, ', '.join(self.variants))
-        if self.raw_options:
-            self.raw_options = self.raw_options.lower()
-            if self.raw_options == 'chameleon':
+        # Set options based on variant (see also set_checkers).
+        if self.option_set.settings_text:
+            if self.option_set.settings_text == 'chameleon':
                 self.options['num-tableau'] = 3
                 self.options['turn-count'] = 1
                 self.options['max-passes'] = 1
-            elif self.raw_options in ('rainbow-one', 'storehouse'):
+            elif self.option_set.settings_text in ('rainbow-one', 'storehouse'):
                 self.options['turn-count'] = 1
                 self.options['max-passes'] = 2
-            elif self.raw_options not in self.variants:
-                self.human.tell('Unrecognized Canfield variant: {}.'.format(self.raw_options))
 
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
@@ -157,22 +143,28 @@ class Canfield(solitaire.Solitaire):
         self.dealers = [solitaire.deal_reserve_n(13), solitaire.deal_start_foundation, deal_tableau1, 
             solitaire.deal_stock_all]
         # Check for variant rules.
-        if self.raw_options == 'chameleon':
+        if self.option_set.settings_text == 'chameleon':
             self.build_checkers = []
             self.lane_checkers = []
             self.pair_checkers = [solitaire.pair_down]
-        elif self.raw_options.startswith('rainbow'):
+        elif self.option_set.settings_text.startswith('rainbow'):
             self.pair_checkers = [solitaire.pair_down]
-        elif self.raw_options == 'selective':
+        elif self.option_set.settings_text == 'selective':
             self.dealers = [solitaire.deal_reserve_n(13), deal_selective, solitaire.deal_stock_all]
-        elif self.raw_options == 'storehouse':
+        elif self.option_set.settings_text == 'storehouse':
             self.pair_checkers[1] = solitaire.pair_suit
             self.dealers = [deal_twos_foundations, solitaire.deal_reserve_n(13), deal_tableau1,
                 solitaire.deal_stock_all]
-        elif self.raw_options == 'superior':
+        elif self.option_set.settings_text == 'superior':
             self.lane_checkers = []
             self.dealers[0] = solitaire.deal_reserve_n(13, True)
             self.reserve_text = self.superior_text
+
+    def set_options(self):
+        """Define the game options. (None)"""
+        self.option_set.add_option('variant', [], options.lower, default = None, valid = self.variants,
+            question = 'Which variant would you like to play? ',
+            error_text = 'The valid variants are: {}.'.format(', '.join(self.variants)))
 
     def superior_text(self):
         """Generate text for the reserve in the superior variant. (str)"""
