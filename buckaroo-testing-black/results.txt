@@ -161,3 +161,8 @@ Crazy Eights,2,2,0,161,216,2,
 Crazy Eights,2,2,0,78,89,3,draw=2 reverse=a skip=q
 Crazy Eights,1,3,0,200,420,3,change-set draw-one empty-deck=reshuffle multi-score one-alert
 Crazy Eights,4,0,0,150,27,1,change-match one-round
+FreeCell,0,1,0,773,43,5,kings-only deal-num=39
+FreeCell,1,0,0,795,71,1,challenge
+FreeCell,0,1,0,801,1,5,egnellahc
+FreeCell,1,0,0,796,73,1,egnellahc
+FreeCell,0,1,0,795,11,5,supercell

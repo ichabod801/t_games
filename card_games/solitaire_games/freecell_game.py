@@ -15,6 +15,8 @@ BakersGame: A game of Baker's Game. (FreeCell)
 """
 
 
+import random
+
 import tgames.card_games.solitaire_games.solitaire_game as solitaire
 import tgames.utility as utility
 
@@ -127,9 +129,9 @@ class FreeCell(solitaire.Solitaire):
         self.pair_checkers = [solitaire.pair_down, solitaire.pair_alt_color]
         self.sort_checkers = [solitaire.sort_ace, solitaire.sort_up]
         # Set the dealers
-        if self.challenge = '2A':
+        if self.challenge == '2A':
             self.dealers = [deal_twos, deal_aces, solitaire.deal_free]
-        elif self.challenge = 'A2':
+        elif self.challenge == 'A2':
             self.dealers = [deal_aces, deal_twos, solitaire.deal_free]
         else:
             self.dealers = [solitaire.deal_free]
@@ -153,7 +155,7 @@ class FreeCell(solitaire.Solitaire):
             question = 'Should the kings be the only card playable to empty lanes? bool')
         self.option_set.add_option(name = 'challenge', value = '2A', default = '',
             question = 'Should the twos and aces be dealt first? bool')
-        self.option_set.add_option(name = 'egnellahc', value = 'A2', default = '',
+        self.option_set.add_option(name = 'egnellahc', value = 'A2', default = '', target = 'challenge',
             question = 'Should the aces and twos be dealt first? bool')
         self.option_set.add_option(name = 'supercell',
             question = 'Should random cards be flipped face down? bool')
@@ -230,6 +232,7 @@ def fill_free(game):
     unfilled = game.num_cells - len(game.cells)
     for card in range(unfilled):
         game.cells.append(game.tableau[last_index].pop())
+        game.cells[-1].game_location = game.cells
         last_index = (last_index - 1) % len(game.tableau)
 
 def flip_random(game):
