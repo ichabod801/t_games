@@ -157,3 +157,7 @@ Canfield,1,0,0,681,113,1,variant=rainbow
 Canfield,0,1,0,750,111,5,variant=rainbow-one
 Canfield,0,1,0,736,31,5,variant=selective
 Canfield,0,1,0,762,79,7,variant=storehouse
+Crazy Eights,2,2,0,161,216,2,
+Crazy Eights,2,2,0,78,89,3,draw=2 reverse=a skip=q
+Crazy Eights,1,3,0,200,420,3,change-set draw-one empty-deck=reshuffle multi-score one-alert
+Crazy Eights,4,0,0,150,27,1,change-match one-round

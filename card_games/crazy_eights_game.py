@@ -31,7 +31,7 @@ Game Programming: Craig "Ichabod" O'Brien
 
 # The rules for Crazy Eights.
 RULES = """
-Each player is dealt 8 cards, 7 in a two player game. The top card of the deck
+Each player is dealt 5 cards, 7 in a two player game. The top card of the deck
 is discarded face up. Each player in turn must discard a card face up that
 matches the suit or rank of the top card on the discard pile. Any 8 may always
 be played, and allows the player to pick a new suit to match. If a player 
@@ -51,19 +51,19 @@ Options:
 change=: The rank that allows you to change suits. (default = 8)
 change-match: The change suit card must match the discard's suit or rank.
 change-set: The change suit card only changes to it's own suit.
-draw=: The rank that forces the next player to draw that many cards without
-    playing any.
+draw=: The rank, typically 2, that forces the next player to draw that many 
+    cards without playing any.
 draw-one: A player who can't play only has to draw one card.
+easy=: The number of easy bots in the game. (default = 2)
+empty-deck: What to do when the deck is empty: pass (players can pass instead
+    of drawing), reshuffle, or score. (default = score)
+medium=: The number of medium bots in the game. (default = 2)
 multi-score: Each players scores the points in the largest hand minus the
     points in their own hand.
 one-alert: A warning is given when a player has one card.
 one-round: Only play one round.
-pass: When the deck runs out players who can't play just pass their turn.
-players=: The number of players in the game, counting the human. (default = 5)
-reshuffle: Reshuffle the discards when the deck runs out instead of scoring.
-reverse=: The rank that reverses the order of play.
-skip=: The rank that skips the next player.
-smart=: The number of smart bots in the game. (default = 2)
+reverse=: The rank, typically A, that reverses the order of play.
+skip=: The rank, typically Q, that skips the next player.
 """
 
 class C8Bot(player.Bot):
@@ -453,7 +453,7 @@ class CrazyEights(game.Game):
             taken_names.append(self.players[-1].name)
         # Set the winning score.
         if not self.goal:
-            self.goal = 50 * self.num_players
+            self.goal = 50 * len(self.players)
 
     def set_options(self):
         """Define the options for the game. (None)"""
@@ -473,19 +473,23 @@ class CrazyEights(game.Game):
             question = 'Should everyone but the player with the highest hand score each time? bool')
         self.option_set.add_option('draw-one',
             question = 'Should you only have to draw one card if you cannot play a card? ')
-        self.option_set.add_option('easy', [], int, 2, valid = range(10),
+        self.option_set.add_option('easy', [], int, 2, valid = range(10), target = 'num_easy',
             question = 'How many easy bots should there be (return for 2)? ')
-        self.option_set.add_option('medium', [], int, 2, valid = range(10),
+        self.option_set.add_option('medium', [], int, 2, valid = range(10), target = 'num_medium',
             question = 'How many medium bots should there be (return for 2)? ')
         rank_error = 'The valid card ranks are {}.'.format(', '.join(cards.Card.ranks))
-        self.option_set.add_option('change-rank', [], options.upper, '8', valid = cards.Card.ranks,
-            question = 'What rank should change the suit? ', error_text = rank_error)
-        self.option_set.add_option('draw-rank', [], options.upper, '', valid = cards.Card.ranks,
-            question = 'What rank should force the next player to draw? ', error_text = rank_error)
-        self.option_set.add_option('reverse-rank', [], options.upper, '', valid = cards.Card.ranks,
-            question = 'What rank should reverse the order of play? ', error_text = rank_error)
-        self.option_set.add_option('skip-rank', [], options.upper, '', valid = cards.Card.ranks,
-            question = 'What rank should skip the next player? ', error_text = rank_error)
+        self.option_set.add_option('change', [], options.upper, '8', valid = cards.Card.ranks,
+            question = 'What rank should change the suit? ', error_text = rank_error, 
+            target = 'change_rank')
+        self.option_set.add_option('draw', [], options.upper, '', valid = cards.Card.ranks,
+            question = 'What rank should force the next player to draw? ', error_text = rank_error,
+            target = 'draw_rank')
+        self.option_set.add_option('reverse', [], options.upper, '', valid = cards.Card.ranks,
+            question = 'What rank should reverse the order of play? ', error_text = rank_error,
+            target = 'reverse_rank')
+        self.option_set.add_option('skip', [], options.upper, '', valid = cards.Card.ranks,
+            question = 'What rank should skip the next player? ', error_text = rank_error,
+            target = 'skip_rank')
 
     def pass_turn(self, player):
         """
