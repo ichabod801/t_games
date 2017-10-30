@@ -85,7 +85,7 @@ class FreeCell(solitaire.Solitaire):
 
     categories = ['Card Games', 'Solitaire Games', 'FreeCell Games']
     name = 'FreeCell'
-    num_options = 2
+    num_options = 7
 
     def do_gipf(self, arguments):
         """
@@ -122,10 +122,21 @@ class FreeCell(solitaire.Solitaire):
         # Set the game specific rules checkers.
         self.build_checkers = [solitaire.build_one]
         self.lane_checkers = [solitaire.lane_one]
+        if self.kings_only:
+            self.lane_checkers.append(solitaire.lane_king)
         self.pair_checkers = [solitaire.pair_down, solitaire.pair_alt_color]
         self.sort_checkers = [solitaire.sort_ace, solitaire.sort_up]
         # Set the dealers
-        self.dealers = [solitaire.deal_free]
+        if self.challenge = '2A':
+            self.dealers = [deal_twos, deal_aces, solitaire.deal_free]
+        elif self.challenge = 'A2':
+            self.dealers = [deal_aces, deal_twos, solitaire.deal_free]
+        else:
+            self.dealers = [solitaire.deal_free]
+        if self.fill_free:
+            self.dealers.append(fill_free)
+        if self.supercell:
+            self.dealers.append(flip_random)
 
     def set_options(self):
         """Set the game options. (None)"""
@@ -136,6 +147,16 @@ class FreeCell(solitaire.Solitaire):
         self.option_set.add_option(name = 'piles', action = 'key=num-tableau', converter = int, 
             default = 8, valid = range(4, 14), target = self.options,
             question = 'How many tableau piles (4-10, return for 8)? ')
+        self.option_set.add_option(name = 'fill-free',
+            question = 'Should the free cells be filled with the last four cards dealt? bool')
+        self.option_set.add_option(name = 'kings-only',
+            question = 'Should the kings be the only card playable to empty lanes? bool')
+        self.option_set.add_option(name = 'challenge', value = '2A', default = '',
+            question = 'Should the twos and aces be dealt first? bool')
+        self.option_set.add_option(name = 'egnellahc', value = 'A2', default = '',
+            question = 'Should the aces and twos be dealt first? bool')
+        self.option_set.add_option(name = 'supercell',
+            question = 'Should random cards be flipped face down? bool')
 
 
 class BakersGame(FreeCell):
@@ -153,7 +174,7 @@ class BakersGame(FreeCell):
     aka = ['Brain Jam']
     credits = CREDITS_BAKER
     name = "Baker's Game"
-    num_options = 2
+    num_options = 7
     rules = RULES_BAKER
 
     def set_checkers(self):
@@ -161,6 +182,65 @@ class BakersGame(FreeCell):
         super(BakersGame, self).set_checkers()
         # Set the rules for this variation.
         self.pair_checkers = [solitaire.pair_down, solitaire.pair_suit]
+
+
+def deal_aces(game):
+    """
+    Deal the aces onto the tableau. (None)
+
+    Parameters:
+    game: The game to deal the cards for. (Solitaire)
+    """
+    # Find the next pile to deal to.
+    min_tableau = min([len(pile) for pile in game.tableau])
+    next_index = [index for index, pile in enumerate(game.tableau) if len(pile) == min_tableau][0]
+    # Deal the aces.
+    for card in game.deck.cards[::-1]:
+        if card.rank == 'A':
+            game.deck.force(card, game.tableau[next_index])
+            next_index = (next_index + 1) % len(game.tableau)
+
+def deal_twos(game):
+    """
+    Deal the aces onto the tableau. (None)
+
+    Parameters:
+    game: The game to deal the cards for. (Solitaire)
+    """
+    # Find the next pile to deal to.
+    min_tableau = min([len(pile) for pile in game.tableau])
+    next_index = [index for index, pile in enumerate(game.tableau) if len(pile) == min_tableau][0]
+    # Deal the aces.
+    for card in game.deck.cards[::-1]:
+        if card.rank == '2':
+            game.deck.force(card, game.tableau[next_index])
+            next_index = (next_index + 1) % len(game.tableau)
+
+def fill_free(game):
+    """
+    Fill the free cells with the last cards dealt. (None)
+
+    Parameters:
+    game: The game to deal the cards for. (Solitaire)
+    """
+    # Find the last card dealt.
+    max_tableau = max([len(pile) for pile in game.tableau])
+    last_index = [index for index, pile in enumerate(game.tableau) if len(pile) == max_tableau][-1]
+    # Move them to the free cells.
+    unfilled = game.num_cells - len(game.cells)
+    for card in range(unfilled):
+        game.cells.append(game.tableau[last_index].pop())
+        last_index = (last_index - 1) % len(game.tableau)
+
+def flip_random(game):
+    """
+    Flip random tableau cards face down. (None)
+
+    Parameters:
+    game: The game to deal the cards for. (Solitaire)
+    """
+    for pile in game.tableau:
+        random.choice(pile[:-1]).up = False
 
 
 if __name__ == '__main__':

@@ -250,6 +250,9 @@ unformed ideas: rubik's sudoku? (2d, 9x9 rubik's sytle puzzle). OS hacking. Wiza
 other solitaire games: Yukon, Poker, Baker's Dozen, Good Measure, Little Spider, Accordion [thespruce.com]
 	cruel, tripeaks [solitairecentral.com]
 	including all of the above would flesh out the 108 games. (double check that count and redo the list)
+	accordion, fortune's favor, westfield (easy according to solitaire laboratory.com)
+	aces up (solitude site)
+	aces and kings, demons and thieves (by Thomas Warfield, pretty good solitaire site)
 
 == Option Handling ==
 

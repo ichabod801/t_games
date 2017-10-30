@@ -289,7 +289,7 @@ class CrazyEights(game.Game):
     categories = ['Card Games', 'Shedding Games']
     credits = CREDITS
     name = 'Crazy Eights'
-    num_options = 14
+    num_options = 13
     rules = RULES
 
     def deal(self, keep_one = False):

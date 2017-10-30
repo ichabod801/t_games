@@ -822,7 +822,10 @@ def move_one_size(game, to_lane = False):
     to_lane: A flag for the moving going to an open lane. (bool)
     """
     free = game.num_cells - len(game.cells)
-    lanes = game.tableau.count([]) - to_lane
+    if lane_king in game.lane_checkers:
+        lanes = 0
+    else:
+        lanes = game.tableau.count([]) - to_lane
     return (1 + free) * 2 ** lanes
     
 def pair_alt_color(self, mover, target):
