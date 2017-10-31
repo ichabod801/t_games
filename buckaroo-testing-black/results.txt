@@ -166,3 +166,7 @@ FreeCell,1,0,0,795,71,1,challenge
 FreeCell,0,1,0,801,1,5,egnellahc
 FreeCell,1,0,0,796,73,1,egnellahc
 FreeCell,0,1,0,795,11,5,supercell
+Klondike,0,1,0,635,81,4,
+Klondike,0,1,0,745,77,5,
+Klondike,1,0,0,712,95,1,
+Klondike,1,0,0,724,90,1,piles=6

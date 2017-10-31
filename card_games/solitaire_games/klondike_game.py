@@ -35,6 +35,7 @@ Cards from the stock are turned over three at a time. The stock may be gone
 through as many times as you wish.
 
 Options:
+piles=: How many tableau piles there should be.
 switch-one: You can switch to turning over one card at a time, but only for
     one last pass through the deck. (use the switch command)
 turn-one: Cards from the stock are turned over one at a time.
@@ -210,7 +211,7 @@ class Klondike(solitaire.Solitaire):
     categories = ['Card Games', 'Solitaire Games', 'Klondike Games']
     credits = CREDITS
     name = 'Klondike'
-    num_options = 2
+    num_options = 3
     rules = RULES
 
     def do_switch(self, arguments):
@@ -234,31 +235,6 @@ class Klondike(solitaire.Solitaire):
             self.max_passes = self.stock_passes + 1
         return False
 
-    def handle_options(self):
-        """Set the game options. (None)"""
-        # Set the defaults.
-        self.switched = True
-        self.options = {}
-        # Check for options
-        if self.raw_options.lower() == 'none':
-            pass
-        elif self.raw_options:
-            self.flags |= 1
-            for word in self.raw_options.lower().split():
-                if word == 'turn-one':
-                    self.options['turn-count'] = 1
-                elif word == 'switch-one':
-                    self.switched = False
-        else:
-            if self.human.ask('Would you like to change the options? ') in utility.YES:
-                self.flags |= 1
-                turn_one = self.human.ask('Would you like to go through the stock one card at a time? ')
-                if turn_one in utility.YES:
-                    self.options['turn-count'] = 1
-                switch_msg = 'Should you be able to switch to one card at a time for one last pass? '
-                if self.human.ask(switch_msg) in utility.YES:
-                    self.switched = False
-
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
         super(Klondike, self).set_checkers()
@@ -268,6 +244,17 @@ class Klondike(solitaire.Solitaire):
         self.sort_checkers = [solitaire.sort_ace, solitaire.sort_up]
         # Set the dealers
         self.dealers = [deal_klondike, solitaire.deal_stock_all]
+
+    def set_options(self):
+        """Define the options for the game. (None)"""
+        self.options = {}
+        self.option_set.add_option('piles', action = 'key=num-tableau', target = self.options,
+            default = 7, converter = int, question = 'How many tableau piles should their be?')
+        self.option_set.add_option('switch-one', target = 'switched', value = False, default = True,
+            question = 'Should you be able to switch to one card at a time for one last pass? bool')
+        self.option_set.add_option('turn-one', action = 'key=turn-count', target = self.options,
+            value = 1, default = 3,
+            question = 'Would you like to go through the stock one card at a time? bool')
 
 
 def deal_klondike(game):
