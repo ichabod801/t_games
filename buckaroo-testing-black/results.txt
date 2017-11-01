@@ -170,3 +170,7 @@ Klondike,0,1,0,635,81,4,
 Klondike,0,1,0,745,77,5,
 Klondike,1,0,0,712,95,1,
 Klondike,1,0,0,724,90,1,piles=6
+Ninety-Nine,0,2,0,-2,74,0,
+Ninety-Nine,0,2,0,-2,147,1,99=k minus=t skip=9 zero=9
+Ninety-Nine,0,4,0,-4,136,1,99=k minus=t reverse= skip=9 zero=9
+Ninety-Nine,4,0,0,1,230,3,easy=1 medium=3 reverse=2

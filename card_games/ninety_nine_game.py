@@ -19,6 +19,7 @@ import re
 
 import tgames.cards as cards
 import tgames.game as game
+import tgames.options as options
 import tgames.player as player
 import tgames.utility as utility
 
@@ -50,13 +51,14 @@ The tokens command will show you how many tokens each player has left.
 
 Options:
 99=: The ranks that take the total to 99. It can be one rank or multiple ranks
-    separated by slashes.
-bots=: How many bots you will play against.
-chicago: Equivalent to zero=9 skip=9 99=K minus=10.
+    separated by slashes. (default is 9)
+chicago: Equivalent to zero=4/9 skip=9 99=K minus=10 plus-minus=.
+easy: How many easy bots you will play against. (default = 2)
 face=: The ranks that have their face value. This is used to reset default
     non-face values. Face cards will have a value of 10.
 jokers=: The number of jokers added to the deck. Their default value is 99.
-joker-rules: Equivalent to zero=9 reverse=k jokers=2.
+joker-rules: Equivalent to zero=9/k reverse=k jokers=2 99=x skip=.
+medium: How many medium bots you will play against. (default = 2)
 minus=: The ranks that have their value negated. It can be one rank or 
     multiple ranks separated by slashes.
 plus-minus=: The ranks that can be positive or negative. It can be one rank or
@@ -217,22 +219,25 @@ class NinetyNine(game.Game):
         self.card_values = {rank: (min(10, index),) for index, rank in enumerate(cards.Card.ranks)}
         self.card_values['A'] = (1, 11)
         self.free_pass = False
-        self.option_set.add_group('joker-rules', 'zero=9 reverse=k jokers=2')
-        self.option_set.add_group('chicago', 'zero=9 skip=9 99=k minus=t')
+        is_rank_list = lambda ranks: all(rank in cards.Card.ranks for rank in ranks)
+        self.option_set.add_group('joker-rules', 'zero=9/k reverse=k jokers=2 99=x skip=')
+        self.option_set.add_group('chicago', 'zero=4/9 skip=9 99=K minus=10 plus-minus=')
         self.option_set.add_option('jokers', converter = int, default = 0, valid = range(5),
             question = 'How many jokers should there be in the deck (return for 0)? ')
-        self.option_set.add_option('bots', target = 'num_bots', converter = int, default = 2, 
-            valid = range(1, 11), question = 'How many bots do you want to play against (return for 2)? ')
+        self.option_set.add_option('easy', converter = int, default = 2, valid = range(1, 11), 
+            question = 'How many easy bots do you want to play against (return for 2)? ')
+        self.option_set.add_option('medium', converter = int, default = 2, valid = range(1, 11), 
+            question = 'How many medium bots do you want to play against (return for 2)? ')
         self.option_set.add_option('99', target = 'rank99', default = ['9', 'X'],
-            valid = cards.Card.ranks, converter = options.upper, 
+            check = is_rank_list, converter = options.upper, 
             question = 'What ranks should be worth 99 points (slash separated, return for 9 and joker)? ')
-        self.option_set.add_option('minus', default = [], valid = cards.Card.ranks, 
+        self.option_set.add_option('minus', default = [], check = is_rank_list, 
             converter = options.upper, 
             question = 'What ranks should be worth minus face value (slash separated, return for none)? ')
-        self.option_set.add_option('plus-minus', default = ['T'], valid = cards.Card.ranks,
+        self.option_set.add_option('plus-minus', default = ['T'], check = is_rank_list,
             converter = options.upper, 
             question = 'What ranks should be worth +/- face value (slash separated, return for tens)? ')
-        self.option_set.add_option('zero', default = ['4', 'K'], valid = cards.Card.ranks,
+        self.option_set.add_option('zero', default = ['4', 'K'], check = is_rank_list,
             converter = options.upper,
             question = 'What ranks should be worth zero (slash separated, return for 4 and king)? ')
         self.option_set.add_option('reverse', target = 'reverse_rank', valid = cards.Card.ranks,
@@ -248,14 +253,16 @@ class NinetyNine(game.Game):
             if rank in self.rank99:
                 self.card_values[rank] = (99,)
             elif rank in self.minus:
-                self.card_values[rank] = (-self.card_values[rank],)
+                self.card_values[rank] = (-cards.Card.ranks.index(rank),)
             elif rank in self.plus_minus:
-                self.card_values[rank] += (-self.card_values[rank],)
+                self.card_values[rank] += (-cards.Card.ranks.index(rank),)
             elif rank in self.zero:
                 self.card_values[rank] = (0,)
         self.players = [self.human]
-        for bot in range(self.num_bots):
+        for bot in range(self.easy):
             self.players.append(Bot99([player.name for player in self.players]))
+        for bot in range(self.medium):
+            self.players.append(Bot99Medium([player.name for player in self.players]))
 
     def player_turn(self, player):
         """
