@@ -123,7 +123,7 @@ Here are the details on all of the parameters to the add_option call, which are 
 	* name: The name of the option. How the option is specified from the menu interface.
 	* aliases: A list of other names for the option.
 	* converter: A function that returns the option setting in the correct type. Defaults to str. Checks each item in a list setting.
-	* default: The default value to assign if the option is not specified by the user. If default is None, no action is taken unless the user provides the option.
+	* default: The default value to assign if the option is not specified by the user. If default is None, no action is taken unless the user provides the option. If default is a list or tuple, the value will be read in as a list.
 	* value: The value to provide if the option is given without specifying a setting. If the 'map' action is specified, this should be a dictionary that the values come from. For the 'bot' action, if value is None the user is expected to provide parameters to the bot class. Otherwise, the value for the 'bot' action should be a tuple of parameters to the bot class, to be provided using *args.
 	* target: The attribute the setting is to be stored in. Defaults to name. For the 'bot' action, the target is the key to the bot_class dictionary attribute of the game. The value of that key should be a
 	subclass of player.Bot.

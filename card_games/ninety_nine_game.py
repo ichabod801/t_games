@@ -51,11 +51,12 @@ The tokens command will show you how many tokens each player has left.
 Options:
 99=: The ranks that take the total to 99. It can be one rank or multiple ranks
     separated by slashes.
+bots=: How many bots you will play against.
 chicago: Equivalent to zero=9 skip=9 99=K minus=10.
 face=: The ranks that have their face value. This is used to reset default
     non-face values. Face cards will have a value of 10.
 jokers=: The number of jokers added to the deck. Their default value is 99.
-joker-rules: Equivalent to zero=9 reverse=k face=4 jokers=2.
+joker-rules: Equivalent to zero=9 reverse=k jokers=2.
 minus=: The ranks that have their value negated. It can be one rank or 
     multiple ranks separated by slashes.
 plus-minus=: The ranks that can be positive or negative. It can be one rank or
@@ -211,196 +212,50 @@ class NinetyNine(game.Game):
         else:
             return False
 
+    def set_options(self):
+        """Define the options for the game. (None)"""
+        self.card_values = {rank: (min(10, index),) for index, rank in enumerate(cards.Card.ranks)}
+        self.card_values['A'] = (1, 11)
+        self.free_pass = False
+        self.option_set.add_group('joker-rules', 'zero=9 reverse=k jokers=2')
+        self.option_set.add_group('chicago', 'zero=9 skip=9 99=k minus=t')
+        self.option_set.add_option('jokers', converter = int, default = 0, valid = range(5),
+            question = 'How many jokers should there be in the deck (return for 0)? ')
+        self.option_set.add_option('bots', target = 'num_bots', converter = int, default = 2, 
+            valid = range(1, 11), question = 'How many bots do you want to play against (return for 2)? ')
+        self.option_set.add_option('99', target = 'rank99', default = ['9', 'X'],
+            valid = cards.Card.ranks, converter = options.upper, 
+            question = 'What ranks should be worth 99 points (slash separated, return for 9 and joker)? ')
+        self.option_set.add_option('minus', default = [], valid = cards.Card.ranks, 
+            converter = options.upper, 
+            question = 'What ranks should be worth minus face value (slash separated, return for none)? ')
+        self.option_set.add_option('plus-minus', default = ['T'], valid = cards.Card.ranks,
+            converter = options.upper, 
+            question = 'What ranks should be worth +/- face value (slash separated, return for tens)? ')
+        self.option_set.add_option('zero', default = ['4', 'K'], valid = cards.Card.ranks,
+            converter = options.upper,
+            question = 'What ranks should be worth zero (slash separated, return for 4 and king)? ')
+        self.option_set.add_option('reverse', target = 'reverse_rank', valid = cards.Card.ranks,
+            default = '4', converter = options.upper, 
+            question = 'What rank should reverse the order of play? ')
+        self.option_set.add_option('skip', target = 'skip_rank', valid = cards.Card.ranks,
+            default = '3', converter = options.upper, question = 'What rank should skip the next player? ')
+
     def handle_options(self):
         """Handle the game options(None)"""
-        # !! needs options for the number of bots.
-        # Set default options.
-        self.card_values = {rank: (rank_index,) for rank_index, rank in enumerate(cards.Card.ranks)}
-        self.card_values['A'] = (1, 11)
-        self.card_values['4'] = (0,)
-        self.card_values['9'] = (99,) # go to 99
-        self.card_values['T'] = (-10, 10)
-        self.card_values['J'] = (10,)
-        self.card_values['Q'] = (10,)
-        self.card_values['K'] = (0,)
-        self.card_values['X'] = (99,)
-        self.reverse_rank = '4'
-        self.skip_rank = '3'
-        self.jokers = 0
+        super(NinetyNine, self).handle_options()
+        for rank in cards.Card.ranks:
+            if rank in self.rank99:
+                self.card_values[rank] = (99,)
+            elif rank in self.minus:
+                self.card_values[rank] = (-self.card_values[rank],)
+            elif rank in self.plus_minus:
+                self.card_values[rank] += (-self.card_values[rank],)
+            elif rank in self.zero:
+                self.card_values[rank] = (0,)
         self.players = [self.human]
-        self.free_pass = False
-        for bot in range(2):
+        for bot in range(self.num_bots):
             self.players.append(Bot99([player.name for player in self.players]))
-        self.players.append(Bot99Medium([player.name for player in self.players]))
-        # Handle no options.
-        if self.raw_options.lower() == 'none':
-            pass
-        # Handle passed options.
-        elif self.raw_options:
-            self.flags |= 1
-            self.raw_options = self.raw_options.lower()
-            self.raw_options = self.raw_options.replace('joker-rules', 'zero=9 reverse=k face=4/T jokers=2')
-            self.raw_options = self.raw_options.replace('chicago', 'zero=9 skip=9 99=K minus=T')
-            for word in self.raw_options.lower().split():
-                if '=' in word:
-                    option, value = word.split('=', 1)
-                    if option == '99':
-                        for rank in value.split('/'):
-                            if rank.upper() in cards.Card.ranks:
-                                self.card_values[rank.upper()] = (99,)
-                            else:
-                                self.human.tell('Invalid value for 99 option: {!r}'.format(rank))
-                    elif option == 'face':
-                        for rank in value.split('/'):
-                            if rank.upper() in cards.Card.ranks:
-                                card_value = min(cards.Card.ranks.index(rank.upper()), 10)
-                                self.card_values[rank.upper()] = (card_value,)
-                            else:
-                                self.human.tell('Invalid value for minus option: {!r}'.format(rank))
-                    elif option == 'jokers':
-                        if value.isdigit():
-                            self.jokers = int(value)
-                        else:
-                            self.human.tell('Invalid value for jokers option: {!r}.'.format(value))
-                    elif option == 'minus':
-                        for rank in value.split('/'):
-                            if rank.upper() in cards.Card.ranks:
-                                card_value = min(cards.Card.ranks.index(rank.upper()), 10)
-                                self.card_values[rank.upper()] = (-card_value,)
-                            else:
-                                self.human.tell('Invalid value for minus option: {!r}'.format(rank))
-                    elif option == 'plus-minus':
-                        for rank in value.split('/'):
-                            if rank.upper() in cards.Card.ranks:
-                                card_value = min(cards.Card.ranks.index(rank.upper()), 10)
-                                self.card_values[rank.upper()] = (-card_value, card_value)
-                            else:
-                                self.human.tell('Invalid value for plus-minus option: {!r}'.format(rank))
-                    elif option == 'reverse':
-                        if value.upper() in cards.Card.ranks:
-                            self.reverse_rank = value.upper()
-                        else:
-                            self.human.tell('Invalid value for reverse option: {!r}'.format(value))
-                    elif option == 'skip':
-                        if value.upper() in cards.Card.ranks:
-                            self.skip_rank = value.upper()
-                        else:
-                            self.human.tell('Invalid value for skip option: {!r}'.format(value))
-                    elif option == 'zero':
-                        for rank in value.split('/'):
-                            if rank.upper() in cards.Card.ranks:
-                                self.card_values[rank.upper()] = (0,)
-                            else:
-                                self.human.tell('Invalid value for zero option: {!r}'.format(rank))
-                    else:
-                        self.human.tell('Invalid option to Ninety-Nine: {}=.'.format(option))
-                else:
-                    self.human.tell('Invalid option to Ninety-Nine: {}.'.format(option))
-        # Handle asked options.
-        else:
-            self.flags |= 1
-            if self.human.ask('Would you like to change the options? ') in utility.YES:
-                query = 'What cards should have a 99 value (slash-separated, return for 9)? '
-                while True:
-                    nn =self.human.ask(query)
-                    if not nn.strip():
-                        nn = '9'
-                    ranks = nn.upper().split('/')
-                    for rank in ranks:
-                        if rank not in cards.Card.ranks:
-                            self.human.tell('{} is not a valid rank.'.foramt(rank))
-                            break
-                    else:
-                        for rank in ranks:
-                            self.card_values[rank] = (99,)
-                        break
-                query = 'What cards should have their face value (slash-separated, return for all but '
-                query += 'A/4/9/10/K)? '
-                while True:
-                    face =self.human.ask(query)
-                    if not face.strip():
-                        break
-                    ranks = face.upper().split('/')
-                    for rank in ranks:
-                        if rank not in cards.Card.ranks:
-                            self.human.tell('{} is not a valid rank.'.foramt(rank))
-                            break
-                    else:
-                        for rank in ranks:
-                            card_value = min(cards.Card.ranks.index(rank), 10)
-                            self.card_values[rank] = (card_value,)
-                        break
-                while True:
-                    jokers = self.human.ask('How many jokers would you like in the deck (return for 0)? ')
-                    if jokers.isdigit():
-                        self.jokers = int(jokers)
-                        break
-                    else:
-                        self.human.tell('Non-negative integers only, please.')
-                query = 'What cards should have minus their face value (slash-separated, enter for none)? '
-                while True:
-                    minus =self.human.ask(query)
-                    if not minus.strip():
-                        break
-                    ranks = minus.upper().split('/')
-                    for rank in ranks:
-                        if rank not in cards.Card.ranks:
-                            self.human.tell('{} is not a valid rank.'.foramt(rank))
-                            break
-                    else:
-                        for rank in ranks:
-                            card_value = min(cards.Card.ranks.index(rank), 10)
-                            self.card_values[rank] = (-card_value,)
-                        break
-                query = 'What cards should have +/- their face value (slash-separated, enter for T)? '
-                while True:
-                    plus_minus =self.human.ask(query)
-                    if not plus_minus.strip():
-                        plus_minus = 'T'
-                    ranks = plus_minus.upper().split('/')
-                    for rank in ranks:
-                        if rank not in cards.Card.ranks:
-                            self.human.tell('{} is not a valid rank.'.foramt(rank))
-                            break
-                    else:
-                        for rank in ranks:
-                            card_value = min(cards.Card.ranks.index(rank), 10)
-                            self.card_values[rank] = (-card_value, card_value)
-                        break
-                query - 'What rank should reverse the order of play (return for 4)? '
-                while True:
-                    reverse = self.human.ask(query).upper()
-                    if not reverse.strip():
-                        reverse = '4'
-                    if reverse in cards.Card.ranks:
-                        self.reverse_rank = reverse
-                        break
-                    else:
-                        self.human.tell('{} is not a valid card rank.'.format(reverse))
-                query - 'What rank should skip the next player (return for 3)? '
-                while True:
-                    skip = self.human.ask(query).upper()
-                    if not skip.strip():
-                        skip = '3'
-                    if skip in cards.Card.ranks:
-                        self.skip_rank = skip
-                        break
-                    else:
-                        self.human.tell('{} is not a valid card rank.'.format(skip))
-                query = 'What cards should have zero value (slash-separated, return for 4/K)? '
-                while True:
-                    zero =self.human.ask(query)
-                    if not zero.strip():
-                        zero = '4/K'
-                    ranks = zero.upper().split('/')
-                    for rank in ranks:
-                        if rank not in cards.Card.ranks:
-                            self.human.tell('{} is not a valid rank.'.foramt(rank))
-                            break
-                    else:
-                        for rank in ranks:
-                            self.card_values[rank] = (0,)
-                        break
 
     def player_turn(self, player):
         """
