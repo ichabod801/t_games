@@ -5,12 +5,16 @@
 == Short Term To Do List ==
 
 Prep for long haul
-	make cards.py more user friendly.
-	consider argparse for options. Or DIY.
 	you/your translator for bots
 	isolate bots?
-	set_up/clean_up for bots
 A round of one per penultimate category, two for solitaire.
+	Backgammon
+	Forty Thieves
+	Bisley
+	Cribbage
+	Yacht
+	Craps
+	Hangman
 Rinse and repeat
 
 == Long Term To Do List ==

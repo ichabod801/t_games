@@ -121,7 +121,7 @@ class Interface(other_cmd.OtherCmd):
                 self.aliases.update(cls.aliases)
         # Display the intro.
         self.human.tell("\nWelcome to Ichabod's Text Game Extravaganza!")
-        unique_games = set(self.games.values())
+        unique_games = set([game for game in self.games.values() if game.categories[0] != 'Test Games'])
         num_options = sum(game.num_options for game in unique_games)
         count_text = 'Currently hosting {} different games with {} settable options.\n'
         self.human.tell(count_text.format(len(unique_games), num_options))

@@ -41,6 +41,10 @@ class Player(object):
     Methods:
     ask: Get information from the player. (str)
     ask_int: Get an integer response from the human. (int)
+    ask_int_list: Get a multiple integer response from the human. (int)
+    ask_valid: Get and validate responses from the user. (str)
+    clean_up: Do any necessary post-game processing. (None)
+    set_up: Do any necessary pre-game processing. (None)
     store_results: Store a game result. (None)
     tell: Give information to the player. (None)
 
@@ -202,6 +206,14 @@ class Player(object):
             # Warn the user on invalid responses.
             self.tell('That is not a valid response.')
             self.tell('Please choose one of: {}.'.format(', '.join(valid)))
+
+    def clean_up(self):
+        """Do any necessary post-game processing. (None)"""
+        pass
+
+    def set_up(self):
+        """Do any necessary pre-game processing. (None)"""
+        pass
 
     def store_results(self, game_name, result):
         """

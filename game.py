@@ -313,6 +313,8 @@ class Game(OtherCmd):
         self.force_end = ''
         self.flags &= 1 # reset everything but the options flag.
         self.set_up()
+        for player in self.players:
+            player.set_up()
         # Loop through the players repeatedly.
         self.player_index = 0
         while True:
@@ -327,6 +329,8 @@ class Game(OtherCmd):
                 break
         # Clean up the game.
         self.clean_up()
+        for player in self.players:
+            player.clean_up()
         self.gipfed = []
         # Report the results.
         results = [self.scores[self.human.name], self.turns, self.flags, self.option_set.settings_text]
