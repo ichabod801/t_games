@@ -149,6 +149,10 @@ class Card(object):
 class CRand(object):
     """
     Implementation of C's rand function. (object)
+
+    Overridden Methods:
+    __init__
+    __call__
     """
 
     def __init__(self, seed = None):
@@ -176,7 +180,7 @@ class Deck(object):
     shuffle: Shuffle the discards back into the deck. (None)
     """
 
-    def __init__(self, jokers = 0, decks = 1, shuffle_size = 0):
+    def __init__(self, jokers = 0, decks = 1, shuffle_size = 0, card_class = Card):
         """
         Fill the deck with a standard set of cards. (None)
 
@@ -190,12 +194,14 @@ class Deck(object):
         for deck in range(decks):
             for rank in Card.ranks[1:]:
                 for suit in Card.suits:
-                    self.cards.append(Card(rank, suit))
-        self.card_re = Card.card_re
+                    self.cards.append(card_class(rank, suit))
+        self.card_re = card_class.card_re
+        self.ranks = card_class.ranks
+        self.suits = card_class.suits
         # Add any requested jokers.
         for deck in range(decks):
             for suit_index in range(jokers):
-                self.cards.append(Card('X', Card.suits[suit_index % len(Card.suits)]))
+                self.cards.append(Card('X', card_class.suits[suit_index % len(card_class.suits)]))
         # Start with an empty discard pile.
         self.discards = []
 
@@ -222,6 +228,18 @@ class Deck(object):
         """
         self.discards.append(card)
         card.up = up
+    
+    def force(self, card_text, up = True):
+        """
+        Remove a particular card from the deck. (Card)
+        
+        Parameters:
+        card_text: The string version of the card. (str)
+        face_up = Flag for dealing the card face up. (bool)
+        """
+        card = self.cards.index(card)
+        self.cards.remove(card)
+        return card
 
     def shuffle(self, number = None):
         """Shuffle the discards back into the deck. (None)"""
@@ -262,6 +280,15 @@ class Hand(object):
         """Set up the link to the deck. (None)"""
         self.deck = deck
         self.cards = []
+
+    def __contains__(self, item):
+        """
+        Check for a card being in the hand. (None)
+
+        Parameters:
+        item: The card to check for existince. (object)
+        """
+        return item in self.cards
 
     def __repr__(self):
         """Debugging text representation. (str)"""
