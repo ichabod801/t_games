@@ -129,6 +129,8 @@ class OptionSet(object):
             question_type = 'bot-param'
         elif action == 'bot':
             question_type = 'bot-count'
+        elif not question:
+            question_type = 'none'
         else:
             question_type = ''
         # Convert empty parapmeters.
@@ -308,6 +310,8 @@ class OptionSet(object):
                     pairs.extend(self.ask_bot_param(definition))
                 elif definition['question_type'] == 'bot-count':
                     pairs.extend(self.ask_bot_count(definition))
+                elif definition['question_type'] == 'none':
+                    continue
                 else:
                     pairs.extend(self.ask_parameter(definition))
             # Create standardized text.

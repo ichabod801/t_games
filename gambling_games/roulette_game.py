@@ -159,6 +159,7 @@ class Roulette(game.Game):
     Overridden Methods:
     handle_options
     player_turn
+    set_options
     set_up
     """
 
@@ -1057,54 +1058,9 @@ class Roulette(game.Game):
 
     def handle_options(self):
         """Handle the game options. (None)"""
-        # Default options
-        self.layout = 'american'
+        super(Roulette, self).handle_options()
+        # Set the numbers in the layout.
         self.numbers = [str(number) for number in range(37)]
-        self.stake = 100
-        self.max_bet = 10
-        self.uk_rule = False
-        # Handle no options
-        if self.raw_options.lower() == 'none':
-            pass
-        # Parse options from the interface
-        elif self.raw_options:
-            self.flags |= 1
-            for word in self.raw_options.lower().split():
-                if word == 'american':
-                    self.layout = 'american'
-                elif word == 'french':
-                    self.layout = 'french'
-                elif word == 'uk-rule':
-                    self.uk_rule = True
-                elif '=' in word:
-                    option, value = word.split('=')
-                    if option == 'stake':
-                        if value.isdigit():
-                            self.stake = int(value)
-                        else:
-                            self.human.tell('Invalid value for stake= option: {!r}'.format(value))
-                    elif option == 'max-bet':
-                        if value.isdigit():
-                            self.stake = int(value)
-                        else:
-                            self.human.tell('Invalid value for max-bet= option: {!r}'.format(value))
-                    else:
-                        self.human.tell('Invalid option for roulette: {}=.'.format(option))
-                else:
-                    self.human.tell('Invalid option for roulette: {}.'.format(word))
-        # Ask the user about the options.
-        else:
-            if self.human.ask('Would you like to change the options? ') in utility.YES:
-                self.flags |= 1
-                # !! doesn't ask max bet
-                query = 'What stake do you want to start with? '
-                self.stake = self.human.ask_int(query, low = 1, default = 100, cmd = False)
-                query = 'French or American (return for American)? '
-                layouts = ['french', 'american']
-                self.layout = self.human.ask_valid(query, valid = layouts, default = 'american')
-                query = 'Should the UK rule (1/2 back on lost 1:1 bets) be in effect? '
-                self.uk_rule = self.human.ask(query) in utility.YES
-        # Update the numbers for an american layout.
         if self.layout == 'american':
             self.numbers.append('00')
 
@@ -1175,6 +1131,18 @@ class Roulette(game.Game):
         player.tell('\nYou have {} bucks.'.format(self.scores[player.name]))
         move = player.ask('Enter a bet or spin: ')
         return self.handle_cmd(move)
+
+    def set_options(self):
+        """Define the game options. (None)"""
+        self.option_set.add_option('french', target = 'layout', value = 'french', default = 'american',
+            question = 'Do you want to play with the Frech (single zero) layout? bool')
+        self.option_set.add_option('american', target = 'layout', value = 'american', default = None)
+        self.option_set.add_option('stake', [], int, 100, check = lambda bucks: bucks > 0,
+            question = 'How much money would you like to start with (return for 100)? ')
+        self.option_set.add_option('limit', [], int, 10, target = 'max_bet',
+            check = lambda bucks: bucks > 0, question = 'What should the maximum bet be (return for 10)? ')
+        self.option_set.add_option('uk-rule', 
+            question = 'Should the UK rule (1/2 back on lost 1:1 bets) be in effect? ')
 
     def set_up(self):
         """Set up the game. (None)"""
