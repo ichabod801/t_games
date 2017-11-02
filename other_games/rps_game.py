@@ -40,7 +40,7 @@ Each player chooses one of rock, paper, or scissors. Rock beats scissors,
 paper beats rock, and scissors beats paper. If players choose the same thing, 
 both players choose again.
 
-If the lizard-spock options is chosen, players may also choose lizard or 
+If the lizard-spock option is chosen, players may also choose lizard or 
 Spock. Lizard beats paper and Spock and loses to rock and scissors. Spock
 beats scissors and rock and loses to paper and lizard.
 
@@ -218,12 +218,13 @@ class RPS(game.Game):
     A game of rock-paper-scissors. (Game)
 
     Class Attributes:
-    bots: The bots available as options for play. (dict of str: Bot)
+    bot_classes: The bots available as options for play. (dict of str: Bot)
     lizard_spock: A wins attribute for the lizard-spock option. (dict)
     wins: What each move beats. (dict of str: list of str)
 
     Attributes:
     bot: The non-human player. (player.Bot)
+    bot_name: The name of the bot class. (str)
     match: The number of games in a match. (int)
     moves: The moves made keyed to the player's names. (dict of str: str)
 
@@ -235,7 +236,7 @@ class RPS(game.Game):
     """
 
     aka = ['RPS', 'Rock Paper Scissors', 'Roshambo']
-    bots = {'bart': Bart, 'lisa': Lisa, 'memor': Memor, 'randy': Randy}
+    bot_classess = {'bart': Bart, 'lisa': Lisa, 'memor': Memor, 'randy': Randy}
     categories = ['Other Games', 'Other Games']
     credits = CREDITS
     lizard_spock = {'rock': ['scissors', 'lizard'], 'scissors': ['paper', 'lizard'], 
@@ -270,54 +271,8 @@ class RPS(game.Game):
 
     def handle_options(self):
         """Handle any game options. (None)"""
-        # Set default options
-        self.bot_class = Memor
-        self.match = 3
-        # Check for no options
-        if self.raw_options == 'none':
-            pass
-        # Check for passed options.
-        elif self.raw_options:
-            self.flags |= 1
-            for word in self.raw_options.lower().split():
-                # Lizard Spock
-                if word == 'lizard-spock':
-                    self.wins = self.lizard_spock
-                # Match
-                elif word.startswith('match='):
-                    try:
-                        self.match = int(word.split('=')[1])
-                    except ValueError:
-                        self.human.tell('Invalid value for match option: {!r}.'.format(word.split('=')[1]))
-                # Bots.
-                elif word in self.bots:
-                    self.bot_class = self.bots[word]
-        # Ask for options.
-        else:
-            if self.human.ask('Would you like to change the options? ').lower().strip() in utility.YES:
-                self.flags |= 1
-                # Check for lizard Spock.
-                lizard_spock = self.human.ask('Would you like to add lizard and Spock? ')
-                if lizard_spock in utility.YES:
-                    self.wins = self.lizard_spock
-                # Check for match number.
-                prompt = 'How many games to play in match (return for 3)? '
-                self.match = self.human.ask_int(prompt, low = 1, default = 3, cmd = False)
-                # Check for bot opponent.
-                while True:
-                    bot = self.human.ask('Which bot would you like to play against (return for Memor)? ')
-                    bot = bot.lower().strip()
-                    if bot in self.bots:
-                        self.bot_class = self.bots[bot]
-                        break
-                    elif not bot:
-                        break
-                    else:
-                        self.human.tell('I do not recognize that type of bot.')
-                        known = ', '.join(sorted(self.bots.keys()))
-                        self.human.tell('The bots I know are:', known)
-        # Set up players.
-        self.bot = self.bot_class([self.human.name])
+        super(RPS, self).handle_options()
+        self.bot = self.bot_classes[self.bot_name]([self.human.name])
         self.players = [self.human, self.bot]
 
     def player_turn(self, player):
@@ -327,11 +282,21 @@ class RPS(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        move = player.ask('What is your move? ').lower().strip()
+        move = player.ask('What is your move? ').lower()
         if move in self.wins:
             self.moves[player.name] = move
         else:
             return self.handle_cmd(move)
+
+    def set_options(self):
+        """Define the options for the game. (None)"""
+        self.option_set.default_bots = [(Memor, ())]
+        self.option_set.add_option('lizard-spock', target = self.wins, value = self.lizard_spock,
+            default = None, question = 'Would you like to play with lizard and Spock? bool')
+        self.option_set.add_option('match', [], int, default = 3, check = lambda x: x > 0,
+            question = 'How many games should there be in the match? (return for 3)? ')
+        self.option_set.add_option('bot-name', valid = ('bart', 'lisa', 'memor', 'randy'),
+            converter = options.lower, default = 'memor')
 
     def set_up(self):
         """Set up the game. (None)"""
