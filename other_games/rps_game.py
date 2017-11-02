@@ -23,6 +23,7 @@ import os
 import random
 
 import tgames.game as game
+import tgames.options as options
 import tgames.player as player
 import tgames.utility as utility
 
@@ -74,10 +75,10 @@ class Bart(player.Bot):
         super(Bart, self).__init__(taken_names, initial = 'b')
 
     def ask(self, prompt):
-        if prompt == 'What is your move? ':
+        if prompt == '\nWhat is your move? ':
             return 'rock'
         else:
-            return ''
+            raise ValueError('Unexpected question asked.')
 
     def tell(self, text):
         pass
@@ -115,14 +116,14 @@ class Memor(player.Bot):
     def ask(self, prompt):
         if not self.memory:
             self.set_up()
-        if prompt == 'What is your move? ':
+        if prompt == '\nWhat is your move? ':
             moves, counts = zip(*self.memory.items())
             cum = [sum(counts[:index]) for index in range(1, len(moves) + 1)]
             choice = random.random() * cum[-1]
             guess = moves[bisect.bisect(cum, choice)]
             return random.choice(self.losses[guess])
         else:
-            return ''
+            raise ValueError('Unexpected question asked.')
 
     def load_data(self):
         with open(self.file_path) as data_file:
@@ -160,20 +161,20 @@ class Randy(player.Bot):
     tell
     """
 
-    def __init__(self, taken_names):
+    def __init__(self, taken_names, initial = 'r'):
         """
         Set up the bot. (None)
 
         Parameters:
         taken_names: The names already taken. (list of str)
         """
-        super(Randy, self).__init__(taken_names, initial = 'r')
+        super(Randy, self).__init__(taken_names, initial)
 
     def ask(self, prompt):
-        if prompt == 'What is your move? ':
+        if prompt == '\nWhat is your move? ':
             return random.choice(list(self.game.wins.keys()))
         else:
-            return ''
+            raise ValueError('Unexpected question asked.')
 
     def tell(self, text):
         pass
@@ -200,13 +201,13 @@ class Lisa(Randy):
         self.last_attack = ''
 
     def ask(self, prompt):
-        if prompt == 'What is your move? ':
+        if prompt == '\nWhat is your move? ':
             if self.last_attack == 'rock':
                 return 'paper'
             else:
                 return super(Lisa, self).ask(prompt)
         else:
-            return ''
+            raise ValueError('Unexpected question asked.')
 
     def tell(self, text):
         if text in self.game.wins:
@@ -232,11 +233,12 @@ class RPS(game.Game):
     game_over
     handle_options
     player_turn
+    set_options
     set_up
     """
 
     aka = ['RPS', 'Rock Paper Scissors', 'Roshambo']
-    bot_classess = {'bart': Bart, 'lisa': Lisa, 'memor': Memor, 'randy': Randy}
+    bot_classes = {'bart': Bart, 'lisa': Lisa, 'memor': Memor, 'randy': Randy}
     categories = ['Other Games', 'Other Games']
     credits = CREDITS
     lizard_spock = {'rock': ['scissors', 'lizard'], 'scissors': ['paper', 'lizard'], 
@@ -248,6 +250,7 @@ class RPS(game.Game):
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
+        # !! reports loss unless you sweep, since you have one loss.
         # Only check if both players have moved.
         if not self.turns % 2:
             move = self.moves[self.human.name]
@@ -272,7 +275,7 @@ class RPS(game.Game):
     def handle_options(self):
         """Handle any game options. (None)"""
         super(RPS, self).handle_options()
-        self.bot = self.bot_classes[self.bot_name]([self.human.name])
+        self.bot = self.bot_classes[self.bot]([self.human.name])
         self.players = [self.human, self.bot]
 
     def player_turn(self, player):
@@ -282,7 +285,7 @@ class RPS(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        move = player.ask('What is your move? ').lower()
+        move = player.ask('\nWhat is your move? ').lower()
         if move in self.wins:
             self.moves[player.name] = move
         else:
@@ -291,12 +294,14 @@ class RPS(game.Game):
     def set_options(self):
         """Define the options for the game. (None)"""
         self.option_set.default_bots = [(Memor, ())]
-        self.option_set.add_option('lizard-spock', target = self.wins, value = self.lizard_spock,
+        self.option_set.add_option('lizard-spock', target = 'wins', value = self.lizard_spock,
             default = None, question = 'Would you like to play with lizard and Spock? bool')
         self.option_set.add_option('match', [], int, default = 3, check = lambda x: x > 0,
             question = 'How many games should there be in the match? (return for 3)? ')
-        self.option_set.add_option('bot-name', valid = ('bart', 'lisa', 'memor', 'randy'),
-            converter = options.lower, default = 'memor')
+        self.option_set.add_option('bot', valid = ('bart', 'lisa', 'memor', 'randy'),
+            converter = options.lower, default = 'memor', 
+            question = 'Which bot would you like to play against? ',
+            error_text = 'The valid bots are Bart, Lisa, Memor, and Randy.')
 
     def set_up(self):
         """Set up the game. (None)"""
