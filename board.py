@@ -3,6 +3,10 @@ board.py
 
 Boards for text games.
 
+!! I need to think about generalization. Should BoardCell be generalized, or
+should boards accept a cell class. Location can easily be generalized. Single
+piece vs. multiple pieces not so much.
+
 Classes:
 BoardCell: A square (or other shape) in a board. (object)
 Coordinate: A cartesian coordinate in an n-dimensional space. (tuple)
@@ -176,38 +180,24 @@ class Coordinate(tuple):
             return NotImplemented
 
 
-class GridBoard(object):
+class Board(object):
     """
-    A rectangular board of squares. (object)
+    A playing board for a game. (object)
 
     Methods:
     clear: Clear all pieces off the board. (None)
-    copy: Create a copy of the board. (GridBoard)
     move: Move a piece from one cell to another. (object)
     offset: Return a cell offset from another cell (BoardCell)
     place: Place a piece in a cell. (None)
 
-    Overridden Methods:
+    Overriddent Methods:
     __init__
     __iter__
     """
 
-    def __init__(self, columns, rows):
-        """
-        Set up the grid of cells. (None)
-
-        Paramters:
-        columns: The number of columns on the board. (int)
-        rows: The number of rows on the board. (int)
-        """
-        # store dimensions
-        self.columns = columns
-        self.rows = rows
-        # create cells
+    def __init__(self):
+        """Set up the cells. (None)"""
         self.cells = {}
-        for column in range(columns):
-            for row in range(rows):
-                self.cells[Coordinate((column, row))] = BoardCell(column, row)
 
     def __iter__(self):
         """
@@ -221,15 +211,6 @@ class GridBoard(object):
         """Clear all pieces off the board. (None)"""
         for cell in self.cells.values():
             cell.clear()
-
-    def copy(self, **kwargs):
-        """Create a copy of the board. (GridBoard)"""
-        # clone the cells
-        clone = self.__class__(self.columns, self.rows, **kwargs)
-        # clone the cell contents
-        for location in clone:
-            clone.cells[location].piece = self.cells[location].piece
-        return clone
 
     def move(self, start, end):
         """
@@ -270,3 +251,63 @@ class GridBoard(object):
         cell: The location to place the piece in. (Coordinate)
         """
         self.cells[cell].piece = piece
+
+
+class GridBoard(Board):
+    """
+    A rectangular board of squares. (Board)
+
+    Methods:
+    copy: Create a copy of the board. (GridBoard)
+
+    Overridden Methods:
+    __init__
+    """
+
+    def __init__(self, columns, rows):
+        """
+        Set up the grid of cells. (None)
+
+        Paramters:
+        columns: The number of columns on the board. (int)
+        rows: The number of rows on the board. (int)
+        """
+        # store dimensions
+        self.columns = columns
+        self.rows = rows
+        # create cells
+        self.cells = {}
+        for column in range(columns):
+            for row in range(rows):
+                self.cells[Coordinate((column, row))] = BoardCell(column, row)
+
+    def copy(self, **kwargs):
+        """Create a copy of the board. (GridBoard)"""
+        # clone the cells
+        clone = self.__class__(self.columns, self.rows, **kwargs)
+        # clone the cell contents
+        for location in clone:
+            clone.cells[location].piece = self.cells[location].piece
+        return clone
+
+
+class LineBoard(object):
+    """
+    A linear board of points. (Board)
+
+    Overridden Methods:
+    __init__
+    """
+
+    def __init__(self, points):
+        """
+        Set up the line of cells. (None)
+
+        Parameters:
+        points: The number of points on the board. (int)
+        """
+        # Store the dimension.
+        self.points = points
+        # Create the cells.
+        for point in range(points):
+            self.cells[point] = BoardCell(point)
