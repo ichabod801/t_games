@@ -4,9 +4,6 @@
 
 == Short Term To Do List ==
 
-Prep for long haul
-	you/your translator for bots
-	isolate bots?
 A round of one per penultimate category, two for solitaire.
 	Backgammon
 	Forty Thieves

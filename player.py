@@ -225,16 +225,14 @@ class Player(object):
         """
         pass
 
-    def tell(self, *args, **kwargs):
+    def tell(self, *args, sep = ' ', end = '\n', file = sys.stdout, flush = False):
         """
         Give information to the player. (None)
-
-        !! get the actual signature from print.
 
         Parameters:
         The parameters are as per the built-in print function.
         """
-        print(*args, **kwargs)
+        print(*args, sep = sep, end = end, file = file, flush = flush)
 
 
 class Bot(Player):
@@ -262,6 +260,20 @@ class Bot(Player):
                 self.name = random.choice(BOT_NAMES[random.choice(string.ascii_lowercase)].split('/'))
             if self.name not in taken_names:
                 break
+
+    def tell(self, *args, sep = ' ', end = '\n', file = sys.stdout, flush = False):
+        """
+        Give information to the player. (None)
+
+        Parameters:
+        The parameters are as per the built-in print function.
+        """
+        text = sep.join([str(arg) for arg in args]) + end
+        possesive = self.name + "'s"
+        pairs = (('Your', possesive), ('your', possessive), ('You', self.name), ('you', self.name))
+        for pronoun, name in pairs:
+            text = text.replace(pronoun, name)
+        print(text, file = file, flush = flush)
 
 class AlphaBetaBot(Bot):
     """
