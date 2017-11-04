@@ -7,6 +7,7 @@
 Flag for match play.
 A round of one per penultimate category, two for solitaire.
 	Backgammon
+		replace GridBoard with DimBoard
 	Forty Thieves
 	Bisley
 	Cribbage

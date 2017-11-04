@@ -5,7 +5,8 @@ Boards for text games.
 
 !! I need to think about generalization. Should BoardCell be generalized, or
 should boards accept a cell class. Location can easily be generalized. Single
-piece vs. multiple pieces not so much.
+piece vs. multiple pieces maybe not so much. I'm thinking multiple board cell
+classes.
 
 Classes:
 BoardCell: A square (or other shape) in a board. (object)
@@ -19,11 +20,12 @@ class BoardCell(object):
     A square (or other shape) in a board. (object)
 
     The piece attribute may be any object, but it should convert to a string that
-    correctly displays it on the board.
+    correctly displays it on the board. Likewise, the location can be any object,
+    but it should be hashable and support addition.
 
     Attributes:
     empty: How the cell looks when empty. (str)
-    location: Where on the board the cell is. (Coordinate)
+    location: Where on the board the cell is. (object)
     piece: The piece occupying the board. (object)
 
     Overridden Methods:
@@ -32,7 +34,7 @@ class BoardCell(object):
     __repr__
     """
 
-    def __init__(self, column, row, piece = None, empty = ' '):
+    def __init__(self, location, piece = None, empty = ' '):
         """
         Initialize the cell. (None)
 
@@ -42,7 +44,7 @@ class BoardCell(object):
         piece: The piece initially in the cell. (object)
         empty: How the cell looks when empty. (str)
         """
-        self.location = Coordinate((column, row))
+        self.location = location
         self.piece = piece
         self.empty = empty
 
@@ -56,15 +58,13 @@ class BoardCell(object):
         """
         Computer readable text representation. (str)
         """
-        # poisitional parameters
-        text = 'BoardCell({}, {}'.format(self.location[0], self.location[1])
         # keyword parameters
-        if self.piece is not None:
-            text += ', piece = {!r}'.format(self.piece)
+        if self.piece:
+            piece_text = ', piece = {!r}'.format(self.piece)
         if self.empty != ' ':
-            text += ', empty = {!r}'.format(self.empty)
+            empty_text = ', empty = {!r}'.format(self.empty)
         # complete and return
-        return text + ')'
+        return '{}({}{}{})'.format(self.__class__.__name__, self.location, piece_text, empty_text)
 
     def __str__(self):
         """
@@ -75,11 +75,11 @@ class BoardCell(object):
         else:
             return self.empty
 
-    def clear(self):
+    def clear(self, nothing = None):
         """
         Remove any piece from the cell. (None)
         """
-        self.piece = None
+        self.piece = nothing
 
 
 class Coordinate(tuple):
@@ -197,6 +197,7 @@ class Board(object):
 
     def __init__(self):
         """Set up the cells. (None)"""
+        self.default_piece = None
         self.cells = {}
 
     def __iter__(self):
@@ -210,7 +211,7 @@ class Board(object):
     def clear(self):
         """Clear all pieces off the board. (None)"""
         for cell in self.cells.values():
-            cell.clear()
+            cell.clear(self.default_piece)
 
     def move(self, start, end):
         """
@@ -227,7 +228,7 @@ class Board(object):
         capture = self.cells[end].piece
         # move the piece
         self.cells[end].piece = self.cells[start].piece
-        self.cells[start].piece = None
+        self.cells[start].piece = self.default_piece
         return capture
 
     def offset(self, cell, offset):
@@ -253,6 +254,43 @@ class Board(object):
         self.cells[cell].piece = piece
 
 
+class DimBoard(Board):
+    """
+    A board of squares in variable dimensions. (Board)
+
+    Methods:
+    copy: Create a copy of the board. (GridBoard)
+
+    Overridden Methods:
+    __init__
+    """
+
+    def __init__(self, dimensions, default_piece = None):
+        """
+        Set up the grid of cells. (None)
+
+        Paramters:
+        dimensions: The dimensions of the board, in cells. (tuple of int)
+        default_piece: The default piece for the square.
+        """
+        # store dimensions
+        self.dimensions = dimensions
+        self.rows = rows
+        # create cells
+        self.default_piece = default_piece
+        locations = itertools.product(*[range(dimension) for dimension in self.dimensions])
+        self.cells = {location: BoardCell(location, self.default_piece) for location in locations}
+
+    def copy(self, **kwargs):
+        """Create a copy of the board. (GridBoard)"""
+        # clone the cells
+        clone = self.__class__(self.dimensions, self.default_piece, **kwargs)
+        # clone the cell contents
+        for location in clone:
+            clone.cells[location].piece = self.cells[location].piece
+        return clone
+
+
 class GridBoard(Board):
     """
     A rectangular board of squares. (Board)
@@ -264,7 +302,7 @@ class GridBoard(Board):
     __init__
     """
 
-    def __init__(self, columns, rows):
+    def __init__(self, columns, rows, default_piece = None):
         """
         Set up the grid of cells. (None)
 
@@ -276,10 +314,12 @@ class GridBoard(Board):
         self.columns = columns
         self.rows = rows
         # create cells
+        self.default_piece = default_piece
         self.cells = {}
         for column in range(columns):
             for row in range(rows):
-                self.cells[Coordinate((column, row))] = BoardCell(column, row)
+                location = Coordinate((column, row))
+                self.cells[location] = BoardCell(location, default_piece)
 
     def copy(self, **kwargs):
         """Create a copy of the board. (GridBoard)"""
@@ -291,23 +331,48 @@ class GridBoard(Board):
         return clone
 
 
-class LineBoard(object):
+class MultiBoard(DimBoard):
     """
-    A linear board of points. (Board)
-
-    Overridden Methods:
-    __init__
+    A board with multiple pieces per cell. (Board)
     """
 
-    def __init__(self, points):
+    def __init__(self, dimensions):
         """
-        Set up the line of cells. (None)
+        Set up the grid of cells. (None)
+
+        Paramters:
+        dimensions: The dimensions of the board, in cells. (tuple of int)
+        """
+        super(MultiBoard, self).__init__(dimensions, [])
+
+    def move(self, start, end):
+        """
+        Move a piece from one cell to another. (object)
+
+        The object returned is any piece that is in the destination cell before the
+        move. The parameters should be keys appropriate to cells on the board.
 
         Parameters:
-        points: The number of points on the board. (int)
+        start: The location containing the piece to move. (Coordinate)
+        end: The location to move the piece to. (Coordinate)
         """
-        # Store the dimension.
-        self.points = points
-        # Create the cells.
-        for point in range(points):
-            self.cells[point] = BoardCell(point)
+        # store the captured piece
+        capture = self.cells[end].piece
+        # move the piece
+        mover = self.cells[start].piece.pop()
+        if not (capture == self.default_piece or mover == capture[0]):
+            self.cells[end].piece == self.default_piece
+        self.cells[end].piece.append(mover)
+        return capture
+
+    def place(self, piece, cell):
+        """
+        Place a piece in a cell. (None)
+
+        The piece parameter should be a key appropriate to cells on the board.
+
+        Paramters:
+        piece: The piece to place on the board. (See BoardCell)
+        cell: The location to place the piece in. (Coordinate)
+        """
+        self.cells[cell].piece.append(piece)
