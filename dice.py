@@ -6,9 +6,12 @@ Dice objects for tgames.
 Die: A single die. (object)
 """
 
+
+import functools
 import random
 
 
+@functools.total_ordering
 class Die(object):
     """
     A single die. (object)
@@ -42,6 +45,34 @@ class Die(object):
             self.sides = sides
         # Get an initial value for the die.
         self.roll()
+
+    def __eq__(self, other):
+        """
+        Equality testing. (bool)
+
+        Parameters:
+        other: The item to check for equality. (object)
+        """
+        if isinstance(other, Die):
+            return self.value == other.value
+        elif isinstance(other, (int, float)):
+            return self.value == other
+        else:
+            return NotImplemented
+
+    def __lt__(self, other):
+        """
+        Ordering (less than) testing. (bool)
+
+        Parameters:
+        other: The item to check for less than. (object)
+        """
+        if isinstance(other, Die):
+            return self.value < other.value
+        elif isinstance(other, (int, float)):
+            return self.value < other
+        else:
+            return NotImplemented
 
     def __repr__(self):
         """Debugging text representation. (str)"""
@@ -108,6 +139,11 @@ class Pool(object):
         for die in self.dice:
             self.values.append(die.roll())
         return self.values
+
+    def sort(self, key = None, reverse = False):
+        """Sort the dice in the pool. (list)"""
+        self.dice.sort(key = key, reverse = reverse)
+        self.values = [die.value for die in self.dice]
 
 if __name__ == '__main__':
     die = Die('die')

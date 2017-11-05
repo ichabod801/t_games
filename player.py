@@ -225,14 +225,14 @@ class Player(object):
         """
         pass
 
-    def tell(self, *args, sep = ' ', end = '\n', file = sys.stdout, flush = False):
+    def tell(self, *args, **kwargs):
         """
         Give information to the player. (None)
 
         Parameters:
         The parameters are as per the built-in print function.
         """
-        print(*args, sep = sep, end = end, file = file, flush = flush)
+        print(*args, **kwargs)
 
 
 class Bot(Player):
@@ -261,19 +261,23 @@ class Bot(Player):
             if self.name not in taken_names:
                 break
 
-    def tell(self, *args, sep = ' ', end = '\n', file = sys.stdout, flush = False):
+    def tell(self, *args, **kwargs):
         """
         Give information to the player. (None)
 
         Parameters:
         The parameters are as per the built-in print function.
         """
-        text = sep.join([str(arg) for arg in args]) + end
+        kwargs['sep'] = kwargs.get('sep', ' ')
+        kwargs['end'] = kwargs.get('end', '\n')
+        text = kwargs['sep'].join([str(arg) for arg in args]) + kwargs['end']
         possesive = self.name + "'s"
         pairs = (('Your', possesive), ('your', possessive), ('You', self.name), ('you', self.name))
         for pronoun, name in pairs:
             text = text.replace(pronoun, name)
-        print(text, file = file, flush = flush)
+        del kwargs['sep']
+        del kwargs['end']
+        print(text, **kwargs)
 
 class AlphaBetaBot(Bot):
     """

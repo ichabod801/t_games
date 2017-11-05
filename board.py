@@ -15,6 +15,9 @@ GridBoard: A rectangular board of squares. (object)
 """
 
 
+import itertools
+
+
 class BoardCell(object):
     """
     A square (or other shape) in a board. (object)
@@ -271,15 +274,17 @@ class DimBoard(Board):
 
         Paramters:
         dimensions: The dimensions of the board, in cells. (tuple of int)
-        default_piece: The default piece for the square.
+        default_piece: The default piece for the square. (object)
         """
         # store dimensions
         self.dimensions = dimensions
-        self.rows = rows
         # create cells
         self.default_piece = default_piece
         locations = itertools.product(*[range(dimension) for dimension in self.dimensions])
-        self.cells = {location: BoardCell(location, self.default_piece) for location in locations}
+        if callable(self.default_piece):
+            self.cells = {location: BoardCell(location, self.default_piece()) for location in locations}
+        else:
+            self.cells = {location: BoardCell(location, self.default_piece) for location in locations}
 
     def copy(self, **kwargs):
         """Create a copy of the board. (GridBoard)"""
@@ -343,7 +348,7 @@ class MultiBoard(DimBoard):
         Paramters:
         dimensions: The dimensions of the board, in cells. (tuple of int)
         """
-        super(MultiBoard, self).__init__(dimensions, [])
+        super(MultiBoard, self).__init__(dimensions, list)
 
     def move(self, start, end):
         """
@@ -358,9 +363,10 @@ class MultiBoard(DimBoard):
         """
         # store the captured piece
         capture = self.cells[end].piece
+        self.cells[end].piece = self.default_piece()
         # move the piece
         mover = self.cells[start].piece.pop()
-        if not (capture == self.default_piece or mover == capture[0]):
+        if not (capture == self.default_piece() or mover == capture[0]):
             self.cells[end].piece == self.default_piece
         self.cells[end].piece.append(mover)
         return capture
