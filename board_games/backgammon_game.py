@@ -33,14 +33,41 @@ class Backgammon(game.Game):
     set_up
     """
 
+    aliases = {'b': 'bear'}
     categories = ['Board Games', 'Race Games']
     credits = CREDITS
     name = 'Backgammon'
 
+    def do_bear(self, argument):
+        """
+        Bear a piece off of the board. (bool)
+
+        Parameters:
+        argument: The point or points to bear off from. (str)
+        """
+        player = self.players[self.player_index]
+        words = argument.split()
+        if words[0].lower() == 'off':
+            words = words[1:]
+        try:
+            points = [int(word) for word in words]
+        except ValueError:
+            player.tell('Invalid argument to the bear command: {}.'.format(argument))
+            return True
+        if player == self.human:
+            piece = self.human_piece
+        else:
+            piece = self.bot_piece # !! get rid of this shit. put the pieces in a dict.
+        locations = [loc for loc in self.board.cells if piece in self.board.cells[loc].piece]
+        # !! not finished. test for all pieces in home
+        for point in points:
+            # check for a legal point, use the largest one if no exact match.
+            pass
+
     def get_moves(self):
         """Determine the moves from the dice roll. (None)"""
         self.moves = self.dice.values[:]
-        if self.moves[0] = self.moves[1]:
+        if self.moves[0] == self.moves[1]:
             self.moves.extend(self.moves)
 
     def set_options(self):
@@ -81,11 +108,15 @@ class Backgammon(game.Game):
         if not (start_pieces and start_pieces[0] == player_piece):
             player.tell('You do not have a piece on that starting square.')
             return True
+        elif start - end not in self.moves:
+            player.tell('You do not have a die roll matching that move.')
+            return True
         elif end_pieces and end_pieces[0] != player_piece and len(end_pieces) > 1:
             player.tell('That end point is blocked.')
             return True
         else:
             self.board.move((start,), (end,))
+            self.moves.remove(start - end)
         return self.moves
 
     def set_up(self):
