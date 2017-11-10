@@ -45,7 +45,10 @@ class Backgammon(game.Game):
         Parameters:
         argument: The point or points to bear off from. (str)
         """
+        # Get the current player.
         player = self.players[self.player_index]
+        piece = self.pieces[player.name]
+        # Convert the arguments.
         words = argument.split()
         if words[0].lower() == 'off':
             words = words[1:]
@@ -54,15 +57,39 @@ class Backgammon(game.Game):
         except ValueError:
             player.tell('Invalid argument to the bear command: {}.'.format(argument))
             return True
-        if player == self.human:
-            piece = self.human_piece
-        else:
-            piece = self.bot_piece # !! get rid of this shit. put the pieces in a dict.
         locations = [loc for loc in self.board.cells if piece in self.board.cells[loc].piece]
-        # !! not finished. test for all pieces in home
+        # Check for all pieces in the player's home.
+        if (piece == 'X' and max(locations) > 5) or (piece == 'O' and min(locations) < 18):
+            player.tell('You do not have all of your pieces in your home yet.')
+            return True
+        elif piece in self.bar.piece:
+            player.tell('You still have a piece on the bar.')
+            return True
+        # Play any legal moves
         for point in points:
-            # check for a legal point, use the largest one if no exact match.
-            pass
+            # Check for a valid roll and 
+            if not self.board.cells[(point - 1,)].piece:
+                player.tell('You do not have a piece on the {} point.')
+                continue
+            elif point in self.moves:
+                self.moves.remove(point)
+            elif point < max(self.moves):
+                self.moves.remove(max(self.moves))
+            else:
+                player.tell('There is no valid move for the {} point.')
+                continue
+            self.board.out[piece] = self.board.cells[(point - 1,)].piece.pop()
+
+    def game_over(self):
+        """Check for the end of the game."""
+        # !! needs checks for gammon/backgammon
+        # !! that's enough to warrant a refactor with win_check(piece) method.
+        human_piece = self.pieces[self.human.name]
+        bot_piece = self.pieces[self.bot.name]
+        if len(self.board.out[human_piece].piece) == 15:
+            self.win_loss_draw[0] = self.doubling_die
+        elif len(self.board.out[bot_piece].piece) == 15:
+            self.win_loss_draw[1] = self.doubling_die
 
     def get_moves(self):
         """Determine the moves from the dice roll. (None)"""
@@ -75,10 +102,7 @@ class Backgammon(game.Game):
         self.option_set.add_option('o', target = 'human_piece', converter = options.upper, default = 'X')
 
     def player_turn(self, player):
-        if player == self.human:
-            player_piece = self.human_piece
-        else:
-            player_piece = self.bot_piece
+        player_piece = self.pieces[player.name]
         player.tell(self.board.get_text(player_piece))
         if not self.moves:
             self.dice.roll()
@@ -123,10 +147,11 @@ class Backgammon(game.Game):
         """Set up the game. (None)"""
         self.board = BackgammonBoard((24,))
         self.doubling_die = 1
+        self.pieces[self.human.name] = self.human_piece
         if self.human_piece == 'X':
-            self.bot_piece = 'O'
+            self.pieces[self.bot.name] = 'O'
         else:
-            self.bot_piece = 'X'
+            self.pieces[self.bot.name] = 'X'
         self.dice = dice.Pool()
         while self.dice.values[0] == self.dice.values[1]:
             self.dice.roll()
