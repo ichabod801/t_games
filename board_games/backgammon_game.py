@@ -38,6 +38,18 @@ class Backgammon(game.Game):
     credits = CREDITS
     name = 'Backgammon'
 
+    def check_win(self, piece):
+        other_piece = 'XO'['OX'.index(piece)]
+        result = 0
+        if len(self.board.out[piece].piece) == 15:
+            result = self.doubling_die
+            if not len(self.board.out[other_piece].piece):
+                if other_piece in self.board.bar.piece:
+                    result *= 3
+                else:
+                    result *= 2
+        return result 
+
     def do_bear(self, argument):
         """
         Bear a piece off of the board. (bool)
@@ -82,14 +94,13 @@ class Backgammon(game.Game):
 
     def game_over(self):
         """Check for the end of the game."""
-        # !! needs checks for gammon/backgammon
-        # !! that's enough to warrant a refactor with win_check(piece) method.
-        human_piece = self.pieces[self.human.name]
-        bot_piece = self.pieces[self.bot.name]
-        if len(self.board.out[human_piece].piece) == 15:
-            self.win_loss_draw[0] = self.doubling_die
-        elif len(self.board.out[bot_piece].piece) == 15:
-            self.win_loss_draw[1] = self.doubling_die
+        human_win = self.win_check(self.pieces[self.human.name])
+        if human_win:
+            self.win_loss_draw[0] = human_win
+        bot_win = self.win_check(self.pieces[self.bot.name])
+        elif bot_win:
+            self.win_loss_draw[1] = bot_win
+        return max(self.win_loss_draw) >= self.match
 
     def get_moves(self):
         """Determine the moves from the dice roll. (None)"""
@@ -99,12 +110,17 @@ class Backgammon(game.Game):
 
     def set_options(self):
         """Define the options for the game. (None)"""
-        self.option_set.add_option('o', target = 'human_piece', converter = options.upper, default = 'X')
+        self.option_set.add_option('o', target = 'human_piece', value = 'O', default = 'X',
+            question = 'Would you like to play with the O piece? bool')
+        self.option_set.add_option('match', ['m'], int, 1, check = lambda x: x > 0,
+            question = 'What should be the winning match score (return for 1)? ')
 
     def player_turn(self, player):
+        # !! need a check for no legal moves left.
         player_piece = self.pieces[player.name]
         player.tell(self.board.get_text(player_piece))
         if not self.moves:
+            # !! need to check for doubling.
             self.dice.roll()
             self.dice.sort()
             player.tell('You rolled a {} and a {}.'.format(*self.dice))

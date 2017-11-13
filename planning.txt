@@ -5,6 +5,7 @@
 == Short Term To Do List ==
 
 Flag for match play.
+rename player_turn to player_action
 A round of one per penultimate category, two for solitaire.
 	Backgammon
 		replace GridBoard with DimBoard
