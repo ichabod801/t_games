@@ -281,6 +281,7 @@ class DimBoard(Board):
         # create cells
         self.default_piece = default_piece
         locations = itertools.product(*[range(dimension) for dimension in self.dimensions])
+        locations = [Coordinate(location) for location in locations]
         if callable(self.default_piece):
             self.cells = {location: BoardCell(location, self.default_piece()) for location in locations}
         else:

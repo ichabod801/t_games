@@ -98,7 +98,7 @@ class Backgammon(game.Game):
         if human_win:
             self.win_loss_draw[0] = human_win
         bot_win = self.win_check(self.pieces[self.bot.name])
-        elif bot_win:
+        if bot_win:
             self.win_loss_draw[1] = bot_win
         return max(self.win_loss_draw) >= self.match
 
@@ -292,6 +292,10 @@ class BackgammonBoard(board.MultiBoard):
             self.cells[(24 - location,)].piece = ['O'] * count
 
 if __name__ == '__main__':
+    try:
+        input = raw_input
+    except NameError:
+        pass
     board = BackgammonBoard()
     print(board.get_text('X'))
     print()
