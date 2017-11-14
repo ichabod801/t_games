@@ -192,6 +192,7 @@ class BackgammonBoard(board.MultiBoard):
         super(BackgammonBoard, self).__init__(dimensions)
         self.bar = board.BoardCell((-1,), [])
         self.out = {'X': board.BoardCell((-2,), []), 'O': board.BoardCell((-3,), [])}
+        self.cells.update({(-1,): self.bar, (-2,): self.out['X'], (-3,): self.out['O']})
         self.set_up()
 
     def board_text(self, locations):
@@ -218,27 +219,46 @@ class BackgammonBoard(board.MultiBoard):
         return lines
 
     def get_moves(self, piece, rolls, moves = []):
-        # !! need check for piece on bar
         full_moves = []
         from_cells = [coord for coord in self.cells if piece in self.cells[coord].piece]
         direction = {'X': 1, 'O': -1}[piece]
         for roll in set(rolls):
             sub_rolls = rolls[:]
             sub_rolls.remove(roll)
-            for coord in from_cells:
-                end_coord = coord + roll * direction
-                end_cell = self.cells[end_coord]
-                if piece not in end_cell.piece and len(end_cell.piece) > 1:
-                    continue
-                sub_board = self.copy()
-                capture = sub_board.make_move(coord, end_coord)
-                if capture:
-                    sub_board.bar.piece.append(capture)
-                new_moves = moves + [(coord, end_coord)]
-                if sub_rolls:
-                    self.full_moves.extend(sub_board.get_moves(piece, sub_rolls, new_moves))
+            if piece in self.bar.piece:
+                if piece == 'X':
+                    end_coord = (23 - roll,)
                 else:
-                    self.full_moves.append(new_moves)
+                    end_coord = (roll - 1,)
+                end_cell = self.cells[end_coord]
+                if cell.piece[0] == piece or len(cell.piece) < 2:
+                    sub_board = self.copy()
+                    capture = sub_board.make_move((-1,), end_coord)
+                    if capture:
+                        sub_board.bar.piece.append(capture)
+                    new_moves = moves + [((-1,), end_coord)]
+                    if sub_rolls:
+                        self.full_moves.extend(sub_board.get_moves(piece, sub_rolls, new_moves))
+                    else:
+                        self.full_moves.append(new_moves)
+            else:
+                for coord in from_cells:
+                    if coord < (0,):
+                        continue
+                    end_coord = coord + roll * direction
+                    end_cell = self.cells[end_coord]
+                    if piece not in end_cell.piece and len(end_cell.piece) > 1:
+                        continue
+                    # !! duplicate code, don't like options for refactoring.
+                    sub_board = self.copy()
+                    capture = sub_board.make_move(coord, end_coord)
+                    if capture:
+                        sub_board.bar.piece.append(capture)
+                    new_moves = moves + [(coord, end_coord)]
+                    if sub_rolls:
+                        self.full_moves.extend(sub_board.get_moves(piece, sub_rolls, new_moves))
+                    else:
+                        self.full_moves.append(new_moves)
         return full_moves
 
     def get_text(self, piece):
