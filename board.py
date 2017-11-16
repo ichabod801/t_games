@@ -64,8 +64,12 @@ class BoardCell(object):
         # keyword parameters
         if self.piece:
             piece_text = ', piece = {!r}'.format(self.piece)
+        else:
+            piece_text = ''
         if self.empty != ' ':
             empty_text = ', empty = {!r}'.format(self.empty)
+        else:
+            empty_text = ''
         # complete and return
         return '{}({}{}{})'.format(self.__class__.__name__, self.location, piece_text, empty_text)
 
@@ -372,11 +376,11 @@ class MultiBoard(DimBoard):
         end: The location to move the piece to. (Coordinate)
         """
         # store the captured piece
-        capture = self.cells[end].piece
+        capture = self.cells[end].piece[:]
         # move the piece
         mover = self.cells[start].piece.pop()
         if not (capture == self.default_piece() or mover == capture[0]):
-            self.cells[end].piece == self.default_piece()
+            self.cells[end].piece = self.default_piece()
         else:
             capture = self.default_piece()
         self.cells[end].piece.append(mover)

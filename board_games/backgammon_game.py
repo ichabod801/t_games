@@ -158,7 +158,10 @@ class Backgammon(game.Game):
             player.tell('That end point is blocked.')
             return True
         else:
-            self.board.move((start,), (end,))
+            capture = self.board.move((start,), (end,))
+            # !! should this be in board.move()?
+            if capture:
+                self.board.bar.piece.extend(capture)
             self.moves.remove(start - end)
         return self.moves
 
@@ -225,7 +228,7 @@ class BackgammonBoard(board.MultiBoard):
         # !! we also need to consider bearing off as a third state, which means we must refactor.
         full_moves = []
         from_cells = [coord for coord in self.cells if piece in self.cells[coord].piece]
-        direction = {'X': 1, 'O': -1}[piece]
+        direction = {'X': -1, 'O': 1}[piece]
         for roll in set(rolls):
             sub_rolls = rolls[:]
             sub_rolls.remove(roll)
@@ -248,7 +251,7 @@ class BackgammonBoard(board.MultiBoard):
             else:
                 for coord in from_cells:
                     end_coord = coord + (roll * direction,)
-                    if coord < (0,) or end_coord < (0,):
+                    if not ((0,) <= coord < self.dimensions and (0,) <= end_coord < self.dimensions):
                         continue
                     end_cell = self.cells[end_coord]
                     if piece not in end_cell.piece and len(end_cell.piece) > 1:
@@ -320,5 +323,6 @@ if __name__ == '__main__':
             break
         capture = bg_board.move(start, end)
         if capture:
+            bg_board.bar.piece.extend(capture)
             print('Capture:', capture)
-    test_moves = bg_board.get_moves('O', [1, 2])
+    test_moves = bg_board.get_moves('O', [6, 5])
