@@ -222,6 +222,7 @@ class BackgammonBoard(board.MultiBoard):
         return lines
 
     def get_moves(self, piece, rolls, moves = []):
+        # !! we also need to consider bearing off as a third state, which means we must refactor.
         full_moves = []
         from_cells = [coord for coord in self.cells if piece in self.cells[coord].piece]
         direction = {'X': 1, 'O': -1}[piece]
@@ -262,7 +263,11 @@ class BackgammonBoard(board.MultiBoard):
                         full_moves.extend(sub_board.get_moves(piece, sub_rolls, new_moves))
                     else:
                         full_moves.append(new_moves)
-        return full_moves
+        final_moves = []
+        for move in full_moves:
+            if move not in final_moves and list(reversed(move)) not in final_moves:
+                final_moves.append(move)
+        return final_moves
 
     def get_text(self, piece):
         """
