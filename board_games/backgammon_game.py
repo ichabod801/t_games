@@ -7,6 +7,9 @@ BackgammonBoard: A board for Backgammon. (board.LineBoard)
 """
 
 
+from __future__ import print_function
+
+
 import tgames.board as board
 import tgames.dice as dice
 import tgames.game as game
@@ -231,34 +234,34 @@ class BackgammonBoard(board.MultiBoard):
                 else:
                     end_coord = (roll - 1,)
                 end_cell = self.cells[end_coord]
-                if cell.piece[0] == piece or len(cell.piece) < 2:
+                if piece in end_cell.piece or len(end_cell.piece) < 2:
                     sub_board = self.copy()
-                    capture = sub_board.make_move((-1,), end_coord)
+                    capture = sub_board.move((-1,), end_coord)
                     if capture:
                         sub_board.bar.piece.append(capture)
                     new_moves = moves + [((-1,), end_coord)]
                     if sub_rolls:
-                        self.full_moves.extend(sub_board.get_moves(piece, sub_rolls, new_moves))
+                        full_moves.extend(sub_board.get_moves(piece, sub_rolls, new_moves))
                     else:
-                        self.full_moves.append(new_moves)
+                        full_moves.append(new_moves)
             else:
                 for coord in from_cells:
-                    if coord < (0,):
+                    end_coord = coord + (roll * direction,)
+                    if coord < (0,) or end_coord < (0,):
                         continue
-                    end_coord = coord + roll * direction
                     end_cell = self.cells[end_coord]
                     if piece not in end_cell.piece and len(end_cell.piece) > 1:
                         continue
                     # !! duplicate code, don't like options for refactoring.
                     sub_board = self.copy()
-                    capture = sub_board.make_move(coord, end_coord)
+                    capture = sub_board.move(coord, end_coord)
                     if capture:
                         sub_board.bar.piece.append(capture)
                     new_moves = moves + [(coord, end_coord)]
                     if sub_rolls:
-                        self.full_moves.extend(sub_board.get_moves(piece, sub_rolls, new_moves))
+                        full_moves.extend(sub_board.get_moves(piece, sub_rolls, new_moves))
                     else:
-                        self.full_moves.append(new_moves)
+                        full_moves.append(new_moves)
         return full_moves
 
     def get_text(self, piece):
@@ -296,15 +299,21 @@ if __name__ == '__main__':
         input = raw_input
     except NameError:
         pass
-    board = BackgammonBoard()
-    print(board.get_text('X'))
+    bg_board = BackgammonBoard()
+    print(bg_board.get_text('X'))
     print()
-    print(board.get_text('O')) # !! incorrect. flips horiz, should rotate
+    print(bg_board.get_text('O'))
     print()
     while True:
-        print(board.get_text('X'))
+        print(bg_board.get_text('X'))
         print()
         move = input('Move? ')
         print()
-        start, end = [(int(x) - 1,) for x in move.split()]
-        board.move(start, end)
+        try:
+            start, end = [(int(x) - 1,) for x in move.split()]
+        except ValueError:
+            break
+        capture = bg_board.move(start, end)
+        if capture:
+            print('Capture:', capture)
+    test_moves = bg_board.get_moves('O', [1, 2])

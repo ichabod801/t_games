@@ -354,7 +354,7 @@ class MultiBoard(DimBoard):
     def copy(self, **kwargs):
         """Create a copy of the board. (GridBoard)"""
         # clone the cells
-        clone = self.__class__(self.dimensions, self.default_piece, **kwargs)
+        clone = self.__class__(self.dimensions, **kwargs)
         # clone the cell contents
         for location in clone:
             clone.cells[location].piece = self.cells[location].piece[:]
@@ -373,11 +373,12 @@ class MultiBoard(DimBoard):
         """
         # store the captured piece
         capture = self.cells[end].piece
-        self.cells[end].piece = self.default_piece()
         # move the piece
         mover = self.cells[start].piece.pop()
         if not (capture == self.default_piece() or mover == capture[0]):
-            self.cells[end].piece == self.default_piece
+            self.cells[end].piece == self.default_piece()
+        else:
+            capture = self.default_piece()
         self.cells[end].piece.append(mover)
         return capture
 
