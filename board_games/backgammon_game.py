@@ -51,9 +51,9 @@ class BackgammonBot(player.Bot):
                 move = possibles[0]
                 self.held_moves = possilbes[1:]
             if move[1] < 0:
-                return 'bear {}'.format(move[1][0] + 1)
+                return 'bear {}'.format(move[0][0] + 1)
             elif move[0] < 0:
-                pass # !! need a command for freeing pieces on the bar.
+                return 'enter {}'.format(move[1][0] + 1)
             else:
                 return '{} {}'.format(move[0][0], move[1][0])
         else:
