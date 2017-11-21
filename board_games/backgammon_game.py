@@ -2,6 +2,7 @@
 backgammon_game.py
 
 Classes:
+BackgammonBot: A bot for a game of Backgammon(player.bot)
 Backgammon: A game of Backgammon. (game.Game)
 BackgammonBoard: A board for Backgammon. (board.LineBoard)
 """
@@ -14,6 +15,7 @@ import tgames.board as board
 import tgames.dice as dice
 import tgames.game as game
 import tgames.options as options
+import tgames.player as player
 
 
 CREDITS = """
@@ -28,6 +30,74 @@ FRAME_LOW = ['+-------------+-------------+',  '  1 1 1                      ',
     '  2 1 0 9 8 7   6 5 4 3 2 1  ']
 
 
+class BackgammonBot(player.Bot):
+    """
+    A bot for a game of Backgammon(player.bot)
+    """
+
+    def ask(self, prompt):
+        if prompt == 'What is your move? ':
+            if self.held_moves:
+                move = self.held_moves.pop(0)
+            else:
+                possibles = []
+                board = self.game.board
+                for play in board.get_moves():
+                    sub_board = board.copy()
+                    for move in play:
+                        sub_board.move(*move)
+                    possibles.append(self.eval_board(sub_board), play)
+                possibles.sort(reverse = True)
+                move = possibles[0]
+                self.held_moves = possilbes[1:]
+            if move[1] < 0:
+                return 'bear {}'.format(move[1][0] + 1)
+            elif move[0] < 0:
+                pass # !! need a command for freeing pieces on the bar.
+            else:
+                return '{} {}'.format(move[0][0], move[1][0])
+        else:
+            raise ValueError('Unexpected question to BackgammonBot: {}'.format(prompt))
+
+    def eval_board(self, board):
+        # Find controlled and blot points.
+        controlled = {'X': [], 'O': []}
+        blots = {'X': [], 'O': []}
+        for cell in board.cells.values():
+            if cell.location < (0,):
+                continue
+            if len(cell.piece) > 1:
+                controlled[cell.piece[0]].append(cell.location)
+            elif line(cell.piece) == 1:
+                blots[cell.piece[0]].append(cell.location)
+        captured = {piece: board.bar.piece.count(piece) for piece in 'XO'}
+        pip_count = {piece: board.get_pip_count(piece) for piece in 'XO'}
+        # Calculate hits.
+        direct_hits = {'X': 0, 'O': 0}
+        indirect_hits = {'X': 0, 'O': 0}
+        for piece in 'XO':
+            foe_direction = {'X': 1, 'O': -1}[piece]
+            foe_piece = {'X': 'O', 'O': 'X'}[piece]
+            for blot in blots[piece]:
+                for offset in range(1, 13):
+                    offcell = board.get_offset(blot, (offset * foe_direction,))
+                    if foe_piece in offcell.piece:
+                        if offset < 7:
+                            direct_hits[piece] += 1
+                        if offset > 1:
+                            indirect_hits[piece] += 1
+        # Get list of score factors.
+        my_piece = self.game.pieces[self.name]
+        foe_piece = {'X': 'O', 'O': 'X'}[my_piece]
+        score = [captured[foe_piece] - captured[my_piece]]
+        score.append(len(blots[foe_piece]) - len(blots[my_piece]))
+        score.append(direct_hits[foe_piece] - direct_hits[my_piece])
+        score.append(indirect_hits[foe_piece] - indirect_hits[my_piece])
+        score.append(pip_count[my_piece] - pip_count[foe_piece])
+        score.append(controlled[my_piece] - controlled[foe_piece])
+        return(score)
+
+
 class Backgammon(game.Game):
     """
     A game of Backgammon. (game.Game)
@@ -36,9 +106,10 @@ class Backgammon(game.Game):
     set_up
     """
 
-    aliases = {'b': 'bear'}
+    aliases = {'b': 'bear', 'd': 'double', 'e': 'enter'}
     categories = ['Board Games', 'Race Games']
     credits = CREDITS
+    layouts = {'standard': ((6, 5), (8, 3), (13, 5), (24, 2))}
     name = 'Backgammon'
 
     def check_win(self, piece):
@@ -95,6 +166,47 @@ class Backgammon(game.Game):
                 continue
             self.board.out[piece] = self.board.cells[(point - 1,)].piece.pop()
 
+    def do_enter(self, argument):
+        """
+        Bring a piece back into play from the bar. (bool)
+
+        Parameters:
+        argument: The point to enter onto. (str)
+        """
+        # Get the current player.
+        player = self.players[self.player_index]
+        piece = self.pieces[player.name]
+        # Convert the arguments.
+        try:
+            point = int(argument) - 1
+        except ValueError:
+            player.tell('Invalid argument to the enter command: {}.'.format(argument))
+            return True
+        needed_roll = 24 - point
+        if piece == 'O':
+            point = 23 - point
+        # Check for valid entry point.
+        if needed_roll not in self.moves:
+            player.tell('You need to roll a {} to enter on that point.'.format(argument))
+            return True
+        elif piece not in self.board.bar.piece:
+            player.tell('You do not have a piece on the bar.')
+            return True
+        end_cell = self.board.cells[(point,)]
+        if piece not in end_cell.piece and len(end_cell.piece) > 1:
+            player.tell('That point is blocked.')
+            return True
+        # Make the move.
+        capture = self.board.move((-1,), (point,))
+        self.board.bar.extend(capture)
+        self.moves.remove(needed_roll)
+        return self.moves
+
+    def handle_options(self):
+        """Define the game options."""
+        self.option_set.add_option('layout', default = 'standard', value = self.layouts,
+            question = 'What layout would you like to use? ')
+
     def game_over(self):
         """Check for the end of the game."""
         human_win = self.win_check(self.pieces[self.human.name])
@@ -110,13 +222,6 @@ class Backgammon(game.Game):
         self.moves = self.dice.values[:]
         if self.moves[0] == self.moves[1]:
             self.moves.extend(self.moves)
-
-    def set_options(self):
-        """Define the options for the game. (None)"""
-        self.option_set.add_option('o', target = 'human_piece', value = 'O', default = 'X',
-            question = 'Would you like to play with the O piece? bool')
-        self.option_set.add_option('match', ['m'], int, 1, check = lambda x: x > 0,
-            question = 'What should be the winning match score (return for 1)? ')
 
     def player_turn(self, player):
         # !! need a check for no legal moves left.
@@ -159,15 +264,22 @@ class Backgammon(game.Game):
             return True
         else:
             capture = self.board.move((start,), (end,))
-            # !! should this be in board.move()?
+            # !! should this be in board.move()? 
             if capture:
                 self.board.bar.piece.extend(capture)
             self.moves.remove(start - end)
         return self.moves
 
+    def set_options(self):
+        """Define the options for the game. (None)"""
+        self.option_set.add_option('o', target = 'human_piece', value = 'O', default = 'X',
+            question = 'Would you like to play with the O piece? bool')
+        self.option_set.add_option('match', ['m'], int, 1, check = lambda x: x > 0,
+            question = 'What should be the winning match score (return for 1)? ')
+
     def set_up(self):
         """Set up the game. (None)"""
-        self.board = BackgammonBoard((24,))
+        self.board = BackgammonBoard((24,), self.layout)
         self.doubling_die = 1
         self.pieces[self.human.name] = self.human_piece
         if self.human_piece == 'X':
@@ -188,7 +300,7 @@ class BackgammonBoard(board.MultiBoard):
     get_moves: Get the legal moves for a given roll. (list)
     """
 
-    def __init__(self, dimensions = (24,)):
+    def __init__(self, dimensions = (24,), layout = ((6, 5), (8, 3), (13, 5), (24, 2))):
         """
         Set up the grid of cells. (None)
 
@@ -199,7 +311,7 @@ class BackgammonBoard(board.MultiBoard):
         self.bar = board.BoardCell((-1,), [])
         self.out = {'X': board.BoardCell((-2,), []), 'O': board.BoardCell((-3,), [])}
         self.cells.update({(-1,): self.bar, (-2,): self.out['X'], (-3,): self.out['O']})
-        self.set_up()
+        self.set_up(layout)
 
     def board_text(self, locations):
         lines = []
@@ -225,30 +337,43 @@ class BackgammonBoard(board.MultiBoard):
         return lines
 
     def get_moves(self, piece, rolls, moves = []):
-        # !! we also need to consider bearing off as a third state, which means we must refactor.
+        # !! probably not precisely corrent. Partial moves?
         full_moves = []
         from_cells = [coord for coord in self.cells if piece in self.cells[coord].piece]
         direction = {'X': -1, 'O': 1}[piece]
+        home = {'X': tuple(range(6)), 'O': tuple(range(23, 16, -1))}[piece]
         for roll in set(rolls):
             sub_rolls = rolls[:]
             sub_rolls.remove(roll)
             if piece in self.bar.piece:
+                # Generate moves when a piece is captured.
+                coord = self.bar.location
+                if piece != self.bar.piece[-1]:
+                    self.bar.piece.remove(piece)
+                    self.bar.piece.append(piece)
                 if piece == 'X':
                     end_coord = (23 - roll,)
                 else:
                     end_coord = (roll - 1,)
                 end_cell = self.cells[end_coord]
                 if piece in end_cell.piece or len(end_cell.piece) < 2:
-                    sub_board = self.copy()
-                    capture = sub_board.move((-1,), end_coord)
-                    if capture:
-                        sub_board.bar.piece.append(capture)
-                    new_moves = moves + [((-1,), end_coord)]
-                    if sub_rolls:
-                        full_moves.extend(sub_board.get_moves(piece, sub_rolls, new_moves))
-                    else:
-                        full_moves.append(new_moves)
+                    full_moves = self.get_moves_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
+            elif all([coord[0] in home or coord == self.out[piece].location for coord in from_cells]):
+                # Generate bearing off moves.
+                coord = (home[roll - 1],)
+                end_coord = self.out[piece].location
+                max_index = [ndx for ndx, pt in enumerate(home) if piece in self.cells[(pt,)].piece][-1]
+                if piece in self.cells[coord].piece:
+                    full_moves = self.get_moves_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
+                elif roll > max_index:
+                    coord = (home[max_index],)
+                    full_moves = self.get_moves_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
+                else:
+                    coord = (home[max_index],)
+                    end_coord = (coord[0] + roll * direction,)
+                    full_moves = self.get_moves_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
             else:
+                # Generate moves with no special conditions.
                 for coord in from_cells:
                     end_coord = coord + (roll * direction,)
                     if not ((0,) <= coord < self.dimensions and (0,) <= end_coord < self.dimensions):
@@ -256,21 +381,38 @@ class BackgammonBoard(board.MultiBoard):
                     end_cell = self.cells[end_coord]
                     if piece not in end_cell.piece and len(end_cell.piece) > 1:
                         continue
-                    # !! duplicate code, don't like options for refactoring.
-                    sub_board = self.copy()
-                    capture = sub_board.move(coord, end_coord)
-                    if capture:
-                        sub_board.bar.piece.append(capture)
-                    new_moves = moves + [(coord, end_coord)]
-                    if sub_rolls:
-                        full_moves.extend(sub_board.get_moves(piece, sub_rolls, new_moves))
-                    else:
-                        full_moves.append(new_moves)
+                    full_moves = self.get_moves_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
+        # Eliminate duplicate moves.
         final_moves = []
         for move in full_moves:
             if move not in final_moves and list(reversed(move)) not in final_moves:
                 final_moves.append(move)
         return final_moves
+
+    def get_moves_help(self, piece, coord, end_coord, moves, full_moves, sub_rolls):
+        sub_board = self.copy(layout = ())
+        capture = sub_board.move(coord, end_coord)
+        if capture:
+            sub_board.bar.piece.append(capture)
+        new_moves = moves + [(coord, end_coord)]
+        if sub_rolls:
+            full_moves.extend(sub_board.get_moves(piece, sub_rolls, new_moves))
+        else:
+            full_moves.append(new_moves)
+        return full_moves
+
+    def get_pip_count(self, piece):
+        points = []
+        for cell in self.cells.values():
+            point = cell.location[0] + 1
+            if point == 0:
+                point = 25
+            elif point < 0:
+                point = 0
+            elif piece == 'O':
+                point = 25 - point
+            points.extend([point] * cell.piece.count(piece))
+        return sum(points)
 
     def get_text(self, piece):
         """
@@ -297,8 +439,8 @@ class BackgammonBoard(board.MultiBoard):
             lines.extend(['', 'Bar: {}'.format(''.join(self.bar.piece))])
         return '\n'.join(lines)
 
-    def set_up(self):
-        for location, count in ((6, 5), (8, 3), (13, 5), (24, 2)):
+    def set_up(self, layout):
+        for location, count in layout:
             self.cells[(location - 1,)].piece = ['X'] * count
             self.cells[(24 - location,)].piece = ['O'] * count
 
@@ -308,6 +450,7 @@ if __name__ == '__main__':
     except NameError:
         pass
     bg_board = BackgammonBoard()
+    #bg_board = BackgammonBoard(layout = ((6, 1), (4, 2), (2, 3), (1, 5)))
     print(bg_board.get_text('X'))
     print()
     print(bg_board.get_text('O'))
@@ -315,6 +458,9 @@ if __name__ == '__main__':
     while True:
         print(bg_board.get_text('X'))
         print()
+        pip_x = bg_board.get_pip_count('X')
+        pip_o = bg_board.get_pip_count('O')
+        print('Pip Counts: X = {}, O = {}.\n'.format(pip_x, pip_o))
         move = input('Move? ')
         print()
         try:
@@ -324,5 +470,5 @@ if __name__ == '__main__':
         capture = bg_board.move(start, end)
         if capture:
             bg_board.bar.piece.extend(capture)
-            print('Capture:', capture)
     test_moves = bg_board.get_moves('O', [6, 5])
+    print(test_moves)
