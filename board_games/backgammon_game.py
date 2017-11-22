@@ -202,17 +202,12 @@ class Backgammon(game.Game):
         self.moves.remove(needed_roll)
         return self.moves
 
-    def handle_options(self):
-        """Define the game options."""
-        self.option_set.add_option('layout', default = 'standard', value = self.layouts,
-            question = 'What layout would you like to use? ')
-
     def game_over(self):
         """Check for the end of the game."""
-        human_win = self.win_check(self.pieces[self.human.name])
+        human_win = self.check_win(self.pieces[self.human.name])
         if human_win:
             self.win_loss_draw[0] = human_win
-        bot_win = self.win_check(self.pieces[self.bot.name])
+        bot_win = self.check_win(self.pieces[self.bot.name])
         if bot_win:
             self.win_loss_draw[1] = bot_win
         return max(self.win_loss_draw) >= self.match
@@ -231,9 +226,9 @@ class Backgammon(game.Game):
             # !! need to check for doubling.
             self.dice.roll()
             self.dice.sort()
-            player.tell('You rolled a {} and a {}.'.format(*self.dice))
             self.get_moves()
-        move = player.ask_int_list('What is your move? ', low = 1, high = 24, valid_lens = [1, 2])
+        player.tell('\nThe roll to you is {}.'.format(', '.join([str(x) for x in self.moves])))
+        move = player.ask_int_list('\nWhat is your move? ', low = 1, high = 24, valid_lens = [1, 2])
         if len(move) == 1:
             possible = []
             for maybe in set(self.moves):
@@ -272,16 +267,22 @@ class Backgammon(game.Game):
 
     def set_options(self):
         """Define the options for the game. (None)"""
+        self.option_set.default_bots = [(BackgammonBot, ())]
         self.option_set.add_option('o', target = 'human_piece', value = 'O', default = 'X',
             question = 'Would you like to play with the O piece? bool')
         self.option_set.add_option('match', ['m'], int, 1, check = lambda x: x > 0,
             question = 'What should be the winning match score (return for 1)? ')
+        self.option_set.add_option('layout', ['l'], options.lower, action = 'map', value = self.layouts, 
+            default = 'standard',
+            question = 'What layout would you like to use (return for standard)? ')
 
     def set_up(self):
         """Set up the game. (None)"""
         self.board = BackgammonBoard((24,), self.layout)
         self.doubling_die = 1
-        self.pieces[self.human.name] = self.human_piece
+        self.doubling_status = ''
+        self.bot = self.players[-1]
+        self.pieces = {self.human.name: self.human_piece}
         if self.human_piece == 'X':
             self.pieces[self.bot.name] = 'O'
         else:
@@ -289,6 +290,8 @@ class Backgammon(game.Game):
         self.dice = dice.Pool()
         while self.dice.values[0] == self.dice.values[1]:
             self.dice.roll()
+        if self.dice.values[0] < self.dice.values[0]:
+            self.players.reverse()
         self.get_moves()
 
 

@@ -122,6 +122,7 @@ class Pool(object):
                 self.dice.append(die)
             else:
                 self.dice.append(Die(die))
+        self.roll()
 
     def __repr__(self):
         """Debugging text representation. (str)"""
@@ -129,7 +130,7 @@ class Pool(object):
 
     def __str__(self):
         """Human readable text representation. (str)"""
-        text = ', '.join(self.values[:-1])
+        text = ', '.join([str(value) for value in self.values[:-1]])
         text = '{} and {}'.format(text, self.values[-1])
         return text
 
