@@ -6,6 +6,8 @@
 
 Flag for match play.
 rename player_turn to player_action
+have a Player.error() method distinct from Player.tell(), so bots know there's an error.
+	It's written, it needs implementation in games.
 A round of one per penultimate category, two for solitaire.
 	Backgammon
 		replace GridBoard with DimBoard

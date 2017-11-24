@@ -80,6 +80,15 @@ You can get this help text by typing help or ?
 """
 
 
+RULES = """
+1. Abstain from causing harm.
+2. Abstain from deception.
+3. Abstain from taking that which is not freely offered.
+4. Abstain from abusing sexuality.
+5. Abstain from intoxicating the mind.
+"""
+
+
 class Interface(other_cmd.OtherCmd):
     """
     A menu interface for playing games. (OtherCmd)
@@ -89,6 +98,10 @@ class Interface(other_cmd.OtherCmd):
     focus: The menu's current location in the category tree. (dict)
     game: The game being played. (game.Game)
     human: The player navigating the menu. (player.Player)
+
+    Class Attributes:
+    aliases: Alternate command words. (dict of str: str)
+    rules: The rules. (str)
 
     Methods:
     do_credits: Show the programming credits for the interface. (bool)
@@ -108,6 +121,7 @@ class Interface(other_cmd.OtherCmd):
     """
 
     aliases = {'?': 'help'}
+    rules = RULES
 
     def __init__(self, human):
         """Set up the interface. (None)"""
@@ -247,7 +261,9 @@ class Interface(other_cmd.OtherCmd):
         arguments: The game name. (str)
         """
         arguments = arguments.lower()
-        if arguments in self.games:
+        if not arguments:
+            print(self.rules)
+        elif arguments in self.games:
             self.human.tell(self.games[arguments].rules)
             self.human.ask('Press Enter to continue: ')
         else:

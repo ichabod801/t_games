@@ -6,6 +6,7 @@ Base player classes for tgames.
 !! reorganize this so the human stuff is in Human.
 
 Classes:
+BotError: An invalid play by a bot. (ValueError)
 Player: The base player class. (object)
 Bot: A computer player. (Player)
 AlphaBetaBot: A robot player using alpha-beta pruning. (Bot)
@@ -28,6 +29,10 @@ try:
     input = raw_input
 except NameError:
     pass
+
+
+class BotError(ValueError):
+    pass
     
 
 class Player(object):
@@ -43,6 +48,7 @@ class Player(object):
     ask_int: Get an integer response from the human. (int)
     ask_int_list: Get a multiple integer response from the human. (int)
     ask_valid: Get and validate responses from the user. (str)
+    error: Warn the player about an invalid play. (None)
     clean_up: Do any necessary post-game processing. (None)
     set_up: Do any necessary pre-game processing. (None)
     store_results: Store a game result. (None)
@@ -115,15 +121,15 @@ class Player(object):
                 if cmd:
                     break
                 else:
-                    self.tell('Integers only please.')
+                    self.error('Integers only please.')
             else:
                 if low is not None and response < low:
-                    self.tell('That number is too low. The lowest valid response is {}.'.format(low))
+                    self.error('That number is too low. The lowest valid response is {}.'.format(low))
                 elif high is not None and response > high:
-                    self.tell('That number is too high. The highest valid response is {}'.format(high))
+                    self.error('That number is too high. The highest valid response is {}'.format(high))
                 elif valid and response not in valid:
-                    self.tell('{} is not a valid choice.'.format(response))
-                    self.tell('You must choose one of {}.'.format(', '.join([str(x) for x in valid])))
+                    self.error('{} is not a valid choice.'.format(response))
+                    self.error('You must choose one of {}.'.format(', '.join([str(x) for x in valid])))
                 else:
                     break
         return response
@@ -158,27 +164,27 @@ class Player(object):
                 elif valid:
                     for number in set(response):
                         if response.count(number) > valid.count(number):
-                            self.tell("You have more {}'s than allowed".format(number))
-                            self.tell("You must choose from:", ', '.join(valid))
+                            self.error("You have more {}'s than allowed".format(number))
+                            self.error("You must choose from:", ', '.join(valid))
                             break
                     else:
                         break
                 elif valid_lens and len(response) not in valid_lens:
-                    self.tell('That is an invalid number of integers.')
+                    self.error('That is an invalid number of integers.')
                     if len(valid_lens) == 1:
                         plural = 's' if valid_lens[0] > 1 else ''
-                        self.tell('Please enter {} integer{}.'.format(str(valid_lens[0]), plural))
+                        self.error('Please enter {} integer{}.'.format(str(valid_lens[0]), plural))
                     else:
                         message = 'Please enter {}, or {} integers.'
-                        len_text = [str(x) for x in valid_liens[:-1]]
-                        self.tell(message.format(', '.join(len_text, valid_lens[-1])))
+                        len_text = [str(x) for x in valid_lens[:-1]]
+                        self.error(message.format(', '.join(len_text), valid_lens[-1]))
                 else:
                     break
             else:
                 if cmd:
                     break
                 else: 
-                    self.tell('Please enter the requested integers.')
+                    self.error('Please enter the requested integers.')
         return response
 
     def ask_valid(self, prompt, valid, default = '', lower = True):
@@ -211,6 +217,15 @@ class Player(object):
         """Do any necessary post-game processing. (None)"""
         pass
 
+    def error(self, *args, **kwargs):
+        """
+        Warn the player about an invalid play. (None)
+
+        Parameters:
+        The parameters are as teh built-in print function.
+        """
+        print(*args, **kwargs)
+
     def set_up(self):
         """Do any necessary pre-game processing. (None)"""
         pass
@@ -241,6 +256,8 @@ class Bot(Player):
 
     Overridden Methods:
     __init__
+    error
+    tell
     """
 
     def __init__(self, taken_names = [], initial = ''):
@@ -261,6 +278,18 @@ class Bot(Player):
             if self.name not in taken_names:
                 break
 
+    def error(self, *args, **kwargs):
+        """
+        Stop play due to a bot malfunction. (None)
+
+        Parameters:
+        The parameters are the same as the built-in bot function.
+        """
+        kwargs['sep'] = kwargs.get('sep', ' ')
+        kwargs['end'] = kwargs.get('end', '\n')
+        text = kwargs['sep'].join([str(arg) for arg in args]) + kwargs['end']
+        raise BotError(text.strip())
+
     def tell(self, *args, **kwargs):
         """
         Give information to the player. (None)
@@ -271,8 +300,8 @@ class Bot(Player):
         kwargs['sep'] = kwargs.get('sep', ' ')
         kwargs['end'] = kwargs.get('end', '\n')
         text = kwargs['sep'].join([str(arg) for arg in args]) + kwargs['end']
-        possesive = self.name + "'s"
-        pairs = (('Your', possesive), ('your', possessive), ('You', self.name), ('you', self.name))
+        possessive = self.name + "'s"
+        pairs = (('Your', possessive), ('your', possessive), ('You', self.name), ('you', self.name))
         for pronoun, name in pairs:
             text = text.replace(pronoun, name)
         del kwargs['sep']

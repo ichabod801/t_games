@@ -36,26 +36,28 @@ class BackgammonBot(player.Bot):
     """
 
     def ask(self, prompt):
-        if prompt == 'What is your move? ':
+        if prompt.strip() == 'What is your move?':
             if self.held_moves:
                 move = self.held_moves.pop(0)
             else:
                 possibles = []
                 board = self.game.board
-                for play in board.get_moves():
+                for play in board.get_moves(self.piece, self.game.moves):
                     sub_board = board.copy()
                     for move in play:
                         sub_board.move(*move)
-                    possibles.append(self.eval_board(sub_board), play)
+                    possibles.append((self.eval_board(sub_board), play))
                 possibles.sort(reverse = True)
-                move = possibles[0]
-                self.held_moves = possilbes[1:]
-            if move[1] < 0:
+                best = possibles[0][1]
+                move = best[0]
+                self.held_moves = best[1:]
+            print(move)
+            if move[1] < (0,):
                 return 'bear {}'.format(move[0][0] + 1)
-            elif move[0] < 0:
+            elif move[0] < (0,):
                 return 'enter {}'.format(move[1][0] + 1)
             else:
-                return '{} {}'.format(move[0][0], move[1][0])
+                return '{} {}'.format(move[0][0] + 1, move[1][0] + 1)
         else:
             raise ValueError('Unexpected question to BackgammonBot: {}'.format(prompt))
 
@@ -68,7 +70,7 @@ class BackgammonBot(player.Bot):
                 continue
             if len(cell.piece) > 1:
                 controlled[cell.piece[0]].append(cell.location)
-            elif line(cell.piece) == 1:
+            elif len(cell.piece) == 1:
                 blots[cell.piece[0]].append(cell.location)
         captured = {piece: board.bar.piece.count(piece) for piece in 'XO'}
         pip_count = {piece: board.get_pip_count(piece) for piece in 'XO'}
@@ -76,11 +78,14 @@ class BackgammonBot(player.Bot):
         direct_hits = {'X': 0, 'O': 0}
         indirect_hits = {'X': 0, 'O': 0}
         for piece in 'XO':
-            foe_direction = {'X': 1, 'O': -1}[piece]
+            foe_direction = {'X': -1, 'O': 1}[piece]
             foe_piece = {'X': 'O', 'O': 'X'}[piece]
             for blot in blots[piece]:
                 for offset in range(1, 13):
-                    offcell = board.get_offset(blot, (offset * foe_direction,))
+                    try:
+                        offcell = board.offset(blot, (offset * foe_direction,))
+                    except KeyError:
+                        break
                     if foe_piece in offcell.piece:
                         if offset < 7:
                             direct_hits[piece] += 1
@@ -94,8 +99,13 @@ class BackgammonBot(player.Bot):
         score.append(direct_hits[foe_piece] - direct_hits[my_piece])
         score.append(indirect_hits[foe_piece] - indirect_hits[my_piece])
         score.append(pip_count[my_piece] - pip_count[foe_piece])
-        score.append(controlled[my_piece] - controlled[foe_piece])
+        score.append(len(controlled[my_piece]) - len(controlled[foe_piece]))
         return(score)
+
+    def set_up(self):
+        """Set up the bot. (None)"""
+        self.held_moves = []
+        self.piece = self.game.pieces[self.name]
 
 
 class Backgammon(game.Game):
@@ -141,28 +151,28 @@ class Backgammon(game.Game):
         try:
             points = [int(word) for word in words]
         except ValueError:
-            player.tell('Invalid argument to the bear command: {}.'.format(argument))
+            player.errpr('Invalid argument to the bear command: {}.'.format(argument))
             return True
         locations = [loc for loc in self.board.cells if piece in self.board.cells[loc].piece]
         # Check for all pieces in the player's home.
         if (piece == 'X' and max(locations) > 5) or (piece == 'O' and min(locations) < 18):
-            player.tell('You do not have all of your pieces in your home yet.')
+            player.error('You do not have all of your pieces in your home yet.')
             return True
         elif piece in self.bar.piece:
-            player.tell('You still have a piece on the bar.')
+            player.error('You still have a piece on the bar.')
             return True
         # Play any legal moves
         for point in points:
             # Check for a valid roll and 
             if not self.board.cells[(point - 1,)].piece:
-                player.tell('You do not have a piece on the {} point.')
+                player.error('You do not have a piece on the {} point.')
                 continue
             elif point in self.moves:
                 self.moves.remove(point)
             elif point < max(self.moves):
                 self.moves.remove(max(self.moves))
             else:
-                player.tell('There is no valid move for the {} point.')
+                player.error('There is no valid move for the {} point.')
                 continue
             self.board.out[piece] = self.board.cells[(point - 1,)].piece.pop()
 
@@ -180,21 +190,21 @@ class Backgammon(game.Game):
         try:
             point = int(argument) - 1
         except ValueError:
-            player.tell('Invalid argument to the enter command: {}.'.format(argument))
+            player.error('Invalid argument to the enter command: {}.'.format(argument))
             return True
         needed_roll = 24 - point
         if piece == 'O':
             point = 23 - point
         # Check for valid entry point.
         if needed_roll not in self.moves:
-            player.tell('You need to roll a {} to enter on that point.'.format(argument))
+            player.error('You need to roll a {} to enter on that point.'.format(argument))
             return True
         elif piece not in self.board.bar.piece:
-            player.tell('You do not have a piece on the bar.')
+            player.error('You do not have a piece on the bar.')
             return True
         end_cell = self.board.cells[(point,)]
         if piece not in end_cell.piece and len(end_cell.piece) > 1:
-            player.tell('That point is blocked.')
+            player.error('That point is blocked.')
             return True
         # Make the move.
         capture = self.board.move((-1,), (point,))
@@ -233,36 +243,37 @@ class Backgammon(game.Game):
             possible = []
             for maybe in set(self.moves):
                 start = move[0] + maybe
-                if self.board.cells[(start,)] and self.board.cells[(start,)][0] == player_piece:
+                if player_piece in self.board.cells[(start,)].piece:
                     possible.append(start)
             if len(possible) == 1:
                 start = possible[0]
                 end = move[0]
             elif len(possible) > 1:
-                player.tell('That move is ambiguous.')
+                player.error('That move is ambiguous.')
                 return True
             else:
-                player.tell('There is no legal move to that point.')
+                player.error('There is no legal move to that point.')
                 return True
         else:
             start, end = [x - 1 for x in move]
         start_pieces = self.board.cells[(start,)].piece
         end_pieces = self.board.cells[(end,)].piece
+        direction = {'X': -1 , 'O': 1}[player_piece]
         if not (start_pieces and start_pieces[0] == player_piece):
-            player.tell('You do not have a piece on that starting square.')
+            player.error('You do not have a piece on that starting square.')
             return True
-        elif start - end not in self.moves:
-            player.tell('You do not have a die roll matching that move.')
+        elif (end - start) * direction not in self.moves:
+            player.error('You do not have a die roll matching that move.')
             return True
         elif end_pieces and end_pieces[0] != player_piece and len(end_pieces) > 1:
-            player.tell('That end point is blocked.')
+            player.error('That end point is blocked.')
             return True
         else:
             capture = self.board.move((start,), (end,))
             # !! should this be in board.move()? 
             if capture:
                 self.board.bar.piece.extend(capture)
-            self.moves.remove(start - end)
+            self.moves.remove(abs(start - end))
         return self.moves
 
     def set_options(self):
@@ -290,7 +301,7 @@ class Backgammon(game.Game):
         self.dice = dice.Pool()
         while self.dice.values[0] == self.dice.values[1]:
             self.dice.roll()
-        if self.dice.values[0] < self.dice.values[0]:
+        if self.dice.values[0] < self.dice.values[1]:
             self.players.reverse()
         self.get_moves()
 
@@ -341,6 +352,8 @@ class BackgammonBoard(board.MultiBoard):
 
     def get_moves(self, piece, rolls, moves = []):
         # !! probably not precisely corrent. Partial moves?
+        # !! If it can't move them all, it doesn't seem to return any of them.
+        # !! but there also will be times when it should remove no moves.
         full_moves = []
         from_cells = [coord for coord in self.cells if piece in self.cells[coord].piece]
         direction = {'X': -1, 'O': 1}[piece]
