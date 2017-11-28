@@ -222,21 +222,22 @@ class Backgammon(game.Game):
             self.win_loss_draw[1] = bot_win
         return max(self.win_loss_draw) >= self.match
 
-    def get_moves(self):
-        """Determine the moves from the dice roll. (None)"""
+    def get_rolls(self):
+        """Determine the rolls you can move with from the dice roll. (None)"""
         self.moves = self.dice.values[:]
         if self.moves[0] == self.moves[1]:
             self.moves.extend(self.moves)
 
     def player_turn(self, player):
         # !! need a check for no legal moves left.
+        # !! needs command handling (in ask_int_list)
         player_piece = self.pieces[player.name]
         player.tell(self.board.get_text(player_piece))
         if not self.moves:
             # !! need to check for doubling.
             self.dice.roll()
             self.dice.sort()
-            self.get_moves()
+            self.get_rolls()
         player.tell('\nThe roll to you is {}.'.format(', '.join([str(x) for x in self.moves])))
         move = player.ask_int_list('\nWhat is your move? ', low = 1, high = 24, valid_lens = [1, 2])
         if len(move) == 1:
@@ -303,7 +304,7 @@ class Backgammon(game.Game):
             self.dice.roll()
         if self.dice.values[0] < self.dice.values[1]:
             self.players.reverse()
-        self.get_moves()
+        self.get_rolls()
 
 
 class BackgammonBoard(board.MultiBoard):
@@ -350,10 +351,12 @@ class BackgammonBoard(board.MultiBoard):
             lines.append(row_text + '|')
         return lines
 
-    def get_moves(self, piece, rolls, moves = []):
+    def get_moves(self, piece, rolls, moves = None):
         # !! probably not precisely corrent. Partial moves?
         # !! If it can't move them all, it doesn't seem to return any of them.
-        # !! but there also will be times when it should remove no moves.
+        # !! but there also will be times when it should return no moves.
+        if moves == None:
+            moves = []
         full_moves = []
         from_cells = [coord for coord in self.cells if piece in self.cells[coord].piece]
         direction = {'X': -1, 'O': 1}[piece]
@@ -412,7 +415,11 @@ class BackgammonBoard(board.MultiBoard):
             sub_board.bar.piece.append(capture)
         new_moves = moves + [(coord, end_coord)]
         if sub_rolls:
-            full_moves.extend(sub_board.get_moves(piece, sub_rolls, new_moves))
+            sub_moves = sub_board.get_moves(piece, sub_rolls, new_moves)
+            if sub_moves:
+                full_moves.extend(sub_moves)
+            else:
+                full_moves.append(new_moves)
         else:
             full_moves.append(new_moves)
         return full_moves
@@ -466,7 +473,7 @@ if __name__ == '__main__':
     except NameError:
         pass
     bg_board = BackgammonBoard()
-    #bg_board = BackgammonBoard(layout = ((6, 1), (4, 2), (2, 3), (1, 5)))
+    #bg_board = BackgammonBoard(layout = ((7, 2), (6, 2), (5, 2), (4, 2), (3, 2), (2, 2), (24, 2)))
     print(bg_board.get_text('X'))
     print()
     print(bg_board.get_text('O'))
