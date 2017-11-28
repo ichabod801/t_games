@@ -58,6 +58,8 @@ class BackgammonBot(player.Bot):
                 return 'enter {}'.format(move[1][0] + 1)
             else:
                 return '{} {}'.format(move[0][0] + 1, move[1][0] + 1)
+        elif prompt.startswith('You have no legal moves'):
+            return ''
         else:
             raise ValueError('Unexpected question to BackgammonBot: {}'.format(prompt))
 
@@ -229,7 +231,6 @@ class Backgammon(game.Game):
             self.moves.extend(self.moves)
 
     def player_turn(self, player):
-        # !! need a check for no legal moves left.
         # !! needs command handling (in ask_int_list)
         player_piece = self.pieces[player.name]
         player.tell(self.board.get_text(player_piece))
@@ -239,7 +240,13 @@ class Backgammon(game.Game):
             self.dice.sort()
             self.get_rolls()
         player.tell('\nThe roll to you is {}.'.format(', '.join([str(x) for x in self.moves])))
+        legal_moves = self.board.get_moves(player_piece, self.moves)
+        if not legal_moves:
+            player.ask('You have no legal moves. Press enter to continue: ')
+            continue
         move = player.ask_int_list('\nWhat is your move? ', low = 1, high = 24, valid_lens = [1, 2])
+        if isinstance(move, str):
+            return self.handle_cmd(move)
         if len(move) == 1:
             possible = []
             for maybe in set(self.moves):
