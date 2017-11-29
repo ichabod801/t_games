@@ -158,7 +158,7 @@ class Backgammon(game.Game):
             return True
         locations = [loc for loc in self.board.cells if piece in self.board.cells[loc].piece]
         # Check for all pieces in the player's home.
-        if (piece == 'X' and max(locations) > 5) or (piece == 'O' and min(locations) < 18):
+        if (piece == 'X' and max(locations) > (5,)) or (piece == 'O' and min(locations) < (18,)):
             player.error('You do not have all of your pieces in your home yet.')
             return True
         elif piece in self.bar.piece:
