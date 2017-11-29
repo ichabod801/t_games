@@ -48,6 +48,7 @@ class BackgammonBot(player.Bot):
                         sub_board.move(*move)
                     possibles.append((self.eval_board(sub_board), play))
                 possibles.sort(reverse = True)
+                print(possibles)
                 best = possibles[0][1]
                 move = best[0]
                 self.held_moves = best[1:]
@@ -59,7 +60,7 @@ class BackgammonBot(player.Bot):
             else:
                 return '{} {}'.format(move[0][0] + 1, move[1][0] + 1)
         elif prompt.startswith('You have no legal moves'):
-            self.game.human.tell('{} has no moves.'.format(self.name))
+            self.game.human.tell('{} has no legal moves.'.format(self.name))
             return ''
         else:
             raise ValueError('Unexpected question to BackgammonBot: {}'.format(prompt))
@@ -109,6 +110,10 @@ class BackgammonBot(player.Bot):
         """Set up the bot. (None)"""
         self.held_moves = []
         self.piece = self.game.pieces[self.name]
+
+    def tell(self, text):
+        if not self.held_moves:
+            super(BackgammonBot, self).tell(text)
 
 
 class Backgammon(game.Game):
