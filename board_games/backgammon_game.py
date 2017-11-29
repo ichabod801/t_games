@@ -164,24 +164,24 @@ class Backgammon(game.Game):
         # Check for all pieces in the player's home.
         if (piece == 'X' and max(locations) > (5,)) or (piece == 'O' and min(locations) < (18,)):
             player.error('You do not have all of your pieces in your home yet.')
-            return True
         elif piece in self.board.bar.piece:
             player.error('You still have a piece on the bar.')
-            return True
-        # Play any legal moves
-        for point in points:
-            # Check for a valid roll and 
-            if not self.board.cells[(point - 1,)].piece:
-                player.error('You do not have a piece on the {} point.')
-                continue
-            elif point in self.moves:
-                self.moves.remove(point)
-            elif point < max(self.moves):
-                self.moves.remove(max(self.moves))
-            else:
-                player.error('There is no valid move for the {} point.')
-                continue
-            self.board.out[piece].piece.append(self.board.cells[(point - 1,)].piece.pop())
+        else:
+            # Play any legal moves
+            for point in points:
+                # Check for a valid roll and 
+                if not self.board.cells[(point - 1,)].piece:
+                    player.error('You do not have a piece on the {} point.')
+                    continue
+                elif point in self.moves:
+                    self.moves.remove(point)
+                elif point < max(self.moves):
+                    self.moves.remove(max(self.moves))
+                else:
+                    player.error('There is no valid move for the {} point.')
+                    continue
+                self.board.out[piece].piece.append(self.board.cells[(point - 1,)].piece.pop())
+        return self.moves
 
     def do_enter(self, argument):
         """
