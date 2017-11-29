@@ -59,6 +59,7 @@ class BackgammonBot(player.Bot):
             else:
                 return '{} {}'.format(move[0][0] + 1, move[1][0] + 1)
         elif prompt.startswith('You have no legal moves'):
+            self.game.human.tell('{} has no moves.'.format(self.name))
             return ''
         else:
             raise ValueError('Unexpected question to BackgammonBot: {}'.format(prompt))
@@ -190,16 +191,16 @@ class Backgammon(game.Game):
         piece = self.pieces[player.name]
         # Convert the arguments.
         try:
-            point = int(argument) - 1
+            needed_roll = int(argument)
         except ValueError:
             player.error('Invalid argument to the enter command: {}.'.format(argument))
             return True
-        needed_roll = 24 - point
+        point = needed_roll - 1
         if piece == 'O':
             point = 23 - point
         # Check for valid entry point.
         if needed_roll not in self.moves:
-            player.error('You need to roll a {} to enter on that point.'.format(argument))
+            player.error('You need to roll a {} to enter on that point.'.format(needed_roll))
             return True
         elif piece not in self.board.bar.piece:
             player.error('You do not have a piece on the bar.')
@@ -231,7 +232,6 @@ class Backgammon(game.Game):
             self.moves.extend(self.moves)
 
     def player_turn(self, player):
-        # !! needs command handling (in ask_int_list)
         player_piece = self.pieces[player.name]
         player.tell(self.board.get_text(player_piece))
         if not self.moves:
@@ -243,7 +243,8 @@ class Backgammon(game.Game):
         legal_moves = self.board.get_moves(player_piece, self.moves)
         if not legal_moves:
             player.ask('You have no legal moves. Press enter to continue: ')
-            continue
+            self.moves = []
+            return False
         move = player.ask_int_list('\nWhat is your move? ', low = 1, high = 24, valid_lens = [1, 2])
         if isinstance(move, str):
             return self.handle_cmd(move)
