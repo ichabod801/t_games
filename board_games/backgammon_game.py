@@ -167,18 +167,19 @@ class Backgammon(game.Game):
         elif piece in self.board.bar.piece:
             player.error('You still have a piece on the bar.')
         else:
+            # !! does not handle red player correctly. Separate point and roll, recalculate point.
             # Play any legal moves
             for point in points:
                 # Check for a valid roll and 
                 if not self.board.cells[(point - 1,)].piece:
-                    player.error('You do not have a piece on the {} point.')
+                    player.error('You do not have a piece on the {} point.'.format(point))
                     continue
                 elif point in self.moves:
                     self.moves.remove(point)
                 elif point < max(self.moves):
                     self.moves.remove(max(self.moves))
                 else:
-                    player.error('There is no valid move for the {} point.')
+                    player.error('There is no valid move for the {} point.'.format(point))
                     continue
                 self.board.out[piece].piece.append(self.board.cells[(point - 1,)].piece.pop())
         return self.moves
