@@ -45,14 +45,13 @@ class BackgammonBot(player.Bot):
                 for play in board.get_moves(self.piece, self.game.moves):
                     sub_board = board.copy()
                     for move in play:
-                        sub_board.move(*move)
+                        capture = sub_board.move(*move)
+                        sub_board.bar.piece.extend(capture)
                     possibles.append((self.eval_board(sub_board), play))
                 possibles.sort(reverse = True)
-                print(possibles)
                 best = possibles[0][1]
                 move = best[0]
                 self.held_moves = best[1:]
-            print(move)
             if move[1] < (0,):
                 return 'bear {}'.format(move[0][0] + 1)
             elif move[0] < (0,):
@@ -182,7 +181,7 @@ class Backgammon(game.Game):
             else:
                 player.error('There is no valid move for the {} point.')
                 continue
-            self.board.out[piece].append(self.board.cells[(point - 1,)].piece.pop())
+            self.board.out[piece].piece.append(self.board.cells[(point - 1,)].piece.pop())
 
     def do_enter(self, argument):
         """
@@ -201,7 +200,7 @@ class Backgammon(game.Game):
             player.error('Invalid argument to the enter command: {}.'.format(argument))
             return True
         point = needed_roll - 1
-        if piece == 'O':
+        if piece == 'X':
             point = 23 - point
         # Check for valid entry point.
         if needed_roll not in self.moves:
@@ -216,7 +215,7 @@ class Backgammon(game.Game):
             return True
         # Make the move.
         capture = self.board.move((-1,), (point,))
-        self.board.bar.extend(capture)
+        self.board.bar.piece.extend(capture)
         self.moves.remove(needed_roll)
         return self.moves
 
