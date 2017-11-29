@@ -161,7 +161,7 @@ class Backgammon(game.Game):
         if (piece == 'X' and max(locations) > (5,)) or (piece == 'O' and min(locations) < (18,)):
             player.error('You do not have all of your pieces in your home yet.')
             return True
-        elif piece in self.bar.piece:
+        elif piece in self.board.bar.piece:
             player.error('You still have a piece on the bar.')
             return True
         # Play any legal moves
@@ -177,7 +177,7 @@ class Backgammon(game.Game):
             else:
                 player.error('There is no valid move for the {} point.')
                 continue
-            self.board.out[piece] = self.board.cells[(point - 1,)].piece.pop()
+            self.board.out[piece].append(self.board.cells[(point - 1,)].piece.pop())
 
     def do_enter(self, argument):
         """
