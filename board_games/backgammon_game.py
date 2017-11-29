@@ -156,32 +156,34 @@ class Backgammon(game.Game):
         if words[0].lower() == 'off':
             words = words[1:]
         try:
-            points = [int(word) for word in words]
+            rolls = [int(word) for word in words]
         except ValueError:
             player.errpr('Invalid argument to the bear command: {}.'.format(argument))
             return True
-        locations = [loc for loc in self.board.cells if piece in self.board.cells[loc].piece]
+        locations = [loc for loc, cell in self.board.cells.items() if piece in cell.piece]
         # Check for all pieces in the player's home.
         if (piece == 'X' and max(locations) > (5,)) or (piece == 'O' and min(locations) < (18,)):
             player.error('You do not have all of your pieces in your home yet.')
         elif piece in self.board.bar.piece:
             player.error('You still have a piece on the bar.')
         else:
-            # !! does not handle red player correctly. Separate point and roll, recalculate point.
             # Play any legal moves
-            for point in points:
+            for roll in rolls:
+                point = roll - 1
+                if piece == '0':
+                    point = 23 - point
                 # Check for a valid roll and 
-                if not self.board.cells[(point - 1,)].piece:
-                    player.error('You do not have a piece on the {} point.'.format(point))
+                if not self.board.cells[(point,)].piece:
+                    player.error('You do not have a piece on the {} point.'.format(roll))
                     continue
-                elif point in self.moves:
-                    self.moves.remove(point)
-                elif point < max(self.moves):
+                elif roll in self.moves:
+                    self.moves.remove(roll)
+                elif roll < max(self.moves):
                     self.moves.remove(max(self.moves))
                 else:
-                    player.error('There is no valid move for the {} point.'.format(point))
+                    player.error('There is no valid move for the {} point.'.format(roll))
                     continue
-                self.board.out[piece].piece.append(self.board.cells[(point - 1,)].piece.pop())
+                self.board.out[piece].piece.append(self.board.cells[(point,)].piece.pop())
         return self.moves
 
     def do_enter(self, argument):
@@ -237,6 +239,7 @@ class Backgammon(game.Game):
             self.moves.extend(self.moves)
 
     def player_turn(self, player):
+        # !! can move with a piece on the bar. also get moves. but only for human.
         player_piece = self.pieces[player.name]
         player.tell(self.board.get_text(player_piece))
         if not self.moves:
