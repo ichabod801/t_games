@@ -30,19 +30,20 @@ class MoveTest(unittest.TestCase):
     def testBear(self):
         """Test bearing off moves."""
         self.setBoard(layout = ((6, 2), (5, 2)))
-        check = [(((19,), (-3,)), ((18,), (-3,))), (((19,), (23,)), ((18,), (-3,))), 
-            (((19,), (-3,)), ((19,), (23,)))]
+        check = [(((19,), (-3,)), ((18,), (-3,))), (((18,), (23,)), ((18,), (-3,)))]
         self.assertEqual(set(check), self.legal_moves)
 
-    @unittest.skip('Test planned but not written.')
     def testBearOver(self):
         """Test bearing off with over rolls."""
-        pass
+        self.setBoard(layout = ((4, 1), (3, 2)))
+        check = [(((20,), (-3,)), ((21,), (-3,)))]
+        self.assertEqual(set(check), self.legal_moves)
 
-    @unittest.skip('Test planned but not written.')
     def testBearPartial(self):
         """Test bearing off with empty point rolled."""
-        pass
+        self.setBoard(layout = ((6, 2), (4, 2)))
+        check = [(((18,), (23,)), ((18,), (-3,)))]
+        self.assertEqual(set(check), self.legal_moves)
 
     def testDoubles(self):
         """Test moves with doubles."""
