@@ -419,9 +419,11 @@ class BackgammonBoard(board.MultiBoard):
                     full_moves = self.get_moves_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
         # Eliminate duplicate moves.
         final_moves = []
+        sorted_moves = []
         for move in full_moves:
-            if move not in final_moves and list(reversed(move)) not in final_moves:
+            if move not in final_moves and list(sorted(move)) not in sorted_moves:
                 final_moves.append(move)
+                sorted_moves.append(list(sorted(move)))
         return final_moves
 
     def get_moves_help(self, piece, coord, end_coord, moves, full_moves, sub_rolls):
@@ -489,7 +491,7 @@ if __name__ == '__main__':
     except NameError:
         pass
     bg_board = BackgammonBoard()
-    #bg_board = BackgammonBoard(layout = ((7, 2), (6, 2), (5, 2), (4, 2), (3, 2), (2, 2), (24, 2)))
+    bg_board = BackgammonBoard(layout = ((24, 1), (23, 1), (22, 1)))
     print(bg_board.get_text('X'))
     print()
     print(bg_board.get_text('O'))
@@ -509,5 +511,5 @@ if __name__ == '__main__':
         capture = bg_board.move(start, end)
         if capture:
             bg_board.bar.piece.extend(capture)
-    test_moves = bg_board.get_moves('O', [6, 5])
+    test_moves = bg_board.get_moves('O', [1, 1, 1, 1])
     print(test_moves)
