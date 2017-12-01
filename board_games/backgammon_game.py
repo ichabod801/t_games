@@ -224,6 +224,7 @@ class Backgammon(game.Game):
 
     def game_over(self):
         """Check for the end of the game."""
+        # !! incorrect for match play. Need +=, and maybe reset game.
         human_win = self.check_win(self.pieces[self.human.name])
         if human_win:
             self.win_loss_draw[0] = human_win
@@ -285,9 +286,12 @@ class Backgammon(game.Game):
         elif end_pieces and end_pieces[0] != player_piece and len(end_pieces) > 1:
             player.error('That end point is blocked.')
             return True
+        elif player_piece in self.board.bar.piece and start != -1:
+            player.error('You re-enter your piece on the bar before making any other move.')
+            return True
         else:
             capture = self.board.move((start,), (end,))
-            # !! should this be in board.move()? 
+            # !! should this be in board.move()? Yes.
             if capture:
                 self.board.bar.piece.extend(capture)
             self.moves.remove(abs(start - end))
