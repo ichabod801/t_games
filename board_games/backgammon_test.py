@@ -27,10 +27,12 @@ class MoveTest(unittest.TestCase):
         raw_moves = self.board.get_moves(piece, rolls)
         self.legal_moves = set(tuple(move) for move in raw_moves)
 
-    @unittest.skip('Test planned but not written.')
     def testBear(self):
         """Test bearing off moves."""
-        pass
+        self.setBoard(layout = ((6, 2), (5, 2)))
+        check = [(((19,), (-3,)), ((18,), (-3,))), (((19,), (23,)), ((18,), (-3,))), 
+            (((19,), (-3,)), ((19,), (23,)))]
+        self.assertEqual(set(check), self.legal_moves)
 
     @unittest.skip('Test planned but not written.')
     def testBearOver(self):
@@ -80,10 +82,11 @@ class MoveTest(unittest.TestCase):
         self.setBoard(layout = ((7, 2), (6, 2), (5, 2), (4, 2), (3, 2), (2, 2), (24, 2)), rolls = [6, 6])
         self.assertEqual(set(), self.legal_moves)
 
-    @unittest.skip('Test started but not finished.')
     def testPartial(self):
         """Test moves where only part of the move is legal."""
-        self.setBoard(layout = ((24, 1), (23, 1), (3, 2)), moves = [((24,), (23,))], rolls = [1, 1])
+        self.setBoard(layout = ((24, 1), (23, 1), (3, 2)), moves = [((23,), (22,))], rolls = [1, 1])
+        check = [(((0,), (1,)),)]
+        self.assertEqual(set(check), self.legal_moves)
 
     def testStart(self):
         """Test the moves at the start of the game."""

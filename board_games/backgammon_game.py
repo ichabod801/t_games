@@ -403,8 +403,8 @@ class BackgammonBoard(board.MultiBoard):
                 elif roll > max_index:
                     coord = (home[max_index],)
                     full_moves = self.get_moves_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
-                else:
-                    coord = (home[max_index],)
+                for home_index in range(roll, max_index + 1):
+                    coord = (home[home_index],)
                     end_coord = (coord[0] + roll * direction,)
                     full_moves = self.get_moves_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
             else:
