@@ -1,6 +1,18 @@
 """
 backgammon_game.py
 
+A game of Backgammon and related variants.
+
+!! reword attributes to roll (the number on a die), move (one roll's move), 
+    and play (a full turn of moves).
+
+?? Should the move validation be done by the board?
+
+Constants:
+CREDITS: The credits for the game. (str)
+FRAME_HIGH: The top of the frame for displaying the board. (list of str)
+FRAME_LOW: The bottom of the frame for displaying the board. (list of str)
+
 Classes:
 BackgammonBot: A bot for a game of Backgammon(player.bot)
 Backgammon: A game of Backgammon. (game.Game)
@@ -18,14 +30,17 @@ import tgames.options as options
 import tgames.player as player
 
 
+# The credits for the game.
 CREDITS = """
 Game Design: Traditional
 Game Programming: Craig "Ichabod" O'Brien
 """
 
+# The top of the frame for displaying the board.
 FRAME_HIGH = ['  1 1 1 1 1 1   1 2 2 2 2 2  ', '  3 4 5 6 7 8   9 0 1 2 3 4  ', 
     '+-------------+-------------+']
 
+# The bottom of the frame for displaying the board.
 FRAME_LOW = ['+-------------+-------------+',  '  1 1 1                      ', 
     '  2 1 0 9 8 7   6 5 4 3 2 1  ']
 
@@ -33,13 +48,33 @@ FRAME_LOW = ['+-------------+-------------+',  '  1 1 1                      ',
 class BackgammonBot(player.Bot):
     """
     A bot for a game of Backgammon(player.bot)
+
+    Attributes:
+    held_moves: Moves planned but not yet made through ask. (list of tuple)
+
+    Methods:
+    eval_board: Evaluate a board position. (list of int)
+
+    Overridden Methods:
+    ask
+    set_up
+    tell
     """
 
     def ask(self, prompt):
+        """
+        Get information from the player. (str)
+
+        Parameters:
+        prompt: The question being asked of the player. (str)
+        """
+        # Respond to move requests.
         if prompt.strip() == 'What is your move?':
             if self.held_moves:
+                # Play any planned moves.
                 move = self.held_moves.pop(0)
             else:
+                # Evaluate all the legal plays.
                 possibles = []
                 board = self.game.board
                 for play in board.get_moves(self.piece, self.game.moves):
@@ -48,23 +83,46 @@ class BackgammonBot(player.Bot):
                         capture = sub_board.move(*move)
                         sub_board.bar.piece.extend(capture)
                     possibles.append((self.eval_board(sub_board), play))
+                # Choose the play with the highest evaluation.
                 possibles.sort(reverse = True)
                 best = possibles[0][1]
+                # Split out any held moves.
                 move = best[0]
                 self.held_moves = best[1:]
+            # Return the move with the correct syntax.
             if move[1] < (0,):
                 return 'bear {}'.format(move[0][0] + 1)
             elif move[0] < (0,):
                 return 'enter {}'.format(move[1][0] + 1)
             else:
                 return '{} {}'.format(move[0][0] + 1, move[1][0] + 1)
+        # Respond to no-move notifications.
         elif prompt.startswith('You have no legal moves'):
             self.game.human.tell('{} has no legal moves.'.format(self.name))
             return ''
+        # Raise an error for any other question.
         else:
             raise ValueError('Unexpected question to BackgammonBot: {}'.format(prompt))
 
     def eval_board(self, board):
+        """
+        Evaluate a board position. (list of int)
+
+        The evaluation is a list of integers. This can be used on it's own or as 
+        input to another evaluation function.
+
+        The items in the evaluation list are (in order):
+            * The difference in the number of captured pieces.
+            * The difference in the number of blots.
+            * The difference in direct hits to blots.
+            * The difference in indirect hits to blots. (!! Not calcualted correctly)
+            * The difference in pip count.
+            * The difference in the number of controlled points.
+        All are calculated so that higher numbers are better for the bot.
+
+        Parameters:
+        board: A board with the position to evaluate. (BackgammonBoard)
+        """
         # Find controlled and blot points.
         controlled = {'X': [], 'O': []}
         blots = {'X': [], 'O': []}
@@ -111,6 +169,13 @@ class BackgammonBot(player.Bot):
         self.piece = self.game.pieces[self.name]
 
     def tell(self, text):
+        """
+        Give information to the player. (None)
+
+        Parameters:
+        The parameters are as per the built-in print function.
+        """
+        # Don't say anything while making multiple moves
         if not self.held_moves:
             super(BackgammonBot, self).tell(text)
 
@@ -118,6 +183,17 @@ class BackgammonBot(player.Bot):
 class Backgammon(game.Game):
     """
     A game of Backgammon. (game.Game)
+
+    The values of the layout class attribute are tuples of two-integer tuples.
+    Each pair of integers indicate a point and the number of piece on that point.
+    This is only provided for one player, and then done symetrically for the 
+    other player.
+
+    Class Attributes:
+    layouts: Different possible starting layouts. (dict of str: tuple)
+
+    Methods:
+    check_win: Check to see if a given player has won. (int)
 
     Overridden Methods:
     set_up
