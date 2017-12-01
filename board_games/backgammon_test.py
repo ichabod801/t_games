@@ -52,18 +52,22 @@ class MoveTest(unittest.TestCase):
             (((1,), (2,)), ((2,), (3,)), ((2,), (3,)), ((3,), (4,))), 
             (((1,), (2,)), ((2,), (3,)), ((3,), (4,)), ((4,), (5,))), 
             (((2,), (3,)), ((3,), (4,)), ((4,), (5,)), ((5,), (6,)))]
+        self.legal_moves = set([tuple(sorted(move)) for move in self.legal_moves])
         check = set(check)
         self.assertEqual(check, self.legal_moves)
 
-    @unittest.skip('Test planned but not written.')
     def testEnter(self):
         """Test moves from the bar."""
-        pass
+        self.setBoard(layout = ((7, 2),), bar = ['X', 'O'], rolls = [2, 3])
+        check = [(((-1,), (1,)), ((1,), (4,))), (((-1,), (1,)), ((17,), (20,))),
+            (((-1,), (2,)), ((2,), (4,))), (((-1,), (2,)), ((17,), (19,)))]
+        self.assertEqual(set(check), self.legal_moves)
 
-    @unittest.skip('Test planned but not written.')
     def testEnterBlock(self):
         """Test moves from the bar with some moves blocked."""
-        pass
+        self.setBoard(layout = ((3, 2), (7, 2)), bar = ['X', 'O'], rolls = [2, 3])
+        check = [(((-1,), (1,)), ((1,), (4,))), (((-1,), (1,)), ((17,), (20,)))]
+        self.assertEqual(set(check), self.legal_moves)
 
     def testEnterNone(self):
         """Test moves from the bar when none are legal."""
@@ -76,10 +80,10 @@ class MoveTest(unittest.TestCase):
         self.setBoard(layout = ((7, 2), (6, 2), (5, 2), (4, 2), (3, 2), (2, 2), (24, 2)), rolls = [6, 6])
         self.assertEqual(set(), self.legal_moves)
 
-    @unittest.skip('Test planned but not written.')
+    @unittest.skip('Test started but not finished.')
     def testPartial(self):
         """Test moves where only part of the move is legal."""
-        pass
+        self.setBoard(layout = ((24, 1), (23, 1), (3, 2)), moves = [((24,), (23,))], rolls = [1, 1])
 
     def testStart(self):
         """Test the moves at the start of the game."""
