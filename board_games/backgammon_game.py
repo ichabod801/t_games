@@ -194,8 +194,12 @@ class Backgammon(game.Game):
 
     Methods:
     check_win: Check to see if a given player has won. (int)
+    do_bear: Bear a piece of the board. (bool)
+    do_enter: Bring a piece back into play from the bar. (bool)
+    get_rolls: Determine the rolls you can move with from the dice roll. (None)
 
     Overridden Methods:
+    game_over
     set_up
     """
 
@@ -206,10 +210,20 @@ class Backgammon(game.Game):
     name = 'Backgammon'
 
     def check_win(self, piece):
+        """
+        Check to see if a given player has won. (int)
+
+        The return value is the match score of the win (0 for no win yet).
+
+        Parameters:
+        piece: The piece used by the player being checked. (str)
+        """
         other_piece = 'XO'['OX'.index(piece)]
         result = 0
+        # Check for win.
         if len(self.board.out[piece].piece) == 15:
             result = self.doubling_die
+            # Check for gammon/backgammon.
             if not len(self.board.out[other_piece].piece):
                 if other_piece in self.board.bar.piece:
                     result *= 3
@@ -234,32 +248,39 @@ class Backgammon(game.Game):
         try:
             rolls = [int(word) for word in words]
         except ValueError:
-            player.errpr('Invalid argument to the bear command: {}.'.format(argument))
+            # Warn on bad arguments.
+            player.error('Invalid argument to the bear command: {}.'.format(argument))
             return True
         locations = [loc for loc, cell in self.board.cells.items() if piece in cell.piece]
         # Check for all pieces in the player's home.
         if (piece == 'X' and max(locations) > (5,)) or (piece == 'O' and min(locations) < (18,)):
             player.error('You do not have all of your pieces in your home yet.')
+        # Check for captured piece
         elif piece in self.board.bar.piece:
             player.error('You still have a piece on the bar.')
         else:
             # Play any legal moves
             for roll in rolls:
+                # Get the correct point
                 point = roll - 1
                 if piece == '0':
                     point = 23 - point
-                # Check for a valid roll and 
+                # Check for a valid point
                 if not self.board.cells[(point,)].piece:
                     player.error('You do not have a piece on the {} point.'.format(roll))
                     continue
+                # Remove the correct roll.
                 elif roll in self.moves:
                     self.moves.remove(roll)
                 elif roll < max(self.moves):
                     self.moves.remove(max(self.moves))
                 else:
+                    # Warn for no valid roll.
                     player.error('There is no valid move for the {} point.'.format(roll))
                     continue
+                # Bear off the piece
                 self.board.out[piece].piece.append(self.board.cells[(point,)].piece.pop())
+        # Continue the turn if there are still rolls to move.
         return self.moves
 
     def do_enter(self, argument):
@@ -281,13 +302,15 @@ class Backgammon(game.Game):
         point = needed_roll - 1
         if piece == 'X':
             point = 23 - point
-        # Check for valid entry point.
+        # Check for valid roll.
         if needed_roll not in self.moves:
             player.error('You need to roll a {} to enter on that point.'.format(needed_roll))
             return True
+        # Check for a piece to enter.
         elif piece not in self.board.bar.piece:
             player.error('You do not have a piece on the bar.')
             return True
+        # Check for a valid entry point.
         end_cell = self.board.cells[(point,)]
         if piece not in end_cell.piece and len(end_cell.piece) > 1:
             player.error('That point is blocked.')
@@ -299,12 +322,14 @@ class Backgammon(game.Game):
         return self.moves
 
     def game_over(self):
-        """Check for the end of the game."""
+        """Check for the end of the game. (bool)"""
         # !! incorrect for match play. Need +=, and maybe reset game.
+        # Check human win.
         human_win = self.check_win(self.pieces[self.human.name])
         if human_win:
             self.win_loss_draw[0] = human_win
         bot_win = self.check_win(self.pieces[self.bot.name])
+        # Check bot win.
         if bot_win:
             self.win_loss_draw[1] = bot_win
         return max(self.win_loss_draw) >= self.match
@@ -316,7 +341,13 @@ class Backgammon(game.Game):
             self.moves.extend(self.moves)
 
     def player_turn(self, player):
-        # !! can move with a piece on the bar. also get moves. but only for human.
+        """
+        Handle a player's turn or other player actions. (bool)
+
+        Parameters:
+        player: The player whose turn it is. (Player)
+        """
+        # !! can move with a piece on the bar. but only for human.
         player_piece = self.pieces[player.name]
         player.tell(self.board.get_text(player_piece))
         if not self.moves:
