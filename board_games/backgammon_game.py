@@ -8,6 +8,9 @@ A game of Backgammon and related variants.
 
 ?? Should the move validation be done by the board?
 
+!! Ichabod's Rule: Instead of capturing, hitting a blot bears the moving
+    piece off the board.
+
 Constants:
 CREDITS: The credits for the game. (str)
 FRAME_HIGH: The top of the frame for displaying the board. (list of str)
@@ -43,6 +46,29 @@ FRAME_HIGH = ['  1 1 1 1 1 1   1 2 2 2 2 2  ', '  3 4 5 6 7 8   9 0 1 2 3 4  ',
 # The bottom of the frame for displaying the board.
 FRAME_LOW = ['+-------------+-------------+',  '  1 1 1                      ', 
     '  2 1 0 9 8 7   6 5 4 3 2 1  ']
+
+# The rules of Backgammon. !! not finished
+RULES = """
+Each player starts the game rolling one die, and the higher roll moves using 
+the two numbers rolled. From then on turns alternate, each player rolling two
+dice on their turn. If doubles are rolled, they count double (as four or the
+rolled number having been rolled). Doubles rolled at the beginning of the game
+are rerolled.
+
+For each number rolled, the player may move one piece that many points (spots
+on the board). Each roll may move a different piece or the same piece, as the
+player choses. Players move opposite directions, with X moving widdershins
+from the top right, and O moving clockwise from the bottom right. The last six
+points in a player's moving direction (the bottom right for X, the top right
+for O) is called the player's home.
+
+Pieces may not be moved to points containing two or more of the opponent's 
+pieces. If a piece is moved to a point with only one opponent's piece on it, 
+the opponent's piece is captured and placed on the bar. If you have piece on
+the bar, you must re-enter the piece into your opponent's home before you can
+make any other move. A 1 moves it to the furthest point from your own home, a
+2 to the next furthest point, and so on. As per normal movement,
+"""
 
 
 class BackgammonBot(player.Bot):
@@ -463,6 +489,8 @@ class BackgammonBoard(board.MultiBoard):
     board_text: Generate a text lines for the pieces on the board. (list of str)
     get_moves: Get the legal moves for a given set of rolls. (list)
     get_moves_help: Recurse get_move using another board. (list of tuple)
+    get_pip_count: Get the pip count for a given player. (int)
+    get_text: Get the board text from a particular player's perspective. (str)
 
     Overridden Methods:
     __init__
@@ -628,8 +656,16 @@ class BackgammonBoard(board.MultiBoard):
         return full_moves
 
     def get_pip_count(self, piece):
-        points = []
+        """
+        Get the pip count for a given player. (int)
+
+        Parameters:
+        piece: The piece of the player to get a pip count for. (str)
+        """
+        # Loop through the board locations.
+        points = 0
         for cell in self.cells.values():
+            # Get the correct pip count.
             point = cell.location[0] + 1
             if point == 0:
                 point = 25
@@ -637,8 +673,9 @@ class BackgammonBoard(board.MultiBoard):
                 point = 0
             elif piece == 'O':
                 point = 25 - point
-            points.extend([point] * cell.piece.count(piece))
-        return sum(points)
+            # Get the pip count for each piece.
+            points += point * cell.piece.count(piece)
+        return points
 
     def get_text(self, piece):
         """
@@ -647,54 +684,50 @@ class BackgammonBoard(board.MultiBoard):
         Parameters:
         piece: The piece for the player to display. (str)
         """
+        # Get the details (for X).
         frame_high = FRAME_HIGH
         frame_low = FRAME_LOW
         order_high = list(range(12, 24))
         order_low = list(range(11, -1, -1))
+        # Convert the details if the text is for O
         if piece == 'O':
             frame_high = [line[::-1] for line in frame_high]
             frame_low = [line[::-1] for line in frame_low]
             order_high = list(range(0, 12))
             order_low = list(range(23, 11, -1))
+        # Get the top half of the board.
         lines = frame_high[:]
         lines.extend(self.board_text(order_high))
+        # Get the middle and bottom half of the board.
         lines.append('|             |             |')
         lines.extend(reversed(self.board_text(order_low)))
         lines.extend(frame_low)
+        # Include a line for any pieces on the bar.
         if self.bar.piece:
             lines.extend(['', 'Bar: {}'.format(''.join(self.bar.piece))])
+        # Return the text.
         return '\n'.join(lines)
 
     def set_up(self, layout):
+        """
+        Put the starting pieces on the board. (None)
+
+        See __init__ for the details of the layout parameter.
+
+        Parameters:
+        layout: The pieces counts and the points to play them on. (tuple of tuple)
+        """
+        # Layout the pieces for X, and mirrored for O.
         for location, count in layout:
             self.cells[(location - 1,)].piece = ['X'] * count
             self.cells[(24 - location,)].piece = ['O'] * count
+
 
 if __name__ == '__main__':
     try:
         input = raw_input
     except NameError:
         pass
-    bg_board = BackgammonBoard()
-    bg_board = BackgammonBoard(layout = ((24, 1), (23, 1), (22, 1)))
-    print(bg_board.get_text('X'))
-    print()
-    print(bg_board.get_text('O'))
-    print()
-    while True:
-        print(bg_board.get_text('X'))
-        print()
-        pip_x = bg_board.get_pip_count('X')
-        pip_o = bg_board.get_pip_count('O')
-        print('Pip Counts: X = {}, O = {}.\n'.format(pip_x, pip_o))
-        move = input('Move? ')
-        print()
-        try:
-            start, end = [(int(x) - 1,) for x in move.split()]
-        except ValueError:
-            break
-        capture = bg_board.move(start, end)
-        if capture:
-            bg_board.bar.piece.extend(capture)
-    test_moves = bg_board.get_moves('O', [1, 1, 1, 1])
-    print(test_moves)
+    name = input('What is your name? ')
+    game = Battleships(player.Player(name), '')
+    game.play()
