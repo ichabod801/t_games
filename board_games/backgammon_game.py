@@ -184,10 +184,7 @@ class Backgammon(game.Game):
     """
     A game of Backgammon. (game.Game)
 
-    The values of the layout class attribute are tuples of two-integer tuples.
-    Each pair of integers indicate a point and the number of piece on that point.
-    This is only provided for one player, and then done symetrically for the 
-    other player.
+    See BackgammonBoard for the details of the layout attribute.
 
     Class Attributes:
     layouts: Different possible starting layouts. (dict of str: tuple)
@@ -200,6 +197,8 @@ class Backgammon(game.Game):
 
     Overridden Methods:
     game_over
+    player_turn
+    set_options
     set_up
     """
 
@@ -348,22 +347,29 @@ class Backgammon(game.Game):
         player: The player whose turn it is. (Player)
         """
         # !! can move with a piece on the bar. but only for human.
+        # Get the player.
         player_piece = self.pieces[player.name]
+        # Show the board.
         player.tell(self.board.get_text(player_piece))
+        # Roll the dice if it's the start of the turn.
         if not self.moves:
-            # !! need to check for doubling.
             self.dice.roll()
             self.dice.sort()
             self.get_rolls()
         player.tell('\nThe roll to you is {}.'.format(', '.join([str(x) for x in self.moves])))
+        # Check for no legal moves
+        # !! if this is just for one roll, I don't need to do move validation. Just check if it's in
+        # !! legal moves. However, this would lose detail in the error messages.
         legal_moves = self.board.get_moves(player_piece, self.moves)
         if not legal_moves:
             player.ask('You have no legal moves. Press enter to continue: ')
             self.moves = []
             return False
+        # Get the player's move.
         move = player.ask_int_list('\nWhat is your move? ', low = 1, high = 24, valid_lens = [1, 2])
         if isinstance(move, str):
             return self.handle_cmd(move)
+        # Convert moves with just the end point.
         if len(move) == 1:
             possible = []
             for maybe in set(self.moves):
@@ -381,27 +387,35 @@ class Backgammon(game.Game):
                 return True
         else:
             start, end = [x - 1 for x in move]
+        # !! Need to handle one move that represents two rolls.
+        # Get the details of the move.
         start_pieces = self.board.cells[(start,)].piece
         end_pieces = self.board.cells[(end,)].piece
         direction = {'X': -1 , 'O': 1}[player_piece]
+        # Check for valid staring point.
         if not (start_pieces and start_pieces[0] == player_piece):
-            player.error('You do not have a piece on that starting square.')
+            player.error('You do not have a piece on that starting point.')
             return True
+        # Check for valid die roll.
         elif (end - start) * direction not in self.moves:
             player.error('You do not have a die roll matching that move.')
             return True
+        # Check for valide end point
         elif end_pieces and end_pieces[0] != player_piece and len(end_pieces) > 1:
             player.error('That end point is blocked.')
             return True
+        # Check for a piece on the bar.
         elif player_piece in self.board.bar.piece and start != -1:
             player.error('You re-enter your piece on the bar before making any other move.')
             return True
         else:
+            # Make the valid move
             capture = self.board.move((start,), (end,))
             # !! should this be in board.move()? Yes.
             if capture:
                 self.board.bar.piece.extend(capture)
             self.moves.remove(abs(start - end))
+        # Continue if there are still rolls to handle.
         return self.moves
 
     def set_options(self):
@@ -417,15 +431,18 @@ class Backgammon(game.Game):
 
     def set_up(self):
         """Set up the game. (None)"""
+        # Set up the board.
         self.board = BackgammonBoard((24,), self.layout)
-        self.doubling_die = 1
-        self.doubling_status = ''
+        # Set up the players.
         self.bot = self.players[-1]
         self.pieces = {self.human.name: self.human_piece}
         if self.human_piece == 'X':
             self.pieces[self.bot.name] = 'O'
         else:
             self.pieces[self.bot.name] = 'X'
+        # Set up the dice.
+        self.doubling_die = 1
+        self.doubling_status = ''
         self.dice = dice.Pool()
         while self.dice.values[0] == self.dice.values[1]:
             self.dice.roll()
@@ -438,57 +455,97 @@ class BackgammonBoard(board.MultiBoard):
     """
     A board for Backgammon. (board.LineBoard)
 
+    Attributes:
+    bar: The cell holding captured pieces. (board.BoardCell)
+    out: The cells holding pieces that have been borne off. (dict)
+
     Methods:
-    get_moves: Get the legal moves for a given roll. (list)
+    board_text: Generate a text lines for the pieces on the board. (list of str)
+    get_moves: Get the legal moves for a given set of rolls. (list)
+    get_moves_help: Recurse get_move using another board. (list of tuple)
+
+    Overridden Methods:
+    __init__
     """
 
     def __init__(self, dimensions = (24,), layout = ((6, 5), (8, 3), (13, 5), (24, 2))):
         """
         Set up the grid of cells. (None)
 
+        The layout parameter is a tuple of two-integer tuples. Each pair of integers 
+        indicate a point and the number of piece on that point. This is only provided 
+        for one player, and then done symetrically for the other player.
+
         Paramters:
         dimensions: The dimensions of the board, in cells. (tuple of int)
+        layout: The initial layout of the pieces. (tuple of tuple)
         """
+        # Set up the base board.
         super(BackgammonBoard, self).__init__(dimensions)
+        # Set up the special cells.
         self.bar = board.BoardCell((-1,), [])
         self.out = {'X': board.BoardCell((-2,), []), 'O': board.BoardCell((-3,), [])}
         self.cells.update({(-1,): self.bar, (-2,): self.out['X'], (-3,): self.out['O']})
+        # Place the starting pieces.
         self.set_up(layout)
 
     def board_text(self, locations):
+        """
+        Generate a text lines for the pieces on the board. (list of str)
+
+        Parameters:
+        locations: The order for displaying the points. (list of int)
+        """
         lines = []
+        # Loop through placements within points.
         for row in range(5):
             row_text = '| '
+            # Loop through the points.
             for bar_check, location in enumerate(locations):
                 pieces = len(self.cells[(location,)].piece)
                 if pieces > row:
+                    # Handle first row numbers.
                     if row == 0 and pieces > 5:
                         if pieces > 9:
                             row_text += '{} '.format(pieces % 10)
                         elif pieces > 5:
                             row_text += '{} '.format(pieces)
+                    # Handle second row number.
                     elif row == 1 and pieces > 9:
                         row_text += '1 '
+                    # Handle piece symbols
                     else:
                         row_text += '{} '.format(self.cells[(location,)].piece[0])
                 else:
+                    # Handle board design.
                     row_text += '{} '.format(':.'[location % 2])
                 if bar_check == 5:
+                    # Handle the bar.
                     row_text += '| '
             lines.append(row_text + '|')
         return lines
 
     def get_moves(self, piece, rolls, moves = None):
-        # !! probably not precisely corrent. Partial moves?
-        # !! If it can't move them all, it doesn't seem to return any of them.
-        # !! but there also will be times when it should return no moves.
+        """
+        Get the legal moves for a given set of rolls. (list)
+
+        This method recurses using get_moves_help.
+
+        Parameters:
+        piece: The piece symbol to get moves for. (str)
+        rolls: The rolls to get moves for. (str)
+        moves: The moves already made. (list of tuple)
+        """
+        # Handle default moves.
         if moves == None:
             moves = []
+        # Loop through the rolls.
         full_moves = []
         from_cells = [coord for coord in self.cells if piece in self.cells[coord].piece]
         direction = {'X': -1, 'O': 1}[piece]
         home = {'X': tuple(range(6)), 'O': tuple(range(23, 16, -1))}[piece]
         for roll in set(rolls):
+            # Get the rolls without the current roll.
             sub_rolls = rolls[:]
             sub_rolls.remove(roll)
             if piece in self.bar.piece:
@@ -538,19 +595,36 @@ class BackgammonBoard(board.MultiBoard):
         return final_moves
 
     def get_moves_help(self, piece, coord, end_coord, moves, full_moves, sub_rolls):
+        """
+        Recurse the get_move method by creating another board. (list of tuple)
+
+        Parameters:
+        piece: The piece symbol to get moves for. (str)
+        coord: The starting point of the move. (tuple of int)
+        end_coord: The ending point of the move. (tuple of int)
+        moves: The moves already made. (list of tuple)
+        full_moves: The moves already recorded. (list of tuple)
+        sub_rolls: The rolls to get moves for. (str)
+        """
+        # Create a board with the move.
         sub_board = self.copy(layout = ())
         capture = sub_board.move(coord, end_coord)
         if capture:
             sub_board.bar.piece.append(capture)
+        # Add to the move to the moves so far.
         new_moves = moves + [(coord, end_coord)]
         if sub_rolls:
+            # Recurse if necessary
             sub_moves = sub_board.get_moves(piece, sub_rolls, new_moves)
             if sub_moves:
                 full_moves.extend(sub_moves)
             else:
+                # Capture partial moves.
                 full_moves.append(new_moves)
         else:
+            # Termination of recursion
             full_moves.append(new_moves)
+        # Return the moves back up the recursion.
         return full_moves
 
     def get_pip_count(self, piece):
