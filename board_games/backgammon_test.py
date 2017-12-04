@@ -61,6 +61,7 @@ class MoveTest(unittest.TestCase):
 
     def testEnter(self):
         """Test moves from the bar."""
+        # !! test for X, it has the home board off by one
         self.setBoard(layout = ((7, 2),), bar = ['X', 'O'], rolls = [2, 3])
         check = [(((-1,), (1,)), ((1,), (4,))), (((-1,), (1,)), ((17,), (20,))),
             (((-1,), (2,)), ((2,), (4,))), (((-1,), (2,)), ((17,), (19,)))]

@@ -10,7 +10,7 @@ have a Player.error() method distinct from Player.tell(), so bots know there's a
 	It's written, it needs implementation in games.
 A round of one per penultimate category, two for solitaire.
 	Backgammon
-		replace GridBoard with DimBoard
+		translate to roll, move, play
 	Forty Thieves
 	Bisley
 	Cribbage
