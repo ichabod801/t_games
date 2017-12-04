@@ -60,14 +60,48 @@ on the board). Each roll may move a different piece or the same piece, as the
 player choses. Players move opposite directions, with X moving widdershins
 from the top right, and O moving clockwise from the bottom right. The last six
 points in a player's moving direction (the bottom right for X, the top right
-for O) is called the player's home.
+for O) is called the player's home board or home.
 
 Pieces may not be moved to points containing two or more of the opponent's 
 pieces. If a piece is moved to a point with only one opponent's piece on it, 
 the opponent's piece is captured and placed on the bar. If you have piece on
 the bar, you must re-enter the piece into your opponent's home before you can
 make any other move. A 1 moves it to the furthest point from your own home, a
-2 to the next furthest point, and so on. As per normal movement,
+2 to the next furthest point, and so on. As per normal movement, if the piece
+entering lands on a single opponent's piece, the opponent's piece is captured
+and put on the bar.
+
+Once all of your pieces are in your home board, you may bear them off, 
+removing them from the board. This is done similarly to entering from the bar,
+with a roll of one removing a piece farthest into your home board, and two
+removing a piece next farthest into your home board, and so on. If your roll
+is for an empty point, and there are no pieces on higher points, you may bear
+off a piece on the highest point lower than the roll. So if you roll a five,
+and only have pieces on the three and four points, you may bear a piece off
+the four point. The first play to bear all of their pieces off the board wins
+the game.
+
+To move, indicate the starting point and ending point. Traditionally this is
+done with a slash, as in '13/7', but it can be done with a space or a comma
+as well. If the move is unambiguous, you may just use the end point. To enter
+a piece from the bar use the enter command (or 'e') and the point you want to
+enter onto. To bear a piece off the board, use the bear command (or 'bear off'
+or 'b') and the point your want to bear off from (NOT the roll).
+
+Backgammon is often played in match play, to even out the luck of the dice.
+When using match play, a game won when the opponent has not born any pieces
+off the board counts double, and a game won when the opponent still has a
+piece on the bar counts triple. Furthermore, there is a doubling die that 
+can be used to double the stakes. At the beginning of the game, either
+player may double the stakes using the double command. The other player must
+accept the doubled stakes or concede the game. After the initial doubling of
+the stakes, control of the doubling die goes to the player who accepted the
+doubling of the stakes, and only they can double the stakes again.
+
+Options:
+o: The human player plays with the red (O) pieces.
+layout: Which layout to use: standard or hyper. (l)
+match: The winning match score. Defaults to 1, or non-match play. (m)
 """
 
 
@@ -231,8 +265,10 @@ class Backgammon(game.Game):
     aliases = {'b': 'bear', 'd': 'double', 'e': 'enter'}
     categories = ['Board Games', 'Race Games']
     credits = CREDITS
-    layouts = {'standard': ((6, 5), (8, 3), (13, 5), (24, 2))}
+    layouts = {'hyper': ((24, 1), (23, 1), (22, 1)), 'standard': ((6, 5), (8, 3), (13, 5), (24, 2))}
     name = 'Backgammon'
+    num_options = 3
+    rules = RULES
 
     def check_win(self, piece):
         """
