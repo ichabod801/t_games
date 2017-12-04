@@ -137,7 +137,7 @@ class BackgammonBot(player.Bot):
                 # Evaluate all the legal plays.
                 possibles = []
                 board = self.game.board
-                for play in board.get_moves(self.piece, self.game.moves):
+                for play in board.get_plays(self.piece, self.game.moves):
                     sub_board = board.copy()
                     for move in play:
                         capture = sub_board.move(*move)
@@ -307,7 +307,7 @@ class Backgammon(game.Game):
         if words[0].lower() == 'off':
             words = words[1:]
         try:
-            rolls = [int(word) for word in words]
+            points = [int(word) for word in words]
         except ValueError:
             # Warn on bad arguments.
             player.error('Invalid argument to the bear command: {}.'.format(argument))
@@ -321,9 +321,10 @@ class Backgammon(game.Game):
             player.error('You still have a piece on the bar.')
         else:
             # Play any legal moves
-            for roll in rolls:
+            for point in points:
                 # Get the correct point
-                point = roll - 1
+                roll = point
+                point -= 1
                 if piece == '0':
                     point = 23 - point
                 # Check for a valid point
@@ -422,7 +423,7 @@ class Backgammon(game.Game):
         # Check for no legal moves
         # !! if this is just for one roll, I don't need to do move validation. Just check if it's in
         # !! legal moves. However, this would lose detail in the error messages.
-        legal_moves = self.board.get_moves(player_piece, self.moves)
+        legal_moves = self.board.get_plays(player_piece, self.moves)
         if not legal_moves:
             player.ask('You have no legal moves. Press enter to continue: ')
             self.moves = []
@@ -523,8 +524,8 @@ class BackgammonBoard(board.MultiBoard):
 
     Methods:
     board_text: Generate a text lines for the pieces on the board. (list of str)
-    get_moves: Get the legal moves for a given set of rolls. (list)
-    get_moves_help: Recurse get_move using another board. (list of tuple)
+    get_plays: Get the legal moves for a given set of rolls. (list)
+    get_plays_help: Recurse get_move using another board. (list of tuple)
     get_pip_count: Get the pip count for a given player. (int)
     get_text: Get the board text from a particular player's perspective. (str)
 
@@ -589,11 +590,11 @@ class BackgammonBoard(board.MultiBoard):
             lines.append(row_text + '|')
         return lines
 
-    def get_moves(self, piece, rolls, moves = None):
+    def get_plays(self, piece, rolls, moves = None):
         """
         Get the legal moves for a given set of rolls. (list)
 
-        This method recurses using get_moves_help.
+        This method recurses using get_plays_help.
 
         Parameters:
         piece: The piece symbol to get moves for. (str)
@@ -624,21 +625,21 @@ class BackgammonBoard(board.MultiBoard):
                     end_coord = (roll - 1,)
                 end_cell = self.cells[end_coord]
                 if piece in end_cell.piece or len(end_cell.piece) < 2:
-                    full_moves = self.get_moves_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
+                    full_moves = self.get_plays_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
             elif all([coord[0] in home or coord == self.out[piece].location for coord in from_cells]):
                 # Generate bearing off moves.
                 coord = (home[roll - 1],)
                 end_coord = self.out[piece].location
                 max_index = [ndx for ndx, pt in enumerate(home) if piece in self.cells[(pt,)].piece][-1]
                 if piece in self.cells[coord].piece:
-                    full_moves = self.get_moves_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
+                    full_moves = self.get_plays_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
                 elif roll > max_index:
                     coord = (home[max_index],)
-                    full_moves = self.get_moves_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
+                    full_moves = self.get_plays_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
                 for home_index in range(roll, max_index + 1):
                     coord = (home[home_index],)
                     end_coord = (coord[0] + roll * direction,)
-                    full_moves = self.get_moves_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
+                    full_moves = self.get_plays_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
             else:
                 # Generate moves with no special conditions.
                 for coord in from_cells:
@@ -648,7 +649,7 @@ class BackgammonBoard(board.MultiBoard):
                     end_cell = self.cells[end_coord]
                     if piece not in end_cell.piece and len(end_cell.piece) > 1:
                         continue
-                    full_moves = self.get_moves_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
+                    full_moves = self.get_plays_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
         # Eliminate duplicate moves.
         final_moves = []
         sorted_moves = []
@@ -658,7 +659,7 @@ class BackgammonBoard(board.MultiBoard):
                 sorted_moves.append(list(sorted(move)))
         return final_moves
 
-    def get_moves_help(self, piece, coord, end_coord, moves, full_moves, sub_rolls):
+    def get_plays_help(self, piece, coord, end_coord, moves, full_moves, sub_rolls):
         """
         Recurse the get_move method by creating another board. (list of tuple)
 
@@ -679,7 +680,7 @@ class BackgammonBoard(board.MultiBoard):
         new_moves = moves + [(coord, end_coord)]
         if sub_rolls:
             # Recurse if necessary
-            sub_moves = sub_board.get_moves(piece, sub_rolls, new_moves)
+            sub_moves = sub_board.get_plays(piece, sub_rolls, new_moves)
             if sub_moves:
                 full_moves.extend(sub_moves)
             else:
