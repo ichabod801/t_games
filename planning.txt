@@ -11,6 +11,7 @@ have a Player.error() method distinct from Player.tell(), so bots know there's a
 A round of one per penultimate category, two for solitaire.
 	Backgammon
 		translate to roll, move, play
+		check !!s, fix any that are needed in the short term.
 	Forty Thieves
 	Bisley
 	Cribbage

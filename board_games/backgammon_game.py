@@ -423,8 +423,8 @@ class Backgammon(game.Game):
         # Check for no legal moves
         # !! if this is just for one roll, I don't need to do move validation. Just check if it's in
         # !! legal moves. However, this would lose detail in the error messages.
-        legal_moves = self.board.get_plays(player_piece, self.rolls)
-        if not legal_moves:
+        legal_plays = self.board.get_plays(player_piece, self.rolls)
+        if not legal_plays:
             player.ask('You have no legal moves. Press enter to continue: ')
             self.rolls = []
             return False
@@ -437,7 +437,7 @@ class Backgammon(game.Game):
         if len(move) == 1:
             possible = []
             for maybe in set(self.rolls):
-                start = move[0] + maybe
+                start = move[0] + maybe # !! not taking into account direction.
                 if player_piece in self.board.cells[(start,)].piece:
                     possible.append(start)
             if len(possible) == 1:
