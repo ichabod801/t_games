@@ -137,7 +137,7 @@ class BackgammonBot(player.Bot):
                 # Evaluate all the legal plays.
                 possibles = []
                 board = self.game.board
-                for play in board.get_plays(self.piece, self.game.moves):
+                for play in board.get_plays(self.piece, self.game.rolls):
                     sub_board = board.copy()
                     for move in play:
                         capture = sub_board.move(*move)
@@ -332,10 +332,10 @@ class Backgammon(game.Game):
                     player.error('You do not have a piece on the {} point.'.format(roll))
                     continue
                 # Remove the correct roll.
-                elif roll in self.moves:
-                    self.moves.remove(roll)
-                elif roll < max(self.moves):
-                    self.moves.remove(max(self.moves))
+                elif roll in self.rolls:
+                    self.rolls.remove(roll)
+                elif roll < max(self.rolls):
+                    self.rolls.remove(max(self.rolls))
                 else:
                     # Warn for no valid roll.
                     player.error('There is no valid move for the {} point.'.format(roll))
@@ -343,7 +343,7 @@ class Backgammon(game.Game):
                 # Bear off the piece
                 self.board.out[piece].piece.append(self.board.cells[(point,)].piece.pop())
         # Continue the turn if there are still rolls to move.
-        return self.moves
+        return self.rolls
 
     def do_enter(self, argument):
         """
@@ -365,7 +365,7 @@ class Backgammon(game.Game):
         if piece == 'X':
             point = 23 - point
         # Check for valid roll.
-        if needed_roll not in self.moves:
+        if needed_roll not in self.rolls:
             player.error('You need to roll a {} to enter on that point.'.format(needed_roll))
             return True
         # Check for a piece to enter.
@@ -380,8 +380,8 @@ class Backgammon(game.Game):
         # Make the move.
         capture = self.board.move((-1,), (point,))
         self.board.bar.piece.extend(capture)
-        self.moves.remove(needed_roll)
-        return self.moves
+        self.rolls.remove(needed_roll)
+        return self.rolls
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
@@ -398,9 +398,9 @@ class Backgammon(game.Game):
 
     def get_rolls(self):
         """Determine the rolls you can move with from the dice roll. (None)"""
-        self.moves = self.dice.values[:]
-        if self.moves[0] == self.moves[1]:
-            self.moves.extend(self.moves)
+        self.rolls = self.dice.values[:]
+        if self.rolls[0] == self.rolls[1]:
+            self.rolls.extend(self.rolls)
 
     def player_turn(self, player):
         """
@@ -415,27 +415,28 @@ class Backgammon(game.Game):
         # Show the board.
         player.tell(self.board.get_text(player_piece))
         # Roll the dice if it's the start of the turn.
-        if not self.moves:
+        if not self.rolls:
             self.dice.roll()
             self.dice.sort()
             self.get_rolls()
-        player.tell('\nThe roll to you is {}.'.format(', '.join([str(x) for x in self.moves])))
+        player.tell('\nThe roll to you is {}.'.format(', '.join([str(x) for x in self.rolls])))
         # Check for no legal moves
         # !! if this is just for one roll, I don't need to do move validation. Just check if it's in
         # !! legal moves. However, this would lose detail in the error messages.
-        legal_moves = self.board.get_plays(player_piece, self.moves)
+        legal_moves = self.board.get_plays(player_piece, self.rolls)
         if not legal_moves:
             player.ask('You have no legal moves. Press enter to continue: ')
-            self.moves = []
+            self.rolls = []
             return False
         # Get the player's move.
         move = player.ask_int_list('\nWhat is your move? ', low = 1, high = 24, valid_lens = [1, 2])
         if isinstance(move, str):
             return self.handle_cmd(move)
         # Convert moves with just the end point.
+        # !! this does not seem to work.
         if len(move) == 1:
             possible = []
-            for maybe in set(self.moves):
+            for maybe in set(self.rolls):
                 start = move[0] + maybe
                 if player_piece in self.board.cells[(start,)].piece:
                     possible.append(start)
@@ -460,7 +461,7 @@ class Backgammon(game.Game):
             player.error('You do not have a piece on that starting point.')
             return True
         # Check for valid die roll.
-        elif (end - start) * direction not in self.moves:
+        elif (end - start) * direction not in self.rolls:
             player.error('You do not have a die roll matching that move.')
             return True
         # Check for valide end point
@@ -477,9 +478,9 @@ class Backgammon(game.Game):
             # !! should this be in board.move()? Yes.
             if capture:
                 self.board.bar.piece.extend(capture)
-            self.moves.remove(abs(start - end))
+            self.rolls.remove(abs(start - end))
         # Continue if there are still rolls to handle.
-        return self.moves
+        return self.rolls
 
     def set_options(self):
         """Define the options for the game. (None)"""
