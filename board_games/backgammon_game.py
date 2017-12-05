@@ -525,8 +525,8 @@ class BackgammonBoard(board.MultiBoard):
 
     Methods:
     board_text: Generate a text lines for the pieces on the board. (list of str)
-    get_plays: Get the legal moves for a given set of rolls. (list)
-    get_plays_help: Recurse get_move using another board. (list of tuple)
+    get_plays: Get the legal plays for a given set of rolls. (list)
+    get_plays_help: Recurse get_plays using another board. (list of tuple)
     get_pip_count: Get the pip count for a given player. (int)
     get_text: Get the board text from a particular player's perspective. (str)
 
@@ -602,11 +602,12 @@ class BackgammonBoard(board.MultiBoard):
         rolls: The rolls to get moves for. (str)
         moves: The moves already made. (list of tuple)
         """
+        # !! with pieces only on 2 and 1 blocked with a roll of 1, it says I can move 2 1. (line 641)
         # Handle default moves.
         if moves == None:
             moves = []
         # Loop through the rolls.
-        full_moves = []
+        full_plays = []
         from_cells = [coord for coord in self.cells if piece in self.cells[coord].piece]
         direction = {'X': -1, 'O': 1}[piece]
         home = {'X': tuple(range(6)), 'O': tuple(range(23, 16, -1))}[piece]
@@ -626,21 +627,21 @@ class BackgammonBoard(board.MultiBoard):
                     end_coord = (roll - 1,)
                 end_cell = self.cells[end_coord]
                 if piece in end_cell.piece or len(end_cell.piece) < 2:
-                    full_moves = self.get_plays_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
+                    full_plays = self.get_plays_help(piece, coord, end_coord, moves, full_plays, sub_rolls)
             elif all([coord[0] in home or coord == self.out[piece].location for coord in from_cells]):
                 # Generate bearing off moves.
                 coord = (home[roll - 1],)
                 end_coord = self.out[piece].location
                 max_index = [ndx for ndx, pt in enumerate(home) if piece in self.cells[(pt,)].piece][-1]
                 if piece in self.cells[coord].piece:
-                    full_moves = self.get_plays_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
+                    full_plays = self.get_plays_help(piece, coord, end_coord, moves, full_plays, sub_rolls)
                 elif roll > max_index:
                     coord = (home[max_index],)
-                    full_moves = self.get_plays_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
+                    full_plays = self.get_plays_help(piece, coord, end_coord, moves, full_plays, sub_rolls)
                 for home_index in range(roll, max_index + 1):
                     coord = (home[home_index],)
                     end_coord = (coord[0] + roll * direction,)
-                    full_moves = self.get_plays_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
+                    full_plays = self.get_plays_help(piece, coord, end_coord, moves, full_plays, sub_rolls)
             else:
                 # Generate moves with no special conditions.
                 for coord in from_cells:
@@ -650,17 +651,17 @@ class BackgammonBoard(board.MultiBoard):
                     end_cell = self.cells[end_coord]
                     if piece not in end_cell.piece and len(end_cell.piece) > 1:
                         continue
-                    full_moves = self.get_plays_help(piece, coord, end_coord, moves, full_moves, sub_rolls)
-        # Eliminate duplicate moves.
-        final_moves = []
-        sorted_moves = []
-        for move in full_moves:
-            if move not in final_moves and list(sorted(move)) not in sorted_moves:
-                final_moves.append(move)
-                sorted_moves.append(list(sorted(move)))
-        return final_moves
+                    full_plays = self.get_plays_help(piece, coord, end_coord, moves, full_plays, sub_rolls)
+        # Eliminate duplicate plays.
+        final_plays = []
+        sorted_plays = []
+        for play in full_plays:
+            if play not in final_plays and list(sorted(play)) not in sorted_plays:
+                final_plays.append(play)
+                sorted_plays.append(list(sorted(play)))
+        return final_plays
 
-    def get_plays_help(self, piece, coord, end_coord, moves, full_moves, sub_rolls):
+    def get_plays_help(self, piece, coord, end_coord, moves, full_plays, sub_rolls):
         """
         Recurse the get_move method by creating another board. (list of tuple)
 
@@ -669,7 +670,7 @@ class BackgammonBoard(board.MultiBoard):
         coord: The starting point of the move. (tuple of int)
         end_coord: The ending point of the move. (tuple of int)
         moves: The moves already made. (list of tuple)
-        full_moves: The moves already recorded. (list of tuple)
+        full_plays: The moves already recorded. (list of tuple)
         sub_rolls: The rolls to get moves for. (str)
         """
         # Create a board with the move.
@@ -681,17 +682,17 @@ class BackgammonBoard(board.MultiBoard):
         new_moves = moves + [(coord, end_coord)]
         if sub_rolls:
             # Recurse if necessary
-            sub_moves = sub_board.get_plays(piece, sub_rolls, new_moves)
-            if sub_moves:
-                full_moves.extend(sub_moves)
+            sub_plays = sub_board.get_plays(piece, sub_rolls, new_moves)
+            if sub_plays:
+                full_plays.extend(sub_plays)
             else:
                 # Capture partial moves.
-                full_moves.append(new_moves)
+                full_plays.append(new_moves)
         else:
             # Termination of recursion
-            full_moves.append(new_moves)
+            full_plays.append(new_moves)
         # Return the moves back up the recursion.
-        return full_moves
+        return full_plays
 
     def get_pip_count(self, piece):
         """
@@ -767,5 +768,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    game = Battleships(player.Player(name), '')
+    game = Backgammon(player.Player(name), '')
     game.play()

@@ -55,3 +55,4 @@ FreeCell,1,0,0,821,48,0,
 Pig,3,0,0,100,33,1,medium satan x
 FreeCell,1,0,0,806,62,0,
 Pig,3,0,0,101,33,1,medium satan x
+FreeCell,1,0,0,807,67,0,
