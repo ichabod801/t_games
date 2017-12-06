@@ -610,7 +610,7 @@ class BackgammonBoard(board.MultiBoard):
         full_plays = []
         from_cells = [coord for coord in self.cells if piece in self.cells[coord].piece]
         direction = {'X': -1, 'O': 1}[piece]
-        home = {'X': tuple(range(6)), 'O': tuple(range(23, 16, -1))}[piece]
+        home = {'X': tuple(range(6)), 'O': tuple(range(23, 17, -1))}[piece]
         for roll in set(rolls):
             # Get the rolls without the current roll.
             sub_rolls = rolls[:]
@@ -622,7 +622,7 @@ class BackgammonBoard(board.MultiBoard):
                     self.bar.piece.remove(piece)
                     self.bar.piece.append(piece)
                 if piece == 'X':
-                    end_coord = (23 - roll,)
+                    end_coord = (24 - roll,)
                 else:
                     end_coord = (roll - 1,)
                 end_cell = self.cells[end_coord]
@@ -634,14 +634,20 @@ class BackgammonBoard(board.MultiBoard):
                 end_coord = self.out[piece].location
                 max_index = [ndx for ndx, pt in enumerate(home) if piece in self.cells[(pt,)].piece][-1]
                 if piece in self.cells[coord].piece:
+                    # Generate standard bearing off moves.
                     full_plays = self.get_plays_help(piece, coord, end_coord, moves, full_plays, sub_rolls)
                 elif roll > max_index:
+                    # Generate bearing off moves with over roll.
                     coord = (home[max_index],)
                     full_plays = self.get_plays_help(piece, coord, end_coord, moves, full_plays, sub_rolls)
                 for home_index in range(roll, max_index + 1):
-                    coord = (home[home_index],)
-                    end_coord = (coord[0] + roll * direction,)
-                    full_plays = self.get_plays_help(piece, coord, end_coord, moves, full_plays, sub_rolls)
+                    # Generate moves within the home board.
+                    start = (home[home_index],)
+                    end = (coord[0] + roll * direction,)
+                    start_ok = piece in self.cells[start].piece
+                    end_ok = piece in self.cells[end] or len(self.cells[end]) < 2
+                    if start_ok and end_ok:
+                        full_plays = self.get_plays_help(piece, start, end, moves, full_plays, sub_rolls)
             else:
                 # Generate moves with no special conditions.
                 for coord in from_cells:
