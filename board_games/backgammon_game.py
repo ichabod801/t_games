@@ -151,7 +151,11 @@ class BackgammonBot(player.Bot):
                 self.held_moves = best[1:]
             # Return the move with the correct syntax.
             if move[1] < (0,):
-                return 'bear {}'.format(move[0][0] + 1)
+                # !! need to test, perhaps test bot.
+                point = move[0][0] + 1
+                if point > 6:
+                    point = 25 - point
+                return 'bear {}'.format(point)
             elif move[0] < (0,):
                 return 'enter {}'.format(move[1][0] + 1)
             else:
@@ -645,7 +649,7 @@ class BackgammonBoard(board.MultiBoard):
                     start = (home[home_index],)
                     end = (coord[0] + roll * direction,)
                     start_ok = piece in self.cells[start].piece
-                    end_ok = piece in self.cells[end] or len(self.cells[end]) < 2
+                    end_ok = piece in self.cells[end].piece or len(self.cells[end].piece) < 2
                     if start_ok and end_ok:
                         full_plays = self.get_plays_help(piece, start, end, moves, full_plays, sub_rolls)
             else:
