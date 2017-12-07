@@ -330,7 +330,7 @@ class Backgammon(game.Game):
             # Warn on bad arguments.
             player.error('Invalid argument to the bear command: {}.'.format(argument))
             return True
-        locations = [loc for loc, cell in self.board.cells.items() if piece in cell.piece]
+        locations = [loc for loc, cell in self.board.cells.items() if piece in cell.piece and loc >= (0,)]
         # Check for all pieces in the player's home.
         if (piece == 'X' and max(locations) > (5,)) or (piece == 'O' and min(locations) < (18,)):
             player.error('You do not have all of your pieces in your home yet.')
@@ -661,7 +661,7 @@ class BackgammonBoard(board.MultiBoard):
                 for home_index in range(6):
                     # Generate moves within the home board.
                     start = (home[home_index],)
-                    end = (start + roll * direction,)
+                    end = (start[0] + roll * direction,)
                     if end < (0,) or end > (23,):
                         continue
                     start_ok = piece in self.cells[start].piece
