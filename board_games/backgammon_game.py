@@ -648,6 +648,8 @@ class BackgammonBoard(board.MultiBoard):
                     # Generate moves within the home board.
                     start = (home[home_index],)
                     end = (coord[0] + roll * direction,)
+                    if end < (0,) or end > (23,):
+                        continue
                     start_ok = piece in self.cells[start].piece
                     end_ok = piece in self.cells[end].piece or len(self.cells[end].piece) < 2
                     if start_ok and end_ok:
