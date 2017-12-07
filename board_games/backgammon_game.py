@@ -168,6 +168,20 @@ class BackgammonBot(player.Bot):
         else:
             raise ValueError('Unexpected question to BackgammonBot: {}'.format(prompt))
 
+    def error(self, *args, **kwargs):
+        """
+        Warn the player about an invalid play. (None)
+
+        Parameters:
+        The parameters are as the built-in print function.
+        """
+        board = self.game.board
+        human = self.game.human
+        human.tell('\nERROR INFO\n')
+        human.tell(board.get_text(self.piece))
+        human.tell(board.get_plays(self.piece, self.game.rolls))
+        super(BackgammonBot, self).error(*args, **kwargs)
+
     def eval_board(self, board):
         """
         Evaluate a board position. (list of int)
@@ -329,7 +343,7 @@ class Backgammon(game.Game):
                 # Get the correct point
                 roll = point
                 point -= 1
-                if piece == '0':
+                if piece == 'O':
                     point = 23 - point
                 # Check for a valid point
                 if not self.board.cells[(point,)].piece:
@@ -644,10 +658,10 @@ class BackgammonBoard(board.MultiBoard):
                     # Generate bearing off moves with over roll.
                     coord = (home[max_index],)
                     full_plays = self.get_plays_help(piece, coord, end_coord, moves, full_plays, sub_rolls)
-                for home_index in range(roll, max_index + 1):
+                for home_index in range(6):
                     # Generate moves within the home board.
                     start = (home[home_index],)
-                    end = (coord[0] + roll * direction,)
+                    end = (start + roll * direction,)
                     if end < (0,) or end > (23,):
                         continue
                     start_ok = piece in self.cells[start].piece
