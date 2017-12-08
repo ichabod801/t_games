@@ -3,8 +3,10 @@ backgammon_game.py
 
 A game of Backgammon and related variants.
 
-!! reword attributes to roll (the number on a die), move (one roll's move), 
-    and play (a full turn of moves).
+Terminology:
+    roll: The number on a die.
+    move: One roll's move.
+    play: A full turn of moves.
 
 ?? Should the move validation be done by the board?
 
@@ -47,7 +49,7 @@ FRAME_HIGH = ['  1 1 1 1 1 1   1 2 2 2 2 2  ', '  3 4 5 6 7 8   9 0 1 2 3 4  ',
 FRAME_LOW = ['+-------------+-------------+',  '  1 1 1                      ', 
     '  2 1 0 9 8 7   6 5 4 3 2 1  ']
 
-# The rules of Backgammon. !! not finished
+# The rules of Backgammon.
 RULES = """
 Each player starts the game rolling one die, and the higher roll moves using 
 the two numbers rolled. From then on turns alternate, each player rolling two
@@ -151,7 +153,6 @@ class BackgammonBot(player.Bot):
                 self.held_moves = best[1:]
             # Return the move with the correct syntax.
             if move[1] < (0,):
-                # !! need to test, perhaps test bot.
                 point = move[0][0] + 1
                 if point > 6:
                     point = 25 - point
@@ -427,7 +428,6 @@ class Backgammon(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        # !! can move with a piece on the bar. but only for human.
         # Get the player.
         player_piece = self.pieces[player.name]
         # Show the board.
@@ -620,7 +620,6 @@ class BackgammonBoard(board.MultiBoard):
         rolls: The rolls to get moves for. (str)
         moves: The moves already made. (list of tuple)
         """
-        # !! with pieces only on 2 and 1 blocked with a roll of 1, it says I can move 2 1. (line 641)
         # Handle default moves.
         if moves == None:
             moves = []

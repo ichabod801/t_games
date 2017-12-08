@@ -4,17 +4,42 @@ backgammon_test.py
 Unit testing for backgammon_game.py.
 
 Classes:
-MoveTest: Test move generation. (TestCase)
+EndPointTest: Test moves made just providing an end point. (TestCase)
+PlayTest: Test play generation. (TestCase)
 """
 
 
+import io
 import unittest
+import sys
 
 from tgames.board_games import backgammon_game as bg
+from tgames import player as player
 
 
-class MoveTest(unittest.TestCase):
-    """Test move generation. (TestCase)"""
+class EndPointTest(unittest.TestCase):
+    """Test moves made just providing an end point. (TestCase)"""
+
+    def setUp(self):
+        """Set up the test case. (None)"""
+        self.game = bg.Backgammon(player.Tester())
+        if not isinstance(self.game.players[0], player.Tester):
+            self.game.players.reverse()
+        self.stdin_hold = sys.stdin
+
+    def tearDown(self):
+        """Clean up after the test case. (None)"""
+        sys.stdin = self.stdin_hold
+
+    def testValid(self):
+        """Test a valid end point move."""
+        self.game.board.rolls = [2, 1]
+        sys.stdin = io.StringIO('7\n')
+        self.assertEqual(['X'], self.game.board.cells[(6,)].piece)
+
+
+class PlayTest(unittest.TestCase):
+    """Test play generation. (TestCase)"""
 
     def setBoard(self, layout = ((6, 5), (8, 3), (13, 5), (24, 2)), moves = [], piece = 'O', 
         rolls = [6, 5], bar = None):
@@ -24,7 +49,7 @@ class MoveTest(unittest.TestCase):
             self.board.bar.piece = bar
         for start, end in moves:
             self.board.move(start, end)
-        raw_moves = self.board.get_moves(piece, rolls)
+        raw_moves = self.board.get_plays(piece, rolls)
         self.legal_moves = set(tuple(move) for move in raw_moves)
 
     def testBear(self):
