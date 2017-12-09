@@ -143,7 +143,6 @@ class BackgammonBot(player.Bot):
                     sub_board = board.copy()
                     for move in play:
                         capture = sub_board.move(*move)
-                        sub_board.bar.piece.extend(capture)
                     possibles.append((self.eval_board(sub_board), play))
                 # Choose the play with the highest evaluation.
                 possibles.sort(reverse = True)
@@ -398,7 +397,6 @@ class Backgammon(game.Game):
             return True
         # Make the move.
         capture = self.board.move((-1,), (point,))
-        self.board.bar.piece.extend(capture)
         self.rolls.remove(needed_roll)
         return self.rolls
 
@@ -450,13 +448,15 @@ class Backgammon(game.Game):
         move = player.ask_int_list('\nWhat is your move? ', low = 1, high = 24, valid_lens = [1, 2])
         if isinstance(move, str):
             return self.handle_cmd(move)
+        else:
+            move = [x - 1 for x in move]
+        direction = {'X': -1 , 'O': 1}[player_piece]
         # Convert moves with just the end point.
-        # !! this does not seem to work.
         if len(move) == 1:
             possible = []
             for maybe in set(self.rolls):
-                start = move[0] + maybe # !! not taking into account direction.
-                if player_piece in self.board.cells[(start,)].piece:
+                start = move[0] - maybe * direction
+                if player_piece in self.board.cells[(start,)].piece and (0 <= start <= 23):
                     possible.append(start)
             if len(possible) == 1:
                 start = possible[0]
@@ -468,12 +468,11 @@ class Backgammon(game.Game):
                 player.error('There is no legal move to that point.')
                 return True
         else:
-            start, end = [x - 1 for x in move]
+            start, end = move
         # !! Need to handle one move that represents two rolls.
         # Get the details of the move.
         start_pieces = self.board.cells[(start,)].piece
         end_pieces = self.board.cells[(end,)].piece
-        direction = {'X': -1 , 'O': 1}[player_piece]
         # Check for valid staring point.
         if not (start_pieces and start_pieces[0] == player_piece):
             player.error('You do not have a piece on that starting point.')
@@ -493,9 +492,6 @@ class Backgammon(game.Game):
         else:
             # Make the valid move
             capture = self.board.move((start,), (end,))
-            # !! should this be in board.move()? Yes.
-            if capture:
-                self.board.bar.piece.extend(capture)
             self.rolls.remove(abs(start - end))
         # Continue if there are still rolls to handle.
         return self.rolls
@@ -701,8 +697,6 @@ class BackgammonBoard(board.MultiBoard):
         # Create a board with the move.
         sub_board = self.copy(layout = ())
         capture = sub_board.move(coord, end_coord)
-        if capture:
-            sub_board.bar.piece.append(capture)
         # Add to the move to the moves so far.
         new_moves = moves + [(coord, end_coord)]
         if sub_rolls:
@@ -771,6 +765,21 @@ class BackgammonBoard(board.MultiBoard):
             lines.extend(['', 'Bar: {}'.format(''.join(self.bar.piece))])
         # Return the text.
         return '\n'.join(lines)
+
+    def move(self, start, end):
+        """
+        Move a piece from one cell to another. (object)
+
+        The object returned is any piece that is in the destination cell before the
+        move. The parameters should be keys appropriate to cells on the board.
+
+        Parameters:
+        start: The location containing the piece to move. (Coordinate)
+        end: The location to move the piece to. (Coordinate)
+        """
+        capture = super(BackgammonBoard, self).move(start, end)
+        self.bar.piece.extend(capture)
+        return capture
 
     def set_up(self, layout):
         """

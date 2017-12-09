@@ -10,10 +10,7 @@ have a Player.error() method distinct from Player.tell(), so bots know there's a
 	It's written, it needs implementation in games.
 A round of one per penultimate category, two for solitaire.
 	Backgammon
-		check !!s, fix any that are needed in the short term.
-		end point moves
 		move two rolls at once
-		capture handled by board
 	Forty Thieves
 	Bisley
 	Cribbage

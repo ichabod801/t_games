@@ -22,8 +22,10 @@ class EndPointTest(unittest.TestCase):
 
     def setUp(self):
         """Set up the test case. (None)"""
-        self.game = bg.Backgammon(player.Tester())
-        if not isinstance(self.game.players[0], player.Tester):
+        self.player = player.Player('Test')
+        self.game = bg.Backgammon(self.player, 'none')
+        self.game.set_up()
+        if self.game.players[0].name != 'Test':
             self.game.players.reverse()
         self.stdin_hold = sys.stdin
 
@@ -34,7 +36,8 @@ class EndPointTest(unittest.TestCase):
     def testValid(self):
         """Test a valid end point move."""
         self.game.board.rolls = [2, 1]
-        sys.stdin = io.StringIO('7\n')
+        self.player.ask = lambda prompt: '7\n'
+        self.game.play()
         self.assertEqual(['X'], self.game.board.cells[(6,)].piece)
 
 

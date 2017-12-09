@@ -184,3 +184,5 @@ Rock-Paper-Scissors,3,2,0,0,10,1,bot-name=lisa match=5
 Rock-Paper-Scissors,0,3,2,0,10,1,bot=randy lizard-spock
 Rock-Paper-Scissors,2,1,1,0,8,0,
 Backgammon,1,0,0,0,48,0,
+Backgammon,1,0,0,0,50,0,
+Backgammon,1,0,0,0,57,0,
