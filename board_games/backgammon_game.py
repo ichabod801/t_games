@@ -465,11 +465,10 @@ class Backgammon(game.Game):
                 player.error('That move is ambiguous.')
                 return True
             else:
-                player.error('There is no legal move to that point.')
+                player.error('There is no legal single move to that point.')
                 return True
         else:
             start, end = move
-        # !! Need to handle one move that represents two rolls.
         # Get the details of the move.
         start_pieces = self.board.cells[(start,)].piece
         end_pieces = self.board.cells[(end,)].piece
@@ -479,12 +478,8 @@ class Backgammon(game.Game):
             return True
         # Check for valid die roll.
         elif (end - start) * direction not in self.rolls:
-            roll_sums = []
-            for size in range(2, len(self.rolls) + 1):
-                roll_sums.exted([(sum(perm), perm), for perm in permutations(self.rolls, size)])
-            roll_sums = list(set(roll_sums))
-            if (end - start) * direction in roll_sums:
-                pass # !! not finished
+                player.error('There is no legal move to that point')
+                return True
             else:
                 player.error('You do not have a die roll matching that move.')
                 return True
