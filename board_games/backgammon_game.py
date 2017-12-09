@@ -478,11 +478,8 @@ class Backgammon(game.Game):
             return True
         # Check for valid die roll.
         elif (end - start) * direction not in self.rolls:
-                player.error('There is no legal move to that point')
-                return True
-            else:
-                player.error('You do not have a die roll matching that move.')
-                return True
+            player.error('You do not have a die roll matching that move.')
+            return True
         # Check for valide end point
         elif end_pieces and end_pieces[0] != player_piece and len(end_pieces) > 1:
             player.error('That end point is blocked.')
@@ -647,6 +644,7 @@ class BackgammonBoard(board.MultiBoard):
                 # Generate bearing off moves.
                 coord = (home[roll - 1],)
                 end_coord = self.out[piece].location
+                # !! this list is coming up empty when more rolls than needed to win.
                 max_index = [ndx for ndx, pt in enumerate(home) if piece in self.cells[(pt,)].piece][-1]
                 if piece in self.cells[coord].piece:
                     # Generate standard bearing off moves.
