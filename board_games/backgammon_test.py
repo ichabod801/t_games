@@ -17,30 +17,6 @@ from tgames.board_games import backgammon_game as bg
 from tgames import player as player
 
 
-class EndPointTest(unittest.TestCase):
-    """Test moves made just providing an end point. (TestCase)"""
-
-    def setUp(self):
-        """Set up the test case. (None)"""
-        self.player = player.Player('Test')
-        self.game = bg.Backgammon(self.player, 'none')
-        self.game.set_up()
-        if self.game.players[0].name != 'Test':
-            self.game.players.reverse()
-        self.stdin_hold = sys.stdin
-
-    def tearDown(self):
-        """Clean up after the test case. (None)"""
-        sys.stdin = self.stdin_hold
-
-    def testValid(self):
-        """Test a valid end point move."""
-        self.game.board.rolls = [2, 1]
-        self.player.ask = lambda prompt: '7\n'
-        self.game.play()
-        self.assertEqual(['X'], self.game.board.cells[(6,)].piece)
-
-
 class PlayTest(unittest.TestCase):
     """Test play generation. (TestCase)"""
 

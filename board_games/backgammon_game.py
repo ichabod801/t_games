@@ -479,8 +479,15 @@ class Backgammon(game.Game):
             return True
         # Check for valid die roll.
         elif (end - start) * direction not in self.rolls:
-            player.error('You do not have a die roll matching that move.')
-            return True
+            roll_sums = []
+            for size in range(2, len(self.rolls) + 1):
+                roll_sums.exted([(sum(perm), perm), for perm in permutations(self.rolls, size)])
+            roll_sums = list(set(roll_sums))
+            if (end - start) * direction in roll_sums:
+                pass # !! not finished
+            else:
+                player.error('You do not have a die roll matching that move.')
+                return True
         # Check for valide end point
         elif end_pieces and end_pieces[0] != player_piece and len(end_pieces) > 1:
             player.error('That end point is blocked.')
