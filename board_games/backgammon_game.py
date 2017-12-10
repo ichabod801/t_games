@@ -456,7 +456,7 @@ class Backgammon(game.Game):
             possible = []
             for maybe in set(self.rolls):
                 start = move[0] - maybe * direction
-                if player_piece in self.board.cells[(start,)].piece and (0 <= start <= 23):
+                if (start,) in self.board.cells and player_piece in self.board.cells[(start,)].piece:
                     possible.append(start)
             if len(possible) == 1:
                 start = possible[0]
@@ -644,8 +644,12 @@ class BackgammonBoard(board.MultiBoard):
                 # Generate bearing off moves.
                 coord = (home[roll - 1],)
                 end_coord = self.out[piece].location
-                # !! this list is coming up empty when more rolls than needed to win.
-                max_index = [ndx for ndx, pt in enumerate(home) if piece in self.cells[(pt,)].piece][-1]
+                # Check for pieces left to move.
+                piece_indexes = [ndx for ndx, pt in enumerate(home) if piece in self.cells[(pt,)].piece]
+                if piece_indexes:
+                    max_index = piece_indexes[-1]
+                else:
+                    continue
                 if piece in self.cells[coord].piece:
                     # Generate standard bearing off moves.
                     full_plays = self.get_plays_help(piece, coord, end_coord, moves, full_plays, sub_rolls)
