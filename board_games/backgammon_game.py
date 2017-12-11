@@ -304,7 +304,7 @@ class Backgammon(game.Game):
             result = self.doubling_die
             # Check for gammon/backgammon.
             if not len(self.board.out[other_piece].piece):
-                if other_piece in self.board.bar.piece:
+                if other_piece in self.board.bar.piece: # !! or in opponent's home
                     result *= 3
                 else:
                     result *= 2
@@ -437,13 +437,15 @@ class Backgammon(game.Game):
             self.get_rolls()
         player.tell('\nThe roll to you is {}.'.format(', '.join([str(x) for x in self.rolls])))
         # Check for no legal moves
-        # !! if this is just for one roll, I don't need to do move validation. Just check if it's in
-        # !! legal moves. However, this would lose detail in the error messages.
         legal_plays = self.board.get_plays(player_piece, self.rolls)
         if not legal_plays:
             player.ask('You have no legal moves. Press enter to continue: ')
             self.rolls = []
             return False
+        legal_moves = set()
+        for play in legal_plays:
+            for move in play:
+                legal_moves.add(move)
         # Get the player's move.
         move = player.ask_int_list('\nWhat is your move? ', low = 1, high = 24, valid_lens = [1, 2])
         if isinstance(move, str):
@@ -488,6 +490,8 @@ class Backgammon(game.Game):
         elif player_piece in self.board.bar.piece and start != -1:
             player.error('You re-enter your piece on the bar before making any other move.')
             return True
+        elif ((start,), (end,)) not in legal_moves:
+            player.error('That move would not allow for the maximum possible play.')
         else:
             # Make the valid move
             capture = self.board.move((start,), (end,))
@@ -680,8 +684,9 @@ class BackgammonBoard(board.MultiBoard):
         # Eliminate duplicate plays.
         final_plays = []
         sorted_plays = []
+        max_moves = max([len(play) for play in full_plays])
         for play in full_plays:
-            if play not in final_plays and list(sorted(play)) not in sorted_plays:
+            if play not in final_plays and list(sorted(play)) not in sorted_plays and len(play) == max_moves:
                 final_plays.append(play)
                 sorted_plays.append(list(sorted(play)))
         return final_plays

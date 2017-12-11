@@ -10,6 +10,10 @@ have a Player.error() method distinct from Player.tell(), so bots know there's a
 	It's written, it needs implementation in games.
 A round of one per penultimate category, two for solitaire.
 	Backgammon
+		Must use higher die
+		Must use both dice if there is a way
+		Correct backgammon calculation (includes being in opponent's home)
+		implement doubling die
 	Forty Thieves
 	Bisley
 	Cribbage
