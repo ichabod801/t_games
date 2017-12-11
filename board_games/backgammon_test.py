@@ -113,6 +113,12 @@ class PlayTest(unittest.TestCase):
         check = set(check)
         self.assertEqual(check, self.legal_moves)
 
+    def testUseBothDice(self):
+        """Test being required to use both dice."""
+        layout = ((2, 2), (4, 2), (8, 2), (20, 1), (24, 2))
+        self.setBoard(layout = layout, moves = [((7,), (-2,)), ((7,), (-2,))])
+        self.assertNotIn((((-1,), (1,)),), self.legal_moves)
+
 
 if __name__ == '__main__':
     unittest.main()

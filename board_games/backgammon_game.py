@@ -684,7 +684,8 @@ class BackgammonBoard(board.MultiBoard):
         # Eliminate duplicate plays.
         final_plays = []
         sorted_plays = []
-        max_moves = max([len(play) for play in full_plays])
+        if full_plays:
+            max_moves = max([len(play) for play in full_plays])
         for play in full_plays:
             if play not in final_plays and list(sorted(play)) not in sorted_plays and len(play) == max_moves:
                 final_plays.append(play)
