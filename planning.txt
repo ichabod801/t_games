@@ -426,3 +426,84 @@ for option, value in self:
 	setattr(game_instance, )
 
 Only real question is default for multi-bot games. For a multibot game, I think we just need to provide a default bot list, which is used if bots is empty. Well, just do that for any game.
+
+== Board Planning ==
+
+I want to redo the BackgammonBoard as an instance of LineBoard, which would use intergers as keys to the cells attribute. That would just simplify things tremendously. And I need to rework get_plays with a BackgammonPlays object, so now is a good time to do that.
+
+But that begs the question of how the board classes should be set up. To answer that, I need to know what boards I need to create, and what other boards I might want to create later.
+
+Of interest: The only multi-dimensional game to allow mutliple pieces is quantum tic-tac-toe. The only single-dimensional boards to restrict a cell to one piece are just for keeping score and aren't really needed. I have long considered separating board from cell, so cell class is passed to the board. This appears to not be necessary if I have a different board class for one-dimensional boards. Quantum tic-tac-toe could be implemented uniquely as Battleships is.
+
+Separate cell types would need to have a common interface. Currently I am using cell.piece = or cell.piece.append. I could just have cell.add_piece or something (piece_to?, move_to?). That would return the capture as board.move does now (probably to board.move). I would also need cell.remove_piece (piece_from?) for board.move functionality. I think that would work pretty easily. The board object also has a place method, for placing ignoring capture. I think that could be done using cell.clear, which is already implemented.
+
+Capture can't really be determined at the cell level, since it could involve another cell. This would happen for overtaking, positional, or custodial capture. But it could happen at the board level with move. This is a significant issue: where should capture be handled: cell, board, or game? The cell has knowledge of it's neighbors, so it can handle custodial, displace, and positional captures. But it doesn't know where the piece was moved from, so it can't handle bounce or overtaking captures. I'm thinking there should be different move methods for the different capture types. The board can assign one of those methods to the move method. A game like Ultima could then have it's move method call different capture type methods based on the piece type.
+
+One confusing thing from the first backgammon program is that the cells had a piece attribute which contained pieces. This would be solved by a common cell interface of add_piece/remove_piece.
+
+If I ever need hexagonal boards, use cube or axial coordinates for them (see redblobgames.com/grids/hexagons). I think showing them on the screen is going to be trickier:
+
+. . . . .
+ . G . .
+. GGG . .   Actually, that's not bad.
+ . . . .    (a fighter and a wizard against a giant)
+. F . W .
+ . . . .
+
+=== Boards Needed for Planned Release ===
+
+GAME                  DIM  CELLS  CAPTR  OTHER
+fox and geese          2     S      O    Cut outs
+tafl                   2     S      C    Territories
+mancala                1     M      P    Loop, multi-movement with drop offs
+chess                  2     S      D
+battleships!           2     P      D    Implemented uniquely, based on pieces.
+backgammon             1     M      D    bar cell, entry cells for variants, off cells (not necc.)
+snakes and ladders     1     O      N
+connect four           2     S      N    1 dimensional movement
+halma                  2     S      N
+cribbage               1     S      N    Technically not needed
+space traders?
+global thermo. war?
+
+Cell types:
+    S    Single piece
+    M    Multiple pieces
+    O    Totally open
+    P    Part of a piece
+
+Capture types:
+    B    Bounce (captured goes to where attacker was)
+    C    Custodial (surround)
+    D    Displace (standard)
+    N    None
+    O    Overtaking (checkers)
+    P    Positional (mancala)
+
+=== Boards I Might Want ===
+
+GAME                 DIM  CELLS  CAPTR  OTHER
+cosmic wimpout        1    S/O     B    Optional
+checkers              2     S      O
+yamato                3     P      D    
+conway's life         2     S      N
+parchesi              1     M      D    Loop, blockades, home cells
+maze generator        2     S      N    Walls
+Tic-Tac-Toe           2     S      N
+3D tic-tac-toe        3     S      N
+quantum tic-tac-toe   2     O      N    Cells collapse into actual pieces
+niner                 2     S      N    Board is obscured
+reversi               2     S      C    Capture replaces with opposing piece
+the landlord game     1     O      N    Space control, special pieces
+Star Trek text game
+swords (melee)        1     S      N    Hexagonal?
+sorcery (wizard)
+plakoto (pinning)
+
+=== Information Needed From Boards/Cells ===
+
+    * all of the legal moves on the board.
+    * The color of a piece in a cell. (color property?)
+    * how many pieces are in a multipiece cell. (override len)
+    * if a cell is in a particular territory. (override contains)
+    * where all of a player's pieces are.

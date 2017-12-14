@@ -614,6 +614,15 @@ class BackgammonBoard(board.MultiBoard):
 
         This method recurses using get_plays_help.
 
+        !! The only good discussion of this I can find (www.bkgm.com, about BKG) says it generates
+        a tree of moves recursively. Then it scans the tree for legal moves by the maximum use of
+        roll criteria. I think what I have would work for that IF it recorded how much of the roll
+        was used for each play. Then I could scan for the max easily, and remove not max plays with
+        a list comprehension. I think an object for the plays would help track things separately.
+        This will require three levels of function: main, generate, recurse.
+
+        !! consider factoring out play generation for the three phases of the game.
+
         Parameters:
         piece: The piece symbol to get moves for. (str)
         rolls: The rolls to get moves for. (str)
@@ -684,12 +693,31 @@ class BackgammonBoard(board.MultiBoard):
         # Eliminate duplicate plays.
         final_plays = []
         sorted_plays = []
+        # Watch for plays not using as many dice as possible.
         if full_plays:
             max_moves = max([len(play) for play in full_plays])
         for play in full_plays:
             if play not in final_plays and list(sorted(play)) not in sorted_plays and len(play) == max_moves:
                 final_plays.append(play)
                 sorted_plays.append(list(sorted(play)))
+        # Only allow for the largest die if not all dice used.
+        if max_moves < len(rolls):
+            # !! will not work, assumes plays are all one move.
+            max_plays = []
+            for start, end in final_plays:
+                if end[0] < 0:
+                    break
+                elif start[0] < 0:
+                    if end[0] > 6:
+                        roll = 24 - end[0]
+                    else:
+                        roll = end[0] + 1
+                else:
+                    roll = abs(start[0] - end[0])
+                max_plays.append((roll, (start, end)))
+            else:
+                max_plays.sort()
+                final_plays = [play for roll, play in max_plays if roll = max_plays[0][0]]
         return final_plays
 
     def get_plays_help(self, piece, coord, end_coord, moves, full_plays, sub_rolls):
