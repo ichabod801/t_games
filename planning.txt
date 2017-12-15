@@ -450,6 +450,8 @@ If I ever need hexagonal boards, use cube or axial coordinates for them (see red
 . F . W .
  . . . .
 
+ I want more detailed planning, though. How exactly does this work for Chess, Backgammon, Halma, and Checkers?
+
 === Boards Needed for Planned Release ===
 
 GAME                  DIM  CELLS  CAPTR  OTHER

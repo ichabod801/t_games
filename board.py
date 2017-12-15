@@ -9,7 +9,7 @@ piece vs. multiple pieces maybe not so much. I'm thinking multiple board cell
 classes.
 
 Classes:
-BoardCell: A square (or other shape) in a board. (object)
+BoardCell: A square (or other shape) in a board that holds one piece. (object)
 Coordinate: A cartesian coordinate in an n-dimensional space. (tuple)
 GridBoard: A rectangular board of squares. (object)
 """
@@ -20,7 +20,7 @@ import itertools
 
 class BoardCell(object):
     """
-    A square (or other shape) in a board. (object)
+    A square (or other shape) in a board that holds one piece. (object)
 
     The piece attribute may be any object, but it should convert to a string that
     correctly displays it on the board. Likewise, the location can be any object,
@@ -31,10 +31,18 @@ class BoardCell(object):
     location: Where on the board the cell is. (object)
     piece: The piece occupying the board. (object)
 
+    Methods:
+    add_piece: Add a piece to the cell. (object)
+    clear: Remove any piece from the cell. (None)
+    remove_piece: Remove a piece from the cell. (object)
+
     Overridden Methods:
     __init__
+    __contains__
     __hash__
+    __iter__
     __repr__
+    __str__
     """
 
     def __init__(self, location, piece = None, empty = ' '):
@@ -42,8 +50,7 @@ class BoardCell(object):
         Initialize the cell. (None)
 
         Parameters:
-        column: The column the cell is in. (int)
-        row: The row the cell is in. (row)
+        location: The location of the cell on the board. (hashable)
         piece: The piece initially in the cell. (object)
         empty: How the cell looks when empty. (str)
         """
@@ -51,11 +58,30 @@ class BoardCell(object):
         self.piece = piece
         self.empty = empty
 
+    def __contains__(self, other):
+        """
+        Check for a piece in the cell. (bool)
+
+        other: The piece to check for. (object)
+        """
+        return self.piece == other
+
     def __hash__(self):
         """
         Hash function on the cell. (int)
         """
         return hash(self.location)
+
+    def __iter__(self):
+        """Iterate over the piece in the cell. (iterator)"""
+        if self.piece is None:
+            return iter([])
+        else:
+            return iter([self.piece])
+
+    def __len__(self):
+        """Return the number of pieces in the cell. (int)"""
+        return self.piece is not None
 
     def __repr__(self):
         """
@@ -82,11 +108,169 @@ class BoardCell(object):
         else:
             return self.empty
 
+    def add_piece(self, piece):
+        """
+        Add a piece to the cell. (object)
+
+        The return value is the piece that was in the cell before.
+
+        Parameters:
+        piece: The piece to add to the cell. (object)
+        """
+        capture = self.piece
+        self.piece = piece
+        return capture
+
     def clear(self, nothing = None):
         """
         Remove any piece from the cell. (None)
         """
         self.piece = nothing
+
+    def copy_piece(self):
+        """
+        Copy the piece in the cell. (object)
+
+        This should be overridden for boards with mutable pieces.
+        """
+        return self.piece
+
+    def get_piece(self):
+        """Get the cell's piece. (object)"""
+        return self.piece
+
+    def remove_piece(self, piece = None):
+        """
+        Remove a piece from the cell. (object)
+
+        Parameters:
+        piece: The piece to remove from the cell. (object)
+        """
+        piece = self.piece
+        self.clear()
+        return piece
+
+
+class MultiCell(BoardCell):
+    """
+    A position on a board that holds multiple pieces. (object)
+
+    The pieces attribute is a list of objects. Each object should convert to a 
+    string that correctly displays it on the board. Likewise, the location can 
+    be any object, but it should be hashable and support addition.
+
+    Attributes:
+    empty: How the cell looks when empty. (str)
+    location: Where on the board the cell is. (object)
+    piece: The piece occupying the board. (object)
+
+    Overridden Methods:
+    __init__
+    __hash__
+    __repr__
+    """
+
+    def __init__(self, location, pieces = [], empty = ' '):
+        """
+        Initialize the cell. (None)
+
+        Parameters:
+        location: The location of the cell on the board. (hashable)
+        pieces: The pieces initially in the cell. (list)
+        empty: How the cell looks when empty. (str)
+        """
+        self.location = location
+        self.pieces = pieces
+        self.empty = empty
+
+    def __contains__(self, other):
+        """
+        Check for a piece in the cell. (bool)
+
+        other: The piece to check for. (object)
+        """
+        return other in self.pieces
+
+    def __hash__(self):
+        """
+        Hash function on the cell. (int)
+        """
+        return hash(self.location)
+
+    def __iter__(self):
+        """Iterate over the piece in the cell. (iterator)"""
+        return iter(self.pieces)
+
+    def __len__(self):
+        """Return the number of pieces in the cell. (int)"""
+        return len(self.pieces)
+
+    def __repr__(self):
+        """
+        Computer readable text representation. (str)
+        """
+        # keyword parameters
+        if self.pieces:
+            piece_text = ', pieces = {!r}'.format(self.pieces)
+        else:
+            piece_text = ''
+        if self.empty != ' ':
+            empty_text = ', empty = {!r}'.format(self.empty)
+        else:
+            empty_text = ''
+        # complete and return
+        return '{}({}{}{})'.format(self.__class__.__name__, self.location, piece_text, empty_text)
+
+    def __str__(self):
+        """
+        Human readable text representation. (str)
+        """
+        if self.pieces:
+            return ', '.join([str(piece) for piece in self.pieces])
+        else:
+            return self.empty
+
+    def add_piece(self, piece):
+        """
+        Add a piece to the cell. (object)
+
+        The return value is the piece that was in the cell before.
+
+        Parameters:
+        piece: The piece to add to the cell. (object)
+        """
+        self.pieces.append(piece)
+
+    def copy_piece(self):
+        """
+        Copy the piece in the cell. (object)
+
+        This should be overridden for boards with mutable pieces.
+        """
+        return self.pieces[:]
+
+    def clear(self, nothing = []):
+        """
+        Remove any piece from the cell. (None)
+        """
+        self.piece = nothing
+
+    def get_piece(self):
+        """Get the cell's pieces. (object)"""
+        return self.pieces
+
+    def remove_piece(self, piece = None):
+        """
+        Remove a piece to the cell. (object)
+
+        Parameters:
+        piece: The piece to remove from the cell. (object)
+        """
+        if piece:
+            piece = self.pieces.pop()
+        else:
+            self.pieces.remove(piece)
+        return piece
 
 
 class Coordinate(tuple):
@@ -220,23 +404,33 @@ class Board(object):
         for cell in self.cells.values():
             cell.clear(self.default_piece)
 
-    def move(self, start, end):
+    def displace(self, start, end, piece = None):
         """
-        Move a piece from one cell to another. (object)
-
-        The object returned is any piece that is in the destination cell before the
-        move. The parameters should be keys appropriate to cells on the board.
+        Move a piece from one cell to another with displace capture. (object)
 
         Parameters:
         start: The location containing the piece to move. (Coordinate)
         end: The location to move the piece to. (Coordinate)
+        piece: The piece to move. (object)
         """
         # store the captured piece
-        capture = self.cells[end].piece
+        capture = self.cells[end].get_piece()
         # move the piece
-        self.cells[end].piece = self.cells[start].piece
-        self.cells[start].piece = self.default_piece
+        mover = self.cells[start].remove_piece(start, end, piece)
+        self.cells[end].add_piece(mover)
         return capture
+
+    def move(self, start, end, piece = None):
+        """
+        Move a piece from one cell to another with displace capture. (object)
+
+        Parameters:
+        start: The location containing the piece to move. (Coordinate)
+        end: The location to move the piece to. (Coordinate)
+        piece: The piece to move. (object)
+        """
+        # default is displace capture.
+        return self.displace(start, end, piece)
 
     def offset(self, cell, offset):
         """
@@ -259,6 +453,29 @@ class Board(object):
         cell: The location to place the piece in. (Coordinate)
         """
         self.cells[cell].piece = piece
+
+    def safe(self, location):
+        """
+        Determine if a cell is safe from capture. (bool)
+
+        Parameter:
+        location: The location of the cell to check. (hashable)
+        """
+        return len(self.cells[location]) > 1
+
+    def safe_displace(self, start, end, piece = None):
+        """
+        Move a piece from one cell to another with displace capture. (object)
+
+        Parameters:
+        start: The location containing the piece to move. (Coordinate)
+        end: The location to move the piece to. (Coordinate)
+        piece: The piece to move. (object)
+        """
+        if self.safe(start):
+            return displace(start, end, piece)
+        else:
+            raise ValueError('Attempt to capture safe cell {!r}.'.format(start))
 
 
 class DimBoard(Board):
@@ -297,7 +514,7 @@ class DimBoard(Board):
         clone = self.__class__(self.dimensions, self.default_piece, **kwargs)
         # clone the cell contents
         for location in clone:
-            clone.cells[location].piece = self.cells[location].piece
+            clone.cells[location].piece = self.cells[location].copy_piece()
         return clone
 
 
