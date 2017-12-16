@@ -3,10 +3,7 @@ board.py
 
 Boards for text games.
 
-!! I need to think about generalization. Should BoardCell be generalized, or
-should boards accept a cell class. Location can easily be generalized. Single
-piece vs. multiple pieces maybe not so much. I'm thinking multiple board cell
-classes.
+!! contents instead of piece/pieces
 
 Classes:
 BoardCell: A square (or other shape) in a board that holds one piece. (object)
@@ -55,7 +52,7 @@ class BoardCell(object):
         empty: How the cell looks when empty. (str)
         """
         self.location = location
-        self.piece = piece
+        self.contents = piece
         self.empty = empty
 
     def __contains__(self, other):
@@ -64,7 +61,7 @@ class BoardCell(object):
 
         other: The piece to check for. (object)
         """
-        return self.piece == other
+        return self.contents == other
 
     def __hash__(self):
         """
@@ -77,11 +74,11 @@ class BoardCell(object):
         if self.piece is None:
             return iter([])
         else:
-            return iter([self.piece])
+            return iter([self.contents])
 
     def __len__(self):
         """Return the number of pieces in the cell. (int)"""
-        return self.piece is not None
+        return self.contents is not None
 
     def __repr__(self):
         """
@@ -89,7 +86,7 @@ class BoardCell(object):
         """
         # keyword parameters
         if self.piece:
-            piece_text = ', piece = {!r}'.format(self.piece)
+            piece_text = ', piece = {!r}'.format(self.contents)
         else:
             piece_text = ''
         if self.empty != ' ':
@@ -103,10 +100,10 @@ class BoardCell(object):
         """
         Human readable text representation. (str)
         """
-        if self.piece:
-            return str(self.piece)
+        if self.contents:
+            return str(self.contents)
         else:
-            return self.empty
+            return self.contents
 
     def add_piece(self, piece):
         """
@@ -117,15 +114,15 @@ class BoardCell(object):
         Parameters:
         piece: The piece to add to the cell. (object)
         """
-        capture = self.piece
-        self.piece = piece
+        capture = self.contents
+        self.contents = piece
         return capture
 
     def clear(self, nothing = None):
         """
         Remove any piece from the cell. (None)
         """
-        self.piece = nothing
+        self.contents = nothing
 
     def copy_piece(self):
         """
@@ -133,11 +130,11 @@ class BoardCell(object):
 
         This should be overridden for boards with mutable pieces.
         """
-        return self.piece
+        return self.contents
 
     def get_piece(self):
         """Get the cell's piece. (object)"""
-        return self.piece
+        return self.contents
 
     def remove_piece(self, piece = None):
         """
@@ -146,7 +143,7 @@ class BoardCell(object):
         Parameters:
         piece: The piece to remove from the cell. (object)
         """
-        piece = self.piece
+        piece = self.contents
         self.clear()
         return piece
 
@@ -162,7 +159,7 @@ class MultiCell(BoardCell):
     Attributes:
     empty: How the cell looks when empty. (str)
     location: Where on the board the cell is. (object)
-    piece: The piece occupying the board. (object)
+    contents: The pieces occupying the cell. (object)
 
     Overridden Methods:
     __init__
@@ -180,7 +177,7 @@ class MultiCell(BoardCell):
         empty: How the cell looks when empty. (str)
         """
         self.location = location
-        self.pieces = pieces
+        self.contents = pieces
         self.empty = empty
 
     def __contains__(self, other):
@@ -189,29 +186,23 @@ class MultiCell(BoardCell):
 
         other: The piece to check for. (object)
         """
-        return other in self.pieces
-
-    def __hash__(self):
-        """
-        Hash function on the cell. (int)
-        """
-        return hash(self.location)
+        return other in self.contents
 
     def __iter__(self):
         """Iterate over the piece in the cell. (iterator)"""
-        return iter(self.pieces)
+        return iter(self.contents)
 
     def __len__(self):
         """Return the number of pieces in the cell. (int)"""
-        return len(self.pieces)
+        return len(self.contents)
 
     def __repr__(self):
         """
         Computer readable text representation. (str)
         """
         # keyword parameters
-        if self.pieces:
-            piece_text = ', pieces = {!r}'.format(self.pieces)
+        if self.contents:
+            piece_text = ', pieces = {!r}'.format(self.contents)
         else:
             piece_text = ''
         if self.empty != ' ':
@@ -225,8 +216,8 @@ class MultiCell(BoardCell):
         """
         Human readable text representation. (str)
         """
-        if self.pieces:
-            return ', '.join([str(piece) for piece in self.pieces])
+        if self.contents:
+            return ', '.join([str(piece) for piece in self.contents])
         else:
             return self.empty
 
@@ -239,7 +230,7 @@ class MultiCell(BoardCell):
         Parameters:
         piece: The piece to add to the cell. (object)
         """
-        self.pieces.append(piece)
+        self.contents.append(piece)
 
     def copy_piece(self):
         """
@@ -247,17 +238,13 @@ class MultiCell(BoardCell):
 
         This should be overridden for boards with mutable pieces.
         """
-        return self.pieces[:]
+        return self.contents[:]
 
     def clear(self, nothing = []):
         """
         Remove any piece from the cell. (None)
         """
-        self.piece = nothing
-
-    def get_piece(self):
-        """Get the cell's pieces. (object)"""
-        return self.pieces
+        self.contents = nothing
 
     def remove_piece(self, piece = None):
         """
@@ -267,9 +254,9 @@ class MultiCell(BoardCell):
         piece: The piece to remove from the cell. (object)
         """
         if piece:
-            piece = self.pieces.pop()
+            self.contents.remove(piece)
         else:
-            self.pieces.remove(piece)
+            piece = self.contents.pop()
         return piece
 
 
@@ -432,6 +419,7 @@ class Board(object):
         capture = self.cells[end].get_piece()
         # move the piece
         mover = self.cells[start].remove_piece(start, end, piece)
+        self.cells[end].clear()
         self.cells[end].add_piece(mover)
         return capture
 
@@ -469,16 +457,18 @@ class Board(object):
         piece: The piece to place on the board. (See BoardCell)
         cell: The location to place the piece in. (Coordinate)
         """
-        self.cells[cell].piece = piece
+        self.cells[cell].clear()
+        self.cells[cell].add_piece(piece)
 
-    def safe(self, location):
+    def safe(self, location, piece):
         """
         Determine if a cell is safe from capture. (bool)
 
         Parameter:
         location: The location of the cell to check. (hashable)
+        piece: The piece that would move to that spot. (object)
         """
-        return len(self.cells[location]) > 1
+        return piece in self.cells[location] or len(self.cells[location]) < 2
 
     def safe_displace(self, start, end, piece = None):
         """
@@ -489,9 +479,14 @@ class Board(object):
         end: The location to move the piece to. (Coordinate)
         piece: The piece to move. (object)
         """
-        if self.safe(start):
-            return displace(start, end, piece)
+        mover = self.cells[start].remove_piece(start, end, piece)
+        if self.safe(start, mover):
+            capture = self.cells[end].get_piece()
+            self.cells[end].clear()
+            self.cells[end].add_piece(mover)
+            return capture
         else:
+            self.cells[start].add_piece(mover)
             raise ValueError('Attempt to capture safe cell {!r}.'.format(start))
 
 
