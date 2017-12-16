@@ -386,10 +386,15 @@ class Board(object):
     __iter__
     """
 
-    def __init__(self):
-        """Set up the cells. (None)"""
-        self.default_piece = None
-        self.cells = {}
+    def __init__(self, locations = [], cell_class = BoardCell):
+        """
+        Set up the cells. (None)
+
+        Parameters:
+        locations: The locations of the cells on the board. (list of hashable)
+        cell_class: The class for the cells on the board. (class)
+        """
+        self.cells = {location: cell_class(location) for location in locations}
 
     def __iter__(self):
         """
@@ -402,7 +407,17 @@ class Board(object):
     def clear(self):
         """Clear all pieces off the board. (None)"""
         for cell in self.cells.values():
-            cell.clear(self.default_piece)
+            cell.clear()
+
+    def copy_pieces(self, parent):
+        """
+        Copy all of the pieces from another board. (None)
+
+        Parameters:
+        parent: The board to copy pieces from. (Board)
+        """
+        for location in parent.cells:
+            self.cells[location] = parent.cells[location].copy_piece()
 
     def displace(self, start, end, piece = None):
         """
@@ -423,6 +438,8 @@ class Board(object):
     def move(self, start, end, piece = None):
         """
         Move a piece from one cell to another with displace capture. (object)
+
+        This should be overridden for the specific capture type of the board.
 
         Parameters:
         start: The location containing the piece to move. (Coordinate)
@@ -489,32 +506,56 @@ class DimBoard(Board):
     __init__
     """
 
-    def __init__(self, dimensions, default_piece = None):
+    def __init__(self, dimensions, cell_class):
         """
         Set up the grid of cells. (None)
 
-        Paramters:
+        Parameters:
         dimensions: The dimensions of the board, in cells. (tuple of int)
-        default_piece: The default piece for the square. (object)
+        cell_class: The class for the cells on the board. (class)
         """
-        # store dimensions
+        # store definition
         self.dimensions = dimensions
-        # create cells
-        self.default_piece = default_piece
+        self.cell_class = cell_class
+        # calculate locations
         locations = itertools.product(*[range(dimension) for dimension in self.dimensions])
         locations = [Coordinate(location) for location in locations]
-        if callable(self.default_piece):
-            self.cells = {location: BoardCell(location, self.default_piece()) for location in locations}
-        else:
-            self.cells = {location: BoardCell(location, self.default_piece) for location in locations}
+        # set up cells
+        super(DimBoard, self).__init__(locations, cell_class)
 
     def copy(self, **kwargs):
         """Create a copy of the board. (GridBoard)"""
-        # clone the cells
-        clone = self.__class__(self.dimensions, self.default_piece, **kwargs)
-        # clone the cell contents
-        for location in clone:
-            clone.cells[location].piece = self.cells[location].copy_piece()
+        clone = self.__class__(self.dimensions, self.cell_class)
+        clone.copy_pieces(self)
+        return clone
+
+
+class LineBoard(Board):
+    """
+    A board of space in a line. (Board)
+
+    The line may be bent or looped.
+    """
+
+    def __init__(self, length, cell_class = MultiCell, extra_cells = []):
+        """
+        Set up the line of cells. (None)
+
+        Parameters:
+        length: The number of cells in the board. (int)
+        cell_class: The class for the cells on the board. (class)
+        extra_cells: The keys for any cells outside the line. (list of hashable)
+        """
+        self.length = length
+        self.cell_class = cell_class
+        super(LineBoard, self).__init__(range(1, length + 1), cell_class)
+        for location in extra_cells:
+            self.cells[location] = cell_class()
+
+    def copy(self, **kwargs):
+        """Create a copy of the board. (GridBoard)"""
+        clone = self.__class__(self.length, self.cell_class)
+        clone.copy_pieces(self)
         return clone
 
 
