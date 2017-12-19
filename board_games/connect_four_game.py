@@ -185,8 +185,8 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
         return twos, threes
 
     def set_up(self):
-        base = list(range(3, 3 + self.game.dimensions[0] // 2))
-        if self.game.dimensions[0] % 2:
+        base = list(range(3, 3 + self.game.columns // 2))
+        if self.game.columns % 2:
             base = base + [base[-1] + 2] + base[::-1]
         else:
             base[-1] += 1
@@ -196,11 +196,11 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
         mod[:3] = [0, 1, 2]
         mod[-2:] = [2, 1]
         board_strength = [[], base]
-        while len(board_strength) <= self.game.dimensions[1] / 2:
+        while len(board_strength) <= self.game.rows / 2:
             board_strength.append([a + b for a, b in zip(board_strength[-1], mod)])
-        if not self.game.dimensions[1] % 2:
+        if not self.game.rows % 2:
             board_strength.append(board_strength[-1])
-        while len(board_strength) <= self.game.dimensions[1]:
+        while len(board_strength) <= self.game.rows:
             board_strength.append([a - b for a, b in zip(board_strength[-1], mod)])
         self.board_strength = list(zip(*board_strength))
 
@@ -327,14 +327,14 @@ class C4Board(board.DimBoard):
         """
         Debugging text representation.
         """
-        return 'C4Board({}, {})'.format(*self.dimensions)
+        return 'C4Board({}, {})'.format(self.columns, self.rows)
 
     def __str__(self):
         """
         Human readable text representation. (str)
         """
         ones, tens = '+', '+'
-        for column in range(1, self.dimensions[0] + 1):
+        for column in range(1, self.contents + 1):
             ones += str(column % 10)
             tens += str(column // 10)
         if self.columns > 9:
@@ -342,9 +342,9 @@ class C4Board(board.DimBoard):
         else:
             head_foot = ones + '+\n'
         text = head_foot
-        for row_index in range(self.dimensions[1], 0, -1):
+        for row_index in range(self.rows, 0, -1):
             row_text = '|'
-            for column_index in range(1, self.dimensions[0] + 1):
+            for column_index in range(1, self.rows + 1):
                 row_text += str(self.cells[(column_index, row_index)])
             text += row_text + '|\n'
         return text + head_foot

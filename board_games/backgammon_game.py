@@ -717,7 +717,7 @@ class BackgammonBoard(board.MultiBoard):
                 max_plays.append((roll, (start, end)))
             else:
                 max_plays.sort()
-                final_plays = [play for roll, play in max_plays if roll = max_plays[0][0]]
+                final_plays = [play for roll, play in max_plays if roll == max_plays[0][0]]
         return final_plays
 
     def get_plays_help(self, piece, coord, end_coord, moves, full_plays, sub_rolls):
