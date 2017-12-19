@@ -273,9 +273,11 @@ class C4BotGamma(C4BotAlphaBeta):
         for bin in bins:
             score += bins[bin] * self.bin_values[bin]
         return score
-class C4Board(board.GridBoard):
+
+
+class C4Board(board.DimBoard):
     """
-    A board for Connect Four type games. (board.GridBoard)
+    A board for Connect Four type games. (board.DimBoard)
 
     Attributes:
     pieces: The pieces to be played. (str)
@@ -303,25 +305,25 @@ class C4Board(board.GridBoard):
         wins: The winning four in a row combinations (list of set of tuple)
         """
         # basic set up
-        super(C4Board, self).__init__(columns, rows)
+        super(C4Board, self).__init__((columns, rows))
         self.pieces = pieces
         self.poppable = poppable
         self.pops = 0
         # set up winning positions
         self.wins = wins
         if not self.wins:
-            for col in range(self.columns):
-                for row in range(self.rows):
-                    if col < self.columns - 3:
+            for col in range(1, columns + 1):
+                for row in range(1, rows + 1):
+                    if col < columns - 2:
                         win = ((col, row), (col + 1, row), (col + 2, row), (col + 3, row))
                         self.wins.append(set([board.Coordinate(xy) for xy in win]))
-                    if row < self.rows - 3:
+                    if row < rows - 2:
                         win = ((col, row), (col, row + 1), (col, row + 2), (col, row + 3))
                         self.wins.append(set(set([board.Coordinate(xy) for xy in win])))
-                        if col < self.columns - 3:
+                        if col < columns - 2:
                             win = ((col, row), (col + 1, row + 1), (col + 2, row + 2), (col + 3, row + 3))
                             self.wins.append(set([board.Coordinate(xy) for xy in win]))
-                        if col > 2:
+                        if col > 3:
                             win = ((col, row), (col - 1, row + 1), (col - 2, row + 2), (col - 3, row + 3))
                             self.wins.append(set([board.Coordinate(xy) for xy in win]))
 
@@ -329,14 +331,14 @@ class C4Board(board.GridBoard):
         """
         Debugging text representation.
         """
-        return 'C4Board({}, {})'.format(self.columns, self.rows)
+        return 'C4Board({}, {})'.format(*self.dimensions)
 
     def __str__(self):
         """
         Human readable text representation. (str)
         """
         ones, tens = '+', '+'
-        for column in range(1, self.columns + 1):
+        for column in range(1, self.dimensions[0] + 1):
             ones += str(column % 10)
             tens += str(column // 10)
         if self.columns > 9:
@@ -344,9 +346,9 @@ class C4Board(board.GridBoard):
         else:
             head_foot = ones + '+\n'
         text = head_foot
-        for row_index in range(self.rows - 1, -1, -1):
+        for row_index in range(self.dimensions[1], 0, -1):
             row_text = '|'
-            for column_index in range(self.columns):
+            for column_index in range(1, self.dimensions[0] + 1):
                 row_text += str(self.cells[(column_index, row_index)])
             text += row_text + '|\n'
         return text + head_foot
@@ -366,7 +368,7 @@ class C4Board(board.GridBoard):
                      break
         # check for a draw
         full = [cell for cell in self.cells.values() if cell.piece]
-        filled = len(full) == self.columns * self.rows
+        filled = len(full) == self.dimensions[0] * self.dimensions[1]
         if filled or len(winners) == 2:
             result = 'draw'
         elif winners:
@@ -384,32 +386,32 @@ class C4Board(board.GridBoard):
         column: The column to check. (int)
         """
         # check rows til you get an empty cell
-        for row in range(self.rows):
+        for row in range(1, self.dimensions[1] + 1):
             if not self.cells[(column, row)].piece:
                 break
-        return row
+        return row - 1
 
     def copy(self):
         """
         Create a copy of the board for AI searches. (Connect4Board)
         """
-        return super(C4Board, self).copy(pieces = self.pieces, wins = self.wins)
+        return super(C4Board, self).copy(*self.dimensions, pieces = self.pieces, wins = self.wins)
 
     def get_moves(self):
         """
         Get all legal moves from the current position. (list of (int, string))
         """
         # get the current piece
-        pieces_played = len([cell for cell in self.cells.values() if cell.piece]) + self.pops
+        pieces_played = len([cell for cell in self.cells.values() if cell.contents]) + self.pops
         current_piece = self.pieces[pieces_played % 2]
         # get the open columns
-        columns = [column for column in range(self.columns) if self.cells[(column, self.rows - 1)].piece is None]
+        columns = [col for col in range(1, self.dimensions[0] + 1) if len(self.cells[(col, self.dimensions[1])])]
         # add the poppable columns, if popping is allowed.
         if self.poppable:
             valid_pops = []
-            for column in range(self.columns):
-                if self.cells[(column, 0)].piece == current_piece:
-                    valid_pops.append(-column - 2)
+            for column in range(1, self.dimensions[0] + 1):
+                if self.cells[(column, 1)].piece == current_piece:
+                    valid_pops.append(-column)
             columns.extend(valid_pops)
         # return the columns with the current piece.
         return [(column, current_piece) for column in columns]
@@ -418,7 +420,7 @@ class C4Board(board.GridBoard):
         """
         Get the last piece played. (str)
         """
-        pieces_played = len([cell for cell in self.cells.values() if cell.piece]) + self.pops
+        pieces_played = len([cell for cell in self.cells.values() if cell.contents]) + self.pops
         return self.pieces[1 - pieces_played % 2]
 
     def make_move(self, move):
@@ -435,8 +437,8 @@ class C4Board(board.GridBoard):
         else:
             height = self.column_height(column)
             # attempt the move
-            if height < self.rows:
-                self.place(piece, (column, height))
+            if height <= self.dimensions[1]:
+                self.place(piece, (column, height + 1))
             else:
                 raise ValueError('Invalid move: column {} is full'.format(column + 1))
 
@@ -448,11 +450,11 @@ class C4Board(board.GridBoard):
         column: The negative (one indexed) column to pop. (int)
         piece: The piece to pop. (str)
         """
-        column = abs(column + 2)
-        if self.cells[(column, 0)].piece == piece:
-            for row in range(1, self.rows):
-                self.cells[(column, row - 1)].piece = self.cells[(column, row)].piece
-            self.cells[(column, self.rows - 1)].piece = None
+        column = abs(column)
+        if self.cells[(column, 1)].contents == piece:
+            for row in range(2, self.dimensions[1] + 1):
+                self.cells[(column, row - 1)].contents = self.cells[(column, row)].contents
+            self.cells[(column, self.dimensions[1])].contents = None
             self.pops += 1
         else:
             raise ValueError('Invalid pop: column {} does not start with {!r}.'.format(column + 1, piece))
@@ -581,7 +583,7 @@ class ConnectFour(game.Game):
             column_index = now_player.ask_int(prompt, valid = open_columns)
         if isinstance(column_index, str):
             return self.handle_cmd(column_index)
-        self.board.make_move((column_index - 1, self.symbols[self.players.index(now_player)]))
+        self.board.make_move((column_index, self.symbols[self.players.index(now_player)]))
 
     def set_up(self):
         """

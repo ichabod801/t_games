@@ -501,7 +501,7 @@ class DimBoard(Board):
     __init__
     """
 
-    def __init__(self, dimensions, cell_class):
+    def __init__(self, dimensions, cell_class = BoardCell):
         """
         Set up the grid of cells. (None)
 
@@ -513,14 +513,14 @@ class DimBoard(Board):
         self.dimensions = dimensions
         self.cell_class = cell_class
         # calculate locations
-        locations = itertools.product(*[range(dimension) for dimension in self.dimensions])
+        locations = itertools.product(*[range(1, dimension + 1) for dimension in self.dimensions])
         locations = [Coordinate(location) for location in locations]
         # set up cells
         super(DimBoard, self).__init__(locations, cell_class)
 
     def copy(self, **kwargs):
         """Create a copy of the board. (GridBoard)"""
-        clone = self.__class__(self.dimensions, self.cell_class)
+        clone = self.__class__(self.dimensions, self.cell_class, **kwargs)
         clone.copy_pieces(self)
         return clone
 
@@ -549,7 +549,7 @@ class LineBoard(Board):
 
     def copy(self, **kwargs):
         """Create a copy of the board. (GridBoard)"""
-        clone = self.__class__(self.length, self.cell_class)
+        clone = self.__class__(self.length, self.cell_class, **kwargs)
         clone.copy_pieces(self)
         return clone
 
