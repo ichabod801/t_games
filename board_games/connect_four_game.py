@@ -73,11 +73,6 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
     eval_board
     """
 
-    # !! needs to be expanded based on board size.
-    # !! pattern is across the bottom then up.
-    board_strength = [[3, 4, 5, 5, 4, 3], [4, 6, 8, 8, 6, 4], [5, 8, 11, 11, 8, 5], [7, 10, 13, 13, 10, 7],
-        [5, 8, 11, 11, 8, 5], [4, 6, 8, 8, 6, 4], [3, 4, 5, 5, 4, 3]]
-
     def __init__(self, depth = 6, fudge = 1, taken_names = [], initial = ''):
         """
         Set up the bot. (None)
@@ -116,7 +111,7 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
         """
         clone = self.game.board.copy()
         results = self.alpha_beta(clone, self.depth, -utility.MAX_INT, utility.MAX_INT, True)
-        return results[0][0] + 1
+        return results[0][0]
 
     def eval_board(self, board):
         """
@@ -190,21 +185,22 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
         return twos, threes
 
     def set_up(self):
-        base = list(range(3, 3 + self.game.columns // 2))
-        if self.game.columns % 2:
+        base = list(range(3, 3 + self.game.dimensions[0] // 2))
+        if self.game.dimensions[0] % 2:
             base = base + [base[-1] + 2] + base[::-1]
         else:
             base[-1] += 1
             base = base + base[::-1]
+        base = [0] + base
         mod = [3] * len(base)
-        mod[:2] = [1, 2]
+        mod[:3] = [0, 1, 2]
         mod[-2:] = [2, 1]
-        board_strength = [base]
-        while len(board_strength) < self.game.rows / 2:
+        board_strength = [[], base]
+        while len(board_strength) <= self.game.dimensions[1] / 2:
             board_strength.append([a + b for a, b in zip(board_strength[-1], mod)])
-        if not self.game.rows % 2:
+        if not self.game.dimensions[1] % 2:
             board_strength.append(board_strength[-1])
-        while len(board_strength) < self.game.rows:
+        while len(board_strength) <= self.game.dimensions[1]:
             board_strength.append([a - b for a, b in zip(board_strength[-1], mod)])
         self.board_strength = list(zip(*board_strength))
 
@@ -241,9 +237,9 @@ class C4BotGamma(C4BotAlphaBeta):
             forward = chain[-1] + offset
             backward = chain[0] - offset
             blocks = 0
-            if forward not in self.game.board.cells or self.game.board.cells[forward].piece:
+            if forward not in self.game.board.cells or self.game.board.cells[forward].contents:
                 blocks += 1
-            if backward not in self.game.board.cells or self.game.board.cells[backward].piece:
+            if backward not in self.game.board.cells or self.game.board.cells[backward].contents:
                 blocks += 1
             bins['{}-{}'.format(len(chain), blocks)] += 1
         return bins
@@ -264,7 +260,7 @@ class C4BotGamma(C4BotAlphaBeta):
         # get the player's piece symbol
         piece = self.game.symbols[player_index]
         # check board value of pieces
-        locations = [location for location, cell in board.cells.items() if cell.piece == piece]
+        locations = [location for location, cell in board.cells.items() if cell.contents == piece]
         score = 0
         for column, row in locations:
             score += self.board_strength[column][row]
