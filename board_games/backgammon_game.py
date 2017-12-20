@@ -8,8 +8,6 @@ Terminology:
     move: One roll's move.
     play: A full turn of moves.
 
-?? Should the move validation be done by the board?
-
 !! Ichabod's Rule: Instead of capturing, hitting a blot bears the moving
     piece off the board.
 
@@ -26,7 +24,6 @@ BackgammonBoard: A board for Backgammon. (board.LineBoard)
 
 
 from __future__ import print_function
-
 
 import tgames.board as board
 import tgames.dice as dice
@@ -532,13 +529,9 @@ class Backgammon(game.Game):
         self.get_rolls()
 
 
-class BackgammonBoard(board.MultiBoard):
+class BackgammonBoard(board.LineBoard):
     """
     A board for Backgammon. (board.LineBoard)
-
-    Attributes:
-    bar: The cell holding captured pieces. (board.BoardCell)
-    out: The cells holding pieces that have been borne off. (dict)
 
     Methods:
     board_text: Generate a text lines for the pieces on the board. (list of str)
@@ -551,7 +544,7 @@ class BackgammonBoard(board.MultiBoard):
     __init__
     """
 
-    def __init__(self, dimensions = (24,), layout = ((6, 5), (8, 3), (13, 5), (24, 2))):
+    def __init__(self, layout = ((6, 5), (8, 3), (13, 5), (24, 2))):
         """
         Set up the grid of cells. (None)
 
@@ -560,16 +553,10 @@ class BackgammonBoard(board.MultiBoard):
         for one player, and then done symetrically for the other player.
 
         Paramters:
-        dimensions: The dimensions of the board, in cells. (tuple of int)
         layout: The initial layout of the pieces. (tuple of tuple)
         """
-        # Set up the base board.
-        super(BackgammonBoard, self).__init__(dimensions)
-        # Set up the special cells.
-        self.bar = board.BoardCell((-1,), [])
-        self.out = {'X': board.BoardCell((-2,), []), 'O': board.BoardCell((-3,), [])}
-        self.cells.update({(-1,): self.bar, (-2,): self.out['X'], (-3,): self.out['O']})
-        # Place the starting pieces.
+        # Set up the board.
+        super(BackgammonBoard, self).__init__(24, extra_cells = ['bar', 'out'])
         self.set_up(layout)
 
     def board_text(self, locations):
@@ -584,8 +571,8 @@ class BackgammonBoard(board.MultiBoard):
         for row in range(5):
             row_text = '| '
             # Loop through the points.
-            for bar_check, location in enumerate(locations):
-                pieces = len(self.cells[(location,)].piece)
+            for bar_check, location in enumerate(range(1, 25)):
+                pieces = len(self.cells[location])
                 if pieces > row:
                     # Handle first row numbers.
                     if row == 0 and pieces > 5:
@@ -598,7 +585,7 @@ class BackgammonBoard(board.MultiBoard):
                         row_text += '1 '
                     # Handle piece symbols
                     else:
-                        row_text += '{} '.format(self.cells[(location,)].piece[0])
+                        row_text += '{} '.format(self.cells[location].contents[0])
                 else:
                     # Handle board design.
                     row_text += '{} '.format(':.'[location % 2])
@@ -762,15 +749,15 @@ class BackgammonBoard(board.MultiBoard):
         points = 0
         for cell in self.cells.values():
             # Get the correct pip count.
-            point = cell.location[0] + 1
-            if point == 0:
+            point = cell.location
+            if point == 'bar':
                 point = 25
-            elif point < 0:
+            elif point == 'out':
                 point = 0
             elif piece == 'O':
                 point = 25 - point
             # Get the pip count for each piece.
-            points += point * cell.piece.count(piece)
+            points += point * cell.contents.count(piece)
         return points
 
     def get_text(self, piece):
@@ -799,8 +786,8 @@ class BackgammonBoard(board.MultiBoard):
         lines.extend(reversed(self.board_text(order_low)))
         lines.extend(frame_low)
         # Include a line for any pieces on the bar.
-        if self.bar.piece:
-            lines.extend(['', 'Bar: {}'.format(''.join(self.bar.piece))])
+        if self.cells['bar'].contents:
+            lines.extend(['', 'Bar: {}'.format(''.join(self.cells['bar'].contents))])
         # Return the text.
         return '\n'.join(lines)
 
@@ -815,8 +802,10 @@ class BackgammonBoard(board.MultiBoard):
         start: The location containing the piece to move. (Coordinate)
         end: The location to move the piece to. (Coordinate)
         """
+        if not (len(self.cells[end]) < 2 or self.cells[start].contents[0] != self.cells[end].contents[0]):
+            raise ValueError('Invalid backgammon move ({}/{}).'.format(start, end))
         capture = super(BackgammonBoard, self).move(start, end)
-        self.bar.piece.extend(capture)
+        self.cells['bar'].add_piece(capture)
         return capture
 
     def set_up(self, layout):
@@ -830,8 +819,12 @@ class BackgammonBoard(board.MultiBoard):
         """
         # Layout the pieces for X, and mirrored for O.
         for location, count in layout:
-            self.cells[(location - 1,)].piece = ['X'] * count
-            self.cells[(24 - location,)].piece = ['O'] * count
+            self.cells[location].contents = ['X'] * count
+            self.cells[25 - location].contents = ['O'] * count
+
+
+class BackgammonPlay(object):
+    pass
 
 
 if __name__ == '__main__':

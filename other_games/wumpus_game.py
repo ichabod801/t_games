@@ -4,7 +4,8 @@ wumpus_game.py
 A game of Hunt the Wumpus.
 
 This is at least the third time I have used the Cave and Dodecahedron objects
-to create a Hunt the Wumpus game.
+to create a Hunt the Wumpus game. However, I want to redo those as subclasses
+of Board and MultiCell.
 
 Constants:
 ADJACENT: Adjacent points on a dodecahedron. (list of tuple of int)
