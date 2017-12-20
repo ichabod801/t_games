@@ -103,7 +103,7 @@ class BoardCell(object):
         if self.contents:
             return str(self.contents)
         else:
-            return self.contents
+            return self.empty
 
     def add_piece(self, piece):
         """
@@ -404,7 +404,7 @@ class Board(object):
         parent: The board to copy pieces from. (Board)
         """
         for location in parent.cells:
-            self.cells[location] = parent.cells[location].copy_piece()
+            self.cells[location].contents = parent.cells[location].copy_piece()
 
     def displace(self, start, end, piece = None):
         """

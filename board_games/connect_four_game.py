@@ -153,7 +153,7 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
         # get the player's piece symbol
         piece = self.game.symbols[player_index]
         # check board value of pieces
-        locations = [location for location, cell in board.cells.items() if cell.piece == piece]
+        locations = [location for location, cell in board.cells.items() if cell.contents == piece]
         score = 0
         for column, row in locations:
             score += self.board_strength[column][row]
@@ -195,7 +195,7 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
         mod = [3] * len(base)
         mod[:3] = [0, 1, 2]
         mod[-2:] = [2, 1]
-        board_strength = [[], base]
+        board_strength = [base]
         while len(board_strength) <= self.game.rows / 2:
             board_strength.append([a + b for a, b in zip(board_strength[-1], mod)])
         if not self.game.rows % 2:
@@ -203,6 +203,7 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
         while len(board_strength) <= self.game.rows:
             board_strength.append([a - b for a, b in zip(board_strength[-1], mod)])
         self.board_strength = list(zip(*board_strength))
+        self.board_strenght = [[], self.board_strength]
 
 
 class C4BotGamma(C4BotAlphaBeta):
@@ -290,33 +291,32 @@ class C4Board(board.DimBoard):
     __str__
     """
 
-    def __init__(self, columns = 7, rows = 6, pieces = [], wins = [], poppable = False):
+    def __init__(self, dimensions = (7, 6), pieces = [], wins = [], poppable = False):
         """
         Set up the board and the winning positions. (None)
 
         Parameters:
-        columns: The number of columns on the board. (int)
-        rows: The number of rows on the board. (int)
+        dimensions: The columns and rows of the board, in cells. (tuple of int)
         pieces: The symbols for player pieces. (list of str)
         wins: The winning four in a row combinations (list of set of tuple)
         """
         # basic set up
-        super(C4Board, self).__init__((columns, rows))
+        super(C4Board, self).__init__(dimensions)
         self.pieces = pieces
         self.poppable = poppable
         self.pops = 0
         # set up winning positions
         self.wins = wins
         if not self.wins:
-            for col in range(1, columns + 1):
-                for row in range(1, rows + 1):
-                    if col < columns - 2:
+            for col in range(1, dimensions[0] + 1):
+                for row in range(1, dimensions[1] + 1):
+                    if col < dimensions[0] - 2:
                         win = ((col, row), (col + 1, row), (col + 2, row), (col + 3, row))
                         self.wins.append(set([board.Coordinate(xy) for xy in win]))
-                    if row < rows - 2:
+                    if row < dimensions[0] - 2:
                         win = ((col, row), (col, row + 1), (col, row + 2), (col, row + 3))
                         self.wins.append(set(set([board.Coordinate(xy) for xy in win])))
-                        if col < columns - 2:
+                        if col < dimensions[0] - 2:
                             win = ((col, row), (col + 1, row + 1), (col + 2, row + 2), (col + 3, row + 3))
                             self.wins.append(set([board.Coordinate(xy) for xy in win]))
                         if col > 3:
@@ -324,27 +324,24 @@ class C4Board(board.DimBoard):
                             self.wins.append(set([board.Coordinate(xy) for xy in win]))
 
     def __repr__(self):
-        """
-        Debugging text representation.
-        """
-        return 'C4Board({}, {})'.format(self.columns, self.rows)
+        """Debugging text representation."""
+        # !! doesn't take into acount pieces and poppable parameters.
+        return 'C4Board({})'.format(self.dimensions)
 
     def __str__(self):
-        """
-        Human readable text representation. (str)
-        """
+        """Human readable text representation. (str)"""
         ones, tens = '+', '+'
-        for column in range(1, self.contents + 1):
+        for column in range(1, self.dimensions[0] + 1):
             ones += str(column % 10)
             tens += str(column // 10)
-        if self.columns > 9:
+        if self.dimensions[0] > 9:
             head_foot = '{}\n{}\n'.format(tens, ones)
         else:
             head_foot = ones + '+\n'
         text = head_foot
-        for row_index in range(self.rows, 0, -1):
+        for row_index in range(self.dimensions[1], 0, -1):
             row_text = '|'
-            for column_index in range(1, self.rows + 1):
+            for column_index in range(1, self.dimensions[0] + 1):
                 row_text += str(self.cells[(column_index, row_index)])
             text += row_text + '|\n'
         return text + head_foot
@@ -356,14 +353,14 @@ class C4Board(board.DimBoard):
         # get the locations with those pieces
         winners = []
         for piece in self.pieces:
-            played = set([cell.location for cell in self.cells.values() if cell.piece == piece])
+            played = set([cell.location for cell in self.cells.values() if cell.contents == piece])
             # check against the winning positions
             for win in self.wins: 
                 if len(win.intersection(played)) == 4:
                      winners.append(piece)
                      break
         # check for a draw
-        full = [cell for cell in self.cells.values() if cell.piece]
+        full = [cell for cell in self.cells.values() if cell.contents]
         filled = len(full) == self.dimensions[0] * self.dimensions[1]
         if filled or len(winners) == 2:
             result = 'draw'
@@ -383,7 +380,7 @@ class C4Board(board.DimBoard):
         """
         # check rows til you get an empty cell
         for row in range(1, self.dimensions[1] + 1):
-            if not self.cells[(column, row)].piece:
+            if not self.cells[(column, row)].contents:
                 break
         return row - 1
 
@@ -391,7 +388,9 @@ class C4Board(board.DimBoard):
         """
         Create a copy of the board for AI searches. (Connect4Board)
         """
-        return super(C4Board, self).copy(*self.dimensions, pieces = self.pieces, wins = self.wins)
+        clone = C4Board(self.dimensions, pieces = self.pieces, wins = self.wins, poppable = self.poppable)
+        clone.copy_pieces(self)
+        return clone
 
     def get_moves(self):
         """
@@ -401,12 +400,12 @@ class C4Board(board.DimBoard):
         pieces_played = len([cell for cell in self.cells.values() if cell.contents]) + self.pops
         current_piece = self.pieces[pieces_played % 2]
         # get the open columns
-        columns = [col for col in range(1, self.dimensions[0] + 1) if len(self.cells[(col, self.dimensions[1])])]
+        columns = [col for col in range(1, self.dimensions[0] + 1) if not self.cells[(col, self.dimensions[1])]]
         # add the poppable columns, if popping is allowed.
         if self.poppable:
             valid_pops = []
             for column in range(1, self.dimensions[0] + 1):
-                if self.cells[(column, 1)].piece == current_piece:
+                if self.cells[(column, 1)].contents == current_piece:
                     valid_pops.append(-column)
             columns.extend(valid_pops)
         # return the columns with the current piece.
@@ -591,7 +590,7 @@ class ConnectFour(game.Game):
         if self.players != saved_players:
             self.symbols.reverse()
         # reset board
-        self.board = C4Board(self.columns, self.rows, poppable = self.poppable)
+        self.board = C4Board((self.columns, self.rows), poppable = self.poppable)
         self.board.pieces = self.symbols
         # reset the bot
         self.bot.set_up()
