@@ -536,7 +536,7 @@ class BackgammonBoard(board.LineBoard):
     Methods:
     board_text: Generate a text lines for the pieces on the board. (list of str)
     get_plays: Get the legal plays for a given set of rolls. (list)
-    get_plays_help: Recurse get_plays using another board. (list of tuple)
+    get_moves_help: Recurse get_plays using another board. (list of tuple)
     get_pip_count: Get the pip count for a given player. (int)
     get_text: Get the board text from a particular player's perspective. (str)
 
@@ -544,7 +544,7 @@ class BackgammonBoard(board.LineBoard):
     __init__
     """
 
-    def __init__(self, layout = ((6, 5), (8, 3), (13, 5), (24, 2))):
+    def __init__(self, length = 24, cell_class = 0, layout = ((6, 5), (8, 3), (13, 5), (24, 2))):
         """
         Set up the grid of cells. (None)
 
@@ -600,7 +600,8 @@ class BackgammonBoard(board.LineBoard):
         Get the legal moves for a given set of rolls. (list)
 
         This method is one level of recursion for get_plays, although the actual 
-        recursion is done in get_moves_help.
+        recursion is done in get_moves_help after calls to one of the ohter
+        get_moves methods.
 
         !! The only good discussion of this I can find (www.bkgm.com, about BKG) says it generates
         a tree of moves recursively. Then it scans the tree for legal moves by the maximum use of
@@ -618,8 +619,6 @@ class BackgammonBoard(board.LineBoard):
         """
         # Loop through the rolls.
         full_plays = []
-        from_cells = [coord for coord in self.cells if piece in self.cells[coord]]
-        direction = {'X': -1, 'O': 1}[piece]
         for roll in set(rolls):
             # Get the rolls without the current roll.
             sub_rolls = rolls[:]
@@ -628,18 +627,10 @@ class BackgammonBoard(board.LineBoard):
             if piece in self.bar.piece:
                 full_plays = self.get_moves_enter(piece, moves, full_plays, sub_rolls, roll)
             elif all([coord[0] in home or coord == self.out[piece].location for coord in from_cells]):
-                full_plays = self.get_moves_bear()
+                full_plays = self.get_moves_home(piece, moves, full_plays, sub_rolls, roll)
             else:
-                # Generate moves with no special conditions.
-                for coord in from_cells:
-                    end_coord = coord + (roll * direction,)
-                    if not ((0,) <= coord < self.dimensions and (0,) <= end_coord < self.dimensions):
-                        continue
-                    end_cell = self.cells[end_coord]
-                    if piece not in end_cell.piece and len(end_cell.piece) > 1:
-                        continue
-                    full_plays = self.get_plays_help(piece, coord, end_coord, moves, full_plays, sub_rolls)
-        # Eliminate duplicate plays.
+                full_plays = self.get_moves_normal(piece, moves, full_plays, sub_rolls, roll)
+        # Eliminate duplicate plays. !! done to here.
         final_plays = []
         sorted_plays = []
         # Watch for plays not using as many dice as possible.
@@ -669,35 +660,6 @@ class BackgammonBoard(board.LineBoard):
                 final_plays = [play for roll, play in max_plays if roll == max_plays[0][0]]
         return final_plays
 
-    def get_moves_bear(self, piece, moves, full_plays, sub_rolls, roll):
-        home = {'X': tuple(range(1, 7)), 'O': tuple(range(24, 18, -1))}[piece]
-        # Generate bearing off moves.
-        coord = home[roll - 1]
-        end_coord = 'out'
-        # Check for pieces left to move.
-        piece_indexes = [ndx for ndx, pt in enumerate(home) if piece in self.cells[(pt,)].piece]
-        if piece_indexes:
-            max_index = piece_indexes[-1]
-        else:
-            continue
-        if piece in self.cells[coord].piece:
-            # Generate standard bearing off moves.
-            full_plays = self.get_plays_help(piece, coord, end_coord, moves, full_plays, sub_rolls)
-        elif roll > max_index:
-            # Generate bearing off moves with over roll.
-            coord = (home[max_index],)
-            full_plays = self.get_plays_help(piece, coord, end_coord, moves, full_plays, sub_rolls)
-        for home_index in range(6):
-            # Generate moves within the home board.
-            start = (home[home_index],)
-            end = (start[0] + roll * direction,)
-            if end < (0,) or end > (23,):
-                continue
-            start_ok = piece in self.cells[start].piece
-            end_ok = piece in self.cells[end].piece or len(self.cells[end].piece) < 2
-            if start_ok and end_ok:
-                full_plays = self.get_plays_help(piece, start, end, moves, full_plays, sub_rolls)
-
     def get_moves_enter(self, piece, moves, full_plays, sub_rolls, roll):
         """
         Get the legal moves when a piece is on the bar. (list of BackgammonPlay)
@@ -718,29 +680,30 @@ class BackgammonBoard(board.LineBoard):
             end_coord = roll
         end_cell = self.cells[end_coord]
         if piece in end_cell or len(end_cell) < 2:
-            full_plays = self.get_moves_help(piece, 'bar', end_coord, moves, full_plays, sub_rolls)
+            full_plays = self.get_moves_help(piece, 'bar', end_coord, moves, full_plays, sub_rolls, roll)
         return full_plays
 
-    def get_plays_help(self, piece, coord, end_coord, moves, full_plays, sub_rolls):
+    def get_moves_help(self, piece, point, end_point, moves, full_plays, sub_rolls, roll):
         """
         Recurse the get_move method by creating another board. (list of tuple)
 
         Parameters:
         piece: The piece symbol to get moves for. (str)
-        coord: The starting point of the move. (tuple of int)
-        end_coord: The ending point of the move. (tuple of int)
+        point: The starting point of the move. (tuple of int)
+        end_point: The ending point of the move. (tuple of int)
         moves: The moves already made. (list of tuple)
         full_plays: The moves already recorded. (list of tuple)
         sub_rolls: The rolls to get moves for. (str)
+        roll: The roll being used for this move. (int)
         """
         # Create a board with the move.
         sub_board = self.copy(layout = ())
-        capture = sub_board.move(coord, end_coord)
+        capture = sub_board.move(point, end_point)
         # Add to the move to the moves so far.
-        new_moves = moves + [(coord, end_coord)]
+        new_moves = moves + [(point, end_point, roll)]
         if sub_rolls:
             # Recurse if necessary
-            sub_plays = sub_board.get_plays(piece, sub_rolls, new_moves)
+            sub_plays = sub_board.get_moves(piece, sub_rolls, new_moves)
             if sub_plays:
                 full_plays.extend(sub_plays)
             else:
@@ -750,6 +713,65 @@ class BackgammonBoard(board.LineBoard):
             # Termination of recursion
             full_plays.append(new_moves)
         # Return the moves back up the recursion.
+        return full_plays
+
+    def get_moves_home(self, piece, moves, full_plays, sub_rolls, roll):
+        """
+        Get the legal moves when all pieces are home. (list of BackgammonPlay)
+
+        Parameters:
+        piece: The piece symbol to get moves for. (str)
+        moves: The moves already made. (BackgammonPlay)
+        full_plays: The plays already recorded. (list of BackgammonPlay)
+        sub_rolls: The rolls to get moves for. (list of int)
+        roll: The current roll being moved. (int)
+        """
+        home = {'X': tuple(range(1, 7)), 'O': tuple(range(24, 18, -1))}[piece]
+        direction = {'X': -1, 'O': 1}[piece]
+        coord = home[roll - 1]
+        # Check for pieces left to move.
+        piece_indexes = [ndx for ndx, pt in enumerate(home) if piece in self.cells[pt]]
+        if piece_indexes:
+            max_index = piece_indexes[-1]
+        else:
+            return full_plays
+        if piece in self.cells[coord]:
+            # Generate standard bearing off moves.
+            full_plays = self.get_moves_help(piece, coord, 'out', moves, full_plays, sub_rolls, roll)
+        elif roll > max_index + 1:
+            # Generate bearing off moves with over roll.
+            coord = home[max_index]
+            full_plays = self.get_moves_help(piece, coord, 'out', moves, full_plays, sub_rolls, roll)
+        for home_index in range(6):
+            # Generate moves within the home board.
+            start = home[home_index]
+            end = start + roll * direction
+            if 0 <= end <= 23:
+                if piece in self.cells[start] and (piece in self.cells[end] or len(self.cells[end]) < 2):
+                    full_plays = self.get_moves_help(piece, start, end, moves, full_plays, sub_rolls, roll)
+        return full_plays
+
+    def get_moves_normal(self, piece, moves, full_plays, sub_rolls, roll):
+        """
+        Generate legal moves during normal play. (list of BackgammonPlay)
+
+        Parameters:
+        piece: The piece symbol to get moves for. (str)
+        moves: The moves already made. (BackgammonPlay)
+        full_plays: The plays already recorded. (list of BackgammonPlay)
+        sub_rolls: The rolls to get moves for. (list of int)
+        roll: The current roll being moved. (int)
+        """
+        from_cells = [point for point in self.cells if piece in self.cells[point]]
+        direction = {'X': -1, 'O': 1}[piece]
+        for point in from_cells:
+            end_point = point + roll * direction
+            if not (0 < point <= self.length and 0 < end_point <= self.length):
+                continue
+            end_cell = self.cells[end_point]
+            if piece not in end_cell and len(end_cell) > 1:
+                continue
+            full_plays = self.get_moves_help(piece, point, end_point, moves, full_plays, sub_rolls, roll)
         return full_plays
 
     def get_pip_count(self, piece):
@@ -785,7 +807,7 @@ class BackgammonBoard(board.LineBoard):
         piece: The piece symbol to move. (str)
         rolls: The rolls available to move with. (list of int)
         """
-        plays = self.get_moves(piece, rolls, [])
+        plays = self.get_moves(piece, rolls, BackgammonPlay())
 
     def get_text(self, piece):
         """
@@ -867,6 +889,8 @@ class BackgammonPlay(object):
     Overridden Methods:
     __init__
     __add__
+    __eq__
+    __len__
     """
 
     def __init__(self, start = 0, end = 0, roll = 0):
@@ -915,6 +939,10 @@ class BackgammonPlay(object):
             return self.moves == other.moves
         else:
             return NotImplemented
+
+    def __len__(self):
+        """Number of moves in the play. (int)"""
+        return len(self.moves)
 
     def add_move(self, start = 0, end = 0, roll = 0):
         """
