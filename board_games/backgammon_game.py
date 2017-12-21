@@ -824,7 +824,84 @@ class BackgammonBoard(board.LineBoard):
 
 
 class BackgammonPlay(object):
-    pass
+    """
+    A possible play (set of moves) in Backgammon. (object)
+
+    The moves attribute is a tuple of three integers: the start point of the move,
+    the end point of the move, and the roll used.
+
+    Attributes:
+    total_roll: The total roll used for the move. (int)
+    moves: The moves that make up the play. (list of tuple)
+
+    Methods:
+    add_move: Add a move to the play. (None)
+
+    Overridden Methods:
+    __init__
+    __add__
+    """
+
+    def __init__(self, start = 0, end = 0, roll = 0):
+        """
+        Set up the play, possibly with an intial move. (None)
+
+        If start is 0 or '', no initial move is recorded.
+
+        Parameters:
+        start: the starting point of the initial move. (int or str)
+        end: the end point of the initial move. (int or str)
+        roll: the roll used for the initial move. (int)
+        """
+        if start:
+            # Set up with initial move.
+            self.moves = [(start, end, roll)]
+            self.total_roll = roll
+        else:
+            # Set up without initial move.
+            self.moves = []
+            self.total_roll = 0
+
+    def __add__(self, other):
+        """
+        Add a new move to the play. (BackgammonPlay)
+
+        Parameters:
+        other: A move to add. (tuple or str or int)
+        """
+        if isinstance(other, tuple) and len(other) == 3:
+            new_play = BackgammonPlay()
+            new_play.moves = self.moves[:]
+            new_play.total_roll = self.total_roll
+            new_play.add_move(*other)
+        else:
+            return NotImplemented
+
+    def __eq__(self, other):
+        """
+        Check for equality between moves. (bool)
+
+        !! If comparing moves happens more than adding them, sort when added instead.
+
+        Parameters:
+        other: The play to compare against. (BackgammonPlay)
+        """
+        if isinstance(other, BackgammonPlay):
+            return self.total_roll == other.total_roll and sorted(self.moves) == sorted(other.moves)
+        else:
+            return NotImplemented
+
+    def add_move(self, start = 0, end = 0, roll = 0):
+        """
+        Add a move to the play. (None)
+
+        Parameters:
+        start: the starting point of the move. (int or str)
+        end: the end point of the move. (int or str)
+        roll: the roll used for the move. (int)
+        """
+        self.moves.append((start, end, roll))
+        self.total_roll += roll
 
 
 if __name__ == '__main__':
