@@ -132,7 +132,7 @@ class BackgammonBot(player.Bot):
             if self.held_moves:
                 # Play any planned moves.
                 move = self.held_moves.pop(0)
-            else:
+            if not self.held_moves:
                 # Evaluate all the legal plays.
                 possibles = []
                 board = self.game.board
@@ -144,19 +144,18 @@ class BackgammonBot(player.Bot):
                 # Choose the play with the highest evaluation.
                 possibles.sort(reverse = True)
                 best = possibles[0][1]
-                # Split out any held moves.
-                move = best[0]
-                self.held_moves = best[1:]
+                # Set the held moves.
+                self.held_moves = iter(best) # !! need to figure out how to use
             # Return the move with the correct syntax.
-            if move[1] < (0,):
-                point = move[0][0] + 1
+            if move[1] == 'out':
+                point = move[0]
                 if point > 6:
                     point = 25 - point
                 return 'bear {}'.format(point)
-            elif move[0] < (0,):
-                return 'enter {}'.format(move[1][0] + 1)
+            elif move[0] == 'bar':
+                return 'enter {}'.format(move[1])
             else:
-                return '{} {}'.format(move[0][0] + 1, move[1][0] + 1)
+                return '{} {}'.format(*move)
         # Respond to no-move notifications.
         elif prompt.startswith('You have no legal moves'):
             self.game.human.tell('{} has no legal moves.'.format(self.name))
@@ -204,11 +203,11 @@ class BackgammonBot(player.Bot):
         for cell in board.cells.values():
             if cell.location < (0,):
                 continue
-            if len(cell.piece) > 1:
-                controlled[cell.piece[0]].append(cell.location)
-            elif len(cell.piece) == 1:
-                blots[cell.piece[0]].append(cell.location)
-        captured = {piece: board.bar.piece.count(piece) for piece in 'XO'}
+            if len(cell.contents) > 1:
+                controlled[cell.contents[0]].append(cell.location)
+            elif len(cell.contents) == 1:
+                blots[cell.contents[0]].append(cell.location)
+        captured = {piece: board.cells['bar'].contents.count(piece) for piece in 'XO'}
         pip_count = {piece: board.get_pip_count(piece) for piece in 'XO'}
         # Calculate hits.
         direct_hits = {'X': 0, 'O': 0}
@@ -630,35 +629,6 @@ class BackgammonBoard(board.LineBoard):
                 full_plays = self.get_moves_home(piece, moves, full_plays, sub_rolls, roll)
             else:
                 full_plays = self.get_moves_normal(piece, moves, full_plays, sub_rolls, roll)
-        # Eliminate duplicate plays. !! done to here.
-        final_plays = []
-        sorted_plays = []
-        # Watch for plays not using as many dice as possible.
-        if full_plays:
-            max_moves = max([len(play) for play in full_plays])
-        for play in full_plays:
-            if play not in final_plays and list(sorted(play)) not in sorted_plays and len(play) == max_moves:
-                final_plays.append(play)
-                sorted_plays.append(list(sorted(play)))
-        # Only allow for the largest die if not all dice used.
-        if max_moves < len(rolls):
-            # !! will not work, assumes plays are all one move.
-            max_plays = []
-            for start, end in final_plays:
-                if end[0] < 0:
-                    break
-                elif start[0] < 0:
-                    if end[0] > 6:
-                        roll = 24 - end[0]
-                    else:
-                        roll = end[0] + 1
-                else:
-                    roll = abs(start[0] - end[0])
-                max_plays.append((roll, (start, end)))
-            else:
-                max_plays.sort()
-                final_plays = [play for roll, play in max_plays if roll == max_plays[0][0]]
-        return final_plays
 
     def get_moves_enter(self, piece, moves, full_plays, sub_rolls, roll):
         """
@@ -807,7 +777,16 @@ class BackgammonBoard(board.LineBoard):
         piece: The piece symbol to move. (str)
         rolls: The rolls available to move with. (list of int)
         """
-        plays = self.get_moves(piece, rolls, BackgammonPlay())
+        if not self.legal_plays:
+            plays = self.get_moves(piece, rolls, BackgammonPlay())
+            plays = list(set(plays))
+            max_roll = max(play.total_roll for play in plays)
+            max_moves = max(len(play) for play in plays)
+            self.legal_plays = []
+            for play in plays:
+                if play.total_roll == max_roll and len(play) == max_moves:
+                    self.legal_plays.append(play)
+        return self.legal_plays
 
     def get_text(self, piece):
         """
@@ -855,6 +834,7 @@ class BackgammonBoard(board.LineBoard):
             raise ValueError('Invalid backgammon move ({}/{}).'.format(start, end))
         capture = super(BackgammonBoard, self).move(start, end)
         self.cells['bar'].add_piece(capture)
+        self.legal_plays = []
         return capture
 
     def set_up(self, layout):
@@ -939,6 +919,14 @@ class BackgammonPlay(object):
             return self.moves == other.moves
         else:
             return NotImplemented
+
+    def __hash__(self):
+        """Generate an integer has for the play. (int)"""
+        return hash(tuple(self.moves))
+
+    def __iter__(self):
+        """Iterate over moves not including rolls. (iterator)"""
+        return (move[:2] for move in self.moves)
 
     def __len__(self):
         """Number of moves in the play. (int)"""
