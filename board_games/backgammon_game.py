@@ -355,11 +355,11 @@ class Backgammon(game.Game):
                     player.error('There is no valid move for the {} point.'.format(roll))
                     continue
                 # Bear off the piece
-                self.board.cells['out'].add_piece(self.board.cells[bear].remove_piece())
+                self.board.move(bear, 'out')
         # Continue the turn if there are still rolls to move.
         return self.rolls
 
-    def do_enter(self, argument):
+    def do_enter(self, argument): 
         """
         Bring a piece back into play from the bar. (bool)
 
@@ -375,7 +375,7 @@ class Backgammon(game.Game):
         except ValueError:
             player.error('Invalid argument to the enter command: {}.'.format(argument))
             return True
-        point = needed_roll - 1
+        point = needed_roll
         if piece == 'X':
             point = 23 - point
         # Check for valid roll.
@@ -383,22 +383,23 @@ class Backgammon(game.Game):
             player.error('You need to roll a {} to enter on that point.'.format(needed_roll))
             return True
         # Check for a piece to enter.
-        elif piece not in self.board.bar.piece:
+        elif piece not in self.board.cells['bar']:
             player.error('You do not have a piece on the bar.')
             return True
         # Check for a valid entry point.
-        end_cell = self.board.cells[(point,)]
+        end_cell = self.board.cells[point]
         if piece not in end_cell.piece and len(end_cell.piece) > 1:
             player.error('That point is blocked.')
             return True
         # Make the move.
-        capture = self.board.move((-1,), (point,))
+        capture = self.board.move('bar', point)
         self.rolls.remove(needed_roll)
         return self.rolls
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
         # !! incorrect for match play. Need +=, and maybe reset game.
+        # !! I should use scores to record gammon/backgammon. wld should be plain win or loss.
         # Check human win.
         human_win = self.check_win(self.pieces[self.human.name])
         if human_win:
@@ -446,19 +447,17 @@ class Backgammon(game.Game):
         move = player.ask_int_list('\nWhat is your move? ', low = 1, high = 24, valid_lens = [1, 2])
         if isinstance(move, str):
             return self.handle_cmd(move)
-        else:
-            move = [x - 1 for x in move]
         direction = {'X': -1 , 'O': 1}[player_piece]
         # Convert moves with just the end point.
         if len(move) == 1:
             possible = []
             for maybe in set(self.rolls):
-                start = move[0] - maybe * direction
-                if (start,) in self.board.cells and player_piece in self.board.cells[(start,)].piece:
+                start = move - maybe * direction
+                if start in self.board.cells and player_piece in self.board.cells[start]:
                     possible.append(start)
             if len(possible) == 1:
                 start = possible[0]
-                end = move[0]
+                end = move
             elif len(possible) > 1:
                 player.error('That move is ambiguous.')
                 return True
@@ -468,8 +467,8 @@ class Backgammon(game.Game):
         else:
             start, end = move
         # Get the details of the move.
-        start_pieces = self.board.cells[(start,)].piece
-        end_pieces = self.board.cells[(end,)].piece
+        start_pieces = self.board.cells[start].contents
+        end_pieces = self.board.cells[end].contents
         # Check for valid staring point.
         if not (start_pieces and start_pieces[0] == player_piece):
             player.error('You do not have a piece on that starting point.')
@@ -486,11 +485,11 @@ class Backgammon(game.Game):
         elif player_piece in self.board.bar.piece and start != -1:
             player.error('You re-enter your piece on the bar before making any other move.')
             return True
-        elif ((start,), (end,)) not in legal_moves:
+        elif (start, end) not in legal_moves:
             player.error('That move would not allow for the maximum possible play.')
         else:
             # Make the valid move
-            capture = self.board.move((start,), (end,))
+            capture = self.board.move(start, end)
             self.rolls.remove(abs(start - end))
         # Continue if there are still rolls to handle.
         return self.rolls
@@ -509,7 +508,7 @@ class Backgammon(game.Game):
     def set_up(self):
         """Set up the game. (None)"""
         # Set up the board.
-        self.board = BackgammonBoard((24,), self.layout)
+        self.board = BackgammonBoard(24, layout = self.layout)
         # Set up the players.
         self.bot = self.players[-1]
         self.pieces = {self.human.name: self.human_piece}
@@ -830,8 +829,9 @@ class BackgammonBoard(board.LineBoard):
         start: The location containing the piece to move. (Coordinate)
         end: The location to move the piece to. (Coordinate)
         """
-        if not (len(self.cells[end]) < 2 or self.cells[start].contents[0] != self.cells[end].contents[0]):
-            raise ValueError('Invalid backgammon move ({}/{}).'.format(start, end))
+        if not (len(self.cells[end]) < 2 or self.cells[start].contents[-1] != self.cells[end].contents[0]):
+            if end != 'out':
+                raise ValueError('Invalid backgammon move ({}/{}).'.format(start, end))
         capture = super(BackgammonBoard, self).move(start, end)
         self.cells['bar'].add_piece(capture)
         self.legal_plays = []
