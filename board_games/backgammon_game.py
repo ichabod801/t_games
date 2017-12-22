@@ -556,6 +556,8 @@ class BackgammonBoard(board.LineBoard):
         # Set up the board.
         super(BackgammonBoard, self).__init__(24, extra_cells = ['bar', 'out'])
         self.set_up(layout)
+        # Set up attributes
+        self.legal_plays = []
 
     def board_text(self, locations):
         """
@@ -617,17 +619,20 @@ class BackgammonBoard(board.LineBoard):
         """
         # Loop through the rolls.
         full_plays = []
+        from_cells = [point for point in self.cells if piece in self.cells[point]]
+        home = {'X': tuple(range(1, 7)), 'O': tuple(range(24, 18, -1))}[piece]
         for roll in set(rolls):
             # Get the rolls without the current roll.
             sub_rolls = rolls[:]
             sub_rolls.remove(roll)
             # Generate moves based on the phase of the game.
-            if piece in self.bar.piece:
+            if piece in self.cells['bar']:
                 full_plays = self.get_moves_enter(piece, moves, full_plays, sub_rolls, roll)
-            elif all([coord[0] in home or coord == self.out[piece].location for coord in from_cells]):
-                full_plays = self.get_moves_home(piece, moves, full_plays, sub_rolls, roll)
+            elif all([coord in home or coord == 'out' for coord in from_cells]):
+                full_plays = self.get_moves_home(piece, moves, full_plays, sub_rolls, roll, from_cells)
             else:
-                full_plays = self.get_moves_normal(piece, moves, full_plays, sub_rolls, roll)
+                full_plays = self.get_moves_normal(piece, moves, full_plays, sub_rolls, roll, from_cells)
+        return full_plays
 
     def get_moves_enter(self, piece, moves, full_plays, sub_rolls, roll):
         """
@@ -669,7 +674,7 @@ class BackgammonBoard(board.LineBoard):
         sub_board = self.copy(layout = ())
         capture = sub_board.move(point, end_point)
         # Add to the move to the moves so far.
-        new_moves = moves + [(point, end_point, roll)]
+        new_moves = moves + (point, end_point, roll)
         if sub_rolls:
             # Recurse if necessary
             sub_plays = sub_board.get_moves(piece, sub_rolls, new_moves)
@@ -684,7 +689,7 @@ class BackgammonBoard(board.LineBoard):
         # Return the moves back up the recursion.
         return full_plays
 
-    def get_moves_home(self, piece, moves, full_plays, sub_rolls, roll):
+    def get_moves_home(self, piece, moves, full_plays, sub_rolls, roll, from_cells):
         """
         Get the legal moves when all pieces are home. (list of BackgammonPlay)
 
@@ -694,6 +699,7 @@ class BackgammonBoard(board.LineBoard):
         full_plays: The plays already recorded. (list of BackgammonPlay)
         sub_rolls: The rolls to get moves for. (list of int)
         roll: The current roll being moved. (int)
+        from_cells: The points that pieces can move from. (list of int or str)
         """
         home = {'X': tuple(range(1, 7)), 'O': tuple(range(24, 18, -1))}[piece]
         direction = {'X': -1, 'O': 1}[piece]
@@ -720,7 +726,7 @@ class BackgammonBoard(board.LineBoard):
                     full_plays = self.get_moves_help(piece, start, end, moves, full_plays, sub_rolls, roll)
         return full_plays
 
-    def get_moves_normal(self, piece, moves, full_plays, sub_rolls, roll):
+    def get_moves_normal(self, piece, moves, full_plays, sub_rolls, roll, from_cells):
         """
         Generate legal moves during normal play. (list of BackgammonPlay)
 
@@ -730,8 +736,8 @@ class BackgammonBoard(board.LineBoard):
         full_plays: The plays already recorded. (list of BackgammonPlay)
         sub_rolls: The rolls to get moves for. (list of int)
         roll: The current roll being moved. (int)
+        from_cells: The points that pieces can move from. (list of int or str)
         """
-        from_cells = [point for point in self.cells if piece in self.cells[point]]
         direction = {'X': -1, 'O': 1}[piece]
         for point in from_cells:
             end_point = point + roll * direction

@@ -418,7 +418,7 @@ class Board(object):
         # store the captured piece
         capture = self.cells[end].get_piece()
         # move the piece
-        mover = self.cells[start].remove_piece(start, end, piece)
+        mover = self.cells[start].remove_piece(piece)
         self.cells[end].clear()
         self.cells[end].add_piece(mover)
         return capture
@@ -545,7 +545,7 @@ class LineBoard(Board):
         self.cell_class = cell_class
         super(LineBoard, self).__init__(range(1, length + 1), cell_class)
         for location in extra_cells:
-            self.cells[location] = cell_class()
+            self.cells[location] = cell_class(location)
 
     def copy(self, **kwargs):
         """Create a copy of the board. (GridBoard)"""

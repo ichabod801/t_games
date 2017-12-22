@@ -25,7 +25,7 @@ class PlayTest(unittest.TestCase):
         """Set up the board for a test. (None)"""
         self.board = bg.BackgammonBoard(layout = layout)
         if bar:
-            self.board.bar.piece = bar
+            self.board.cells['bar'].add_piece(bar)
         for start, end in moves:
             self.board.move(start, end)
         raw_moves = self.board.get_plays(piece, rolls)
@@ -34,31 +34,31 @@ class PlayTest(unittest.TestCase):
     def testBear(self):
         """Test bearing off moves."""
         self.setBoard(layout = ((6, 2), (5, 2)))
-        check = [(((19,), (-3,)), ((18,), (-3,))), (((18,), (23,)), ((18,), (-3,)))]
+        check = [((19, 'out'), (18, 'out')), ((18, 23), (18, 'out'))]
         self.assertEqual(set(check), self.legal_moves)
 
     def testBearOver(self):
         """Test bearing off with over rolls."""
         self.setBoard(layout = ((4, 1), (3, 2)))
-        check = [(((20,), (-3,)), ((21,), (-3,)))]
+        check = [((20, 'out'), (21, 'out'))]
         self.assertEqual(set(check), self.legal_moves)
 
     def testBearPartial(self):
         """Test bearing off with empty point rolled."""
         self.setBoard(layout = ((6, 2), (4, 2)))
-        check = [(((18,), (23,)), ((18,), (-3,)))]
+        check = [((18, 23), (18, 'out'))]
         self.assertEqual(set(check), self.legal_moves)
 
     def testDoubles(self):
         """Test moves with doubles."""
         self.setBoard(layout = ((24, 1), (23, 1), (22, 1)), rolls = [1, 1, 1, 1])
-        check = [(((0,), (1,)), ((1,), (2,)), ((1,), (2,)), ((2,), (3,))), 
-            (((0,), (1,)), ((1,), (2,)), ((2,), (3,)), ((2,), (3,))), 
-            (((0,), (1,)), ((1,), (2,)), ((2,), (3,)), ((3,), (4,))), 
-            (((0,), (1,)), ((2,), (3,)), ((3,), (4,)), ((4,), (5,))), 
-            (((1,), (2,)), ((2,), (3,)), ((2,), (3,)), ((3,), (4,))), 
-            (((1,), (2,)), ((2,), (3,)), ((3,), (4,)), ((4,), (5,))), 
-            (((2,), (3,)), ((3,), (4,)), ((4,), (5,)), ((5,), (6,)))]
+        check = [((0, 1), (1, 2), (1, 2), (2, 3)), 
+            ((0, 1), (1, 2), (2, 3), (2, 3)), 
+            ((0, 1), (1, 2), (2, 3), (3, 4)), 
+            ((0, 1), (2, 3), (3, 4), (4, 5)), 
+            ((1, 2), (2, 3), (2, 3), (3, 4)), 
+            ((1, 2), (2, 3), (3, 4), (4, 5)), 
+            ((2, 3), (3, 4), (4, 5), (5, 6))]
         self.legal_moves = set([tuple(sorted(move)) for move in self.legal_moves])
         check = set(check)
         self.assertEqual(check, self.legal_moves)
@@ -67,14 +67,14 @@ class PlayTest(unittest.TestCase):
         """Test moves from the bar."""
         # !! test for X, it has the home board off by one
         self.setBoard(layout = ((7, 2),), bar = ['X', 'O'], rolls = [2, 3])
-        check = [(((-1,), (1,)), ((1,), (4,))), (((-1,), (1,)), ((17,), (20,))),
-            (((-1,), (2,)), ((2,), (4,))), (((-1,), (2,)), ((17,), (19,)))]
+        check = [((-1, 1), (1, 4)), ((-1, 1), (17, 20)),
+            ((-1, 2), (2, 4)), ((-1, 2), (17, 19))]
         self.assertEqual(set(check), self.legal_moves)
 
     def testEnterBlock(self):
         """Test moves from the bar with some moves blocked."""
         self.setBoard(layout = ((3, 2), (7, 2)), bar = ['X', 'O'], rolls = [2, 3])
-        check = [(((-1,), (1,)), ((1,), (4,))), (((-1,), (1,)), ((17,), (20,)))]
+        check = [((-1, 1), (1, 4)), ((-1, 1), (17, 20))]
         self.assertEqual(set(check), self.legal_moves)
 
     def testEnterNone(self):
@@ -90,34 +90,34 @@ class PlayTest(unittest.TestCase):
 
     def testPartial(self):
         """Test moves where only part of the move is legal."""
-        self.setBoard(layout = ((24, 1), (23, 1), (3, 2)), moves = [((23,), (22,))], rolls = [1, 1])
-        check = [(((0,), (1,)),)]
+        self.setBoard(layout = ((24, 1), (23, 1), (3, 2)), moves = [(24, 23)], rolls = [1, 1])
+        check = [((0, 1),)]
         self.assertEqual(set(check), self.legal_moves)
 
     def testStart(self):
         """Test the moves at the start of the game."""
         self.setBoard()
-        check = [(((11,), (16,)), ((0,), (6,))), (((11,), (16,)), ((11,), (17,))), 
-            (((11,), (16,)), ((16,), (22,))), (((16,), (21,)), ((0,), (6,))), 
-            (((16,), (21,)), ((11,), (17,))), (((16,), (21,)), ((16,), (22,))), 
-            (((0,), (6,)), ((6,), (11,))), (((11,), (17,)), ((17,), (22,)))]
+        check = [((11, 16), (0, 6)), ((11, 16), (11, 17)), 
+            ((11, 16), (16, 22)), ((16, 21), (0, 6)), 
+            ((16, 21), (11, 17)), ((16, 21), (16, 22)), 
+            ((0, 6), (6, 11)), ((11, 17), (17, 22))]
         check = set(check)
         self.assertEqual(check, self.legal_moves)
 
     def testStartBlock(self):
         """Test the starting moves with a simple block."""
-        self.setBoard(moves = [((12,), (6,)), ((7,), (6,))])
-        check = [(((11,), (16,)), ((11,), (17,))), (((11,), (16,)), ((16,), (22,))), 
-            (((16,), (21,)), ((11,), (17,))), (((16,), (21,)), ((16,), (22,))), 
-            (((11,), (17,)), ((17,), (22,)))]
+        self.setBoard(moves = [(13, 7), (8, 7)])
+        check = [((11, 16), (11, 17)), ((11, 16), (16, 22)), 
+            ((16, 21), (11, 17)), ((16, 21), (16, 22)), 
+            ((11, 17), (17, 22))]
         check = set(check)
         self.assertEqual(check, self.legal_moves)
 
     def testUseBothDice(self):
         """Test being required to use both dice."""
         layout = ((2, 2), (4, 2), (8, 2), (20, 1), (24, 2))
-        self.setBoard(layout = layout, moves = [((7,), (-2,)), ((7,), (-2,))])
-        self.assertNotIn((((-1,), (1,)),), self.legal_moves)
+        self.setBoard(layout = layout, moves = [(8, 'out'), (8, 'out')])
+        self.assertNotIn(((-1, 1),), self.legal_moves)
 
 
 if __name__ == '__main__':
