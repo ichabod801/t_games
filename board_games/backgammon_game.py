@@ -109,7 +109,7 @@ class BackgammonBot(player.Bot):
     A bot for a game of Backgammon(player.bot)
 
     Attributes:
-    held_moves: Moves planned but not yet made through ask. (list of tuple)
+    held_moves: Moves planned but not yet made through ask. (BackgammonPlay)
 
     Methods:
     eval_board: Evaluate a board position. (list of int)
@@ -129,9 +129,6 @@ class BackgammonBot(player.Bot):
         """
         # Respond to move requests.
         if prompt.strip() == 'What is your move?':
-            if self.held_moves:
-                # Play any planned moves.
-                move = self.held_moves.pop(0)
             if not self.held_moves:
                 # Evaluate all the legal plays.
                 possibles = []
@@ -143,10 +140,9 @@ class BackgammonBot(player.Bot):
                     possibles.append((self.eval_board(sub_board), play))
                 # Choose the play with the highest evaluation.
                 possibles.sort(reverse = True)
-                best = possibles[0][1]
-                # Set the held moves.
-                self.held_moves = iter(best) # !! need to figure out how to use
+                self.held_moves = possibles[0][1]
             # Return the move with the correct syntax.
+            move = self.held_moves.next_move()
             if move[1] == 'out':
                 point = move[0]
                 if point > 6:
@@ -155,7 +151,7 @@ class BackgammonBot(player.Bot):
             elif move[0] == 'bar':
                 return 'enter {}'.format(move[1])
             else:
-                return '{} {}'.format(*move)
+                return '{} {}'.format(move[0], move[1])
         # Respond to no-move notifications.
         elif prompt.startswith('You have no legal moves'):
             self.game.human.tell('{} has no legal moves.'.format(self.name))
@@ -221,7 +217,7 @@ class BackgammonBot(player.Bot):
                         offcell = board.offset(blot, (offset * foe_direction,))
                     except KeyError:
                         break
-                    if foe_piece in offcell.piece:
+                    if foe_piece in offcell:
                         if offset < 7:
                             direct_hits[piece] += 1
                         if offset > 1:
@@ -239,7 +235,7 @@ class BackgammonBot(player.Bot):
 
     def set_up(self):
         """Set up the bot. (None)"""
-        self.held_moves = []
+        self.held_moves = BackgammonPlay()
         self.piece = self.game.pieces[self.name]
 
     def tell(self, text):
@@ -296,11 +292,16 @@ class Backgammon(game.Game):
         other_piece = 'XO'['OX'.index(piece)]
         result = 0
         # Check for win.
-        if len(self.board.out[piece].piece) == 15:
+        if self.board.cells['out'].count(piece) == 15:
             result = self.doubling_die
             # Check for gammon/backgammon.
-            if not len(self.board.out[other_piece].piece):
-                if other_piece in self.board.bar.piece: # !! or in opponent's home
+            if other_piece not in self.board.cells['out']:
+                if piece == 'X':
+                    home = range(1, 7)
+                else:
+                    home = range(19, 25)
+                home_pieces = sum([self.board.cells[point].contents for point in home], [])
+                if other_piece in self.board.cells['bar'] or other_piece in home_pieces:
                     result *= 3
                 else:
                     result *= 2
@@ -321,28 +322,27 @@ class Backgammon(game.Game):
         if words[0].lower() == 'off':
             words = words[1:]
         try:
-            points = [int(word) for word in words]
+            bears = [int(word) for word in words]
         except ValueError:
             # Warn on bad arguments.
             player.error('Invalid argument to the bear command: {}.'.format(argument))
             return True
-        locations = [loc for loc, cell in self.board.cells.items() if piece in cell.piece and loc >= (0,)]
+        points = [loc for loc, cell in self.board.cells.items() if piece in cell and isinstance(loc, int)]
         # Check for all pieces in the player's home.
-        if (piece == 'X' and max(locations) > (5,)) or (piece == 'O' and min(locations) < (18,)):
+        if (piece == 'X' and max(points) > 5) or (piece == 'O' and min(points) < 18):
             player.error('You do not have all of your pieces in your home yet.')
         # Check for captured piece
-        elif piece in self.board.bar.piece:
+        elif piece in self.board.cells['bar']:
             player.error('You still have a piece on the bar.')
         else:
             # Play any legal moves
-            for point in points:
+            for bear in bears:
                 # Get the correct point
-                roll = point
-                point -= 1
-                if piece == 'O':
-                    point = 23 - point
+                roll = bear
+                if bear == 'O':
+                    bear = 23 - bear
                 # Check for a valid point
-                if not self.board.cells[(point,)].piece:
+                if not self.board.cells[bear]:
                     player.error('You do not have a piece on the {} point.'.format(roll))
                     continue
                 # Remove the correct roll.
@@ -355,7 +355,7 @@ class Backgammon(game.Game):
                     player.error('There is no valid move for the {} point.'.format(roll))
                     continue
                 # Bear off the piece
-                self.board.out[piece].piece.append(self.board.cells[(point,)].piece.pop())
+                self.board.cells['out'].add_piece(self.board.cells[bear].remove_piece())
         # Continue the turn if there are still rolls to move.
         return self.rolls
 
@@ -908,6 +908,10 @@ class BackgammonPlay(object):
         else:
             return NotImplemented
 
+    def __bool__(self):
+        """Are there any moves left? (bool)"""
+        return bool(self.moves)
+
     def __eq__(self, other):
         """
         Check for equality between moves. (bool)
@@ -944,6 +948,10 @@ class BackgammonPlay(object):
         self.moves.append((start, end, roll))
         self.moves.sort()
         self.total_roll += roll
+
+    def next_move(self):
+        """Return a move to make. (tuple)"""
+        self.moves.pop(0)
 
 
 if __name__ == '__main__':
