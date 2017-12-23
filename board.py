@@ -167,7 +167,7 @@ class MultiCell(BoardCell):
     __repr__
     """
 
-    def __init__(self, location, pieces = [], empty = ' '):
+    def __init__(self, location, pieces = None, empty = ' '):
         """
         Initialize the cell. (None)
 
@@ -177,8 +177,11 @@ class MultiCell(BoardCell):
         empty: How the cell looks when empty. (str)
         """
         self.location = location
-        self.contents = pieces
         self.empty = empty
+        if pieces is None:
+            self.contents = []
+        else:
+            self.contents = pieces
 
     def __contains__(self, other):
         """

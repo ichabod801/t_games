@@ -4,7 +4,7 @@ backgammon_test.py
 Unit testing for backgammon_game.py.
 
 Classes:
-EndPointTest: Test moves made just providing an end point. (TestCase)
+MoveTest: Test movement on a BackgammonBoard. (TestCase)
 PlayTest: Test play generation. (TestCase)
 """
 
@@ -17,6 +17,30 @@ from tgames.board_games import backgammon_game as bg
 from tgames import player as player
 
 
+class MoveTest(unittest.TestCase):
+    """Test movement on a BackgammonBoard. (TestCase)"""
+
+    def setUp(self):
+        """Set up with a standard board. (None)"""
+        self.board = bg.BackgammonBoard()
+        print('new board', id(self.board))
+
+    #@unittest.skip('Checking board indenpendence.')
+    def testBasic(self):
+        """Test a basic move."""
+        self.board.move(13, 7)
+        self.assertEqual(['X'], self.board.cells[7].contents)
+        self.assertEqual(['X', 'X', 'X', 'X'], self.board.cells[13].contents)
+
+    def testCapture(self):
+        """Test capture."""
+        self.board.move(13, 7)
+        self.board.move(1, 7)
+        self.assertEqual(['O'], self.board.cells[7].contents)
+        self.assertEqual(['X'], self.board.cells['bar'].contents)
+
+
+@unittest.skip('Pending more basic testing.')
 class PlayTest(unittest.TestCase):
     """Test play generation. (TestCase)"""
 
