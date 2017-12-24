@@ -17,6 +17,26 @@ from tgames.board_games import backgammon_game as bg
 from tgames import player as player
 
 
+PRINT_START = """  1 1 1 1 1 1   1 2 2 2 2 2  
+  3 4 5 6 7 8   9 0 1 2 3 4  
++-------------+-------------+
+| X : . : O : | O : . : . X |
+| X : . : O : | O : . : . X |
+| X : . : O : | O : . : . : |
+| X : . : . : | O : . : . : |
+| X : . : . : | O : . : . : |
+|             |             |
+| O . : . : . | X . : . : . |
+| O . : . : . | X . : . : . |
+| O . : . X . | X . : . : . |
+| O . : . X . | X . : . : O |
+| O . : . X . | X . : . : O |
++-------------+-------------+
+  1 1 1                      
+  2 1 0 9 8 7   6 5 4 3 2 1  """
+
+
+#@unittest.skip('Pending even more basic testing.')
 class MoveTest(unittest.TestCase):
     """Test movement on a BackgammonBoard. (TestCase)"""
 
@@ -149,6 +169,22 @@ class PlayTest(unittest.TestCase):
         self.setBoard(layout = layout, moves = [(8, 'out'), (8, 'out')])
         self.assertNotIn(((-1, 1),), self.legal_moves)
 
+
+class PrintTest(unittest.TestCase):
+    """Test printing of the board on the screen. (TestCase)"""
+
+    def setUp(self):
+        """Set up the test case. (None)"""
+        self.board = bg.BackgammonBoard()
+
+    def testStart(self):
+        """Test printing the starting board."""
+        self.assertEqual(PRINT_START, self.board.get_text('X'))
+
+    def testBar(self):
+        """Test printing with a piece on the bar."""
+        self.board.cells['bar'].contents = ['X']
+        check = PRINT_START + '\n\nBar: X'
 
 if __name__ == '__main__':
     unittest.main()

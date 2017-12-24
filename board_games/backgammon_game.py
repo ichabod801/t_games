@@ -571,7 +571,7 @@ class BackgammonBoard(board.LineBoard):
         for row in range(5):
             row_text = '| '
             # Loop through the points.
-            for bar_check, location in enumerate(range(1, 25)):
+            for bar_check, location in enumerate(locations):
                 pieces = len(self.cells[location])
                 if pieces > row:
                     # Handle first row numbers.
@@ -794,14 +794,14 @@ class BackgammonBoard(board.LineBoard):
         # Get the details (for X).
         frame_high = FRAME_HIGH
         frame_low = FRAME_LOW
-        order_high = list(range(12, 24))
-        order_low = list(range(11, -1, -1))
+        order_high = list(range(13, 25))
+        order_low = list(range(12, 0, -1))
         # Convert the details if the text is for O
         if piece == 'O':
             frame_high = [line[::-1] for line in frame_high]
             frame_low = [line[::-1] for line in frame_low]
-            order_high = list(range(0, 12))
-            order_low = list(range(23, 11, -1))
+            order_high = list(range(1, 13))
+            order_low = list(range(24, 12, -1))
         # Get the top half of the board.
         lines = frame_high[:]
         lines.extend(self.board_text(order_high))
@@ -830,7 +830,8 @@ class BackgammonBoard(board.LineBoard):
             if end != 'out':
                 raise ValueError('Invalid backgammon move ({}/{}).'.format(start, end))
         capture = super(BackgammonBoard, self).move(start, end)
-        self.cells['bar'].add_piece(capture)
+        for piece in capture:
+            self.cells['bar'].add_piece(piece)
         self.legal_plays = []
         return capture
 
