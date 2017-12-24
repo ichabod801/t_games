@@ -23,7 +23,7 @@ class MoveTest(unittest.TestCase):
     def setUp(self):
         """Set up with a standard board. (None)"""
         self.board = bg.BackgammonBoard()
-        print('new board', id(self.board))
+        #print('new board', id(self.board))
 
     #@unittest.skip('Checking board indenpendence.')
     def testBasic(self):
@@ -32,9 +32,15 @@ class MoveTest(unittest.TestCase):
         self.assertEqual(['X'], self.board.cells[7].contents)
         self.assertEqual(['X', 'X', 'X', 'X'], self.board.cells[13].contents)
 
+    def testBasicClear(self):
+        """That that basic moves go away with a new board."""
+        self.assertEqual([], self.board.cells[7].contents)
+
     def testCapture(self):
         """Test capture."""
+        print(self.board.get_text('X'))
         self.board.move(13, 7)
+        print(self.board.get_text('X'))
         self.board.move(1, 7)
         self.assertEqual(['O'], self.board.cells[7].contents)
         self.assertEqual(['X'], self.board.cells['bar'].contents)

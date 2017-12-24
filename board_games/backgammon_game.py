@@ -603,15 +603,6 @@ class BackgammonBoard(board.LineBoard):
         recursion is done in get_moves_help after calls to one of the ohter
         get_moves methods.
 
-        !! The only good discussion of this I can find (www.bkgm.com, about BKG) says it generates
-        a tree of moves recursively. Then it scans the tree for legal moves by the maximum use of
-        roll criteria. I think what I have would work for that IF it recorded how much of the roll
-        was used for each play. Then I could scan for the max easily, and remove not max plays with
-        a list comprehension. I think an object for the plays would help track things separately.
-        This will require three levels of function: main, generate, recurse.
-
-        !! consider factoring out play generation for the three phases of the game.
-
         Parameters:
         piece: The piece symbol to get moves for. (str)
         rolls: The rolls to get moves for. (str)
