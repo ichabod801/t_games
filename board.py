@@ -71,7 +71,7 @@ class BoardCell(object):
 
     def __iter__(self):
         """Iterate over the piece in the cell. (iterator)"""
-        if self.piece is None:
+        if self.contents is None:
             return iter([])
         else:
             return iter([self.contents])
@@ -85,7 +85,7 @@ class BoardCell(object):
         Computer readable text representation. (str)
         """
         # keyword parameters
-        if self.piece:
+        if self.contents:
             piece_text = ', piece = {!r}'.format(self.contents)
         else:
             piece_text = ''
@@ -94,7 +94,7 @@ class BoardCell(object):
         else:
             empty_text = ''
         # complete and return
-        return '{}({}{}{})'.format(self.__class__.__name__, self.location, piece_text, empty_text)
+        return '{}({!r}{}{})'.format(self.__class__.__name__, self.location, piece_text, empty_text)
 
     def __str__(self):
         """
