@@ -213,7 +213,7 @@ class MultiCell(BoardCell):
         else:
             empty_text = ''
         # complete and return
-        return '{}({}{}{})'.format(self.__class__.__name__, self.location, piece_text, empty_text)
+        return '{}({!r}{}{})'.format(self.__class__.__name__, self.location, piece_text, empty_text)
 
     def __str__(self):
         """
