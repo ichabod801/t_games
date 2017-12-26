@@ -5,6 +5,8 @@ Unit testing of board.py.
 
 Classes:
 BoardCellTest: Tests of the board cell class. (TestCase)
+CoordinateTest: Tests of n-dimensional coordinates. (TestCase)
+MultiCellTest: Tests of the multi-cell class. (TestCase)
 """
 
 
@@ -119,6 +121,77 @@ class BoardCellTest(unittest.TestCase):
         """Test the string of an empty BoardCell."""
         self.cell.contents = None
         self.assertEqual(' ', str(self.cell))
+
+class CoordinateTest(unittest.TestCase):
+    """Tests of multi-dimensional coordinates. (TestCase)"""
+
+    def testAbs(self):
+        """Test the absolute value of coordinates."""
+        self.assertEqual(board.Coordinate((8, 1)), abs(board.Coordinate((-8, 1))))
+
+    def testAdd(self):
+        """Test addition of coordinates."""
+        a = board.Coordinate((8, 0, 1))
+        b = board.Coordinate((1, 2, 3))
+        self.assertEqual(board.Coordinate((9, 2, 4)), a + b)
+
+    def testAddNegative(self):
+        """Test addition of coordinates with a negative coordinate."""
+        a = board.Coordinate((8, 0, 1))
+        b = board.Coordinate((-1, -2, -3))
+        self.assertEqual(board.Coordinate((7, -2, -2)), a + b)
+
+    def testAddRight(self):
+        """Test addition of tuple to a coordinate on the right"""
+        total = (5, 4) + board.Coordinate((3, 2))
+        self.assertEqual(board.Coordinate((8, 6)), total)
+        self.assertTrue(isinstance(total, board.Coordinate))
+
+    def testAddTuple(self):
+        """Test adding a coordinate to a tuple."""
+        total = board.Coordinate((3, 2)) + (5, 4)
+        self.assertEqual(board.Coordinate((8, 6)), total)
+        self.assertTrue(isinstance(total, board.Coordinate))
+
+    def testMultiply(self):
+        """Test multiplying a coordinate by a scalar."""
+        product = board.Coordinate((3, 2)) * 5
+        self.assertEqual(board.Coordinate((15, 10)), product)
+        self.assertTrue(isinstance(product, board.Coordinate))
+
+    def testMultiplyRight(self):
+        """Test multiplying a coordinate on the right by a scalar."""
+        product = 5 * board.Coordinate((3, 2))
+        self.assertEqual(board.Coordinate((15, 10)), product)
+        self.assertTrue(isinstance(product, board.Coordinate))
+
+    def testNegate(self):
+        """Test negation of a coordinate"""
+        self.assertEqual(-board.Coordinate((1, -2, 3)), board.Coordinate((-1, 2, -3)))
+
+    def testSubtract(self):
+        """Test subtraction of coordinates."""
+        a = board.Coordinate((8, 0, 1))
+        b = board.Coordinate((1, 2, 3))
+        self.assertEqual(board.Coordinate((7, -2, -2)), a - b)
+
+    def testSubtractionNegative(self):
+        """Test subtraction of coordinates with a negative coordinate."""
+        a = board.Coordinate((8, 0, 1))
+        b = board.Coordinate((-1, -2, -3))
+        self.assertEqual(board.Coordinate((9, 2, 4)), a - b)
+
+    def testSubtractRight(self):
+        """Test subtraction of a tuple from a coordinate."""
+        total = (5, 4) - board.Coordinate((3, 2))
+        self.assertEqual(board.Coordinate((2, 2)), total)
+        self.assertTrue(isinstance(total, board.Coordinate))
+
+    def testSubtractTuple(self):
+        """Test subtraction of a coordinate from a tuple."""
+        total = board.Coordinate((3, 2)) - (5, 4)
+        self.assertEqual(board.Coordinate((-2, -2)), total)
+        self.assertTrue(isinstance(total, board.Coordinate))
 
 
 class MultiCellTest(unittest.TestCase):

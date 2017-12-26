@@ -334,7 +334,7 @@ class Coordinate(tuple):
         Parameters:
         other: The scale to multiply by. (int or float)
         """
-        return other * self
+        return self * other
 
     def __rsub__(self, other):
         """
