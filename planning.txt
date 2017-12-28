@@ -8,6 +8,7 @@ Flag for match play.
 rename player_turn to player_action
 have a Player.error() method distinct from Player.tell(), so bots know there's an error.
 	It's written, it needs implementation in games.
+Domino Dice (a dice pool of two six siders that uses double six dominos instead)
 A round of one per penultimate category, two for solitaire.
 	Backgammon
 		Must use higher die

@@ -393,6 +393,9 @@ class Interface(other_cmd.OtherCmd):
             self.human.tell('{}: {}'.format(letter, choice))
         self.human.tell()
         # Return the meaning of the menu letters.
+        menu_map = dict(pairs)
+        if 'Q' not in menu_map:
+            menu_map['Q'] = 'Quit'
         return dict(pairs)
 
     def show_scores(self, scores, score_type):

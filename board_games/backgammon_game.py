@@ -826,6 +826,7 @@ class BackgammonBoard(board.LineBoard):
         start: The location containing the piece to move. (Coordinate)
         end: The location to move the piece to. (Coordinate)
         """
+        # !! use safe displace.
         if not (len(self.cells[end]) < 2 or self.cells[start].contents[-1] != self.cells[end].contents[0]):
             if end != 'out':
                 raise ValueError('Invalid backgammon move ({}/{}).'.format(start, end))

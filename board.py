@@ -36,6 +36,7 @@ class BoardCell(object):
     Overridden Methods:
     __init__
     __contains__
+    __eq__
     __hash__
     __iter__
     __repr__
@@ -62,6 +63,17 @@ class BoardCell(object):
         other: The piece to check for. (object)
         """
         return self.contents == other
+
+    def __eq__(self, other):
+        """
+        Check for equality (of location and contents) with another cell. (bool)
+
+        Other: The piece to check equality for. (object)
+        """
+        if isinstance(other, BoardCell):
+            return self.location == other.location and self.contents == other.contents
+        else:
+            return NotImplemented
 
     def __hash__(self):
         """
@@ -243,10 +255,12 @@ class MultiCell(BoardCell):
         """
         return self.contents[:]
 
-    def clear(self, nothing = []):
+    def clear(self, nothing = None):
         """
         Remove any piece from the cell. (None)
         """
+        if nothing is None:
+            nothing = []
         self.contents = nothing
 
     def remove_piece(self, piece = None):
@@ -450,7 +464,7 @@ class Board(object):
         """
         return self.cells[cell + offset]
 
-    def place(self, piece, cell):
+    def place(self, cell, piece):
         """
         Place a piece in a cell. (None)
 
@@ -471,7 +485,7 @@ class Board(object):
         location: The location of the cell to check. (hashable)
         piece: The piece that would move to that spot. (object)
         """
-        return piece in self.cells[location] or len(self.cells[location]) < 2
+        return piece not in self.cells[location] and len(self.cells[location]) > 1
 
     def safe_displace(self, start, end, piece = None):
         """
