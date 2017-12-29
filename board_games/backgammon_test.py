@@ -36,16 +36,13 @@ PRINT_START = """  1 1 1 1 1 1   1 2 2 2 2 2
   2 1 0 9 8 7   6 5 4 3 2 1  """
 
 
-#@unittest.skip('Pending even more basic testing.')
 class MoveTest(unittest.TestCase):
     """Test movement on a BackgammonBoard. (TestCase)"""
 
     def setUp(self):
         """Set up with a standard board. (None)"""
         self.board = bg.BackgammonBoard()
-        #print('new board', id(self.board))
 
-    #@unittest.skip('Checking board indenpendence.')
     def testBasic(self):
         """Test a basic move."""
         self.board.move(13, 7)
@@ -58,9 +55,7 @@ class MoveTest(unittest.TestCase):
 
     def testCapture(self):
         """Test capture."""
-        print(self.board.get_text('X'))
         self.board.move(13, 7)
-        print(self.board.get_text('X'))
         self.board.move(1, 7)
         self.assertEqual(['O'], self.board.cells[7].contents)
         self.assertEqual(['X'], self.board.cells['bar'].contents)
@@ -185,6 +180,7 @@ class PrintTest(unittest.TestCase):
         """Test printing with a piece on the bar."""
         self.board.cells['bar'].contents = ['X']
         check = PRINT_START + '\n\nBar: X'
+        self.assertEqual(check, self.board.get_text('X'))
 
 if __name__ == '__main__':
     unittest.main()

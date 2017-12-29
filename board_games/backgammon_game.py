@@ -826,15 +826,24 @@ class BackgammonBoard(board.LineBoard):
         start: The location containing the piece to move. (Coordinate)
         end: The location to move the piece to. (Coordinate)
         """
-        # !! use safe displace.
-        if not (len(self.cells[end]) < 2 or self.cells[start].contents[-1] != self.cells[end].contents[0]):
-            if end != 'out':
-                raise ValueError('Invalid backgammon move ({}/{}).'.format(start, end))
-        capture = super(BackgammonBoard, self).move(start, end)
+        capture = self.safe_displace(start, end)
         for piece in capture:
             self.cells['bar'].add_piece(piece)
         self.legal_plays = []
         return capture
+
+    def safe(self, location, piece):
+        """
+        Determine if a cell is safe from capture. (bool)
+
+        Parameter:
+        location: The location of the cell to check. (hashable)
+        piece: The piece that would move to that spot. (object)
+        """
+        if isinstance(location, str):
+            return True
+        else:
+            return super(BackgammonBoard, self).safe(location, piece)
 
     def set_up(self, layout):
         """

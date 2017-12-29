@@ -500,6 +500,10 @@ class Board(object):
         if self.safe(end, mover):
             self.cells[start].add_piece(mover)
             raise ValueError('Attempt to capture safe cell {!r}.'.format(end))
+        end_pieces = self.cells[end].contents
+        if mover in end_pieces or not end_pieces:
+            self.cells[end].add_piece(mover)
+            return []
         else:
             capture = self.cells[end].get_piece()
             self.cells[end].clear()

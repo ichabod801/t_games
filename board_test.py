@@ -425,6 +425,24 @@ class LineBoardTest(unittest.TestCase):
         """Test safety of an unsafe space."""
         self.assertTrue(self.board.safe(2, '&'))
 
+    def testSafeNotDisCap(self):
+        """Test capture of safe displace with no capture."""
+        self.board.place(1, ['@'])
+        capture = self.board.safe_displace(1, 2)
+        self.assertEqual([], capture)
+
+    def testSafeNotDisEnd(self):
+        """Test end point of safe displace with no capture."""
+        self.board.place(1, ['@'])
+        capture = self.board.safe_displace(1, 2)
+        self.assertEqual(['@', '@', '@'], self.board.cells[2].contents)
+
+    def testSafeNotDisStart(self):
+        """Test starting point of safe displace with no capture."""
+        self.board.place(1, ['@'])
+        capture = self.board.safe_displace(1, 2)
+        self.assertEqual([], self.board.cells[1].contents)
+
     def testSafeSame(self):
         """Test safety of a square with the same piece."""
         self.assertFalse(self.board.safe(2, '@'))
