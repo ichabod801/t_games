@@ -406,10 +406,20 @@ class LineBoardTest(unittest.TestCase):
         self.board.place(2, ['?'])
         self.assertEqual(['?'], self.board.cells[2].contents)
 
-    def testSafeDisplaceRaise(self):
-        """Test safe displace capture."""
-        capture = self.board.safe_displace(4, 2)
-        self.assertRaises([], capture)
+    def testSafeDisplaceCapture(self):
+        """Test capture during a safe displace."""
+        capture = self.board.safe_displace(2, 4)
+        self.assertEqual(['&'], capture)
+
+    def testSafeDisplaceEnd(self):
+        """Test end square of a safe displace."""
+        capture = self.board.safe_displace(2, 4)
+        self.assertEqual(['@'], self.board.cells[4].contents)
+
+    def testSafeDisplaceStart(self):
+        """Test starting square of a safe displace."""
+        capture = self.board.safe_displace(2, 4)
+        self.assertEqual(['@'], self.board.cells[2].contents)
 
     def testSafeNot(self):
         """Test safety of an unsafe space."""
@@ -422,6 +432,23 @@ class LineBoardTest(unittest.TestCase):
     def testSafeSmall(self):
         """Test safety of a square with too few pieces."""
         self.assertFalse(self.board.safe(3, '@'))
+
+    def testUnsafeDisplaceRaise(self):
+        """Test unsafe displace raising an exception."""
+        # !! redo with assertRaises
+        try:
+            capture = self.board.safe_displace(4, 2)
+            self.assertTrue(False)
+        except ValueError:
+            self.assertTrue(True)
+
+    def testUnsafeDisplaceStart(self):
+        """Test unsafe displace retaining start position."""
+        try:
+            capture = self.board.safe_displace(4, 2)
+        except ValueError:
+            pass
+        self.assertEqual(['&'], self.board.cells[4].contents)
 
 class MultiCellTest(unittest.TestCase):
     """Tests of the multi-cell class. (TestCase)"""

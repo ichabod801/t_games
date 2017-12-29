@@ -496,15 +496,15 @@ class Board(object):
         end: The location to move the piece to. (Coordinate)
         piece: The piece to move. (object)
         """
-        mover = self.cells[start].remove_piece(start, end, piece)
-        if self.safe(start, mover):
+        mover = self.cells[start].remove_piece(piece)
+        if self.safe(end, mover):
+            self.cells[start].add_piece(mover)
+            raise ValueError('Attempt to capture safe cell {!r}.'.format(end))
+        else:
             capture = self.cells[end].get_piece()
             self.cells[end].clear()
             self.cells[end].add_piece(mover)
             return capture
-        else:
-            self.cells[start].add_piece(mover)
-            raise ValueError('Attempt to capture safe cell {!r}.'.format(start))
 
 
 class DimBoard(Board):
