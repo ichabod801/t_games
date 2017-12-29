@@ -468,14 +468,14 @@ class Board(object):
         """
         Place a piece in a cell. (None)
 
-        The piece parameter should be a key appropriate to cells on the board.
+        The cell parameter should be a key appropriate to cells on the board.
 
         Paramters:
         piece: The piece to place on the board. (See BoardCell)
         cell: The location to place the piece in. (Coordinate)
         """
         self.cells[cell].clear()
-        self.cells[cell].add_piece(piece)
+        self.cells[cell].contents = piece
 
     def safe(self, location, piece):
         """

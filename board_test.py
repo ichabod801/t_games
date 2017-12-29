@@ -356,69 +356,72 @@ class LineBoardTest(unittest.TestCase):
         new_board = self.board.copy()
         self.assertEqual(new_board.cells, self.board.cells)
 
+    def testDisplaceCapCap(self):
+        """Test the capture of displace movement with capture."""
+        capture = self.board.displace(2, 4)
+        self.assertEqual(['&'], capture)
+
+    def testDisplaceCapEnd(self):
+        """Test the end square of displace movement with capture."""
+        capture = self.board.displace(2, 4)
+        self.assertEqual(['@'], self.board.cells[4].contents)
+
+    def testDisplaceCapStart(self):
+        """Test the start square of displace movement with capture."""
+        capture = self.board.displace(2, 4)
+        self.assertEqual(['@'], self.board.cells[4].contents)
+
+    def testDisplaceNoCapCap(self):
+        """Test the capture of displace movement with no capture."""
+        capture = self.board.displace(2, 3)
+        self.assertEqual([], capture)
+
+    def testDisplaceNoCapEnd(self):
+        """Test the end square of displace movement with no capture."""
+        capture = self.board.displace(2, 3)
+        self.assertEqual(['@'], self.board.cells[3].contents)
+
+    def testDisplaceNoCapStart(self):
+        """Test the start square of displace movement with no capture."""
+        capture = self.board.displace(2, 3)
+        self.assertEqual(['@'], self.board.cells[2].contents)
+
     def testLocations(self):
         """Test the locations of a line board."""
         check = [1, 2, 3, 4, 5]
         locations = sorted(self.board.cells.keys())
         self.assertEqual(check, locations)
 
-    @unittest.skip('Not converted to LineBoard/MultiCell yet.')
-    def testDisplaceCapCap(self):
-        """Test the capture of displace movement with capture."""
-        capture = self.board.displace(2, 4)
-        self.assertEqual('&', capture)
-
-    @unittest.skip('Not converted to LineBoard/MultiCell yet.')
-    def testDisplaceCapEnd(self):
-        """Test the end square of displace movement with capture."""
-        capture = self.board.displace(2, 4)
-        self.assertEqual('@', self.board.cells[4].contents)
-
-    @unittest.skip('Not converted to LineBoard/MultiCell yet.')
-    def testDisplaceCapStart(self):
-        """Test the start square of displace movement with capture."""
-        capture = self.board.displace(2, 4)
-        self.assertIsNone(self.board.cells[2].contents)
-
-    @unittest.skip('Not converted to LineBoard/MultiCell yet.')
-    def testDisplaceNoCapCap(self):
-        """Test the capture of displace movement with no capture."""
-        capture = self.board.displace(2, 3)
-        self.assertIsNone(capture)
-
-    @unittest.skip('Not converted to LineBoard/MultiCell yet.')
-    def testDisplaceNoCapEnd(self):
-        """Test the end square of displace movement with no capture."""
-        capture = self.board.displace(2, 3)
-        self.assertEqual('@', self.board.cells[3].contents)
-
-    @unittest.skip('Not converted to LineBoard/MultiCell yet.')
-    def testDisplaceNoCapStart(self):
-        """Test the start square of displace movement with no capture."""
-        capture = self.board.displace(2, 3)
-        self.assertIsNone(self.board.cells[2].contents)
-
-    @unittest.skip('Not converted to LineBoard/MultiCell yet.')
     def testOffsetClass(self):
         """Test the class of an offset."""
-        self.assertTrue(isinstance(self.board.offset(2, 2), board.BoardCell))
+        self.assertTrue(isinstance(self.board.offset(2, 2), board.MultiCell))
 
-    @unittest.skip('Not converted to LineBoard/MultiCell yet.')
-    def testOffsetValue(self):
-        """Test the value of an offset."""
-        self.assertEqual(4, self.board.offset(2, 2).location)
-
-    @unittest.skip('Not converted to LineBoard/MultiCell yet.')
     def testPlaceEmpty(self):
         """Test placing a piece on an empty spot."""
-        self.board.place(3, '?')
-        self.assertEqual('?', self.board.cells[3].contents)
+        self.board.place(3, ['?'])
+        self.assertEqual(['?'], self.board.cells[3].contents)
 
-    @unittest.skip('Not converted to LineBoard/MultiCell yet.')
     def testPlaceNonEmpty(self):
         """Test placing a piece on a non-empty spot."""
-        self.board.place(2, '?')
-        self.assertEqual('?', self.board.cells[2].contents)
+        self.board.place(2, ['?'])
+        self.assertEqual(['?'], self.board.cells[2].contents)
+
+    def testSafeDisplaceRaise(self):
+        """Test safe displace capture."""
+        capture = self.board.safe_displace(4, 2)
+        self.assertRaises([], capture)
+
+    def testSafeNot(self):
+        """Test safety of an unsafe space."""
+        self.assertTrue(self.board.safe(2, '&'))
+
+    def testSafeSame(self):
+        """Test safety of a square with the same piece."""
+        self.assertFalse(self.board.safe(2, '@'))
+
+    def testSafeSmall(self):
+        """Test safety of a square with too few pieces."""
+        self.assertFalse(self.board.safe(3, '@'))
 
 class MultiCellTest(unittest.TestCase):
     """Tests of the multi-cell class. (TestCase)"""
