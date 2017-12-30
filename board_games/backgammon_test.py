@@ -88,8 +88,7 @@ class PlayTest(unittest.TestCase):
     def testBear(self):
         """Test bearing off moves."""
         self.setBoard(layout = ((6, 2), (5, 2)))
-        check = [((19, 'out'), (18, 'out')), ((18, 23), (18, 'out'))]
-        check = [make_play(play) for play in check]
+        check = [((20, 'out'), (19, 'out')), ((19, 24), (19, 'out'))]
         self.assertEqual(set(check), self.legal_moves)
 
     @unittest.skip('Pending conversion of indexes and tuples to BackgammonPlays.')

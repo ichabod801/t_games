@@ -715,7 +715,7 @@ class BackgammonBoard(board.LineBoard):
             # Generate moves within the home board.
             start = home[home_index]
             end = start + roll * direction
-            if 0 <= end <= 23:
+            if 1 <= end <= 24:
                 if piece in self.cells[start] and (piece in self.cells[end] or len(self.cells[end]) < 2):
                     full_plays = self.get_moves_help(piece, start, end, moves, full_plays, sub_rolls, roll)
         return full_plays
@@ -882,7 +882,11 @@ class BackgammonPlay(object):
     __add__
     __eq__
     __len__
+    __repr__
     """
+
+    from_int = {-1: 'bar', -2: 'out'}
+    to_int = {'bar': -1, 'out': -2}
 
     def __init__(self, start = 0, end = 0, roll = 0):
         """
@@ -897,7 +901,7 @@ class BackgammonPlay(object):
         """
         if start:
             # Set up with initial move.
-            self.moves = [(start, end, roll)]
+            self.moves = [(self.to_int.get(start, start), self.to_int.get(end, end), roll)]
             self.total_roll = roll
         else:
             # Set up without initial move.
@@ -916,6 +920,11 @@ class BackgammonPlay(object):
             new_play.moves = self.moves[:]
             new_play.total_roll = self.total_roll
             new_play.add_move(*other)
+            return new_play
+        elif isinstance(other, BackgammonPlay):
+            new_play = BackgammonPlay()
+            new_play.moves = sorted(self.moves + other.moves)
+            new_play.total_roll = self.total_roll + other.total_roll
             return new_play
         else:
             return NotImplemented
@@ -938,7 +947,7 @@ class BackgammonPlay(object):
 
     def __hash__(self):
         """Generate an integer has for the play. (int)"""
-        return hash(tuple(self.moves))
+        return hash(tuple(sorted(self.moves, key = move_key)))
 
     def __iter__(self):
         """Iterate over moves not including rolls. (iterator)"""
@@ -947,6 +956,10 @@ class BackgammonPlay(object):
     def __len__(self):
         """Number of moves in the play. (int)"""
         return len(self.moves)
+
+    def __repr__(self):
+        """Computer readable text representation. (str)"""
+        return '<BackgammonPlay {!r}>'.format(self.moves)
 
     def add_move(self, start = 0, end = 0, roll = 0):
         """
@@ -957,13 +970,14 @@ class BackgammonPlay(object):
         end: the end point of the move. (int or str)
         roll: the roll used for the move. (int)
         """
-        self.moves.append((start, end, roll))
-        self.moves.sort(key = lambda move: move_key(move))
+        self.moves.append((self.to_int.get(start, start), self.to_int.get(end, end), roll))
+        self.moves.sort()
         self.total_roll += roll
 
     def next_move(self):
         """Return a move to make. (tuple)"""
-        self.moves.pop(0)
+        move = self.moves.pop(0)
+        return tuple([self.from_int.get(x, x) for x in move])
 
 
 def move_key(move):
@@ -980,7 +994,6 @@ def move_key(move):
         else:
             key.append(-sum([ord(char) for char in part]))
     return key
-
 
 
 if __name__ == '__main__':
