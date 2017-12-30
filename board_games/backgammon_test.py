@@ -6,6 +6,9 @@ Unit testing for backgammon_game.py.
 Classes:
 MoveTest: Test movement on a BackgammonBoard. (TestCase)
 PlayTest: Test play generation. (TestCase)
+
+Functions:
+make_play: Make a BackgammonPlay from a list as tuples. (BackgammonPlay)
 """
 
 
@@ -38,6 +41,7 @@ PRINT_START = """  1 1 1 1 1 1   1 2 2 2 2 2
 
 class MoveTest(unittest.TestCase):
     """Test movement on a BackgammonBoard. (TestCase)"""
+    # Most of this should be covered by board_test.LineBoardTest.
 
     def setUp(self):
         """Set up with a standard board. (None)"""
@@ -53,6 +57,12 @@ class MoveTest(unittest.TestCase):
         """That that basic moves go away with a new board."""
         self.assertEqual([], self.board.cells[7].contents)
 
+    def testBear(self):
+        """Test bearing off the board."""
+        self.board.move(19, 'out')
+        self.assertEqual(['O'], self.board.cells['out'].contents)
+        self.assertEqual(['O', 'O', 'O', 'O'], self.board.cells[19].contents)
+
     def testCapture(self):
         """Test capture."""
         self.board.move(13, 7)
@@ -61,7 +71,6 @@ class MoveTest(unittest.TestCase):
         self.assertEqual(['X'], self.board.cells['bar'].contents)
 
 
-@unittest.skip('Pending more basic testing.')
 class PlayTest(unittest.TestCase):
     """Test play generation. (TestCase)"""
 
@@ -80,20 +89,24 @@ class PlayTest(unittest.TestCase):
         """Test bearing off moves."""
         self.setBoard(layout = ((6, 2), (5, 2)))
         check = [((19, 'out'), (18, 'out')), ((18, 23), (18, 'out'))]
+        check = [make_play(play) for play in check]
         self.assertEqual(set(check), self.legal_moves)
 
+    @unittest.skip('Pending conversion of indexes and tuples to BackgammonPlays.')
     def testBearOver(self):
         """Test bearing off with over rolls."""
         self.setBoard(layout = ((4, 1), (3, 2)))
         check = [((20, 'out'), (21, 'out'))]
         self.assertEqual(set(check), self.legal_moves)
 
+    @unittest.skip('Pending conversion of indexes and tuples to BackgammonPlays.')
     def testBearPartial(self):
         """Test bearing off with empty point rolled."""
         self.setBoard(layout = ((6, 2), (4, 2)))
         check = [((18, 23), (18, 'out'))]
         self.assertEqual(set(check), self.legal_moves)
 
+    @unittest.skip('Pending conversion of indexes and tuples to BackgammonPlays.')
     def testDoubles(self):
         """Test moves with doubles."""
         self.setBoard(layout = ((24, 1), (23, 1), (22, 1)), rolls = [1, 1, 1, 1])
@@ -108,6 +121,7 @@ class PlayTest(unittest.TestCase):
         check = set(check)
         self.assertEqual(check, self.legal_moves)
 
+    @unittest.skip('Pending conversion of indexes and tuples to BackgammonPlays.')
     def testEnter(self):
         """Test moves from the bar."""
         # !! test for X, it has the home board off by one
@@ -116,29 +130,34 @@ class PlayTest(unittest.TestCase):
             ((-1, 2), (2, 4)), ((-1, 2), (17, 19))]
         self.assertEqual(set(check), self.legal_moves)
 
+    @unittest.skip('Pending conversion of indexes and tuples to BackgammonPlays.')
     def testEnterBlock(self):
         """Test moves from the bar with some moves blocked."""
         self.setBoard(layout = ((3, 2), (7, 2)), bar = ['X', 'O'], rolls = [2, 3])
         check = [((-1, 1), (1, 4)), ((-1, 1), (17, 20))]
         self.assertEqual(set(check), self.legal_moves)
 
+    @unittest.skip('Pending conversion of indexes and tuples to BackgammonPlays.')
     def testEnterNone(self):
         """Test moves from the bar when none are legal."""
         self.setBoard(layout = ((18, 2), (6, 2), (5, 2), (4, 2), (3, 2), (2, 2), (1, 2)), rolls = [6, 6], 
             bar = ['X', 'O'])
         self.assertEqual(set(), self.legal_moves)
 
+    @unittest.skip('Pending conversion of indexes and tuples to BackgammonPlays.')
     def testNone(self):
         """Test a situation with no legal moves."""
         self.setBoard(layout = ((7, 2), (6, 2), (5, 2), (4, 2), (3, 2), (2, 2), (24, 2)), rolls = [6, 6])
         self.assertEqual(set(), self.legal_moves)
 
+    @unittest.skip('Pending conversion of indexes and tuples to BackgammonPlays.')
     def testPartial(self):
         """Test moves where only part of the move is legal."""
         self.setBoard(layout = ((24, 1), (23, 1), (3, 2)), moves = [(24, 23)], rolls = [1, 1])
         check = [((0, 1),)]
         self.assertEqual(set(check), self.legal_moves)
 
+    @unittest.skip('Pending conversion of indexes and tuples to BackgammonPlays.')
     def testStart(self):
         """Test the moves at the start of the game."""
         self.setBoard()
@@ -149,6 +168,7 @@ class PlayTest(unittest.TestCase):
         check = set(check)
         self.assertEqual(check, self.legal_moves)
 
+    @unittest.skip('Pending conversion of indexes and tuples to BackgammonPlays.')
     def testStartBlock(self):
         """Test the starting moves with a simple block."""
         self.setBoard(moves = [(13, 7), (8, 7)])
@@ -158,6 +178,7 @@ class PlayTest(unittest.TestCase):
         check = set(check)
         self.assertEqual(check, self.legal_moves)
 
+    @unittest.skip('Pending conversion of indexes and tuples to BackgammonPlays.')
     def testUseBothDice(self):
         """Test being required to use both dice."""
         layout = ((2, 2), (4, 2), (8, 2), (20, 1), (24, 2))
@@ -181,6 +202,20 @@ class PrintTest(unittest.TestCase):
         self.board.cells['bar'].contents = ['X']
         check = PRINT_START + '\n\nBar: X'
         self.assertEqual(check, self.board.get_text('X'))
+
+
+def make_play(moves):
+    """
+    Make a BackgammonPlay from a list of moves as tuples. (BackgammonPlay)
+
+    Parameters:
+    moves: A list of Backgammon moves as tuples. (tu)
+    """
+    play = bg.BackgammonPlay()
+    for move in moves:
+        play.add_move(*move)
+    return play
+
 
 if __name__ == '__main__':
     unittest.main()

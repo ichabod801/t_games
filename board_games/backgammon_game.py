@@ -20,6 +20,9 @@ Classes:
 BackgammonBot: A bot for a game of Backgammon(player.bot)
 Backgammon: A game of Backgammon. (game.Game)
 BackgammonBoard: A board for Backgammon. (board.LineBoard)
+
+Functions:
+move_key: Convert a move to a sortable key. (list of int)
 """
 
 
@@ -841,7 +844,7 @@ class BackgammonBoard(board.LineBoard):
         piece: The piece that would move to that spot. (object)
         """
         if isinstance(location, str):
-            return True
+            return False
         else:
             return super(BackgammonBoard, self).safe(location, piece)
 
@@ -906,13 +909,14 @@ class BackgammonPlay(object):
         Add a new move to the play. (BackgammonPlay)
 
         Parameters:
-        other: A move to add. (tuple or str or int)
+        other: A move to add. (tuple of str or int)
         """
         if isinstance(other, tuple) and len(other) == 3:
             new_play = BackgammonPlay()
             new_play.moves = self.moves[:]
             new_play.total_roll = self.total_roll
             new_play.add_move(*other)
+            return new_play
         else:
             return NotImplemented
 
@@ -954,12 +958,29 @@ class BackgammonPlay(object):
         roll: the roll used for the move. (int)
         """
         self.moves.append((start, end, roll))
-        self.moves.sort()
+        self.moves.sort(key = lambda move: move_key(move))
         self.total_roll += roll
 
     def next_move(self):
         """Return a move to make. (tuple)"""
         self.moves.pop(0)
+
+
+def move_key(move):
+    """
+    Convert a move to a sortable key. (list of int)
+
+    Parameters:
+    move: A Backgammon move (tuple of int or str)
+    """
+    key = []
+    for part in move:
+        if isinstance(part, int):
+            key.append(part)
+        else:
+            key.append(-sum([ord(char) for char in part]))
+    return key
+
 
 
 if __name__ == '__main__':
