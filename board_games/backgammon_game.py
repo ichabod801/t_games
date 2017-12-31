@@ -12,9 +12,13 @@ Terminology:
     piece off the board.
 
 Constants:
+BAR: The index of the bar. (int)
 CREDITS: The credits for the game. (str)
 FRAME_HIGH: The top of the frame for displaying the board. (list of str)
 FRAME_LOW: The bottom of the frame for displaying the board. (list of str)
+OUT: The index for pieces born off the board. (int)
+RULES: The rules of Backgammon. (str)
+START: The index for pieces not yet in the game. (int)
 
 Classes:
 BackgammonBot: A bot for a game of Backgammon(player.bot)
@@ -35,6 +39,9 @@ import tgames.options as options
 import tgames.player as player
 
 
+# The index of the bar.
+BAR = -1
+
 # The credits for the game.
 CREDITS = """
 Game Design: Traditional
@@ -48,6 +55,9 @@ FRAME_HIGH = ['  1 1 1 1 1 1   1 2 2 2 2 2  ', '  3 4 5 6 7 8   9 0 1 2 3 4  ',
 # The bottom of the frame for displaying the board.
 FRAME_LOW = ['+-------------+-------------+',  '  1 1 1                      ', 
     '  2 1 0 9 8 7   6 5 4 3 2 1  ']
+
+# The index for pieces born off the board.
+OUT = -2
 
 # The rules of Backgammon.
 RULES = """
@@ -106,6 +116,9 @@ layout: Which layout to use: standard or hyper. (l)
 match: The winning match score. Defaults to 1, or non-match play. (m)
 """
 
+# The index for pieces not yet in the game.
+START = -3
+
 
 class BackgammonBot(player.Bot):
     """
@@ -146,12 +159,12 @@ class BackgammonBot(player.Bot):
                 self.held_moves = possibles[0][1]
             # Return the move with the correct syntax.
             move = self.held_moves.next_move()
-            if move[1] == 'out':
+            if move[1] == OUT:
                 point = move[0]
                 if point > 6:
                     point = 25 - point
                 return 'bear {}'.format(point)
-            elif move[0] == 'bar':
+            elif move[0] == BAR:
                 return 'enter {}'.format(move[1])
             else:
                 return '{} {}'.format(move[0], move[1])
@@ -206,7 +219,7 @@ class BackgammonBot(player.Bot):
                 controlled[cell.contents[0]].append(cell.location)
             elif len(cell.contents) == 1:
                 blots[cell.contents[0]].append(cell.location)
-        captured = {piece: board.cells['bar'].contents.count(piece) for piece in 'XO'}
+        captured = {piece: board.cells[BAR].contents.count(piece) for piece in 'XO'}
         pip_count = {piece: board.get_pip_count(piece) for piece in 'XO'}
         # Calculate hits.
         direct_hits = {'X': 0, 'O': 0}
@@ -295,16 +308,16 @@ class Backgammon(game.Game):
         other_piece = 'XO'['OX'.index(piece)]
         result = 0
         # Check for win.
-        if self.board.cells['out'].count(piece) == 15:
+        if self.board.cells[OUT].count(piece) == 15:
             result = self.doubling_die
             # Check for gammon/backgammon.
-            if other_piece not in self.board.cells['out']:
+            if other_piece not in self.board.cells[OUT]:
                 if piece == 'X':
                     home = range(1, 7)
                 else:
                     home = range(19, 25)
                 home_pieces = sum([self.board.cells[point].contents for point in home], [])
-                if other_piece in self.board.cells['bar'] or other_piece in home_pieces:
+                if other_piece in self.board.cells[BAR] or other_piece in home_pieces:
                     result *= 3
                 else:
                     result *= 2
@@ -335,7 +348,7 @@ class Backgammon(game.Game):
         if (piece == 'X' and max(points) > 5) or (piece == 'O' and min(points) < 18):
             player.error('You do not have all of your pieces in your home yet.')
         # Check for captured piece
-        elif piece in self.board.cells['bar']:
+        elif piece in self.board.cells[BAR]:
             player.error('You still have a piece on the bar.')
         else:
             # Play any legal moves
@@ -358,7 +371,7 @@ class Backgammon(game.Game):
                     player.error('There is no valid move for the {} point.'.format(roll))
                     continue
                 # Bear off the piece
-                self.board.move(bear, 'out')
+                self.board.move(bear, OUT)
         # Continue the turn if there are still rolls to move.
         return self.rolls
 
@@ -386,7 +399,7 @@ class Backgammon(game.Game):
             player.error('You need to roll a {} to enter on that point.'.format(needed_roll))
             return True
         # Check for a piece to enter.
-        elif piece not in self.board.cells['bar']:
+        elif piece not in self.board.cells[BAR]:
             player.error('You do not have a piece on the bar.')
             return True
         # Check for a valid entry point.
@@ -395,7 +408,7 @@ class Backgammon(game.Game):
             player.error('That point is blocked.')
             return True
         # Make the move.
-        capture = self.board.move('bar', point)
+        capture = self.board.move(BAR, point)
         self.rolls.remove(needed_roll)
         return self.rolls
 
@@ -557,7 +570,7 @@ class BackgammonBoard(board.LineBoard):
         layout: The initial layout of the pieces. (tuple of tuple)
         """
         # Set up the board.
-        super(BackgammonBoard, self).__init__(24, extra_cells = ['bar', 'out'])
+        super(BackgammonBoard, self).__init__(24, extra_cells = [BAR, OUT])
         self.set_up(layout)
         # Set up attributes
         self.legal_plays = []
@@ -620,9 +633,9 @@ class BackgammonBoard(board.LineBoard):
             sub_rolls = rolls[:]
             sub_rolls.remove(roll)
             # Generate moves based on the phase of the game.
-            if piece in self.cells['bar']:
+            if piece in self.cells[BAR]:
                 full_plays = self.get_moves_enter(piece, moves, full_plays, sub_rolls, roll)
-            elif all([coord in home or coord == 'out' for coord in from_cells]):
+            elif all([coord in home or coord == OUT for coord in from_cells]):
                 full_plays = self.get_moves_home(piece, moves, full_plays, sub_rolls, roll, from_cells)
             else:
                 full_plays = self.get_moves_normal(piece, moves, full_plays, sub_rolls, roll, from_cells)
@@ -639,16 +652,16 @@ class BackgammonBoard(board.LineBoard):
         sub_rolls: The rolls to get moves for. (list of int)
         roll: The current roll being moved. (int)
         """
-        if piece != self.cells['bar'].contents[-1]:
-            self.cells['bar'].remove_piece(piece)
-            self.cells['bar'].add_piece(piece)
+        if piece != self.cells[BAR].contents[-1]:
+            self.cells[BAR].remove_piece(piece)
+            self.cells[BAR].add_piece(piece)
         if piece == 'X':
             end_coord = 25 - roll
         else:
             end_coord = roll
         end_cell = self.cells[end_coord]
         if piece in end_cell or len(end_cell) < 2:
-            full_plays = self.get_moves_help(piece, 'bar', end_coord, moves, full_plays, sub_rolls, roll)
+            full_plays = self.get_moves_help(piece, BAR, end_coord, moves, full_plays, sub_rolls, roll)
         return full_plays
 
     def get_moves_help(self, piece, point, end_point, moves, full_plays, sub_rolls, roll):
@@ -706,11 +719,11 @@ class BackgammonBoard(board.LineBoard):
             return full_plays
         if piece in self.cells[coord]:
             # Generate standard bearing off moves.
-            full_plays = self.get_moves_help(piece, coord, 'out', moves, full_plays, sub_rolls, roll)
+            full_plays = self.get_moves_help(piece, coord, OUT, moves, full_plays, sub_rolls, roll)
         elif roll > max_index + 1:
             # Generate bearing off moves with over roll.
             coord = home[max_index]
-            full_plays = self.get_moves_help(piece, coord, 'out', moves, full_plays, sub_rolls, roll)
+            full_plays = self.get_moves_help(piece, coord, OUT, moves, full_plays, sub_rolls, roll)
         for home_index in range(6):
             # Generate moves within the home board.
             start = home[home_index]
@@ -755,9 +768,9 @@ class BackgammonBoard(board.LineBoard):
         for cell in self.cells.values():
             # Get the correct pip count.
             point = cell.location
-            if point == 'bar':
+            if point == BAR:
                 point = 25
-            elif point == 'out':
+            elif point == OUT:
                 point = 0
             elif piece == 'O':
                 point = 25 - point
@@ -779,8 +792,8 @@ class BackgammonBoard(board.LineBoard):
         if not self.legal_plays:
             plays = self.get_moves(piece, rolls, BackgammonPlay())
             plays = list(set(plays))
-            max_roll = max(play.total_roll for play in plays)
-            max_moves = max(len(play) for play in plays)
+            max_roll = max(play.total_roll for play in plays) if plays else 0
+            max_moves = max(len(play) for play in plays) if plays else 0
             self.legal_plays = []
             for play in plays:
                 if play.total_roll == max_roll and len(play) == max_moves:
@@ -813,8 +826,8 @@ class BackgammonBoard(board.LineBoard):
         lines.extend(reversed(self.board_text(order_low)))
         lines.extend(frame_low)
         # Include a line for any pieces on the bar.
-        if self.cells['bar'].contents:
-            lines.extend(['', 'Bar: {}'.format(''.join(self.cells['bar'].contents))])
+        if self.cells[BAR].contents:
+            lines.extend(['', 'Bar: {}'.format(''.join(self.cells[BAR].contents))])
         # Return the text.
         return '\n'.join(lines)
 
@@ -831,7 +844,7 @@ class BackgammonBoard(board.LineBoard):
         """
         capture = self.safe_displace(start, end)
         for piece in capture:
-            self.cells['bar'].add_piece(piece)
+            self.cells[BAR].add_piece(piece)
         self.legal_plays = []
         return capture
 
@@ -867,6 +880,8 @@ class BackgammonPlay(object):
     """
     A possible play (set of moves) in Backgammon. (object)
 
+    !! consider having a sorted_moves attribute for efficiency.
+
     The moves attribute is a tuple of three integers: the start point of the move,
     the end point of the move, and the roll used.
 
@@ -885,9 +900,6 @@ class BackgammonPlay(object):
     __repr__
     """
 
-    from_int = {-1: 'bar', -2: 'out'}
-    to_int = {'bar': -1, 'out': -2}
-
     def __init__(self, start = 0, end = 0, roll = 0):
         """
         Set up the play, possibly with an intial move. (None)
@@ -901,7 +913,7 @@ class BackgammonPlay(object):
         """
         if start:
             # Set up with initial move.
-            self.moves = [(self.to_int.get(start, start), self.to_int.get(end, end), roll)]
+            self.moves = [(start, end, roll)]
             self.total_roll = roll
         else:
             # Set up without initial move.
@@ -941,13 +953,13 @@ class BackgammonPlay(object):
         other: The play to compare against. (BackgammonPlay)
         """
         if isinstance(other, BackgammonPlay):
-            return self.moves == other.moves
+            return sorted(self.moves) == sorted(other.moves)
         else:
             return NotImplemented
 
     def __hash__(self):
         """Generate an integer has for the play. (int)"""
-        return hash(tuple(sorted(self.moves, key = move_key)))
+        return hash(tuple(sorted(self.moves)))
 
     def __iter__(self):
         """Iterate over moves not including rolls. (iterator)"""
@@ -970,30 +982,12 @@ class BackgammonPlay(object):
         end: the end point of the move. (int or str)
         roll: the roll used for the move. (int)
         """
-        self.moves.append((self.to_int.get(start, start), self.to_int.get(end, end), roll))
-        self.moves.sort()
+        self.moves.append((start, end, roll))
         self.total_roll += roll
 
     def next_move(self):
         """Return a move to make. (tuple)"""
-        move = self.moves.pop(0)
-        return tuple([self.from_int.get(x, x) for x in move])
-
-
-def move_key(move):
-    """
-    Convert a move to a sortable key. (list of int)
-
-    Parameters:
-    move: A Backgammon move (tuple of int or str)
-    """
-    key = []
-    for part in move:
-        if isinstance(part, int):
-            key.append(part)
-        else:
-            key.append(-sum([ord(char) for char in part]))
-    return key
+        return self.moves.pop(0)
 
 
 if __name__ == '__main__':

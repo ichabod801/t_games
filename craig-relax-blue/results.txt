@@ -59,3 +59,11 @@ FreeCell,1,0,0,807,67,0,
 FreeCell,1,0,0,817,56,0,
 Pig,1,2,0,67,37,1,medium satan x
 FreeCell,1,0,0,785,80,0,
+FreeCell,1,0,0,819,56,0,
+Pig,3,0,0,100,31,1,medium satan x
+Solitaire Dice,1,0,0,920,48,0,
+FreeCell,1,0,0,815,53,0,
+Pig,0,3,0,79,37,1,medium satan x
+Pig,2,1,0,77,42,1,medium satan x
+FreeCell,1,0,0,816,46,0,
+Solitaire Dice,1,0,0,580,44,0,
