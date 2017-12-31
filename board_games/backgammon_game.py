@@ -345,7 +345,7 @@ class Backgammon(game.Game):
             return True
         points = [loc for loc, cell in self.board.cells.items() if piece in cell and isinstance(loc, int)]
         # Check for all pieces in the player's home.
-        if (piece == 'X' and max(points) > 5) or (piece == 'O' and min(points) < 18):
+        if (piece == 'X' and max(points) > 6) or (piece == 'O' and min(points) < 19):
             player.error('You do not have all of your pieces in your home yet.')
         # Check for captured piece
         elif piece in self.board.cells[BAR]:
@@ -393,7 +393,7 @@ class Backgammon(game.Game):
             return True
         point = needed_roll
         if piece == 'X':
-            point = 23 - point
+            point = 25 - point
         # Check for valid roll.
         if needed_roll not in self.rolls:
             player.error('You need to roll a {} to enter on that point.'.format(needed_roll))
@@ -404,7 +404,7 @@ class Backgammon(game.Game):
             return True
         # Check for a valid entry point.
         end_cell = self.board.cells[point]
-        if piece not in end_cell.piece and len(end_cell.piece) > 1:
+        if piece not in end_cell and len(end_cell) > 1:
             player.error('That point is blocked.')
             return True
         # Make the move.
@@ -498,8 +498,8 @@ class Backgammon(game.Game):
             player.error('That end point is blocked.')
             return True
         # Check for a piece on the bar.
-        elif player_piece in self.board.bar.piece and start != -1:
-            player.error('You re-enter your piece on the bar before making any other move.')
+        elif player_piece in self.board.cells[BAR].contents and start != BAR:
+            player.error('You must re-enter your piece on the bar before making any other move.')
             return True
         elif (start, end) not in legal_moves:
             player.error('That move would not allow for the maximum possible play.')

@@ -3,6 +3,8 @@ board_test.py
 
 Unit testing of board.py.
 
+!! needs tests for count method of BoardCell and MultiCell.
+
 Classes:
 BoardTest: Tests of the parent Board class. (TestCase)
 BoardCellTest: Tests of the board cell class. (TestCase)

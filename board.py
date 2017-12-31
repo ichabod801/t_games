@@ -144,6 +144,15 @@ class BoardCell(object):
         """
         return self.contents
 
+    def count(self, piece):
+        """
+        Count the number of times a piece is in the cell. (int)
+
+        Parameters:
+        piece: The piece to count. (object)
+        """
+        return self.board.contents == piece
+
     def get_piece(self):
         """Get the cell's piece. (object)"""
         return self.contents
@@ -247,6 +256,14 @@ class MultiCell(BoardCell):
         """
         self.contents.append(piece)
 
+    def clear(self, nothing = None):
+        """
+        Remove any piece from the cell. (None)
+        """
+        if nothing is None:
+            nothing = []
+        self.contents = nothing
+
     def copy_piece(self):
         """
         Copy the piece in the cell. (object)
@@ -255,13 +272,14 @@ class MultiCell(BoardCell):
         """
         return self.contents[:]
 
-    def clear(self, nothing = None):
+    def count(self, piece):
         """
-        Remove any piece from the cell. (None)
+        Count the number of times a piece is in the cell. (int)
+
+        Parameters:
+        piece: The piece to count. (object)
         """
-        if nothing is None:
-            nothing = []
-        self.contents = nothing
+        return self.contents.count(piece)
 
     def remove_piece(self, piece = None):
         """
