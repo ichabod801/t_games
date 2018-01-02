@@ -151,7 +151,7 @@ class BoardCell(object):
         Parameters:
         piece: The piece to count. (object)
         """
-        return self.board.contents == piece
+        return self.contents == piece
 
     def get_piece(self):
         """Get the cell's piece. (object)"""

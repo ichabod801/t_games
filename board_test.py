@@ -3,8 +3,6 @@ board_test.py
 
 Unit testing of board.py.
 
-!! needs tests for count method of BoardCell and MultiCell.
-
 Classes:
 BoardTest: Tests of the parent Board class. (TestCase)
 BoardCellTest: Tests of the board cell class. (TestCase)
@@ -125,6 +123,19 @@ class BoardCellTest(unittest.TestCase):
     def testContainsNot(self):
         """The failure of the in operator for BoardCell."""
         self.assertFalse('p' in self.cell)
+
+    def testCount(self):
+        """Test the count method of BoardCell."""
+        self.assertEqual(1, self.cell.count('@'))
+
+    def testCountNone(self):
+        """Test the count of an empty BoardCell."""
+        self.cell.clear()
+        self.assertEqual(0, self.cell.count('@'))
+
+    def testCountNot(self):
+        """Test the count of a piece not in a BoardCell"""
+        self.assertEqual(0, self.cell.count('&'))
 
     def testCopyIndependence(self):
         """Test that the copied piece is independent of the BoardCell piece."""
@@ -511,6 +522,19 @@ class MultiCellTest(unittest.TestCase):
     def testCopyValue(self):
         """Test that MultiCell.copy_piece gives the correct value."""
         self.assertEqual(['@', '@'], self.cell.copy_piece())
+
+    def testCount(self):
+        """Test the count method of a MultiCell."""
+        self.assertEqual(2, self.cell.count('@'))
+
+    def testCountEmpty(self):
+        """Test the count of an empty MultiCell."""
+        self.cell.clear()
+        self.assertEqual(0, self.cell.count('@'))
+
+    def testCountNot(self):
+        """Test the count of pice not in the MultiCell."""
+        self.assertEqual(0, self.cell.count('&'))
 
     def testGetPiece(self):
         """Test getting a piece from the MultiCell."""

@@ -172,6 +172,13 @@ class BackgammonBot(player.Bot):
         elif prompt.startswith('You have no legal moves'):
             self.game.human.tell('{} has no legal moves.'.format(self.name))
             return ''
+        elif prompt.startswith('Your opponent wants to double'):
+            my_pips = self.game.board.get_pip_count(self.piece)
+            their_pips = self.game.board.get_pip_count({'X': 'O', 'O': 'X'}[self.piece])
+            if their_pips > 8 and my_pips / their_pips > 0.75:
+                return '1'
+            else:
+                return '0'
         # Raise an error for any other question.
         else:
             raise ValueError('Unexpected question to BackgammonBot: {}'.format(prompt))
@@ -288,10 +295,12 @@ class Backgammon(game.Game):
     set_up
     """
 
-    aliases = {'b': 'bear', 'd': 'double', 'e': 'enter'}
+    aliases = {'b': 'bear', 'd': 'double', 'e': 'enter', 's': 'start'}
     categories = ['Board Games', 'Race Games']
     credits = CREDITS
-    layouts = {'hyper': ((24, 1), (23, 1), (22, 1)), 'standard': ((6, 5), (8, 3), (13, 5), (24, 2))}
+    layouts = {'hyper': ((24, 1), (23, 1), (22, 1)), 'long': ((24, 15),), 
+        'nack': ((6, 4), (8, 3), (13, 4), (23, 2), (24, 2)), 
+        'standard': ((6, 5), (8, 3), (13, 5), (24, 2))}
     name = 'Backgammon'
     num_options = 3
     rules = RULES
@@ -374,6 +383,35 @@ class Backgammon(game.Game):
                 self.board.move(bear, OUT)
         # Continue the turn if there are still rolls to move.
         return self.rolls
+
+    def do_double(self, argument):
+        """
+        Double the doubling die. (bool)
+
+        Parameters:
+        argument: The (ingored) argument to the command. (str)
+        """
+        # Get the current player.
+        player = self.players[self.player_index]
+        piece = self.pieces[player.name]
+        if self.doubling_status in ('', piece):
+            opponent = self.players[1 - self.player_index]
+            query = 'Your opponent wants to double the stakes to {}. Do you accept the new stakes?'
+            accept = opponent.ask(query.format(self.doubling_die * 2))
+            if accept.lower() in utility.YES:
+                self.doubling_die *= 2
+                self.doubling_status = {'X': 'O', 'O': 'X'}[piece]
+            else:
+                if player == self.human:
+                    self.force_end = 'loss'
+                    self.win_loss_draw[1] += self.doubling_die
+                else:
+                    self.force_end = 'win'
+                    self.win_loss_draw[0] += self.doubling_die
+                return False
+        else:
+            player.error("The doubling die is in your opponent's control")
+        return True
 
     def do_enter(self, argument): 
         """

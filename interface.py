@@ -444,15 +444,28 @@ class Interface(other_cmd.OtherCmd):
         player_wld = [0, 0, 0]
         # Loop through results storing totals and streak data.
         for name, win, loss, draw, score, turns, flags, settings in results:
-            if not loss and not win:
-                game_wld[2] += 1
-                wins.append(0)
-            elif not loss:
-                game_wld[0] += 1
-                wins.append(1)
+            if flags & 128:
+                # Handle match play.
+                if win > loss:
+                    game_wld[0] += 1
+                    wins.append(1)
+                elif loss > win:
+                    game_wld[1] += 1
+                    wins.append(0)
+                else:
+                    game_wld[2] += 1
+                    wins.append(-1)
             else:
-                game_wld[1] += 1
-                wins.append(-1)
+                # Handle single games.
+                if not loss and not win:
+                    game_wld[2] += 1
+                    wins.append(0)
+                elif not loss:
+                    game_wld[0] += 1
+                    wins.append(1)
+                else:
+                    game_wld[1] += 1
+                    wins.append(-1)
             player_wld[0] += win
             player_wld[1] += loss
             player_wld[2] += draw

@@ -41,6 +41,9 @@ class Game(OtherCmd):
         4: The game was lost via the quit command.
         8: The gipf command was used in this game.
         16: This game was started by the gipf command.
+        32: The xyzzy command was used in this game.
+        64: This game was started by the xyzzy command.
+        128: This game was won using the xyzzy command.
 
     Class Attributes:
     aka: Other names for the game. (list of str)

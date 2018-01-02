@@ -3,8 +3,6 @@ backgammon_test.py
 
 Unit testing for backgammon_game.py.
 
-!! needs test entering for X
-
 Classes:
 MoveTest: Test movement on a BackgammonBoard. (TestCase)
 PlayTest: Test play generation. (TestCase)
