@@ -44,6 +44,7 @@ class Game(OtherCmd):
         32: The xyzzy command was used in this game.
         64: This game was started by the xyzzy command.
         128: This game was won using the xyzzy command.
+        256: This game was played as a match.
 
     Class Attributes:
     aka: Other names for the game. (list of str)

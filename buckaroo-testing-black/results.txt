@@ -189,3 +189,7 @@ Backgammon,1,0,0,0,57,0,
 Backgammon,1,0,0,0,79,0,
 Backgammon,0,1,0,0,59,0,
 Backgammon,2,0,0,0,43,0,
+Rock-Paper-Scissors,1,2,1,0,8,1,
+Rock-Paper-Scissors,1,2,2,0,10,3,
+Rock-Paper-Scissors,0,5,4,0,18,1,match=5
+Rock-Paper-Scissors,2,1,1,0,8,1,
