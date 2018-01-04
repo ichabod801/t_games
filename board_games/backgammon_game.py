@@ -462,6 +462,9 @@ class Backgammon(game.Game):
         # Check bot win.
         if bot_win:
             self.win_loss_draw[1] = bot_win
+        # Reset the game.
+        if (human_win or bot_win) and self.match > 1:
+            self.reset()
         return max(self.win_loss_draw) >= self.match
 
     def get_rolls(self):
@@ -548,6 +551,22 @@ class Backgammon(game.Game):
         # Continue if there are still rolls to handle.
         return self.rolls
 
+    def reset(self):
+        """Reset the game state during match play."""
+        # Set up the board.
+        self.board = BackgammonBoard(24, layout = self.layout)
+        # Set up the dice.
+        self.doubling_die = 1
+        self.doubling_status = ''
+        self.dice = dice.Pool()
+        while self.dice.values[0] == self.dice.values[1]:
+            self.dice.roll()
+        if self.dice.values[0] < self.dice.values[1]:
+            self.players.reverse()
+        self.get_rolls()
+        # Set up the game.
+        self.turns = 0
+
     def set_options(self):
         """Define the options for the game. (None)"""
         self.option_set.default_bots = [(BackgammonBot, ())]
@@ -561,8 +580,6 @@ class Backgammon(game.Game):
 
     def set_up(self):
         """Set up the game. (None)"""
-        # Set up the board.
-        self.board = BackgammonBoard(24, layout = self.layout)
         # Set up the players.
         self.bot = self.players[-1]
         self.pieces = {self.human.name: self.human_piece}
@@ -570,15 +587,8 @@ class Backgammon(game.Game):
             self.pieces[self.bot.name] = 'O'
         else:
             self.pieces[self.bot.name] = 'X'
-        # Set up the dice.
-        self.doubling_die = 1
-        self.doubling_status = ''
-        self.dice = dice.Pool()
-        while self.dice.values[0] == self.dice.values[1]:
-            self.dice.roll()
-        if self.dice.values[0] < self.dice.values[1]:
-            self.players.reverse()
-        self.get_rolls()
+        # Set up the board and dice.
+        self.reset()
 
 
 class BackgammonBoard(board.LineBoard):
