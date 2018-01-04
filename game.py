@@ -315,7 +315,7 @@ class Game(OtherCmd):
         self.win_loss_draw = [0, 0, 0]
         self.turns = 0
         self.force_end = ''
-        self.flags &= 1 # reset everything but the options flag.
+        self.flags &= 257 # reset everything but the options and match play flags.
         self.set_up()
         for player in self.players:
             player.set_up()

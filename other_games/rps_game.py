@@ -277,10 +277,8 @@ class RPS(game.Game):
         super(RPS, self).handle_options()
         self.bot = self.bot_classes[self.bot]([self.human.name])
         self.players = [self.human, self.bot]
-        print('match =', self.match)
         if self.match > 1:
             self.flags |= 256
-        print('flags =', self.flags)
 
     def player_turn(self, player):
         """

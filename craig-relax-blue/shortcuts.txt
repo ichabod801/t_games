@@ -23,8 +23,6 @@ ntn	ninety nine / none
 ntno	ninety nine
 rol	roulette / none
 rolo	roulette
-rps	rock paper scissors / none
-rpso	rock paper scissors
 pig3	pig / x medium satan
 wum	wumpus / none
 wumo	wumpus
