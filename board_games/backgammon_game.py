@@ -365,7 +365,7 @@ class Backgammon(game.Game):
                 # Get the correct point
                 roll = bear
                 if bear == 'O':
-                    bear = 23 - bear
+                    bear = 25 - bear
                 # Check for a valid point
                 if not self.board.cells[bear]:
                     player.error('You do not have a piece on the {} point.'.format(roll))
