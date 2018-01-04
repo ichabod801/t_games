@@ -417,6 +417,7 @@ class Board(object):
         cell_class: The class for the cells on the board. (class)
         """
         self.cells = {location: cell_class(location) for location in locations}
+        self.extra_cells = []
 
     def __iter__(self):
         """
@@ -503,7 +504,8 @@ class Board(object):
         location: The location of the cell to check. (hashable)
         piece: The piece that would move to that spot. (object)
         """
-        return piece not in self.cells[location] and len(self.cells[location]) > 1
+        cell = self.cells[location]
+        return piece not in cell and len(cell) > 1 and location not in self.extra_cells
 
     def safe_displace(self, start, end, piece = None):
         """
@@ -583,7 +585,8 @@ class LineBoard(Board):
         self.length = length
         self.cell_class = cell_class
         super(LineBoard, self).__init__(range(1, length + 1), cell_class)
-        for location in extra_cells:
+        self.extra_cells = extra_cells
+        for location in self.extra_cells:
             self.cells[location] = cell_class(location)
 
     def copy(self, **kwargs):

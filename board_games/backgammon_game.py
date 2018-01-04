@@ -452,8 +452,6 @@ class Backgammon(game.Game):
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
-        # !! incorrect for match play. Need +=, and maybe reset game.
-        # !! I should use scores to record gammon/backgammon. wld should be plain win or loss.
         # Check human win.
         human_win = self.check_win(self.pieces[self.human.name])
         if human_win:
@@ -509,12 +507,12 @@ class Backgammon(game.Game):
         if len(move) == 1:
             possible = []
             for maybe in set(self.rolls):
-                start = move - maybe * direction
+                start = move[0] - maybe * direction
                 if start in self.board.cells and player_piece in self.board.cells[start]:
                     possible.append(start)
             if len(possible) == 1:
                 start = possible[0]
-                end = move
+                end = move[0]
             elif len(possible) > 1:
                 player.error('That move is ambiguous.')
                 return True
@@ -565,6 +563,8 @@ class Backgammon(game.Game):
             self.players.reverse()
         self.get_rolls()
         # Set up the game.
+        if self.match > 1:
+            self.flags |= 256
         self.turns = 0
 
     def set_options(self):
