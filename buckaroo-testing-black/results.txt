@@ -198,3 +198,4 @@ Rock-Paper-Scissors,2,3,0,0,10,257,match=5
 Rock-Paper-Scissors,2,3,4,0,18,257,match=5
 Rock-Paper-Scissors,3,2,1,0,12,257,match=5
 Backgammon,3,0,0,0,94,0,
+Backgammon,1,0,0,0,53,2,

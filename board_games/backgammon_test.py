@@ -67,6 +67,13 @@ class MoveTest(unittest.TestCase):
         self.assertEqual(['O'], self.board.cells[OUT].contents)
         self.assertEqual(['O', 'O', 'O', 'O'], self.board.cells[19].contents)
 
+    def testBearNoCapture(self):
+        """Test bearing off the board."""
+        self.board.move(19, OUT)
+        self.board.move(6, OUT)
+        self.assertEqual(['O', 'X'], self.board.cells[OUT].contents)
+        self.assertEqual([], self.board.cells[BAR].contents)
+
     def testCapture(self):
         """Test capture."""
         self.board.move(13, 7)

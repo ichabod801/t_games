@@ -344,6 +344,7 @@ class Backgammon(game.Game):
         Parameters:
         argument: The point or points to bear off from. (str)
         """
+        # !! you can bear an opponent's piece from your home.
         # Get the current player.
         player = self.players[self.player_index]
         piece = self.pieces[player.name]
@@ -372,7 +373,7 @@ class Backgammon(game.Game):
                 if bear == 'O':
                     bear = 25 - bear
                 # Check for a valid point
-                if not self.board.cells[bear]:
+                if piece not in self.board.cells[bear]:
                     player.error('You do not have a piece on the {} point.'.format(roll))
                     continue
                 # Remove the correct roll.
@@ -457,6 +458,7 @@ class Backgammon(game.Game):
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
+        # !! needs output
         # Check human win.
         human_win = self.check_win(self.pieces[self.human.name])
         if human_win:
