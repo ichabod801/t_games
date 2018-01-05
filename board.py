@@ -521,7 +521,7 @@ class Board(object):
             self.cells[start].add_piece(mover)
             raise ValueError('Attempt to capture safe cell {!r}.'.format(end))
         end_pieces = self.cells[end].contents
-        if mover in end_pieces or not end_pieces:
+        if mover in end_pieces or not end_pieces or end in self.extra_cells:
             self.cells[end].add_piece(mover)
             return []
         else:

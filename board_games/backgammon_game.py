@@ -10,6 +10,8 @@ Terminology:
 
 !! Ichabod's Rule: Instead of capturing, hitting a blot bears the moving
     piece off the board.
+!! At the end of the game the bot seems to be illegally/mistakenly moving
+    to -2 and capturing all my born off pieces.
 
 Constants:
 BAR: The index of the bar. (int)
@@ -163,10 +165,13 @@ class BackgammonBot(player.Bot):
                 point = move[0]
                 if point > 6:
                     point = 25 - point
+                print('bear', point)
                 return 'bear {}'.format(point)
             elif move[0] == BAR:
+                print('enter', move[1])
                 return 'enter {}'.format(move[1])
             else:
+                print('move', move)
                 return '{} {}'.format(move[0], move[1])
         # Respond to no-move notifications.
         elif prompt.startswith('You have no legal moves'):
