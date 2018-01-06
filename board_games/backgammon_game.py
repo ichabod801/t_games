@@ -10,8 +10,6 @@ Terminology:
 
 !! Ichabod's Rule: Instead of capturing, hitting a blot bears the moving
     piece off the board.
-!! At the end of the game the bot seems to be illegally/mistakenly moving
-    to -2 and capturing all my born off pieces.
 
 Constants:
 BAR: The index of the bar. (int)
@@ -165,13 +163,10 @@ class BackgammonBot(player.Bot):
                 point = move[0]
                 if point > 6:
                     point = 25 - point
-                print('bear', point)
                 return 'bear {}'.format(point)
             elif move[0] == BAR:
-                print('enter', move[1])
                 return 'enter {}'.format(move[1])
             else:
-                print('move', move)
                 return '{} {}'.format(move[0], move[1])
         # Respond to no-move notifications.
         elif prompt.startswith('You have no legal moves'):
@@ -225,7 +220,7 @@ class BackgammonBot(player.Bot):
         controlled = {'X': [], 'O': []}
         blots = {'X': [], 'O': []}
         for cell in board.cells.values():
-            if cell.location < (0,):
+            if cell.location < 0:
                 continue
             if len(cell.contents) > 1:
                 controlled[cell.contents[0]].append(cell.location)
@@ -242,7 +237,7 @@ class BackgammonBot(player.Bot):
             for blot in blots[piece]:
                 for offset in range(1, 13):
                     try:
-                        offcell = board.offset(blot, (offset * foe_direction,))
+                        offcell = board.offset(blot, offset * foe_direction)
                     except KeyError:
                         break
                     if foe_piece in offcell:
@@ -344,7 +339,7 @@ class Backgammon(game.Game):
         Parameters:
         argument: The point or points to bear off from. (str)
         """
-        # !! you can bear an opponent's piece from your home.
+        # !! bot can't bear
         # Get the current player.
         player = self.players[self.player_index]
         piece = self.pieces[player.name]
@@ -358,7 +353,7 @@ class Backgammon(game.Game):
             # Warn on bad arguments.
             player.error('Invalid argument to the bear command: {}.'.format(argument))
             return True
-        points = [loc for loc, cell in self.board.cells.items() if piece in cell and isinstance(loc, int)]
+        points = [loc for loc, cell in self.board.cells.items() if piece in cell and loc > 0]
         # Check for all pieces in the player's home.
         if (piece == 'X' and max(points) > 6) or (piece == 'O' and min(points) < 19):
             player.error('You do not have all of your pieces in your home yet.')
@@ -370,7 +365,7 @@ class Backgammon(game.Game):
             for bear in bears:
                 # Get the correct point
                 roll = bear
-                if bear == 'O':
+                if piece == 'O':
                     bear = 25 - bear
                 # Check for a valid point
                 if piece not in self.board.cells[bear]:
