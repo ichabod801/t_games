@@ -180,6 +180,13 @@ class BackgammonBot(player.Bot):
                 return '1'
             else:
                 return '0'
+        elif prompt.startswith('Would you like to double'):
+            my_pips = self.game.board.get_pip_count(self.piece)
+            their_pips = self.game.board.get_pip_count({'X': 'O', 'O': 'X'}[self.piece])
+            if their_pips > 8 and my_pips / their_pips > 0.75:
+                return '1'
+            else:
+                return '0'
         # Raise an error for any other question.
         else:
             raise ValueError('Unexpected question to BackgammonBot: {}'.format(prompt))
@@ -388,43 +395,6 @@ class Backgammon(game.Game):
         # Continue the turn if there are still rolls to move.
         return self.rolls
 
-    def do_double(self, argument):
-        """
-        Double the doubling die. (bool)
-
-        Parameters:
-        argument: The (ingored) argument to the command. (str)
-        """
-        # Get the current player.
-        player = self.players[self.player_index]
-        piece = self.pieces[player.name]
-        if self.doubling_status in ('', piece):
-            opponent = self.players[1 - self.player_index]
-            query = 'Your opponent wants to double the stakes to {}. Do you accept the new stakes?'
-            accept = opponent.ask(query.format(self.doubling_die * 2))
-            if accept.lower() in utility.YES:
-                self.doubling_die *= 2
-                self.doubling_status = {'X': 'O', 'O': 'X'}[piece]
-                message = 'Your opponent accepts the double, the doubling die is now at {}'
-                player.tell(message.format(self.doubling_die))
-            else:
-                player.tell('Your opponent refuses the double, you win.')
-                if player == self.human:
-                    self.win_loss_draw[1] += self.doubling_die
-                else:
-                    self.win_loss_draw[0] += self.doubling_die
-                # !! this part depends on who doubles
-                if self.win_loss_draw[0] >= self.match:
-                    self.force_end = 'win'
-                elif self.win_loss_draw[1] >= self.match:
-                    self.force_end = 'loss'
-                else:
-                    self.reset()
-                return False
-        else:
-            player.error("The doubling die is in your opponent's control")
-        return True
-
     def do_enter(self, argument): 
         """
         Bring a piece back into play from the bar. (bool)
@@ -477,6 +447,41 @@ class Backgammon(game.Game):
         # Keep playing
         return True
 
+    def double(self, player):
+        """
+        Double the doubling die. (bool)
+
+        Parameters:
+        player: The player doubling the stakes. (player.Player)
+        """
+        # Get the player's piece.
+        piece = self.pieces[player.name]
+        if self.doubling_status in ('', piece):
+            opponent = self.players[1 - self.player_index]
+            query = 'Your opponent wants to double the stakes to {}. Do you accept the new stakes? '
+            accept = opponent.ask(query.format(self.doubling_die * 2))
+            if accept.lower() in utility.YES:
+                self.doubling_die *= 2
+                self.doubling_status = {'X': 'O', 'O': 'X'}[piece]
+                message = 'Your opponent accepts the double, the doubling die is now at {}'
+                player.tell(message.format(self.doubling_die))
+            else:
+                player.tell('Your opponent refuses the double, you win.')
+                if player == self.human:
+                    self.win_loss_draw[1] += self.doubling_die
+                else:
+                    self.win_loss_draw[0] += self.doubling_die
+                if self.win_loss_draw[0] >= self.match:
+                    self.force_end = 'win'
+                elif self.win_loss_draw[1] >= self.match:
+                    self.force_end = 'loss'
+                else:
+                    self.reset()
+                return False
+        else:
+            player.error("The doubling die is in your opponent's control")
+        return True
+
     def game_over(self):
         """Check for the end of the game. (bool)"""
         # Check human win.
@@ -514,6 +519,12 @@ class Backgammon(game.Game):
         player.tell(self.board.get_text(player_piece))
         # Roll the dice if it's the start of the turn.
         if not self.rolls:
+            if self.doubling_status in ('', player_piece):
+                double = player.ask('Would you like to double the stakes (return to roll)? ')
+                if double in utility.YES:
+                    game_on = self.double(player)
+                    if not game_on:
+                        return False
             self.dice.roll()
             self.dice.sort()
             self.get_rolls()
