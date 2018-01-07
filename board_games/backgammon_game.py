@@ -327,8 +327,10 @@ class Backgammon(game.Game):
                     home = range(19, 25)
                 home_pieces = sum([self.board.cells[point].contents for point in home], [])
                 if other_piece in self.board.cells[BAR] or other_piece in home_pieces:
+                    self.human.tell('Backgammon!')
                     result *= 3
                 else:
+                    self.human.tell('Gammon!')
                     result *= 2
         return result 
 
@@ -458,12 +460,15 @@ class Backgammon(game.Game):
         human_win = self.check_win(self.pieces[self.human.name])
         if human_win:
             self.win_loss_draw[0] += human_win
+            self.human.tell('\nYou win!\n')
         bot_win = self.check_win(self.pieces[self.bot.name])
         # Check bot win.
         if bot_win:
             self.win_loss_draw[1] += bot_win
+            self.human.tell('\nYou lose. :(\n')
         # Reset the game.
         if (human_win or bot_win) and self.match > 1:
+            self.human.tell('The match score is {} to {}.\n'.format(*self.win_loss_draw[:2]))
             self.reset()
         return max(self.win_loss_draw) >= self.match
 

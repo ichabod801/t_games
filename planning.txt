@@ -12,7 +12,7 @@ Domino Dice (a dice pool of two six siders that uses double six dominos instead)
 Finish options_test.py
 A round of one per penultimate category, two for solitaire.
 	Backgammon
-		test match play and doubling die
+		test doubling die
 		genetic engineering
 	Forty Thieves
 	Bisley

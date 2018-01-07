@@ -201,3 +201,4 @@ Backgammon,3,0,0,0,94,0,
 Backgammon,1,0,0,0,53,2,
 Backgammon,3,0,0,0,71,0,
 Backgammon,1,0,0,0,44,0,
+Backgammon,6,0,0,0,0,259,match=5
