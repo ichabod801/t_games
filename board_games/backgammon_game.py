@@ -457,11 +457,11 @@ class Backgammon(game.Game):
         # Check human win.
         human_win = self.check_win(self.pieces[self.human.name])
         if human_win:
-            self.win_loss_draw[0] = human_win
+            self.win_loss_draw[0] += human_win
         bot_win = self.check_win(self.pieces[self.bot.name])
         # Check bot win.
         if bot_win:
-            self.win_loss_draw[1] = bot_win
+            self.win_loss_draw[1] += bot_win
         # Reset the game.
         if (human_win or bot_win) and self.match > 1:
             self.reset()

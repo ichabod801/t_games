@@ -12,7 +12,8 @@ Domino Dice (a dice pool of two six siders that uses double six dominos instead)
 Finish options_test.py
 A round of one per penultimate category, two for solitaire.
 	Backgammon
-		implement doubling die
+		test match play and doubling die
+		genetic engineering
 	Forty Thieves
 	Bisley
 	Cribbage
@@ -240,7 +241,7 @@ board/war: Star Trek text game, swords (melee), sorcery (wizard)
 dice/jeopardy: two die pig, piglett
 card/matching: memory
 cards/shedding: psychotic eights (crazy eights with random options, but 8s do something)
-card/solitaire/freecell: supercell (freecell with random down cards)
+card/solitaire: strategy, terrace, bouquet
 gambling/cards: poker, acey ducey
 gambling/other: horse races (bit races?).
 other/simulation: santa paravia, oregon trail, basket ball (robot wars?), lunar/lem/rocket (101)
@@ -250,8 +251,8 @@ puzzles: Sliding puzzle, mastermind, math quiz, mine sweeper
 tile games: Domino's, maj hong with characters (as graph of distribution to show heights).
 unknown: three musketeer's (gamut of games), fencing (101 basic games), darts (101), nim (101), boggle, mille bornes
 
-games planned: 39
-games needed:   8
+games planned: 41
+games needed:   6
 
 unformed ideas: rubik's sudoku? (2d, 9x9 rubik's sytle puzzle). OS hacking. Wizardry? Stratego?
 
@@ -261,6 +262,7 @@ other solitaire games: Yukon, Poker, Baker's Dozen, Good Measure, Little Spider,
 	accordion, fortune's favor, westfield (easy according to solitaire laboratory.com)
 	aces up (solitude site)
 	aces and kings, demons and thieves (by Thomas Warfield, pretty good solitaire site)
+	quadrille, sultan, single rail or westcliff, ... (review of Parlett's Solitaire)
 
 == Option Handling ==
 
