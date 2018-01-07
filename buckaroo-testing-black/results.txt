@@ -202,3 +202,6 @@ Backgammon,1,0,0,0,53,2,
 Backgammon,3,0,0,0,71,0,
 Backgammon,1,0,0,0,44,0,
 Backgammon,6,0,0,0,0,259,match=5
+Backgammon,2,1,0,0,3,259,match=4
+Backgammon,0,1,0,0,69,257,match=4
+Backgammon,7,0,0,0,0,257,match=4

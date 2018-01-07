@@ -37,6 +37,7 @@ import tgames.dice as dice
 import tgames.game as game
 import tgames.options as options
 import tgames.player as player
+import tgames.utility as utility
 
 
 # The index of the bar.
@@ -175,7 +176,7 @@ class BackgammonBot(player.Bot):
         elif prompt.startswith('Your opponent wants to double'):
             my_pips = self.game.board.get_pip_count(self.piece)
             their_pips = self.game.board.get_pip_count({'X': 'O', 'O': 'X'}[self.piece])
-            if their_pips > 8 and my_pips / their_pips > 0.75:
+            if their_pips > 8 and their_pips / my_pips > 0.75:
                 return '1'
             else:
                 return '0'
@@ -295,7 +296,7 @@ class Backgammon(game.Game):
     set_up
     """
 
-    aliases = {'b': 'bear', 'd': 'double', 'e': 'enter', 's': 'start'}
+    aliases = {'b': 'bear', 'd': 'double', 'e': 'enter', 'p': 'pips', 's': 'start'}
     categories = ['Board Games', 'Race Games']
     credits = CREDITS
     layouts = {'hyper': ((24, 1), (23, 1), (22, 1)), 'long': ((24, 15),), 
@@ -404,13 +405,21 @@ class Backgammon(game.Game):
             if accept.lower() in utility.YES:
                 self.doubling_die *= 2
                 self.doubling_status = {'X': 'O', 'O': 'X'}[piece]
+                message = 'Your opponent accepts the double, the doubling die is now at {}'
+                player.tell(message.format(self.doubling_die))
             else:
+                player.tell('Your opponent refuses the double, you win.')
                 if player == self.human:
-                    self.force_end = 'loss'
                     self.win_loss_draw[1] += self.doubling_die
                 else:
-                    self.force_end = 'win'
                     self.win_loss_draw[0] += self.doubling_die
+                # !! this part depends on who doubles
+                if self.win_loss_draw[0] >= self.match:
+                    self.force_end = 'win'
+                elif self.win_loss_draw[1] >= self.match:
+                    self.force_end = 'loss'
+                else:
+                    self.reset()
                 return False
         else:
             player.error("The doubling die is in your opponent's control")
@@ -453,9 +462,23 @@ class Backgammon(game.Game):
         self.rolls.remove(needed_roll)
         return self.rolls
 
+    def do_pips(self, argument):
+        """
+        Show the pip counts for the two players. (True)
+
+        Parameters:
+        argument: The (ingored) argument to the command. (str)
+        """
+        # Get the current player.
+        player = self.players[self.player_index]
+        # Show the pip counts.
+        player.tell('\nX:', self.board.get_pip_count('X'))
+        player.tell('O:', self.board.get_pip_count('O'), '\n')
+        # Keep playing
+        return True
+
     def game_over(self):
         """Check for the end of the game. (bool)"""
-        # !! needs output
         # Check human win.
         human_win = self.check_win(self.pieces[self.human.name])
         if human_win:

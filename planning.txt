@@ -14,6 +14,8 @@ A round of one per penultimate category, two for solitaire.
 	Backgammon
 		test doubling die
 		genetic engineering
+		gipf
+		variants
 	Forty Thieves
 	Bisley
 	Cribbage
@@ -254,7 +256,7 @@ unknown: three musketeer's (gamut of games), fencing (101 basic games), darts (1
 games planned: 41
 games needed:   6
 
-unformed ideas: rubik's sudoku? (2d, 9x9 rubik's sytle puzzle). OS hacking. Wizardry? Stratego?
+unformed ideas: rubik's sudoku? (2d, 9x9 rubik's sytle puzzle). OS hacking. Wizardry? Stratego? Coder (themed board game, start in high school, have to get cards/points to graduate, then under grad, and grad school, and work. You can skip to work after any graduation, but winning work is easier with more education, and work may send you back to school (obsolete card/space). Same track, but different card piles?),
 
 other solitaire games: Yukon, Poker, Baker's Dozen, Good Measure, Little Spider, Accordion [thespruce.com]
 	cruel, tripeaks [solitairecentral.com]
@@ -262,7 +264,7 @@ other solitaire games: Yukon, Poker, Baker's Dozen, Good Measure, Little Spider,
 	accordion, fortune's favor, westfield (easy according to solitaire laboratory.com)
 	aces up (solitude site)
 	aces and kings, demons and thieves (by Thomas Warfield, pretty good solitaire site)
-	quadrille, sultan, single rail or westcliff, ... (review of Parlett's Solitaire)
+	quadrille, sultan, single rail, olga, step-up, monte carlo, interregnum, labyrinth, flip flop, st. helena  ... (review of Parlett's Solitaire, up through Open games, picking an interesting one with odds in favor (if possible) from eachc chapter)
 
 == Option Handling ==
 
