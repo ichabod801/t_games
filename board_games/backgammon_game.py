@@ -22,6 +22,7 @@ START: The index for pieces not yet in the game. (int)
 
 Classes:
 BackgammonBot: A bot for a game of Backgammon(player.bot)
+BackGeneBot: A Backgammon bot for genetic engineering. (BackgammonBot)
 Backgammon: A game of Backgammon. (game.Game)
 BackgammonBoard: A board for Backgammon. (board.LineBoard)
 
@@ -123,7 +124,7 @@ START = -3
 
 class BackgammonBot(player.Bot):
     """
-    A bot for a game of Backgammon(player.bot)
+    A bot for a game of Backgammon(player.Bot)
 
     Attributes:
     held_moves: Moves planned but not yet made through ask. (BackgammonPlay)
@@ -154,7 +155,14 @@ class BackgammonBot(player.Bot):
                     sub_board = board.copy()
                     for move in play:
                         capture = sub_board.move(*move)
-                    possibles.append((self.eval_board(sub_board), play))
+                    features, points = self.describe_board(sub_board)
+                    if max_points['X'] + max_points['O'] > 24 or features[0]['X'] or features[0]['O']:
+                        phase = 'mixed'
+                    elif max_points['X'] < 6 and max_points['Y'] < 6:
+                        phase = 'stretch'
+                    else:
+                        phase = 'split'
+                    possibles.append((self.eval_board(board_features, phase), play))
                 # Choose the play with the highest evaluation.
                 possibles.sort(reverse = True)
                 self.held_moves = possibles[0][1]
@@ -174,16 +182,14 @@ class BackgammonBot(player.Bot):
             self.game.human.tell('{} has no legal moves.'.format(self.name))
             return ''
         elif prompt.startswith('Your opponent wants to double'):
-            my_pips = self.game.board.get_pip_count(self.piece)
-            their_pips = self.game.board.get_pip_count({'X': 'O', 'O': 'X'}[self.piece])
-            if their_pips > 8 and their_pips / my_pips > 0.75:
+            features, points = self.describe_board(self.game.board)
+            if eval_board(features, 'accept') > 0:
                 return '1'
             else:
                 return '0'
         elif prompt.startswith('Would you like to double'):
-            my_pips = self.game.board.get_pip_count(self.piece)
-            their_pips = self.game.board.get_pip_count({'X': 'O', 'O': 'X'}[self.piece])
-            if their_pips > 8 and my_pips / their_pips > 0.75:
+            features, points = self.describe_board(self.game.board)
+            if eval_board(features, 'double') > 0:
                 return '1'
             else:
                 return '0'
@@ -191,33 +197,21 @@ class BackgammonBot(player.Bot):
         else:
             raise ValueError('Unexpected question to BackgammonBot: {}'.format(prompt))
 
-    def error(self, *args, **kwargs):
+    def describe_board(self, board):
         """
-        Warn the player about an invalid play. (None)
-
-        Parameters:
-        The parameters are as the built-in print function.
-        """
-        board = self.game.board
-        human = self.game.human
-        human.tell('\nERROR INFO\n')
-        human.tell(board.get_text(self.piece))
-        human.tell(board.get_plays(self.piece, self.game.rolls))
-        super(BackgammonBot, self).error(*args, **kwargs)
-
-    def eval_board(self, board):
-        """
-        Evaluate a board position. (list of int)
+        Determine the features of the current board layout. (list of int)
 
         The evaluation is a list of integers. This can be used on it's own or as 
         input to another evaluation function.
 
         The items in the evaluation list are (in order):
             * The difference in the number of captured pieces.
+            * The difference in the number of pieces born off the board.
             * The difference in the number of blots.
             * The difference in direct hits to blots.
             * The difference in indirect hits to blots. (!! Not calcualted correctly)
             * The difference in pip count.
+            * The difference in the farthest piece from being born off.
             * The difference in the number of controlled points.
         All are calculated so that higher numbers are better for the bot.
 
@@ -234,8 +228,15 @@ class BackgammonBot(player.Bot):
                 controlled[cell.contents[0]].append(cell.location)
             elif len(cell.contents) == 1:
                 blots[cell.contents[0]].append(cell.location)
+        points = {piece: controlled[piece] + blots[piece] for piece in 'XO'}
+        points['O'] = [24 - point for point in points['O']]
         captured = {piece: board.cells[BAR].contents.count(piece) for piece in 'XO'}
+        off = {piece: board.cells[OUT].contents.count(piece) for piece in 'XO'}
         pip_count = {piece: board.get_pip_count(piece) for piece in 'XO'}
+        max_pip = {piece: max(points[piece]) for piece in 'XO'}
+        for piece in 'XO':
+            if captured[piece]:
+                max_pip[piece] = 25
         # Calculate hits.
         direct_hits = {'X': 0, 'O': 0}
         indirect_hits = {'X': 0, 'O': 0}
@@ -257,12 +258,44 @@ class BackgammonBot(player.Bot):
         my_piece = self.game.pieces[self.name]
         foe_piece = {'X': 'O', 'O': 'X'}[my_piece]
         score = [captured[foe_piece] - captured[my_piece]]
+        score.append(off[my_piece] - off[foe_piece])
         score.append(len(blots[foe_piece]) - len(blots[my_piece]))
         score.append(direct_hits[foe_piece] - direct_hits[my_piece])
         score.append(indirect_hits[foe_piece] - indirect_hits[my_piece])
-        score.append(pip_count[my_piece] - pip_count[foe_piece])
+        score.append(pip_count[foe_pice] - pip_count[my_piece])
+        score.append(max_pip[foe_pice] - pip_count[my_piece])
         score.append(len(controlled[my_piece]) - len(controlled[foe_piece]))
-        return(score)
+        return score, points
+
+    def error(self, *args, **kwargs):
+        """
+        Warn the player about an invalid play. (None)
+
+        Parameters:
+        The parameters are as the built-in print function.
+        """
+        board = self.game.board
+        human = self.game.human
+        human.tell('\nERROR INFO\n')
+        human.tell(board.get_text(self.piece))
+        human.tell(board.get_plays(self.piece, self.game.rolls))
+        super(BackgammonBot, self).error(*args, **kwargs)
+
+    def eval_board(self, board_features, phase):
+        my_pips = self.game.board.get_pip_count(self.piece)
+        their_pips = self.game.board.get_pip_count({'X': 'O', 'O': 'X'}[self.piece])
+        if phase == 'double':
+            if their_pips > 8 and my_pips / their_pips > 0.75:
+                return 1
+            else:
+                return 0
+        elif phase == 'accept':
+            if their_pips > 8 and their_pips / my_pips > 0.75:
+                return 1
+            else:
+                return 0
+        else:
+            return board_features
 
     def set_up(self):
         """Set up the bot. (None)"""
@@ -279,6 +312,35 @@ class BackgammonBot(player.Bot):
         # Don't say anything while making multiple moves
         if not self.held_moves:
             super(BackgammonBot, self).tell(text)
+
+
+class BackGeneBot(BackgammonBot):
+    """
+    A Backgammon bot for genetic engineering. (BackgammonBot)
+    """
+
+    phases = ['Mixed', 'Split', 'Stretch', 'Double', 'Accept']
+
+    def __init__(self, taken_names = [], mother = None, father = None):
+        """
+        Set up the bot. (None)
+
+        Parameters:
+        taken_names: The names already in use by other players. (list of str)
+        mother: The bot's mother. (BackGeneBot or None)
+        father: The bot's father. (BackGeneBot or None)
+        """
+        self.vectors = []
+        if mother is None:
+            for phase in self.phases:
+                self.vectors[phase] = [random.randint(-100, 100) for dummy in range(8)]
+        else:
+            for phase in self.phases:
+                pairs = zip(mother.vectors[phase], father.vectors[phase])
+                self.vectors[phase] = [random.choice(pair) for pair in pairs]
+
+    def eval_board(self, board_features, phase):
+        return sum([f * r for f, r in zip(self.vectors[phase], board_features)])
 
 
 class Backgammon(game.Game):
