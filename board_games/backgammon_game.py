@@ -65,7 +65,7 @@ OUT = -2
 RULES = """
 Each player starts the game rolling one die, and the higher roll moves using 
 the two numbers rolled. From then on turns alternate, each player rolling two
-dice on their turn. If doubles are rolled, they count double (as four or the
+dice on their turn. If doubles are rolled, they count double (as four of the
 rolled number having been rolled). Doubles rolled at the beginning of the game
 are rerolled.
 
@@ -112,9 +112,11 @@ accept the doubled stakes or concede the game. After the initial doubling of
 the stakes, control of the doubling die goes to the player who accepted the
 doubling of the stakes, and only they can double the stakes again.
 
+You may get both players' pip counts at any time with the pips command.
+
 Options:
 o: The human player plays with the red (O) pieces.
-layout: Which layout to use: standard or hyper. (l)
+layout: Which layout to use: long, standard, or hyper. (l)
 match: The winning match score. Defaults to 1, or non-match play. (m)
 """
 
@@ -156,13 +158,13 @@ class BackgammonBot(player.Bot):
                     for move in play:
                         capture = sub_board.move(*move)
                     features, points = self.describe_board(sub_board)
-                    if max_points['X'] + max_points['O'] > 24 or features[0]['X'] or features[0]['O']:
+                    if max(points['X']) + max(points['O']) > 24 or sub_board.cells[BAR].contents:
                         phase = 'mixed'
-                    elif max_points['X'] < 6 and max_points['Y'] < 6:
+                    elif max(points['X']) <= 6 and max(points['O']) < 6:
                         phase = 'stretch'
                     else:
                         phase = 'split'
-                    possibles.append((self.eval_board(board_features, phase), play))
+                    possibles.append((self.eval_board(features, phase), play))
                 # Choose the play with the highest evaluation.
                 possibles.sort(reverse = True)
                 self.held_moves = possibles[0][1]
@@ -183,13 +185,13 @@ class BackgammonBot(player.Bot):
             return ''
         elif prompt.startswith('Your opponent wants to double'):
             features, points = self.describe_board(self.game.board)
-            if eval_board(features, 'accept') > 0:
+            if self.eval_board(features, 'accept') > 0:
                 return '1'
             else:
                 return '0'
         elif prompt.startswith('Would you like to double'):
             features, points = self.describe_board(self.game.board)
-            if eval_board(features, 'double') > 0:
+            if self.eval_board(features, 'double') > 0:
                 return '1'
             else:
                 return '0'
@@ -233,10 +235,14 @@ class BackgammonBot(player.Bot):
         captured = {piece: board.cells[BAR].contents.count(piece) for piece in 'XO'}
         off = {piece: board.cells[OUT].contents.count(piece) for piece in 'XO'}
         pip_count = {piece: board.get_pip_count(piece) for piece in 'XO'}
-        max_pip = {piece: max(points[piece]) for piece in 'XO'}
+        max_pip = {}
         for piece in 'XO':
             if captured[piece]:
                 max_pip[piece] = 25
+            if points[piece]:
+                max_pip[piece] = max(points[piece])
+            else:
+                max_pip[piece] = 0
         # Calculate hits.
         direct_hits = {'X': 0, 'O': 0}
         indirect_hits = {'X': 0, 'O': 0}
@@ -262,8 +268,8 @@ class BackgammonBot(player.Bot):
         score.append(len(blots[foe_piece]) - len(blots[my_piece]))
         score.append(direct_hits[foe_piece] - direct_hits[my_piece])
         score.append(indirect_hits[foe_piece] - indirect_hits[my_piece])
-        score.append(pip_count[foe_pice] - pip_count[my_piece])
-        score.append(max_pip[foe_pice] - pip_count[my_piece])
+        score.append(pip_count[foe_piece] - pip_count[my_piece])
+        score.append(max_pip[foe_piece] - pip_count[my_piece])
         score.append(len(controlled[my_piece]) - len(controlled[foe_piece]))
         return score, points
 
@@ -285,12 +291,12 @@ class BackgammonBot(player.Bot):
         my_pips = self.game.board.get_pip_count(self.piece)
         their_pips = self.game.board.get_pip_count({'X': 'O', 'O': 'X'}[self.piece])
         if phase == 'double':
-            if their_pips > 8 and my_pips / their_pips > 0.75:
+            if their_pips > 8 and my_pips / their_pips < 0.75:
                 return 1
             else:
                 return 0
         elif phase == 'accept':
-            if their_pips > 8 and their_pips / my_pips > 0.75:
+            if their_pips > 8 and my_pips / their_pips < 1.33:
                 return 1
             else:
                 return 0
@@ -684,7 +690,7 @@ class Backgammon(game.Game):
     def set_up(self):
         """Set up the game. (None)"""
         # Set up the players.
-        self.bot = self.players[-1]
+        self.bot = [player for player in self.players if player.name != self.human.name][0]
         self.pieces = {self.human.name: self.human_piece}
         if self.human_piece == 'X':
             self.pieces[self.bot.name] = 'O'
