@@ -207,3 +207,10 @@ Backgammon,0,1,0,0,69,257,match=4
 Backgammon,7,0,0,0,0,257,match=4
 Backgammon,12,0,0,0,0,257,match=4
 Backgammon,4,0,0,0,0,257,match=4
+Backgammon,0,4,0,0,4,257,match=4
+Backgammon,9,2,0,0,0,257,match=4
+Backgammon,1,4,0,0,21,257,match=4
+Backgammon,4,2,0,0,0,257,match=4
+Backgammon,0,5,0,0,13,257,match=4
+Backgammon,0,4,0,0,0,257,match=4
+Forty Thieves,0,1,0,801,2,4,

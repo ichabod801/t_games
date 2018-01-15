@@ -13,6 +13,8 @@ Finish options_test.py
 A round of one per penultimate category, two for solitaire.
 	Backgammon
 		genetic engineering
+			see if I can get a good doubling strategy with the new ask method
+			don't spend too much time on it, move on.
 		gipf
 		variants
 	Forty Thieves
@@ -263,7 +265,7 @@ other solitaire games: Yukon, Poker, Baker's Dozen, Good Measure, Little Spider,
 	accordion, fortune's favor, westfield (easy according to solitaire laboratory.com)
 	aces up (solitude site)
 	aces and kings, demons and thieves (by Thomas Warfield, pretty good solitaire site)
-	quadrille, sultan, single rail, olga, step-up, monte carlo, interregnum, labyrinth, flip flop, st. helena  ... (review of Parlett's Solitaire, up through Open games, picking an interesting one with odds in favor (if possible) from eachc chapter)
+	quadrille, sultan, single rail, olga, step-up, monte carlo, interregnum, labyrinth, flip flop, st. helena, crescent, bouquet, kings, striptease. (review of Parlett's Solitaire, picking an interesting one with odds in favor (if possible) from each chapter)
 
 == Option Handling ==
 

@@ -451,10 +451,10 @@ class Interface(other_cmd.OtherCmd):
                     wins.append(1)
                 elif loss > win:
                     game_wld[1] += 1
-                    wins.append(0)
+                    wins.append(-1)
                 else:
                     game_wld[2] += 1
-                    wins.append(-1)
+                    wins.append(0)
             else:
                 # Handle single games.
                 if not loss and not win:

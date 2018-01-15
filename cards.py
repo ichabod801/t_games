@@ -14,6 +14,7 @@ TrackingDeck: A deck that keeps track of the location of its cards. (Deck)
 
 from __future__ import print_function
 
+import collections
 import random
 import re
 
@@ -434,6 +435,7 @@ class TrackingDeck(Deck):
 
         Parameters:
         game: The game the card is a part of. (game.Game)
+        decks: The number of decks shuffled together. (int)
         card_class: The type of card in the deck. (TrackingCard)
         """
         # Set the general attributes.
@@ -573,6 +575,75 @@ class TrackingDeck(Deck):
         # clear the other piles
         self.discards = []
         self.in_play = []
+
+
+class MultiTrackingDeck(TrackingDeck):
+    """
+    A deck that keeps track of the location of multiple duplicate cards. (Deck)
+
+    Attributes:
+    card_map: A map for finding cards in the deck. (dict of str: list of str}
+    card_re: A regular expression to match a card.
+    game: The game the deck is a part of. (Solitaire)
+    in_play: The cards currently in play. (list of Card)
+    last_order: The order of the deck at the last shuffle. (list of int)
+    max_rank: The highest rank in the deck. (int)
+    ranks: The ranks available to cards in the deck. (list of int)
+    suits: The suits available to cards in the deck. (list of str)
+
+    Methods:
+    find: Find a card in the deck. (Card)
+    force: Remove a particular card from the deck. (Card)
+    gather: Gather cards back into the deck. (None)
+
+    Overridden Methods:
+    __init__
+    __repr__
+    __str__
+    deal
+    discard
+    """
+
+    def __init__(self, game, decks = 2, card_class = TrackingCard):
+        """
+        Set up the deck of cards. (None)
+
+        Parameters:
+        game: The game the card is a part of. (game.Game)
+        decks: The number of decks shuffled together. (int)
+        card_class: The type of card in the deck. (TrackingCard)
+        """
+        # Set the general attributes.
+        self.game = game
+        self.ranks = card_class.ranks
+        self.suits = card_class.suits
+        self.card_re = card_class.card_re
+        self.decks = decks
+        # Fill the deck.
+        self.cards = []
+        self.card_map = collections.defaultdict(list)
+        card_number = 0
+        for deck in range(decks):
+            for rank in self.ranks[1:]:
+                for suit in self.suits:
+                    card = card_class(rank, suit, self)
+                    self.cards.append(card)
+                    self.card_map[card.rank + card.suit].append(card)
+        self.max_rank = self.ranks[-1]
+        # set the default attributes
+        self.in_play = []
+        self.discards = []
+        self.last_order = self.cards[:]
+
+    def __repr__(self):
+        """Debugging text representation. (str)"""
+        if self.in_play:
+            card = self.in_play[0]
+        elif self.cards:
+            card = self.cards[0]
+        else:
+            card = self.discards[0]
+        return 'MultiTrackingDeck({}, {}, {})'.format(self.game, self.decks, type(card))
 
 if __name__ == '__main__':
     deck = Deck()

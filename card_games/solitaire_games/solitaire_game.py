@@ -5,6 +5,7 @@ Base class for solitaire games.
 
 Classes:
 Solitaire: A generalized solitaire game. (game.game)
+MultiSolitaire: A game of solitaire that uses multiple decks. (Solitaire)
 
 Functions:
 pair_alt_color: Build in alternating colors. (str) ?? order of functions?
@@ -550,7 +551,7 @@ class Solitaire(game.Game):
         self.turn_count = options['turn-count']
         self.max_passes = options['max-passes']
         # initialize derived attributes
-        self.deck = cards.TrackingDeck(self, *options['deck-specs'])
+        self.deck = deck_class(self, *options['deck-specs'])
         deal_num = -1
         deal_text_index = self.option_set.settings_text.find('deal-num')
         if deal_text_index != -1:
@@ -712,6 +713,334 @@ class Solitaire(game.Game):
         for card in move_stack:
             card.game_location = new_location
 
+
+class MultiSolitaire(Solitaire):
+    """
+    A game of solitaire that uses multiple decks. (Solitaire)
+
+    You could have one class, and if there is only one deck, return a list of
+    one, but you would lose specificity of errors.
+
+    Attributes:
+    alt_moves: Alternate possibilities for the last move. (list of tuple)
+
+    Methods:
+    do_alternate: Redo the last command with different but matching cards. (bool)
+
+    Overridden Methods:
+    find_foundation: Find the foundations a card can be sorted to. (list of list)
+    """
+
+    aliases = {'alt': 'alternate'}
+    categories = ['Test Games', 'Solitaire Games']
+    name = 'Solitaire Base'
+    
+    def do_alternate(self, argument):
+        """
+        Redo the last command with different but matching cards. (bool)
+        
+        This is for when there are two cards of the same rank and suit that 
+        can make the same move, and the game makes the wrong one.
+
+        Parameters:
+        argument: The (ignored) argument to the command. (str)
+        """
+        if self.alt_moves:
+            # find the last move from the user
+            move_ndx = -1
+            while self.moves[move_ndx][3]:
+                move_ndx -= 1
+            base_move = self.moves[move_ndx]
+            # undo the last move without penalty
+            self.undo(1)
+            self.undo_count -= 1
+            # redo the move with the next move
+            self.transfer(*self.alt_moves.pop())
+            return False
+        else:
+            self.human.error('The last move is not alternatable.')
+            return True
+        
+    def do_auto(self, max_rank):
+        """
+        Automatically play cards into the foundations. (bool)
+        
+        Parameters:
+        max_rank: The maximum rank to auto sort. (str)
+        """
+        # convert max rank to int
+        max_rank = max_rank.upper()
+        if max_rank.strip() == '':
+            max_rank = len(self.deck.ranks) - 1
+        elif max_rank in self.deck.ranks:
+            max_rank = self.deck.ranks.index(max_rank)
+        else:
+            self.human.tell('There was an error: the rank specified is not in the deck.')
+            return True
+        # loop until there are no sortable cards
+        while True:
+            # reset loop
+            sorts = 0
+            # check free cells
+            for card in self.cells:
+                foundations = self.find_foundation(card)
+                for card_foundation in foundations:
+                    if card.rank_num <= max_rank and self.sort_check(card, card_foundation, False):
+                        self.do_sort(str(card))
+                        sorts += 1
+            # check tableau
+            for pile in self.tableau:
+                if pile:
+                    card = pile[-1]
+                    foundations = self.find_foundation(card)
+                    for card_foundation in foundations:
+                        if card.rank_num <= max_rank and self.sort_check(card, card_foundation, False):
+                            self.do_sort(str(card))
+                            sorts += 1
+            # check the waste
+            if self.waste:
+                card = self.waste[-1]
+                foundations = self.find_foundation(card)
+                for card_foundation in foundations:
+                    if card.rank_num <= max_rank and self.sort_check(card, card_foundation, False):
+                        self.do_sort(str(card))
+                        sorts += 1
+            # check the reserve
+            for pile in self.reserve:
+                if pile:
+                    card = pile[-1]
+                    foundations = self.find_foundation(card)
+                    for card_foundation in foundations:
+                        if card.rank_num <= max_rank and self.sort_check(card, card_foundation, False):
+                            self.do_sort(str(card))
+                            sorts += 1
+            if not sorts:
+                break
+        return False
+    
+    def do_build(self, arguments):
+        """
+        Build card(s) into stacks on the tableau. (bool)
+        
+        Parameters:
+        arguments: The card to move and the card to move it onto. (str)
+        """
+        # parse the arguments
+        card_arguments = self.deck.card_re.findall(arguments.upper())
+        if len(card_arguments) != 2:
+            self.human.tell('Invalid arguments to build command: {!r}.'.format(arguments))
+            return True
+        mover, target = card_arguments
+        # get the details on all the cards
+        movers = self.deck.find(mover)
+        targets = self.deck.find(target)
+        self.alt_moves = []
+        for mover in movers:
+            moving_stack = self.super_stack(mover)
+            for target in targets:
+                # check for a valid move
+                if self.build_check(mover, target, moving_stack, show_error = False):
+                    self.alt_moves.append((moving_stack, target.game_location))
+        if self.alt_moves:
+            self.transfer(*self.alt_moves.pop())
+            return False
+        else:
+            self.human.error('There are no valid moves for building a {} onto a {}.'.format(mover, target))
+            return True
+        
+    def do_free(self, card):
+        """
+        Move a card to one of the free cells. (bool)
+        
+        Parameters:
+        card: The card to be freed. (str)
+        """
+        # parse the arguments
+        card_arguments = self.deck.card_re.findall(card.upper())
+        if len(card_arguments) != 1:
+            self.human.tell('Invalid arguments to build command: {!r}.'.format(arguments))
+            return True
+        # get the details on the card to be freed.
+        cards = self.deck.find(card_arguments[0])
+        # free the card
+        self.alt_moves = []
+        for card in cards:
+            if self.free_check(card):
+                self.alt_moves.append(([card], self.cells))
+        if self.alt_moves:
+            self.transfer(*self.alt_moves.pop())
+            return False
+        else:
+            self.human.error('There are no valid moves for freeing a {}.'.format(card))
+            return True
+        
+    def do_lane(self, card):
+        """
+        Move a card into an empty lane. (bool)
+        
+        Parameters:
+        card: The string identifying the card. (str)
+        """
+        # get the card and the cards to be moved
+        if not self.deck.card_re.match(card):
+            self.human.tell('Invalid card passed to lane command: {!r}.'.format(card))
+            return True
+        cards = self.deck.find(card)
+        self.alt_moves = []
+        for card in cards:
+            moving_stack = self.super_stack(card)
+            # check for validity and move
+            if self.lane_check(card, moving_stack):
+                self.alt_moves.append((moving_stack, self.tableau[self.tableau.index([])]))
+        if self.alt_moves:
+            self.transer(*self.alt_moves.pop())
+            return False
+        else:
+            self.human.error('There are no valid moves for laning a {}.'.format(card))
+            return True
+    
+    def do_sort(self, card):
+        """
+        Move a card to the foundation. (bool)
+        
+        Parameters:
+        card: The card being moved. (str)
+        """
+        # !! sorting cards from the stock.
+        # get the card
+        if not self.deck.card_re.match(card):
+            self.human.tell('Invalid card passed to sort command: {!r}.'.format(card))
+            return True
+        cards = self.deck.find(card)
+        self.alt_moves = []
+        for card in cards:
+            foundations = self.find_foundation(card)
+            for foundation in foundations:
+                if self.sort_check(card, foundation, False):
+                    self.alt_moves.append(([card], foundation))
+        if self.alt_moves:
+            self.transfer(*self.alt_moves.pop())
+            return False
+        else:
+            self.human.error('There are no valid moves for sorting a {}.'.format(card))
+            return True
+    
+    def do_turn(self, arguments):
+        """
+        Turn cards from the stock into the waste. (bool)
+
+        Parameters:
+        arguments: The (ignored) arguments to the turn command. (str)
+        """
+        # !! not turning. After any sort? Not always doing it. Top card left in stock, but also in waste.
+        self.alt_moves = []
+        return super(MultiSolitaire, self).do_turn(arguments)
+    
+    def do_undo(self, num_moves):
+        """
+        Undo one or more previous moves. (bool)
+        
+        Parameters:
+        num_moves: The number of moves to undo. (str)
+        """
+        self.alt_moves = []
+        return super(MultiSolitaire, self).do_undo(arguments)
+
+    def find_foundation(self, card):
+        """
+        Find the foundations a card can be sorted to. (list of list)
+
+        Parameters:
+        card: The card to sort. (str)
+        """
+        first_index = self.deck.suits.index(card.suit)
+        foundations = []
+        for deck_index in range(self.deck.decks):
+            foundations.append(self.foundations[first_index + len(self.deck.suits) * deck_index])
+        return foundations
+    
+    def guess(self, card):
+        """
+        Guess what move to make for a particular card. (None)
+        
+        Parameters:
+        card: The card to move. (str)
+        """
+        # Loop through the possible cards.
+        cards = self.deck.find(card)
+        moves = []
+        for card in cards:
+            # check sorting
+            if self.foundations:
+                for foundation in self.find_foundation(card):
+                    if self.sort_check(card, foundation, False):
+                        moves.append('sort {}'.format(card))
+            if not moves:
+                # check bulding
+                moving_stack = self.super_stack(card)
+                for pile in self.tableau:
+                    if pile and self.build_check(card, pile[-1], moving_stack, False):
+                        moves.append('build {} {}'.format(card, pile[-1]))
+                        break
+                else:
+                    # check freeing
+                    if card.game_location is not self.cells and self.free_check(card, False):
+                        moves.append('free {}'.format(card))
+                    # check laning
+                    elif self.lane_check(card, moving_stack, False):
+                        moves.append('lane {}'.format(card))
+            if moves:
+                break
+        if moves:
+            self.handle_cmd(moves.pop())
+        else:
+            self.human.error('There is no valid move for a {}.'.format(card))
+
+    def set_solitaire(self):
+        """
+        Special initialization for solitaire games. (None)
+        
+        For an ulimited number of passes through the stock, set max_passes to -1.
+        """
+        # !! needs translating to mulitple decks
+        options = {'deck-specs': [], 'num-tableau': 7, 'num-foundations': 4, 'num-reserve': 0,
+            'num-cells': 0, 'turn-count': 3, 'max-passes': -1, 'wrap-ranks': False}
+        options.update(self.options)
+        # initialize specified attributes
+        self.num_cells = options['num-cells']
+        self.wrap_ranks = options['wrap-ranks']
+        self.turn_count = options['turn-count']
+        self.max_passes = options['max-passes']
+        # initialize derived attributes
+        self.deck = cards.MultiTrackingDeck(self, *options['deck-specs'])
+        deal_num = -1
+        deal_text_index = self.option_set.settings_text.find('deal-num')
+        if deal_text_index != -1:
+            self.option_set.settings_text = self.option_set.settings_text[:(deal_text_index - 1)]
+        if self.raw_options.lower() != 'none':
+            prompt = 'Enter the deal number, or return for a random deal: '
+            deal_num = self.human.ask_int(prompt, low = 1, default = -1, cmd = False)
+        if deal_num == -1:
+            deal_num = None
+        else:
+            self.option_set.settings_text += ' deal-num={}'.format(deal_num)
+        self.deck.shuffle(number = deal_num)
+        self.tableau = [[] for ndx in range(options['num-tableau'])]
+        self.foundations = [[] for ndx in range(options['num-foundations'])]
+        self.reserve = [[] for ndx in range(options['num-reserve'])]
+        # initialize default attributes
+        # piles
+        self.cells = []
+        self.stock = []
+        self.stock_passes = 0
+        self.waste = []
+        # undo history
+        self.moves = []
+        self.undo_count = 0
+        self.commands = []
+        # game specific rules
+        self.set_checkers()
+
     
 def build_one(game, mover, target, moving_stack):
     """
@@ -741,7 +1070,7 @@ def deal_free(game):
 
 def deal_reserve_n(n, up = False):
     """
-    Create a dealer that deals n cards to the reserve (None)
+    Create a dealer that deals n cards to the reserve (function)
 
     The top card is always dealt face up.
 
@@ -755,6 +1084,23 @@ def deal_reserve_n(n, up = False):
         for card_index in range(n):
             game.deck.deal(game.reserve[0], up)
         game.reserve[0][-1].up = True
+    return dealer
+
+def deal_n(n, up = True):
+    """
+    Create a dealer that deals n cards onto the tableau. (function)
+
+    The top card is always dealt face up.
+
+    Parameters:
+    n: The number of cards to deal to the reserve. (int)
+    up: A flag for dealing the cards face up. (bool)
+    """
+    def dealer(game):
+        for card_index in range(n):
+            game.deck.deal(game.tableau[card_index % len(game.tableau)])
+        for pile in game.tableau:
+            pile[-1].up = True
     return dealer
 
 def deal_start_foundation(game):
@@ -777,7 +1123,7 @@ def deal_stock_all(game):
     game: The game to deal the cards for. (Solitaire)
     """
     while game.deck.cards:
-        game.deck.deal(game.stock)
+        game.deck.deal(game.stock, face_up = False)
     game.stock.reverse()
 
 def lane_king(game, card, moving_stack):

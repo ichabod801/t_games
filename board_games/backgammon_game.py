@@ -11,6 +11,10 @@ Terminology:
 !! Ichabod's Rule: Instead of capturing, hitting a blot bears the moving
     piece off the board.
 
+I need to read up on backgammon strategy. See if I can find a better set of
+board features to redo additive bot with. Get a good additive bot, then move
+on to expectamax or a neural net.
+
 Constants:
 BAR: The index of the bar. (int)
 CREDITS: The credits for the game. (str)
@@ -32,6 +36,8 @@ move_key: Convert a move to a sortable key. (list of int)
 
 
 from __future__ import print_function
+
+import random
 
 import tgames.board as board
 import tgames.dice as dice
@@ -156,11 +162,13 @@ class BackgammonBot(player.Bot):
                 for play in board.get_plays(self.piece, self.game.rolls):
                     sub_board = board.copy()
                     for move in play:
-                        capture = sub_board.move(*move)
+                        capture = sub_board.move(*move, piece = self.piece)
                     features, points = self.describe_board(sub_board)
-                    if max(points['X']) + max(points['O']) > 24 or sub_board.cells[BAR].contents:
+                    max_x = max(points['X']) if points['X'] else 0
+                    max_o = max(points['O']) if points['O'] else 0
+                    if max_x + max_o > 24 or sub_board.cells[BAR].contents:
                         phase = 'mixed'
-                    elif max(points['X']) <= 6 and max(points['O']) < 6:
+                    elif max_x <= 6 and max_o < 6:
                         phase = 'stretch'
                     else:
                         phase = 'split'
@@ -176,7 +184,10 @@ class BackgammonBot(player.Bot):
                     point = 25 - point
                 return 'bear {}'.format(point)
             elif move[0] == BAR:
-                return 'enter {}'.format(move[1])
+                point = move[1]
+                if point > 6:
+                    point = 25 - point
+                return 'enter {}'.format(point)
             else:
                 return '{} {}'.format(move[0], move[1])
         # Respond to no-move notifications.
@@ -185,13 +196,13 @@ class BackgammonBot(player.Bot):
             return ''
         elif prompt.startswith('Your opponent wants to double'):
             features, points = self.describe_board(self.game.board)
-            if self.eval_board(features, 'accept') > 0:
+            if self.eval_board(features, 'accept') < -25:
                 return '1'
             else:
                 return '0'
         elif prompt.startswith('Would you like to double'):
             features, points = self.describe_board(self.game.board)
-            if self.eval_board(features, 'double') > 0:
+            if self.eval_board(features, 'double') > 25:
                 return '1'
             else:
                 return '0'
@@ -269,7 +280,7 @@ class BackgammonBot(player.Bot):
         score.append(direct_hits[foe_piece] - direct_hits[my_piece])
         score.append(indirect_hits[foe_piece] - indirect_hits[my_piece])
         score.append(pip_count[foe_piece] - pip_count[my_piece])
-        score.append(max_pip[foe_piece] - pip_count[my_piece])
+        score.append(max_pip[foe_piece] - max_pip[my_piece])
         score.append(len(controlled[my_piece]) - len(controlled[foe_piece]))
         return score, points
 
@@ -325,7 +336,7 @@ class BackGeneBot(BackgammonBot):
     A Backgammon bot for genetic engineering. (BackgammonBot)
     """
 
-    phases = ['Mixed', 'Split', 'Stretch', 'Double', 'Accept']
+    phases = ['mixed', 'split', 'stretch', 'double', 'accept']
 
     def __init__(self, taken_names = [], mother = None, father = None):
         """
@@ -336,14 +347,67 @@ class BackGeneBot(BackgammonBot):
         mother: The bot's mother. (BackGeneBot or None)
         father: The bot's father. (BackGeneBot or None)
         """
-        self.vectors = []
+        super(BackGeneBot, self).__init__(taken_names = taken_names)
+        self.vectors = {}
         if mother is None:
             for phase in self.phases:
-                self.vectors[phase] = [random.randint(-100, 100) for dummy in range(8)]
+                if phase in ('double', 'accept'):
+                    self.vectors[phase] = [random.randint(-100, 100) for dummy in range(8)]
+                else:
+                    self.vectors[phase] = [random.randint(0, 100) for dummy in range(8)]
         else:
             for phase in self.phases:
                 pairs = zip(mother.vectors[phase], father.vectors[phase])
                 self.vectors[phase] = [random.choice(pair) for pair in pairs]
+
+    def eval_board(self, board_features, phase):
+        return sum([f * r for f, r in zip(self.vectors[phase], board_features)])
+
+    def tell(self, *args, **kwargs):
+        pass
+
+
+class AdditiveBot(BackgammonBot):
+
+    def __init__(self, taken_names = []):
+        """
+        Set up the bot. (None)
+
+        A [71, 54, 47, 10, 57, 15, 17, 14]
+        D [38, 8, 40, 9, 81, 44, 44, 88]
+        E [7, 93, 55, 44, 74, 92, 47, 63]
+        O [42, 91, 80, 53, 96, 91, 42, 1]
+        OD [42, 91, 80, 9, 96, 91, 42, 88]
+        ID [38, 8, 40, 20, 14, 36, 44, 88]
+        EOD+ [42, 91, 80, 9, 96, 92, 47, 63]
+        IDE [38, 8, 40, 20, 74, 36, 44, 88]
+        AOD [42, 54, 80, 9, 96, 91, 42, 88]
+        IDE+ [38, 93, 40, 20, 14, 36, 44, 88]
+        EOD+OD [42, 91, 80, 9, 96, 92, 42, 63]
+        EA [71, 93, 47, 44, 57, 92, 47, 14]
+        OOD [42, 91, 80, 9, 96, 91, 42, 88]
+        ODA [71, 54, 80, 9, 57, 15, 42, 14]
+        AE [71, 54, 55, 10, 57, 15, 47, 63]
+
+            * The difference in the number of captured pieces.
+            * The difference in the number of pieces born off the board.
+            * The difference in the number of blots.
+            * The difference in direct hits to blots.
+            * The difference in indirect hits to blots. (!! Not calcualted correctly)
+            * The difference in pip count.
+            * The difference in the farthest piece from being born off.
+            * The difference in the number of controlled points.
+
+        Parameters:
+        taken_names: The names already in use by other players. (list of str)
+        """
+        super(AdditiveBot, self).__init__(taken_names = taken_names)
+        self.vectors = {}
+        self.vectors['mixed'] = [7, 42, 92, 17, 87, 93, 29, 66]
+        self.vectors['split'] = [4, 12, 22, 23, 30, 41, 57, 8]
+        self.vectors['stretch'] = [98, 26, 15, 64, 88, 86, 100, 78]
+        self.vectors['double'] = [-70, 52, 28, -83, 11, 93, -76, -67]
+        self.vectors['accept'] = [-28, 46, 79, 37, 30, 17, -69, 32]
 
     def eval_board(self, board_features, phase):
         return sum([f * r for f, r in zip(self.vectors[phase], board_features)])
@@ -496,7 +560,7 @@ class Backgammon(game.Game):
             player.error('That point is blocked.')
             return True
         # Make the move.
-        capture = self.board.move(BAR, point)
+        capture = self.board.move(BAR, point, piece)
         self.rolls.remove(needed_roll)
         return self.rolls
 
@@ -587,7 +651,7 @@ class Backgammon(game.Game):
         player.tell(self.board.get_text(player_piece))
         # Roll the dice if it's the start of the turn.
         if not self.rolls:
-            if self.doubling_status in ('', player_piece):
+            if self.doubling_status in ('', player_piece) and self.doubling_die < self.match:
                 double = player.ask('Would you like to double the stakes (return to roll)? ')
                 if double in utility.YES:
                     game_on = self.double(player)
@@ -596,6 +660,8 @@ class Backgammon(game.Game):
             self.dice.roll()
             self.dice.sort()
             self.get_rolls()
+            if self.turns > 500:
+                self.force_end = 'win'
         player.tell('\nThe roll to you is {}.'.format(', '.join([str(x) for x in self.rolls])))
         # Check for no legal moves
         legal_plays = self.board.get_plays(player_piece, self.rolls)
@@ -678,7 +744,7 @@ class Backgammon(game.Game):
 
     def set_options(self):
         """Define the options for the game. (None)"""
-        self.option_set.default_bots = [(BackgammonBot, ())]
+        self.option_set.default_bots = [(AdditiveBot, ())]
         self.option_set.add_option('o', target = 'human_piece', value = 'O', default = 'X',
             question = 'Would you like to play with the O piece? bool')
         self.option_set.add_option('match', ['m'], int, 1, check = lambda x: x > 0,
@@ -988,7 +1054,7 @@ class BackgammonBoard(board.LineBoard):
         # Return the text.
         return '\n'.join(lines)
 
-    def move(self, start, end):
+    def move(self, start, end, piece = None):
         """
         Move a piece from one cell to another. (object)
 
@@ -999,7 +1065,7 @@ class BackgammonBoard(board.LineBoard):
         start: The location containing the piece to move. (Coordinate)
         end: The location to move the piece to. (Coordinate)
         """
-        capture = self.safe_displace(start, end)
+        capture = self.safe_displace(start, end, piece)
         for piece in capture:
             self.cells[BAR].add_piece(piece)
         self.legal_plays = []
