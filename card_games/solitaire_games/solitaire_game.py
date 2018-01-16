@@ -890,10 +890,10 @@ class MultiSolitaire(Solitaire):
         for card in cards:
             moving_stack = self.super_stack(card)
             # check for validity and move
-            if self.lane_check(card, moving_stack):
+            if self.lane_check(card, moving_stack, False):
                 self.alt_moves.append((moving_stack, self.tableau[self.tableau.index([])]))
         if self.alt_moves:
-            self.transer(*self.alt_moves.pop())
+            self.transfer(*self.alt_moves.pop())
             return False
         else:
             self.human.error('There are no valid moves for laning a {}.'.format(card))
@@ -942,7 +942,7 @@ class MultiSolitaire(Solitaire):
         Parameters:
         num_moves: The number of moves to undo. (str)
         """
-        self.alt_moves = [] # !! this will screw up do_alternative
+        self.alt_moves = [] # !! this will screw up do_alternative, but it's needed.
         return super(MultiSolitaire, self).do_undo(num_moves)
 
     def find_foundation(self, card):

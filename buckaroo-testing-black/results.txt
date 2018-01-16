@@ -215,3 +215,4 @@ Backgammon,0,5,0,0,13,257,match=4
 Backgammon,0,4,0,0,0,257,match=4
 Forty Thieves,0,1,0,801,2,4,
 Forty Thieves,0,1,0,784,18,4,
+Forty Thieves,0,1,0,724,119,5,streets
