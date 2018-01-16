@@ -374,6 +374,18 @@ class TrackingCard(Card):
             self.deck_location = None
             self.game_location = None
 
+    def __eq__(self, other):
+        """
+        Check equality with another card. (bool)
+
+        Parameters:
+        other: The card to compare with. (Card or str)
+        """
+        if isinstance(other, TrackingCard):
+            return id(self) == id(other)
+        else:
+            return super(TrackingCard, self).__eq__(other)
+
     def above(self, other, n = 1):
         """
         Check that this card is n ranks above another card. (bool)

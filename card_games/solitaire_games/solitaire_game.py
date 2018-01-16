@@ -752,7 +752,7 @@ class MultiSolitaire(Solitaire):
                 move_ndx -= 1
             base_move = self.moves[move_ndx]
             # undo the last move without penalty
-            self.undo(1)
+            self.do_undo(1)
             self.undo_count -= 1
             # redo the move with the next move
             self.transfer(*self.alt_moves.pop())
@@ -932,7 +932,6 @@ class MultiSolitaire(Solitaire):
         Parameters:
         arguments: The (ignored) arguments to the turn command. (str)
         """
-        # !! not turning. After any sort? Not always doing it. Top card left in stock, but also in waste.
         self.alt_moves = []
         return super(MultiSolitaire, self).do_turn(arguments)
     
@@ -943,8 +942,8 @@ class MultiSolitaire(Solitaire):
         Parameters:
         num_moves: The number of moves to undo. (str)
         """
-        self.alt_moves = []
-        return super(MultiSolitaire, self).do_undo(arguments)
+        self.alt_moves = [] # !! this will screw up do_alternative
+        return super(MultiSolitaire, self).do_undo(num_moves)
 
     def find_foundation(self, card):
         """
