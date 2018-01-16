@@ -752,7 +752,7 @@ class MultiSolitaire(Solitaire):
                 move_ndx -= 1
             base_move = self.moves[move_ndx]
             # undo the last move without penalty
-            self.do_undo(1)
+            self.do_undo('1', clear_alt = False)
             self.undo_count -= 1
             # redo the move with the next move
             self.transfer(*self.alt_moves.pop())
@@ -935,14 +935,15 @@ class MultiSolitaire(Solitaire):
         self.alt_moves = []
         return super(MultiSolitaire, self).do_turn(arguments)
     
-    def do_undo(self, num_moves):
+    def do_undo(self, num_moves, clear_alt = True):
         """
         Undo one or more previous moves. (bool)
         
         Parameters:
         num_moves: The number of moves to undo. (str)
         """
-        self.alt_moves = [] # !! this will screw up do_alternative, but it's needed.
+        if clear_alt:
+            self.alt_moves = []
         return super(MultiSolitaire, self).do_undo(num_moves)
 
     def find_foundation(self, card):
