@@ -125,7 +125,7 @@ dudo                  -> poker dice
 freecell              -> hamurabi
 freecell              -> penguin              (move any card to an empty foundation, turn on wrap_ranks)
 forty thieves         -> bisley
-forty thieves         -> freecell
+forty thieves         -> freecell             (move any one card from the waste)
 fox and geese         -> dudo
 fox and geese         -> ghost
 ghost                 -> hangman              (switch the ghost word to the hangman word)

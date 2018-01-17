@@ -21,6 +21,36 @@ class FortyThieves(solitaire.MultiSolitaire):
     name = 'Forty Thieves'
     num_options = 2
 
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        game, losses = self.gipf_check(arguments, ('freecell',))
+        # Freecell
+        if game == 'freecell':
+            if not losses:
+                self.human.tell(self)
+                tableau_check = [stack[-1] for stack in self.tableau if stack]
+                while True:
+                    cards_raw = self.human.ask('Enter a waste card and a card to build it on: ')
+                    cards = cards_raw.upper().split()
+                    if cards[0] not in self.waste:
+                        self.human.tell('You must build with a face up waste card.')
+                    elif cards[1] not in tableau_check:
+                        self.human.tell('You must build to the top of a tableau pile.')
+                    else:
+                        break
+                waste_ndx = self.waste.index(cards[0])
+                waste_card = self.waste[waste_ndx]
+                tableau_stack = [stack for stack in self.tableau if stack[-1] == cards[1]][0]
+                self.transfer([waste_card], tableau_stack)
+            pass
+        else:
+            self.human.tell("I'm sorry, I quit gipfing for Lent.")
+
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
         super(FortyThieves, self).set_checkers()

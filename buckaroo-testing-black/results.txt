@@ -216,3 +216,10 @@ Backgammon,0,4,0,0,0,257,match=4
 Forty Thieves,0,1,0,801,2,4,
 Forty Thieves,0,1,0,784,18,4,
 Forty Thieves,0,1,0,724,119,5,streets
+Forty Thieves,1,0,0,738,239,1,streets deal-num=1
+FreeCell,1,0,0,810,59,0,
+Forty Thieves,0,1,0,797,5,12,
+FreeCell,1,0,0,805,62,0,
+Forty Thieves,0,1,0,797,6,12,
+FreeCell,1,0,0,803,82,0,
+Forty Thieves,0,1,0,797,5,12,

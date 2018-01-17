@@ -30,7 +30,7 @@ Python Implementation: Craig "Ichabod" O'Brien
 # Credits for Baker's Game.
 CREDITS_BAKER = """
 Game Design: Traditional
-Python Implementation: Craig "Ichabod" O'Brien
+Game Programming: Craig "Ichabod" O'Brien
 """
 
 # Rules for FreeCell.
@@ -86,8 +86,10 @@ class FreeCell(solitaire.Solitaire):
     """
 
     categories = ['Card Games', 'Solitaire Games', 'FreeCell Games']
+    credits = CREDITS
     name = 'FreeCell'
     num_options = 7
+    rules = RULES
 
     def do_gipf(self, arguments):
         """

@@ -551,7 +551,7 @@ class Solitaire(game.Game):
         self.turn_count = options['turn-count']
         self.max_passes = options['max-passes']
         # initialize derived attributes
-        self.deck = deck_class(self, *options['deck-specs'])
+        self.deck = cards.TrackingDeck(self, *options['deck-specs'])
         deal_num = -1
         deal_text_index = self.option_set.settings_text.find('deal-num')
         if deal_text_index != -1:
