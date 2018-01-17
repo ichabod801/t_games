@@ -26,9 +26,13 @@ building or sorting. You may only go through the stock once.
 
 OPTIONS:
 alt-color (streets): The tableau is built down in rank by alternating color.
-columns: The number of tableau columns (stacks) dealt.
+columns (c): The number of tableau columns (stacks) dealt.
 down-rows: The number of tabelau rows that are dealt face down.
-rows: The number of tableau rows dealt.
+found-aces: Start the game with the aces on the foundations.
+lucas: 
+move-seq: Move any built sequence on the tableau.
+not-suit: The tableau is built down in rank by anything but suit.
+rows (r): The number of tableau rows dealt.
 """
 
 
@@ -40,7 +44,7 @@ class FortyThieves(solitaire.MultiSolitaire):
     aka = ['Big Forty', 'Le Cadran', 'Napoleon at St Helena', 'Roosevelt at San Juan']
     categories = ['Card Games', 'Solitaire Games', 'Forty Thieves']
     name = 'Forty Thieves'
-    num_options = 2
+    num_options = 7
 
     def do_gipf(self, arguments):
         """
@@ -76,11 +80,14 @@ class FortyThieves(solitaire.MultiSolitaire):
         """Set up the game specific rules. (None)"""
         super(FortyThieves, self).set_checkers()
         # Set game specific rules.
-        self.build_checkers = [solitaire.build_one]
-        self.lane_checkers = [solitaire.lane_one]
+        if not self.move_seq:
+            self.build_checkers = [solitaire.build_one]
+            self.lane_checkers = [solitaire.lane_one]
         self.pair_checkers = [solitaire.pair_down, solitaire.pair_suit]
         if self.streets:
             self.pair_checkers[-1] = solitaire.pair_alt_color
+        elif self.not_suits:
+            self.pair_checkers[-1] = pair_not_suit
         self.sort_checkers = [solitaire.sort_ace, solitaire.sort_up]
         # Set the dealers.
         self.dealers = []
@@ -94,10 +101,17 @@ class FortyThieves(solitaire.MultiSolitaire):
 
     def set_options(self):
         self.options = {'max-passes': 1, 'num-foundations': 8, 'num-tableau': 10, 'turn-count': 1}
-        for alias in ('emperor', 'deauville', 'dress-parade', 'rank-and-file'):
+        for alias in ('emperor', 'deauville', 'dress-parade', 'rank-and-file'): # !! split the last two ala wikip
             self.option_set.add_group(alias, 'streets down-rows')
+        self.option_set.add_group('lucas', 'found-aces c=13 r=3')
+        self.option_set.add_group('maria', 'alt-color c=9 r=4')
+        self.option_set.add_group('limited', 'c=12 r=3')
+        self.option_set.add_group('indian', 'down-rows=1 c=10 r=3 not-suit')
+        self.option_set.add_group('number ten', 'down-rows=2 c=10 r=4 alt-color move-seq')
         self.option_set.add_option('streets', ['alt-color'],
             question = 'Should tableau building be down by alternating color (return for by suit)? bool')
+        self.option_set.add_option('not-suit',
+            question = 'Should tableau building be down by anything but suit? bool')
         self.option_set.add_option('columns', ['c'], int, default = 10, 
             question = 'How many tableau columns (stacks) should be dealt (return for 10)? ')
         self.option_set.add_option('rows', ['r'], int, default = 10, 
@@ -106,6 +120,8 @@ class FortyThieves(solitaire.MultiSolitaire):
             question = 'How many rows of the tableau should be dealt face down (return for none)? ')
         self.option_set.add_option('found-aces',
             question = 'Should the aces be dealt to start the foundations? bool')
+        self.option_set.add_option('move-seq', ['josephine'],
+            question = 'Should you be able to move any sequence on the tableau (return for one card at a time)? bool')
     
     def stock_text(self):
         """Generate text for the stock and waste. (str)"""
@@ -131,6 +147,21 @@ def deal_aces_multi(game):
         ace = game.deck.find(ace_text)[0]
         for foundation in game.find_foundation(ace):
             game.deck.force(ace_text, foundation)
+
+def pair_not_suit(game):
+    """
+    Build in anything but suits. (str)
+    
+    Parameters:
+    game: The game buing played. (Solitaire)
+    mover: The card to move. (TrackingCard)
+    target: The destination card. (TrackingCard)
+    """
+    error = ''
+    if mover.suit == target.suit:
+        error = 'The {} is the same suit as the {}'
+        error = error.format(mover.name, target.name)
+    return error
 
 
 if __name__ == '__main__':
