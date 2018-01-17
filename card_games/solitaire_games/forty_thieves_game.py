@@ -11,12 +11,33 @@ FortyThieves: A game of Forty Thieves. (solitaire.Solitaire)
 import tgames.card_games.solitaire_games.solitaire_game as solitaire
 
 
+CREDITS = """
+Game Design: Traditional
+Game Programming: Craig "Ichabod" O'Brien
+"""
+
+RULES = """
+This is a two deck solitaire game. Ten columns of four cards each are dealt 
+for the tableau. There are eight foundations to be built up, ace to king in
+suit. You may only move one card at a time. Building on the tableau is down
+in rank by suit. You may turn over one card from the stock at a time, and 
+place it in a waste pile. The top card of the waste pile is available for
+building or sorting. You may only go through the stock once.
+
+OPTIONS:
+alt-color (streets): The tableau is built down in rank by alternating color.
+columns: The number of tableau columns (stacks) dealt.
+down-rows: The number of tabelau rows that are dealt face down.
+rows: The number of tableau rows dealt.
+"""
+
+
 class FortyThieves(solitaire.MultiSolitaire):
     """
     A game of Forty Thieves. (solitaire.Solitaire)
     """
 
-    aka = ['Big Forty', 'Cadran', 'Napoleon at St Helena', 'Roosevelt at San Juan']
+    aka = ['Big Forty', 'Le Cadran', 'Napoleon at St Helena', 'Roosevelt at San Juan']
     categories = ['Card Games', 'Solitaire Games', 'Forty Thieves']
     name = 'Forty Thieves'
     num_options = 2
@@ -62,16 +83,29 @@ class FortyThieves(solitaire.MultiSolitaire):
             self.pair_checkers[-1] = solitaire.pair_alt_color
         self.sort_checkers = [solitaire.sort_ace, solitaire.sort_up]
         # Set the dealers.
-        self.dealers = [solitaire.deal_n(40), solitaire.deal_stock_all]
+        self.dealers = []
+        if self.found_aces:
+            self.dealers.append(deal_aces_multi)
         if self.down_rows:
-            self.pair_checkers[:1] = [solitaire.deal_n(30, False), solitaire.deal_n(10)]
+            self.down_rows = min(self.down_rows, self.rows - 1)
+            self.dealers.append(solitaire.deal_n(self.columns * self.down_rows, False))
+        self.dealers.append(solitaire.deal_n(self.columns * (self.rows - self.down_rows)))
+        self.dealers.append(solitaire.deal_stock_all)
 
     def set_options(self):
         self.options = {'max-passes': 1, 'num-foundations': 8, 'num-tableau': 10, 'turn-count': 1}
         for alias in ('emperor', 'deauville', 'dress-parade', 'rank-and-file'):
             self.option_set.add_group(alias, 'streets down-rows')
-        self.option_set.add_option('streets', ['alt-color'])
-        self.option_set.add_option('down-rows')
+        self.option_set.add_option('streets', ['alt-color'],
+            question = 'Should tableau building be down by alternating color (return for by suit)? bool')
+        self.option_set.add_option('columns', ['c'], int, default = 10, 
+            question = 'How many tableau columns (stacks) should be dealt (return for 10)? ')
+        self.option_set.add_option('rows', ['r'], int, default = 10, 
+            question = 'How many tableau rows should be dealt (return for 4)? ')
+        self.option_set.add_option('down-rows', [], int, default = 0,
+            question = 'How many rows of the tableau should be dealt face down (return for none)? ')
+        self.option_set.add_option('found-aces',
+            question = 'Should the aces be dealt to start the foundations? bool')
     
     def stock_text(self):
         """Generate text for the stock and waste. (str)"""
@@ -83,6 +117,20 @@ class FortyThieves(solitaire.MultiSolitaire):
         # waste
         stock_text += ' '.join(str(card) for card in self.waste)
         return stock_text
+
+
+def deal_aces_multi(game):
+    """
+    Deal the aces to the foundations in a multi-deck game.
+
+    Parameters:
+    game: A multi-deck game of solitaire. (MultiSolitaire)
+    """
+    for suit in game.deck.suits:
+        ace_text = 'A' + suit
+        ace = game.deck.find(ace_text)[0]
+        for foundation in game.find_foundation(ace):
+            game.deck.force(ace_text, foundation)
 
 
 if __name__ == '__main__':
