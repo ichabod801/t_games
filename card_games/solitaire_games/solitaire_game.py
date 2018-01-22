@@ -845,7 +845,8 @@ class MultiSolitaire(Solitaire):
             self.transfer(*self.alt_moves.pop())
             return False
         else:
-            self.human.error('There are no valid moves for building a {} onto a {}.'.format(mover, target))
+            message = 'There are no valid moves for building a {} onto a {}.'
+            self.human.error(message.format(*card_arguments))
             return True
         
     def do_free(self, card):
@@ -1098,9 +1099,7 @@ def deal_n(n, up = True):
     """
     def dealer(game):
         for card_index in range(n):
-            game.deck.deal(game.tableau[card_index % len(game.tableau)])
-        for pile in game.tableau:
-            pile[-1].up = True
+            game.deck.deal(game.tableau[card_index % len(game.tableau)], face_up = up)
     return dealer
 
 def deal_start_foundation(game):

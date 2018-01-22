@@ -76,6 +76,11 @@ class FortyThieves(solitaire.MultiSolitaire):
         else:
             self.human.tell("I'm sorry, I quit gipfing for Lent.")
 
+    def handle_options(self):
+        """Handle the game options. (None)"""
+        super(FortyThieves, self).handle_options()
+        self.options['num-tableau'] = self.columns
+
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
         super(FortyThieves, self).set_checkers()
@@ -86,7 +91,7 @@ class FortyThieves(solitaire.MultiSolitaire):
         self.pair_checkers = [solitaire.pair_down, solitaire.pair_suit]
         if self.streets:
             self.pair_checkers[-1] = solitaire.pair_alt_color
-        elif self.not_suits:
+        elif self.not_suit:
             self.pair_checkers[-1] = pair_not_suit
         self.sort_checkers = [solitaire.sort_ace, solitaire.sort_up]
         # Set the dealers.
@@ -101,8 +106,10 @@ class FortyThieves(solitaire.MultiSolitaire):
 
     def set_options(self):
         self.options = {'max-passes': 1, 'num-foundations': 8, 'num-tableau': 10, 'turn-count': 1}
-        for alias in ('emperor', 'deauville', 'dress-parade', 'rank-and-file'): # !! split the last two ala wikip
-            self.option_set.add_group(alias, 'streets down-rows')
+        self.option_set.add_group('emperor', 'streets down-rows=3')
+        self.option_set.add_group('deauville', 'streets down-rows=3')
+        self.option_set.add_group('dress-parade', 'streets down-rows=3 move-seq')
+        self.option_set.add_group('rank-and-file', 'streets down-rows=3 move-seq')
         self.option_set.add_group('lucas', 'found-aces c=13 r=3')
         self.option_set.add_group('maria', 'alt-color c=9 r=4')
         self.option_set.add_group('limited', 'c=12 r=3')
@@ -114,9 +121,9 @@ class FortyThieves(solitaire.MultiSolitaire):
             question = 'Should tableau building be down by anything but suit? bool')
         self.option_set.add_option('columns', ['c'], int, default = 10, 
             question = 'How many tableau columns (stacks) should be dealt (return for 10)? ')
-        self.option_set.add_option('rows', ['r'], int, default = 10, 
+        self.option_set.add_option('rows', ['r'], int, default = 4, 
             question = 'How many tableau rows should be dealt (return for 4)? ')
-        self.option_set.add_option('down-rows', [], int, default = 0,
+        self.option_set.add_option('down-rows', ['d'], int, default = 0,
             question = 'How many rows of the tableau should be dealt face down (return for none)? ')
         self.option_set.add_option('found-aces',
             question = 'Should the aces be dealt to start the foundations? bool')
@@ -148,7 +155,7 @@ def deal_aces_multi(game):
         for foundation in game.find_foundation(ace):
             game.deck.force(ace_text, foundation)
 
-def pair_not_suit(game):
+def pair_not_suit(game, mover, target):
     """
     Build in anything but suits. (str)
     
