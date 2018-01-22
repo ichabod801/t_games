@@ -114,7 +114,7 @@ class FortyThieves(solitaire.MultiSolitaire):
         self.option_set.add_group('maria', 'alt-color c=9 r=4')
         self.option_set.add_group('limited', 'c=12 r=3')
         self.option_set.add_group('indian', 'down-rows=1 c=10 r=3 not-suit')
-        self.option_set.add_group('number ten', 'down-rows=2 c=10 r=4 alt-color move-seq')
+        self.option_set.add_group('number-ten', 'down-rows=2 c=10 r=4 alt-color move-seq')
         self.option_set.add_option('streets', ['alt-color'],
             question = 'Should tableau building be down by alternating color (return for by suit)? bool')
         self.option_set.add_option('not-suit',

@@ -960,15 +960,15 @@ class MultiSolitaire(Solitaire):
             foundations.append(self.foundations[first_index + len(self.deck.suits) * deck_index])
         return foundations
     
-    def guess(self, card):
+    def guess(self, card_arg):
         """
         Guess what move to make for a particular card. (None)
         
         Parameters:
-        card: The card to move. (str)
+        card_arg: The card to move. (str)
         """
         # Loop through the possible cards.
-        cards = self.deck.find(card)
+        cards = self.deck.find(card_arg)
         moves = []
         for card in cards:
             # check sorting
@@ -995,7 +995,7 @@ class MultiSolitaire(Solitaire):
         if moves:
             self.handle_cmd(moves.pop())
         else:
-            self.human.error('There is no valid move for a {}.'.format(card))
+            self.human.error('There is no valid move for a {}.'.format(card_arg))
 
     def set_solitaire(self):
         """
@@ -1003,7 +1003,6 @@ class MultiSolitaire(Solitaire):
         
         For an ulimited number of passes through the stock, set max_passes to -1.
         """
-        # !! needs translating to mulitple decks
         options = {'deck-specs': [], 'num-tableau': 7, 'num-foundations': 4, 'num-reserve': 0,
             'num-cells': 0, 'turn-count': 3, 'max-passes': -1, 'wrap-ranks': False}
         options.update(self.options)
