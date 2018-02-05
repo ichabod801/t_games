@@ -4,6 +4,8 @@
 
 == Short Term To Do List ==
 
+take baker's game out of canfield gipf
+redo all of the current solitaire games catgory attributes.
 Flag for match play.
 rename player_turn to player_action
 have a Player.error() method distinct from Player.tell(), so bots know there's an error.
@@ -43,15 +45,14 @@ board/chase: fox and geese, tafl
 board/displace: mancala, chess (wrapper for Sunfish), battleships!
 board/race: backgammon, snakes and ladders
 board/space: connect four*, halma
-card/solitaire/adding and pairing: golf, pyramid
-card/solitaire/bisley: bisley, martha
-card/solitaire/canfield: canfield!, duchess
-card/solitaire/castle: beleaguered castle, siegecraft
-card/solitaire/fan: la belle lucie, shamrocks
-card/solitaire/forty thieves: forty thieves, maria
-card/solitaire/free cell: free cell*, penguin, baker's game*
-card/solitaire/klondike: agnes, klondike*
-card/solitaire/spider: spider, spiderette
+card/solitaire/open/sorters: crescent, black hole
+card/solitaire/open/builders: bisley, beleagured castle, free cell*
+card/solitaire/open/other: pyramid, nestor
+card/solitaire/hybrid/sorters: interregnum, labyrinth, strategy
+card/solitaire/hybrid/builders: martha, la belle lucie, spider
+card/solitaire/closed/sorters: golf, quadrille
+card/solitaire/closed/builders: canfield*, forty thieves*, klondike*
+card/solitaire/closed/other: monte carlo, accordion
 card/trick: hearts, spades
 card/matching: cribbage, snip snap snorem
 card/shedding: crazy eights*, spit
@@ -72,7 +73,7 @@ other/other: RPS(LS)*, number guessing game
 
 An asterisk means the game has been coded. An exclamation point means the game has been coded and is in the gipf graph.
 
-games planned: 61
+games planned: 63
 games coded:   15
 games gipfed:   4
 
@@ -89,24 +90,38 @@ other: 3
 
 == Gipf Planning ==
 
+games to add:
+
+accordion: 0/1
+black hole: 0/2
+crescent: 0/2
+interregnum: 0/1
+labyrinth: 0/1
+monte carlo: 0/0
+nestor: 0/1
+quadrille: 0/2
+strategy: 0/0
+
+I have loops through open, hybrid, closed, and sorters. I need loops through builders (going up) and others, and then clean up any empty spots.
+
+accordion             -> spit
+accordion             -> canfield
 adventure             -> hunt the wumpus
 adventure             -> zip
-agnes                 -> maria
-agnes                 -> space traders
 bacarat               -> mexico
 bacarat               -> rock-paper-scissors
 backgammon            -> connect four
 backgammon            -> snakes and ladders
-baker's game          -> pyramid
-baker's game          -> tafl
 battleships           -> chess                (win if you sink their battleship)
 beleaguered castle    -> war
-beleaguered castle    -> shamrocks
+beleaguered castle    -> 
 bisley                -> blackjack
 bisley                -> martha
+black hole            -> space traders
+black hole            -> interregnum
 blackjack             -> bacarat
 blackjack             -> ninety-nine          (the dealer can't draw (their turn is skipped))
-canfield              -> baker's game         (make one build by suit)
+canfield              ->          (make one build by suit)
 canfield              -> blackjack            (build a jack on any thing)
 chess                 -> mancala              (take a row and move it one square left or right)
 chess                 -> mate
@@ -116,14 +131,14 @@ craps                 -> zip
 craps                 -> crazy eights
 crazy eights          -> mexico
 crazy eights          -> spit
+crescent              -> tafl
+crescent              -> beleaguered castle
 cribbage              -> backgammon
 cribbage              -> tonk
-duchess               -> canfield
-duchess               -> maria
 dudo                  -> liar's dice
 dudo                  -> poker dice
 freecell              -> hamurabi
-freecell              -> penguin              (move any card to an empty foundation, turn on wrap_ranks)
+freecell              -> nestor
 forty thieves         -> bisley
 forty thieves         -> freecell             (move any one card from the waste)
 fox and geese         -> dudo
@@ -131,8 +146,8 @@ fox and geese         -> ghost
 ghost                 -> hangman              (switch the ghost word to the hangman word)
 ghost                 -> rock-paper-scissors
 global thermonuclear  -> peace and love
-global thermonuclear  -> siegecraft
-golf                  -> duchess
+global thermonuclear  -> 
+golf                  -> black hole
 golf                  -> spider
 golf ii               -> golf
 golf ii               -> spades
@@ -143,48 +158,58 @@ hamurabi              -> pyramid
 hangman               -> fox and geese
 hangman               -> ghost
 hearts                -> rummy
-hearts                -> shamrocks
+hearts                -> 
 hunt the wumpus       -> hangman
-klondike              -> agnes
+interregnum           -> martha
+interregnum           ->
+klondike              -> quadrille
 klondike              -> solitaire dice       (place one card from the stock at the end of the stock)
-la belle lucie        -> agnes
+la belle lucie        -> black hole
 la belle lucie        -> canfield
+labyrinth             -> tafl
+labyrinth             ->
 liar's dice           -> la belle lucie
 liar's dice           -> yacht
 mancala               -> backgammon
 mancala               -> hearts
-maria                 -> forty thieves
-maria                 -> martha
+                 -> forty thieves
+                 -> 
 martha                -> bisley
-martha                -> duchess
+martha                -> 
 mate                  -> dudo
-mate                  -> siegecraft
+mate                  -> 
 mexico                -> adventure
 mexico                -> craps
+monte carlo           -> pyramid
+monte carlo           ->
+nestor                -> crescent
+nestor                ->
 ninety-nine           -> blackjack            (pass without losing a token)
 ninety-nine           -> golf ii
 number guessing       -> snip snap snorem
 number guessing       -> slot machine
 peace and love        -> golf ii
 peace and love        -> space traders
-penguin               -> klondike             (move any one card)
-penguin               -> tafl
+               -> klondike             (move any one card)
+               -> 
 pig                   -> solitaire dice       (pick one of two rolls)
 pig                   -> zip
 poker dice            -> liar's dice
 poker dice            -> roulette
 pyramid               -> golf
 pyramid               -> spider
+quadrille             -> accordion
+quadrille             -> crescent
 rock-paper-scissors   -> number guessing
 rock-paper-scissors   -> peace and love
 roulette              -> connect four         (make a corner bet, one of them will win at 4:1)
 roulette              -> slot machine
-rummy                 -> baker's game
+rummy                 -> 
 rummy                 -> tonk
-siege craft           -> beleaguered castle
-siege craft           -> forty thieves
-shamrocks             -> la belle lucie
-shamrocks             -> penguin
+           -> 
+           -> forty thieves
+             -> la belle lucie
+             -> 
 slot machine          -> bacarat
 slot machine          -> number guessing
 snakes and ladders    -> global thermonuclear
@@ -200,12 +225,12 @@ solitaire dice        -> mate
 space traders         -> adventure
 space traders         -> hamurabi
 spider                -> beleaguered castle
-spider                -> spiderette
-spiderette            -> snakes and ladders
-spiderette            -> spit
+spider                -> labyrinth
+strategy              -> snakes and ladders
+strategy              -> quadrille
 tafl                  -> fox and geese
 tafl                  -> halma
-tonk                  -> spiderette
+tonk                  -> 
 tonk                  -> war
 war                   -> global thermonuclear
 war                   -> ninety-nine
@@ -513,3 +538,62 @@ plakoto (pinning)
     * how many pieces are in a multipiece cell. (override len)
     * if a cell is in a particular territory. (override contains)
     * where all of a player's pieces are.
+
+== Solitaire Organization ==
+
+I'm using Wikipedia's organzation of solitaire games, but I feel it has it's limitations. It's based on being like one of seven particular games, as if there couldn't be an eighth type of game. David Parlett has a different system of organization, although he does not adhere to it exactly. Could I use the basics of it as a categorization?
+
+=== First Question ===
+
+How do the current games fit into it?
+
+open/sorters: 
+open/builders: bisley, beleagured castle, seigecraft~, shamrocks, baker's game, free cell, penguin
+open/other: pyramid
+hybrid/sorters: 
+hybrid/builders: martha, la belle lucie, spider, spiderette
+closed/sorters: golf
+closed/builders: canfield, duchess, forty thieves, maria~, agnes, klondike
+closed/other: 
+
+This is, interestingly, showing directions completely unexplored in my categorization (and the filling out thereof). So I could cut some games, but I would need to add a lot of them as well. This would totally mess up the gipf planning. However, it show the exact weakness I expected in my categorization. I doubt the sorters that I don't have will be similar enough to fit in the current categories.
+
+To quantify the problem: I would need to add eight games, and eleven of the current games are superfluous. I have already picked out some that could be added from the section on 108 games. Some (marked with ~) are really variants of others, and could easily be dropped.
+
+I may want to call 'other' games 'pairers.' It is not clear that that is a universal trait, however. [It appears not to be a universal trait, it's just the most common form of 'other'.]
+
+=== Second Question ===
+
+Can his other categoryies be squeezed into the basics?
+
+Spiders can, he calls them half-open packers (hybrid builders in my scheme).
+Blockades appear to be hybrid sorters.
+Planners appear to be hybrid sorters as well.
+
+Since he puts them in their own categories, one of each should be included in my final categorization.
+
+=== Proposal ===
+
+open/sorters: crescent, black hole
+open/builders: bisley, beleagured castle, shamrocks, free cell, penguin
+open/other: pyramid, nestor
+hybrid/sorters: interregnum, labyrinth, flip flop
+hybrid/builders: martha, la belle lucie, spider
+closed/sorters: golf, quadrille
+closed/builders: canfield, forty thieves, klondike
+closed/other: monte carlo, accordion
+
+ditched: seigecraft~, baker's game, spiderette, duchess, maria~, agnes
+
+That's 22 games, and 6 over the two per category rule. It also does not include his three favorites. I could add strategy in place of flip flop, but his other two favorites are in overfull categories. I could drop penguin and shamrocks to make open/builders more reasonable. That would make it:
+
+open/sorters: crescent, black hole
+open/builders: bisley, beleagured castle, free cell
+open/other: pyramid, nestor
+hybrid/sorters: interregnum, labyrinth, strategy
+hybrid/builders: martha, la belle lucie, spider
+closed/sorters: golf, quadrille
+closed/builders: canfield, forty thieves, klondike
+closed/other: monte carlo, accordion
+
+That's 20 games, and 4 over the two per category rule, and none over three per category. I don't lose anything I've already programmed except baker's game (which I can get back as a variant)

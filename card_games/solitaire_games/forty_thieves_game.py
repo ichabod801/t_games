@@ -28,11 +28,17 @@ OPTIONS:
 alt-color (streets): The tableau is built down in rank by alternating color.
 columns (c): The number of tableau columns (stacks) dealt.
 down-rows: The number of tabelau rows that are dealt face down.
+dress-parade (rank-and-file) Equivalent to 'alt-color down-rows=3 move-seq'.
+emporer (deauville): Equivalent to 'alt-color down-rows=3'.
 found-aces: Start the game with the aces on the foundations.
-lucas: 
+indian: Equivalent to 'down-rows=1 c=10 r=3 not-suit'.
+limited: Equivalent to 'c=12 r=3'.
+lucas: Equivalent to 'found-aces c=13 r=3'.
+maria: Equivalent to 'alt-color c=9 r=4'.
 move-seq: Move any built sequence on the tableau.
 not-suit: The tableau is built down in rank by anything but suit.
-rows (r): The number of tableau rows dealt.
+number-ten: Equivalent to 'down-rows=2 c=10 r=4 alt-color move-seq'.
+rows (r): The number of tableau rows (cards per stack) dealt.
 """
 
 
