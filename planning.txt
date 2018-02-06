@@ -90,20 +90,6 @@ other: 3
 
 == Gipf Planning ==
 
-games to add:
-
-accordion: 0/1
-black hole: 0/2
-crescent: 0/2
-interregnum: 0/1
-labyrinth: 0/1
-monte carlo: 0/0
-nestor: 0/1
-quadrille: 0/2
-strategy: 0/0
-
-I have loops through open, hybrid, closed, and sorters. I need loops through builders (going up) and others, and then clean up any empty spots.
-
 accordion             -> spit
 accordion             -> canfield
 adventure             -> hunt the wumpus
@@ -114,14 +100,14 @@ backgammon            -> connect four
 backgammon            -> snakes and ladders
 battleships           -> chess                (win if you sink their battleship)
 beleaguered castle    -> war
-beleaguered castle    -> 
+beleaguered castle    -> forty thieves
 bisley                -> blackjack
 bisley                -> martha
 black hole            -> space traders
 black hole            -> interregnum
 blackjack             -> bacarat
 blackjack             -> ninety-nine          (the dealer can't draw (their turn is skipped))
-canfield              ->          (make one build by suit)
+canfield              -> la belle lucie
 canfield              -> blackjack            (build a jack on any thing)
 chess                 -> mancala              (take a row and move it one square left or right)
 chess                 -> mate
@@ -146,7 +132,7 @@ fox and geese         -> ghost
 ghost                 -> hangman              (switch the ghost word to the hangman word)
 ghost                 -> rock-paper-scissors
 global thermonuclear  -> peace and love
-global thermonuclear  -> 
+global thermonuclear  -> forty thieves
 golf                  -> black hole
 golf                  -> spider
 golf ii               -> golf
@@ -158,40 +144,36 @@ hamurabi              -> pyramid
 hangman               -> fox and geese
 hangman               -> ghost
 hearts                -> rummy
-hearts                -> 
+hearts                -> strategy
 hunt the wumpus       -> hangman
 interregnum           -> martha
-interregnum           ->
+interregnum           -> labyrinth
 klondike              -> quadrille
 klondike              -> solitaire dice       (place one card from the stock at the end of the stock)
 la belle lucie        -> black hole
 la belle lucie        -> canfield
 labyrinth             -> tafl
-labyrinth             ->
+labyrinth             -> interregnum
 liar's dice           -> la belle lucie
 liar's dice           -> yacht
 mancala               -> backgammon
 mancala               -> hearts
-                 -> forty thieves
-                 -> 
 martha                -> bisley
-martha                -> 
+martha                -> nestor
 mate                  -> dudo
-mate                  -> 
+mate                  -> monte carlo
 mexico                -> adventure
 mexico                -> craps
 monte carlo           -> pyramid
-monte carlo           ->
+monte carlo           -> strategy
 nestor                -> crescent
-nestor                ->
+nestor                -> monte carlo
 ninety-nine           -> blackjack            (pass without losing a token)
 ninety-nine           -> golf ii
 number guessing       -> snip snap snorem
 number guessing       -> slot machine
 peace and love        -> golf ii
 peace and love        -> space traders
-               -> klondike             (move any one card)
-               -> 
 pig                   -> solitaire dice       (pick one of two rolls)
 pig                   -> zip
 poker dice            -> liar's dice
@@ -204,12 +186,8 @@ rock-paper-scissors   -> number guessing
 rock-paper-scissors   -> peace and love
 roulette              -> connect four         (make a corner bet, one of them will win at 4:1)
 roulette              -> slot machine
-rummy                 -> 
+rummy                 -> klondike
 rummy                 -> tonk
-           -> 
-           -> forty thieves
-             -> la belle lucie
-             -> 
 slot machine          -> bacarat
 slot machine          -> number guessing
 snakes and ladders    -> global thermonuclear
@@ -230,7 +208,7 @@ strategy              -> snakes and ladders
 strategy              -> quadrille
 tafl                  -> fox and geese
 tafl                  -> halma
-tonk                  -> 
+tonk                  -> accordion
 tonk                  -> war
 war                   -> global thermonuclear
 war                   -> ninety-nine
