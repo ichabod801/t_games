@@ -158,7 +158,7 @@ class Roulette(game.Game):
 
     Overridden Methods:
     handle_options
-    player_turn
+    player_action
     set_options
     set_up
     """
@@ -1121,7 +1121,7 @@ class Roulette(game.Game):
         else:
             self.human.tell('You did not win anything this spin.')
 
-    def player_turn(self, player):
+    def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
 

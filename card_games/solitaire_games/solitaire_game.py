@@ -495,7 +495,7 @@ class Solitaire(game.Game):
             self.human.tell(error)
         return not error
 
-    def player_turn(self, player):
+    def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
 

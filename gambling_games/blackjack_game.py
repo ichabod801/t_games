@@ -121,7 +121,7 @@ class Blackjack(game.Game):
     Overridden Methods:
     do_quit
     game_over
-    player_turn
+    player_action
     set_options
     set_up
     """
@@ -548,7 +548,7 @@ class Blackjack(game.Game):
         # Return integer arguments.
         return int_args
 
-    def player_turn(self, player):
+    def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
 

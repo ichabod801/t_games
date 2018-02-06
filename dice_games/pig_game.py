@@ -439,7 +439,7 @@ class Pig(game.Game):
     game_over
     handle_options
     set_up
-    player_turn
+    player_action
     """
 
     name = 'Pig'
@@ -547,7 +547,7 @@ class Pig(game.Game):
         self.option_set.handle_settings(self.raw_options)
         random.shuffle(self.players)
 
-    def player_turn(self, player):
+    def player_action(self, player):
         """
         Have one player roll until terminal number or they choose to stop. (bool)
 

@@ -232,7 +232,7 @@ class RPS(game.Game):
     Overridden Methods:
     game_over
     handle_options
-    player_turn
+    player_action
     set_options
     set_up
     """
@@ -280,7 +280,7 @@ class RPS(game.Game):
         if self.match > 1:
             self.flags |= 256
 
-    def player_turn(self, player):
+    def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
 

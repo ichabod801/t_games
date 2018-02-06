@@ -95,7 +95,7 @@ class NinetyNine(game.Game):
     do_quit
     game_over
     handle_options
-    player_turn
+    player_action
     set_up
     """
 
@@ -232,7 +232,7 @@ class NinetyNine(game.Game):
         for bot in range(self.medium):
             self.players.append(Bot99Medium([player.name for player in self.players]))
 
-    def player_turn(self, player):
+    def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
 

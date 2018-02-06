@@ -281,7 +281,7 @@ class CrazyEights(game.Game):
     Overridden Methods:
     game_over
     handle_options
-    player_turn
+    player_action
     set_up
     """
 
@@ -557,7 +557,7 @@ class CrazyEights(game.Game):
         elif self.one_alert and len(hand.cards) == 1:
             self.human.tell('{} has one card left.'.format(player.name))
 
-    def player_turn(self, player):
+    def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
 

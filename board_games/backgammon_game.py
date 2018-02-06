@@ -430,7 +430,7 @@ class Backgammon(game.Game):
 
     Overridden Methods:
     game_over
-    player_turn
+    player_action
     set_options
     set_up
     """
@@ -638,7 +638,7 @@ class Backgammon(game.Game):
         if self.rolls[0] == self.rolls[1]:
             self.rolls.extend(self.rolls)
 
-    def player_turn(self, player):
+    def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
 

@@ -470,7 +470,7 @@ class ConnectFour(game.Game):
     clean_up
     game_over
     handle_options
-    player_turn
+    player_action
     set_up
     """
 
@@ -559,7 +559,7 @@ class ConnectFour(game.Game):
             valid = ['easy', 'medium', 'hard'], default = 'medium', 
             question = 'How hard of a bot do you want to play against (return for medium)? ')
         
-    def player_turn(self, now_player):
+    def player_action(self, now_player):
         """
         Play one turn for the given player. (None)
 

@@ -294,7 +294,7 @@ class Wumpus(game.Game):
 
     Overridden Methods:
     game_over
-    player_turn
+    player_action
     set_up
     """
 
@@ -352,7 +352,7 @@ class Wumpus(game.Game):
         self.scores[self.human.name] = self.turns
         return True
 
-    def player_turn(self, player):
+    def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
 

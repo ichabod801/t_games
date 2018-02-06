@@ -79,7 +79,7 @@ class SolitaireDice(game.Game):
     Overridden Methods:
     set_up
     game_over
-    player_turn
+    player_action
     """
 
     aka = ['SoDi']
@@ -154,7 +154,7 @@ class SolitaireDice(game.Game):
                 self.win_loss_draw[0] = 1
             return True
 
-    def player_turn(self, player):
+    def player_action(self, player):
         """
         Roll, discard, and choose two pairs. (bool)
 

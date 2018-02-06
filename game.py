@@ -75,7 +75,7 @@ class Game(OtherCmd):
     game_over: Check for the end of the game. (bool)
     handle_options: Handle game options and set the player list. (None)
     play: Play the game. (list of int)
-    player_turn: Handle a player's turn or other player actions. (bool)
+    player_action: Handle a player's turn or other player actions. (bool)
     set_options: Define the options for the game. (bool)
     set_up: Handle any pre-game tasks. (None)
     tournament: Run a tournament of the game. (dict)
@@ -323,7 +323,7 @@ class Game(OtherCmd):
         self.player_index = 0
         while True:
             # Loop through player actions until their turn is done.
-            while self.player_turn(self.players[self.player_index]):
+            while self.player_action(self.players[self.player_index]):
                 pass
             # Update tracking.
             self.turns += 1
@@ -340,7 +340,7 @@ class Game(OtherCmd):
         results = [self.scores[self.human.name], self.turns, self.flags, self.option_set.settings_text]
         return self.win_loss_draw + results
 
-    def player_turn(self, player):
+    def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
 
@@ -400,7 +400,7 @@ class Flip(Game):
 
     Overridden Methods:
     game_over
-    player_turn
+    player_action
     set_up
     """
 
@@ -439,7 +439,7 @@ class Flip(Game):
                     self.human.tell(message.format(self.bot.name, winning_score - 2))
                 return True
 
-    def player_turn(self, player):
+    def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
 
@@ -513,7 +513,7 @@ class Sorter(Game):
 
     Overridden Methods:
     handle_options
-    player_turn
+    player_action
     set_up
     """
 
@@ -549,7 +549,7 @@ class Sorter(Game):
             self.flags |= 1
             self.length = int(self.raw_options)
 
-    def player_turn(self, player):
+    def player_action(self, player):
         """
         Get two numbers to swap. (bool)
 

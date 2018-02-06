@@ -4,12 +4,13 @@
 
 == Short Term To Do List ==
 
-Flag for match play.
-rename player_turn to player_action
+rename player_action to player_action
 have a Player.error() method distinct from Player.tell(), so bots know there's an error.
 	It's written, it needs implementation in games.
 Domino Dice (a dice pool of two six siders that uses double six dominos instead)
 Finish options_test.py
+redo Baker's Game as a variant of FreeCell.
+title to menu so you know what category you're in.
 A round of one per penultimate category, two for solitaire.
 	Strategy
 	Cribbage

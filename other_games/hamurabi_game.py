@@ -279,7 +279,7 @@ class Hamurabi(game.Game):
         self.start_population = 100
         self.start_rats = 200
 
-    def player_turn(self, player):
+    def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
 
