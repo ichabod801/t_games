@@ -48,7 +48,7 @@ class FortyThieves(solitaire.MultiSolitaire):
     """
 
     aka = ['Big Forty', 'Le Cadran', 'Napoleon at St Helena', 'Roosevelt at San Juan']
-    categories = ['Card Games', 'Solitaire Games', 'Forty Thieves']
+    categories = ['Card Games', 'Solitaire Games', 'Closed Games', 'Builders']
     name = 'Forty Thieves'
     num_options = 7
 

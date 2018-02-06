@@ -75,7 +75,7 @@ class Canfield(solitaire.Solitaire):
     """
 
     aka = ['Demon']
-    categories = categories = ['Card Games', 'Solitaire Games', 'Canfield Games']
+    categories = categories = ['Card Games', 'Solitaire Games', 'Closed Games', 'Builders']
     credits = CREDITS
     name = 'Canfield'
     num_options = 7 # There are basically seven things the options modify.
@@ -89,17 +89,8 @@ class Canfield(solitaire.Solitaire):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
-        game, losses = self.gipf_check(arguments, ("baker's game", 'blackjack'))
-        if game == "baker's game":
-            if not losses:
-                pair_hold = self.pair_checkers
-                self.pair_checkers = [solitaire.pair_down, solitaire.pair_suit]
-                go = True
-                while go:
-                    cards = self.human.ask('Enter two cards of the same suit to build: ')
-                    go = self.do_build(cards)
-                self.pair_checkers = pair_hold
-        elif game == 'blackjack':
+        game, losses = self.gipf_check(arguments, ('blackjack',))
+        if game == 'blackjack':
             if not losses:
                 pair_hold = self.pair_checkers
                 self.pair_checkers = []

@@ -4,8 +4,6 @@
 
 == Short Term To Do List ==
 
-take baker's game out of canfield gipf
-redo all of the current solitaire games catgory attributes.
 Flag for match play.
 rename player_turn to player_action
 have a Player.error() method distinct from Player.tell(), so bots know there's an error.
@@ -13,24 +11,24 @@ have a Player.error() method distinct from Player.tell(), so bots know there's a
 Domino Dice (a dice pool of two six siders that uses double six dominos instead)
 Finish options_test.py
 A round of one per penultimate category, two for solitaire.
-	Backgammon
-		genetic engineering
-			see if I can get a good doubling strategy with the new ask method
-			don't spend too much time on it, move on.
-		gipf
-		variants
-	Forty Thieves
-	Bisley
+	Strategy
 	Cribbage
 	Yacht
 	Craps
 	Hangman
+	Backgammon
+		read up on backgammon strategy
+		try (once) to make a better bot
+		gipf
+		variants
 Rinse and repeat
 
 == Long Term To Do List ==
 
 Program the games planned for text_games round 2.
 	Try for every category gets one before any gets two.
+	Shoot for at least 25 before releasing (to beat bsdgames)
+		try to have a connected gipf grapf
 Clean Up
     documentation (style guide)
     output (one blank line)
