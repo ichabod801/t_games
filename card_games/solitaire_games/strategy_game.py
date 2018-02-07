@@ -6,7 +6,7 @@ Strategy: A game of Strategy. (solitaire.Solitaire)
 """
 
 
-import tgames.solitaire_game as solitaire
+import tgames.card_games.solitaire_games.solitaire_game as solitaire
 
 
 CREDITS = """
@@ -25,24 +25,25 @@ piles: The number of tableau piles (1-8).
 
 
 class Strategy(solitaire.Solitaire):
-	"""
-	A game of Strategy. (solitaire.Solitaire)
+    """
+    A game of Strategy. (solitaire.Solitaire)
 
-	Overridden Methods:
+    Overridden Methods:
     set_checkers
     set_options
-	"""
+    """
 
-	credits = CREDITS
-	categories = ['Card Games', 'Solitaire Games', 'Closed Games', 'Sorters']
-	name = 'Strategy'
+    credits = CREDITS
+    categories = ['Card Games', 'Solitaire Games', 'Closed Games', 'Sorters']
+    name = 'Strategy'
     num_options = 1
     rules = RULES
 
-	def set_checkers(self):
+    def set_checkers(self):
         """Set up the game specific rules. (None)"""
         self.build_checkers = [build_reserve]
         self.lane_checkers = [lane_reserve]
+        self.pair_checkers = []
         self.sort_checkers = [solitaire.sort_ace, solitaire.sort_up, sort_no_reserve]
         self.dealers = [solitaire.deal_reserve_n(52)]
 
@@ -66,7 +67,7 @@ def build_reserve(game, mover, target, moving_stack):
     """
     error = ''
     # check that mover is the top card of the waste.
-    if mover != game.reserve[0][-1]:
+    if (not game.reserve[0]) or mover != game.reserve[0][-1]:
         error = 'You may only build the top card from the reserve.'
     return error
 
@@ -81,7 +82,7 @@ def lane_reserve(game, card, moving_stack):
     """
     error = ''
     # check for the moving card being a king.
-    if card !=  game.reserve[0][-1]:
+    if (not game.reserve[0]) or card !=  game.reserve[0][-1]:
         error = 'You can only lane the top card from the reserve.'
     return error
 
@@ -96,7 +97,7 @@ def sort_no_reserve(game, card, foundation):
     """
     error = ''
     # check for match to foundation pile
-    if reserve and card.rank != 'A':
+    if game.reserve[0] and card.rank != 'A':
         error = 'Only aces can be sorted before the reserve is emptied.'
     return error
 
