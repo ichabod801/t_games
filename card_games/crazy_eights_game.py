@@ -394,7 +394,7 @@ class CrazyEights(game.Game):
                     return False
                 else:
                     message = 'That is not a valid play. Please draw or play a {}.'
-                    player.tell(message.format(self.draw_rank))
+                    player.error(message.format(self.draw_rank))
         # Draw the cards.
         if self.deck.cards:
             for card in range(self.forced_draw):
@@ -508,9 +508,9 @@ class CrazyEights(game.Game):
             return False
         # Give appropriate error for invalid pass.
         elif self.empty_deck == 'pass':
-            player.tell('You may not pass until the deck is empty.')
+            player.error('You may not pass until the deck is empty.')
         else:
-            player.tell('None shall pass.')
+            player.error('None shall pass.')
         return True
 
     def play_card(self, player, card_text):
@@ -534,7 +534,7 @@ class CrazyEights(game.Game):
                 if suit and suit[0] in 'CDHS':
                     self.suit = suit[0]
                     break
-                player.tell('Please enter a valid suit (C, D, H, or S).')
+                player.error('Please enter a valid suit (C, D, H, or S).')
         else:
             self.suit = ''
         # Handle forced draws.
@@ -678,7 +678,7 @@ class CrazyEights(game.Game):
             self.play_card(player, card_text)
         # Warn for invalid plays.
         else:
-            player.tell('That is not a valid play.')
+            player.error('That is not a valid play.')
             return True
         return False
 

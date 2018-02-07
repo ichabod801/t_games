@@ -203,7 +203,7 @@ class Blackjack(game.Game):
         """
         # Check for proper timing.
         if self.phase != 'play':
-            self.human.tell('No hands have been dealt yet.')
+            self.human.error('No hands have been dealt yet.')
             return False
         # Parse the arguments.
         if not arguments.strip():
@@ -216,16 +216,16 @@ class Blackjack(game.Game):
         hand = self.player_hands[hand_index]
         # Check for valid bet amount.
         if bet > self.scores[self.human.name]:
-            self.human.tell('You only have {} bucks to bet.'.format(self.scores[self.human.name]))
+            self.human.error('You only have {} bucks to bet.'.format(self.scores[self.human.name]))
         elif self.true_double and bet != self.bets[hand_index]:
             self.human.tell('You can only double the original bet ({})'.format(self.bets[hand_index]))
         elif bet > self.bets[hand_index]:
-            self.human.tell('You can only double up to your original bet ({}).'.format(self.bets[hand_index]))
+            self.human.error('You can only double up to your original bet ({}).'.format(self.bets[hand_index]))
         # Make sure the hand can receive cards.
         elif hand.status != 'open':
-            self.human.tell('That hand is {}, you cannot double it.'.format(hand.status))
+            self.human.error('That hand is {}, you cannot double it.'.format(hand.status))
         elif not self.double_split and hand.was_split:
-            self.human.tell('You cannot double a split hand.')
+            self.human.error('You cannot double a split hand.')
         else:
             # Increase the bet
             self.bets[hand_index] += bet
@@ -265,7 +265,7 @@ class Blackjack(game.Game):
         """
         # Check for proper timing.
         if self.phase != 'play':
-            self.human.tell('No hands have been dealt yet.')
+            self.human.error('No hands have been dealt yet.')
             return False
         # Parse the arguments.
         int_args = self.parse_arguments('hit', arguments)
@@ -275,7 +275,7 @@ class Blackjack(game.Game):
         # Make sure hand can receive cards.
         hand = self.player_hands[hand_index]
         if hand.status != 'open':
-            self.human.tell('That hand is {}, you cannot hit it.'.format(hand.status))
+            self.human.error('That hand is {}, you cannot hit it.'.format(hand.status))
         else:
             # Draw the card.
             hand.draw()
@@ -298,7 +298,7 @@ class Blackjack(game.Game):
         """
         # Check for proper timing.
         if self.phase != 'play':
-            self.human.tell('No hands have been dealt yet.')
+            self.human.error('No hands have been dealt yet.')
             return False
         # Parse the arguments.
         int_args = self.parse_arguments('hint', arguments)
@@ -355,7 +355,7 @@ class Blackjack(game.Game):
         """
         # Check timing.
         if self.phase != 'play':
-            self.human.tell('No hands have been dealt yet.')
+            self.human.error('No hands have been dealt yet.')
             return False
         # Parse arguments.
         int_args = self.parse_arguments('split', arguments)
@@ -365,13 +365,13 @@ class Blackjack(game.Game):
         hand = self.player_hands[hand_index]
         # Check for valid split.
         if len(hand.cards) != 2:
-            self.human.tell('You can only split a hand of two cards.')
+            self.human.error('You can only split a hand of two cards.')
         elif self.split_rank and hand.cards[0].rank != hand.cards[1].rank:
-            self.human.tell('You may only split cards of the same rank.')
+            self.human.error('You may only split cards of the same rank.')
         elif hand.card_values[hand.cards[0].rank] != hand.card_values[hand.cards[1].rank]:
-            self.human.tell('You may only split cards of the same value.')
+            self.human.error('You may only split cards of the same value.')
         elif not self.resplit and hand.was_split:
-            self.human.tell('You may not split a hand that was already split.')
+            self.human.error('You may not split a hand that was already split.')
         else:
             # Split the hands.
             new_hand = hand.split()
@@ -397,7 +397,7 @@ class Blackjack(game.Game):
         """
         # Check timing.
         if self.phase != 'play':
-            self.human.tell('No hands have been dealt yet.')
+            self.human.error('No hands have been dealt yet.')
             return False
         # Parse arguments.
         int_args = self.parse_arguments('hit', arguments)
@@ -407,7 +407,7 @@ class Blackjack(game.Game):
         # Check that the hand is not arleady standing or busted.
         hand = self.player_hands[hand_index]
         if hand.status != 'open':
-            self.human.tell('That hand is {}, you cannot stand with it.'.format(hand.status))
+            self.human.error('That hand is {}, you cannot stand with it.'.format(hand.status))
         else:
             # Set the hand to standing.
             hand.status = 'standing'
@@ -421,10 +421,10 @@ class Blackjack(game.Game):
         """
         # Check for proper timing.
         if not self.surrender:
-            self.human.tell('Surrender is not allowed in this game.')
+            self.human.error('Surrender is not allowed in this game.')
             return False
         if self.phase != 'play':
-            self.human.tell('No hands have been dealt yet.')
+            self.human.error('No hands have been dealt yet.')
             return False
         # Parse the arguments.
         int_args = self.parse_arguments('surrender', arguments)
@@ -434,11 +434,11 @@ class Blackjack(game.Game):
         # Make sure hand has no actions taken on it.
         hand = self.player_hands[hand_index]
         if hand.status != 'open':
-            self.human.tell('That hand is {}, you cannot hit it.'.format(hand.status))
+            self.human.error('That hand is {}, you cannot surrender it.'.format(hand.status))
         elif hand.was_split:
-            self.human.tell('You cannot surrender a split hand.')
+            self.human.error('You cannot surrender a split hand.')
         elif len(hand.cards) > 2:
-            self.human.tell('You cannot surrender a hand that has been hit.')
+            self.human.error('You cannot surrender a hand that has been hit.')
         else:
             hand.status = 'surrendered'
             self.scores[self.human.name] += int(self.bets[hand_index] / 2)
@@ -530,18 +530,18 @@ class Blackjack(game.Game):
             int_args = [int(arg) for arg in arguments.split()]
         except ValueError:
             message = 'Invalid argument to {} ({}): must be no more than {} integers.'
-            self.human.tell(message.format(command, arguments, max_args))
+            self.human.error(message.format(command, arguments, max_args))
             return []
         # Check for correct number of arguments.
         if max_args - len(int_args) == 1:
             # Add default hand index if necessary.
             int_args.append(1)
         if len(int_args) != max_args:
-            self.human.tell('Need more arguments to the {0} command. See help {0}.'.format(command))
+            self.human.error('Need more arguments to the {0} command. See help {0}.'.format(command))
             return []
         # Check for a valid hand index.
         if int_args[-1] > len(self.player_hands):
-            self.human.tell('Invalid hand index ({}).'.format(int_args[-1]))
+            self.human.error('Invalid hand index ({}).'.format(int_args[-1]))
             return []
         # Adjust hand index to 0 indexing
         int_args[-1] -= 1

@@ -98,7 +98,7 @@ class Canfield(solitaire.Solitaire):
                 while go:
                     cards = self.human.ask('Enter a jack and anything to build it on: ')
                     if cards.strip().upper()[0] != 'J':
-                        self.human.tell('The first card must be a jack.')
+                        self.human.error('The first card must be a jack.')
                         continue
                     go = self.do_build(cards)
                 self.pair_checkers = pair_hold
@@ -193,7 +193,7 @@ def deal_selective(game):
         founder = game.human.ask(message).strip()
         if founder in starters:
             break
-        game.human.tell('That is not one of the available cards.')
+        game.human.error('That is not one of the available cards.')
     # Deal the foundation card chosen.
     founder = game.deck.find(founder)
     target = game.find_foundation(founder)

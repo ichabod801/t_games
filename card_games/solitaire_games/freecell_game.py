@@ -111,9 +111,9 @@ class FreeCell(solitaire.Solitaire):
                     cards_raw = self.human.ask('Enter a free cell card and a card to build it on: ')
                     cards = cards_raw.upper().split()
                     if cards[0] not in cell_check:
-                        self.human.tell('You must build with a free cell card.')
+                        self.human.error('You must build with a free cell card.')
                     elif cards[1] not in tableau_check:
-                        self.human.tell('You must build to the top of a tableau pile.')
+                        self.human.error('You must build to the top of a tableau pile.')
                     elif not self.do_build(cards_raw):
                         break
                 self.pair_checkers = pair_hold

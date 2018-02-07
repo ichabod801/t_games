@@ -217,7 +217,7 @@ class Game(OtherCmd):
                 stack.append(float(word))
             # handle garbage
             else:
-                self.human.tell('Invalid RPN expression.')
+                self.human.error('Invalid RPN expression.')
         # Display the stack.
         self.human.tell(' '.join([str(x) for x in stack]))
         return True

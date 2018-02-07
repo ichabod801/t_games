@@ -144,7 +144,7 @@ class Solitaire(game.Game):
                         break
         # handle determination
         if error and show_error:
-            self.human.tell(error)
+            self.human.error(error)
         return not error
         
     def build_pair(self, mover, target):
@@ -181,13 +181,13 @@ class Solitaire(game.Game):
         """
         cards = self.deck.card_re.findall(line)
         if not cards:
-            self.human.tell('I do not recognize that command.')
+            self.human.error('I do not recognize that command.')
         elif len(cards) == 1:
             return self.guess(cards[0])
         elif len(cards) == 2:
             return self.do_build(' '.join(cards))
         else:
-            self.human.tell("I don't know what to do with that many cards.")
+            self.human.error("I don't know what to do with that many cards.")
         
     def do_auto(self, max_rank):
         """
@@ -203,7 +203,7 @@ class Solitaire(game.Game):
         elif max_rank in self.deck.ranks:
             max_rank = self.deck.ranks.index(max_rank)
         else:
-            self.human.tell('There was an error: the rank specified is not in the deck.')
+            self.human.error('There was an error: the rank specified is not in the deck.')
             return True
         # loop until there are no sortable cards
         while True:
@@ -252,7 +252,7 @@ class Solitaire(game.Game):
         # parse the arguments
         card_arguments = self.deck.card_re.findall(arguments.upper())
         if len(card_arguments) != 2:
-            self.human.tell('Invalid arguments to build command: {!r}.'.format(arguments))
+            self.human.error('Invalid arguments to build command: {!r}.'.format(arguments))
             return True
         mover, target = card_arguments
         # get the details on all the cards
@@ -276,7 +276,7 @@ class Solitaire(game.Game):
         # parse the arguments
         card_arguments = self.deck.card_re.findall(card.upper())
         if len(card_arguments) != 1:
-            self.human.tell('Invalid arguments to build command: {!r}.'.format(arguments))
+            self.human.error('Invalid arguments to build command: {!r}.'.format(arguments))
             return True
         # get the details on the card to be freed.
         card = self.deck.find(card_arguments[0])
@@ -296,7 +296,7 @@ class Solitaire(game.Game):
         """
         # get the card and the cards to be moved
         if not self.deck.card_re.match(card):
-            self.human.tell('Invalid card passed to lane command: {!r}.'.format(card))
+            self.human.error('Invalid card passed to lane command: {!r}.'.format(card))
             return True
         card = self.deck.find(card)
         moving_stack = self.super_stack(card)
@@ -316,7 +316,7 @@ class Solitaire(game.Game):
         """
         # get the card
         if not self.deck.card_re.match(card):
-            self.human.tell('Invalid card passed to sort command: {!r}.'.format(card))
+            self.human.error('Invalid card passed to sort command: {!r}.'.format(card))
             return True
         card = self.deck.find(card)
         foundation = self.find_foundation(card)
@@ -348,7 +348,7 @@ class Solitaire(game.Game):
                 self.stock_passes += 1
             return False
         else:
-            self.human.tell('You may not make any more passes through the stock.')
+            self.human.error('You may not make any more passes through the stock.')
             return True
     
     def do_undo(self, num_moves):
@@ -378,7 +378,7 @@ class Solitaire(game.Game):
                     self.do_undo()
             # no move to undo
             else:
-                self.human.tell('There are no moves to undo.')
+                self.human.error('There are no moves to undo.')
                 break
         return not moves_undone
             
@@ -492,7 +492,7 @@ class Solitaire(game.Game):
                     break
         # handle determination
         if error and show_error:
-            self.human.tell(error)
+            self.human.error(error)
         return not error
 
     def player_action(self, player):
@@ -775,7 +775,7 @@ class MultiSolitaire(Solitaire):
         elif max_rank in self.deck.ranks:
             max_rank = self.deck.ranks.index(max_rank)
         else:
-            self.human.tell('There was an error: the rank specified is not in the deck.')
+            self.human.error('There was an error: the rank specified is not in the deck.')
             return True
         # loop until there are no sortable cards
         while True:
@@ -828,7 +828,7 @@ class MultiSolitaire(Solitaire):
         # parse the arguments
         card_arguments = self.deck.card_re.findall(arguments.upper())
         if len(card_arguments) != 2:
-            self.human.tell('Invalid arguments to build command: {!r}.'.format(arguments))
+            self.human.error('Invalid arguments to build command: {!r}.'.format(arguments))
             return True
         mover, target = card_arguments
         # get the details on all the cards
@@ -859,7 +859,7 @@ class MultiSolitaire(Solitaire):
         # parse the arguments
         card_arguments = self.deck.card_re.findall(card.upper())
         if len(card_arguments) != 1:
-            self.human.tell('Invalid arguments to build command: {!r}.'.format(arguments))
+            self.human.error('Invalid arguments to build command: {!r}.'.format(arguments))
             return True
         # get the details on the card to be freed.
         cards = self.deck.find(card_arguments[0])
@@ -884,7 +884,7 @@ class MultiSolitaire(Solitaire):
         """
         # get the card and the cards to be moved
         if not self.deck.card_re.match(card):
-            self.human.tell('Invalid card passed to lane command: {!r}.'.format(card))
+            self.human.error('Invalid card passed to lane command: {!r}.'.format(card))
             return True
         cards = self.deck.find(card)
         self.alt_moves = []
@@ -910,7 +910,7 @@ class MultiSolitaire(Solitaire):
         # !! sorting cards from the stock.
         # get the card
         if not self.deck.card_re.match(card):
-            self.human.tell('Invalid card passed to sort command: {!r}.'.format(card))
+            self.human.error('Invalid card passed to sort command: {!r}.'.format(card))
             return True
         cards = self.deck.find(card)
         self.alt_moves = []

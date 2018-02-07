@@ -501,7 +501,7 @@ class Pig(game.Game):
                 self.human.tell(message.format(choice, self.turn_score))
                 go = True
         else:
-            self.human.tell('Say what?')
+            self.human.error('Say what?')
             go = True
         return go
 

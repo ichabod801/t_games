@@ -167,7 +167,7 @@ class Interface(other_cmd.OtherCmd):
         if game_name.lower() in self.games:
             self.do_play(line)
         else:
-            self.human.tell('That is an invalid selection.')
+            self.human.error('That is an invalid selection.')
 
     def do_credits(self, arguments):
         """
@@ -236,7 +236,7 @@ class Interface(other_cmd.OtherCmd):
             self.human.tell()
         else:
             # Warn about unknown games.
-            self.human.tell("\nI don't know how to play that game.")
+            self.human.error("\nI don't know how to play that game.")
         return True
 
     def do_random(self, arguments):
@@ -267,7 +267,7 @@ class Interface(other_cmd.OtherCmd):
             self.human.tell(self.games[arguments].rules)
             self.human.ask('Press Enter to continue: ')
         else:
-            self.human.tell("\nI do not know the rules to that game.")
+            self.human.error("\nI do not know the rules to that game.")
         return True
 
     def do_stats(self, arguments):

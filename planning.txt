@@ -10,6 +10,7 @@ Domino Dice (a dice pool of two six siders that uses double six dominos instead)
 Finish options_test.py
 redo Baker's Game as a variant of FreeCell.
 title to menu so you know what category you're in.
+	top command to get to the top of the menu.
 A round of one per penultimate category, two for solitaire.
 	Cribbage
 	Yacht

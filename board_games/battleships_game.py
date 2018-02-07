@@ -129,11 +129,11 @@ class Battleships(game.Game):
                     ship = self.human.ask('\nEnter a ship type: ')
                     if ship in INVENTORIES['bradley']:
                         break
-                    self.human.tell('I do not recognize that ship type.')
+                    self.human.error('I do not recognize that ship type.')
                 board = self.boards[self.bot.name]
                 ships = [(name, squares) for name, squares in board.fleet if name == ship and squares]
                 if not ships:
-                    self.human.tell('There are no more {}s.'.format(ship.lower()))
+                    self.human.error('There are no more {}s.'.format(ship.lower()))
                 else:
                     name, squares = random.choice(ships)
                     square = random.choice(squares)
@@ -528,10 +528,10 @@ class SeaBoard(object):
                     squares = SQUARE_RE.findall(move.upper())
                     # Check for the correct number of squares.
                     if size == 1 and len(squares) != 1:
-                        self.player.tell('You must enter one square for a {}.'.format(ship.lower()))
+                        self.player.error('You must enter one square for a {}.'.format(ship.lower()))
                         continue
                     elif size > 1 and len(squares) != 2:
-                        self.player.tell('Please enter a start and end square.')
+                        self.player.error('Please enter a start and end square.')
                         continue
                     # Get the full list of squares.
                     if size == 1:
@@ -540,11 +540,11 @@ class SeaBoard(object):
                         ship_squares = self.make_ship(*squares)
                     # Check for diagonal ships.
                     if not ship_squares:
-                        self.player.tell('Ships must be horizontal or vertical.')
+                        self.player.error('Ships must be horizontal or vertical.')
                         continue
                     # Check for the correct size of ship.
                     elif len(ship_squares) != size:
-                        self.player.tell('{}s must be {} squares long.'.format(ship.lower(), size))
+                        self.player.error('{}s must be {} squares long.'.format(ship.lower(), size))
                         continue
                     # Check for adjacent or overlapping ships.
                     for square in ship_squares:
@@ -558,7 +558,7 @@ class SeaBoard(object):
                         self.fleet.append((ship, ship_squares))
                         break
                     # Warn player about overlapping or adjacent ships.
-                    self.player.tell('That ship is adjacent to or overlaps another ship.')
+                    self.player.error('That ship is adjacent to or overlaps another ship.')
 
     def show(self, to = 'friend'):
         """

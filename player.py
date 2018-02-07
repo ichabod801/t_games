@@ -157,10 +157,10 @@ class Player(object):
             if self.int_re.match(response):
                 response = [int(num) for num in self.int_re.findall(response)]
                 if low is not None and min(response) < low:
-                    self.tell('{} is too low. The lowest valid response is {}.'.format(min(response), low))
+                    self.error('{} is too low. The lowest valid response is {}.'.format(min(response), low))
                 elif high is not None and max(response) > high:
                     highest = max(response)
-                    self.tell('{} is too high. The highest valid response is {}'.format(highest, high))
+                    self.error('{} is too high. The highest valid response is {}'.format(highest, high))
                 elif valid:
                     for number in set(response):
                         if response.count(number) > valid.count(number):
@@ -210,8 +210,8 @@ class Player(object):
             if response in valid:
                 return response
             # Warn the user on invalid responses.
-            self.tell('That is not a valid response.')
-            self.tell('Please choose one of: {}.'.format(', '.join(valid)))
+            self.error('That is not a valid response.')
+            self.error('Please choose one of: {}.'.format(', '.join(valid)))
 
     def clean_up(self):
         """Do any necessary post-game processing. (None)"""

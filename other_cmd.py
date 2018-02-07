@@ -47,7 +47,7 @@ class OtherCmd(object):
         Parameters:
         text: The raw text input by the user. (str)
         """
-        self.human.tell('I do not recognize the command {!r}.'.format(text))
+        self.human.error('I do not recognize the command {!r}.'.format(text))
         return True
 
     def do_debug(self, arguments):
@@ -60,8 +60,8 @@ class OtherCmd(object):
         try:
             result = eval(arguments)
         except (Exception, AttributeError, ImportError, NameError, TypeError, ValueError):
-            self.human.tell('\nThere was an exception raised while processing that command:')
-            self.human.tell(traceback.format_exc(), end = '')
+            self.human.error('\nThere was an exception raised while processing that command:')
+            self.human.error(traceback.format_exc(), end = '')
         else:
             self.human.tell(repr(result))
             self.human.tell()

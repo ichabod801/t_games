@@ -222,7 +222,7 @@ class Klondike(solitaire.Solitaire):
         arguments. The (ignored) arguments to the command. (str)
         """
         if self.switched:
-            self.human.tell('You may not switch to one card at a time.')
+            self.human.error('You may not switch to one card at a time.')
         else:
             # Reset the options
             self.switched = True

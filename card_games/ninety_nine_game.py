@@ -279,10 +279,10 @@ class NinetyNine(game.Game):
                     return False
                 else:
                     # Warn on bad total.
-                    player.tell('Incorrect or invalid total provided.')
+                    player.error('Incorrect or invalid total provided.')
             else:
                 # Warn if the player doesn't have the card.
-                player.tell('You do not have that card.')
+                player.error('You do not have that card.')
         else:
             # Handle other commands.
             return self.handle_cmd(move)

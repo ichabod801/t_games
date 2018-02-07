@@ -99,12 +99,12 @@ class Hamurabi(game.Game):
         try:
             acres = int(arguments)
         except ValueError:
-            self.human.tell('Invalid argument to buy: {!r}.'.format(arguments))
+            self.human.error('Invalid argument to buy: {!r}.'.format(arguments))
             return False
         if acres < 0:
-            self.human.tell("You can't buy negative acres.")
+            self.human.error("You can't buy negative acres.")
         elif acres > self.storage / self.acre_cost:
-            self.human.tell("You don't have enough grain to buy that many acres.")
+            self.human.error("You don't have enough grain to buy that many acres.")
         else:
             self.storage -= acres * self.acre_cost
             self.acres += acres
@@ -120,12 +120,12 @@ class Hamurabi(game.Game):
         try:
             bales = int(arguments)
         except ValueError:
-            self.human.tell('Invalid argument to feed: {!r}.'.format(arguments))
+            self.human.error('Invalid argument to feed: {!r}.'.format(arguments))
             return False
         if bales < 0:
-            self.human.tell("People vomitting on you is not supported in this version.")
+            self.human.error("People vomitting on you is not supported in this version.")
         elif bales > self.storage:
-            self.human.tell("You don't have that many bales to release.")
+            self.human.error("You don't have that many bales to release.")
         else:
             self.feed += bales
             self.storage -= bales
@@ -187,16 +187,16 @@ class Hamurabi(game.Game):
         try:
             acres = int(arguments)
         except ValueError:
-            self.human.tell('Invalid argument to plant: {!r}.'.format(arguments))
+            self.human.error('Invalid argument to plant: {!r}.'.format(arguments))
             return False
         if acres < 0:
-            self.human.tell("You can't plant negative acres.")
+            self.human.error("You can't plant negative acres.")
         elif acres > self.acres - self.seed:
-            self.human.tell("You don't have that many acres to plant.")
+            self.human.error("You don't have that many acres to plant.")
         elif acres > self.storage * 2:
-            self.human.tell("You don't have enough seed to plant that many acres.")
+            self.human.error("You don't have enough seed to plant that many acres.")
         elif acres > self.population * 10:
-            self.human.tell("You don't have enough people to plant that much seed.")
+            self.human.error("You don't have enough people to plant that much seed.")
         else:
             self.seed += acres
             self.storage -= acres // 2
@@ -212,12 +212,12 @@ class Hamurabi(game.Game):
         try:
             sell = int(arguments)
         except ValueError:
-            self.human.tell('Invalid argument to sell: {!r}.'.format(arguments))
+            self.human.error('Invalid argument to sell: {!r}.'.format(arguments))
             return False
         if sell < 0:
-            self.human.tell("You can't sell negative acres.")
+            self.human.error("You can't sell negative acres.")
         elif sell > self.acres:
-            self.human.tell("You don't have that many acres to sell.")
+            self.human.error("You don't have that many acres to sell.")
         else:
             self.acres -= sell
             self.storage += sell * self.acre_cost

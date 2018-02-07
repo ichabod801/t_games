@@ -200,7 +200,7 @@ class Roulette(game.Game):
         args = arguments.split()
         # Check for number and bet
         if len(args) != 2:
-            self.human.tell('Invalid number of arguments to a bet command.')
+            self.human.error('Invalid number of arguments to a bet command.')
         else:
             target, bet = args
             # Check for a valid bet.
@@ -210,9 +210,9 @@ class Roulette(game.Game):
                 if 1 <= bet <= max_bet:
                     return target, bet
                 else:
-                    self.human.tell('That bet is too large. You may only bet {} bucks.'.format(max_bet))
+                    self.human.error('That bet is too large. You may only bet {} bucks.'.format(max_bet))
             else:
-                self.human.tell('All bets must be decimal integers.')
+                self.human.error('All bets must be decimal integers.')
         # Return dummy (False) values on failure.
         return '', 0
 
@@ -227,12 +227,12 @@ class Roulette(game.Game):
         pair = pair.split('-')
         # Check for two numbers.
         if len(pair) != 2:
-            self.human.tell('You must enter two numbers for a {} bet.'.format(bet_type))
+            self.human.error('You must enter two numbers for a {} bet.'.format(bet_type))
         # Check that they are on the wheel.
         elif pair[0] not in self.numbers:
-            self.human.tell('{} is not in this layout.'.format(pair[0]))
+            self.human.error('{} is not in this layout.'.format(pair[0]))
         elif pair[1] not in self.numbers:
-            self.human.tell('{} is not in this layout.'.format(pair[1]))
+            self.human.error('{} is not in this layout.'.format(pair[1]))
         else:
             return True
         return False
@@ -255,7 +255,7 @@ class Roulette(game.Game):
             self.scores[self.human.name] -= bet
             self.bets.append(('basket bet', ('0', '1', '2', '3'), bet))
         elif numbers:
-            self.human.tell('That bet can only be made on a French layout.')
+            self.human.error('That bet can only be made on a French layout.')
         return True
 
     def do_bets(self, arguments):
@@ -310,7 +310,7 @@ class Roulette(game.Game):
                 self.bets.append(('column bet on {}'.format(column), targets, bet))
             else:
                 # Warn on invalid column
-                self.human.tell('That is not a valid column. Please use 1/2/3, P/M/D, or F/S/T.')
+                self.human.error('That is not a valid column. Please use 1/2/3, P/M/D, or F/S/T.')
         return True
 
     def do_complete(self, arguments):
@@ -417,14 +417,14 @@ class Roulette(game.Game):
                 # check bet against what player has
                 total_bet = sum([bet for text, targets, bet in bets])
                 if total_bet > self.scores[self.human.name]:
-                    self.human.tell('You do not have enough bucks for the total bet.')
+                    self.human.error('You do not have enough bucks for the total bet.')
                 else:
                     # Maket the bets.
                     self.bets.extend(bets)
                     self.scores[self.human.name] -= total_bet
             else:
                 # Warning for an invalid number.
-                self.human.tell('That number is not in the current layout.')
+                self.human.error('That number is not in the current layout.')
         return True
 
     def do_corner(self, arguments):
@@ -447,7 +447,7 @@ class Roulette(game.Game):
                 self.bets.append(('corner bet on {}'.format(numbers), targets, bet))
             else:
                 message = '{} and {} are not the low and high of a square of numbers.'
-                self.human.tell(message.format(low, high))
+                self.human.error(message.format(low, high))
         return True
 
     def do_double(self, arguments):
@@ -498,7 +498,7 @@ class Roulette(game.Game):
                 self.bets.append(('dozen bet on {}'.format(dozen), targets, bet))
             else:
                 # Warn the user if the dozen is invalid.
-                self.human.tell('That is not a valid dozen. Please use 1/2/3, P/M/D, or F/S/T.')
+                self.human.error('That is not a valid dozen. Please use 1/2/3, P/M/D, or F/S/T.')
         return True
 
     def do_even(self, arguments):
@@ -534,14 +534,14 @@ class Roulette(game.Game):
                 full_bet = bet * len(numbers)
                 if full_bet > self.scores[self.human.name]:
                     # Warn if user can't afford the full bet.
-                    self.human.tell('You do not have enough bucks for the full bet.')
+                    self.human.error('You do not have enough bucks for the full bet.')
                 else:
                     # Make the bets.
                     for number in numbers:
                         self.bets.append(('single bet on {}'.format(number), [number], bet))
                     self.scores[self.human.name] -= self.bet
             else:
-                self.human.tell('That is not a valid final digit.')
+                self.human.error('That is not a valid final digit.')
         return True
 
     def do_gipf(self, arguments):
@@ -561,7 +561,7 @@ class Roulette(game.Game):
                     try:
                         low, high = sorted([int(word) for word in corner.split('-')])
                     except ValueError:
-                        self.human.tell('Please enter two numbers separated by a dash')
+                        self.human.error('Please enter two numbers separated by a dash')
                     if low > 0 and high - low == 4:
                         targets = [str(n) for n in (low, low + 1, high - 1, high)]
                         # Make one of the four win.
@@ -572,9 +572,9 @@ class Roulette(game.Game):
                         self.scores[self.human.name] -= 1
                         break
                     else:
-                        self.human.tell('That is not a valid corner bet.')
+                        self.human.error('That is not a valid corner bet.')
         else:
-            self.human.tell("That bet is not available on this layout.")
+            self.human.error("That bet is not available on this layout.")
 
     def do_high(self, arguments):
         """
@@ -648,7 +648,7 @@ class Roulette(game.Game):
             # Check the bet and the full bet.
             numbers, bet = self.check_bet('neighbors {}'.format(int_args[0]))
             if bet * 9 > self.scores[self.human.name]:
-                self.human.tell('You do not have enough money for the full bet.')
+                self.human.error('You do not have enough money for the full bet.')
             elif numbers:
                 # Make the bet.
                 self.bets.append(('trio bet on 0-2-3', ['0', '2', '3'], bet * 2))
@@ -661,9 +661,9 @@ class Roulette(game.Game):
                 self.scores[self.human.name] -= 9 * bet
         # Warn the user if there is invalid input.
         elif int_args:
-            self.human.tell('This bet is only available on the French layout.')
+            self.human.error('This bet is only available on the French layout.')
         else:
-            self.human.tell('You must provide an ammount to bet.')
+            self.human.error('You must provide an ammount to bet.')
         return True
 
     def do_niner(self, arguments):
@@ -705,7 +705,7 @@ class Roulette(game.Game):
         # Check the bet and the full bet.
         numbers, bet = self.check_bet('orphans {}'.format(argument))
         if bet * 5 > self.scores[self.human.name]:
-            self.human.tell('You do not have enough money for the full bet.')
+            self.human.error('You do not have enough money for the full bet.')
         elif numbers:
             # Make the bet.
             self.bets.append(('single bet on 1', ['1'], bet))
@@ -742,7 +742,7 @@ class Roulette(game.Game):
                 self.bets.append(('prime bet excluding {}'.format(numbers), primes, bet))
             else:
                 # Warn the user of invalid input.
-                self.human.tell('{} and {} are not distinct prime numbers.'.format(low, high))
+                self.human.error('{} and {} are not distinct prime numbers.'.format(low, high))
         return True
 
     def do_quit(self, arguments):
@@ -804,9 +804,9 @@ class Roulette(game.Game):
                 self.bets.remove(self.bets[bet_index])
             # Warn the user about invalid input.
             else:
-                self.human.tell('There are not that many bets.')
+                self.human.error('There are not that many bets.')
         else:
-            self.human.tell('You must specify the bet with a postive integer.')
+            self.human.error('You must specify the bet with a postive integer.')
         return True
 
     def do_seven(self, arguments):
@@ -880,7 +880,7 @@ class Roulette(game.Game):
                 self.bets.append(('split bet on {}'.format(numbers), numbers.split('-'), bet))
             else:
                 # Warn the user about invalid input.
-                self.human.tell('{} and {} are not adjacent on the layout.'.format(low, high))
+                self.human.error('{} and {} are not adjacent on the layout.'.format(low, high))
         return True
 
     def do_straight(self, arguments):
@@ -895,7 +895,7 @@ class Roulette(game.Game):
         if number:
             if number not in self.numbers:
                 # Warn the user about invalid input.
-                self.human.tell('That number is not in this layout.')
+                self.human.error('That number is not in this layout.')
             else:
                 # Make the bet.
                 self.scores[self.human.name] -= bet
@@ -917,7 +917,7 @@ class Roulette(game.Game):
             end = int(numbers[-1])
             if end % 3:
                 # Warn on invalid input.
-                self.human.tell('A valid street must end in a multiple of three.')
+                self.human.error('A valid street must end in a multiple of three.')
             else:
                 # Make the bet.
                 text = '{}-{}-{}'.format(end - 2, end - 1, end)
@@ -942,7 +942,7 @@ class Roulette(game.Game):
             if '5-8-10-11' in arguments or 'ferrari' in arguments.lower():
                 full_bet = bet * 10
             if full_bet > self.scores[self.human.name]:
-                self.human.tell('You do not have enough money for the full bet.')
+                self.human.error('You do not have enough money for the full bet.')
             elif numbers:
                 # Make the bet.
                 self.bets.append(('split bet on 5-8', ['5', '8'], bet))
@@ -965,7 +965,7 @@ class Roulette(game.Game):
                 self.scores[self.human.name] -= full_bet
         else:
             # Warn the user if no bet is given.
-            self.human.tell('You must give an amount to bet.')
+            self.human.error('You must give an amount to bet.')
         return True
 
     def do_top(self, arguments):
@@ -987,7 +987,7 @@ class Roulette(game.Game):
             self.bets.append(('top line bet', ('0', '00', '1', '2', '3'), bet))
         elif numbers:
             # Warn the user if playing on a French layout.
-            self.human.tell('That bet can only be made on an American layout.')
+            self.human.error('That bet can only be made on an American layout.')
         return True
 
     def do_trio(self, arguments):
@@ -1011,7 +1011,7 @@ class Roulette(game.Game):
                 self.bets.append(('trio bet on {}'.format(numbers), numbers.split('-'), bet))
             else:
                 # Warn the user about invalid input.
-                self.human.tell('That is not a valid trio on this layout.')
+                self.human.error('That is not a valid trio on this layout.')
         return True
 
     def do_zero(self, arguments):
@@ -1031,7 +1031,7 @@ class Roulette(game.Game):
             if 'naca' in arguments.lower():
                 full_bet = bet * 5
             if full_bet > self.scores[self.human.name]:
-                self.human.tell('You do not have enough money for the full bet.')
+                self.human.error('You do not have enough money for the full bet.')
             elif numbers:
                 # Make the bet
                 self.bets.append(('split bet on 0-3', ['0', '3'], bet))
@@ -1043,9 +1043,9 @@ class Roulette(game.Game):
                 self.scores[self.human.name] -= full_bet
         # Warn the user about invalid input.
         elif int_args:
-            self.human.tell('This bet is only available on the French layout.')
+            self.human.error('This bet is only available on the French layout.')
         else:
-            self.human.tell('You must give an amount to bet.')
+            self.human.error('You must give an amount to bet.')
         return True
 
     def game_over(self):
@@ -1075,7 +1075,7 @@ class Roulette(game.Game):
         """
         # Check the full bet
         if bet * width > self.scores[self.human.name]:
-            self.human.tell('You do not have enough money for the full bet.')
+            self.human.error('You do not have enough money for the full bet.')
         elif number:
             if number in self.numbers:
                 # Get the right wheel.

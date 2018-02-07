@@ -69,9 +69,9 @@ class FortyThieves(solitaire.MultiSolitaire):
                     cards_raw = self.human.ask('Enter a waste card and a card to build it on: ')
                     cards = cards_raw.upper().split()
                     if cards[0] not in self.waste:
-                        self.human.tell('You must build with a face up waste card.')
+                        self.human.error('You must build with a face up waste card.')
                     elif cards[1] not in tableau_check:
-                        self.human.tell('You must build to the top of a tableau pile.')
+                        self.human.error('You must build to the top of a tableau pile.')
                     else:
                         break
                 waste_ndx = self.waste.index(cards[0])
