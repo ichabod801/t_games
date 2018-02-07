@@ -14,14 +14,14 @@ data_to_text: Convert CREDITS_DATA to formatted text. (str)
 
 # The sections and people who worked on those sections.
 CREDITS_DATA = [('Interface Programming', """Craig "Ichabod" O'Brien"""),
-    ('Game Design', """Humans; Paul Alfille, Richard A. Canfield, Doug Dyment, Ned Strongin, Sid Sackson, 
-        Gregory Yob, Howard Wexler"""),
+    ('Game Design', """Humans; Paul Alfille, Richard A. Canfield, Doug Dyment, Albert Morehead, 
+        Geoffrey Mott-Smith, Ned Strongin, Sid Sackson, Gregory Yob, Howard Wexler"""),
     ('Game Programming', """Craig "Ichabod" O'Brien"""),
     ('Bot Design', """Roger Johnson, Reiner Knizia, Todd Neller, Craig O'Brien, Clifton Presser"""),
     ('Bot Programming', """Craig "Ichabod" O'Brien"""),
     ('Play Testing', """Craig "Ichabod" O'Brien"""),
     ('Special Thanks', """Guido van Rossum; python-forum.io, github.com, Wikipedia, pagat.com; 
-        Kris Burm, Matt Groening""")]
+        Kris Burm, Matt Groening, David Parlett""")]
 
 
 def data_to_text():
