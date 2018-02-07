@@ -3,6 +3,11 @@ strategy_game.py
 
 Classes:
 Strategy: A game of Strategy. (solitaire.Solitaire)
+
+Functions:
+build_reserve: Build only from the reserve. (bool)
+lane_reserve: Lane only from the reserve (bool)
+sort_no_reserve: Sort non-aces only when the reserve is empty. (bool)
 """
 
 
@@ -18,6 +23,9 @@ RULES = """
 All of the cards are dealt to the reserve. You may move the top card of the 
 reserve onto any of the eight tableau piles. Aces may be sorted as they 
 appear, but no other card may be sorted until the reserve is empty.
+
+Parlett suggests that each time you win, play again with one less tableau
+pile.
 
 Options:
 piles: The number of tableau piles (1-8).
@@ -41,10 +49,14 @@ class Strategy(solitaire.Solitaire):
 
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
+        # Cards only move from the reserve (at first).
         self.build_checkers = [build_reserve]
         self.lane_checkers = [lane_reserve]
+        # There are no stacks of cards to move.
         self.pair_checkers = []
+        # Sort aces. Up from aces after the reserve is empty.
         self.sort_checkers = [solitaire.sort_ace, solitaire.sort_up, sort_no_reserve]
+        # All cards start in the reserve.
         self.dealers = [solitaire.deal_reserve_n(52)]
 
     def set_options(self):
@@ -57,7 +69,7 @@ class Strategy(solitaire.Solitaire):
 
 def build_reserve(game, mover, target, moving_stack):
     """
-    Build from the reserve. (bool)
+    Build only from the reserve. (bool)
     
     Parameters:
     game: The game being played. (Solitaire)
@@ -73,7 +85,7 @@ def build_reserve(game, mover, target, moving_stack):
 
 def lane_reserve(game, card, moving_stack):
     """
-    Check moving the top reserve card to a lane. (bool)
+    Lane only from the reserve (bool)
     
     Parameters:
     game: The game being played. (Solitaire)

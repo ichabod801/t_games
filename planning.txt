@@ -11,7 +11,6 @@ Finish options_test.py
 redo Baker's Game as a variant of FreeCell.
 title to menu so you know what category you're in.
 A round of one per penultimate category, two for solitaire.
-	Strategy
 	Cribbage
 	Yacht
 	Craps
@@ -72,8 +71,7 @@ other/other: RPS(LS)*, number guessing game
 An asterisk means the game has been coded. An exclamation point means the game has been coded and is in the gipf graph.
 
 games planned: 63
-games coded:   15
-games gipfed:   4
+games coded:   17
 
 Note that bsd games has 24 of what I would call games. I need to at least beat that before releasing.
 
