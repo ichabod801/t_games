@@ -9,10 +9,10 @@ redo Baker's Game as a variant of FreeCell.
 title to menu so you know what category you're in.
 	top command to get to the top of the menu.
 A round of one per penultimate category, two for solitaire.
-	Cribbage
-	Yacht
-	Craps
-	Hangman
+	Cribbage (tricky strategy)
+	Yacht (prioritization, lots of variants)
+	Craps (complicated play, street vs. casino)
+	Hangman (word list)
 	Backgammon
 		read up on backgammon strategy
 		try (once) to make a better bot
@@ -26,6 +26,7 @@ Program the games planned for text_games round 2.
 	Try for every category gets one before any gets two.
 	Shoot for at least 25 before releasing (to beat bsdgames)
 		try to have a connected gipf grapf
+		or at least a spanning path.
 Clean Up
     documentation (style guide)
     output (one blank line)

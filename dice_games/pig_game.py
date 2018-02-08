@@ -61,6 +61,7 @@ The first player to score 100 or more wins.
 
 OPTIONS:
 even-turns: Everyone gets the same number of turns.
+shuffle=: Use a shuffle die with the specified number of repeats.
 six-bad: Turns end with no score on a six instead of a one.
 
 BOT OPTIONS:

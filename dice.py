@@ -152,7 +152,14 @@ class Pool(object):
 
     Attributes:
     dice: The dice in the pool. (list of Die)
+    held: Dice put asside and not rolled. (list of Die)
     values: The current values of the dice in the pool. (list)
+
+    Methods:
+    hold: Hold some of the dice from further rolling. (None)
+    release: Make all held dice available for rolling. (None)
+    roll: Roll the dice in the pool. (list)
+    sort: Sort the dice in the pool in place. (list)
 
     Overridden Methods:
     __init__
@@ -171,6 +178,7 @@ class Pool(object):
         dice: A list of dice specifications. (list)
         """
         self.dice = []
+        self.held = []
         for die in dice:
             if isinstance(die, Die):
                 self.dice.append(die)
@@ -188,15 +196,41 @@ class Pool(object):
         text = '{} and {}'.format(text, self.values[-1])
         return text
 
+    def hold(self, *values):
+        """
+        Hold some of the dice from further rolling. (None)
+
+        Parameters:
+        *values: The values of the dice to hold.
+        """
+        for value in values:
+            spot = self.dice.index(value)
+            self.held.append(self.dice[spot])
+            del self.dice[spot]
+        self.held.sort()
+
+    def release(self):
+        """Make all held dice available for rolling. (None)"""
+        self.dice.extend(self.held)
+        self.held = []
+
     def roll(self):
         """Roll the dice in the pool. (list)"""
         self.values = []
+        for die in self.held:
+            self.values.append(die.value)
         for die in self.dice:
             self.values.append(die.roll())
         return self.values
 
     def sort(self, key = None, reverse = False):
-        """Sort the dice in the pool. (list)"""
+        """
+        Sort the dice in the pool in place. (None)
+
+        Parameters:
+        key: A function returning the value to sort an item by. (callable)
+        reverse: A flag for reversing the sort order. (bool)
+        """
         self.dice.sort(key = key, reverse = reverse)
         self.values = [die.value for die in self.dice]
 
