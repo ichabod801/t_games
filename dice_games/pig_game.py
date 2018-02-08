@@ -584,6 +584,8 @@ class Pig(game.Game):
             question = 'Should six be the number that ends the turn? bool')
         self.option_set.add_option(name = 'even-turns', target = 'even_turns',
             question = 'Should each player get the same number of turns? bool')
+        self.option_set.add_option(name = 'shuffle', converter = int, default = 0,
+            question = 'How many repeats should the shuffle die have (return or 0 for normal die)? ')
         # Parameterized bots.
         self.option_set.add_option(name = 'value', action = 'bot', default = None, converter = int, 
             check = lambda params: len(params) <= 1 and max(params) <= 100)
@@ -616,7 +618,10 @@ class Pig(game.Game):
 
     def set_up(self):
         """Set up the game. (None)"""
-        self.die = dice.Die()
+        if self.shuffle:
+            self.die = dice.ShuffleDie(6, self.shuffle)
+        else:
+            self.die = dice.Die()
         self.turn_score = 0
 
 

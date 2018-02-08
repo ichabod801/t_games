@@ -227,3 +227,4 @@ Forty Thieves,0,1,0,795,16,4,
 FreeCell,1,0,0,816,54,0,
 Pig,1,2,0,52,38,1,medium satan x
 Strategy,1,0,0,805,70,0,
+Pig,0,1,0,29,17,1,shuffle=2
