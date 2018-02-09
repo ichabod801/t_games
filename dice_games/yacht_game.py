@@ -4,6 +4,7 @@ yacht_game.py
 Games similar to Yacht.
 
 Classes:
+ScoreCategory: A category for a category dice game. (object)
 Yacht: The game of Yacht and it's cousins. (game.Game)
 
 Functions:
@@ -16,6 +17,82 @@ straight: Score a straight category. (int)
 
 import tgames.dice as dice
 import tgames.game as game
+
+
+class ScoreCategory(object):
+    """
+    A category for a category dice game. (object)
+
+    !! I will want to move this to dice.py.
+
+    Attributes:
+    description: A description of the category. (str)
+    first: The bonus for getting the roll on the first roll. (int)
+    name: The name of the category. (str)
+    validator: A function to check validity and get the sub-total. (callable)
+    score_type: How the category is scored. (str)
+
+    Methods:
+    score: Score a roll based on this category. (int)
+
+    Overridden Methods:
+    __init__
+    """
+
+    def __init__(self, name, description, validator, score_type = 'total', first = 0):
+        """
+        Set up the category. (None)
+
+        Parameters:
+        description: A description of the category. (str)
+        name: The name of the category. (str)
+        validator: A function to check validity and get the sub-total. (callable)
+        score_type: How the category is scored. (str)
+        first: The bonus for getting the roll on the first roll. (int)
+        """
+        # Set basic attributes.
+        self.name = name
+        self.description = description
+        self.validator = validator
+        self.first = first
+        # Parse the score type.
+        if score_type.isdigit():
+            self.score_type = int(score_type)
+        else:
+            self.score_type = score_type.lower()
+        # Check for a bonus.
+        if self.score_type.startswith('total+'):
+            self.bonus = int(score_type.split('+')[1])
+            self.score_type = 'total'
+        else:
+            self.bonus = 0
+
+    def score(self, dice, roll_count):
+        """
+        Score a roll based on this category. (int)
+
+        Parameters:
+        dice: The roll to score. (dice.Pool)
+        roll_count: How many rolls it took to get the roll. (int)
+        """
+        sub_total = self.validator(dice)
+        # Score a valid roll
+        if sub_total:
+            # Score by type of category.
+            if isinstance(self.score_type, int):
+                score = self.score_type
+            elif self.score_type == 'sub-total':
+                score = sub_total
+            else:
+                score = sum(dice)
+            # Add bonuses.
+            score += self.bonus
+            if roll_count == 1:
+                score += self.first
+        else:
+            # Invalid rolls score 0.
+            score = 0
+        return score
 
 
 class Yacht(game.Game):
