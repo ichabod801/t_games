@@ -265,6 +265,8 @@ other solitaire games: Yukon, Poker, Baker's Dozen, Good Measure, Little Spider,
 	aces and kings, demons and thieves (by Thomas Warfield, pretty good solitaire site)
 	quadrille, sultan, single rail, olga, step-up, monte carlo, interregnum, labyrinth, flip flop, st. helena, crescent, bouquet, kings, striptease. (review of Parlett's Solitaire, picking an interesting one with odds in favor (if possible) from each chapter)
 
+Note that in the current plan for the initial release, there are no games starting with the letters E, J, O, U, V, or X.
+
 == Option Handling ==
 
 I need a common way to handle game options. I'm writing the same code over and over again. Something like argparse, but it's not clear how to get into the argparse internals to handle asking questions. Player.ask_int and Player.ask_valid are a start, but I think I can do better with dedicated option handling. In addition, this would make it viable to have a consistent way to store options in the results.

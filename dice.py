@@ -156,6 +156,7 @@ class Pool(object):
     values: The current values of the dice in the pool. (list)
 
     Methods:
+    count: Count the number of times a particular rolls has been made. (int)
     hold: Hold some of the dice from further rolling. (None)
     release: Make all held dice available for rolling. (None)
     roll: Roll the dice in the pool. (list)
@@ -196,6 +197,15 @@ class Pool(object):
         text = '{} and {}'.format(text, self.values[-1])
         return text
 
+    def count(self, object):
+        """
+        Count the number of times a particular rolls has been made. (int)
+
+        Parameters:
+        object: The roll to count. (object)
+        """
+        return self.dice.count(object)
+
     def hold(self, *values):
         """
         Hold some of the dice from further rolling. (None)
@@ -231,8 +241,9 @@ class Pool(object):
         key: A function returning the value to sort an item by. (callable)
         reverse: A flag for reversing the sort order. (bool)
         """
-        self.dice.sort(key = key, reverse = reverse)
-        self.values = [die.value for die in self.dice]
+        all_dice = self.held + self.dice
+        all_dice.sort(key = key, reverse = reverse)
+        self.values = [die.value for die in all_dice]
 
 
 class DominoPool(Pool):
