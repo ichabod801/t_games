@@ -8,6 +8,7 @@ ScoreCategory: A category for a category dice game. (object)
 Yacht: The game of Yacht and it's cousins. (game.Game)
 
 Functions:
+five_kind: Score the yacht category. (int)
 four_kind: Score the four of a kind category. (int)
 full_house: Score the full house category. (int)
 score_n: Creating a scoring function for a number category. (callable)
@@ -39,7 +40,7 @@ class ScoreCategory(object):
     __init__
     """
 
-    def __init__(self, name, description, validator, score_type = 'total', first = 0):
+    def __init__(self, name, description, validator, score_type = 'sub-total', first = 0):
         """
         Set up the category. (None)
 
@@ -66,6 +67,44 @@ class ScoreCategory(object):
             self.score_type = 'total'
         else:
             self.bonus = 0
+
+    def do_hold(self, arguments):
+        """
+        Hold back dice for scoring. (bool)
+
+        Parameters:
+        arguments: The dice (values) to hold. (str)
+        """
+        # Get the current player.
+        player = self.players[self.player_index]
+        # Get the integer values to hold.
+        try:
+            holds = [int(word) for word in arguments.split()]
+        except ValueError:
+            player.error('Invalid argument to hold: {!r}.'.format(arguments))
+        # Hold the dice.
+        try:
+            self.dice.hold(holds)
+        except ValueError:
+            player.error('You do not have all of those dice to hold.')
+        return True
+
+    def do_roll(self, arguments):
+        """
+        Roll the dice (excluding any held back). (bool)
+
+        Parameters:
+        arguments: The dice (values) to hold. (str)
+        """
+        # Get the current player.
+        player = self.players[self.player_index]
+        # Check the roll count
+        if self.roll_count == 3:
+            player.error('You have already rolled three times.')
+        else:
+            # Roll the dice and mark the roll.
+            self.dice.roll()
+            self.roll_count += 1
 
     def score(self, dice, roll_count):
         """
@@ -95,26 +134,17 @@ class ScoreCategory(object):
         return score
 
 
-class Yacht(game.Game):
+def five_kind(dice):
     """
-    The game of Yacht and it's cousins. (game.Game)
+    Score the yacht category. (int)
 
-    Class Attributes:
-    categories: The scoring functions for each category. (dict of str: callable)
-
-    Attributes:
-    dice: The pool of dice for the game. (dice.Pool)
-
-    Overridden Methods:
-    set_up
+    Parameters:
+    dice: The dice roll to score. (int)
     """
-
-    categories = {'ones': score_n(1), }
-
-    def set_up(self):
-        """Set up the game. (None)"""
-        self.dice = dice.Pool([6] * 5)
-
+    # !! I should take the sorting out of the functions for efficiency.
+    values = sorted(dice.values)
+    if values[0] == values[4]:
+        return 5 * values[0]
 
 def four_kind(dice):
     """
@@ -166,3 +196,41 @@ def straight(dice):
     else:
         return 30
     return 0
+
+
+class Yacht(game.Game):
+    """
+    The game of Yacht and it's cousins. (game.Game)
+
+    Class Attributes:
+    categories: The scoring functions for each category. (dict of str: callable)
+
+    Attributes:
+    dice: The pool of dice for the game. (dice.Pool)
+
+    Overridden Methods:
+    set_up
+    """
+
+    # !! display should come from here, but where to store order? OrderedDict?
+    categories = {'ones': ScoreCategory('Ones', 'As many ones as possible', score_n(1)),
+        'twos': ScoreCategory('Twos', 'As many twos as possible', score_n(2)),
+        'threes': ScoreCategory('Threes', 'As many threes as possible', score_n(3)),
+        'fours': ScoreCategory('Fours', 'As many fours as possible', score_n(4)),
+        'fives': ScoreCategory('Fives', 'As many fives as possible', score_n(5)),
+        'sixes': ScoreCategory('Sixes', 'As many sixes as possible', score_n(6)),
+        'full-house': ScoreCategory('Full House', 'Three of a kind and a pair', full_house),
+        'four-kind': ScoreCategory('Four of a Kind', 'Four of the same number', four_kind),
+        'litte-straight': ScoreCategory('Little Striaght', '1-2-3-4-5', straight, '30'),
+        'big-straight': ScoreCategory('Big Straight', '2-3-4-5-6', straight, '30'),
+        'choice': SubCategory('Choice', 'Any roll', lambda dice: 1, 'total'),
+        'yacht': SubCategory('Yacht', 'Five of the same number', five_kind, '50')}
+
+    def handle_options(self):
+        """Handle the game options."""
+        super(Yacht, self).handle_options()
+        self.categories = Yacht.categories.copy()
+
+    def set_up(self):
+        """Set up the game. (None)"""
+        self.dice = dice.Pool([6] * 5)
