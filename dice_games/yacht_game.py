@@ -173,6 +173,17 @@ class Bacht(player.Bot):
     A bacht to play Yacht. (player.Bot)
 
     This is just a dummy bot to test the game functionality.
+
+    Attributes:
+    next: The bacht's next move, if known. (str)
+
+    Methods:
+    get_category: Get the category to score a roll in. (str)
+    get_holds: Get the dice to hold for the next roll. (list of int)
+
+    Overridden Methods:
+    ask
+    set_up
     """
 
     def ask(self, query):
@@ -182,7 +193,46 @@ class Bacht(player.Bot):
         Parameters:
         query: The question to ask of the bacht. (str)
         """
-        pass # !! not finished
+        if query == 'What is your move? ':
+            if self.next == 'roll':
+                self.next = ''
+                return 'roll'
+            elif game.roll_count == 3 or self.next == 'score':
+                move = 'score ' + self.get_category()
+            else:
+                move = 'hold ' + ' '.join([str(x) for x in self.get_holds()])
+                if self.game.dice:
+                    self.next = 'roll'
+                else:
+                    self.next = 'score'
+        else:
+            raise player.BotError('Unexpected query to Bacht: {!r}'.format(query))
+
+    def get_holds(self):
+        """
+        Get the dice to hold for the next roll. (list of int)
+
+        If the roll is ready to score, this method holds all of the dice.
+        """
+        held = self.game.dice.held
+        pending = self.game.dice.dice
+        my_scores = self.game.category_scores[self.name]
+        if not held:
+            counts = [pending.count(value) for value in range(7)]
+            if len([count for count in counts if count > 1]) > 1:
+                # save those
+            elif max(counts) > 2:
+                # save that
+            elif my_scores['Little Straight'] is None and len(set([die for die in pending if die < 6])) > 3:
+                # save those
+            elif my_scores['Big Straight'] is None and len(set([die for die in pending if die > 1])) > 3:
+                # save those
+            else:
+                # save the max
+
+    def set_up(self):
+        """Set up the bot. (None)"""
+        self.next = ''
 
 
 class Yacht(game.Game):
