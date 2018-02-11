@@ -208,6 +208,13 @@ class Bacht(player.Bot):
         else:
             raise player.BotError('Unexpected query to Bacht: {!r}'.format(query))
 
+    def get_catgory(self):
+        """Get the category to score the current roll in. (str)"""
+        ranking = [(category.score(self.game.dice), category.name) for category in self.game.categories]
+        ranking.reverse() # reverse is done so ties go to category with lowest potential.
+        ranking.sort()
+        return ranking[-1][1]
+
     def get_holds(self):
         """
         Get the dice to hold for the next roll. (list of int)
@@ -219,16 +226,39 @@ class Bacht(player.Bot):
         my_scores = self.game.category_scores[self.name]
         if not held:
             counts = [pending.count(value) for value in range(7)]
-            if len([count for count in counts if count > 1]) > 1:
-                # save those
-            elif max(counts) > 2:
-                # save that
-            elif my_scores['Little Straight'] is None and len(set([die for die in pending if die < 6])) > 3:
-                # save those
-            elif my_scores['Big Straight'] is None and len(set([die for die in pending if die > 1])) > 3:
-                # save those
+            ordered = sorted(counts[:], reverse = True)
+            if ordered[1] > 1:
+                hold = [counts.index(ordered[0])] * ordered[0]
+                if ordered[0] == ordered[1]:
+                    hold = [counts.index(ordered[0], counts.index(ordered[0]) + 1)] * ordered[0]
+                else:
+                    hold += [counts.index(ordered[1])] * ordered[1]
+            elif ordered[0] > 2:
+                hold = [counts.index(ordered[0])] * ordered[0]
+            elif my_scores['Little Straight'] is None and len(set([die for die in pending if die < 6])) > 2:
+                hold = set([die for die in pending if die < 6])
+            elif my_scores['Big Straight'] is None and len(set([die for die in pending if die > 1])) > 2:
+                hold = set([die for die in pending if die > 1])
+            elif ordered[0] > 1:
+                hold = [counts.index(ordered[0])] * ordered[0]
             else:
-                # save the max
+                hold = [max(pending)]
+        else:
+            unique_held = len(set(held))
+            if unique_held == 1:
+                hold = held[0] * pending.count(held[0])
+            elif unique_held == 2:
+                if pending[0] in held:
+                    hold = pending[:1]
+                else:
+                    hold = []
+            elif unique_held == 3:
+                hold = list(set([die for die in pending if die not in held]))
+                if 6 in hold and 1 in held:
+                    hold.remove(6)
+                elif 1 in hold and 6 in held:
+                    hold.remove(1)
+        return hold
 
     def set_up(self):
         """Set up the bot. (None)"""
@@ -258,18 +288,18 @@ class Yacht(game.Game):
     set_up
     """
 
-    categories = ['ones': ScoreCategory('Ones', 'As many ones as possible', score_n(1)),
-        'twos': ScoreCategory('Twos', 'As many twos as possible', score_n(2)),
-        'threes': ScoreCategory('Threes', 'As many threes as possible', score_n(3)),
-        'fours': ScoreCategory('Fours', 'As many fours as possible', score_n(4)),
-        'fives': ScoreCategory('Fives', 'As many fives as possible', score_n(5)),
-        'sixes': ScoreCategory('Sixes', 'As many sixes as possible', score_n(6)),
-        'full-house': ScoreCategory('Full House', 'Three of a kind and a pair', full_house),
-        'four-kind': ScoreCategory('Four of a Kind', 'Four of the same number', four_kind),
-        'litte-straight': ScoreCategory('Little Straight', '1-2-3-4-5', straight, '30'),
-        'big-straight': ScoreCategory('Big Straight', '2-3-4-5-6', straight, '30'),
-        'choice': SubCategory('Choice', 'Any roll', lambda dice: 1, 'total'),
-        'yacht': SubCategory('Yacht', 'Five of the same number', five_kind, '50')]
+    categories = [('ones', ScoreCategory('Ones', 'As many ones as possible', score_n(1))),
+        ('twos', ScoreCategory('Twos', 'As many twos as possible', score_n(2))),
+        ('threes', ScoreCategory('Threes', 'As many threes as possible', score_n(3))),
+        ('fours', ScoreCategory('Fours', 'As many fours as possible', score_n(4))),
+        ('fives', ScoreCategory('Fives', 'As many fives as possible', score_n(5))),
+        ('sixes', ScoreCategory('Sixes', 'As many sixes as possible', score_n(6))),
+        ('full-house', ScoreCategory('Full House', 'Three of a kind and a pair', full_house)),
+        ('four-kind', ScoreCategory('Four of a Kind', 'Four of the same number', four_kind)),
+        ('litte-straight', ScoreCategory('Little Straight', '1-2-3-4-5', straight, '30')),
+        ('big-straight', ScoreCategory('Big Straight', '2-3-4-5-6', straight, '30')),
+        ('choice', SubCategory('Choice', 'Any roll', lambda dice: 1, 'total')),
+        ('yacht', SubCategory('Yacht', 'Five of the same number', five_kind, '50'))]
 
     def do_hold(self, arguments):
         """
