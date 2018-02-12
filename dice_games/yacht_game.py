@@ -59,22 +59,21 @@ class ScoreCategory(object):
         self.validator = validator
         self.first = first
         # Parse the score type.
+        self.bonus = 0
+        self.score_type = score_type.lower()
+        # Check for set score.
         if score_type.isdigit():
             self.score_type = int(score_type)
-        else:
-            self.score_type = score_type.lower()
         # Check for a bonus.
-        if self.score_type.startswith('total+'):
+        elif self.score_type.startswith('total+'):
             self.bonus = int(score_type.split('+')[1])
             self.score_type = 'total'
-        else:
-            self.bonus = 0
 
     def copy(self):
         """Create an independent copy of the category. (ScoreCategory)"""
-        clone = ScoreCategory(self.name, self.description, self.validator, self.score_type, self.first)
-        clone.bonus = self.bonus
-        return clone
+        new = ScoreCategory(self.name, self.description, self.validator, str(self.score_type), self.first)
+        new.bonus = self.bonus
+        return new
 
     def score(self, dice, roll_count):
         """
@@ -270,7 +269,7 @@ class Yacht(game.Game):
     The game of Yacht and it's cousins. (game.Game)
 
     Class Attributes:
-    categories: The scoring functions for each category. (dict of str: callable)
+    score_cats: The scoring categories in the game. (dict of str: ScoreCategory)
 
     Attributes:
     category_scores: The player's scores in each category. (dict of str: dict)
@@ -288,18 +287,20 @@ class Yacht(game.Game):
     set_up
     """
 
-    categories = [('ones', ScoreCategory('Ones', 'As many ones as possible', score_n(1))),
-        ('twos', ScoreCategory('Twos', 'As many twos as possible', score_n(2))),
-        ('threes', ScoreCategory('Threes', 'As many threes as possible', score_n(3))),
-        ('fours', ScoreCategory('Fours', 'As many fours as possible', score_n(4))),
-        ('fives', ScoreCategory('Fives', 'As many fives as possible', score_n(5))),
-        ('sixes', ScoreCategory('Sixes', 'As many sixes as possible', score_n(6))),
-        ('full-house', ScoreCategory('Full House', 'Three of a kind and a pair', full_house)),
-        ('four-kind', ScoreCategory('Four of a Kind', 'Four of the same number', four_kind)),
-        ('litte-straight', ScoreCategory('Little Straight', '1-2-3-4-5', straight, '30')),
-        ('big-straight', ScoreCategory('Big Straight', '2-3-4-5-6', straight, '30')),
-        ('choice', SubCategory('Choice', 'Any roll', lambda dice: 1, 'total')),
-        ('yacht', SubCategory('Yacht', 'Five of the same number', five_kind, '50'))]
+    categories = ['Dice Games', 'Category Games']
+    name = 'Yacht'
+    score_cats = [ScoreCategory('Ones', 'As many ones as possible', score_n(1)),
+        ScoreCategory('Twos', 'As many twos as possible', score_n(2)),
+        ScoreCategory('Threes', 'As many threes as possible', score_n(3)),
+        ScoreCategory('Fours', 'As many fours as possible', score_n(4)),
+        ScoreCategory('Fives', 'As many fives as possible', score_n(5)),
+        ScoreCategory('Sixes', 'As many sixes as possible', score_n(6)),
+        ScoreCategory('Full House', 'Three of a kind and a pair', full_house),
+        ScoreCategory('Four of a Kind', 'Four of the same number', four_kind),
+        ScoreCategory('Little Straight', '1-2-3-4-5', straight, '30'),
+        ScoreCategory('Big Straight', '2-3-4-5-6', straight, '30'),
+        ScoreCategory('Choice', 'Any roll', lambda dice: 1, 'total'),
+        ScoreCategory('Yacht', 'Five of the same number', five_kind, '50')]
 
     def do_hold(self, arguments):
         """
@@ -317,7 +318,7 @@ class Yacht(game.Game):
             player.error('Invalid argument to hold: {!r}.'.format(arguments))
         # Hold the dice.
         try:
-            self.dice.hold(holds)
+            self.dice.hold(*holds)
         except ValueError:
             player.error('You do not have all of those dice to hold.')
         return True
@@ -338,6 +339,7 @@ class Yacht(game.Game):
             # Roll the dice and mark the roll.
             self.dice.roll()
             self.roll_count += 1
+        return True
 
     def do_score(self, arguments):
         """
@@ -350,13 +352,13 @@ class Yacht(game.Game):
         player = self.players[self.player_index]
         # Find the correct category.
         # !! It would be good to provide some flexibility in identifying categories.
-        for category in self.categories:
+        for category in self.score_cats:
             if arguments.lower() == category.name.lower():
                 break
         else:
             # Handle unknown categories.
             player.error('I do not recognize that category.')
-            known = [category.name for category in self.categories]
+            known = [category.name for category in self.score_cats]
             player.error('The categories I know are: {}.'.format(', '.join(known)))
             return False
         # Score the roll in that category.
@@ -386,7 +388,7 @@ class Yacht(game.Game):
     def handle_options(self):
         """Handle the game options."""
         super(Yacht, self).handle_options()
-        self.categories = [category.copy() for category in Yacht.categories]
+        self.score_cats = [category.copy() for category in Yacht.score_cats]
 
     def player_action(self, player):
         """
@@ -405,6 +407,7 @@ class Yacht(game.Game):
     def set_up(self):
         """Set up the game. (None)"""
         self.dice = dice.Pool([6] * 5)
-        score_base = {category.name: None for category in self.categories}
+        self.roll_count = 1
+        score_base = {category.name: None for category in self.score_cats}
         self.category_scores = {player.name: score_base.copy() for player in self.players}
         self.scores = {player.name: 0 for player in self.players}
