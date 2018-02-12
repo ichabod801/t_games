@@ -301,7 +301,8 @@ class Bot(Player):
         kwargs['end'] = kwargs.get('end', '\n')
         text = kwargs['sep'].join([str(arg) for arg in args]) + kwargs['end']
         possessive = self.name + "'s"
-        pairs = (('Your', possessive), ('your', possessive), ('You', self.name), ('you', self.name))
+        pairs = (('Your', possessive), ('your', possessive), ('You', self.name), ('you', self.name), 
+            ('have', 'has'))
         for pronoun, name in pairs:
             text = text.replace(pronoun, name)
         del kwargs['sep']

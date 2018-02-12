@@ -17,6 +17,8 @@ straight: Score a straight category. (int)
 """
 
 
+import random
+
 import tgames.dice as dice
 import tgames.game as game
 import tgames.player as player
@@ -150,6 +152,7 @@ def score_n(number):
     """
     def score_num(dice):
         return number * dice.count(number)
+    return score_num
 
 def straight(dice):
     """
@@ -196,7 +199,7 @@ class Bacht(player.Bot):
             if self.next == 'roll':
                 self.next = ''
                 return 'roll'
-            elif game.roll_count == 3 or self.next == 'score':
+            elif self.game.roll_count == 3 or self.next == 'score':
                 move = 'score ' + self.get_category()
             else:
                 move = 'hold ' + ' '.join([str(x) for x in self.get_holds()])
@@ -206,6 +209,7 @@ class Bacht(player.Bot):
                     self.next = 'score'
         else:
             raise player.BotError('Unexpected query to Bacht: {!r}'.format(query))
+        return move
 
     def get_catgory(self):
         """Get the category to score the current roll in. (str)"""
@@ -251,7 +255,7 @@ class Bacht(player.Bot):
                     hold = pending[:1]
                 else:
                     hold = []
-            elif unique_held == 3:
+            elif unique_held > 2:
                 hold = list(set([die for die in pending if die not in held]))
                 if 6 in hold and 1 in held:
                     hold.remove(6)
@@ -287,6 +291,7 @@ class Yacht(game.Game):
     set_up
     """
 
+    aliases = {'h': 'hold', 'r': 'roll', 's': 'score'}
     categories = ['Dice Games', 'Category Games']
     name = 'Yacht'
     score_cats = [ScoreCategory('Ones', 'As many ones as possible', score_n(1)),
@@ -360,7 +365,7 @@ class Yacht(game.Game):
             player.error('I do not recognize that category.')
             known = [category.name for category in self.score_cats]
             player.error('The categories I know are: {}.'.format(', '.join(known)))
-            return False
+            return True
         # Score the roll in that category.
         score = category.score(self.dice, self.roll_count)
         if self.category_scores[player.name][category.name] is None:
@@ -370,25 +375,23 @@ class Yacht(game.Game):
             self.roll_count = 1
             self.dice.release()
             self.dice.roll()
-            return True
+            return False
         else:
             # Handle previously scored categories.
             player.error('You have already scored in that category.')
-            return False
+            return True
 
     def game_over(self):
         """Check for all categories having been used. (bool)"""
-        count = sum([list(player.score.values()).count(None) for player in self.players])
-        if not count:
-            self.category_scores = self.scores
-            for player_name in self.category_scores:
-                self.scores[player_name] = sum(self.category_scores[player_name].values())
+        count = sum([list(self.category_scores[plyr.name].values()).count(None) for plyr in self.players])
         return count == 0
 
     def handle_options(self):
         """Handle the game options."""
         super(Yacht, self).handle_options()
         self.score_cats = [category.copy() for category in Yacht.score_cats]
+        self.players = [self.human, Bacht()]
+        random.shuffle(self.players)
 
     def player_action(self, player):
         """

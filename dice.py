@@ -60,6 +60,10 @@ class Die(object):
         else:
             return NotImplemented
 
+    def __hash__(self):
+        """Hash value. (int)"""
+        return hash(self.value)
+
     def __lt__(self, other):
         """
         Ordering (less than) testing. (bool)
@@ -204,7 +208,7 @@ class Pool(object):
         Parameters:
         object: The roll to count. (object)
         """
-        return self.dice.count(object)
+        return self.dice.count(object) + self.held.count(object)
 
     def hold(self, *values):
         """
