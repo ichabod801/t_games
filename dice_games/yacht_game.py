@@ -204,7 +204,7 @@ class Bacht(player.Bot):
             else:
                 move = 'hold ' + ' '.join([str(x) for x in self.get_holds()])
                 if move == 'hold ':
-                    move == 'roll'
+                    move = 'roll'
                 elif self.game.dice.dice:
                     self.next = 'roll'
                 else:
@@ -216,8 +216,8 @@ class Bacht(player.Bot):
     def get_category(self):
         """Get the category to score the current roll in. (str)"""
         ranking = []
-        for category in self.game.category_scores:
-            if self.game.category_scores[self.name][category.name] is not None:
+        for category in self.game.score_cats:
+            if self.game.category_scores[self.name][category.name] is None:
                 ranking.append((category.score(self.game.dice, self.game.roll_count), category.name))
         ranking.reverse() # reverse is done so ties go to category with lowest potential.
         ranking.sort()
