@@ -312,6 +312,22 @@ class Yacht(game.Game):
         ScoreCategory('Choice', 'Any roll', lambda dice: 1, 'total'),
         ScoreCategory('Yacht', 'Five of the same number', five_kind, '50')]
 
+    def __str__(self):
+        """Human readable text representation (str)"""
+        cat_names = [category.name for category in self.score_cats]
+        max_len = max(len(name) for name in cat_names)
+        play_names = [min(player.name, 18) for player in self.player]
+        line_format = ('{{:<{}}}' + '  {{:>{}}}' * len(self.players)).format(max_len, *play_names)
+        lines = [line_format.format('Categories', *[name[:18] for name in play_names])]
+        lines.append('-' * len(lines[0]))
+        for category in self.score_cats:
+            sub_scores = [self.category_scores[player.name][category.name] for  player in self.players]
+            sub_scores = ['-' if score is None else score for score in sub_scores]
+            lines.append(line_format.format(category.name, *sub_scores))
+        lines.append('-' * len(lines[0]))
+        lines.append(line_format.format('Total', *[self.scores[player.name] for player in self.players]))
+        return '\n'.join(lines)
+
     def do_hold(self, arguments):
         """
         Hold back dice for scoring. (bool)
@@ -389,7 +405,23 @@ class Yacht(game.Game):
     def game_over(self):
         """Check for all categories having been used. (bool)"""
         count = sum([list(self.category_scores[plyr.name].values()).count(None) for plyr in self.players])
-        return count == 0
+        if count:
+            return False
+        else:
+            human_score = self.scores[self.human.name]
+            best = max(self.scores.values())
+            winners = [name for name, score in self.scores.items() if score == best]
+            self.human.tell(self)
+            if len(winners) == 1:
+                self.human.tell('\nThe winner is {} with {} points.'.format(winners[0], best))
+            else:
+                message = 'The winners are {} and {}; with {} points.'
+                self.human.tell(message.format(', '.join(winners[:-1]), winners[-1], best))
+            self.win_loss_draw[0] = len([score for score in self.scores.values() if score < human_score])
+            self.win_loss_draw[1] = len([score for score in self.scores.values() if score > human_score])
+            self.win_loss_draw[2] = len([score for score in self.scores.values() if score == human_score])
+            self.win_loss_draw[2] -= 1
+            return True
 
     def handle_options(self):
         """Handle the game options."""
@@ -406,6 +438,7 @@ class Yacht(game.Game):
         player: The player whose turn it is. (player.Player)
         """
         # Show the game status.
+        player.tell(self)
         player.tell('\nThe roll to you is {}.'.format(self.dice))
         player.tell('You have {} rerolls left.\n'.format(3 - self.roll_count))
         # Get the player's move.

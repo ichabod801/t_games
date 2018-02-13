@@ -197,8 +197,8 @@ class Pool(object):
 
     def __str__(self):
         """Human readable text representation. (str)"""
-        text = ', '.join([str(value) for value in self.values[:-1]])
-        text = '{} and {}'.format(text, self.values[-1])
+        dice_text = [str(die.value) + '*' for die in self.held] + [str(die.value) for die in self.dice]
+        text = '{}, and {}'.format(', '.join(dice_text[:-1]), dice_text[-1])
         return text
 
     def count(self, object):
