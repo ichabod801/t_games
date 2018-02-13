@@ -94,7 +94,7 @@ class ScoreCategory(object):
             elif self.score_type == 'sub-total':
                 score = sub_total
             else:
-                score = sum(dice)
+                score = sum(dice.values)
             # Add bonuses.
             score += self.bonus
             if roll_count == 1:
@@ -203,7 +203,9 @@ class Bacht(player.Bot):
                 move = 'score ' + self.get_category()
             else:
                 move = 'hold ' + ' '.join([str(x) for x in self.get_holds()])
-                if self.game.dice:
+                if move == 'hold ':
+                    move == 'roll'
+                elif self.game.dice.dice:
                     self.next = 'roll'
                 else:
                     self.next = 'score'
@@ -211,9 +213,12 @@ class Bacht(player.Bot):
             raise player.BotError('Unexpected query to Bacht: {!r}'.format(query))
         return move
 
-    def get_catgory(self):
+    def get_category(self):
         """Get the category to score the current roll in. (str)"""
-        ranking = [(category.score(self.game.dice), category.name) for category in self.game.categories]
+        ranking = []
+        for category in self.game.category_scores:
+            if self.game.category_scores[self.name][category.name] is not None:
+                ranking.append((category.score(self.game.dice, self.game.roll_count), category.name))
         ranking.reverse() # reverse is done so ties go to category with lowest potential.
         ranking.sort()
         return ranking[-1][1]
@@ -249,7 +254,7 @@ class Bacht(player.Bot):
         else:
             unique_held = len(set(held))
             if unique_held == 1:
-                hold = held[0] * pending.count(held[0])
+                hold = [held[0]] * pending.count(held[0])
             elif unique_held == 2:
                 if pending[0] in held:
                     hold = pending[:1]
