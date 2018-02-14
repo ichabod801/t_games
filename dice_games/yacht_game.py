@@ -414,9 +414,9 @@ class Yacht(game.Game):
             winners = [name for name, score in self.scores.items() if score == best]
             self.human.tell(self)
             if len(winners) == 1:
-                self.human.tell('\nThe winner is {} with {} points.'.format(winners[0], best))
+                self.human.tell('\nThe winner is {} with {} points.\n'.format(winners[0], best))
             else:
-                message = 'The winners are {} and {}; with {} points.'
+                message = '\nThe winners are {} and {}; with {} points.\n'
                 self.human.tell(message.format(', '.join(winners[:-1]), winners[-1], best))
             self.win_loss_draw[0] = len([score for score in self.scores.values() if score < human_score])
             self.win_loss_draw[1] = len([score for score in self.scores.values() if score > human_score])
