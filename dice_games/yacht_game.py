@@ -125,7 +125,7 @@ def four_kind(dice):
     dice: The dice roll to score. (int)
     """
     values = sorted(dice.values)
-    if values[0] == values[3] or values[2] == values[4]:
+    if values[0] == values[3] or values[1] == values[4]:
         return 4 * values[2]
     else:
         return 0
@@ -162,8 +162,8 @@ def straight(dice):
     dice: The dice roll to score. (int)
     """
     values = sorted(dice.values)
-    for value_index, value in enumerate(values):
-        if value - values[value_index - 1] != 1:
+    for value_index, value in enumerate(values[1:]):
+        if value - values[value_index] != 1: # indexes are correctly off due to skipping values[0]
             break
     else:
         return 30
@@ -199,13 +199,13 @@ class Bacht(player.Bot):
             if self.next == 'roll':
                 self.next = ''
                 return 'roll'
-            elif self.game.roll_count == 3 or self.next == 'score':
+            elif self.game.roll_count == 3 or self.next == 'score' or not self.game.dice.dice:
                 move = 'score ' + self.get_category()
             else:
                 move = 'hold ' + ' '.join([str(x) for x in self.get_holds()])
                 if move == 'hold ':
                     move = 'roll'
-                elif self.game.dice.dice:
+                elif self.game.dice.dice: # !! does not work, since hald hasn't happened yet.
                     self.next = 'roll'
                 else:
                     self.next = 'score'
@@ -316,9 +316,9 @@ class Yacht(game.Game):
         """Human readable text representation (str)"""
         cat_names = [category.name for category in self.score_cats]
         max_len = max(len(name) for name in cat_names)
-        play_names = [min(player.name, 18) for player in self.player]
-        line_format = ('{{:<{}}}' + '  {{:>{}}}' * len(self.players)).format(max_len, *play_names)
-        lines = [line_format.format('Categories', *[name[:18] for name in play_names])]
+        play_lens = [min(len(player.name), 18) for player in self.players]
+        line_format = ('{{:<{}}}' + '  {{:>{}}}' * len(self.players)).format(max_len, *play_lens)
+        lines = [line_format.format('Categories', *[player.name[:18] for player in self.players])]
         lines.append('-' * len(lines[0]))
         for category in self.score_cats:
             sub_scores = [self.category_scores[player.name][category.name] for  player in self.players]
@@ -342,6 +342,7 @@ class Yacht(game.Game):
             holds = [int(word) for word in arguments.split()]
         except ValueError:
             player.error('Invalid argument to hold: {!r}.'.format(arguments))
+            return False
         # Hold the dice.
         try:
             self.dice.hold(*holds)
