@@ -14,6 +14,7 @@ four_kind: Score the four of a kind category. (int)
 full_house: Score the full house category. (int)
 score_n: Creating a scoring function for a number category. (callable)
 straight: Score a straight category. (int)
+three_kind: Score the three of a kind category. (int)
 """
 
 
@@ -24,11 +25,79 @@ import tgames.game as game
 import tgames.player as player
 
 
+CREDITS = """
+Game Design: Traditional
+Game Programming: Craig "Ichabod" O'Brien
+"""
+
+RULES = """
+You start by rolling five dice. You may set any number of the dice aside and
+reroll the rest. You may set aside a second time and roll a third time. Dice
+that are set aside may not be rerolled that turn. Once you get a final roll,
+you choose a category to score it in. Each category may be scored only onece.
+If you do not meet the criteria for the category, you may still score it, but
+it is worth zero points. The game is over when everyone has scored all of the
+categories. The categories (and their scores) are:
+
+Yacht: Five of a kind (50)
+Big Straight: 2-3-4-5-6 (30)
+Little Straight: 1-2-3-4-5 (30)
+Four of a Kind: Four of the same number. (Sum of the four of a kind)
+Full House: Two of one number and threee of another. (Sum of the dice)
+Chance: Any roll. (Sum of the dice)
+Sixes: As many sixes as possible. (Sum of the sixes)
+Fives: As many fives as possible. (Sum of the fives)
+Fours: As many fours as possible. (Sum of the fours)
+Threes: As many threes as possible. (Sum of the threes)
+Twos: As many twos as possible. (Sum of the twos)
+Ones: As many ones as possible. (Sum of the ones)
+
+Options:
+extra-five=: Each player's second and later five of a kinds score bonus points
+    equal to this option.
+five-name=: Change the name of the five of a kind category. Underscores are
+    converted to spaces.
+max-rolls: The maximum number of rolls you can make.
+n-bonus=: A bonus for getting enough points in ones through sixes. The value
+    of this options should be two numbers separated by a slash (the bonus
+    points/the score needed).
+strict-4k: Four of a kind cannot be scored with five of a kind.
+strict-full: Full house cannot be scored with five of a kind.
+super-five: If you get five of a kind without rerolling, you win isntantly.
+wild-straight: Ones can be used as 2 or 6 in straights.
+
+Score Options:
+The score options allow changing the scores of the categories. They are done
+with 'category-option = score-specification'. The score specification can be
+total (sum of the dice), sub-total (sum of the qualifying dice), a number for
+a straight score, two numbers separated by a slash (the score if done without
+rerolling/the normal score), or total+ a number (sum of the dice plus the 
+number give). If the score is set to 0, that category is removed from the 
+game. The category options are: five-kind, big-straight, low-straight, 
+four-kind, full-house, three-kind, chance, and low-chance. Note that 
+three-kind and low-chance are not in the normal game. Assigning them a score 
+specification will add them to the game. The low-chance category must be 
+lower than the normal chance category. If it is not, the second one scored 
+counts as 0.
+
+Variant Options:
+cheerio: Equivalent to five-name=Cheerio big-straight=25 low-straight=20
+    four-kind=0 max-rolls=2
+general: Equivalent to five-name=Small_General five-kind=60 four-kind=45/40
+    full-house=35/30 big-straight=25/20 low-straight=0 chance=0 super-five
+    wild-straight
+hindenberg: Equivalent to five-name=Hindenberg five-kind=30 big-straight=20 
+    low-straight=15 four-kind=0 chance=0
+yahtzee: Equivalent to five-name=Yahtzee big-straight=40 full-house=25 
+    three-kind=total n-bonus=35/63 extra-five=100
+yam: Equivalent to five-name=Yam five-kind=total+40 big-straight=total+30
+    full-house=total+20 low-chance=total n-bonus=30/60
+"""
+
+
 class ScoreCategory(object):
     """
     A category for a category dice game. (object)
-
-    !! I will want to move this to dice.py.
 
     Attributes:
     description: A description of the category. (str)
@@ -169,6 +238,19 @@ def straight(dice):
         return 30
     return 0
 
+def three_kind(dice):
+    """
+    Score the three of a kind category. (int)
+
+    Parameters:
+    dice: The dice roll to score. (int)
+    """
+    values = sorted(dice.values)
+    if values[0] == values[2] or values[1] == values[3] or values[2] == values[4]:
+        return 3 * values[2]
+    else:
+        return 0
+
 
 class Bacht(player.Bot):
     """
@@ -298,18 +380,22 @@ class Yacht(game.Game):
 
     aliases = {'h': 'hold', 'r': 'roll', 's': 'score'}
     categories = ['Dice Games', 'Category Games']
+    credits = CREDITS
     name = 'Yacht'
+    rules = RULES
     score_cats = [ScoreCategory('Ones', 'As many ones as possible', score_n(1)),
         ScoreCategory('Twos', 'As many twos as possible', score_n(2)),
         ScoreCategory('Threes', 'As many threes as possible', score_n(3)),
         ScoreCategory('Fours', 'As many fours as possible', score_n(4)),
         ScoreCategory('Fives', 'As many fives as possible', score_n(5)),
         ScoreCategory('Sixes', 'As many sixes as possible', score_n(6)),
-        ScoreCategory('Full House', 'Three of a kind and a pair', full_house),
-        ScoreCategory('Four of a Kind', 'Four of the same number', four_kind),
+        ScoreCategory('Three of a Kind', 'Threed of the same number', three_kind, '0')
+        ScoreCategory('Low Chance', 'Any roll (lower than Chance)', lambda dice: 1, '0')
+        ScoreCategory('Chance', 'Any roll', lambda dice: 1, 'total'),
         ScoreCategory('Little Straight', '1-2-3-4-5', straight, '30'),
         ScoreCategory('Big Straight', '2-3-4-5-6', straight, '30'),
-        ScoreCategory('Choice', 'Any roll', lambda dice: 1, 'total'),
+        ScoreCategory('Full House', 'Three of a kind and a pair', full_house),
+        ScoreCategory('Four of a Kind', 'Four of the same number', four_kind),
         ScoreCategory('Yacht', 'Five of the same number', five_kind, '50')]
 
     def __str__(self):
@@ -445,6 +531,29 @@ class Yacht(game.Game):
         # Get the player's move.
         move = player.ask('What is your move? ')
         return self.handle_cmd(move)
+
+    def set_options(self):
+        """Define the game options. (None)"""
+        # Set the score category options.
+        """five-kind, big-straight, low-straight, 
+        four-kind, full-house, three-kind, chance, low-chance"""
+        self.score_options = {}
+        self.option_set.add_option('low-chance', action = 'key=Yacht', target = self.score_options, 
+            default = None, question = 'What is the score for low chance (return for not used)? ')
+        self.option_set.add_option('chance', action = 'key=Yacht', target = self.score_options, 
+            default = None, question = 'What is the score for chance (return for total)? ') # !! not done.
+        self.option_set.add_option('three-kind', action = 'key=Yacht', target = self.score_options, 
+            default = None, question = 'What is the score for five of a kind (return for 50)? ')
+        self.option_set.add_option('five-kind', action = 'key=Yacht', target = self.score_options, 
+            default = None, question = 'What is the score for five of a kind (return for 50)? ')
+        self.option_set.add_option('five-kind', action = 'key=Yacht', target = self.score_options, 
+            default = None, question = 'What is the score for five of a kind (return for 50)? ')
+        self.option_set.add_option('five-kind', action = 'key=Yacht', target = self.score_options, 
+            default = None, question = 'What is the score for five of a kind (return for 50)? ')
+        self.option_set.add_option('five-kind', action = 'key=Yacht', target = self.score_options, 
+            default = None, question = 'What is the score for five of a kind (return for 50)? ')
+        self.option_set.add_option('five-kind', action = 'key=Yacht', target = self.score_options, 
+            default = None, question = 'What is the score for five of a kind (return for 50)? ')
 
     def set_up(self):
         """Set up the game. (None)"""
