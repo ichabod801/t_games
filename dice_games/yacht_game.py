@@ -72,7 +72,7 @@ with 'category-option = score-specification'. The score specification can be
 total (sum of the dice), sub-total (sum of the qualifying dice), a number for
 a straight score, two numbers separated by a slash (the score if done without
 rerolling/the normal score), or total+ a number (sum of the dice plus the 
-number give). If the score is set to 0, that category is removed from the 
+bonus to give). If the score is set to 0, that category is removed from the 
 game. The category options are: five-kind, big-straight, low-straight, 
 four-kind, full-house, three-kind, chance, and low-chance. Note that 
 three-kind and low-chance are not in the normal game. Assigning them a score 
@@ -513,7 +513,28 @@ class Yacht(game.Game):
     def handle_options(self):
         """Handle the game options."""
         super(Yacht, self).handle_options()
+        # Handle the score category options.
         self.score_cats = [category.copy() for category in Yacht.score_cats]
+        for category in self.score_cats:
+            if category.name in self.score_options:
+                score_spec = self.score_options[category.name]
+                if score_spec.isdigit():
+                    # Handle set scores.
+                    category.score_type = int(score_spec)
+                elif '/' in score_spec:
+                    # Handle bonus for scoring without rerolling.
+                    score_spec = score_spec.split('/')
+                    category.first = int(score_spec[0])
+                    category.score_type = int(score_spec[1])
+                elif score_spec.startswith('total'):
+                    # Handle total of all dice, inclduing bonuses.
+                    category.score_type = 'total'
+                    if '+' in score_spce:
+                        category.bonus = int(score_spec.split('+')[1])
+                elif score_spec == 'sub-total':
+                    # Handle total of qualifying dice.
+                    category.score_type = 'sub-total'
+        # Set the players.
         self.players = [self.human, Bacht()]
         random.shuffle(self.players)
 
@@ -535,23 +556,27 @@ class Yacht(game.Game):
     def set_options(self):
         """Define the game options. (None)"""
         # Set the score category options.
-        """five-kind, big-straight, low-straight, 
-        four-kind, full-house, three-kind, chance, low-chance"""
+        # !! I need a validator function.
+        # !! Also use the lowercase converter.
+        # !! Need catch for low chance.
         self.score_options = {}
-        self.option_set.add_option('low-chance', action = 'key=Yacht', target = self.score_options, 
+        self.option_set.add_option('low-chance', action = 'key=Low Chance', target = self.score_options, 
             default = None, question = 'What is the score for low chance (return for not used)? ')
-        self.option_set.add_option('chance', action = 'key=Yacht', target = self.score_options, 
+        self.option_set.add_option('chance', action = 'key=Chance', target = self.score_options, 
             default = None, question = 'What is the score for chance (return for total)? ') # !! not done.
-        self.option_set.add_option('three-kind', action = 'key=Yacht', target = self.score_options, 
-            default = None, question = 'What is the score for five of a kind (return for 50)? ')
-        self.option_set.add_option('five-kind', action = 'key=Yacht', target = self.score_options, 
-            default = None, question = 'What is the score for five of a kind (return for 50)? ')
-        self.option_set.add_option('five-kind', action = 'key=Yacht', target = self.score_options, 
-            default = None, question = 'What is the score for five of a kind (return for 50)? ')
-        self.option_set.add_option('five-kind', action = 'key=Yacht', target = self.score_options, 
-            default = None, question = 'What is the score for five of a kind (return for 50)? ')
-        self.option_set.add_option('five-kind', action = 'key=Yacht', target = self.score_options, 
-            default = None, question = 'What is the score for five of a kind (return for 50)? ')
+        self.option_set.add_option('three-kind', action = 'key=Three of a Kind', 
+            target = self.score_options, default = None, 
+            question = 'What is the score for three of a kind (return for not used)? ')
+        self.option_set.add_option('full-house', action = 'key=Full House', target = self.score_options, 
+            default = None, question = 'What is the score for full house (return for total)? ')
+        self.option_set.add_option('four-kind', action = 'key=Four of a kind', target = self.score_options,
+            default = None, question = 'What is the score for four of a kind (return for total)? ')
+        self.option_set.add_option('low-straight', action = 'key=Little Straight', 
+            target = self.score_options, default = None, 
+            question = 'What is the score for little straights (return for 30)? ')
+        self.option_set.add_option('big-straight', action = 'key=Big Straight', 
+            target = self.score_options, default = None, 
+            question = 'What is the score for big straights (return for 30)? ')
         self.option_set.add_option('five-kind', action = 'key=Yacht', target = self.score_options, 
             default = None, question = 'What is the score for five of a kind (return for 50)? ')
 
@@ -562,3 +587,26 @@ class Yacht(game.Game):
         score_base = {category.name: None for category in self.score_cats}
         self.category_scores = {player.name: score_base.copy() for player in self.players}
         self.scores = {player.name: 0 for player in self.players}
+
+
+def valid_score_spec(score_spec):
+    """
+    Validate a score specification. (bool)
+
+    Parameters:
+    score_spec: A user entered score specification. (str)
+    """
+    valid = False
+    if score_spec in ('sub-total', 'total'):
+        # Sums of dice.
+        valid = True
+    elif score_spec.isdigit():
+        # Set scores
+        valid = True
+    elif score_spec.startswith('total+'):
+        # Totals with bonuses
+        score_spec = score_spec.split('+')
+        if len(score_spec) == 2 and score_spec.split('+')[1].isdigit():
+            valid = True
+    # !! not finished
+    return valid
