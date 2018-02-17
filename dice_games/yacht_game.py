@@ -168,9 +168,9 @@ class ScoreCategory(object):
             else:
                 score = sum(dice.values)
             # Add bonuses.
-            score += self.bonus
             if roll_count == 1:
-                score += self.first
+                score = self.first
+            score += self.bonus
         else:
             # Invalid rolls score 0.
             score = 0
@@ -563,26 +563,26 @@ class Yacht(game.Game):
         """Handle the game options."""
         super(Yacht, self).handle_options()
         # Handle the score category options.
-        for category in Yacht.score_cats:
+        self.score_cats = [category.copy() for category in Yacht.score_cats]
+        for category in self.score_cats:
             if category.name in self.score_options:
                 score_spec = self.score_options[category.name]
-                if score_spec.isdigit():
-                    # Handle set scores.
-                    category.score_type = int(score_spec)
-                elif '/' in score_spec:
+                if isinstance(score_spec, list):
                     # Handle bonus for scoring without rerolling.
-                    score_spec = score_spec.split('/')
                     category.first = int(score_spec[0])
                     category.score_type = int(score_spec[1])
+                elif score_spec.isdigit():
+                    # Handle set scores.
+                    category.score_type = int(score_spec)
                 elif score_spec.startswith('total'):
                     # Handle total of all dice, inclduing bonuses.
                     category.score_type = 'total'
-                    if '+' in score_spce:
+                    if '+' in score_spec:
                         category.bonus = int(score_spec.split('+')[1])
                 elif score_spec == 'sub-total':
                     # Handle total of qualifying dice.
                     category.score_type = 'sub-total'
-        self.score_cats = [category.copy() for category in Yacht.score_cats if category.score_type]
+        self.score_cats = [category for category in self.score_cats if category.score_type]
         # !! need to catch having only one straight category.
         # Set the players.
         self.players = [self.human, Bacht()]
@@ -620,7 +620,7 @@ class Yacht(game.Game):
         self.option_set.add_option('full-house', action = 'key=Full House', target = self.score_options, 
             default = None, check = valid_score_spec, converter = options.lower, 
             question = 'What is the score for full house (return for total)? ')
-        self.option_set.add_option('four-kind', action = 'key=Four of a kind', target = self.score_options,
+        self.option_set.add_option('four-kind', action = 'key=Four of a Kind', target = self.score_options,
             default = None, check = valid_score_spec, converter = options.lower, 
             question = 'What is the score for four of a kind (return for total)? ')
         self.option_set.add_option('low-straight', action = 'key=Little Straight', 
@@ -655,17 +655,16 @@ def valid_score_spec(score_spec):
     if score_spec in ('sub-total', 'total'):
         # Sums of dice.
         valid = True
+    elif isinstance(score_spec, list):
+        # Bonus for scoring on the first roll.
+        if len(score_spec) == 2 and score_spec[0].isdigit() and score_spec[1].isdigit():
+            valid = True
     elif score_spec.isdigit():
         # Set scores
         valid = True
     elif score_spec.startswith('total+'):
         # Totals with bonuses
         score_spec = score_spec.split('+')
-        if len(score_spec) == 2 and score_spec.split('+')[1].isdigit():
-            valid = True
-    elif '/' in score_spec:
-        # Bonus for scoring on the first roll.
-        score_spec = score_spec.split('/')
-        if len(score_spec) == 2 and score_spec[0].isdigit() and score_spec[1].isdigit():
+        if len(score_spec) == 2 and score_spec[1].isdigit():
             valid = True
     return valid
