@@ -14,6 +14,8 @@ four_kind: Score the four of a kind category. (int)
 full_house: Score the full house category. (int)
 score_n: Creating a scoring function for a number category. (callable)
 straight: Score a straight category. (int)
+straight_low: Score a low straight category. (int)
+straight_high: Score a high straight category. (int)
 three_kind: Score the three of a kind category. (int)
 """
 
@@ -208,7 +210,9 @@ def full_house(dice):
     dice: The dice roll to score. (int)
     """
     values = sorted(dice.values)
-    if values[0] == values[1] and values[2] == values[4] and values[1] != values[2]:
+    if values[0] == values[1] and values[2] == values[4] and values[0] != values[4]:
+        return sum(values)
+    if values[0] == values[2] and values[3] == values[4] and values[0] != values[4]:
         return sum(values)
     else:
         return 0
@@ -236,8 +240,32 @@ def straight(dice):
         if value - values[value_index] != 1: # indexes are correctly off due to skipping values[0]
             break
     else:
-        return 30
+        return 30 # !! should return sum of valid dice.
     return 0
+
+def straight_low(dice):
+    """
+    Score a low straight category. (int)
+
+    Parameters:
+    dice: The dice roll to score. (int)
+    """
+    if 1 in dice.values:
+        return straight(dice)
+    else:
+        return 0
+
+def straight_high(dice):
+    """
+    Score a high straight category. (int)
+
+    Parameters:
+    dice: The dice roll to score. (int)
+    """
+    if 6 in dice.values:
+        return straight(dice)
+    else:
+        return 0
 
 def three_kind(dice):
     """
@@ -308,12 +336,12 @@ class Bacht(player.Bot):
                     chance = my_scores['Chance']
                     if chance is not None and chance <= score:
                         score = 0
-                elif category.name = 'Chance' and 'Low Chance' in my_scores:
+                elif category.name == 'Chance' and 'Low Chance' in my_scores:
                     low_chance = my_scores['Low Chance']
                     if low_chance is not None and score <= low_chance:
                         score = 0
                 ranking.append((score, category.name))
-        ranking.reverse() # reverse is done so ties go to category with lowest potential.
+        #ranking.reverse() # reverse is done so ties go to category with lowest potential. # !! not working?
         ranking.sort()
         return ranking[-1][1]
 
@@ -401,11 +429,11 @@ class Yacht(game.Game):
         ScoreCategory('Fours', 'As many fours as possible', score_n(4)),
         ScoreCategory('Fives', 'As many fives as possible', score_n(5)),
         ScoreCategory('Sixes', 'As many sixes as possible', score_n(6)),
-        ScoreCategory('Three of a Kind', 'Threed of the same number', three_kind, '0')
-        ScoreCategory('Low Chance', 'Any roll (lower than Chance)', lambda dice: 1, '0')
+        ScoreCategory('Three of a Kind', 'Threed of the same number', three_kind, '0'),
+        ScoreCategory('Low Chance', 'Any roll (lower than Chance)', lambda dice: 1, '0'),
         ScoreCategory('Chance', 'Any roll', lambda dice: 1, 'total'),
-        ScoreCategory('Little Straight', '1-2-3-4-5', straight, '30'),
-        ScoreCategory('Big Straight', '2-3-4-5-6', straight, '30'),
+        ScoreCategory('Little Straight', '1-2-3-4-5', straight_low, '30'),
+        ScoreCategory('Big Straight', '2-3-4-5-6', straight_high, '30'),
         ScoreCategory('Full House', 'Three of a kind and a pair', full_house),
         ScoreCategory('Four of a Kind', 'Four of the same number', four_kind),
         ScoreCategory('Yacht', 'Five of the same number', five_kind, '50')]
@@ -440,7 +468,7 @@ class Yacht(game.Game):
             holds = [int(word) for word in arguments.split()]
         except ValueError:
             player.error('Invalid argument to hold: {!r}.'.format(arguments))
-            return False
+            return True
         # Hold the dice.
         try:
             self.dice.hold(*holds)
@@ -492,7 +520,7 @@ class Yacht(game.Game):
             chance = self.category_scores[player.name]['Chance']
             if chance is not None and chance <= score:
                 score = 0
-        elif category.name = 'Chance' and 'Low Chance' in self.category_scores[player.name]:
+        elif category.name == 'Chance' and 'Low Chance' in self.category_scores[player.name]:
             low_chance = self.category_scores[player.name]['Low Chance']
             if low_chance is not None and score <= low_chance:
                 score = 0
@@ -535,8 +563,7 @@ class Yacht(game.Game):
         """Handle the game options."""
         super(Yacht, self).handle_options()
         # Handle the score category options.
-        self.score_cats = [category.copy() for category in Yacht.score_cats]
-        for category in self.score_cats:
+        for category in Yacht.score_cats:
             if category.name in self.score_options:
                 score_spec = self.score_options[category.name]
                 if score_spec.isdigit():
@@ -555,6 +582,8 @@ class Yacht(game.Game):
                 elif score_spec == 'sub-total':
                     # Handle total of qualifying dice.
                     category.score_type = 'sub-total'
+        self.score_cats = [category.copy() for category in Yacht.score_cats if category.score_type]
+        # !! need to catch having only one straight category.
         # Set the players.
         self.players = [self.human, Bacht()]
         random.shuffle(self.players)
@@ -583,7 +612,7 @@ class Yacht(game.Game):
             question = 'What is the score for low chance (return for not used)? ')
         self.option_set.add_option('chance', action = 'key=Chance', target = self.score_options, 
             default = None, check = valid_score_spec, converter = options.lower, 
-            question = 'What is the score for chance (return for total)? ') # !! not done.
+            question = 'What is the score for chance (return for total)? ')
         self.option_set.add_option('three-kind', action = 'key=Three of a Kind', 
             target = self.score_options, default = None, check = valid_score_spec, 
             converter = options.lower, 
@@ -610,7 +639,7 @@ class Yacht(game.Game):
         """Set up the game. (None)"""
         self.dice = dice.Pool([6] * 5)
         self.roll_count = 1
-        score_base = {category.name: None for category in self.score_cats if category.score_type}
+        score_base = {category.name: None for category in self.score_cats}
         self.category_scores = {player.name: score_base.copy() for player in self.players}
         self.scores = {player.name: 0 for player in self.players}
 
