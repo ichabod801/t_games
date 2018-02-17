@@ -22,6 +22,7 @@ import random
 
 import tgames.dice as dice
 import tgames.game as game
+import tgames.options as options
 import tgames.player as player
 
 
@@ -103,7 +104,7 @@ class ScoreCategory(object):
     description: A description of the category. (str)
     first: The bonus for getting the roll on the first roll. (int)
     name: The name of the category. (str)
-    validator: A function to check validity and get the sub-total. (callable)
+    check: A function to check validity and get the sub-total. (callable)
     score_type: How the category is scored. (str)
 
     Methods:
@@ -113,21 +114,21 @@ class ScoreCategory(object):
     __init__
     """
 
-    def __init__(self, name, description, validator, score_type = 'sub-total', first = 0):
+    def __init__(self, name, description, check, score_type = 'sub-total', first = 0):
         """
         Set up the category. (None)
 
         Parameters:
         description: A description of the category. (str)
         name: The name of the category. (str)
-        validator: A function to check validity and get the sub-total. (callable)
+        check: A function to check validity and get the sub-total. (callable)
         score_type: How the category is scored. (str)
         first: The bonus for getting the roll on the first roll. (int)
         """
         # Set basic attributes.
         self.name = name
         self.description = description
-        self.validator = validator
+        self.check = check
         self.first = first
         # Parse the score type.
         self.bonus = 0
@@ -142,7 +143,7 @@ class ScoreCategory(object):
 
     def copy(self):
         """Create an independent copy of the category. (ScoreCategory)"""
-        new = ScoreCategory(self.name, self.description, self.validator, str(self.score_type), self.first)
+        new = ScoreCategory(self.name, self.description, self.check, str(self.score_type), self.first)
         new.bonus = self.bonus
         return new
 
@@ -154,7 +155,7 @@ class ScoreCategory(object):
         dice: The roll to score. (dice.Pool)
         roll_count: How many rolls it took to get the roll. (int)
         """
-        sub_total = self.validator(dice)
+        sub_total = self.check(dice)
         # Score a valid roll
         if sub_total:
             # Score by type of category.
@@ -298,9 +299,20 @@ class Bacht(player.Bot):
     def get_category(self):
         """Get the category to score the current roll in. (str)"""
         ranking = []
+        my_scores = self.game.category_scores[self.name]
         for category in self.game.score_cats:
-            if self.game.category_scores[self.name][category.name] is None:
-                ranking.append((category.score(self.game.dice, self.game.roll_count), category.name))
+            if my_scores[category.name] is None:
+                score = category.score(self.game.dice, self.game.roll_count)
+                # !! repeated code, needs refactoring. Score method of Yacht?
+                if category.name == 'low Chance' and 'Chance' in my_scores:
+                    chance = my_scores['Chance']
+                    if chance is not None and chance <= score:
+                        score = 0
+                elif category.name = 'Chance' and 'Low Chance' in my_scores:
+                    low_chance = my_scores['Low Chance']
+                    if low_chance is not None and score <= low_chance:
+                        score = 0
+                ranking.append((score, category.name))
         ranking.reverse() # reverse is done so ties go to category with lowest potential.
         ranking.sort()
         return ranking[-1][1]
@@ -476,6 +488,15 @@ class Yacht(game.Game):
             return True
         # Score the roll in that category.
         score = category.score(self.dice, self.roll_count)
+        if category.name == 'Low Chance' and 'Chance' in self.category_scores[player.name]:
+            chance = self.category_scores[player.name]['Chance']
+            if chance is not None and chance <= score:
+                score = 0
+        elif category.name = 'Chance' and 'Low Chance' in self.category_scores[player.name]:
+            low_chance = self.category_scores[player.name]['Low Chance']
+            if low_chance is not None and score <= low_chance:
+                score = 0
+        # Apply the score to the player.
         if self.category_scores[player.name][category.name] is None:
             self.category_scores[player.name][category.name] = score
             self.scores[player.name] += score
@@ -556,35 +577,40 @@ class Yacht(game.Game):
     def set_options(self):
         """Define the game options. (None)"""
         # Set the score category options.
-        # !! I need a validator function.
-        # !! Also use the lowercase converter.
-        # !! Need catch for low chance.
         self.score_options = {}
         self.option_set.add_option('low-chance', action = 'key=Low Chance', target = self.score_options, 
-            default = None, question = 'What is the score for low chance (return for not used)? ')
+            default = None, check = valid_score_spec, converter = options.lower, 
+            question = 'What is the score for low chance (return for not used)? ')
         self.option_set.add_option('chance', action = 'key=Chance', target = self.score_options, 
-            default = None, question = 'What is the score for chance (return for total)? ') # !! not done.
+            default = None, check = valid_score_spec, converter = options.lower, 
+            question = 'What is the score for chance (return for total)? ') # !! not done.
         self.option_set.add_option('three-kind', action = 'key=Three of a Kind', 
-            target = self.score_options, default = None, 
+            target = self.score_options, default = None, check = valid_score_spec, 
+            converter = options.lower, 
             question = 'What is the score for three of a kind (return for not used)? ')
         self.option_set.add_option('full-house', action = 'key=Full House', target = self.score_options, 
-            default = None, question = 'What is the score for full house (return for total)? ')
+            default = None, check = valid_score_spec, converter = options.lower, 
+            question = 'What is the score for full house (return for total)? ')
         self.option_set.add_option('four-kind', action = 'key=Four of a kind', target = self.score_options,
-            default = None, question = 'What is the score for four of a kind (return for total)? ')
+            default = None, check = valid_score_spec, converter = options.lower, 
+            question = 'What is the score for four of a kind (return for total)? ')
         self.option_set.add_option('low-straight', action = 'key=Little Straight', 
-            target = self.score_options, default = None, 
+            target = self.score_options, default = None, check = valid_score_spec, 
+            converter = options.lower, 
             question = 'What is the score for little straights (return for 30)? ')
         self.option_set.add_option('big-straight', action = 'key=Big Straight', 
-            target = self.score_options, default = None, 
+            target = self.score_options, default = None, check = valid_score_spec, 
+            converter = options.lower, 
             question = 'What is the score for big straights (return for 30)? ')
         self.option_set.add_option('five-kind', action = 'key=Yacht', target = self.score_options, 
-            default = None, question = 'What is the score for five of a kind (return for 50)? ')
+            default = None, check = valid_score_spec, converter = options.lower, 
+            question = 'What is the score for five of a kind (return for 50)? ')
 
     def set_up(self):
         """Set up the game. (None)"""
         self.dice = dice.Pool([6] * 5)
         self.roll_count = 1
-        score_base = {category.name: None for category in self.score_cats}
+        score_base = {category.name: None for category in self.score_cats if category.score_type}
         self.category_scores = {player.name: score_base.copy() for player in self.players}
         self.scores = {player.name: 0 for player in self.players}
 
@@ -608,5 +634,9 @@ def valid_score_spec(score_spec):
         score_spec = score_spec.split('+')
         if len(score_spec) == 2 and score_spec.split('+')[1].isdigit():
             valid = True
-    # !! not finished
+    elif '/' in score_spec:
+        # Bonus for scoring on the first roll.
+        score_spec = score_spec.split('/')
+        if len(score_spec) == 2 and score_spec[0].isdigit() and score_spec[1].isdigit():
+            valid = True
     return valid
