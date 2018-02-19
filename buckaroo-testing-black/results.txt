@@ -232,3 +232,6 @@ Yacht,0,0,0,9,1,0,
 Yacht,0,0,0,97,24,2,
 Yacht,0,1,0,95,24,0,
 Yacht,0,1,0,108,24,0,
+FreeCell,1,0,0,813,60,0,
+Pig,3,0,0,101,27,1,medium satan x
+Yacht,1,0,0,110,22,1,big-straight=25 five-name=Cheerio four-kind=0 low-straight=20 max-rolls=2

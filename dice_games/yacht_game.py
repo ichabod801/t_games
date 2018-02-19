@@ -240,7 +240,7 @@ def straight(dice):
         if value - values[value_index] != 1: # indexes are correctly off due to skipping values[0]
             break
     else:
-        return 30 # !! should return sum of valid dice.
+        return sum(values)
     return 0
 
 def straight_low(dice):
@@ -258,6 +258,8 @@ def straight_low(dice):
 def straight_high(dice):
     """
     Score a high straight category. (int)
+
+    !! this scored right with sorted values on second roll, but 0 with unsorted values on first roll.
 
     Parameters:
     dice: The dice roll to score. (int)
@@ -310,7 +312,8 @@ class Bacht(player.Bot):
             if self.next == 'roll':
                 self.next = ''
                 return 'roll'
-            elif self.game.roll_count == 3 or self.next == 'score' or not self.game.dice.dice:
+            elif (self.game.roll_count == self.game.max_rolls or self.next == 'score' 
+                or not self.game.dice.dice):
                 move = 'score ' + self.get_category()
             else:
                 move = 'hold ' + ' '.join([str(x) for x in self.get_holds()])
@@ -422,6 +425,7 @@ class Yacht(game.Game):
     categories = ['Dice Games', 'Category Games']
     credits = CREDITS
     name = 'Yacht'
+    num_options = 16
     rules = RULES
     score_cats = [ScoreCategory('Ones', 'As many ones as possible', score_n(1)),
         ScoreCategory('Twos', 'As many twos as possible', score_n(2)),
@@ -486,8 +490,8 @@ class Yacht(game.Game):
         # Get the current player.
         player = self.players[self.player_index]
         # Check the roll count
-        if self.roll_count == 3:
-            player.error('You have already rolled three times.')
+        if self.roll_count == self.max_rolls:
+            player.error('You have already rolled {} times.'.format(self.max_rolls))
         else:
             # Roll the dice and mark the roll.
             self.dice.roll()
@@ -524,6 +528,9 @@ class Yacht(game.Game):
             low_chance = self.category_scores[player.name]['Low Chance']
             if low_chance is not None and score <= low_chance:
                 score = 0
+        # Check for instant win.
+        if self.super_five and category == self.score_cats[-1] and self.roll_count == 1:
+            # !! not finished. Want to set all scores to zero and ensure current player has max.
         # Apply the score to the player.
         if self.category_scores[player.name][category.name] is None:
             self.category_scores[player.name][category.name] = score
@@ -583,6 +590,7 @@ class Yacht(game.Game):
                     # Handle total of qualifying dice.
                     category.score_type = 'sub-total'
         self.score_cats = [category for category in self.score_cats if category.score_type]
+        self.score_cats[-1].name = self.five_name
         # !! need to catch having only one straight category.
         # Set the players.
         self.players = [self.human, Bacht()]
@@ -598,7 +606,7 @@ class Yacht(game.Game):
         # Show the game status.
         player.tell(self)
         player.tell('\nThe roll to you is {}.'.format(self.dice))
-        player.tell('You have {} rerolls left.\n'.format(3 - self.roll_count))
+        player.tell('You have {} rerolls left.\n'.format(self.max_rolls - self.roll_count))
         # Get the player's move.
         move = player.ask('What is your move? ')
         return self.handle_cmd(move)
@@ -634,6 +642,10 @@ class Yacht(game.Game):
         self.option_set.add_option('five-kind', action = 'key=Yacht', target = self.score_options, 
             default = None, check = valid_score_spec, converter = options.lower, 
             question = 'What is the score for five of a kind (return for 50)? ')
+        # Set the other options.
+        self.option_set.add_option('five-name', default = 'Yacht')
+        self.option_set.add_option('max-rolls', converter = int, default = 3)
+        self.option_set.add_option('super-five')
 
     def set_up(self):
         """Set up the game. (None)"""
