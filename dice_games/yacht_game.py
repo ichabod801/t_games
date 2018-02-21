@@ -528,9 +528,6 @@ class Yacht(game.Game):
             low_chance = self.category_scores[player.name]['Low Chance']
             if low_chance is not None and score <= low_chance:
                 score = 0
-        # Check for instant win.
-        if self.super_five and category == self.score_cats[-1] and self.roll_count == 1:
-            # !! not finished. Want to set all scores to zero and ensure current player has max.
         # Apply the score to the player.
         if self.category_scores[player.name][category.name] is None:
             self.category_scores[player.name][category.name] = score
@@ -539,6 +536,24 @@ class Yacht(game.Game):
             self.roll_count = 1
             self.dice.release()
             self.dice.roll()
+            # Check for instant win.
+            if self.super_five and score and category == self.score_cats[-1] and self.roll_count == 1:
+                self.force_end = True
+                if player == self.human:
+                    self.win_loss_draw[0] = len(self.players) - 1
+                else:
+                    human_score = self.scores[self.human.name]
+                    # !! duplicate code.
+                    self.win_loss_draw[0] = len([x for x in self.scores.values() if x < human_score])
+                    self.win_loss_draw[1] = len([x for x in self.scores.values() if x > human_score])
+                    self.win_loss_draw[2] = len([x for x in self.scores.values() if x == human_score])
+                    self.win_loss_draw[2] -= 1
+                    if self.scores[player.name] < human_score:
+                        self.win_loss_draw[1] += 1
+                        self.win_loss_draw[0] -= 1
+                    elif self.scores[player.name] == human_score:
+                        self.win_loss_draw[1] += 1
+                        self.win_loss_draw[2] -= 1
             return False
         else:
             # Handle previously scored categories.
