@@ -269,6 +269,22 @@ def straight_high(dice):
     else:
         return 0
 
+def straight_wild(dice):
+    """
+    Score a straight category with twos wild. (int)
+
+    Twos in a wild straight can count as ones or sixes.
+
+    Parameters:
+    dice: The dice roll to score. (int)
+    """
+    score = straight(dice)
+    if not score:
+        values = dice.values
+        if set(values) == set([2, 3, 4, 5]) and values.count(2) == 2:
+            score = sum(values)
+    return score
+
 def three_kind(dice):
     """
     Score the three of a kind category. (int)
@@ -368,9 +384,11 @@ class Bacht(player.Bot):
                     hold += [counts.index(ordered[1])] * ordered[1]
             elif ordered[0] > 2:
                 hold = [counts.index(ordered[0])] * ordered[0]
-            elif my_scores['Little Straight'] is None and len(set([die for die in pending if die < 6])) > 2:
+            elif my_scores.get('Little Straight', 0) is None and len(set([die for die in pending if die < 6])) > 2:
                 hold = set([die for die in pending if die < 6])
-            elif my_scores['Big Straight'] is None and len(set([die for die in pending if die > 1])) > 2:
+            elif my_scores.get('Big Straight', 0) is None and len(set([die for die in pending if die > 1])) > 2:
+                hold = set([die for die in pending if die > 1])
+            elif my_scores.get('Straight', 0) is None and len(set([die for die in pending if die > 1])) > 2:
                 hold = set([die for die in pending if die > 1])
             elif ordered[0] > 1:
                 hold = [counts.index(ordered[0])] * ordered[0]
@@ -606,7 +624,15 @@ class Yacht(game.Game):
                     category.score_type = 'sub-total'
         self.score_cats = [category for category in self.score_cats if category.score_type]
         self.score_cats[-1].name = self.five_name
-        # !! need to catch having only one straight category.
+        # Catch having only one straight category.
+        straight_cats = [category for category in self.score_cats if 'Straight' in category.name]
+        if len(straight_cats) == 1:
+            straight_cats[0].name = 'Straight'
+            straight_cats[0].check = straight
+        # Handle wild straights option.
+        if self.wild_straight:
+            for score_cat in straight_cats:
+                score_cat.check = straight_wild
         # Set the players.
         self.players = [self.human, Bacht()]
         random.shuffle(self.players)
@@ -661,6 +687,7 @@ class Yacht(game.Game):
         self.option_set.add_option('five-name', default = 'Yacht')
         self.option_set.add_option('max-rolls', converter = int, default = 3)
         self.option_set.add_option('super-five')
+        self.option_set.add_option('wild-straight')
 
     def set_up(self):
         """Set up the game. (None)"""
