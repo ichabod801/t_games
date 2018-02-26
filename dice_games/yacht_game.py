@@ -62,8 +62,8 @@ five-name=: Change the name of the five of a kind category. Underscores are
     converted to spaces.
 max-rolls: The maximum number of rolls you can make.
 n-bonus=: A bonus for getting enough points in ones through sixes. The value
-    of this options should be two numbers separated by a slash (the bonus
-    points/the score needed).
+    of this options should be two numbers separated by a slash (the score
+    needed/the bonus points).
 strict-4k: Four of a kind cannot be scored with five of a kind.
 strict-full: Full house cannot be scored with five of a kind.
 super-five: If you get five of a kind without rerolling, you win isntantly.
@@ -472,6 +472,10 @@ class Yacht(game.Game):
             sub_scores = [self.category_scores[player.name][category.name] for  player in self.players]
             sub_scores = ['-' if score is None else score for score in sub_scores]
             lines.append(line_format.format(category.name, *sub_scores))
+            if category.name == 'Sixes' and self.n_bonus[0]:
+                sub_scores = [self.category_scores[player.name]['Bonus'] for player in self.players]
+                sub_scores = ['-' if score is None else score for score in sub_scores]
+                lines.append(line_format.format('Bonus', *sub_scores))
         lines.append('-' * len(lines[0]))
         lines.append(line_format.format('Total', *[self.scores[player.name] for player in self.players]))
         return '\n'.join(lines)
@@ -550,6 +554,18 @@ class Yacht(game.Game):
         if self.category_scores[player.name][category.name] is None:
             self.category_scores[player.name][category.name] = score
             self.scores[player.name] += score
+            # Check for a number bonus.
+            if self.n_bonus[0] and category.name in ('Ones', 'Twos', 'Threes', 'Fours', 'Fives', 'Sixes'):
+                try:
+                    n_sum = 0
+                    for category_name in ('Ones', 'Twos', 'Threes', 'Fours', 'Fives', 'Sixes'):
+                        n_sum += self.category_scores[player.name][category_name]
+                    if n_sum >= self.n_bonus[0]:
+                        self.category_scores[player.name]['Bonus'] = self.n_bonus[1]
+                    else:
+                        self.category_scores[player.name]['Bonus'] = 0
+                except TypeError:
+                    pass
             # Reset the dice for the next player.
             self.roll_count = 1
             self.dice.release()
@@ -684,16 +700,27 @@ class Yacht(game.Game):
             default = None, check = valid_score_spec, converter = options.lower, 
             question = 'What is the score for five of a kind (return for 50)? ')
         # Set the other options.
-        self.option_set.add_option('five-name', default = 'Yacht')
-        self.option_set.add_option('max-rolls', converter = int, default = 3)
-        self.option_set.add_option('super-five')
-        self.option_set.add_option('wild-straight')
+        self.option_set.add_option('extra-five', default = 0, converter = int,
+            question = 'What should the bonus be for extra five of a kinds (return for none)? ')
+        self.option_set.add_option('five-name', default = 'Yacht',
+            question = 'What should the name of a five of a kind be (return for Yacht)? ')
+        self.option_set.add_option('max-rolls', converter = int, default = 3,
+            question = 'How many rolls should you get each turn (return for 3)? ')
+        self.option_set.add_option('n-bonus', default = [0, 0], converter = int, 
+            check = lambda x: len(x) == 2, 
+            question = 'What should the number bonus be (total needed/bonus points, return for none)? ')
+        self.option_set.add_option('super-five',
+            question = 'Should a five of a kind without rerolling win the game? bool')
+        self.option_set.add_option('wild-straight',
+            question = 'Should 2s be able to count as 1 or 6 in straights? bool')
 
     def set_up(self):
         """Set up the game. (None)"""
         self.dice = dice.Pool([6] * 5)
         self.roll_count = 1
         score_base = {category.name: None for category in self.score_cats}
+        if self.n_bonus[0]:
+            score_base['Bonus'] = None
         self.category_scores = {player.name: score_base.copy() for player in self.players}
         self.scores = {player.name: 0 for player in self.players}
 
