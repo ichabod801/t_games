@@ -169,7 +169,7 @@ class ScoreCategory(object):
                 score = sum(dice.values)
             # Add bonuses.
             if roll_count == 1:
-                score = self.first
+                score += self.first
             score += self.bonus
         else:
             # Invalid rolls score 0.
@@ -258,8 +258,6 @@ def straight_low(dice):
 def straight_high(dice):
     """
     Score a high straight category. (int)
-
-    !! this scored right with sorted values on second roll, but 0 with unsorted values on first roll.
 
     Parameters:
     dice: The dice roll to score. (int)
@@ -562,6 +560,7 @@ class Yacht(game.Game):
                         n_sum += self.category_scores[player.name][category_name]
                     if n_sum >= self.n_bonus[0]:
                         self.category_scores[player.name]['Bonus'] = self.n_bonus[1]
+                        self.scores[player.name] += self.n_bonus[1]
                     else:
                         self.category_scores[player.name]['Bonus'] = 0
                 except TypeError:
@@ -589,6 +588,9 @@ class Yacht(game.Game):
                         self.win_loss_draw[1] += 1
                         self.win_loss_draw[2] -= 1
             return False
+        elif self.extra_five and self.score_cats[-1] == category:
+            self.scores[player.name] += self.extra_five
+            self.category_scores[player.name][self.score_cats[-1].name] += self.extra_five
         else:
             # Handle previously scored categories.
             player.error('You have already scored in that category.')
