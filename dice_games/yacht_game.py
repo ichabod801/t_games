@@ -706,6 +706,20 @@ class Yacht(game.Game):
 
     def set_options(self):
         """Define the game options. (None)"""
+        # Set the variant groups.
+        self.option_set.add_group('cheerio', 
+            'five-name=Cheerio big-straight=25 low-straight=20 four-kind=0 max-rolls=2')
+        self.option_set.add_group('general', 
+            'five-name=Small_General five-kind=60 four-kind=45/40 full-house=35/30 big-straight=25/20 ' +
+            'low-straight=0 chance=0 super-five wild-straight')
+        self.option_set.add_group('hindenberg', 
+            'five-name=Hindenberg five-kind=30 big-straight=20 low-straight=15 four-kind=0 chance=0')
+        self.option_set.add_group('yahtzee', 
+            'five-name=Yahtzee big-straight=40 full-house=25 three-kind=total n-bonus=63/35 ' +
+            'extra-five=100')
+        self.option_set.add_group('yam', 
+            'five-name=Yam five-kind=total+40 big-straight=total+30 full-house=total+20 ' + 
+            'low-chance=total n-bonus=60/30')
         # Set the score category options.
         self.score_options = {}
         self.option_set.add_option('low-chance', action = 'key=Low Chance', target = self.score_options, 
