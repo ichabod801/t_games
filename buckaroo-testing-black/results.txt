@@ -238,3 +238,4 @@ Yacht,1,0,0,110,22,1,big-straight=25 five-name=Cheerio four-kind=0 low-straight=
 Yacht,1,0,0,0,2,1,super-five
 Yacht,1,0,0,50,8,1,super-five
 Yacht,1,0,0,136,18,3,super-five
+Yacht,1,0,0,272,24,3,extra-five=100 strict-four strict-full

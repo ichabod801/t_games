@@ -46,7 +46,7 @@ Yacht: Five of a kind (50)
 Big Straight: 2-3-4-5-6 (30)
 Little Straight: 1-2-3-4-5 (30)
 Four of a Kind: Four of the same number. (Sum of the four of a kind)
-Full House: Two of one number and threee of another. (Sum of the dice)
+Full House: Two of one number and three of another. (Sum of the dice)
 Chance: Any roll. (Sum of the dice)
 Sixes: As many sixes as possible. (Sum of the sixes)
 Fives: As many fives as possible. (Sum of the fives)
@@ -64,7 +64,7 @@ max-rolls: The maximum number of rolls you can make.
 n-bonus=: A bonus for getting enough points in ones through sixes. The value
     of this options should be two numbers separated by a slash (the score
     needed/the bonus points).
-strict-4k: Four of a kind cannot be scored with five of a kind.
+strict-four: Four of a kind cannot be scored with five of a kind.
 strict-full: Full house cannot be scored with five of a kind.
 super-five: If you get five of a kind without rerolling, you win isntantly.
 wild-straight: Ones can be used as 2 or 6 in straights.
@@ -202,9 +202,37 @@ def four_kind(dice):
     else:
         return 0
 
+def four_kind_strict(dice):
+    """
+    Score the four of a kind category, disallowing five of a kind. (int)
+
+    Parameters:
+    dice: The dice roll to score. (int)
+    """
+    values = sorted(dice.values)
+    if (values[0] == values[3] or values[1] == values[4]) and values[0] != values[4]:
+        return 4 * values[2]
+    else:
+        return 0
+
 def full_house(dice):
     """
     Score the full house category. (int)
+
+    Parameters:
+    dice: The dice roll to score. (int)
+    """
+    values = sorted(dice.values)
+    if values[0] == values[1] and values[2] == values[4]:
+        return sum(values)
+    if values[0] == values[2] and values[3] == values[4]:
+        return sum(values)
+    else:
+        return 0
+
+def full_house_strict(dice):
+    """
+    Score the full house category, disallowing five of a kind. (int)
 
     Parameters:
     dice: The dice roll to score. (int)
@@ -598,10 +626,7 @@ class Yacht(game.Game):
 
     def game_over(self):
         """Check for all categories having been used. (bool)"""
-        count = sum([list(self.category_scores[plyr.name].values()).count(None) for plyr in self.players])
-        if count:
-            return False
-        else:
+        if self.turns == len(self.score_cats) * len(self.players):
             human_score = self.scores[self.human.name]
             best = max(self.scores.values())
             winners = [name for name, score in self.scores.items() if score == best]
@@ -616,6 +641,8 @@ class Yacht(game.Game):
             self.win_loss_draw[2] = len([score for score in self.scores.values() if score == human_score])
             self.win_loss_draw[2] -= 1
             return True
+        else:
+            return False
 
     def handle_options(self):
         """Handle the game options."""
@@ -640,7 +667,14 @@ class Yacht(game.Game):
                 elif score_spec == 'sub-total':
                     # Handle total of qualifying dice.
                     category.score_type = 'sub-total'
+        # Handle strict categories.
+        if self.strict_full:
+            self.score_cats[11].check = full_house_strict
+        if self.strict_four:
+            self.score_cats[12].check = four_kind_strict
+        # Remove non-scoring score categories.
         self.score_cats = [category for category in self.score_cats if category.score_type]
+        # Set the five of a kind name.
         self.score_cats[-1].name = self.five_name
         # Catch having only one straight category.
         straight_cats = [category for category in self.score_cats if 'Straight' in category.name]
@@ -711,6 +745,10 @@ class Yacht(game.Game):
         self.option_set.add_option('n-bonus', default = [0, 0], converter = int, 
             check = lambda x: len(x) == 2, 
             question = 'What should the number bonus be (total needed/bonus points, return for none)? ')
+        self.option_set.add_option('strict-four',
+            question = 'Should five of a kind be invalid for the four of a kind category? bool')
+        self.option_set.add_option('strict-full',
+            question = 'Should five of a kind be invalid for the full house category? bool')
         self.option_set.add_option('super-five',
             question = 'Should a five of a kind without rerolling win the game? bool')
         self.option_set.add_option('wild-straight',
