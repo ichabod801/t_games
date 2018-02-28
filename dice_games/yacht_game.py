@@ -94,7 +94,8 @@ hindenberg: Equivalent to five-name=Hindenberg five-kind=30 big-straight=20
 yahtzee: Equivalent to five-name=Yahtzee big-straight=40 full-house=25 
     three-kind=total n-bonus=35/63 extra-five=100
 yam: Equivalent to five-name=Yam five-kind=total+40 big-straight=total+30
-    full-house=total+20 low-chance=total n-bonus=30/60
+    full-house=total+20 low-chance=total low-straight=0 four-kind=0 
+    n-bonus=30/60
 """
 
 
@@ -719,7 +720,7 @@ class Yacht(game.Game):
             'extra-five=100')
         self.option_set.add_group('yam', 
             'five-name=Yam five-kind=total+40 big-straight=total+30 full-house=total+20 ' + 
-            'low-chance=total n-bonus=60/30')
+            'low-chance=total low-straight=0 four-kind=0 n-bonus=60/30')
         # Set the score category options.
         self.score_options = {}
         self.option_set.add_option('low-chance', action = 'key=Low Chance', target = self.score_options, 

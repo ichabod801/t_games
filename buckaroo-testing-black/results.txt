@@ -243,3 +243,6 @@ Yacht,1,0,0,137,24,1,strict-four strict-full
 Yacht,1,0,0,78,22,1,big-straight=25 five-name=Cheerio four-kind=0 low-straight=20 max-rolls=2
 Yacht,1,0,0,90,4,3,big-straight=25/20 chance=0 five-kind=60 five-name=Small_General four-kind=45/40 full-house=35/30 low-straight=0 super-five wild-straight
 Yacht,1,0,0,143,20,3,big-straight=25/20 chance=0 five-kind=60 five-name=Small_General four-kind=45/40 full-house=35/30 low-straight=0 super-five wild-straight
+Yacht,1,0,0,106,20,1,big-straight=20 chance=0 five-kind=30 five-name=Hindenberg four-kind=0 low-straight=15
+Yacht,1,0,0,227,26,1,big-straight=40 extra-five=100 five-name=Yahtzee full-house=25 n-bonus=63/35 three-kind=total
+Yacht,1,0,0,227,22,1,big-straight=total+30 five-kind=total+40 five-name=Yam four-kind=0 full-house=total+20 low-chance=total low-straight=0 n-bonus=60/30
