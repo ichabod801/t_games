@@ -306,8 +306,8 @@ def straight_wild(dice):
     """
     score = straight(dice)
     if not score:
-        values = dice.values
-        if set(values) == set([2, 3, 4, 5]) and values.count(2) == 2:
+        values = sorted(dice.values)
+        if values in ([1, 1, 3, 4, 5], [1, 3, 4, 5, 6]):
             score = sum(values)
     return score
 
@@ -654,7 +654,7 @@ class Yacht(game.Game):
                 score_spec = self.score_options[category.name]
                 if isinstance(score_spec, list):
                     # Handle bonus for scoring without rerolling.
-                    category.first = int(score_spec[0])
+                    category.first = int(score_spec[0]) - int(score_spec[1])
                     category.score_type = int(score_spec[1])
                 elif score_spec.isdigit():
                     # Handle set scores.
@@ -675,7 +675,7 @@ class Yacht(game.Game):
         # Remove non-scoring score categories.
         self.score_cats = [category for category in self.score_cats if category.score_type]
         # Set the five of a kind name.
-        self.score_cats[-1].name = self.five_name
+        self.score_cats[-1].name = self.five_name.replace('_', ' ')
         # Catch having only one straight category.
         straight_cats = [category for category in self.score_cats if 'Straight' in category.name]
         if len(straight_cats) == 1:
@@ -686,7 +686,7 @@ class Yacht(game.Game):
             for score_cat in straight_cats:
                 score_cat.check = straight_wild
         # Set the players.
-        self.players = [self.human, Bacht()]
+        self.players = [self.human, Bacht([self.human.name])]
         random.shuffle(self.players)
 
     def player_action(self, player):
