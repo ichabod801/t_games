@@ -185,7 +185,6 @@ def five_kind(dice):
     Parameters:
     dice: The dice roll to score. (int)
     """
-    # !! I should take the sorting out of the functions for efficiency.
     values = sorted(dice.values)
     if values[0] == values[4]:
         return 5 * values[0]
@@ -254,7 +253,7 @@ def score_n(number):
     number: The number of the category. (int)
     """
     def score_num(dice):
-        return number * dice.count(number)
+        return number * dice.values.count(number)
     return score_num
 
 def straight(dice):
@@ -491,58 +490,63 @@ class Bachter(Bacht):
                 if category_name in num_cats:
                     roll = num_cats.index(category_name)
                     count = self.game.dice.count(roll)
-                    possibles.append((target_dice - count, [roll] * count, roll * count - target_score))
+                    score_diff = roll * count - target_score
+                    possibles.append((count - target_dice, [roll] * count, score_diff, 'run'))
                 elif 'of a Kind' in category_name or category_name == self.game.five_name:
                     count, roll = counts[0]
                     score_diff = category.score(self.game.dice, 1) - target_score
-                    possibles.append((target_dice - count, [roll] * count, score_diff))
+                    possibles.append((count - target_dice, [roll] * count, score_diff, 'run'))
                 elif 'Chance' in category_name:
                     hold = [5] * self.game.dice.count(5) + [6] * self.game.dice.count(6)
                     score_diff = category.score(self.game.dice, 1) - target_score
-                    possibles.append((target_dice - len(hold), hold, score_diff))
+                    possibles.append((len(hold) - target_dice, hold, score_diff, 'chance'))
                 elif 'Straight' in category_name: # !! not working. bot got straight on first roll, held 1 six.
-                    # ?? possibles[x][0] wrong?
+                    # ?? possibles[x][0] wrong?!!
                     hold = set(self.game.dice.values).intersection(test_values)
                     score_diff = category.score(self.game.dice, 1) - target_score
-                    possibles.append((target_dice - len(hold), hold, score_diff))
+                    possibles.append((len(hold) - target_dice, hold, score_diff, 'straight'))
                 elif category_name == 'Full House':
                     count_a, roll_a = counts[0]
                     count_b, roll_b = counts[1]
                     hold = [roll_a] * count_a + [roll_b] * count_b
                     score_diff = category.score(self.game.dice, 1) - target_score
-                    possibles.append((count_a + count_b - 5, hold, score_diff))
+                    possibles.append((5 - count_a - count_b, hold, score_diff, 'full'))
             possibles.sort(reverse = True)
             hold = possibles[0][1]
+            self.target = possibles[0][-1]
         else:
-            # !! duplicate code
             unique_held = len(set(held))
-            if unique_held == 1:
+            if self.target == 'run':
                 hold = [held[0]] * pending.count(held[0])
-            elif unique_held == 2:
-                if pending[0] in held:
+            elif self.target == 'full':
+                if pending[0].value in held:
                     hold = pending[:1]
                 else:
                     hold = []
-            elif unique_held > 2:
+            elif self.target == 'straight':
                 hold = list(set([die for die in pending if die not in held]))
                 if 6 in hold and 1 in held:
                     hold.remove(6)
                 elif 1 in hold and 6 in held:
                     hold.remove(1)
+            elif self.target == 'chance':
+                hold = list([die.value for die in pending if die.value > 2])
         return hold
 
     def set_up(self):
         """Set up the bot. (None)"""
         self.next = ''
+        self.target = 'run'
         self.category_data = {'Ones': (3, [1, 1, 1, 2, 3]), 'Twos': (3, [2, 2, 2, 3, 4]), 
             'Threes': (3, [3, 3, 3, 4, 5]), 'Fours': (3, [4, 4, 4, 5, 6]), 'Fives': (3, [5, 5, 5, 6, 1]), 
             'Sixes': (3, [6, 6, 6, 1, 2]), 'Three of a Kind': (3, [4, 4, 4, 3, 5]), 
             'Low Chance': (3, [3, 4, 4, 5, 5]), 'Chance': (3, [4, 4, 5, 5, 6]), 
             'Little Straight': (5, [1, 2, 3, 4, 5]), 'Big Straight': (5, [2, 3, 4, 5, 6]),
-            'Full House': (5, [3, 3, 3, 6, 6]), 'Four of a Kind': (4, [4, 4, 4, 4, 3]),
+            'Full House': (5, [3, 3, 2, 2, 2]), 'Four of a Kind': (4, [2, 2, 2, 2, 4]),
             self.game.score_cats[-1].name: (5, [4, 4, 4, 4, 4])}
         self.category_data['Straight'] = self.category_data['Big Straight']
         self.dice = dice.Pool([6] * 5)
+        # !! not working correctly
         for category in self.game.score_cats:
             self.dice.values = self.category_data[category.name][1]
             self.category_data[category.name] += (category.score(self.dice, 2), category)
