@@ -579,6 +579,7 @@ class Yacht(game.Game):
     aliases = {'h': 'hold', 'r': 'roll', 's': 'score'}
     categories = ['Dice Games', 'Category Games']
     credits = CREDITS
+    letters = '123456ABCDEFGH'
     name = 'Yacht'
     num_options = 16
     rules = RULES
@@ -600,21 +601,21 @@ class Yacht(game.Game):
     def __str__(self):
         """Human readable text representation (str)"""
         cat_names = [category.name for category in self.score_cats]
-        max_len = max(len(name) for name in cat_names)
+        max_len = max(len(name) for name in cat_names) + 3
         play_lens = [min(len(player.name), 18) for player in self.players]
-        line_format = ('{{:<{}}}' + '  {{:>{}}}' * len(self.players)).format(max_len, *play_lens)
-        lines = [line_format.format('Categories', *[player.name[:18] for player in self.players])]
+        line_format = ('{{}} {{:<{}}}' + '  {{:>{}}}' * len(self.players)).format(max_len, *play_lens)
+        lines = [line_format.format('  ', 'Categories', *[player.name[:18] for player in self.players])]
         lines.append('-' * len(lines[0]))
-        for category in self.score_cats:
+        for char, category in zip(self.letters, self.score_cats):
             sub_scores = [self.category_scores[player.name][category.name] for  player in self.players]
             sub_scores = ['-' if score is None else score for score in sub_scores]
-            lines.append(line_format.format(category.name, *sub_scores))
+            lines.append(line_format.format(char + ':', category.name, *sub_scores))
             if category.name == 'Sixes' and self.n_bonus[0]:
                 sub_scores = [self.category_scores[player.name]['Bonus'] for player in self.players]
                 sub_scores = ['-' if score is None else score for score in sub_scores]
-                lines.append(line_format.format('Bonus', *sub_scores))
+                lines.append(line_format.format('-:', 'Bonus', *sub_scores))
         lines.append('-' * len(lines[0]))
-        lines.append(line_format.format('Total', *[self.scores[player.name] for player in self.players]))
+        lines.append(line_format.format('  ', 'Total', *[self.scores[plyr.name] for plyr in self.players]))
         return '\n'.join(lines)
 
     def do_hold(self, arguments):
@@ -667,16 +668,19 @@ class Yacht(game.Game):
         # Get the current player.
         player = self.players[self.player_index]
         # Find the correct category.
-        # !! It would be good to provide some flexibility in identifying categories.
         for category in self.score_cats:
             if arguments.lower() == category.name.lower():
                 break
         else:
-            # Handle unknown categories.
-            player.error('I do not recognize that category.')
-            known = [category.name for category in self.score_cats]
-            player.error('The categories I know are: {}.'.format(', '.join(known)))
-            return True
+            # Check for single character category reference.
+            if arguments.upper() in self.letters:
+                category = self.score_cats[self.letters.index(arguments.upper())]
+            else:
+                # Handle unknown categories.
+                player.error('I do not recognize that category.')
+                known = [category.name for category in self.score_cats]
+                player.error('The categories I know are: {}.'.format(', '.join(known)))
+                return True
         # Score the roll in that category.
         score = category.score(self.dice, self.roll_count)
         if category.name == 'Low Chance' and 'Chance' in self.category_scores[player.name]:
@@ -797,7 +801,14 @@ class Yacht(game.Game):
             for score_cat in straight_cats:
                 score_cat.check = straight_wild
         # Set the players.
-        self.players = [self.human, Bachter([self.human.name])]
+        self.players = [self.human]
+        taken_names = [self.human.name]
+        for bot_index in range(self.easy):
+            self.players.append(Bacht(taken_names))
+            taken_names.append(self.players[-1].name)
+        for bot_index in range(self.medium):
+            self.players.append(Bachter(taken_names))
+            taken_names.append(self.players[-1].name)
         random.shuffle(self.players)
 
     def player_action(self, player):
@@ -860,6 +871,11 @@ class Yacht(game.Game):
         self.option_set.add_option('five-kind', action = 'key=Yacht', target = self.score_options, 
             default = None, check = valid_score_spec, converter = options.lower, 
             question = 'What is the score for five of a kind (return for 50)? ')
+        # Set the bot options.
+        self.option_set.add_option('easy', default = 1, converter = int,
+            question = 'How many easy bots would you like to play against (return for 1)? ')
+        self.option_set.add_option('medium', default = 2, converter = int,
+            question = 'How many medium bots would you like to play against (return for 2)? ')
         # Set the other options.
         self.option_set.add_option('extra-five', default = 0, converter = int,
             question = 'What should the bonus be for extra five of a kinds (return for none)? ')
