@@ -387,7 +387,6 @@ class Bacht(player.Bot):
                     if low_chance is not None and score <= low_chance:
                         score = 0
                 ranking.append((score, category.name))
-        #ranking.reverse() # reverse is done so ties go to category with lowest potential. # !! not working?
         ranking.sort()
         return ranking[-1][1]
 
@@ -441,6 +440,113 @@ class Bacht(player.Bot):
     def set_up(self):
         """Set up the bot. (None)"""
         self.next = ''
+
+
+class Bachter(Bacht):
+    """
+    A Bachter Bacht.
+
+    Attributes:
+    category_data: Target number of dice and score for each category. (dict)
+
+    Overridden Methods:
+    set_up
+    """
+
+    def get_category(self):
+        """Get the category to score the current roll in. (str)"""
+        ranking = []
+        my_scores = self.game.category_scores[self.name]
+        for category in self.game.score_cats:
+            if my_scores[category.name] is None:
+                score = category.score(self.game.dice, self.game.roll_count)
+                score -= self.category_data[category.name][2]
+                # !! repeated code, needs refactoring. Score method of Yacht?
+                if category.name == 'low Chance' and 'Chance' in my_scores:
+                    chance = my_scores['Chance']
+                    if chance is not None and chance <= score:
+                        score = 0
+                elif category.name == 'Chance' and 'Low Chance' in my_scores:
+                    low_chance = my_scores['Low Chance']
+                    if low_chance is not None and score <= low_chance:
+                        score = 0
+                ranking.append((score, category.name))
+        ranking.sort()
+        return ranking[-1][1]
+
+    def get_holds(self):
+        """Get dice to hold. (list of int)"""
+        held = self.game.dice.held
+        pending = self.game.dice.dice
+        my_scores = self.game.category_scores[self.name]
+        num_cats = ['Zeros', 'Ones', 'Twos', 'Threes', 'Fours', 'Fives', 'Sixes']
+        if not held:
+            possibles = []
+            counts = [(self.game.dice.count(roll), roll) for roll in range(1, 7)]
+            counts.sort(reverse = True)
+            for category_name, score in my_scores.items():
+                if score is not None:
+                    continue
+                target_dice, test_values, target_score, category = self.category_data[category_name]
+                if category_name in num_cats:
+                    roll = num_cats.index(category_name)
+                    count = self.game.dice.count(roll)
+                    possibles.append((target_dice - count, [roll] * count, roll * count - target_score))
+                elif 'of a Kind' in category_name or category_name == self.game.five_name:
+                    count, roll = counts[0]
+                    score_diff = category.score(self.game.dice, 1) - target_score
+                    possibles.append((target_dice - count, [roll] * count, score_diff))
+                elif 'Chance' in category_name:
+                    hold = [5] * self.game.dice.count(5) + [6] * self.game.dice.count(6)
+                    score_diff = category.score(self.game.dice, 1) - target_score
+                    possibles.append((target_dice - len(hold), hold, score_diff))
+                elif 'Straight' in category_name: # !! not working. bot got straight on first roll, held 1 six.
+                    # ?? possibles[x][0] wrong?
+                    hold = set(self.game.dice.values).intersection(test_values)
+                    score_diff = category.score(self.game.dice, 1) - target_score
+                    possibles.append((target_dice - len(hold), hold, score_diff))
+                elif category_name == 'Full House':
+                    count_a, roll_a = counts[0]
+                    count_b, roll_b = counts[1]
+                    hold = [roll_a] * count_a + [roll_b] * count_b
+                    score_diff = category.score(self.game.dice, 1) - target_score
+                    possibles.append((count_a + count_b - 5, hold, score_diff))
+            possibles.sort(reverse = True)
+            hold = possibles[0][1]
+        else:
+            # !! duplicate code
+            unique_held = len(set(held))
+            if unique_held == 1:
+                hold = [held[0]] * pending.count(held[0])
+            elif unique_held == 2:
+                if pending[0] in held:
+                    hold = pending[:1]
+                else:
+                    hold = []
+            elif unique_held > 2:
+                hold = list(set([die for die in pending if die not in held]))
+                if 6 in hold and 1 in held:
+                    hold.remove(6)
+                elif 1 in hold and 6 in held:
+                    hold.remove(1)
+        return hold
+
+    def set_up(self):
+        """Set up the bot. (None)"""
+        self.next = ''
+        self.category_data = {'Ones': (3, [1, 1, 1, 2, 3]), 'Twos': (3, [2, 2, 2, 3, 4]), 
+            'Threes': (3, [3, 3, 3, 4, 5]), 'Fours': (3, [4, 4, 4, 5, 6]), 'Fives': (3, [5, 5, 5, 6, 1]), 
+            'Sixes': (3, [6, 6, 6, 1, 2]), 'Three of a Kind': (3, [4, 4, 4, 3, 5]), 
+            'Low Chance': (3, [3, 4, 4, 5, 5]), 'Chance': (3, [4, 4, 5, 5, 6]), 
+            'Little Straight': (5, [1, 2, 3, 4, 5]), 'Big Straight': (5, [2, 3, 4, 5, 6]),
+            'Full House': (5, [3, 3, 3, 6, 6]), 'Four of a Kind': (4, [4, 4, 4, 4, 3]),
+            self.game.score_cats[-1].name: (5, [4, 4, 4, 4, 4])}
+        self.category_data['Straight'] = self.category_data['Big Straight']
+        self.dice = dice.Pool([6] * 5)
+        for category in self.game.score_cats:
+            self.dice.values = self.category_data[category.name][1]
+            self.category_data[category.name] += (category.score(self.dice, 2), category)
+        self.category_data = {name: data for name, data in self.category_data.items() if len(data) == 4}
 
 
 class Yacht(game.Game):
@@ -687,7 +793,7 @@ class Yacht(game.Game):
             for score_cat in straight_cats:
                 score_cat.check = straight_wild
         # Set the players.
-        self.players = [self.human, Bacht([self.human.name])]
+        self.players = [self.human, Bachter([self.human.name])]
         random.shuffle(self.players)
 
     def player_action(self, player):

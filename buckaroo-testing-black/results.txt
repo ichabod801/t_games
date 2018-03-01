@@ -246,3 +246,5 @@ Yacht,1,0,0,143,20,3,big-straight=25/20 chance=0 five-kind=60 five-name=Small_Ge
 Yacht,1,0,0,106,20,1,big-straight=20 chance=0 five-kind=30 five-name=Hindenberg four-kind=0 low-straight=15
 Yacht,1,0,0,227,26,1,big-straight=40 extra-five=100 five-name=Yahtzee full-house=25 n-bonus=63/35 three-kind=total
 Yacht,1,0,0,227,22,1,big-straight=total+30 five-kind=total+40 five-name=Yam four-kind=0 full-house=total+20 low-chance=total low-straight=0 n-bonus=60/30
+Yacht,0,1,0,97,24,0,
+Yacht,0,1,0,135,24,0,
