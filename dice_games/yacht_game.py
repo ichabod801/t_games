@@ -325,21 +325,9 @@ class Bacht(player.Bot):
         # Loop through the score categories
         ranking = []
         for category in self.game.score_cats:
-            # If it hasn't been used...
+            # Save scores for unused categories.
             if my_scores[category.name] is None:
-                score = category.score(self.game.dice, self.game.roll_count)
-                # Handle low chance.
-                # !! repeated code, needs refactoring. Score method of Yacht?
-                if category.name == 'low Chance' and 'Chance' in my_scores:
-                    chance = my_scores['Chance']
-                    if chance is not None and chance <= score:
-                        score = 0
-                elif category.name == 'Chance' and 'Low Chance' in my_scores:
-                    low_chance = my_scores['Low Chance']
-                    if low_chance is not None and score <= low_chance:
-                        score = 0
-                # Save the score for each category.
-                ranking.append((score, category.name))
+                ranking.append((self.game.score(category, self), category.name))
         # Choose the category that scores the most.
         ranking.sort()
         return ranking[-1][1]
@@ -472,7 +460,7 @@ class Bachter(Bacht):
         possibles = []
         for category_name, score in my_scores.items():
             # Skip used categories.
-            if score is not None:
+            if score is not None or category_name == 'Bonus':
                 continue
             # Get the category data.
             target_dice, test_values, target_score, category = self.category_data[category_name]
@@ -768,7 +756,6 @@ class Yacht(game.Game):
         Parameters:
         arguments: The category to score the roll in. (str)
         """
-        # !! refactor (chances and win/loss/draw)
         # Get the current player.
         player = self.players[self.player_index]
         # Find the correct category.
@@ -786,15 +773,7 @@ class Yacht(game.Game):
                 player.error('The categories I know are: {}.'.format(', '.join(known)))
                 return True
         # Score the roll in that category.
-        score = category.score(self.dice, self.roll_count)
-        if category.name == 'Low Chance' and 'Chance' in self.category_scores[player.name]:
-            chance = self.category_scores[player.name]['Chance']
-            if chance is not None and chance <= score:
-                score = 0
-        elif category.name == 'Chance' and 'Low Chance' in self.category_scores[player.name]:
-            low_chance = self.category_scores[player.name]['Low Chance']
-            if low_chance is not None and score <= low_chance:
-                score = 0
+        score = self.score(category, player)
         # Apply the score to the player.
         if self.category_scores[player.name][category.name] is None:
             self.category_scores[player.name][category.name] = score
@@ -826,11 +805,7 @@ class Yacht(game.Game):
                     self.win_loss_draw[0] = len(self.players) - 1
                 else:
                     human_score = self.scores[self.human.name]
-                    # !! duplicate code.
-                    self.win_loss_draw[0] = len([x for x in self.scores.values() if x < human_score])
-                    self.win_loss_draw[1] = len([x for x in self.scores.values() if x > human_score])
-                    self.win_loss_draw[2] = len([x for x in self.scores.values() if x == human_score])
-                    self.win_loss_draw[2] -= 1
+                    self.set_wld()
                     if self.scores[player.name] < human_score:
                         self.win_loss_draw[1] += 1
                         self.win_loss_draw[0] -= 1
@@ -865,10 +840,7 @@ class Yacht(game.Game):
                 message = '\nThe winners are {} and {}; with {} points.\n'
                 self.human.tell(message.format(', '.join(winners[:-1]), winners[-1], best))
             # Calculate the win/loss/draw (for the human)
-            self.win_loss_draw[0] = len([score for score in self.scores.values() if score < human_score])
-            self.win_loss_draw[1] = len([score for score in self.scores.values() if score > human_score])
-            self.win_loss_draw[2] = len([score for score in self.scores.values() if score == human_score])
-            self.win_loss_draw[2] -= 1
+            self.set_wld()
             return True
         else:
             return False
@@ -939,6 +911,27 @@ class Yacht(game.Game):
         # Get the player's move.
         move = player.ask('What is your move? ')
         return self.handle_cmd(move)
+
+    def score(self, category, player):
+        """
+        Score the current roll in the given category. (int)
+
+        Parameters:
+        category: The category to score the roll in. (ScoreCategory)
+        player: The player the roll is being scored for. (player.Player)
+        """
+        # Get the base score.
+        score = category.score(self.dice, self.roll_count)
+        # Handle linked chance categories.
+        if category.name == 'Low Chance' and 'Chance' in self.category_scores[player.name]:
+            chance = self.category_scores[player.name]['Chance']
+            if chance is not None and chance <= score:
+                score = 0
+        elif category.name == 'Chance' and 'Low Chance' in self.category_scores[player.name]:
+            low_chance = self.category_scores[player.name]['Low Chance']
+            if low_chance is not None and score <= low_chance:
+                score = 0
+        return score
 
     def set_options(self):
         """Define the game options. (None)"""
@@ -1020,6 +1013,14 @@ class Yacht(game.Game):
             score_base['Bonus'] = None
         self.category_scores = {player.name: score_base.copy() for player in self.players}
         self.scores = {player.name: 0 for player in self.players}
+
+    def set_wld(self):
+        """Set the win/loss/draw record for the human. (None)"""
+        human_score = self.scores[self.human.name]
+        self.win_loss_draw[0] = len([x for x in self.scores.values() if x < human_score])
+        self.win_loss_draw[1] = len([x for x in self.scores.values() if x > human_score])
+        self.win_loss_draw[2] = len([x for x in self.scores.values() if x == human_score])
+        self.win_loss_draw[2] -= 1
 
 
 def valid_score_spec(score_spec):

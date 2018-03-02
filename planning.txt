@@ -94,6 +94,7 @@ bacarat               -> rock-paper-scissors
 backgammon            -> connect four
 backgammon            -> snakes and ladders
 battleships           -> chess                (win if you sink their battleship)
+battleships           -> 
 beleaguered castle    -> war
 beleaguered castle    -> forty thieves
 bisley                -> blackjack
@@ -141,6 +142,7 @@ hangman               -> ghost
 hearts                -> rummy
 hearts                -> strategy
 hunt the wumpus       -> hangman
+hunt the wumpus       ->
 interregnum           -> martha
 interregnum           -> labyrinth
 klondike              -> quadrille
