@@ -3,20 +3,30 @@ yacht_game.py
 
 Games similar to Yacht.
 
-Classes:
-ScoreCategory: A category for a category dice game. (object)
-Bacht: A bot to play Yacht. (player.Bot)
-Yacht: The game of Yacht and it's cousins. (game.Game)
+Constants:
+CREDITS: The credits for Yacht. (str)
+RULES: The rules and options for Yacht. (str)
 
-Functions:
+Scoring Functions:
 five_kind: Score the yacht category. (int)
 four_kind: Score the four of a kind category. (int)
+four_kind_strict: Score the four of a kind category, w/o five of a kind. (int)
 full_house: Score the full house category. (int)
+full_house_strict: Score the full house category, w/o five of a kind. (int)
 score_n: Creating a scoring function for a number category. (callable)
 straight: Score a straight category. (int)
 straight_low: Score a low straight category. (int)
 straight_high: Score a high straight category. (int)
+straight_wild: Score a straight category with twos wild. (int)
 three_kind: Score the three of a kind category. (int)
+
+Classes:
+Bacht: A bot to play Yacht. (player.Bot)
+ScoreCategory: A category for a category dice game. (object)
+Yacht: The game of Yacht and it's cousins. (game.Game)
+
+Other Functions:
+validate_score_spec: Validate a score specification. (bool)
 """
 
 
@@ -28,19 +38,29 @@ import tgames.options as options
 import tgames.player as player
 
 
+# The credits for Yacht.
 CREDITS = """
 Game Design: Traditional
 Game Programming: Craig "Ichabod" O'Brien
+Bot Programming: Craig "Ichabod" O'Brien
 """
 
+# The rules and options for Yacht.
 RULES = """
 You start by rolling five dice. You may set any number of the dice aside and
 reroll the rest. You may set aside a second time and roll a third time. Dice
 that are set aside may not be rerolled that turn. Once you get a final roll,
-you choose a category to score it in. Each category may be scored only onece.
+you choose a category to score it in. Each category may be scored only once.
 If you do not meet the criteria for the category, you may still score it, but
 it is worth zero points. The game is over when everyone has scored all of the
-categories. The categories (and their scores) are:
+categories. 
+
+To set aside dice, use the hold (h) command, follow by a list of the values
+you want to set asside. To roll again, use the roll (r) command. To score, use
+the score (s) command followed by either the name of the category or the 
+character preceding the category in the score table.
+
+The categories (and their scores) are:
 
 Yacht: Five of a kind (50)
 Big Straight: 2-3-4-5-6 (30)
@@ -56,11 +76,13 @@ Twos: As many twos as possible. (Sum of the twos)
 Ones: As many ones as possible. (Sum of the ones)
 
 Options:
+easy=: How many easy bots you want to play against.
 extra-five=: Each player's second and later five of a kinds score bonus points
     equal to this option.
 five-name=: Change the name of the five of a kind category. Underscores are
     converted to spaces.
 max-rolls: The maximum number of rolls you can make.
+medium=: How many medium bots you want to play against.
 n-bonus=: A bonus for getting enough points in ones through sixes. The value
     of this options should be two numbers separated by a slash (the score
     needed/the bonus points).
@@ -97,85 +119,6 @@ yam: Equivalent to five-name=Yam five-kind=total+40 big-straight=total+30
     full-house=total+20 low-chance=total low-straight=0 four-kind=0 
     n-bonus=30/60
 """
-
-
-class ScoreCategory(object):
-    """
-    A category for a category dice game. (object)
-
-    Attributes:
-    description: A description of the category. (str)
-    first: The bonus for getting the roll on the first roll. (int)
-    name: The name of the category. (str)
-    check: A function to check validity and get the sub-total. (callable)
-    score_type: How the category is scored. (str)
-
-    Methods:
-    score: Score a roll based on this category. (int)
-
-    Overridden Methods:
-    __init__
-    """
-
-    def __init__(self, name, description, check, score_type = 'sub-total', first = 0):
-        """
-        Set up the category. (None)
-
-        Parameters:
-        description: A description of the category. (str)
-        name: The name of the category. (str)
-        check: A function to check validity and get the sub-total. (callable)
-        score_type: How the category is scored. (str)
-        first: The bonus for getting the roll on the first roll. (int)
-        """
-        # Set basic attributes.
-        self.name = name
-        self.description = description
-        self.check = check
-        self.first = first
-        # Parse the score type.
-        self.bonus = 0
-        self.score_type = score_type.lower()
-        # Check for set score.
-        if score_type.isdigit():
-            self.score_type = int(score_type)
-        # Check for a bonus.
-        elif self.score_type.startswith('total+'):
-            self.bonus = int(score_type.split('+')[1])
-            self.score_type = 'total'
-
-    def copy(self):
-        """Create an independent copy of the category. (ScoreCategory)"""
-        new = ScoreCategory(self.name, self.description, self.check, str(self.score_type), self.first)
-        new.bonus = self.bonus
-        return new
-
-    def score(self, dice, roll_count):
-        """
-        Score a roll based on this category. (int)
-
-        Parameters:
-        dice: The roll to score. (dice.Pool)
-        roll_count: How many rolls it took to get the roll. (int)
-        """
-        sub_total = self.check(dice)
-        # Score a valid roll
-        if sub_total:
-            # Score by type of category.
-            if isinstance(self.score_type, int):
-                score = self.score_type
-            elif self.score_type == 'sub-total':
-                score = sub_total
-            else:
-                score = sum(dice.values)
-            # Add bonuses.
-            if roll_count == 1:
-                score += self.first
-            score += self.bonus
-        else:
-            # Invalid rolls score 0.
-            score = 0
-        return score
 
 
 def five_kind(dice):
@@ -337,6 +280,8 @@ class Bacht(player.Bot):
     Methods:
     get_category: Get the category to score a roll in. (str)
     get_holds: Get the dice to hold for the next roll. (list of int)
+    initial_holds: Get the holds on the first roll. (list of int)
+    later_holds: Get the holds on the second and third rolls. (list of int)
 
     Overridden Methods:
     ask
@@ -351,12 +296,15 @@ class Bacht(player.Bot):
         query: The question to ask of the bacht. (str)
         """
         if query == 'What is your move? ':
+            # Check for preset roll.
             if self.next == 'roll':
                 self.next = ''
                 return 'roll'
+            # Check for time to score.
             elif (self.game.roll_count == self.game.max_rolls or self.next == 'score' 
                 or not self.game.dice.dice):
                 move = 'score ' + self.get_category()
+            # Otherwise hold dice.
             else:
                 move = 'hold ' + ' '.join([str(x) for x in self.get_holds()])
                 if move == 'hold ':
@@ -366,16 +314,21 @@ class Bacht(player.Bot):
                 else:
                     self.next = 'score'
         else:
+            # Handle unknown questions.
             raise player.BotError('Unexpected query to Bacht: {!r}'.format(query))
         return move
 
     def get_category(self):
         """Get the category to score the current roll in. (str)"""
-        ranking = []
+        # Get scores for checking used categories.
         my_scores = self.game.category_scores[self.name]
+        # Loop through the score categories
+        ranking = []
         for category in self.game.score_cats:
+            # If it hasn't been used...
             if my_scores[category.name] is None:
                 score = category.score(self.game.dice, self.game.roll_count)
+                # Handle low chance.
                 # !! repeated code, needs refactoring. Score method of Yacht?
                 if category.name == 'low Chance' and 'Chance' in my_scores:
                     chance = my_scores['Chance']
@@ -385,7 +338,9 @@ class Bacht(player.Bot):
                     low_chance = my_scores['Low Chance']
                     if low_chance is not None and score <= low_chance:
                         score = 0
+                # Save the score for each category.
                 ranking.append((score, category.name))
+        # Choose the category that scores the most.
         ranking.sort()
         return ranking[-1][1]
 
@@ -395,45 +350,69 @@ class Bacht(player.Bot):
 
         If the roll is ready to score, this method holds all of the dice.
         """
-        held = self.game.dice.held
+        # Hold on first round based on dice values.
+        if not self.game.dice.held:
+            hold = self.initial_holds()
+        # Hold on later rounds by inferring why you held things on early rounds.
+        else:
+            hold = self.later_holds()
+        return hold
+
+    def initial_holds(self):
+        """Get the holds on the first roll. (list of int)"""
+        # Get local references to commonly used information.
         pending = self.game.dice.dice
         my_scores = self.game.category_scores[self.name]
-        if not held:
-            counts = [pending.count(value) for value in range(7)]
-            ordered = sorted(counts[:], reverse = True)
-            if ordered[1] > 1:
-                hold = [counts.index(ordered[0])] * ordered[0]
-                if ordered[0] == ordered[1]:
-                    hold = [counts.index(ordered[0], counts.index(ordered[0]) + 1)] * ordered[0]
-                else:
-                    hold += [counts.index(ordered[1])] * ordered[1]
-            elif ordered[0] > 2:
-                hold = [counts.index(ordered[0])] * ordered[0]
-            elif my_scores.get('Little Straight', 0) is None and len(set([die for die in pending if die < 6])) > 2:
-                hold = set([die for die in pending if die < 6])
-            elif my_scores.get('Big Straight', 0) is None and len(set([die for die in pending if die > 1])) > 2:
-                hold = set([die for die in pending if die > 1])
-            elif my_scores.get('Straight', 0) is None and len(set([die for die in pending if die > 1])) > 2:
-                hold = set([die for die in pending if die > 1])
-            elif ordered[0] > 1:
-                hold = [counts.index(ordered[0])] * ordered[0]
+        # Summarize the dice values.
+        counts = [pending.count(value) for value in range(7)]
+        ordered = sorted(counts[:], reverse = True)
+        # If you have at least two pair, go for full house.
+        if ordered[1] > 1:
+            hold = [counts.index(ordered[0])] * ordered[0]
+            if ordered[0] == ordered[1]:
+                hold = [counts.index(ordered[0], counts.index(ordered[0]) + 1)] * ordered[0]
             else:
-                hold = [max(pending)]
+                hold += [counts.index(ordered[1])] * ordered[1]
+        # Three of a kind goes for a run.
+        elif ordered[0] > 2:
+            hold = [counts.index(ordered[0])] * ordered[0]
+        # Then check for straights.
+        elif my_scores.get('Little Straight', 0) is None and len(set([die for die in pending if die < 6])) > 2:
+            hold = set([die for die in pending if die < 6])
+        elif my_scores.get('Big Straight', 0) is None and len(set([die for die in pending if die > 1])) > 2:
+            hold = set([die for die in pending if die > 1])
+        elif my_scores.get('Straight', 0) is None and len(set([die for die in pending if die > 1])) > 2:
+            hold = set([die for die in pending if die > 1])
+        # The go for runs from pairs.
+        elif ordered[0] > 1:
+            hold = [counts.index(ordered[0])] * ordered[0]
+        # If all else fails, go for run with highest value.
         else:
-            unique_held = len(set(held))
-            if unique_held == 1:
-                hold = [held[0]] * pending.count(held[0])
-            elif unique_held == 2:
-                if pending[0] in held:
-                    hold = pending[:1]
-                else:
-                    hold = []
-            elif unique_held > 2:
-                hold = list(set([die for die in pending if die not in held]))
-                if 6 in hold and 1 in held:
-                    hold.remove(6)
-                elif 1 in hold and 6 in held:
-                    hold.remove(1)
+            hold = [max(pending)]
+        return hold
+
+    def later_holds(self):
+        """Get the holds on the second and third rolls. (list of int)"""
+        # Get local references to commonly used information.
+        held = self.game.dice.held
+        pending = self.game.dice.dice
+        unique_held = len(set(held))
+        # Holding one value means go for a run.
+        if unique_held == 1:
+            hold = [held[0]] * pending.count(held[0])
+        # Holding two values means go for a pair.
+        elif unique_held == 2:
+            if pending[0] in held:
+                hold = pending[:1]
+            else:
+                hold = []
+        # Holding three values means go for a straight.
+        elif unique_held > 2:
+            hold = list(set([die for die in pending if die not in held]))
+            if 6 in hold and 1 in held:
+                hold.remove(6)
+            elif 1 in hold and 6 in held:
+                hold.remove(1)
         return hold
 
     def set_up(self):
@@ -449,18 +428,25 @@ class Bachter(Bacht):
     category_data: Target number of dice and score for each category. (dict)
 
     Overridden Methods:
+    get_category
+    initial_holds
+    later_holds
     set_up
     """
 
     def get_category(self):
         """Get the category to score the current roll in. (str)"""
-        ranking = []
+        # Get a local copy of scores for checking used categories.
         my_scores = self.game.category_scores[self.name]
+        # Loop through the score categories.
+        ranking = []
         for category in self.game.score_cats:
+            # Check those that haven't been used.
             if my_scores[category.name] is None:
+                # Rank by difference from target score.
                 score = category.score(self.game.dice, self.game.roll_count)
                 score -= self.category_data[category.name][2]
-                # !! repeated code, needs refactoring. Score method of Yacht?
+                # !!! repeated code, needs refactoring. Score method of Yacht?
                 if category.name == 'low Chance' and 'Chance' in my_scores:
                     chance = my_scores['Chance']
                     if chance is not None and chance <= score:
@@ -470,73 +456,94 @@ class Bachter(Bacht):
                     if low_chance is not None and score <= low_chance:
                         score = 0
                 ranking.append((score, category.name))
+        # Score the category that is best compared to its expected score.
         ranking.sort()
         return ranking[-1][1]
 
-    def get_holds(self):
-        """Get dice to hold. (list of int)"""
+    def initial_holds(self):
+        """Get holds on the first roll. (list of int)"""
+        # Get a local copy of scores for checking used categories.
+        my_scores = self.game.category_scores[self.name]
+        num_cats = ('Zeros', 'Ones', 'Twos', 'Threes', 'Fours', 'Fives', 'Sixes')
+        # Summarize the current roll.
+        counts = [(self.game.dice.count(roll), roll) for roll in range(1, 7)]
+        counts.sort(reverse = True)
+        # Loop through the game categories.
+        possibles = []
+        for category_name, score in my_scores.items():
+            # Skip used categories.
+            if score is not None:
+                continue
+            # Get the category data.
+            target_dice, test_values, target_score, category = self.category_data[category_name]
+            # Check each category against needed dice and target score.
+            # Check ones through sixes.
+            if category_name in num_cats:
+                roll = num_cats.index(category_name)
+                count = self.game.dice.count(roll)
+                score_diff = roll * count - target_score
+                possibles.append((count - target_dice, [roll] * count, score_diff, 'run'))
+            # Check three/four of a kind
+            elif 'of a Kind' in category_name or category_name == self.game.five_name:
+                count, roll = counts[0]
+                score_diff = category.score(self.game.dice, 1) - target_score
+                possibles.append((count - target_dice, [roll] * count, score_diff, 'run'))
+            # Check chance (so as not to waste it).
+            elif 'Chance' in category_name:
+                hold = [5] * self.game.dice.count(5) + [6] * self.game.dice.count(6)
+                score_diff = category.score(self.game.dice, 1) - target_score
+                possibles.append((len(hold) - target_dice, hold, score_diff, 'chance'))
+            # Check straights.
+            elif 'Straight' in category_name:
+                hold = set(self.game.dice.values).intersection(test_values)
+                score_diff = category.score(self.game.dice, 1) - target_score
+                possibles.append((len(hold) - target_dice, hold, score_diff, 'straight'))
+            # Check full house.
+            elif category_name == 'Full House':
+                count_a, roll_a = counts[0]
+                count_b, roll_b = counts[1]
+                hold = [roll_a] * count_a + [roll_b] * count_b
+                score_diff = category.score(self.game.dice, 1) - target_score
+                possibles.append((5 - count_a - count_b, hold, score_diff, 'full'))
+        # Hold target category you have the best dice and difference with target score for.
+        possibles.sort(reverse = True)
+        hold = possibles[0][1]
+        self.target = possibles[0][-1]
+        return hold
+
+    def later_holds(self):
+        """Get the holds on the first roll. (list of int)"""
+        # Get a local reference to the dice.
         held = self.game.dice.held
         pending = self.game.dice.dice
-        my_scores = self.game.category_scores[self.name]
-        num_cats = ['Zeros', 'Ones', 'Twos', 'Threes', 'Fours', 'Fives', 'Sixes']
-        if not held:
-            possibles = []
-            counts = [(self.game.dice.count(roll), roll) for roll in range(1, 7)]
-            counts.sort(reverse = True)
-            for category_name, score in my_scores.items():
-                if score is not None:
-                    continue
-                target_dice, test_values, target_score, category = self.category_data[category_name]
-                if category_name in num_cats:
-                    roll = num_cats.index(category_name)
-                    count = self.game.dice.count(roll)
-                    score_diff = roll * count - target_score
-                    possibles.append((count - target_dice, [roll] * count, score_diff, 'run'))
-                elif 'of a Kind' in category_name or category_name == self.game.five_name:
-                    count, roll = counts[0]
-                    score_diff = category.score(self.game.dice, 1) - target_score
-                    possibles.append((count - target_dice, [roll] * count, score_diff, 'run'))
-                elif 'Chance' in category_name:
-                    hold = [5] * self.game.dice.count(5) + [6] * self.game.dice.count(6)
-                    score_diff = category.score(self.game.dice, 1) - target_score
-                    possibles.append((len(hold) - target_dice, hold, score_diff, 'chance'))
-                elif 'Straight' in category_name: # !! not working. bot got straight on first roll, held 1 six.
-                    # ?? possibles[x][0] wrong?!!
-                    hold = set(self.game.dice.values).intersection(test_values)
-                    score_diff = category.score(self.game.dice, 1) - target_score
-                    possibles.append((len(hold) - target_dice, hold, score_diff, 'straight'))
-                elif category_name == 'Full House':
-                    count_a, roll_a = counts[0]
-                    count_b, roll_b = counts[1]
-                    hold = [roll_a] * count_a + [roll_b] * count_b
-                    score_diff = category.score(self.game.dice, 1) - target_score
-                    possibles.append((5 - count_a - count_b, hold, score_diff, 'full'))
-            possibles.sort(reverse = True)
-            hold = possibles[0][1]
-            self.target = possibles[0][-1]
-        else:
-            unique_held = len(set(held))
-            if self.target == 'run':
-                hold = [held[0]] * pending.count(held[0])
-            elif self.target == 'full':
-                if pending[0].value in held:
-                    hold = pending[:1]
-                else:
-                    hold = []
-            elif self.target == 'straight':
-                hold = list(set([die for die in pending if die not in held]))
-                if 6 in hold and 1 in held:
-                    hold.remove(6)
-                elif 1 in hold and 6 in held:
-                    hold.remove(1)
-            elif self.target == 'chance':
-                hold = list([die.value for die in pending if die.value > 2])
+        # Hold based on target type as set in initial_hold.
+        # Hold based on runs.
+        if self.target == 'run':
+            hold = [held[0]] * pending.count(held[0])
+        # Hold for a full house.
+        elif self.target == 'full':
+            if pending[0].value in held:
+                hold = pending[:1]
+            else:
+                hold = []
+        # Hold for a straight.
+        elif self.target == 'straight':
+            hold = list(set([die for die in pending if die not in held]))
+            if 6 in hold and 1 in held:
+                hold.remove(6)
+            elif 1 in hold and 6 in held:
+                hold.remove(1)
+        # Hold for chance.
+        elif self.target == 'chance':
+            hold = list([die.value for die in pending if die.value > 2])
         return hold
 
     def set_up(self):
         """Set up the bot. (None)"""
+        # Intial bot state variables.
         self.next = ''
         self.target = 'run'
+        # Basic category data.
         self.category_data = {'Ones': (3, [1, 1, 1, 2, 3]), 'Twos': (3, [2, 2, 2, 3, 4]), 
             'Threes': (3, [3, 3, 3, 4, 5]), 'Fours': (3, [4, 4, 4, 5, 6]), 'Fives': (3, [5, 5, 5, 6, 1]), 
             'Sixes': (3, [6, 6, 6, 1, 2]), 'Three of a Kind': (3, [4, 4, 4, 3, 5]), 
@@ -545,12 +552,96 @@ class Bachter(Bacht):
             'Full House': (5, [3, 3, 2, 2, 2]), 'Four of a Kind': (4, [2, 2, 2, 2, 4]),
             self.game.score_cats[-1].name: (5, [4, 4, 4, 4, 4])}
         self.category_data['Straight'] = self.category_data['Big Straight']
+        # Calcuate target scores and save actual category objects.
         self.dice = dice.Pool([6] * 5)
-        # !! not working correctly
         for category in self.game.score_cats:
             self.dice.values = self.category_data[category.name][1]
             self.category_data[category.name] += (category.score(self.dice, 2), category)
+        # Remove categories not used in the current variant.
         self.category_data = {name: data for name, data in self.category_data.items() if len(data) == 4}
+
+
+class ScoreCategory(object):
+    """
+    A category for a category dice game. (object)
+
+    Attributes:
+    bonus: Bonus points added to the sum of the dice. (int)
+    check: A function to check validity and get the sub-total. (callable)
+    description: A description of the category. (str)
+    first: The bonus for getting the roll on the first roll. (int)
+    name: The name of the category. (str)
+    score_type: How the category is scored. (str)
+
+    Methods:
+    copy: Create an independent copy of the category. (ScoreCategory)
+    score: Score a roll based on this category. (int)
+
+    Overridden Methods:
+    __init__
+    """
+
+    def __init__(self, name, description, check, score_type = 'sub-total', first = 0):
+        """
+        Set up the category. (None)
+
+        Parameters:
+        description: A description of the category. (str)
+        name: The name of the category. (str)
+        check: A function to check validity and get the sub-total. (callable)
+        score_type: How the category is scored. (str)
+        first: The bonus for getting the roll on the first roll. (int)
+        """
+        # Set basic attributes.
+        self.name = name
+        self.description = description
+        self.check = check
+        self.first = first
+        # Parse the score type.
+        self.bonus = 0
+        self.score_type = score_type.lower()
+        # Check for set score.
+        if score_type.isdigit():
+            self.score_type = int(score_type)
+        # Check for a bonus.
+        elif self.score_type.startswith('total+'):
+            self.bonus = int(score_type.split('+')[1])
+            self.score_type = 'total'
+
+    def copy(self):
+        """Create an independent copy of the category. (ScoreCategory)"""
+        # Create the new category.
+        new = ScoreCategory(self.name, self.description, self.check, str(self.score_type), self.first)
+        # Set the bonus.
+        new.bonus = self.bonus
+        return new
+
+    def score(self, dice, roll_count):
+        """
+        Score a roll based on this category. (int)
+
+        Parameters:
+        dice: The roll to score. (dice.Pool)
+        roll_count: How many rolls it took to get the roll. (int)
+        """
+        sub_total = self.check(dice)
+        # Score a valid roll
+        if sub_total:
+            # Score by type of category.
+            if isinstance(self.score_type, int):
+                score = self.score_type
+            elif self.score_type == 'sub-total':
+                score = sub_total
+            else:
+                score = sum(dice.values)
+            # Add bonuses.
+            if roll_count == 1:
+                score += self.first
+            score += self.bonus
+        else:
+            # Invalid rolls score 0.
+            score = 0
+        return score
 
 
 class Yacht(game.Game):
@@ -558,6 +649,7 @@ class Yacht(game.Game):
     The game of Yacht and it's cousins. (game.Game)
 
     Class Attributes:
+    letters: Letters for easy selection of score categories. (str)
     score_cats: The scoring categories in the game. (dict of str: ScoreCategory)
 
     Attributes:
@@ -570,9 +662,11 @@ class Yacht(game.Game):
     do_score: Score the current dice roll. (bool)
 
     Overridden Methods:
+    __str__
     game_over
     handle_options
     player_action
+    set_options
     set_up
     """
 
@@ -600,22 +694,31 @@ class Yacht(game.Game):
 
     def __str__(self):
         """Human readable text representation (str)"""
+        # Detrmine the width of the columns.
         cat_names = [category.name for category in self.score_cats]
         max_len = max(len(name) for name in cat_names) + 3
         play_lens = [min(len(player.name), 18) for player in self.players]
+        # Set up the line template.
         line_format = ('{{}} {{:<{}}}' + '  {{:>{}}}' * len(self.players)).format(max_len, *play_lens)
+        # Start with the titles.
         lines = [line_format.format('  ', 'Categories', *[player.name[:18] for player in self.players])]
         lines.append('-' * len(lines[0]))
+        # Add the categories in storage order.
         for char, category in zip(self.letters, self.score_cats):
+            # Get the scores (- for unused categories).
             sub_scores = [self.category_scores[player.name][category.name] for  player in self.players]
             sub_scores = ['-' if score is None else score for score in sub_scores]
+            # Add a line of the scores.
             lines.append(line_format.format(char + ':', category.name, *sub_scores))
+            # Add a line for a bonus after the number categories.
             if category.name == 'Sixes' and self.n_bonus[0]:
                 sub_scores = [self.category_scores[player.name]['Bonus'] for player in self.players]
                 sub_scores = ['-' if score is None else score for score in sub_scores]
                 lines.append(line_format.format('-:', 'Bonus', *sub_scores))
+        # End with total scores.
         lines.append('-' * len(lines[0]))
         lines.append(line_format.format('  ', 'Total', *[self.scores[plyr.name] for plyr in self.players]))
+        # Return as one string.
         return '\n'.join(lines)
 
     def do_hold(self, arguments):
@@ -665,6 +768,7 @@ class Yacht(game.Game):
         Parameters:
         arguments: The category to score the roll in. (str)
         """
+        # !! refactor (chances and win/loss/draw)
         # Get the current player.
         player = self.players[self.player_index]
         # Find the correct category.
@@ -698,15 +802,18 @@ class Yacht(game.Game):
             # Check for a number bonus.
             if self.n_bonus[0] and category.name in ('Ones', 'Twos', 'Threes', 'Fours', 'Fives', 'Sixes'):
                 try:
+                    # Sum the categories.
                     n_sum = 0
                     for category_name in ('Ones', 'Twos', 'Threes', 'Fours', 'Fives', 'Sixes'):
                         n_sum += self.category_scores[player.name][category_name]
+                    # Check against the required total
                     if n_sum >= self.n_bonus[0]:
                         self.category_scores[player.name]['Bonus'] = self.n_bonus[1]
                         self.scores[player.name] += self.n_bonus[1]
                     else:
                         self.category_scores[player.name]['Bonus'] = 0
                 except TypeError:
+                    # Any unscored categories will send the code here.
                     pass
             # Reset the dice for the next player.
             self.roll_count = 1
@@ -731,6 +838,7 @@ class Yacht(game.Game):
                         self.win_loss_draw[1] += 1
                         self.win_loss_draw[2] -= 1
             return False
+        # Check for secondary fives of a kind.
         elif self.extra_five and self.score_cats[-1] == category:
             self.scores[player.name] += self.extra_five
             self.category_scores[player.name][self.score_cats[-1].name] += self.extra_five
@@ -741,16 +849,22 @@ class Yacht(game.Game):
 
     def game_over(self):
         """Check for all categories having been used. (bool)"""
+        # Make sure everyone has one turn per score category.
         if self.turns == len(self.score_cats) * len(self.players):
+            # Get the human score.
             human_score = self.scores[self.human.name]
+            # Get the winners.
             best = max(self.scores.values())
             winners = [name for name, score in self.scores.items() if score == best]
+            # Show the final scores.
             self.human.tell(self)
+            # Announce the winner(s).
             if len(winners) == 1:
                 self.human.tell('\nThe winner is {} with {} points.\n'.format(winners[0], best))
             else:
                 message = '\nThe winners are {} and {}; with {} points.\n'
                 self.human.tell(message.format(', '.join(winners[:-1]), winners[-1], best))
+            # Calculate the win/loss/draw (for the human)
             self.win_loss_draw[0] = len([score for score in self.scores.values() if score < human_score])
             self.win_loss_draw[1] = len([score for score in self.scores.values() if score > human_score])
             self.win_loss_draw[2] = len([score for score in self.scores.values() if score == human_score])
@@ -760,7 +874,7 @@ class Yacht(game.Game):
             return False
 
     def handle_options(self):
-        """Handle the game options."""
+        """Handle the game options. (None)"""
         super(Yacht, self).handle_options()
         # Handle the score category options.
         self.score_cats = [category.copy() for category in Yacht.score_cats]
@@ -897,8 +1011,10 @@ class Yacht(game.Game):
 
     def set_up(self):
         """Set up the game. (None)"""
+        # Set up the dice.
         self.dice = dice.Pool([6] * 5)
         self.roll_count = 1
+        # Set up the scores.
         score_base = {category.name: None for category in self.score_cats}
         if self.n_bonus[0]:
             score_base['Bonus'] = None
