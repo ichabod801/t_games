@@ -10,7 +10,6 @@ title to menu so you know what category you're in.
 	top command to get to the top of the menu.
 A round of one per penultimate category, two for solitaire.
 	Cribbage (tricky strategy)
-	Yacht (prioritization, lots of variants)
 	Craps (complicated play, street vs. casino)
 	Hangman (word list)
 	Backgammon
@@ -27,6 +26,7 @@ Program the games planned for text_games round 2.
 	Shoot for at least 25 before releasing (to beat bsdgames)
 		try to have a connected gipf grapf
 		or at least a spanning path.
+		Note that after the current section is done, going by the gipf growth plan (below) does this.
 Clean Up
     documentation (style guide)
     output (one blank line)
@@ -574,3 +574,65 @@ closed/builders: canfield, forty thieves, klondike
 closed/other: monte carlo, accordion
 
 That's 20 games, and 4 over the two per category rule, and none over three per category. I don't lose anything I've already programmed except baker's game (which I can get back as a variant)
+
+=== Gipf Growth Plan ===
+
+
+Or, if I add these games, everything is linked by gipf with no root or leaf nodes:
+	bacarat
+	zip
+	poker dice
+	quadrille
+	accordion
+	spit
+	crescent
+	beleaguered castle
+	number guessing
+	slot machine
+	(and I would have 32 games for an early release)
+	After that these could be added without adding roots or leaves:
+		bisley
+		nestor
+		mexico
+		spades
+		liar's dice
+		tonk
+		snip snap snorem
+		war
+	The next round would be:
+		golf ii
+		martha
+		adventure
+		la belle lucie
+		global thermonuclear
+		(gtw would require adding chess and mancala as well)
+	The next round would be:
+		halma
+		snakes and ladders
+		peace and love
+	Then:
+		tafl
+		rummy
+		space traders
+	then:
+		hearts
+		black hole
+	then:
+		golf
+		strategy
+		interregnum
+	then:
+		pyramid
+		monte carlo
+		spider
+		labyrinth
+	then:
+		mate
+	then:
+		dudo
+	then:
+		fox and geese
+	then:
+		hangman * Assumes this was remove from the initial.
+		ghost
+	And you're done.
