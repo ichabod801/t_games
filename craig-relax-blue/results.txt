@@ -70,3 +70,4 @@ Solitaire Dice,1,0,0,580,44,0,
 Pig,0,3,0,30,47,1,medium satan x
 FreeCell,1,0,0,789,75,0,
 Crazy Eights,3,1,0,153,208,0,
+FreeCell,1,0,0,796,81,0,

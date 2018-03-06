@@ -11,6 +11,9 @@ Cribbage: A game of Cribbage. (game.Game)
 """
 
 
+import collections
+
+
 import tgames.game as game
 import tgames.cards as cards
 
@@ -154,6 +157,41 @@ class Cribbage(game.Game):
         else:
             return self.handle_cmd(answer)
 
+    def score_hands(self):
+        """Score the hands after a round of play. (None)"""
+        # Loop through the players, starting on the dealer's left.
+        player_index = (self.dealer_index + 1) % len(self.players)
+        for player in self.players[player_index:] + self.players[:player_index]:
+            cards = self.hands[player.name].cards + self.in_play[player.name].cards
+            # !! need to set name and add the crib.
+            # Check for flushes. (four in hand or five with starter)
+            # !! not finished
+            # Check for his nobs (jack of suit of starter)
+            # !! not finished.
+            # Add the starter for the scoring categories below.
+            cards.append(self.starter)
+            # Check for 15s.
+            fifteens = 0
+            for size in range(2, 6):
+                for cards in itertools.permuations(cards, size):
+                    if sum(cards) == 15:
+                        fifteens += 1
+            if fifteens:
+                self.scores[name] += 2 * fifteens
+                message = '{} scores {} for {} combinations adding to 15.'
+                self.human.tell(.format(name, 2 * fifteens, fifteens))
+            # Check for pairs.
+            rank_counts = collections.Counter([card.rank for card in cards])
+            for rank, count in rank_counts.most_common():
+                if count < 2:
+                    break
+                pair_score = utility.choose(count, 2) * 2
+                self.scores[player.name] += pair_score
+                message = '{} scores {} for getting {} cards of the same rank.'
+                self.player.tell(message.format(player.name, pair_score, count))
+            # Check for runs.
+            # !! not finished
+
     def score_sequence(self, player):
         """
         Score cards as they are played in sequence. (None)
@@ -166,7 +204,6 @@ class Cribbage(game.Game):
         if self.card_total == 15:
             self.scores[player.name] += 2
             self.player.tell('{} scores 2 points for reaching 15.'.format(player.name))
-        # Check for pairs.
         # Count the cards of the same rank.
         rank_count = 1
         for play_index in range(-2, -5, -1):
@@ -179,8 +216,22 @@ class Cribbage(game.Game):
             self.scores[player.name] += pair_score
             message = '{} scores {} for getting {} cards of the same rank.'
             self.player.tell(message.format(player.name, pair_score, rank_count))
-        # !! not finished
         # Check for runs.
+        run_index = -3
+        run_count = 0
+        while True:
+            values = sorted([card.value for card in played.cards[run_index:]])
+            diffs = [second - first for first, second in zip(values, values[1:])]
+            if all([diff == 1 for diff in diffs]):
+                run_index -= 1
+                run_count = len(values)
+            else:
+                break
+        # Score any runs.
+        if run_count:
+            self.scores[player.name] += run_count
+            message = '{0} scores {1} for getting a {1}-card straight.'
+            self.player.tell(message.format(player.name, run_count))
 
     def set_up(self):
         """Set up the game. (None)"""
@@ -191,7 +242,7 @@ class Cribbage(game.Game):
         self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
         self.hands['The Crib'] = cards.Hand(self.deck)
         self.deal()
-        self.in_play = {player.name cards.Hand(self.deck) for player in self.players}
+        self.in_play = {player.name: cards.Hand(self.deck) for player in self.players}
         self.in_play['Play Sequence'] = cards.Hand(self.deck)
         # set up the game
         self.phase = 'Discard'
