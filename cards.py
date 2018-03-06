@@ -270,9 +270,14 @@ class Hand(object):
     discard: Discard a card back to the deck. (None)
     draw: Draw a card from the deck. (None)
     score: Score the hand. (int)
+    shift: Pass a card to another hand. (None)
+    show_player: Show the hand to the player playing it. (str)
 
     Overridden Methods:
     __init__
+    __contains__
+    __iter__
+    __len__
     __repr__
     __str__
     """
@@ -290,6 +295,14 @@ class Hand(object):
         item: The card to check for existince. (object)
         """
         return item in self.cards
+
+    def __iter__(self):
+        """Iterate over the cards in hand. (iterator)"""
+        iter(self.cards)
+
+    def __len__(self):
+        """Return the number of cards in the hand. (int)"""
+        return len(self.cards)
 
     def __repr__(self):
         """Debugging text representation. (str)"""
@@ -329,6 +342,16 @@ class Hand(object):
         """Score the hand. (int)"""
         # Default score is high card.
         return max([Card.ranks.index(card.rank) for card in self.cards])
+
+    def shift(self, card, hand):
+        """
+        Pass a card to another hand. (None)
+
+        card: The card to pass. (str)
+        hand: The hand to pass it to. (Hand)
+        """
+        card_index = self.cards.index(card)
+        hand.cards.append(self.cards.pop(card_index))
 
     def show_player(self):
         """Show the hand to the player playing it. (str)"""

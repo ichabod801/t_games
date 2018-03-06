@@ -27,6 +27,7 @@ Program the games planned for text_games round 2.
 		try to have a connected gipf grapf
 		or at least a spanning path.
 		Note that after the current section is done, going by the gipf growth plan (below) does this.
+		Also note that I could just redo the gipf graph to get what I want. Duh.
 Clean Up
     documentation (style guide)
     output (one blank line)
@@ -606,6 +607,7 @@ Or, if I add these games, everything is linked by gipf with no root or leaf node
 		la belle lucie
 		global thermonuclear
 		(gtw would require adding chess and mancala as well)
+		[at this point the gipf digraph would be fully connected.]
 	The next round would be:
 		halma
 		snakes and ladders
