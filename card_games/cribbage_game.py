@@ -134,6 +134,8 @@ class Cribbage(game.Game):
                 self.go_count += 1
                 if self.go_count == len(self.players):
                     self.human.tell('Everyone has passed.')
+                    self.scores[player.name] += 1
+                    self.human.tell('{} scores 1 for the go.'.format(player.name))
                     self.score_hands()
                 return False
         elif card:
@@ -165,21 +167,31 @@ class Cribbage(game.Game):
             cards = self.hands[player.name].cards + self.in_play[player.name].cards
             # !! need to set name and add the crib.
             # Check for flushes. (four in hand or five with starter)
-            # !! not finished
+            suits = set([card.suit for card in cards])
+            if len(suits) == 1:
+                if self.starter.suit in suits:
+                    size = 5
+                else:
+                    size = 4
+                message = '{} scores {} points for a {}-card flush.'
+                self.human.tell(message.format(name, size, size))
             # Check for his nobs (jack of suit of starter)
-            # !! not finished.
+            nob = CribCard('J', self.starter.suit)
+            if nob in cards:
+                self.scores[name] += 1
+                self.human.tell('{} scores one for his nob.'.format(name))
             # Add the starter for the scoring categories below.
             cards.append(self.starter)
             # Check for 15s.
             fifteens = 0
             for size in range(2, 6):
-                for cards in itertools.permuations(cards, size):
+                for cards in itertools.combinations(cards, size):
                     if sum(cards) == 15:
                         fifteens += 1
             if fifteens:
                 self.scores[name] += 2 * fifteens
                 message = '{} scores {} for {} combinations adding to 15.'
-                self.human.tell(.format(name, 2 * fifteens, fifteens))
+                self.human.tell(message.format(name, 2 * fifteens, fifteens))
             # Check for pairs.
             rank_counts = collections.Counter([card.rank for card in cards])
             for rank, count in rank_counts.most_common():
@@ -190,7 +202,19 @@ class Cribbage(game.Game):
                 message = '{} scores {} for getting {} cards of the same rank.'
                 self.player.tell(message.format(player.name, pair_score, count))
             # Check for runs.
+            ranks = sorted([CribCard.ranks.index(card.rank) for card in cards])
+            diffs = [second - first for first, second in zip(ranks, ranks[1:])]
+            run = []
+            for diff in diffs:
+                if diff < 2:
+                    run.append(diff)
+                elif len(run) > 1:
+                    break
+                else:
+                    run = []
             # !! not finished
+            if self.scores[name] >= self.target_score:
+                self.human.tell('{} has won with {} points.'.format(name, self.scores[name]))
 
     def score_sequence(self, player):
         """

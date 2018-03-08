@@ -71,3 +71,6 @@ Pig,0,3,0,30,47,1,medium satan x
 FreeCell,1,0,0,789,75,0,
 Crazy Eights,3,1,0,153,208,0,
 FreeCell,1,0,0,796,81,0,
+FreeCell,1,0,0,812,54,0,
+FreeCell,1,0,0,807,57,0,
+Pig,3,0,0,104,40,1,medium satan x
