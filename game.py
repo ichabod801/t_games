@@ -45,6 +45,7 @@ class Game(OtherCmd):
         64: This game was started by the xyzzy command.
         128: This game was won using the xyzzy command.
         256: This game was played as a match.
+        512: This game was played with a cyborg.
 
     Class Attributes:
     aka: Other names for the game. (list of str)
@@ -311,12 +312,12 @@ class Game(OtherCmd):
         with five players, your win/loss/draw is 2, 1, 1.
         """
         # Set up the game.
-        self.scores = {player.name: 0 for player in self.players}
         self.win_loss_draw = [0, 0, 0]
         self.turns = 0
         self.force_end = ''
         self.flags &= 257 # reset everything but the options and match play flags.
         self.set_up()
+        self.scores = {player.name: 0 for player in self.players}
         for player in self.players:
             player.set_up()
         # Loop through the players repeatedly.

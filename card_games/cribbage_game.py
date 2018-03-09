@@ -12,10 +12,12 @@ Cribbage: A game of Cribbage. (game.Game)
 
 
 import collections
+import random
 
 
-import tgames.game as game
 import tgames.cards as cards
+import tgames.game as game
+import tgames.player as player
 
 
 CREDITS = """
@@ -48,24 +50,35 @@ class Cribbage(game.Game):
         lines = ['\nScores\n------\n']
         for player in self.players:
             lines.append('{}: {}'.format(player.name, self.scores[player.name]))
-        lines.append('\nRunning Total: {}'.format(self.total))
+        lines.append('\nRunning Total: {}'.format(self.card_total))
         player = self.players[self.player_index]
         hand = self.hands[player.name]
         lines.append('\nCards in Hand: {}.'.format(hand.show_player()))
         lines.append('\nCards played: {}\n'.format(self.cards_played))
+        return '\n'.join(lines)
 
     def deal(self):
         """Deal the cards. (None)"""
+        # Reset the tracking variables.
+        self.card_total = 0
+        self.go_count = 0
+        # Discard and shuffle.
+        for hand in self.hands.values():
+            hand.discard()
+        self.in_play['Play Sequence'].cards = []
+        for hand in self.in_play.values():
+            hand.discard()
+        self.deck.shuffle()
         # Find the dealer and the player on their left.
         self.dealer_index = (self.dealer_index + 1) % len(self.players)
-        dealer = dealer
+        dealer = self.players[self.dealer_index]
         self.player_index = (self.dealer_index + 1) % len(self.players)
         print('The current dealer is {}.'.format(dealer.name))
         # Deal the cards
         hand_size = [0, 0, 6, 5, 5][len(self.players)]
         for card in range(hand_size):
             for player in self.players:
-                self.hands[player.hand].draw()
+                self.hands[player.name].draw()
         if len(self.players) == 3:
             self.hands['The Crib'].draw()
         self.starter = self.deck.deal(up = True)
@@ -77,6 +90,24 @@ class Cribbage(game.Game):
             if self.scores[dealer.name] >= self.target_score:
                 self.force_win
                 return False
+
+    def game_over(self):
+        """Check for the end of the game. (None)"""
+        if max(self.scores.values()) >= self.target_score:
+            # Determine the winner.
+            scores = [(score, name) for name, score in self.scores.items()]
+            scores.sort(reverse = True)
+            self.human.tell('{1} wins with {0} points.'.format(*scores[0]))
+            # Calcualte win/loss/draw stats.
+            wld_index = 1
+            for score, name in scores:
+                if name == self.human.name:
+                    wld_index = 0
+                else:
+                    self.win_loss_draw[wld_index] += 1
+            return True
+        else:
+            return False
 
     def player_action(self, player):
         """
@@ -98,8 +129,9 @@ class Cribbage(game.Game):
         Parameters:
         player: The current player. (player.Player)
         """
-        discard_word, s = [('one', ''), ('two', 's')][self.discard_size == 1]
-        answer = player.ask('Which {} card{} would you like to discard? '.format(discard_word, s))
+        discard_word, s = [('', ''), ('two', 's')][self.discard_size != 1]
+        query = 'Which {} card{} would you like to discard to the crib, {}? '
+        answer = player.ask(query.format(discard_word, s, player.name))
         discards = cards.Card.card_re.findall(answer)
         if not discards:
             return self.handle_cmd(answer)
@@ -125,8 +157,8 @@ class Cribbage(game.Game):
         """
         hand = self.hands[player.name]
         in_play = self.in_play[player.name]
-        answer = player.ask('Which card would you like to play? ')
-        card = CribCard.card_re.search(answer)
+        answer = player.ask('Which card would you like to play, {}? '.format(player.name))
+        card = CribCard.card_re.match(answer)
         if answer.lower() == 'go':
             if min([card.value for card in hand]) <= 31 - self.card_total:
                 message = 'You must play any cards under rank {} before you can pass.'
@@ -141,7 +173,7 @@ class Cribbage(game.Game):
                     self.score_hands()
                 return False
         elif card:
-            card = CribCard(*card.upper())
+            card = CribCard(*answer[:2].upper())
             if card not in hand:
                 player.error('You do not have that card in your hand.')
                 return True
@@ -150,7 +182,7 @@ class Cribbage(game.Game):
                 return True
             else:
                 hand.shift(card, in_play)
-                self.hands['Play Sequence'].cards.append(in_play.cards[-1])
+                self.in_play['Play Sequence'].cards.append(in_play.cards[-1])
                 self.score_sequence(player)
                 self.card_total += card
                 self.go_count = 0
@@ -182,6 +214,7 @@ class Cribbage(game.Game):
                     size = 5
                 else:
                     size = 4
+                # !! Crib can't score 4 flush.
                 message = '{} scores {} points for a {}-card flush.'
                 self.human.tell(message.format(name, size, size))
             # Check for his nobs (jack of suit of starter)
@@ -259,7 +292,7 @@ class Cribbage(game.Game):
         # Count the cards of the same rank.
         rank_count = 1
         for play_index in range(-2, -5, -1):
-            if played[play_index].rank != played[-1].rank:
+            if played[play_index]cards.rank != played[-1]cards.rank:
                 break
             rank_count += 1
         # Score any pairs.
@@ -287,23 +320,23 @@ class Cribbage(game.Game):
 
     def set_up(self):
         """Set up the game. (None)"""
-        # Set up the deck.
-        self.deck = cards.Deck(card_class = CribCard)
-        self.deck.shuffle()
-        # Set up the hands.
-        self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
-        self.hands['The Crib'] = cards.Hand(self.deck)
-        self.deal()
-        self.in_play = {player.name: cards.Hand(self.deck) for player in self.players}
-        self.in_play['Play Sequence'] = cards.Hand(self.deck)
-        # set up the game
-        self.phase = 'Discard'
+        # Set the players.
+        self.players = [self.human, player.Cyborg([self.human.name])]
+        random.shuffle(self.players)
+        # set up the tracking variables.
+        self.phase = 'discard'
         self.discard_size = [0, 0, 2, 1, 1][len(self.players)]
         self.dealer_index = -1
         self.target_score = 161
         self.skunk = 61
-        self.card_total = 0
-        self.go_count = 0
+        # Set up the deck.
+        self.deck = cards.Deck(card_class = CribCard)
+        # Set up the hands.
+        self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
+        self.hands['The Crib'] = cards.Hand(self.deck)
+        self.in_play = {player.name: cards.Hand(self.deck) for player in self.players}
+        self.in_play['Play Sequence'] = cards.Hand(self.deck)
+        self.deal()
 
 
 class CribCard(cards.Card):
@@ -347,3 +380,13 @@ class CribCard(cards.Card):
         other: The integer to add to. (int)
         """
         return self.value + other
+
+
+if __name__ == '__main__':
+    try:
+        input = raw_input
+    except NameError:
+        pass
+    name = input('What is your name? ')
+    crib = Cribbage(player.Player(name), '')
+    crib.play()

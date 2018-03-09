@@ -1047,3 +1047,13 @@ def valid_score_spec(score_spec):
         if len(score_spec) == 2 and score_spec[1].isdigit():
             valid = True
     return valid
+
+
+if __name__ == '__main__':
+    try:
+        input = raw_input
+    except NameError:
+        pass
+    name = input('What is your name? ')
+    yacht = Yacht(player.Player(name), '')
+    yacht.play()

@@ -250,14 +250,12 @@ class Player(object):
         print(*args, **kwargs)
 
 
-class Bot(Player):
+class Cyborg(Player):
     """
-    A computer player. (Player)
+    A bot that is run by the human for testing. (Player)
 
     Overridden Methods:
     __init__
-    error
-    tell
     """
 
     def __init__(self, taken_names = [], initial = ''):
@@ -277,6 +275,18 @@ class Bot(Player):
                 self.name = random.choice(BOT_NAMES[random.choice(string.ascii_lowercase)].split('/'))
             if self.name not in taken_names:
                 break
+        self.held_inputs = []
+        self.shortcuts = {}
+
+
+class Bot(Cyborg):
+    """
+    A full computer player. (Player)
+
+    Overridden Methods:
+    error
+    tell
+    """
 
     def error(self, *args, **kwargs):
         """
