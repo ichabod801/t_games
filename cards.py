@@ -287,6 +287,10 @@ class Hand(object):
         self.deck = deck
         self.cards = []
 
+    def __bool__(self):
+        """Hands are True if they have cards in them. (None)"""
+        return bool(self.cards)
+
     def __contains__(self, item):
         """
         Check for a card being in the hand. (None)

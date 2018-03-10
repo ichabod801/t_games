@@ -44,7 +44,7 @@ def choose(n, r):
     n: The number of items to choose from. (int)
     r: The number of items to choose. (int)
     """
-    return math.factorial(n) / (math.factorial(r) * math.factorial(n - r))
+    return int(math.factorial(n) / (math.factorial(r) * math.factorial(n - r)))
 
 def flip():
     """Return a random bit. (int)"""

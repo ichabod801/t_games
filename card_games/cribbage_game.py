@@ -19,6 +19,7 @@ import random
 import tgames.cards as cards
 import tgames.game as game
 import tgames.player as player
+import tgames.utility as utility
 
 
 CREDITS = """
@@ -162,7 +163,7 @@ class Cribbage(game.Game):
         answer = player.ask('Which card would you like to play, {}? '.format(player.name))
         card = CribCard.card_re.match(answer)
         if answer.lower() == 'go':
-            if min([card.value for card in hand]) <= 31 - self.card_total:
+            if hand and min([card.value for card in hand]) <= 31 - self.card_total:
                 message = 'You must play any cards under rank {} before you can pass.'
                 player.error(message.format(32 - self.card_total))
                 return True
@@ -198,6 +199,7 @@ class Cribbage(game.Game):
     def score_hands(self):
         """Score the hands after a round of play. (None)"""
         # ?? refactor?
+        # !! totally scoring wrong. Added more communication to figure out what's wrong.
         # Loop through the players, starting on the dealer's left.
         player_index = (self.dealer_index + 1) % len(self.players)
         names = [player.name for player in self.players[player_index:] + self.players[:player_index]]
@@ -205,10 +207,12 @@ class Cribbage(game.Game):
             # Score the crib to the dealer.
             if name == 'The Crib':
                 cards = self.hands['The Crib'].cards
-                name = self.players[self.dealer_index].dealer
-                self.human.tell('Now scoring the crib for the dealer ({}).'.format(name))
+                name = self.players[self.dealer_index].name
+                message = 'Now scoring the crib for the dealer ({}): {} + {}'
             else:
                 cards = self.hands[name].cards + self.in_play[name].cards
+                message = "Now scoring {}'s hand: {} + {}"
+            self.human.tell(message.format(name, ', '.join(cards), self.starter))
             # Check for flushes. (four in hand or five with starter)
             suits = set([card.suit for card in cards])
             if len(suits) == 1:
@@ -304,16 +308,12 @@ class Cribbage(game.Game):
             message = '{} scores {} for getting {} cards of the same rank.'
             self.human.tell(message.format(player.name, pair_score, rank_count))
         # Check for runs.
-        run_index = -3
         run_count = 0
-        while True:
-            values = sorted([card.value for card in played.cards[run_index:]])
+        for run_index in range(-3, -len(played) - 1, -1):
+            values = sorted([CribCard.ranks.index(card.rank) for card in played.cards[run_index:]])
             diffs = [second - first for first, second in zip(values, values[1:])]
             if diffs and all([diff == 1 for diff in diffs]):
-                run_index -= 1
                 run_count = len(values)
-            else:
-                break
         # Score any runs.
         if run_count:
             self.scores[player.name] += run_count
