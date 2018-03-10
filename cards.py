@@ -298,7 +298,7 @@ class Hand(object):
 
     def __iter__(self):
         """Iterate over the cards in hand. (iterator)"""
-        iter(self.cards)
+        return iter(self.cards)
 
     def __len__(self):
         """Return the number of cards in the hand. (int)"""
