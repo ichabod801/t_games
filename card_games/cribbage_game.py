@@ -43,7 +43,7 @@ class Cribbage(game.Game):
     """
 
     aka = ['Crib']
-    categories = ['Card Game', 'Matching Game']
+    categories = ['Card Games', 'Matching Game']
     credits = CREDITS
     name = 'Cribbage'
 
@@ -200,6 +200,8 @@ class Cribbage(game.Game):
         """Score the hands after a round of play. (None)"""
         # ?? refactor?
         # !! totally scoring wrong. Added more communication to figure out what's wrong.
+        # !! not scoring pairs or runs correctly.
+        # !! not scoring 15s correctly (of len == 3 at least).
         # Loop through the players, starting on the dealer's left.
         player_index = (self.dealer_index + 1) % len(self.players)
         names = [player.name for player in self.players[player_index:] + self.players[:player_index]]
@@ -212,7 +214,7 @@ class Cribbage(game.Game):
             else:
                 cards = self.hands[name].cards + self.in_play[name].cards
                 message = "Now scoring {}'s hand: {} + {}"
-            self.human.tell(message.format(name, ', '.join(cards), self.starter))
+            self.human.tell(message.format(name, ', '.join([str(card) for card in cards]), self.starter))
             # Check for flushes. (four in hand or five with starter)
             suits = set([card.suit for card in cards])
             if len(suits) == 1:
@@ -233,8 +235,8 @@ class Cribbage(game.Game):
             # Check for 15s.
             fifteens = 0
             for size in range(2, 6):
-                for cards in itertools.combinations(cards, size):
-                    if sum(cards) == 15:
+                for sub_cards in itertools.combinations(cards, size):
+                    if sum(sub_cards) == 15:
                         fifteens += 1
             if fifteens:
                 self.scores[name] += 2 * fifteens
@@ -270,7 +272,7 @@ class Cribbage(game.Game):
                 if len(pairs) == 2 and pairs[1] - pairs[0] == 1:
                     run_count = 3
                 # Update the score.
-                run_length = len(run) + 1
+                run_length = run.count(1) + 1
                 self.scores[name] += run_length * run_count
                 # Update the user.
                 if run_count == 1:
@@ -338,7 +340,7 @@ class Cribbage(game.Game):
         self.hands['The Crib'] = cards.Hand(self.deck)
         self.in_play = {player.name: cards.Hand(self.deck) for player in self.players}
         self.in_play['Play Sequence'] = cards.Hand(self.deck)
-        self.deal()
+        self.deal() # !! happening before scores are set.
 
 
 class CribCard(cards.Card):
