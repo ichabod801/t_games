@@ -32,8 +32,6 @@ class Cribbage(game.Game):
     """
     A game of Cribbage. (game.Game)
 
-    !! needs game over and reset for redeals.
-
     Attributes:
     cards_played: The cards played so far this round. (str)
     deck: The deck of cards used in the game. (cards.Deck)
@@ -63,9 +61,6 @@ class Cribbage(game.Game):
 
     def deal(self):
         """Deal the cards. (None)"""
-        # Reset the tracking variables.
-        self.card_total = 0
-        self.go_count = 0
         # Discard and shuffle.
         for hand in self.hands.values():
             hand.discard()
@@ -76,7 +71,7 @@ class Cribbage(game.Game):
         # Find the dealer and the player on their left.
         self.dealer_index = (self.dealer_index + 1) % len(self.players)
         dealer = self.players[self.dealer_index]
-        self.player_index = (self.dealer_index + 1) % len(self.players)
+        self.player_index = self.dealer_index
         print('The current dealer is {}.'.format(dealer.name))
         # Deal the cards
         hand_size = [0, 0, 6, 5, 5][len(self.players)]
@@ -86,6 +81,8 @@ class Cribbage(game.Game):
         if len(self.players) == 3:
             self.hands['The Crib'].draw()
         self.starter = self.deck.deal(up = True)
+        # Reset the tracking variables.
+        self.phase = 'discard'
         # Check for heels.
         if self.starter.rank == 'J':
             print ('The dealer got his heels.')
@@ -119,6 +116,9 @@ class Cribbage(game.Game):
         Parameters:
         player: The current player. (player.Player)
         """
+        if self.phase == 'deal':
+            self.deal()
+            return False
         player.tell(self)
         if self.phase == 'discard':
             return self.player_discards(player)
@@ -173,7 +173,7 @@ class Cribbage(game.Game):
                     self.human.tell('Everyone has passed.')
                     self.scores[player.name] += 1
                     self.human.tell('{} scores 1 for the go.'.format(player.name))
-                    self.score_hands()
+                    self.reset()
                 return False
         elif card:
             card = CribCard(*answer[:2].upper())
@@ -191,17 +191,25 @@ class Cribbage(game.Game):
                 self.go_count = 0
                 if self.card_total == 31:
                     self.human.tell('The count has reached 31.')
-                    self.score_hands()
+                    self.scores[player.name] += 2
+                    self.human.tell('{} scores 2 points for reaching 31.'.format(player.name))
+                    self.reset()
                 return False
         else:
             return self.handle_cmd(answer)
 
+    def reset(self):
+        """Reset the game after a pegging round. (None)"""
+        self.card_total = 0
+        self.go_count = 0
+        self.in_play['Play Sequence'].cards = []
+        if not any(self.hands[player.name] for player in self.players):
+            self.score_hands()
+            self.deal()
+
     def score_hands(self):
         """Score the hands after a round of play. (None)"""
         # ?? refactor?
-        # !! totally scoring wrong. Added more communication to figure out what's wrong.
-        # !! not scoring pairs or runs correctly.
-        # !! not scoring 15s correctly (of len == 3 at least).
         # Loop through the players, starting on the dealer's left.
         player_index = (self.dealer_index + 1) % len(self.players)
         names = [player.name for player in self.players[player_index:] + self.players[:player_index]]
@@ -328,7 +336,7 @@ class Cribbage(game.Game):
         self.players = [self.human, player.Cyborg([self.human.name])]
         random.shuffle(self.players)
         # set up the tracking variables.
-        self.phase = 'discard'
+        self.phase = 'deal'
         self.discard_size = [0, 0, 2, 1, 1][len(self.players)]
         self.dealer_index = -1
         self.target_score = 161
@@ -340,7 +348,6 @@ class Cribbage(game.Game):
         self.hands['The Crib'] = cards.Hand(self.deck)
         self.in_play = {player.name: cards.Hand(self.deck) for player in self.players}
         self.in_play['Play Sequence'] = cards.Hand(self.deck)
-        self.deal() # !! happening before scores are set.
 
 
 class CribCard(cards.Card):
