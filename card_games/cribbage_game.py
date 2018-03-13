@@ -8,6 +8,8 @@ Credits: The credits for Cribbage. (str)
 
 Classes:
 Cribbage: A game of Cribbage. (game.Game)
+CribBot: A bot for playing Cribbage. (player.Bot)
+CribCard: A card for a game of Cribbage. (cards.Card)
 """
 
 
@@ -80,16 +82,10 @@ class Cribbage(game.Game):
                 self.hands[player.name].draw()
         if len(self.players) == 3:
             self.hands['The Crib'].draw()
-        self.starter = self.deck.deal(up = True)
+        # Dummy starter card.
+        self.starter = CribCard('X', 'X')
         # Reset the tracking variables.
         self.phase = 'discard'
-        # Check for heels.
-        if self.starter.rank == 'J':
-            print ('The dealer got his heels.')
-            self.scores[dealer.name] += 2
-            if self.scores[dealer.name] >= self.target_score:
-                self.force_win
-                return False
 
     def game_over(self):
         """Check for the end of the game. (None)"""
@@ -149,6 +145,14 @@ class Cribbage(game.Game):
                 self.hands[player.name].shift(card, self.hands['The Crib'])
             if len(self.hands['The Crib']) == 4:
                 self.phase = 'play'
+                self.starter = self.deck.deal(up = True)
+                # Check for heels.
+                if self.starter.rank == 'J':
+                    print ('The dealer got his heels.')
+                    self.scores[dealer.name] += 2
+                    if self.scores[dealer.name] >= self.target_score:
+                        self.force_win
+                        return False
             return False
 
     def player_play(self, player):
@@ -207,9 +211,42 @@ class Cribbage(game.Game):
             self.score_hands()
             self.deal()
 
+    def score_fifteens(self, cards):
+        """
+        Score any sets totalling to fifteen in the given cards. (int)
+
+        Parameters:
+        cards: The cards to score. (list of CribCard)
+        """
+        fifteens = 0
+        for size in range(2, 6):
+            for sub_cards in itertools.combinations(cards, size):
+                if sum(sub_cards) == 15:
+                    fifteens += 1
+        return fifteens * 2
+
+    def score_flush(self, cards):
+        """
+        Score any flushes in the given cards. (int)
+
+        Parameters:
+        cards: The cards to score. (list of CribCard)
+        """
+        score = 0
+        suits = set([card.suit for card in cards])
+        if len(suits) == 1:
+            if self.starter.suit in suits:
+                size = 5
+            else:
+                size = 4
+            # Crib can't score 4 flush.
+            if cards[0] not in self.hands['The Crib'] or size == 5:
+                score = size
+        return score
+
     def score_hands(self):
         """Score the hands after a round of play. (None)"""
-        # ?? refactor?
+        # ?? refactor!
         # Loop through the players, starting on the dealer's left.
         player_index = (self.dealer_index + 1) % len(self.players)
         names = [player.name for player in self.players[player_index:] + self.players[:player_index]]
@@ -224,15 +261,11 @@ class Cribbage(game.Game):
                 message = "Now scoring {}'s hand: {} + {}"
             self.human.tell(message.format(name, ', '.join([str(card) for card in cards]), self.starter))
             # Check for flushes. (four in hand or five with starter)
-            suits = set([card.suit for card in cards])
-            if len(suits) == 1:
-                if self.starter.suit in suits:
-                    size = 5
-                else:
-                    size = 4
-                # !! Crib can't score 4 flush.
+            suit_score = self.score_flush(cards)
+            if suit_score:
+                self.scores[name] += suit_score
                 message = '{} scores {} points for a {}-card flush.'
-                self.human.tell(message.format(name, size, size))
+                self.human.tell(message.format(name, suit_score, suit_score))
             # Check for his nobs (jack of suit of starter)
             nob = CribCard('J', self.starter.suit)
             if nob in cards:
@@ -241,21 +274,14 @@ class Cribbage(game.Game):
             # Add the starter for the scoring categories below.
             cards.append(self.starter)
             # Check for 15s.
-            fifteens = 0
-            for size in range(2, 6):
-                for sub_cards in itertools.combinations(cards, size):
-                    if sum(sub_cards) == 15:
-                        fifteens += 1
+            fifteens = self.score_fifteens(cards)
             if fifteens:
                 self.scores[name] += 2 * fifteens
                 message = '{} scores {} for {} combinations adding to 15.'
                 self.human.tell(message.format(name, 2 * fifteens, fifteens))
             # Check for pairs.
-            rank_counts = collections.Counter([card.rank for card in cards])
-            for rank, count in rank_counts.most_common():
-                if count < 2:
-                    break
-                pair_score = utility.choose(count, 2) * 2
+            rank_data = self.score_pairs(cards)
+            for rank, count, pair_score in rank_data:
                 self.scores[name] += pair_score
                 message = '{} scores {} for getting {} cards of the same rank.'
                 self.human.tell(message.format(name, pair_score, count))
@@ -292,6 +318,25 @@ class Cribbage(game.Game):
             if self.scores[name] >= self.target_score:
                 self.human.tell('{} has won with {} points.'.format(name, self.scores[name]))
                 break
+
+    def score_pairs(self, cards):
+        """
+        Score any flushes in the given cards. (list of tuple)
+
+        The tuples returned are the rank, the number cards of that rank, and the score
+        for that rank.
+
+        Parameters:
+        cards: The cards to score. (list of CribCard)
+        """
+        rank_counts = collections.Counter([card.rank for card in cards])
+        rank_data = []
+        for rank, count in rank_counts.most_common():
+            if count < 2:
+                break
+            pair_score = utility.choose(count, 2) * 2
+            rank_data.append(rank, count, pair_score)
+        return rank_data
 
     def score_sequence(self, player):
         """
@@ -337,9 +382,12 @@ class Cribbage(game.Game):
         random.shuffle(self.players)
         # set up the tracking variables.
         self.phase = 'deal'
-        self.discard_size = [0, 0, 2, 1, 1][len(self.players)]
+        self.card_total = 0
+        self.go_count = 0
         self.dealer_index = -1
-        self.target_score = 161
+        # Set up the scoring variables.
+        self.discard_size = [0, 0, 2, 1, 1][len(self.players)]
+        self.target_score = 121
         self.skunk = 61
         # Set up the deck.
         self.deck = cards.Deck(card_class = CribCard)
@@ -348,6 +396,25 @@ class Cribbage(game.Game):
         self.hands['The Crib'] = cards.Hand(self.deck)
         self.in_play = {player.name: cards.Hand(self.deck) for player in self.players}
         self.in_play['Play Sequence'] = cards.Hand(self.deck)
+
+
+class CribBot(player.Bot):
+    """
+    A bot for playing Cribbage. (player.Bot)
+    """
+
+    def ask(self, query):
+        """
+        Respond to a question from the game. (str)
+
+        Parameters:
+        query: The question the game asked. (str)
+        """
+        hand = self.game.hands[self.name]
+        if 'discard' in query:
+            for keepers in itertools.combinations(hand, 4):
+                discards = [card for card in hand if card not in keepers]
+                score = self.score_four(keepers)
 
 
 class CribCard(cards.Card):
