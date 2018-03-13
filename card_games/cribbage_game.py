@@ -246,7 +246,6 @@ class Cribbage(game.Game):
 
     def score_hands(self):
         """Score the hands after a round of play. (None)"""
-        # ?? refactor!
         # Loop through the players, starting on the dealer's left.
         player_index = (self.dealer_index + 1) % len(self.players)
         names = [player.name for player in self.players[player_index:] + self.players[:player_index]]
@@ -283,30 +282,13 @@ class Cribbage(game.Game):
             rank_data = self.score_pairs(cards)
             for rank, count, pair_score in rank_data:
                 self.scores[name] += pair_score
-                message = '{} scores {} for getting {} cards of the same rank.'
-                self.human.tell(message.format(name, pair_score, count))
+                rank_name = CribCard.rank_names[CribCard.rank.index(rank)].lower()
+                if rank_name == 'six':
+                    rank_name = 'sixe'
+                message = '{} scores {} for getting {} {}s.'
+                self.human.tell(message.format(name, pair_score, count, rank_name))
             # Check for runs.
-            # Check for pairs or adjacent ranks.
-            ranks = sorted([CribCard.ranks.index(card.rank) for card in cards])
-            diffs = [second - first for first, second in zip(ranks, ranks[1:])]
-            run = []
-            for diff in diffs:
-                if diff < 2:
-                    run.append(diff)
-                elif len(run) > 1:
-                    break
-                else:
-                    run = []
-            # Score any runs that occurred.
-            if len(run) > 1 and run.count(1) > 1:
-                # Check pair count to determine the number of runs.
-                pairs = [index for index, diff in enumerate(run) if diff == 0]
-                run_count = [1, 2, 4][len(pairs)]
-                # Adjust for three of a kind as opposed to two pair.
-                if len(pairs) == 2 and pairs[1] - pairs[0] == 1:
-                    run_count = 3
-                # Update the score.
-                run_length = run.count(1) + 1
+            for run_length, run_count in score_runs(cards):
                 self.scores[name] += run_length * run_count
                 # Update the user.
                 if run_count == 1:
@@ -321,7 +303,7 @@ class Cribbage(game.Game):
 
     def score_pairs(self, cards):
         """
-        Score any flushes in the given cards. (list of tuple)
+        Score any pairs in the given cards. (list of tuple)
 
         The tuples returned are the rank, the number cards of that rank, and the score
         for that rank.
@@ -337,6 +319,38 @@ class Cribbage(game.Game):
             pair_score = utility.choose(count, 2) * 2
             rank_data.append(rank, count, pair_score)
         return rank_data
+
+    def score_runs(self, cards):
+        """
+        Score any straights in the given cards. (list of tuple)
+
+        Parameters:
+        cards: The cards to score. (int)
+        """
+        # Check for pairs or adjacent ranks.
+        ranks = sorted([CribCard.ranks.index(card.rank) for card in cards])
+        diffs = [second - first for first, second in zip(ranks, ranks[1:])]
+        run = []
+        for diff in diffs:
+            if diff < 2:
+                run.append(diff)
+            elif len(run) > 1:
+                break
+            else:
+                run = []
+        # Record any runs that occurred.
+        run_data = []
+        if len(run) > 1 and run.count(1) > 1:
+            # Check pair count to determine the number of runs.
+            pairs = [index for index, diff in enumerate(run) if diff == 0]
+            run_count = [1, 2, 4][len(pairs)]
+            # Adjust for three of a kind as opposed to two pair.
+            if len(pairs) == 2 and pairs[1] - pairs[0] == 1:
+                run_count = 3
+            # Update the score.
+            run_length = run.count(1) + 1
+            run_data.append(run_length, run_count)
+        return run_data
 
     def score_sequence(self, player):
         """
@@ -411,10 +425,54 @@ class CribBot(player.Bot):
         query: The question the game asked. (str)
         """
         hand = self.game.hands[self.name]
+        dealer = self.name == self.game.players[self.game.dealer_index].name
         if 'discard' in query:
+            possibles = []
             for keepers in itertools.combinations(hand, 4):
                 discards = [card for card in hand if card not in keepers]
-                score = self.score_four(keepers)
+                if dealer:
+                    score = self.score_four(keepers) + self.score_discards(discards)
+                else:
+                    score = self.score_four(keepers) - self.score_discards(discards)
+                possibles.append((score, discards))
+            possibles.sort(reverse = True)
+            return ' '.join([str(card) for card in possibles])
+
+    def score_discards(self, cards):
+        """
+        'Score' a potential set of descards. (float)
+
+        The score given here is a postive rating of how bad an idea it is to
+        discard those card(s).
+
+        Parameters:
+        cards: The cards to score. (list of CribCard)
+        """
+        score = 0
+        if len(cards) == 2:
+            if sum(cards) == 15 or cards[0].rank == cards[1].rank:
+                score += 2
+            if abs(cards[0] - cards[1]) == 1:
+                score += 0.75
+            if cards[0].suit == cards[1].suit:
+                score += 0.25
+        ranks = sorted([card.rank for card in cards])
+        score += (ranks.count('5') + ranks.count('J')) / 2.0
+        if ranks in (['4', 'A'], ['6', '8'], ['6', '9'], ['7', '9']):
+            score += 0.5
+        return score
+
+    def score_four(self, cards):
+        """
+        Score a potential set of four cards. (int)
+
+        Parameters:
+        cards: The cards to score. (list of CribCard)
+        """
+        score = self.game.score_flush(cards) + self.game.score_fifteens(cards)
+        score += [pair_score for rank, count, pair_score in self.game.score_pairs(cards)]
+        score += [run_length * run_count for run_length, run_count in self.game.score_runs(cards)]
+        return score
 
 
 class CribCard(cards.Card):
