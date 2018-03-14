@@ -3,6 +3,8 @@ cribbage_game.py
 
 A game of Cribbage.
 
+# !! allow for a cut of the deck, maybe even draw for first dealer.
+
 Constants:
 Credits: The credits for Cribbage. (str)
 
@@ -83,7 +85,7 @@ class Cribbage(game.Game):
         if len(self.players) == 3:
             self.hands['The Crib'].draw()
         # Dummy starter card.
-        self.starter = CribCard('X', 'X')
+        self.starter = CribCard('X', 'S')
         # Reset the tracking variables.
         self.phase = 'discard'
 
@@ -392,7 +394,7 @@ class Cribbage(game.Game):
     def set_up(self):
         """Set up the game. (None)"""
         # Set the players.
-        self.players = [self.human, player.Cyborg([self.human.name])]
+        self.players = [self.human, CribBot([self.human.name])] # !! bot needs game linkage.
         random.shuffle(self.players)
         # set up the tracking variables.
         self.phase = 'deal'
@@ -437,6 +439,27 @@ class CribBot(player.Bot):
                 possibles.append((score, discards))
             possibles.sort(reverse = True)
             return ' '.join([str(card) for card in possibles])
+        elif 'play' in query:
+            playable = [card for card in hand if 31 - card >= self.game.card_total]
+            if not playable:
+                return 'go'
+            else:
+                sums = [card for card in playable if card + self.game.card_total in (1, 2, 3, 4, 15, 31)]
+                if sums:
+                    return str(sums[0])
+                playable.sort()
+                if self.game.card_total:
+                    last_card = self.game.in_play['Play Sequence'][-1]
+                    pairs = [card for card in playable if card.rank == last_card.rank]
+                    if pairs:
+                        return str(pairs[0])
+                    else:
+                        playable.sort()
+                        return str(playable[-1])
+                else:
+                    return str(playable[0])
+        else:
+            raise player.BotError('Unexepected question to CribBot: {!r}'.format(query))
 
     def score_discards(self, cards):
         """
