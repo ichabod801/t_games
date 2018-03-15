@@ -150,7 +150,8 @@ class Cribbage(game.Game):
                 self.starter = self.deck.deal(up = True)
                 # Check for heels.
                 if self.starter.rank == 'J':
-                    print ('The dealer got his heels.')
+                    self.human.tell('The dealer got his heels.')
+                    dealer = self.players[self.dealer_index]
                     self.scores[dealer.name] += 2
                     if self.scores[dealer.name] >= self.target_score:
                         self.force_win
@@ -225,7 +226,7 @@ class Cribbage(game.Game):
             for sub_cards in itertools.combinations(cards, size):
                 if sum(sub_cards) == 15:
                     fifteens += 1
-        return fifteens * 2
+        return fifteens
 
     def score_flush(self, cards):
         """
@@ -284,13 +285,13 @@ class Cribbage(game.Game):
             rank_data = self.score_pairs(cards)
             for rank, count, pair_score in rank_data:
                 self.scores[name] += pair_score
-                rank_name = CribCard.rank_names[CribCard.rank.index(rank)].lower()
+                rank_name = CribCard.rank_names[CribCard.ranks.index(rank)].lower()
                 if rank_name == 'six':
                     rank_name = 'sixe'
                 message = '{} scores {} for getting {} {}s.'
                 self.human.tell(message.format(name, pair_score, count, rank_name))
             # Check for runs.
-            for run_length, run_count in score_runs(cards):
+            for run_length, run_count in self.score_runs(cards):
                 self.scores[name] += run_length * run_count
                 # Update the user.
                 if run_count == 1:
@@ -319,7 +320,7 @@ class Cribbage(game.Game):
             if count < 2:
                 break
             pair_score = utility.choose(count, 2) * 2
-            rank_data.append(rank, count, pair_score)
+            rank_data.append((rank, count, pair_score))
         return rank_data
 
     def score_runs(self, cards):
@@ -351,7 +352,7 @@ class Cribbage(game.Game):
                 run_count = 3
             # Update the score.
             run_length = run.count(1) + 1
-            run_data.append(run_length, run_count)
+            run_data.append((run_length, run_count))
         return run_data
 
     def score_sequence(self, player):
@@ -391,10 +392,13 @@ class Cribbage(game.Game):
             message = '{0} scores {1} for getting a {1}-card straight.'
             self.human.tell(message.format(player.name, run_count))
 
+    def set_options(self):
+        """Set the game options. (None)"""
+        self.option_set.default_bots = ((CribBot, ()),)
+
     def set_up(self):
         """Set up the game. (None)"""
         # Set the players.
-        self.players = [self.human, CribBot([self.human.name])] # !! bot needs game linkage.
         random.shuffle(self.players)
         # set up the tracking variables.
         self.phase = 'deal'
@@ -438,7 +442,7 @@ class CribBot(player.Bot):
                     score = self.score_four(keepers) - self.score_discards(discards)
                 possibles.append((score, discards))
             possibles.sort(reverse = True)
-            return ' '.join([str(card) for card in possibles])
+            return ' '.join([str(card) for card in possibles[0][1]])
         elif 'play' in query:
             playable = [card for card in hand if 31 - card >= self.game.card_total]
             if not playable:
@@ -449,7 +453,7 @@ class CribBot(player.Bot):
                     return str(sums[0])
                 playable.sort()
                 if self.game.card_total:
-                    last_card = self.game.in_play['Play Sequence'][-1]
+                    last_card = self.game.in_play['Play Sequence'].cards[-1]
                     pairs = [card for card in playable if card.rank == last_card.rank]
                     if pairs:
                         return str(pairs[0])
@@ -493,8 +497,8 @@ class CribBot(player.Bot):
         cards: The cards to score. (list of CribCard)
         """
         score = self.game.score_flush(cards) + self.game.score_fifteens(cards)
-        score += [pair_score for rank, count, pair_score in self.game.score_pairs(cards)]
-        score += [run_length * run_count for run_length, run_count in self.game.score_runs(cards)]
+        score += sum([pair_score for rank, count, pair_score in self.game.score_pairs(cards)])
+        score += sum([run_length * run_count for run_length, run_count in self.game.score_runs(cards)])
         return score
 
 
@@ -539,6 +543,24 @@ class CribCard(cards.Card):
         other: The integer to add to. (int)
         """
         return self.value + other
+
+    def __rsub__(self, other):
+        """
+        Subtract the card as an integer. (int)
+
+        Parameters:
+        other: The integer to add to. (int)
+        """
+        return other - self.value
+
+    def __sub__(self, other):
+        """
+        Subtract the card as an integer. (int)
+
+        Parameters:
+        other: The integer to add to. (int)
+        """
+        return self.value - other
 
 
 if __name__ == '__main__':
