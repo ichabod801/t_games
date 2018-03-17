@@ -256,3 +256,8 @@ Yacht,3,0,0,182,48,0,
 Yacht,0,3,0,127,48,0,
 Yacht,3,0,0,295,44,1,big-straight=total+30 five-kind=total+40 five-name=Yam four-kind=0 full-house=total+20 low-chance=total low-straight=0 n-bonus=60/30
 Cribbage,0,1,0,89,109,2,
+Cribbage,1,0,0,130,143,0,
+Cribbage,0,1,0,101,114,0,
+Cribbage,0,1,0,105,122,0,
+Cribbage,0,1,0,105,143,0,
+Cribbage,0,1,0,80,119,0,

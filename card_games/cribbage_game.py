@@ -3,7 +3,13 @@ cribbage_game.py
 
 A game of Cribbage.
 
-# !! allow for a cut of the deck, maybe even draw for first dealer.
+To Do (not in order)
+    Cut the deck
+    Pick a card at start
+    Match play
+    Clean up output
+    Number words (utility)
+    totals on scoring
 
 Constants:
 Credits: The credits for Cribbage. (str)
@@ -31,6 +37,46 @@ Game Design: John Suckling
 Game Programming: Craig "Ichabod" O'Brien
 """
 
+ENTER_TEXT = 'Please press enter to continue: '
+
+RULES = """
+Each player is dealt six cards, five in a three or four player game. Each 
+player then discards down to four cards. Discarded cards go into the Crib,
+which is an extra hand that is scored by the dealer. In a three player game
+a fourth card is dealt to the crib from the deck.
+
+After discarding, a starter card is revealed. If it is a jack, the dealer
+gets two points (for his heels). Then players play cards starting with the 
+player to the left of the dealer. The sequence of played cards can be used to 
+score points. If the total reaches 15 (aces count one, face cards count 10), 
+the player scores 2 points. If a pair is made with the previous card, 2 
+points are scored. Note that pairs are counted separately, so three of the 
+same rank in a row counts as three pairs, and four of the same rank in a row 
+counts as six pairs. If a straight of n cards is made with the last n cards, 
+n points are scored.
+
+The total of the cards played cannot go over 31. If a player can't play a card
+that keeps the total 31 or under, they pass by saying 'go.' If everyone 
+passes, the last player to play a card scores a point. If the total reaches
+31, the last player to play a card scores 2 points. Once play is done the
+sequence starts over again with a total of 0.
+
+Once everyone has played all of their cards, the players' hands are scored,
+with the addition of the starter card. Every combination of cards totalling
+15 scores 2 points. Every pair scores 2 points, with pairs counted as above.
+Straights count for the number of the cards in the straight. If you have a
+pair in the straight, the two straights both score (or all three if you have
+three of a kind in the straight, or all four if you have two pair in the
+straight). A flush not counting the starter card counts four points. If the
+starter card is the same suit as the four in the hand you score five points.
+Finally, a jack of the same suit as the starter card (his nobs) scores one
+point.
+
+The role of dealer then passes to the left, and a new hand and starter are
+dealt. This continues until someone reaches 121 points. Note that the dealer's
+hand is scored last, to offset the advantage of the crib in tight games.
+"""
+
 
 class Cribbage(game.Game):
     """
@@ -48,6 +94,7 @@ class Cribbage(game.Game):
     categories = ['Card Games', 'Matching Game']
     credits = CREDITS
     name = 'Cribbage'
+    rules = RULES
 
     def __str__(self):
         """Human readable text representation. (str)"""
@@ -151,6 +198,7 @@ class Cribbage(game.Game):
                 # Check for heels.
                 if self.starter.rank == 'J':
                     self.human.tell('The dealer got his heels.')
+                    self.human.ask(ENTER_TEXT)
                     dealer = self.players[self.dealer_index]
                     self.scores[dealer.name] += 2
                     if self.scores[dealer.name] >= self.target_score:
@@ -167,22 +215,20 @@ class Cribbage(game.Game):
         """
         hand = self.hands[player.name]
         in_play = self.in_play[player.name]
+        playable = [card for card in hand if card + self.card_total <= 31]
+        if not playable:
+            player.ask('You have no playable cards and must go. Press enter to continue: ')
+            self.go_count += 1
+            if self.go_count == len(self.players):
+                self.human.tell('Everyone has passed.')
+                self.scores[player.name] += 1
+                self.human.tell('{} scores 1 for the go.'.format(player.name))
+                self.human.ask(ENTER_TEXT)
+                self.reset()
+            return False
         answer = player.ask('Which card would you like to play, {}? '.format(player.name))
         card = CribCard.card_re.match(answer)
-        if answer.lower() == 'go':
-            if hand and min([card.value for card in hand]) <= 31 - self.card_total:
-                message = 'You must play any cards under rank {} before you can pass.'
-                player.error(message.format(32 - self.card_total))
-                return True
-            else:
-                self.go_count += 1
-                if self.go_count == len(self.players):
-                    self.human.tell('Everyone has passed.')
-                    self.scores[player.name] += 1
-                    self.human.tell('{} scores 1 for the go.'.format(player.name))
-                    self.reset()
-                return False
-        elif card:
+        if card:
             card = CribCard(*answer[:2].upper())
             if card not in hand:
                 player.error('You do not have that card in your hand.')
@@ -200,6 +246,7 @@ class Cribbage(game.Game):
                     self.human.tell('The count has reached 31.')
                     self.scores[player.name] += 2
                     self.human.tell('{} scores 2 points for reaching 31.'.format(player.name))
+                    self.human.ask(ENTER_TEXT)
                     self.reset()
                 return False
         else:
@@ -253,6 +300,7 @@ class Cribbage(game.Game):
         player_index = (self.dealer_index + 1) % len(self.players)
         names = [player.name for player in self.players[player_index:] + self.players[:player_index]]
         for name in names + ['The Crib']:
+            hand_score = 0
             # Score the crib to the dealer.
             if name == 'The Crib':
                 cards = self.hands['The Crib'].cards
@@ -265,26 +313,27 @@ class Cribbage(game.Game):
             # Check for flushes. (four in hand or five with starter)
             suit_score = self.score_flush(cards)
             if suit_score:
-                self.scores[name] += suit_score
+                hand_score += suit_score
                 message = '{} scores {} points for a {}-card flush.'
                 self.human.tell(message.format(name, suit_score, suit_score))
             # Check for his nobs (jack of suit of starter)
             nob = CribCard('J', self.starter.suit)
             if nob in cards:
-                self.scores[name] += 1
+                hand_score += 1
                 self.human.tell('{} scores one for his nob.'.format(name))
             # Add the starter for the scoring categories below.
             cards.append(self.starter)
             # Check for 15s.
             fifteens = self.score_fifteens(cards)
             if fifteens:
-                self.scores[name] += 2 * fifteens
-                message = '{} scores {} for {} combinations adding to 15.'
-                self.human.tell(message.format(name, 2 * fifteens, fifteens))
+                hand_score += 2 * fifteens
+                s = ['', 's'][fifteens > 1]
+                message = '{} scores {} for {} combination{} adding to 15.'
+                self.human.tell(message.format(name, 2 * fifteens, fifteens, s))
             # Check for pairs.
             rank_data = self.score_pairs(cards)
             for rank, count, pair_score in rank_data:
-                self.scores[name] += pair_score
+                hand_score += pair_score
                 rank_name = CribCard.rank_names[CribCard.ranks.index(rank)].lower()
                 if rank_name == 'six':
                     rank_name = 'sixe'
@@ -292,17 +341,23 @@ class Cribbage(game.Game):
                 self.human.tell(message.format(name, pair_score, count, rank_name))
             # Check for runs.
             for run_length, run_count in self.score_runs(cards):
-                self.scores[name] += run_length * run_count
+                hand_score += run_length * run_count
                 # Update the user.
                 if run_count == 1:
                     message = '{0} scored {1} points for a {1} card run.'
                 else:
                     message = '{0} scored {3} points for {2} runs of length {1}.'
                 self.human.tell(message.format(name, run_length, run_count, run_length * run_count))
-            # Check for a win before scoring the dealer/crib.
+            # Announce and record total.
+            self.human.tell('{} scored a total of {} points for this hand.'.format(name, hand_score))
+            self.scores[name] += hand_score
+            # Check for a win.
             if self.scores[name] >= self.target_score:
                 self.human.tell('{} has won with {} points.'.format(name, self.scores[name]))
                 break
+            else:
+                self.human.ask(ENTER_TEXT)
+                self.human.tell()
 
     def score_pairs(self, cards):
         """
@@ -367,6 +422,7 @@ class Cribbage(game.Game):
         if self.card_total == 15:
             self.scores[player.name] += 2
             self.human.tell('{} scores 2 points for reaching 15.'.format(player.name))
+            self.human.ask(ENTER_TEXT)
         # Count the cards of the same rank.
         rank_count = 1
         for play_index in range(-2, -len(played) - 1, -1):
@@ -379,6 +435,7 @@ class Cribbage(game.Game):
             self.scores[player.name] += pair_score
             message = '{} scores {} for getting {} cards of the same rank.'
             self.human.tell(message.format(player.name, pair_score, rank_count))
+            self.human.ask(ENTER_TEXT)
         # Check for runs.
         run_count = 0
         for run_index in range(-3, -len(played) - 1, -1):
@@ -391,6 +448,7 @@ class Cribbage(game.Game):
             self.scores[player.name] += run_count
             message = '{0} scores {1} for getting a {1}-card straight.'
             self.human.tell(message.format(player.name, run_count))
+            self.human.ask(ENTER_TEXT)
 
     def set_options(self):
         """Set the game options. (None)"""
@@ -443,27 +501,41 @@ class CribBot(player.Bot):
                 possibles.append((score, discards))
             possibles.sort(reverse = True)
             return ' '.join([str(card) for card in possibles[0][1]])
+        elif 'no playable' in query:
+            self.game.human.tell('{} calls "go."'.format(self.name))
+            return ''
         elif 'play' in query:
             playable = [card for card in hand if 31 - card >= self.game.card_total]
-            if not playable:
-                return 'go'
-            else:
-                sums = [card for card in playable if card + self.game.card_total in (1, 2, 3, 4, 15, 31)]
-                if sums:
-                    return str(sums[0])
-                playable.sort()
-                if self.game.card_total:
-                    last_card = self.game.in_play['Play Sequence'].cards[-1]
-                    pairs = [card for card in playable if card.rank == last_card.rank]
-                    if pairs:
-                        return str(pairs[0])
-                    else:
-                        playable.sort()
-                        return str(playable[-1])
+            sums = [card for card in playable if card + self.game.card_total in (1, 2, 3, 4, 15, 31)]
+            if sums:
+                play = sums[0]
+            playable.sort()
+            if self.game.card_total:
+                last_card = self.game.in_play['Play Sequence'].cards[-1]
+                pairs = [card for card in playable if card.rank == last_card.rank]
+                if pairs:
+                    play = pairs[0]
                 else:
-                    return str(playable[0])
+                    playable.sort()
+                    play = playable[-1]
+            else:
+                play = playable[0]
+            self.game.human.tell('{} played the {}.'.format(self.name, play.name.lower()))
+            return str(play)
         else:
             raise player.BotError('Unexepected question to CribBot: {!r}'.format(query))
+
+    def tell(self, message):
+        """
+        The the bot some information. (None)
+
+        Parameters:
+        message: The information to tell the bot. (str)
+        """
+        if isinstance(message, Cribbage):
+            pass
+        else:
+            super(CribBot, self).tell(message)
 
     def score_discards(self, cards):
         """

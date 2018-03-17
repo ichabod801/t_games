@@ -48,7 +48,7 @@ class OtherCmd(object):
         text: The raw text input by the user. (str)
         """
         player = self.players[self.player_index]
-        self.player.error('I do not recognize the command {!r}.'.format(text))
+        player.error('I do not recognize the command {!r}.'.format(text))
         return True
 
     def do_debug(self, arguments):
