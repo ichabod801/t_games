@@ -178,6 +178,8 @@ class Deck(object):
     Methods:
     deal: Deal a card from the deck. (Card)
     discard: Discard a card to the discard pile. (None)
+    force: Remove a particular card from the deck. (Card)
+    pick: Pick a card from the deck. (Card)
     shuffle: Shuffle the discards back into the deck. (None)
     """
 
@@ -205,6 +207,16 @@ class Deck(object):
                 self.cards.append(Card('X', card_class.suits[suit_index % len(card_class.suits)]))
         # Start with an empty discard pile.
         self.discards = []
+
+    def cut(self, n):
+        """
+        Cut the deck. (None)
+
+        Parameters:
+        n: A number indicating where to cut the deck. (int)
+        """
+        n %= len(self.cards)
+        self.cards = self.cards[n:] + self.cards[:n]
 
     def deal(self, up = False):
         """
@@ -241,6 +253,16 @@ class Deck(object):
         card = self.cards.index(card)
         self.cards.remove(card)
         return card
+
+    def pick(self, n, up = True):
+        """
+        Pick a card from the deck. (Card)
+
+        Parameters:
+        n: A number to determine the card picked. (int)
+        up: Flag for picking the card face up. (bool)
+        """
+        return self.cards.pop(n % len(self.cards))
 
     def shuffle(self, number = None):
         """Shuffle the discards back into the deck. (None)"""

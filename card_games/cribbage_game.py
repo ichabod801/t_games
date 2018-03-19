@@ -4,9 +4,7 @@ cribbage_game.py
 A game of Cribbage.
 
 To Do (not in order)
-    Cut the deck
-    Pick a card at start
-    Match play
+    Match play (and other options)
     Number words (utility)
 
 Constants:
@@ -122,6 +120,10 @@ class Cribbage(game.Game):
         dealer = self.players[self.dealer_index]
         self.player_index = self.dealer_index
         print('\nThe current dealer is {}.'.format(dealer.name))
+        # Cut the deck.
+        left = (self.dealer_index + 1) % len(self.players)
+        cut_index = self.players[left].ask_int('Enter a number to cut the deck: ')
+        self.deck.cut(cut_index)
         # Deal the cards
         hand_size = [0, 0, 6, 5, 5][len(self.players)]
         for card in range(hand_size):
@@ -460,18 +462,35 @@ class Cribbage(game.Game):
         self.phase = 'deal'
         self.card_total = 0
         self.go_count = 0
-        self.dealer_index = -1
         # Set up the scoring variables.
         self.discard_size = [0, 0, 2, 1, 1][len(self.players)]
         self.target_score = 121
         self.skunk = 61
         # Set up the deck.
         self.deck = cards.Deck(card_class = CribCard)
+        self.deck.shuffle()
         # Set up the hands.
         self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
         self.hands['The Crib'] = cards.Hand(self.deck)
         self.in_play = {player.name: cards.Hand(self.deck) for player in self.players}
         self.in_play['Play Sequence'] = cards.Hand(self.deck)
+        # Pick the dealer.
+        players = self.players
+        while True:
+            cards_picked = []
+            for player in self.players:
+                card_index = player.ask_int('Enter a number to pick a card: ')
+                card = self.deck.pick(card_index)
+                self.human.tell('{} picked the {}.'.format(player, card.name))
+                self.deck.discard(card)
+                cards_picked.append((card, player))
+            cards_picked.sort()
+            if cards_picked[0][0].rank == cards_picked[1][0].rank:
+                self.human.tell('Tie! Pick again.')
+                players = [player for card, player in cards_picked if card.rank == cards_picked[0][0].rank]
+            else:
+                break
+        self.dealer_index = self.players.index(cards_picked[0][1]) - 1
 
 
 class CribBot(player.Bot):
@@ -487,8 +506,8 @@ class CribBot(player.Bot):
         query: The question the game asked. (str)
         """
         hand = self.game.hands[self.name]
-        dealer = self.name == self.game.players[self.game.dealer_index].name
         if 'discard' in query:
+            dealer = self.name == self.game.players[self.game.dealer_index].name
             possibles = []
             for keepers in itertools.combinations(hand, 4):
                 discards = [card for card in hand if card not in keepers]
@@ -520,6 +539,8 @@ class CribBot(player.Bot):
                 play = playable[0]
             self.game.human.tell('\n{} played the {}.'.format(self.name, play.name.lower()))
             return str(play)
+        elif query.startswith('Enter a number'):
+            return str(random.randint(1, 121))
         else:
             raise player.BotError('Unexepected question to CribBot: {!r}'.format(query))
 
