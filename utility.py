@@ -31,7 +31,21 @@ except AttributeError:
     MAX_INT = sys.maxsize
 
 
-# Yes
+# Words for one hundred and higher.
+THOUSAND_UP = ['', 'thousand', 'million', 'billion', 'trillion', 'quadrillion', 'quintillion',
+    'sextillion', 'septillion', 'octillion', 'nonillion', 'decillion', 'undecillion', 'duodecillion',
+    'tredecillion', 'quatturodecillion', 'quindecillion', 'sexdecillion', 'octodecillion',
+    'novemdecillion', 'vigintillion']
+
+# The first twenty number words.
+NINETEEN = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 
+    'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen',
+    'nineteen']
+
+# The words for the tens place.
+TENS = ['', '', 'twenty', 'thirty', 'fourty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety']
+
+# Synonyms for 'yes'. 
 YES = set(['yes', 'y', '1', 'yup', 'sure', 'affirmative', 'yeah', 'indubitably', 'yep', 'aye', 'ok'])
 YES.update(['okay', 'darn tootin', 'roger', 'da', 'si'])
 
@@ -50,6 +64,22 @@ def flip():
     """Return a random bit. (int)"""
     return random.choice([1, 0])
 
+def hundred_word(n):
+    """
+    Give the word form of a number less than 100. (str)
+
+    Parameter:
+    n: A number to give the word form of. (int)
+    """
+    n %= 100
+    if n < 20:
+        return NINETEEN[n]
+    else:
+        word = TENS[n // 10]
+        if n % 10:
+            word = '{}-{}'.format(word, NINETEEN[n % 10])
+        return word
+
 def median(values):
     """
     Calculate the median of a list. (float)
@@ -67,6 +97,21 @@ def mean(values):
     values: The list of values. (seq of float)
     """
     return sum(values) / float(len(values))
+
+def number_word(n):
+    """
+    Give the word form of a number. (str)
+
+    Parameter:
+    n: A number to give the word form of. (int)
+    """
+    word = ''
+    level = 0
+    while n:
+        word = '{} {} {}'.format(thousand_word(n), THOUSAND_UP[level], word).strip()
+        n //= 1000
+        level += 1
+    return word
 
 def permutations(n, r):
     """
@@ -104,8 +149,24 @@ def streaks(values):
     max_losing = min(min(lengths), 0)
     return length, value, lengths
 
+def thousand_word(n):
+    """
+    Give the word form of a number less than 100. (str)
+
+    Parameter:
+    n: A number to give the word form of. (int)
+    """
+    n %= 1000
+    if n < 100:
+        return hundred_word(n)
+    elif n % 100:
+        return '{} hundred {}'.format(NINETEEN[n // 100], hundred_word(n))
+    else:
+        return '{} hundred'.format(NINETEEN[n // 100])
+
 
 if __name__ == '__main__':
     test = [1, 0, 1, 1, 1, 0, 1, 1, 0, 0]
     print(test)
     print(streaks(test))
+    print(number_word(1023405600070890))

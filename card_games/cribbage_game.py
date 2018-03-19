@@ -197,7 +197,7 @@ class Cribbage(game.Game):
                 self.starter = self.deck.deal(up = True)
                 # Check for heels.
                 if self.starter.rank == 'J':
-                    self.human.tell('The dealer got his heels.')
+                    self.human.tell('The dealer got their heels.')
                     self.human.ask(ENTER_TEXT)
                     dealer = self.players[self.dealer_index]
                     self.scores[dealer.name] += 2
@@ -300,6 +300,7 @@ class Cribbage(game.Game):
         player_index = (self.dealer_index + 1) % len(self.players)
         names = [player.name for player in self.players[player_index:] + self.players[:player_index]]
         for name in names + ['The Crib']:
+            self.human.tell()
             hand_score = 0
             # Score the crib to the dealer.
             if name == 'The Crib':
@@ -357,7 +358,6 @@ class Cribbage(game.Game):
                 break
             else:
                 self.human.ask(ENTER_TEXT)
-                self.human.tell()
 
     def score_pairs(self, cards):
         """
