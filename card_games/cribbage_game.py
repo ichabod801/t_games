@@ -7,9 +7,7 @@ To Do (not in order)
     Cut the deck
     Pick a card at start
     Match play
-    Clean up output
     Number words (utility)
-    totals on scoring
 
 Constants:
 Credits: The credits for Cribbage. (str)
@@ -104,10 +102,10 @@ class Cribbage(game.Game):
         lines.append('\nRunning Total: {}'.format(self.card_total))
         player = self.players[self.player_index]
         hand = self.hands[player.name]
-        lines.append('\nCards in Hand: {}.'.format(hand.show_player()))
+        lines.append('\nCards in Hand: {}'.format(hand.show_player()))
         if self.phase != 'discard':
             lines.append('\nStarter Card: {}.'.format(self.starter))
-        lines.append('\nCards played: {}\n'.format(self.in_play['Play Sequence']))
+            lines.append('\nCards played: {}\n'.format(self.in_play['Play Sequence']))
         return '\n'.join(lines)
 
     def deal(self):
@@ -123,7 +121,7 @@ class Cribbage(game.Game):
         self.dealer_index = (self.dealer_index + 1) % len(self.players)
         dealer = self.players[self.dealer_index]
         self.player_index = self.dealer_index
-        print('The current dealer is {}.'.format(dealer.name))
+        print('\nThe current dealer is {}.'.format(dealer.name))
         # Deal the cards
         hand_size = [0, 0, 6, 5, 5][len(self.players)]
         for card in range(hand_size):
@@ -220,7 +218,7 @@ class Cribbage(game.Game):
             player.ask('You have no playable cards and must go. Press enter to continue: ')
             self.go_count += 1
             if self.go_count == len(self.players):
-                self.human.tell('Everyone has passed.')
+                self.human.tell('\nEveryone has passed.')
                 self.scores[player.name] += 1
                 self.human.tell('{} scores 1 for the go.'.format(player.name))
                 self.human.ask(ENTER_TEXT)
@@ -243,7 +241,7 @@ class Cribbage(game.Game):
                 self.score_sequence(player)
                 self.go_count = 0
                 if self.card_total == 31:
-                    self.human.tell('The count has reached 31.')
+                    self.human.tell('\nThe count has reached 31.')
                     self.scores[player.name] += 2
                     self.human.tell('{} scores 2 points for reaching 31.'.format(player.name))
                     self.human.ask(ENTER_TEXT)
@@ -502,7 +500,7 @@ class CribBot(player.Bot):
             possibles.sort(reverse = True)
             return ' '.join([str(card) for card in possibles[0][1]])
         elif 'no playable' in query:
-            self.game.human.tell('{} calls "go."'.format(self.name))
+            self.game.human.tell('\n{} calls "go."'.format(self.name))
             return ''
         elif 'play' in query:
             playable = [card for card in hand if 31 - card >= self.game.card_total]
@@ -520,7 +518,7 @@ class CribBot(player.Bot):
                     play = playable[-1]
             else:
                 play = playable[0]
-            self.game.human.tell('{} played the {}.'.format(self.name, play.name.lower()))
+            self.game.human.tell('\n{} played the {}.'.format(self.name, play.name.lower()))
             return str(play)
         else:
             raise player.BotError('Unexepected question to CribBot: {!r}'.format(query))
