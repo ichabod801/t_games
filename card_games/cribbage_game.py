@@ -154,6 +154,15 @@ class Cribbage(game.Game):
         else:
             return False
 
+    def handle_options(self):
+        """Handle the game option settings. (None)"""
+        super(Cribbage, self).handle_options()
+        self.players = [self.human]
+        taken_names = [self.human.name]
+        for bot in range(self.n_bots):
+            self.players.append(CribBot(taken_names))
+            taken_names.append(self.players[-1].name)
+
     def player_action(self, player):
         """
         Allow the player to do something.
@@ -177,8 +186,8 @@ class Cribbage(game.Game):
         Parameters:
         player: The current player. (player.Player)
         """
-        discard_word, s = [('', ''), ('two', 's')][self.discard_size != 1]
-        query = 'Which {} card{} would you like to discard to the crib, {}? '
+        discard_word, s = [('', ''), (' two', 's')][self.discard_size != 1]
+        query = 'Which{} card{} would you like to discard to the crib, {}? '
         answer = player.ask(query.format(discard_word, s, player.name))
         discards = cards.Card.card_re.findall(answer)
         if not discards:
@@ -454,13 +463,16 @@ class Cribbage(game.Game):
         if run_count:
             self.scores[player.name] += run_count
             message = '{} scores {} for getting a {}-card straight.'
-            self.human.tell(message.format(player.name, run_count, utility.number_word(rank_count)))
+            self.human.tell(message.format(player.name, run_count, utility.number_word(run_count)))
             if not self.auto_score:
                 self.human.ask(ENTER_TEXT)
 
     def set_options(self):
         """Set the game options. (None)"""
         self.option_set.default_bots = ((CribBot, ()),)
+        # The number of opponents.
+        self.option_set.add_option('n-bots', converter = int, default = 1, valid = (1, 2, 3),
+            question = 'How many bots would you like to play against (return for 1)? ')
         # Interface options (do not count in num_options)
         self.option_set.add_group('fast', 'auto-go auto-score no-cut no-pick')
         self.option_set.add_option('auto-go', 'Should prompts be skipped when you must go? bool')
