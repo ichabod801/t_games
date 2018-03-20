@@ -120,9 +120,10 @@ class Cribbage(game.Game):
         self.player_index = self.dealer_index
         print('\nThe current dealer is {}.'.format(dealer.name))
         # Cut the deck.
-        left = (self.dealer_index + 1) % len(self.players)
-        cut_index = self.players[left].ask_int('Enter a number to cut the deck: ')
-        self.deck.cut(cut_index)
+        if not self.no_cut:
+            left = (self.dealer_index + 1) % len(self.players)
+            cut_index = self.players[left].ask_int('Enter a number to cut the deck: ', cmd = False)
+            self.deck.cut(cut_index)
         # Deal the cards
         hand_size = [0, 0, 6, 5, 5][len(self.players)]
         for card in range(hand_size):
@@ -197,7 +198,8 @@ class Cribbage(game.Game):
                 # Check for heels.
                 if self.starter.rank == 'J':
                     self.human.tell('The dealer got their heels.')
-                    self.human.ask(ENTER_TEXT)
+                    if not self.auto_score:
+                        self.human.ask(ENTER_TEXT)
                     dealer = self.players[self.dealer_index]
                     self.scores[dealer.name] += 2
                     if self.scores[dealer.name] >= self.target_score:
@@ -216,13 +218,16 @@ class Cribbage(game.Game):
         in_play = self.in_play[player.name]
         playable = [card for card in hand if card + self.card_total <= 31]
         if not playable:
-            player.ask('You have no playable cards and must go. Press enter to continue: ')
+            player.tell('You have no playable cards and must go.')
+            if not self.auto_score:
+                player.ask(ENTER_TEXT)
             self.go_count += 1
             if self.go_count == len(self.players):
                 self.human.tell('\nEveryone has passed.')
                 self.scores[player.name] += 1
                 self.human.tell('{} scores 1 for the go.'.format(player.name))
-                self.human.ask(ENTER_TEXT)
+                if not self.auto_score:
+                    self.human.ask(ENTER_TEXT)
                 self.reset()
             return False
         answer = player.ask('Which card would you like to play, {}? '.format(player.name))
@@ -245,7 +250,8 @@ class Cribbage(game.Game):
                     self.human.tell('\nThe count has reached 31.')
                     self.scores[player.name] += 2
                     self.human.tell('{} scores 2 points for reaching 31.'.format(player.name))
-                    self.human.ask(ENTER_TEXT)
+                    if not self.auto_score:
+                        self.human.ask(ENTER_TEXT)
                     self.reset()
                 return False
         else:
@@ -355,7 +361,7 @@ class Cribbage(game.Game):
             if self.scores[name] >= self.target_score:
                 self.human.tell('{} has won with {} points.'.format(name, self.scores[name]))
                 break
-            else:
+            elif not self.auto_score:
                 self.human.ask(ENTER_TEXT)
 
     def score_pairs(self, cards):
@@ -421,7 +427,8 @@ class Cribbage(game.Game):
         if self.card_total == 15:
             self.scores[player.name] += 2
             self.human.tell('{} scores 2 points for reaching 15.'.format(player.name))
-            self.human.ask(ENTER_TEXT)
+            if not self.auto_score:
+                self.human.ask(ENTER_TEXT)
         # Count the cards of the same rank.
         rank_count = 1
         for play_index in range(-2, -len(played) - 1, -1):
@@ -434,7 +441,8 @@ class Cribbage(game.Game):
             self.scores[player.name] += pair_score
             message = '{} scores {} for getting {} cards of the same rank.'
             self.human.tell(message.format(player.name, pair_score, utility.number_word(rank_count)))
-            self.human.ask(ENTER_TEXT)
+            if not self.auto_score:
+                self.human.ask(ENTER_TEXT)
         # Check for runs.
         run_count = 0
         for run_index in range(-3, -len(played) - 1, -1):
@@ -447,11 +455,18 @@ class Cribbage(game.Game):
             self.scores[player.name] += run_count
             message = '{} scores {} for getting a {}-card straight.'
             self.human.tell(message.format(player.name, run_count, utility.number_word(rank_count)))
-            self.human.ask(ENTER_TEXT)
+            if not self.auto_score:
+                self.human.ask(ENTER_TEXT)
 
     def set_options(self):
         """Set the game options. (None)"""
         self.option_set.default_bots = ((CribBot, ()),)
+        # Interface options (do not count in num_options)
+        self.option_set.add_group('fast', 'auto-go auto-score no-cut no-pick')
+        self.option_set.add_option('auto-go', 'Should prompts be skipped when you must go? bool')
+        self.option_set.add_option('auto-score', 'Should prompts be skipped when players score? bool')
+        self.option_set.add_option('no-cut', 'Should cutting the deck be skipped? bool')
+        self.option_set.add_option('no-pick', 'Should picking cards for first deal be skipped? bool')
 
     def set_up(self):
         """Set up the game. (None)"""
@@ -474,22 +489,26 @@ class Cribbage(game.Game):
         self.in_play = {player.name: cards.Hand(self.deck) for player in self.players}
         self.in_play['Play Sequence'] = cards.Hand(self.deck)
         # Pick the dealer.
-        players = self.players
-        while True:
-            cards_picked = []
-            for player in self.players:
-                card_index = player.ask_int('Enter a number to pick a card: ')
-                card = self.deck.pick(card_index)
-                self.human.tell('{} picked the {}.'.format(player, card.name))
-                self.deck.discard(card)
-                cards_picked.append((card, player))
-            cards_picked.sort()
-            if cards_picked[0][0].rank == cards_picked[1][0].rank:
-                self.human.tell('Tie! Pick again.')
-                players = [player for card, player in cards_picked if card.rank == cards_picked[0][0].rank]
-            else:
-                break
-        self.dealer_index = self.players.index(cards_picked[0][1]) - 1
+        if self.no_pick:
+            random.shuffle(self.players)
+            self.dealer_index = -1
+        else:
+            players = self.players
+            while True:
+                cards_picked = []
+                for player in self.players:
+                    card_index = player.ask_int('Enter a number to pick a card: ', cmd = False)
+                    card = self.deck.pick(card_index)
+                    self.human.tell('{} picked the {}.'.format(player, card.name))
+                    self.deck.discard(card)
+                    cards_picked.append((card, player))
+                cards_picked.sort()
+                if cards_picked[0][0].rank == cards_picked[1][0].rank:
+                    self.human.tell('Tie! Pick again.')
+                    players = [plyr for crd, plyr in cards_picked if crd.rank == cards_picked[0][0].rank]
+                else:
+                    break
+            self.dealer_index = self.players.index(cards_picked[0][1]) - 1
 
 
 class CribBot(player.Bot):
@@ -540,6 +559,8 @@ class CribBot(player.Bot):
             return str(play)
         elif query.startswith('Enter a number'):
             return str(random.randint(1, 121))
+        elif query.startswith('Please press enter'):
+            return ''
         else:
             raise player.BotError('Unexepected question to CribBot: {!r}'.format(query))
 
