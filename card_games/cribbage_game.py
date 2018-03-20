@@ -5,7 +5,6 @@ A game of Cribbage.
 
 To Do (not in order)
     Match play (and other options)
-    Number words (utility)
 
 Constants:
 Credits: The credits for Cribbage. (str)
@@ -184,7 +183,7 @@ class Cribbage(game.Game):
         if not discards:
             return self.handle_cmd(answer)
         elif len(discards) != self.discard_size:
-            player.error('You must discard {} card{}.'.format(discard_word, s))
+            player.error('You must discard {} card{}.'.format(utility.number_word(self.discard_size), s))
             return True
         elif not all(card in self.hands[player.name] for card in discards):
             player.error('You do not have all of those cards in your hand.')
@@ -316,7 +315,7 @@ class Cribbage(game.Game):
             if suit_score:
                 hand_score += suit_score
                 message = '{} scores {} points for a {}-card flush.'
-                self.human.tell(message.format(name, suit_score, suit_score))
+                self.human.tell(message.format(name, suit_score, utility.number_word(suit_score)))
             # Check for his nobs (jack of suit of starter)
             nob = CribCard('J', self.starter.suit)
             if nob in cards:
@@ -330,7 +329,7 @@ class Cribbage(game.Game):
                 hand_score += 2 * fifteens
                 s = ['', 's'][fifteens > 1]
                 message = '{} scores {} for {} combination{} adding to 15.'
-                self.human.tell(message.format(name, 2 * fifteens, fifteens, s))
+                self.human.tell(message.format(name, 2 * fifteens, utility.number_word(fifteens), s))
             # Check for pairs.
             rank_data = self.score_pairs(cards)
             for rank, count, pair_score in rank_data:
@@ -339,7 +338,7 @@ class Cribbage(game.Game):
                 if rank_name == 'six':
                     rank_name = 'sixe'
                 message = '{} scores {} for getting {} {}s.'
-                self.human.tell(message.format(name, pair_score, count, rank_name))
+                self.human.tell(message.format(name, pair_score, utility.number_word(count), rank_name))
             # Check for runs.
             for run_length, run_count in self.score_runs(cards):
                 hand_score += run_length * run_count
@@ -434,7 +433,7 @@ class Cribbage(game.Game):
             pair_score = utility.choose(rank_count, 2) * 2
             self.scores[player.name] += pair_score
             message = '{} scores {} for getting {} cards of the same rank.'
-            self.human.tell(message.format(player.name, pair_score, rank_count))
+            self.human.tell(message.format(player.name, pair_score, utility.number_word(rank_count)))
             self.human.ask(ENTER_TEXT)
         # Check for runs.
         run_count = 0
@@ -446,8 +445,8 @@ class Cribbage(game.Game):
         # Score any runs.
         if run_count:
             self.scores[player.name] += run_count
-            message = '{0} scores {1} for getting a {1}-card straight.'
-            self.human.tell(message.format(player.name, run_count))
+            message = '{} scores {} for getting a {}-card straight.'
+            self.human.tell(message.format(player.name, run_count, utility.number_word(rank_count)))
             self.human.ask(ENTER_TEXT)
 
     def set_options(self):
