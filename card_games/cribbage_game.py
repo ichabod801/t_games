@@ -4,7 +4,23 @@ cribbage_game.py
 A game of Cribbage.
 
 To Do (not in order)
-    Match play (and other options)
+    options:
+        cards dealt
+        last= (3 in five-card)
+        discards
+        multi-go
+        target
+        lurch=/double-lurch=
+        auction
+        cut throat
+        solo
+        partnership
+        solitaire
+        match play
+            default free play
+            official
+            long-match
+            triple-skunk
 
 Constants:
 Credits: The credits for Cribbage. (str)
@@ -70,6 +86,16 @@ point.
 The role of dealer then passes to the left, and a new hand and starter are
 dealt. This continues until someone reaches 121 points. Note that the dealer's
 hand is scored last, to offset the advantage of the crib in tight games.
+
+Options:
+auto-go: Don't prompt players who must go.
+auto-score: Don't prompt the user after a player scores.
+deal=: The number of cards dealt (defaults to 6).
+discards=: The number of cards discarded (defaults to 2).
+fast: Equivalent to auto-go auto-score no-cut no-pick.
+n-bots: The number of bots to play against.
+no-cut: Skip cutting the deck before the deal.
+no-pick: Skip picking a card to see who deals first.
 """
 
 
@@ -125,8 +151,7 @@ class Cribbage(game.Game):
             cut_index = self.players[left].ask_int('Enter a number to cut the deck: ', cmd = False)
             self.deck.cut(cut_index)
         # Deal the cards
-        hand_size = [0, 0, 6, 5, 5][len(self.players)]
-        for card in range(hand_size):
+        for card in range(self.deal):
             for player in self.players:
                 self.hands[player.name].draw()
         if len(self.players) == 3:
@@ -144,12 +169,16 @@ class Cribbage(game.Game):
             scores.sort(reverse = True)
             self.human.tell('{1} wins with {0} points.'.format(*scores[0]))
             # Calcualte win/loss/draw stats.
-            wld_index = 1
+            human_score = self.scores[self.human.name]
             for score, name in scores:
                 if name == self.human.name:
-                    wld_index = 0
-                else:
-                    self.win_loss_draw[wld_index] += 1
+                    continue
+                elif score < human_score:
+                    self.win_loss_draw[0] += 1
+                elif score > human_score:
+                    self.win_loss_draw[1] += 1
+                elif score == human_score:
+                    self.win_loss_draw[2] += 1
             return True
         else:
             return False
@@ -186,14 +215,14 @@ class Cribbage(game.Game):
         Parameters:
         player: The current player. (player.Player)
         """
-        discard_word, s = [('', ''), (' two', 's')][self.discard_size != 1]
+        discard_word, s = [('', ''), (' two', 's')][self.discards != 1]
         query = 'Which{} card{} would you like to discard to the crib, {}? '
         answer = player.ask(query.format(discard_word, s, player.name))
         discards = cards.Card.card_re.findall(answer)
         if not discards:
             return self.handle_cmd(answer)
-        elif len(discards) != self.discard_size:
-            player.error('You must discard {} card{}.'.format(utility.number_word(self.discard_size), s))
+        elif len(discards) != self.discards:
+            player.error('You must discard {} card{}.'.format(utility.number_word(self.discards), s))
             return True
         elif not all(card in self.hands[player.name] for card in discards):
             player.error('You do not have all of those cards in your hand.')
@@ -470,6 +499,11 @@ class Cribbage(game.Game):
     def set_options(self):
         """Set the game options. (None)"""
         self.option_set.default_bots = ((CribBot, ()),)
+        # Hand options
+        self.option_set.add_option('deal', covernter = int, default = 6, valid = (5, 6, 7),
+            question = 'How many cards should be dealt? (return for 6)? ')
+        self.option_set.add_option('discards', converter = int, default = 2, valid = (1, 2),
+            question = 'How many cards should be discarded (return for 2)? ')
         # The number of opponents.
         self.option_set.add_option('n-bots', converter = int, default = 1, valid = (1, 2, 3),
             question = 'How many bots would you like to play against (return for 1)? ')
@@ -489,7 +523,6 @@ class Cribbage(game.Game):
         self.card_total = 0
         self.go_count = 0
         # Set up the scoring variables.
-        self.discard_size = [0, 0, 2, 1, 1][len(self.players)]
         self.target_score = 121
         self.skunk = 61
         # Set up the deck.

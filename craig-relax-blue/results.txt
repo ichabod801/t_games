@@ -76,3 +76,5 @@ FreeCell,1,0,0,807,57,0,
 Pig,3,0,0,104,40,1,medium satan x
 Cribbage,0,1,0,103,129,0,
 Cribbage,1,0,0,124,110,0,
+FreeCell,1,0,0,825,45,0,
+FreeCell,1,0,0,805,67,0,
