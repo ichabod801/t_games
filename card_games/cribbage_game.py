@@ -90,7 +90,7 @@ hand is scored last, to offset the advantage of the crib in tight games.
 Options:
 auto-go: Don't prompt players who must go.
 auto-score: Don't prompt the user after a player scores.
-deal=: The number of cards dealt (defaults to 6).
+cards=: The number of cards dealt (defaults to 6).
 discards=: The number of cards discarded (defaults to 2).
 fast: Equivalent to auto-go auto-score no-cut no-pick.
 n-bots: The number of bots to play against.
@@ -148,13 +148,14 @@ class Cribbage(game.Game):
         # Cut the deck.
         if not self.no_cut:
             left = (self.dealer_index + 1) % len(self.players)
-            cut_index = self.players[left].ask_int('Enter a number to cut the deck: ', cmd = False)
+            query = 'Enter a number to cut the deck: '
+            cut_index = self.players[left].ask_int(query, cmd = False, default = 0)
             self.deck.cut(cut_index)
         # Deal the cards
-        for card in range(self.deal):
+        for card in range(self.cards):
             for player in self.players:
                 self.hands[player.name].draw()
-        if len(self.players) == 3:
+        for card in range(4 - len(self.players) * self.discards):
             self.hands['The Crib'].draw()
         # Dummy starter card.
         self.starter = CribCard('X', 'S')
@@ -500,7 +501,7 @@ class Cribbage(game.Game):
         """Set the game options. (None)"""
         self.option_set.default_bots = ((CribBot, ()),)
         # Hand options
-        self.option_set.add_option('deal', covernter = int, default = 6, valid = (5, 6, 7),
+        self.option_set.add_option('cards', converter = int, default = 6, valid = (5, 6, 7),
             question = 'How many cards should be dealt? (return for 6)? ')
         self.option_set.add_option('discards', converter = int, default = 2, valid = (1, 2),
             question = 'How many cards should be discarded (return for 2)? ')
@@ -542,7 +543,8 @@ class Cribbage(game.Game):
             while True:
                 cards_picked = []
                 for player in self.players:
-                    card_index = player.ask_int('Enter a number to pick a card: ', cmd = False)
+                    query = 'Enter a number to pick a card: '
+                    card_index = player.ask_int(query, cmd = False, default = 0)
                     card = self.deck.pick(card_index)
                     self.human.tell('{} picked the {}.'.format(player, card.name))
                     self.deck.discard(card)
