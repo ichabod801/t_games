@@ -106,7 +106,7 @@ Note that if they don't choose a valid game, you should give a non-sequitor or c
 
 The set_option method defines the options availble for the game, for later use by handle_options. The options are stored and handled by a options.OptionSet instance, stored in the option_set attribute of the game. Each option in the OptionSet is stored as a dictionary of values. These are created using the add_option method of the OptionSet.
 
-For example, take the even-turns option in Pig. If that option is True, each player gets the same number of turns before the game is over. The simplest way to set that up would be: self.option_set.add_option(name = 'even-turns', target = 'even_turns'). The name is the name of the option the player would use, and the target is the attribute the option is stored in. The target defaults to the name, but in this case the name uses dashes, where attribute names need underscores. The default behavior for an option definition is to assign True if the option is provided, and False if it is not.
+For example, take the even-turns option in Pig. If that option is True, each player gets the same number of turns before the game is over. The simplest way to set that up would be: self.option_set.add_option(name = 'even-turns'). The name is the name of the option the player would use. The default behavior for an option definition is to assign True if the option is provided, and False if it is not. This will be assigned to te even_turns attribute (the name of the option with any dashes converted to underscores). If you wanted to assign it to the even attribute, you would use self.option_set.add_option(name = 'even-turns', target = 'even').
 
 We could reverse this option: call it odd-turns, which assigns False to even_turns if it is provided, and True if it is not. That would be set up with: self.option_set.add_option(name = 'odd-turns', target = 'even_turns', value = False, default = True). The value of the definition is what is assigned if the option is provided, and the default of the definition is what is assigned if the option is not provided. It doesn't have to be True or False, either. For example, the 'six-bad' option to Pig sets the bad attribute to 6, when it is normally one. That attribute is set up as self.option_set.add_option(name = 'six-bad', target = 'bad', value = 6, default = 1).
 
@@ -156,6 +156,10 @@ For example, say you have a game named Spam. You have two bot classes for the ga
 		* name = 'hard', converter = 'int', check = lambda x: len(x) < 3, default = None, target = 'bar', value = ()
 
 The first one is a class attribute, the rest are done in the set_options method. The converters and the checks make sure no more than two integers are provided as options. The defaults ensure that none of the bots are automatically added every game. The targets on the last three get the right class for the bots. The values on the last three specify the attributes for those bots, with '()' specifying the default attributes.
+
+You can also assign predefined sets of options, called option groups. To the user, it works just like another option. Internally, the option is translated into other options. This is done with the add_group method of the option_set: option_set.add_group('fubar', 'foo bar'). That would add a fubar option, that is equivalent to the foo and bar options together. Naturally, you need to define foo and bar options as well.
+
+The design philosophy of tgames is that (when possible and sensible) variants to games should be defined as option groups. For example, Yacht provides different scoring options and a max-rolls option. These are then put into various option groups for the variants of Yacht, such as General and Cheerio. This allows the user to create a Yacht variant of their own without having to reprogram yacht_game.py, and still allows easy access to commonly played variants.
 
 == Bots ==
 

@@ -115,6 +115,7 @@ class Cribbage(game.Game):
     categories = ['Card Games', 'Matching Game']
     credits = CREDITS
     name = 'Cribbage'
+    num_options = 7
     rules = RULES
 
     def __str__(self):
@@ -145,6 +146,14 @@ class Cribbage(game.Game):
         dealer = self.players[self.dealer_index]
         self.player_index = self.dealer_index
         print('\nThe current dealer is {}.'.format(dealer.name))
+        # Score the last bonus.
+        if self.last and max(self.scores.values()) == 0:
+            last_index = (self.dealer_index - 1) % len(self.players)
+            last_name = self.players[last_index].name
+            self.scores[last_name] += self.last
+            self.human.tell('{} scores {} points for being last.'.format(last_name, self.last))
+            if not self.auto_score:
+                self.human.ask(ENTER_TEXT)
         # Cut the deck.
         if not self.no_cut:
             left = (self.dealer_index + 1) % len(self.players)
@@ -302,8 +311,8 @@ class Cribbage(game.Game):
         self.go_count = 0
         self.in_play['Play Sequence'].cards = []
         if not any(self.hands[player.name] for player in self.players):
-            self.score_hands()
-            self.deal()
+            if not self.score_hands():
+                self.deal() # Only deal if no one wins.
 
     def score_fifteens(self, cards):
         """
@@ -339,7 +348,11 @@ class Cribbage(game.Game):
         return score
 
     def score_hands(self):
-        """Score the hands after a round of play. (None)"""
+        """
+        Score the hands after a round of play. (bool)
+
+        The return value is a flag for someone winning the game.
+        """
         # Loop through the players, starting on the dealer's left.
         player_index = (self.dealer_index + 1) % len(self.players)
         names = [player.name for player in self.players[player_index:] + self.players[:player_index]]
@@ -399,9 +412,10 @@ class Cribbage(game.Game):
             # Check for a win.
             if self.scores[name] >= self.target_score:
                 self.human.tell('{} has won with {} points.'.format(name, self.scores[name]))
-                break
+                return True
             elif not self.auto_score:
                 self.human.ask(ENTER_TEXT)
+        return False
 
     def score_pairs(self, cards):
         """
@@ -499,13 +513,21 @@ class Cribbage(game.Game):
 
     def set_options(self):
         """Set the game options. (None)"""
-        self.option_set.default_bots = ((CribBot, ()),)
-        # Hand options
+        # Set the hand options
         self.option_set.add_option('cards', converter = int, default = 6, valid = (5, 6, 7),
             question = 'How many cards should be dealt? (return for 6)? ')
         self.option_set.add_option('discards', converter = int, default = 2, valid = (1, 2),
             question = 'How many cards should be discarded (return for 2)? ')
-        # The number of opponents.
+        # Set the score options.
+        self.option_set.add_option('target-score', ['win'], int, default = 121, check = lambda x: x > 0,
+            question = 'How many points should it take to win (return for 121)? ')
+        self.option_set.add_option('skunk', [], int, default = 61, check = lambda x: x > 0,
+            question = 'How many points should it take to avoid a skunk (return for 61)? ')
+        self.option_set.add_option('double-skunk', [], int, default = 0, check = lambda x: x > -1,
+            question = 'How many points should it take to avoid a double skunk (return for 0)? ')
+        self.option_set.add_option('last', [], int, default = 0, check = lambda x: x > -1,
+            question = 'How many points should the last player get for being last (return for 0)? ')
+        # Set the number of opponents.
         self.option_set.add_option('n-bots', converter = int, default = 1, valid = (1, 2, 3),
             question = 'How many bots would you like to play against (return for 1)? ')
         # Interface options (do not count in num_options)
@@ -523,9 +545,6 @@ class Cribbage(game.Game):
         self.phase = 'deal'
         self.card_total = 0
         self.go_count = 0
-        # Set up the scoring variables.
-        self.target_score = 121
-        self.skunk = 61
         # Set up the deck.
         self.deck = cards.Deck(card_class = CribCard)
         self.deck.shuffle()
