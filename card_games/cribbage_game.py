@@ -90,13 +90,19 @@ hand is scored last, to offset the advantage of the crib in tight games.
 Options:
 auto-go: Don't prompt players who must go.
 auto-score: Don't prompt the user after a player scores.
-cards=: The number of cards dealt (defaults to 6).
-discards=: The number of cards discarded (defaults to 2).
+cards=: The number of cards dealt (defaults = 6).
+discards=: The number of cards discarded (defaults = 2).
+double-skunk=: The score needed to avoid a double skunk (default = 0).
 fast: Equivalent to auto-go auto-score no-cut no-pick.
+five-card (5-card): equivalent to one-go cards=5 discards=1 target-score=61
+    skunk=31 last=3
+last=: The initial score of the last player to play (default = 0).
 n-bots: The number of bots to play against.
 no-cut: Skip cutting the deck before the deal.
 no-pick: Skip picking a card to see who deals first.
 one-go: There is only one round of play, that is, only one go.
+skunk=: The score needed to avoid a skunk (defualt = 61).
+target-score= (win=): The score needed to win (default = 121).
 """
 
 
@@ -116,7 +122,7 @@ class Cribbage(game.Game):
     categories = ['Card Games', 'Matching Game']
     credits = CREDITS
     name = 'Cribbage'
-    num_options = 7
+    num_options = 8
     rules = RULES
 
     def __str__(self):
@@ -534,6 +540,10 @@ class Cribbage(game.Game):
         # Set the number of opponents.
         self.option_set.add_option('n-bots', converter = int, default = 1, valid = (1, 2, 3),
             question = 'How many bots would you like to play against (return for 1)? ')
+        # Set the variant groups.
+        five_card = 'one-go cards=5 discards=1 win=61 skunk=31 last=3'
+        self.option_set.add_group('five-card', five_card)
+        self.option_set.add_group('5-card', five_card)
         # Interface options (do not count in num_options)
         self.option_set.add_group('fast', 'auto-go auto-score no-cut no-pick')
         self.option_set.add_option('auto-go', 

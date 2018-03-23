@@ -265,3 +265,4 @@ Cribbage,1,0,0,125,107,0,
 Cribbage,1,2,0,114,364,1,n-bots=3
 Cribbage,1,0,0,61,69,1,last=3 target-score=61
 Cribbage,1,0,0,21,14,1,target-score=18
+Cribbage,0,1,0,60,42,1,cards=5 discards=1 last=3 one-go skunk=31 target-score=61
