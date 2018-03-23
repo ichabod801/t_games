@@ -96,6 +96,7 @@ fast: Equivalent to auto-go auto-score no-cut no-pick.
 n-bots: The number of bots to play against.
 no-cut: Skip cutting the deck before the deal.
 no-pick: Skip picking a card to see who deals first.
+one-go: There is only one round of play, that is, only one go.
 """
 
 
@@ -310,7 +311,7 @@ class Cribbage(game.Game):
         self.card_total = 0
         self.go_count = 0
         self.in_play['Play Sequence'].cards = []
-        if not any(self.hands[player.name] for player in self.players):
+        if (not any(self.hands.values())) or self.one_go:
             if not self.score_hands():
                 self.deal() # Only deal if no one wins.
 
@@ -518,6 +519,9 @@ class Cribbage(game.Game):
             question = 'How many cards should be dealt? (return for 6)? ')
         self.option_set.add_option('discards', converter = int, default = 2, valid = (1, 2),
             question = 'How many cards should be discarded (return for 2)? ')
+        # Set the play options.
+        self.option_set.add_option('one-go', 
+            question = 'Should there only be one round of play, or one go? bool')
         # Set the score options.
         self.option_set.add_option('target-score', ['win'], int, default = 121, check = lambda x: x > 0,
             question = 'How many points should it take to win (return for 121)? ')
@@ -532,10 +536,14 @@ class Cribbage(game.Game):
             question = 'How many bots would you like to play against (return for 1)? ')
         # Interface options (do not count in num_options)
         self.option_set.add_group('fast', 'auto-go auto-score no-cut no-pick')
-        self.option_set.add_option('auto-go', 'Should prompts be skipped when you must go? bool')
-        self.option_set.add_option('auto-score', 'Should prompts be skipped when players score? bool')
-        self.option_set.add_option('no-cut', 'Should cutting the deck be skipped? bool')
-        self.option_set.add_option('no-pick', 'Should picking cards for first deal be skipped? bool')
+        self.option_set.add_option('auto-go', 
+            question = 'Should prompts be skipped when you must go? bool')
+        self.option_set.add_option('auto-score', 
+            question = 'Should prompts be skipped when players score? bool')
+        self.option_set.add_option('no-cut', 
+            question = 'Should cutting the deck be skipped? bool')
+        self.option_set.add_option('no-pick', 
+            question = 'Should picking cards for first deal be skipped? bool')
 
     def set_up(self):
         """Set up the game. (None)"""
