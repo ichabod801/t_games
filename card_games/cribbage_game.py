@@ -5,17 +5,11 @@ A game of Cribbage.
 
 To Do (not in order)
     options:
-        cards dealt
-        last= (3 in five-card)
-        discards
-        multi-go
-        target
-        lurch=/double-lurch=
         auction
         cut throat
         solo
         partnership
-        solitaire
+        solitaire?
         match play
             default free play
             official
@@ -101,7 +95,8 @@ n-bots: The number of bots to play against.
 no-cut: Skip cutting the deck before the deal.
 no-pick: Skip picking a card to see who deals first.
 one-go: There is only one round of play, that is, only one go.
-skunk=: The score needed to avoid a skunk (defualt = 61).
+seven-card (7-card): equivalent to cards=7 target-score=181 skunk=151
+skunk=: The score needed to avoid a skunk (defualt = 91).
 target-score= (win=): The score needed to win (default = 121).
 """
 
@@ -317,7 +312,8 @@ class Cribbage(game.Game):
         self.card_total = 0
         self.go_count = 0
         self.in_play['Play Sequence'].cards = []
-        if (not any(self.hands.values())) or self.one_go:
+        # Player names are used to get hands to avoid checking the crib for cards.
+        if (not any(self.hands[player.name] for player in self.players)) or self.one_go:
             if not self.score_hands():
                 self.deal() # Only deal if no one wins.
 
@@ -531,8 +527,8 @@ class Cribbage(game.Game):
         # Set the score options.
         self.option_set.add_option('target-score', ['win'], int, default = 121, check = lambda x: x > 0,
             question = 'How many points should it take to win (return for 121)? ')
-        self.option_set.add_option('skunk', [], int, default = 61, check = lambda x: x > 0,
-            question = 'How many points should it take to avoid a skunk (return for 61)? ')
+        self.option_set.add_option('skunk', [], int, default = 91, check = lambda x: x > 0,
+            question = 'How many points should it take to avoid a skunk (return for 91)? ')
         self.option_set.add_option('double-skunk', [], int, default = 0, check = lambda x: x > -1,
             question = 'How many points should it take to avoid a double skunk (return for 0)? ')
         self.option_set.add_option('last', [], int, default = 0, check = lambda x: x > -1,
@@ -544,6 +540,9 @@ class Cribbage(game.Game):
         five_card = 'one-go cards=5 discards=1 win=61 skunk=31 last=3'
         self.option_set.add_group('five-card', five_card)
         self.option_set.add_group('5-card', five_card)
+        seven_card = 'cards=7 win=181 skunk=151'
+        self.option_set.add_group('seven-card', seven_card)
+        self.option_set.add_group('7-card', seven_card)
         # Interface options (do not count in num_options)
         self.option_set.add_group('fast', 'auto-go auto-score no-cut no-pick')
         self.option_set.add_option('auto-go', 
@@ -611,7 +610,7 @@ class CribBot(player.Bot):
         if 'discard' in query:
             dealer = self.name == self.game.players[self.game.dealer_index].name
             possibles = []
-            for keepers in itertools.combinations(hand, 4):
+            for keepers in itertools.combinations(hand, self.game.cards - self.game.discards):
                 discards = [card for card in hand if card not in keepers]
                 if dealer:
                     score = self.score_four(keepers) + self.score_discards(discards)
