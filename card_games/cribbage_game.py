@@ -91,6 +91,14 @@ fast: Equivalent to auto-go auto-score no-cut no-pick.
 five-card (5-card): equivalent to one-go cards=5 discards=1 target-score=61
     skunk=31 last=3
 last=: The initial score of the last player to play (default = 0).
+match=: The number of games to play in a match. (default = 1).
+match-scores=: How to score wins/skunks/double skunks
+    acc: 2/3/3
+    long: 3/4/4
+    free: 1/2/3
+    four: 1/2/4
+    or you can enter three numbers separated by slashes.
+    defaults to acc (American Cribbage Congress).
 n-bots: The number of bots to play against.
 no-cut: Skip cutting the deck before the deal.
 no-pick: Skip picking a card to see who deals first.
@@ -198,11 +206,33 @@ class Cribbage(game.Game):
     def handle_options(self):
         """Handle the game option settings. (None)"""
         super(Cribbage, self).handle_options()
+        # Set up the players (bots).
         self.players = [self.human]
         taken_names = [self.human.name]
         for bot in range(self.n_bots):
             self.players.append(CribBot(taken_names))
             taken_names.append(self.players[-1].name)
+        # Set up match play.
+        if self.match > 1:
+            self.flags |= 256
+            if self.match_scores = 'acc':
+                self.match_scores = (2, 3, 3)
+            if self.match_scores = 'long':
+                self.match_scores = (3, 4, 4)
+            elif self.match_scores = 'free':
+                self.match_scores = (1, 2, 3)
+            elif self.match_scores = 'four':
+                self.match_scores = (1, 2, 4)
+            else:
+                try:
+                    self.match_scores = [int(score) for score in self.match_scores.split('/')]
+                except ValueError:
+                    warning = 'Invalid setting for match-scores option: {!r}.'
+                    self.human.error(warning.format(self.match_scores))
+                    self.match_scores = (2, 3, 3)
+        else:
+            self.match = 1
+            self.match_scores = (1, 1, 1)
 
     def player_action(self, player):
         """
@@ -536,6 +566,11 @@ class Cribbage(game.Game):
         # Set the number of opponents.
         self.option_set.add_option('n-bots', converter = int, default = 1, valid = (1, 2, 3),
             question = 'How many bots would you like to play against (return for 1)? ')
+        # Set the match options.
+        self.option_set.add_option('match', converter = int, default = 1,
+            question = 'How many games for match play (return for single game)? ')
+        self.option_set.add_option('match-scores', valid = ('acc', 'long', 'free', 'four'), 
+            default = 'acc', question = 'Should match scores be ACC, long, free, or triple? ')
         # Set the variant groups.
         five_card = 'one-go cards=5 discards=1 win=61 skunk=31 last=3'
         self.option_set.add_group('five-card', five_card)
