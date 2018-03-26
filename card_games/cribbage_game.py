@@ -92,6 +92,7 @@ five-card (5-card): equivalent to one-go cards=5 discards=1 target-score=61
     skunk=31 last=3
 last=: The initial score of the last player to play (default = 0).
 match=: The number of games to play in a match. (default = 1).
+    Match results only make sense for two player games.
 match-scores=: How to score wins/skunks/double skunks
     acc: 2/3/3
     long: 3/4/4
@@ -104,7 +105,7 @@ no-cut: Skip cutting the deck before the deal.
 no-pick: Skip picking a card to see who deals first.
 one-go: There is only one round of play, that is, only one go.
 seven-card (7-card): equivalent to cards=7 target-score=181 skunk=151
-skunk=: The score needed to avoid a skunk (defualt = 91).
+skunk=: The score needed to avoid a skunk (defualt = 91, only in match play).
 target-score= (win=): The score needed to win (default = 121).
 """
 
@@ -188,18 +189,26 @@ class Cribbage(game.Game):
             scores = [(score, name) for name, score in self.scores.items()]
             scores.sort(reverse = True)
             self.human.tell('{1} wins with {0} points.'.format(*scores[0]))
+            # Check for skunk.
+            game_score = self.match_scores[0]
+            if scores[1][0] < self.skunk:
+                games_score = self.match_scores[1]
+                self.human.tell('{1} got skunked with {0} points.'.format(*scores[1]))
+            elif scores[1][0] < self.double_skunk:
+                games_score = self.match_scores[1]
+                self.human.tell('{1} got double skunked with {0} points.'.format(*scores[1]))
             # Calcualte win/loss/draw stats.
             human_score = self.scores[self.human.name]
             for score, name in scores:
                 if name == self.human.name:
                     continue
                 elif score < human_score:
-                    self.win_loss_draw[0] += 1
+                    self.win_loss_draw[0] += game_score
                 elif score > human_score:
-                    self.win_loss_draw[1] += 1
+                    self.win_loss_draw[1] += game_score
                 elif score == human_score:
-                    self.win_loss_draw[2] += 1
-            return True
+                    self.win_loss_draw[2] += game_score
+            return max(self.win_loss_draw) >= self.match
         else:
             return False
 
@@ -215,18 +224,19 @@ class Cribbage(game.Game):
         # Set up match play.
         if self.match > 1:
             self.flags |= 256
-            if self.match_scores = 'acc':
+            if self.match_scores == 'acc':
                 self.match_scores = (2, 3, 3)
-            if self.match_scores = 'long':
+            elif self.match_scores == 'long':
                 self.match_scores = (3, 4, 4)
-            elif self.match_scores = 'free':
+            elif self.match_scores == 'free':
                 self.match_scores = (1, 2, 3)
-            elif self.match_scores = 'four':
+            elif self.match_scores == 'four':
                 self.match_scores = (1, 2, 4)
             else:
                 try:
                     self.match_scores = [int(score) for score in self.match_scores.split('/')]
-                except ValueError:
+                    check = self.match_scores[2]
+                except (ValueError, IndexError):
                     warning = 'Invalid setting for match-scores option: {!r}.'
                     self.human.error(warning.format(self.match_scores))
                     self.match_scores = (2, 3, 3)

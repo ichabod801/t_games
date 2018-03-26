@@ -64,9 +64,9 @@ category you are currently in, or just 'stats' for stats for all of the games
 you have played.
 
 You can play a random game by typing 'random'. This will be a random game from
-the category your in currently in the menu system. To play any random game, 
+the category you're in currently in the menu system. To play any random game, 
 use 'random all'. You can get a list of available games with the games
-command. It is context sensitive, and will only show the games for the 
+command. It is also context sensitive, and will only show the games for the 
 category that you are in.
 
 You can create shortcuts using the set command. The first word after the set

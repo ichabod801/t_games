@@ -136,7 +136,7 @@ golf ii               -> golf
 golf ii               -> spades
 halma                 -> chess
 halma                 -> mancala
-hamurabi              -> cribage
+hamurabi              -> cribbage
 hamurabi              -> pyramid
 hangman               -> fox and geese
 hangman               -> ghost
@@ -576,8 +576,7 @@ closed/other: monte carlo, accordion
 
 That's 20 games, and 4 over the two per category rule, and none over three per category. I don't lose anything I've already programmed except baker's game (which I can get back as a variant)
 
-=== Gipf Growth Plan ===
-
+== Gipf Growth Plan ==
 
 Or, if I add these games, everything is linked by gipf with no root or leaf nodes:
 	bacarat
@@ -638,3 +637,23 @@ Or, if I add these games, everything is linked by gipf with no root or leaf node
 		hangman * Assumes this was remove from the initial.
 		ghost
 	And you're done.
+
+=== Relink ===
+
+I could add the following gipf links to the map to have no roots or leaves:
+	craps        -> yacht
+	crazy eights -> canfield
+	crazy eights -> craps
+	hangman      -> forty thieves
+	hangman      -> rps
+	rps          -> klondike
+	yacht        -> backgammon
+	Then redo those links in the original plan, and then create a plan of rounds just as in the first proposal.
+	However, there are still many pairs showing no path. (69%)
+		The problem seems to be that battleships, pig, and wumpus are poorly linked out and not linked in.
+		battleships -> yacht
+		hamurabi    -> wumpus
+		ninety-nine -> pig
+		klondike    -> battleships
+		drops it to 37%, without really messing up the plan.
+		I need to map that out visually to find the problems.

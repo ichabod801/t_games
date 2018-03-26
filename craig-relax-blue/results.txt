@@ -84,3 +84,13 @@ FreeCell,1,0,0,802,62,0,
 FreeCell,1,0,0,826,43,0,
 FreeCell,1,0,0,825,42,0,
 FreeCell,1,0,0,817,54,0,
+FreeCell,1,0,0,819,56,0,
+Pig,3,0,0,101,18,1,medium satan x
+FreeCell,1,0,0,820,48,0,
+Pig,0,3,0,72,46,1,medium satan x
+FreeCell,1,0,0,810,63,0,
+Pig,3,0,0,104,55,1,medium satan x
+Cribbage,1,0,0,124,133,0,
+FreeCell,1,0,0,816,46,0,
+Pig,1,2,0,51,43,1,medium satan x
+Hamurabi,1,0,0,2,10,0,
