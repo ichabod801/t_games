@@ -188,14 +188,14 @@ class Cribbage(game.Game):
             # Determine the winner.
             scores = [(score, name) for name, score in self.scores.items()]
             scores.sort(reverse = True)
-            self.human.tell('{1} wins with {0} points.'.format(*scores[0]))
+            self.human.tell('{1} wins with {0} points.'.format(*scores[0])) # !! dupe output, score_hands
             # Check for skunk.
             game_score = self.match_scores[0]
             if scores[1][0] < self.skunk:
-                games_score = self.match_scores[1]
+                game_score = self.match_scores[1]
                 self.human.tell('{1} got skunked with {0} points.'.format(*scores[1]))
             elif scores[1][0] < self.double_skunk:
-                games_score = self.match_scores[1]
+                game_score = self.match_scores[2]
                 self.human.tell('{1} got double skunked with {0} points.'.format(*scores[1]))
             # Calcualte win/loss/draw stats.
             human_score = self.scores[self.human.name]
@@ -208,7 +208,15 @@ class Cribbage(game.Game):
                     self.win_loss_draw[1] += game_score
                 elif score == human_score:
                     self.win_loss_draw[2] += game_score
-            return max(self.win_loss_draw) >= self.match
+            if max(self.win_loss_draw) >= self.match:
+                return True
+            else:
+                self.scores = {player.name: 0 for player in self.players}
+                self.deal()
+                # !! duplicate code (see reset method)
+                self.card_count = 0
+                self.go_count = 0
+                self.in_play['Play Sequence'].cards = []
         else:
             return False
 

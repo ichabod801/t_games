@@ -94,3 +94,11 @@ Cribbage,1,0,0,124,133,0,
 FreeCell,1,0,0,816,46,0,
 Pig,1,2,0,51,43,1,medium satan x
 Hamurabi,1,0,0,2,10,0,
+FreeCell,1,0,0,810,57,0,
+FreeCell,1,0,0,810,60,0,
+Pig,0,3,0,27,48,1,medium satan x
+Pig,0,3,0,0,22,1,medium satan x
+Pig,0,3,0,0,32,1,medium satan x
+Pig,3,0,0,101,37,1,medium satan x
+FreeCell,1,0,0,817,58,0,
+FreeCell,1,0,0,819,51,0,
