@@ -657,3 +657,27 @@ I could add the following gipf links to the map to have no roots or leaves:
 		klondike    -> battleships
 		drops it to 37%, without really messing up the plan.
 		I need to map that out visually to find the problems.
+
+=== Add Links ===
+
+Take the games I have planned through backgammon/craps/hangman. Add the following links:
+	battleships   -> canfield
+	connect four  -> hunt the wumpus
+	crazy eights  -> strategy
+	cribbage      -> craps
+	cribbage      -> crazy eights
+	forty thieves -> pig
+	hamurabi      -> yacht
+	hangman       -> craps
+	klondike      -> battleships
+	klondike      -> hangman
+	ninety-nine   -> crazy eights
+	ninety-nine   -> yacht
+	rps           -> forty thieves
+	roulette      -> blackjack
+	roulette      -> klondike
+	strategy      -> roulette
+	yacht         -> rps
+
+That gives a fully connected graph. You have the hub of battleships/pig/hunt the wumpus. You have a chain going out from each of those and reconnecting to the hub elsewhere. Those chains contain all of the games, so it's a loop and fully connected. In addition, there are cross links between each pair of chains. There are some extraneous links, and it may go over the idea of a two in/two out limit for anything outside the hub, but it works, and you could link into it.
+
