@@ -268,3 +268,5 @@ Cribbage,1,0,0,21,14,1,target-score=18
 Cribbage,0,1,0,60,42,1,cards=5 discards=1 last=3 one-go skunk=31 target-score=61
 Cribbage,1,0,0,186,153,1,cards=7 skunk=151 target-score=181
 Cribbage,4,2,0,33,119,259,match=3 skunk=15 target-score=31
+Cribbage,3,0,0,37,27,257,auto-go auto-score match=3 no-cut no-pick skunk=15 target-score=31
+Cribbage,3,0,0,31,25,257,auto-go auto-score match=3 no-cut no-pick skunk=15 target-score=31

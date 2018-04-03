@@ -190,13 +190,16 @@ class Cribbage(game.Game):
             scores.sort(reverse = True)
             self.human.tell('{1} wins with {0} points.'.format(*scores[0])) # !! dupe output, score_hands
             # Check for skunk.
-            game_score = self.match_scores[0]
+            game_score = self.skunk_scores[0]
             if scores[1][0] < self.skunk:
-                game_score = self.match_scores[1]
+                game_score = self.skunk_scores[1]
                 self.human.tell('{1} got skunked with {0} points.'.format(*scores[1]))
             elif scores[1][0] < self.double_skunk:
-                game_score = self.match_scores[2]
+                game_score = self.skunk_scores[2]
                 self.human.tell('{1} got double skunked with {0} points.'.format(*scores[1]))
+            self.match_scores[scores[0][1]] += game_score
+            if self.match > 1:
+                self.show_match()
             # Calcualte win/loss/draw stats.
             human_score = self.scores[self.human.name]
             for score, name in scores:
@@ -208,7 +211,7 @@ class Cribbage(game.Game):
                     self.win_loss_draw[1] += game_score
                 elif score == human_score:
                     self.win_loss_draw[2] += game_score
-            if max(self.win_loss_draw) >= self.match:
+            if max(self.match_scores.values()) >= self.match:
                 return True
             else:
                 self.scores = {player.name: 0 for player in self.players}
@@ -232,25 +235,25 @@ class Cribbage(game.Game):
         # Set up match play.
         if self.match > 1:
             self.flags |= 256
-            if self.match_scores == 'acc':
-                self.match_scores = (2, 3, 3)
-            elif self.match_scores == 'long':
-                self.match_scores = (3, 4, 4)
-            elif self.match_scores == 'free':
-                self.match_scores = (1, 2, 3)
-            elif self.match_scores == 'four':
-                self.match_scores = (1, 2, 4)
+            if self.skunk_scores == 'acc':
+                self.skunk_scores = (2, 3, 3)
+            elif self.skunk_scores == 'long':
+                self.skunk_scores = (3, 4, 4)
+            elif self.skunk_scores == 'free':
+                self.skunk_scores = (1, 2, 3)
+            elif self.skunk_scores == 'four':
+                self.skunk_scores = (1, 2, 4)
             else:
                 try:
-                    self.match_scores = [int(score) for score in self.match_scores.split('/')]
-                    check = self.match_scores[2]
+                    self.skunk_scores = [int(score) for score in self.skunk_scores.split('/')]
+                    check = self.skunk_scores[2]
                 except (ValueError, IndexError):
                     warning = 'Invalid setting for match-scores option: {!r}.'
-                    self.human.error(warning.format(self.match_scores))
-                    self.match_scores = (2, 3, 3)
+                    self.human.error(warning.format(self.skunk_scores))
+                    self.skunk_scores = (2, 3, 3)
         else:
             self.match = 1
-            self.match_scores = (1, 1, 1)
+            self.skunk_scores = (1, 1, 1)
 
     def player_action(self, player):
         """
@@ -587,7 +590,7 @@ class Cribbage(game.Game):
         # Set the match options.
         self.option_set.add_option('match', converter = int, default = 1,
             question = 'How many games for match play (return for single game)? ')
-        self.option_set.add_option('match-scores', valid = ('acc', 'long', 'free', 'four'), 
+        self.option_set.add_option('skunk-scores', valid = ('acc', 'long', 'free', 'four'), 
             default = 'acc', question = 'Should match scores be ACC, long, free, or triple? ')
         # Set the variant groups.
         five_card = 'one-go cards=5 discards=1 win=61 skunk=31 last=3'
@@ -615,6 +618,7 @@ class Cribbage(game.Game):
         self.phase = 'deal'
         self.card_total = 0
         self.go_count = 0
+        self.match_scores = {player.name: 0 for player in self.players}
         # Set up the deck.
         self.deck = cards.Deck(card_class = CribCard)
         self.deck.shuffle()
@@ -645,6 +649,13 @@ class Cribbage(game.Game):
                 else:
                     break
             self.dealer_index = self.players.index(cards_picked[0][1]) - 1
+
+    def show_match(self):
+        """Show the match scores. (None)"""
+        self.human.tell('\nMatch Scores\n----- ------')
+        for name in sorted(player.name for player in self.players):
+            self.human.tell('{}: {}'.format(name, self.match_scores[name]))
+        self.human.tell()
 
 
 class CribBot(player.Bot):
