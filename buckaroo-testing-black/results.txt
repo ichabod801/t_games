@@ -270,3 +270,5 @@ Cribbage,1,0,0,186,153,1,cards=7 skunk=151 target-score=181
 Cribbage,4,2,0,33,119,259,match=3 skunk=15 target-score=31
 Cribbage,3,0,0,37,27,257,auto-go auto-score match=3 no-cut no-pick skunk=15 target-score=31
 Cribbage,3,0,0,31,25,257,auto-go auto-score match=3 no-cut no-pick skunk=15 target-score=31
+Cribbage,4,0,0,34,74,257,auto-go auto-score match=3 no-cut no-pick skunk=15 target-score=31
+Cribbage,2,4,0,23,114,257,auto-go auto-score match=3 no-cut no-pick skunk=15 target-score=31
