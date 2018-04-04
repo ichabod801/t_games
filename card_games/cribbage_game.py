@@ -166,7 +166,7 @@ class Cribbage(game.Game):
     categories = ['Card Games', 'Matching Game']
     credits = CREDITS
     name = 'Cribbage'
-    num_options = 8
+    num_options = 10
     rules = RULES
 
     def __str__(self):
@@ -369,13 +369,17 @@ class Cribbage(game.Game):
         Parameters:
         player: The current player. (player.Player)
         """
+        # Get the player information
         hand = self.hands[player.name]
         in_play = self.in_play[player.name]
+        # Check for playable cards.
         playable = [card for card in hand if card + self.card_total <= 31]
         if not playable:
+            # Warn player of no playable cards.
             player.tell('You have no playable cards and must go.')
             if not self.auto_score:
                 player.ask(ENTER_TEXT)
+            # Update and check go count
             self.go_count += 1
             if self.go_count == len(self.players):
                 self.human.tell('\nEveryone has passed.')
@@ -385,22 +389,28 @@ class Cribbage(game.Game):
                     self.human.ask(ENTER_TEXT)
                 self.reset()
             return False
+        # Get card to play.
         answer = player.ask('Which card would you like to play, {}? '.format(player.name))
         card = CribCard.card_re.match(answer)
         if card:
             card = CribCard(*answer[:2].upper())
             if card not in hand:
+                # Warn the player about cards they don't have.
                 player.error('You do not have that card in your hand.')
                 return True
             if card + self.card_total > 31:
+                # Warn the player about unplayable cards.
                 player.error('That card would put the running total over 31.')
                 return True
             else:
+                # Play the card.
                 hand.shift(card, in_play)
                 self.in_play['Play Sequence'].cards.append(in_play.cards[-1])
+                # Update hte tracking variables.
                 self.card_total += card
-                self.score_sequence(player)
                 self.go_count = 0
+                # Score the card.
+                self.score_sequence(player)
                 if self.card_total == 31:
                     self.human.tell('\nThe count has reached 31.')
                     self.scores[player.name] += 2
@@ -410,6 +420,7 @@ class Cribbage(game.Game):
                     self.reset()
                 return False
         else:
+            # Handle anything that isn't a playing card.
             return self.handle_cmd(answer)
 
     def reset(self):
@@ -447,11 +458,11 @@ class Cribbage(game.Game):
         suits = set([card.suit for card in cards])
         if len(suits) == 1:
             if self.starter.suit in suits:
-                size = 5
+                size = self.cards - self.discards + 1
             else:
-                size = 4
+                size = self.cards - self.discards
             # Crib can't score 4 flush.
-            if cards[0] not in self.hands['The Crib'] or size == 5:
+            if cards[0] not in self.hands['The Crib'] or size == self.cards - self.discards + 1:
                 score = size
         return score
 
@@ -715,6 +726,14 @@ class Cribbage(game.Game):
 class CribBot(player.Bot):
     """
     A bot for playing Cribbage. (player.Bot)
+
+    Methods:
+    score_discards: 'Score' a potential set of descards. (float)
+    score_four: Score a potential set of kept cards. (int)
+
+    Overridden Methods:
+    ask
+    tell
     """
 
     def ask(self, query):
@@ -803,7 +822,7 @@ class CribBot(player.Bot):
 
     def score_four(self, cards):
         """
-        Score a potential set of four cards. (int)
+        Score a potential set of kept cards. (int)
 
         Parameters:
         cards: The cards to score. (list of CribCard)
