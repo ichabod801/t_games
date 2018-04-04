@@ -225,6 +225,33 @@ class Cribbage(game.Game):
         # Reset the tracking variables.
         self.phase = 'discard'
 
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        game, losses = self.gipf_check(arguments, ('backgammon', 'craps'))
+        # Backgammon
+        if game == 'backgammon':
+            self.human.tell('Pairs score four point each this round.')
+            self.double_pairs = True
+        # Craps
+        elif game == 'craps':
+            hand = self.hands[self.human.name]
+            while True:
+                card_text = self.human.ask('Pick a card to replace: ')
+                card = CribCard.card_re.search(card_text)
+                if not card:
+                    self.human.error('Please enter a valid card.')
+                elif card.upper() not in hand:
+                    self.human.error('You do not have that card to discard.')
+                else:
+                    break
+            hand.discard(card)
+            hand.draw()
+
     def game_over(self):
         """Check for the end of the game. (None)"""
         if max(self.scores.values()) >= self.target_score:
@@ -534,6 +561,7 @@ class Cribbage(game.Game):
                 return True
             elif not self.auto_score:
                 self.human.ask(ENTER_TEXT)
+        self.double_pairs = False
         return False
 
     def score_pairs(self, cards):
@@ -552,6 +580,8 @@ class Cribbage(game.Game):
             if count < 2:
                 break
             pair_score = utility.choose(count, 2) * 2
+            if self.double_pairs:
+                pair_score *= 2
             rank_data.append((rank, count, pair_score))
         return rank_data
 
@@ -610,6 +640,7 @@ class Cribbage(game.Game):
         # Score any pairs.
         if rank_count > 1:
             pair_score = utility.choose(rank_count, 2) * 2
+            pair_score *= 2 * self.double_pairs
             self.scores[player.name] += pair_score
             message = '{} scores {} for getting {} cards of the same rank.'
             self.human.tell(message.format(player.name, pair_score, utility.number_word(rank_count)))
@@ -684,6 +715,7 @@ class Cribbage(game.Game):
         self.card_total = 0
         self.go_count = 0
         self.match_scores = {player.name: 0 for player in self.players}
+        self.double_pairs = False
         # Set up the deck.
         self.deck = cards.Deck(card_class = CribCard)
         self.deck.shuffle()
