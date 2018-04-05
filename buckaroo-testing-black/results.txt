@@ -273,3 +273,5 @@ Cribbage,3,0,0,31,25,257,auto-go auto-score match=3 no-cut no-pick skunk=15 targ
 Cribbage,4,0,0,34,74,257,auto-go auto-score match=3 no-cut no-pick skunk=15 target-score=31
 Cribbage,2,4,0,23,114,257,auto-go auto-score match=3 no-cut no-pick skunk=15 target-score=31
 Backgammon,1,0,0,0,49,0,
+Backgammon,1,0,0,0,63,0,
+Cribbage,0,1,0,120,126,8,
