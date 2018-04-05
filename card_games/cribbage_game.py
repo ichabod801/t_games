@@ -182,8 +182,8 @@ class Cribbage(game.Game):
         # Show the current cards in play.
         if self.phase != 'discard':
             lines.append('\nStarter Card: {}.'.format(self.starter))
-            lines.append('\nCards played: {}\n'.format(self.in_play['Play Sequence']))
-        lines.append('\nRunning Total: {}'.format(self.card_total))
+            lines.append('\nCards played: {}'.format(self.in_play['Play Sequence']))
+        lines.append('\nRunning Total: {}\n'.format(self.card_total))
         return '\n'.join(lines)
 
     def deal(self):
@@ -232,10 +232,10 @@ class Cribbage(game.Game):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
-        game, losses = self.gipf_check(arguments, ('backgammon', 'craps'))
+        game, losses = self.gipf_check(arguments, ('backgammon',))
         # Backgammon
         if game == 'backgammon':
-            self.human.tell('Pairs score four point each this round.')
+            self.human.tell('Pairs score four points each this round.')
             self.double_pairs = True
         # Craps
         elif game == 'craps':
@@ -251,6 +251,10 @@ class Cribbage(game.Game):
                     break
             hand.discard(card)
             hand.draw()
+        # Game with no gipf link
+        else:
+            self.human.error("I'm sorry, sir, but that is simply not acceptable in this venue.")
+        return True
 
     def game_over(self):
         """Check for the end of the game. (None)"""
@@ -640,7 +644,8 @@ class Cribbage(game.Game):
         # Score any pairs.
         if rank_count > 1:
             pair_score = utility.choose(rank_count, 2) * 2
-            pair_score *= 2 * self.double_pairs
+            if self.double_pairs:
+                pair_score *= 2
             self.scores[player.name] += pair_score
             message = '{} scores {} for getting {} cards of the same rank.'
             self.human.tell(message.format(player.name, pair_score, utility.number_word(rank_count)))

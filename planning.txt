@@ -219,6 +219,7 @@ battleships              Gesundheit
 blackjack                ValueError: gipf
 canfield                 I'm sorry, I don't speak Flemish.
 connect four             Yeah, just go two blocks up and take a right. You can't miss it.
+cribbage                 I'm sorry, sir, but that is simply not acceptable in this venue.
 freecell                 There are no valid moves for the gipf of spades.
 ninety-nine              Girls in pillow fights? Come on, this is a family game.
 pig                      Say what?
