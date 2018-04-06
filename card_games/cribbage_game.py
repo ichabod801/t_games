@@ -87,6 +87,7 @@ double-skunk=: The score needed to avoid a double skunk (default = 0).
 fast: Equivalent to auto-go auto-score no-cut no-pick.
 five-card (5-card): equivalent to one-go cards=5 discards=1 target-score=61
     skunk=31 last=3
+four-partners (4-partners): equivalent to n-bots=3 partners cards=5 discards=1
 last=: The initial score of the last player to play (default = 0).
 match=: The number of games to play in a match. (default = 1).
     Match results only make sense for two player games.
@@ -101,6 +102,7 @@ n-bots: The number of bots to play against.
 no-cut: Skip cutting the deck before the deal.
 no-pick: Skip picking a card to see who deals first.
 one-go: There is only one round of play, that is, only one go.
+partners: Pair players off into teams.
 seven-card (7-card): equivalent to cards=7 target-score=181 skunk=151
 skunk=: The score needed to avoid a skunk (defualt = 91, only in match play).
 target-score= (win=): The score needed to win (default = 121).
@@ -132,6 +134,7 @@ class Cribbage(game.Game):
     no_pick: A flag for skipping picking a card to see who deals. (bool)
     phase: The phase of play, either deal, discard, or play. (str)
     one_go: A flag for there only being one round of play. (bool)
+    partners: A flag for having teams of players. (bool)
     skunk: The score needed to avoid being skunked.
     skunk_scores: The match points earned for wins and skunks. (tuple of int)
     starter: The starter card. (CribCard)
@@ -164,7 +167,7 @@ class Cribbage(game.Game):
     categories = ['Card Games', 'Matching Game']
     credits = CREDITS
     name = 'Cribbage'
-    num_options = 10
+    num_options = 11
     rules = RULES
 
     def __str__(self):
@@ -323,6 +326,19 @@ class Cribbage(game.Game):
             taken_names.append(self.players[-1].name)
         # Set up teams.
         self.teams = {player.name: [player.name] for player in self.players}
+        if self.partners:
+            if len(self.players) % 2:
+                # Warn user for trying to make a team with an odd number of players.
+                warning = 'Invalid number of players for the partners option: {}.'
+                self.human.error(warning.format(len(self.players)))
+            else:
+                # Set up the teams.
+                num_teams = len(self.players) // 2
+                for player_index, player in enumerate(self.players[:num_teams]):
+                    team_mate = self.players[player_index + num_teams]
+                    team = [player.name, team_mate.name]
+                    self.teams[player.name] = team
+                    self.teams[team_mate.name] = team
         # Set up match play.
         if self.match > 1:
             self.flags |= 256
@@ -393,7 +409,7 @@ class Cribbage(game.Game):
             for card in discards:
                 self.hands[player.name].shift(card, self.hands['The Crib'])
             # Check for starting play.
-            if len(self.hands['The Crib']) == 4:
+            if len(self.hands['The Crib']) == 4: # !! does not work with all card/discard combinations
                 self.phase = 'play'
                 self.starter = self.deck.deal(up = True)
                 # Check for heels.
@@ -700,6 +716,7 @@ class Cribbage(game.Game):
             question = 'How many points should it take to avoid a double skunk (return for 0)? ')
         self.option_set.add_option('last', [], int, default = 0, check = lambda x: x > -1,
             question = 'How many points should the last player get for being last (return for 0)? ')
+        self.option_set.add_option('partners', question = 'Should players be paired off into teams? bool')
         # Set the number of opponents.
         self.option_set.add_option('n-bots', converter = int, default = 1, valid = (1, 2, 3),
             question = 'How many bots would you like to play against (return for 1)? ')
@@ -715,6 +732,9 @@ class Cribbage(game.Game):
         seven_card = 'cards=7 win=181 skunk=151'
         self.option_set.add_group('seven-card', seven_card)
         self.option_set.add_group('7-card', seven_card)
+        four_partners = 'n-bots=3 partners cards=5 discards=1'
+        self.option_set.add_group('four-partners', four_partners)
+        self.option_set.add_group('4-partners', four_partners)
         # Interface options (do not count in num_options)
         self.option_set.add_group('fast', 'auto-go auto-score no-cut no-pick')
         self.option_set.add_option('auto-go', 
