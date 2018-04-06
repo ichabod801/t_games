@@ -6,11 +6,8 @@ A game of Cribbage.
 To Do (not in order)
     get gipfing and anything else done, then flesh out options until the 15th.
     options:
-        cut throat
         solo
         partnership
-        auction
-        solitaire?
 
 Constants:
 CREDITS: The credits for Cribbage. (str)
@@ -141,6 +138,7 @@ class Cribbage(game.Game):
     target_score: The score needed to win the game. (int)
 
     Methods:
+    add_points: Add points to a player's score. (None)
     deal: Deal the cards. (None)
     player_discards: Allow the player to discard cards. (None)
     player_play: Allow the player to play a card. (None)
@@ -185,6 +183,21 @@ class Cribbage(game.Game):
             lines.append('\nCards played: {}'.format(self.in_play['Play Sequence']))
         lines.append('\nRunning Total: {}\n'.format(self.card_total))
         return '\n'.join(lines)
+
+    def add_points(self, player, points):
+        """
+        Add points to a player's score. (None)
+
+        Parameters:
+        player: The player to get the points. (player.Player or str)
+        points: The points they should get.
+        """
+        # Get the player name.
+        if isinstance(player, player.Player):
+            player = player.name
+        # Add his score to all team mates.
+        for name in self.teams[player]:
+            self.scores[name] += points
 
     def deal(self):
         """Deal the cards. (None)"""
@@ -308,6 +321,8 @@ class Cribbage(game.Game):
         for bot in range(self.n_bots):
             self.players.append(CribBot(taken_names))
             taken_names.append(self.players[-1].name)
+        # Set up teams.
+        self.teams = {player.name: [player.name] for player in self.players}
         # Set up match play.
         if self.match > 1:
             self.flags |= 256
@@ -387,7 +402,7 @@ class Cribbage(game.Game):
                     if not self.auto_score:
                         self.human.ask(ENTER_TEXT)
                     dealer = self.players[self.dealer_index]
-                    self.scores[dealer.name] += 2
+                    self.add_points(dealer, 2)
                     if self.scores[dealer.name] >= self.target_score:
                         self.force_win
                         return False
@@ -414,8 +429,8 @@ class Cribbage(game.Game):
             self.go_count += 1
             if self.go_count == len(self.players):
                 self.human.tell('\nEveryone has passed.')
-                self.scores[player.name] += 1
-                self.human.tell('{} scores 1 for the go.'.format(player.name))
+                self.add_points(player, 1)
+                self.human.tell('{} scores 1 for the go.'.format(player.name)) # !! no check for win?
                 if not self.auto_score:
                     self.human.ask(ENTER_TEXT)
                 self.reset()
@@ -444,8 +459,8 @@ class Cribbage(game.Game):
                 self.score_sequence(player)
                 if self.card_total == 31:
                     self.human.tell('\nThe count has reached 31.')
-                    self.scores[player.name] += 2
-                    self.human.tell('{} scores 2 points for reaching 31.'.format(player.name))
+                    self.add_points(player, 2)
+                    self.human.tell('{} scores 2 points for reaching 31.'.format(player.name)) # !! no check for win?
                     if not self.auto_score:
                         self.human.ask(ENTER_TEXT)
                     self.reset()
@@ -558,8 +573,8 @@ class Cribbage(game.Game):
                 self.human.tell(message.format(name, run_length, run_count, run_length * run_count))
             # Announce and record total.
             self.human.tell('{} scored a total of {} points for this hand.'.format(name, hand_score))
-            self.scores[name] += hand_score
-            # Check for a win.
+            self.add_points(name, hand_score)
+            # Check for a win. !! won't work with partnership.
             if self.scores[name] >= self.target_score:
                 self.human.tell('{} has won with {} points.'.format(name, self.scores[name]))
                 return True
@@ -631,7 +646,7 @@ class Cribbage(game.Game):
         played = self.in_play['Play Sequence']
         # Check for a total of 15.
         if self.card_total == 15:
-            self.scores[player.name] += 2
+            self.add_points(player, 2)
             self.human.tell('{} scores 2 points for reaching 15.'.format(player.name))
             if not self.auto_score:
                 self.human.ask(ENTER_TEXT)
@@ -646,7 +661,7 @@ class Cribbage(game.Game):
             pair_score = utility.choose(rank_count, 2) * 2
             if self.double_pairs:
                 pair_score *= 2
-            self.scores[player.name] += pair_score
+            self.add_points(player, pair_score)
             message = '{} scores {} for getting {} cards of the same rank.'
             self.human.tell(message.format(player.name, pair_score, utility.number_word(rank_count)))
             if not self.auto_score:
@@ -660,7 +675,7 @@ class Cribbage(game.Game):
                 run_count = len(values)
         # Score any runs.
         if run_count:
-            self.scores[player.name] += run_count
+            self.add_points(player, run_count)
             message = '{} scores {} for getting a {}-card straight.'
             self.human.tell(message.format(player.name, run_count, utility.number_word(run_count)))
             if not self.auto_score:
