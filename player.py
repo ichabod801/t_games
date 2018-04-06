@@ -532,7 +532,8 @@ class Tester(Human):
         self.name = name
         self.quest = quest
         self.color = color
-        self.folder_name = '{}-{}-{}'.format(self.name, self.quest, self.color).lower()
+        base_name = '{}-{}-{}'.format(self.name, self.quest, self.color).lower()
+        self.folder_name = os.path.join(utility.LOC, base_name)
         if not os.path.exists(self.folder_name):
             os.mkdir(self.folder_name)
             with open(os.path.join(self.folder_name, 'results.txt'), 'w') as player_data:

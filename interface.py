@@ -133,12 +133,6 @@ class Interface(other_cmd.OtherCmd):
         for cls in reversed(self.__class__.__mro__):
             if hasattr(cls, 'aliases'):
                 self.aliases.update(cls.aliases)
-        # Display the intro.
-        self.human.tell("\nWelcome to Ichabod's Text Game Extravaganza!")
-        unique_games = set([g for g in self.games.values() if g.categories[0] != 'Test Games'])
-        num_options = sum(game.num_options for game in unique_games)
-        count_text = 'Currently hosting {} different games with {} settable options.\n'
-        self.human.tell(count_text.format(len(unique_games), num_options))
 
     def category_games(self):
         """Get all of the games in the current category. (list of game.Game)"""
@@ -315,6 +309,12 @@ class Interface(other_cmd.OtherCmd):
         # Start at the top category.
         self.focus = self.categories
         previous = []
+        # Display the intro.
+        self.human.tell("\nWelcome to Ichabod's Text Game Extravaganza!")
+        unique_games = set([g for g in self.games.values() if g.categories[0] != 'Test Games'])
+        num_options = sum(game.num_options for game in unique_games)
+        count_text = 'Currently hosting {} different games with {} settable options.\n'
+        self.human.tell(count_text.format(len(unique_games), num_options))
         # Loop through player choices.
         while True:
             # Show the menu and get the possible choices.
@@ -358,7 +358,7 @@ class Interface(other_cmd.OtherCmd):
             self.human.store_results(self.game.name, results)
             self.do_stats(self.game.name)
             again = self.human.ask('Would you like to play again? ').strip().lower()
-            if again == '!':
+            if again in ('!', '!!'):
                 self.human.held_inputs = ['!']
                 break
             elif again not in utility.YES:

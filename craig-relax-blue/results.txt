@@ -114,3 +114,7 @@ FreeCell,1,0,0,809,59,0,
 FreeCell,1,0,0,822,47,0,
 FreeCell,1,0,0,791,74,0,
 FreeCell,1,0,0,806,63,0,
+FreeCell,1,0,0,809,57,0,
+FreeCell,1,0,0,811,53,0,
+FreeCell,1,0,0,808,61,0,
+Pig,3,0,0,101,32,1,medium satan x

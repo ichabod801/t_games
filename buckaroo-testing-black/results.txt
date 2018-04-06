@@ -275,3 +275,4 @@ Cribbage,2,4,0,23,114,257,auto-go auto-score match=3 no-cut no-pick skunk=15 tar
 Backgammon,1,0,0,0,49,0,
 Backgammon,1,0,0,0,63,0,
 Cribbage,0,1,0,120,126,8,
+Pig,2,1,0,52,20,1,medium satan x

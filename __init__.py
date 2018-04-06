@@ -13,6 +13,7 @@ import tgames.dice as dice
 import tgames.game as game
 import tgames.interface as interface
 import tgames.player as player
+import tgames.test as test
 
 def play():
     """Play some text games. (None)"""
