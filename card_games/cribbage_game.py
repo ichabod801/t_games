@@ -326,19 +326,11 @@ class Cribbage(game.Game):
             taken_names.append(self.players[-1].name)
         # Set up teams.
         self.teams = {player.name: [player.name] for player in self.players}
-        if self.partners:
-            if len(self.players) % 2:
-                # Warn user for trying to make a team with an odd number of players.
-                warning = 'Invalid number of players for the partners option: {}.'
-                self.human.error(warning.format(len(self.players)))
-            else:
-                # Set up the teams.
-                num_teams = len(self.players) // 2
-                for player_index, player in enumerate(self.players[:num_teams]):
-                    team_mate = self.players[player_index + num_teams]
-                    team = [player.name, team_mate.name]
-                    self.teams[player.name] = team
-                    self.teams[team_mate.name] = team
+        # Warn user for trying to make a team with an odd number of players.
+        if self.partners and len(self.players) % 2:
+            warning = 'Invalid number of players for the partners option: {}.'
+            self.human.error(warning.format(len(self.players)))
+            self.partners = False
         # Set up match play.
         if self.match > 1:
             self.flags |= 256
@@ -772,7 +764,7 @@ class Cribbage(game.Game):
             players = self.players
             while True:
                 cards_picked = []
-                for player in self.players:
+                for player in players:
                     query = 'Enter a number to pick a card: '
                     card_index = player.ask_int(query, cmd = False, default = 0)
                     card = self.deck.pick(card_index)
@@ -780,12 +772,21 @@ class Cribbage(game.Game):
                     self.deck.discard(card)
                     cards_picked.append((card, player))
                 cards_picked.sort()
+                self.players[:len(cards_picked)] = [player for card, player in cards_picked]
                 if cards_picked[0][0].rank == cards_picked[1][0].rank:
                     self.human.tell('Tie! Pick again.')
                     players = [plyr for crd, plyr in cards_picked if crd.rank == cards_picked[0][0].rank]
                 else:
                     break
-            self.dealer_index = self.players.index(cards_picked[0][1]) - 1
+            self.dealer_index = -1
+        if self.partners:
+            # Set up the teams.
+            num_teams = len(self.players) // 2
+            for player_index, player in enumerate(self.players[:num_teams]):
+                team_mate = self.players[player_index + num_teams]
+                team = [player.name, team_mate.name]
+                self.teams[player.name] = team
+                self.teams[team_mate.name] = team
 
     def show_match(self):
         """Show the match scores. (None)"""
