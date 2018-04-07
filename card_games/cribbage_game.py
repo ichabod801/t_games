@@ -187,19 +187,19 @@ class Cribbage(game.Game):
         lines.append('\nRunning Total: {}\n'.format(self.card_total))
         return '\n'.join(lines)
 
-    def add_points(self, player, points):
+    def add_points(self, scorer, points):
         """
         Add points to a player's score. (None)
 
         Parameters:
-        player: The player to get the points. (player.Player or str)
+        scorer: The player to get the points. (player.Player or str)
         points: The points they should get.
         """
         # Get the player name.
-        if isinstance(player, player.Player):
-            player = player.name
+        if isinstance(scorer, player.Player):
+            scorer = scorer.name
         # Add his score to all team mates.
-        for name in self.teams[player]:
+        for name in self.teams[scorer]:
             self.scores[name] += points
 
     def deal(self):
@@ -408,8 +408,8 @@ class Cribbage(game.Game):
             # Handle discards.
             for card in discards:
                 self.hands[player.name].shift(card, self.hands['The Crib'])
-            # Check for starting play.
-            if len(self.hands['The Crib']) == 4: # !! does not work with all card/discard combinations
+            # Check for starting play after dealer discards.
+            if self.players.index(player) == self.dealer_index:
                 self.phase = 'play'
                 self.starter = self.deck.deal(up = True)
                 # Check for heels.

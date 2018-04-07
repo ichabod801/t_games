@@ -276,3 +276,4 @@ Backgammon,1,0,0,0,49,0,
 Backgammon,1,0,0,0,63,0,
 Cribbage,0,1,0,120,126,8,
 Pig,2,1,0,52,20,1,medium satan x
+Cribbage,0,1,0,78,111,3,auto-go auto-score no-cut no-pick
