@@ -278,3 +278,4 @@ Cribbage,0,1,0,120,126,8,
 Pig,2,1,0,52,20,1,medium satan x
 Cribbage,0,1,0,78,111,3,auto-go auto-score no-cut no-pick
 Cribbage,2,0,1,122,178,1,cards=5 discards=1 n-bots=3 partners
+Cribbage,0,1,0,97,152,1,cards=5 discards=1 n-bots=3 partners

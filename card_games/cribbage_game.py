@@ -278,7 +278,9 @@ class Cribbage(game.Game):
             # Determine the winner.
             scores = [(score, name) for name, score in self.scores.items()]
             scores.sort(reverse = True)
-            self.human.tell('{1} wins with {0} points.'.format(*scores[0])) # !! dupe output, score_hands
+            names = ' and '.join(self.teams[scores[0][1]])
+            s = ('s', '')[' and ' in names]
+            self.human.tell('{} wins with {} points.'.format(names, scores[0][0])) # !! dupe output, score_hands
             # Check for skunk.
             game_score = self.skunk_scores[0]
             if scores[1][0] < self.skunk:
@@ -293,7 +295,7 @@ class Cribbage(game.Game):
             # Calcualte win/loss/draw stats.
             human_score = self.scores[self.human.name]
             for score, name in scores:
-                if name == self.human.name:
+                if name in self.teams[self.human.name]:
                     continue
                 elif score < human_score:
                     self.win_loss_draw[0] += game_score
@@ -301,6 +303,9 @@ class Cribbage(game.Game):
                     self.win_loss_draw[1] += game_score
                 elif score == human_score:
                     self.win_loss_draw[2] += game_score
+            # Halve win/loss/draw for team games, so it's per team not per preson.
+            if self.partners:
+                self.win_loss_draw = [x // 2 for x in self.win_loss_draw]
             # Check for a match win.
             if max(self.match_scores.values()) >= self.match:
                 return True
@@ -584,7 +589,7 @@ class Cribbage(game.Game):
             self.add_points(name, hand_score)
             # Check for a win. !! won't work with partnership.
             if self.scores[name] >= self.target_score:
-                self.human.tell('{} has won with {} points.'.format(name, self.scores[name]))
+                #self.human.tell('{} has won with {} points.'.format(name, self.scores[name]))
                 return True
             elif not self.auto_score:
                 self.human.ask(ENTER_TEXT)
