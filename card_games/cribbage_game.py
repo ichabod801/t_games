@@ -7,7 +7,6 @@ To Do (not in order)
     get gipfing and anything else done, then flesh out options until the 15th.
     options:
         solo
-        partnership
 
 Constants:
 CREDITS: The credits for Cribbage. (str)
@@ -105,6 +104,8 @@ one-go: There is only one round of play, that is, only one go.
 partners: Pair players off into teams.
 seven-card (7-card): equivalent to cards=7 target-score=181 skunk=151
 skunk=: The score needed to avoid a skunk (defualt = 91, only in match play).
+solo: The players are teamed against the dealer, and the dealer can swap cards
+    with the crib.
 target-score= (win=): The score needed to win (default = 121).
 """
 
@@ -216,6 +217,11 @@ class Cribbage(game.Game):
         dealer = self.players[self.dealer_index]
         self.player_index = self.dealer_index
         print('\nThe current dealer is {}.'.format(dealer.name))
+        # Set the teams for the solo option.
+        if self.solo:
+            self.teams[dealer.name] = [dealer.name]
+            non_dealers = [player.name for player in self.players if player != dealer]
+            self.teams.update({name: non_dealers for name in non_dealers})
         # Score the last bonus.
         if self.last and max(self.scores.values()) == 0:
             last_index = (self.dealer_index - 1) % len(self.players)
@@ -385,6 +391,12 @@ class Cribbage(game.Game):
         Parameters:
         player: The current player. (player.Player)
         """
+        # Handle solo option for dealer.
+        if self.solo and player == self.players[self.dealer_index]:
+            for card in self.hands['The Crib']:
+                self.hands['The Crib'].shift(card, self.hands[player.name])
+            discard_save = self.discards
+            self.discards = self.cards - self.discards
         # Get and parse the discards.
         discard_word, s = [('', ''), (' two', 's')][self.discards != 1]
         query = 'Which{} card{} would you like to discard to the crib, {}? '
@@ -409,6 +421,8 @@ class Cribbage(game.Game):
             if self.players.index(player) == self.dealer_index:
                 self.phase = 'play'
                 self.starter = self.deck.deal(up = True)
+                if self.solo:
+                    self.discards = discard_save
                 # Check for heels.
                 if self.starter.rank == 'J':
                     self.human.tell('The dealer got their heels.')
@@ -714,6 +728,7 @@ class Cribbage(game.Game):
         self.option_set.add_option('last', [], int, default = 0, check = lambda x: x > -1,
             question = 'How many points should the last player get for being last (return for 0)? ')
         self.option_set.add_option('partners', question = 'Should players be paired off into teams? bool')
+        self.option_set.add_option('solo', question = 'Should players be teamed against the dealer? bool')
         # Set the number of opponents.
         self.option_set.add_option('n-bots', converter = int, default = 1, valid = (1, 2, 3),
             question = 'How many bots would you like to play against (return for 1)? ')
@@ -823,11 +838,13 @@ class CribBot(player.Bot):
         """
         hand = self.game.hands[self.name]
         if 'discard' in query:
-            dealer = self.name == self.game.players[self.game.dealer_index].name
+            dealer = (self == self.game.players[self.game.dealer_index])
             possibles = []
-            for keepers in itertools.combinations(hand, self.game.cards - self.game.discards):
+            for keepers in itertools.combinations(hand, len(self.hand) - self.game.discards):
                 discards = [card for card in hand if card not in keepers]
-                if dealer:
+                if dealer and self.game.solo:
+                    score = self.score_four(keepers) + self.score_four(discards)
+                elif dealer
                     score = self.score_four(keepers) + self.score_discards(discards)
                 else:
                     score = self.score_four(keepers) - self.score_discards(discards)
