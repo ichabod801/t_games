@@ -217,11 +217,14 @@ class Cribbage(game.Game):
         dealer = self.players[self.dealer_index]
         self.player_index = self.dealer_index
         print('\nThe current dealer is {}.'.format(dealer.name))
-        # Set the teams for the solo option.
+        # Handle the solo option.
         if self.solo:
+            # Set up teams
             self.teams[dealer.name] = [dealer.name]
             non_dealers = [player.name for player in self.players if player != dealer]
             self.teams.update({name: non_dealers for name in non_dealers})
+            # Redirect the crib.
+            self.hands['The Crib'] = self.hands[dealer.name]
         # Score the last bonus.
         if self.last and max(self.scores.values()) == 0:
             last_index = (self.dealer_index - 1) % len(self.players)
@@ -286,7 +289,7 @@ class Cribbage(game.Game):
             scores.sort(reverse = True)
             names = ' and '.join(self.teams[scores[0][1]])
             s = ('s', '')[' and ' in names]
-            self.human.tell('{} wins with {} points.'.format(names, scores[0][0])) # !! dupe output, score_hands
+            self.human.tell('{} win{} with {} points.'.format(names, s, scores[0][0]))
             # Check for skunk.
             game_score = self.skunk_scores[0]
             if scores[1][0] < self.skunk:
@@ -393,12 +396,14 @@ class Cribbage(game.Game):
         """
         # Handle solo option for dealer.
         if self.solo and player == self.players[self.dealer_index]:
-            for card in self.hands['The Crib']:
-                self.hands['The Crib'].shift(card, self.hands[player.name])
+            # Handle different discard count.
             discard_save = self.discards
             self.discards = self.cards - self.discards
+            # Reset the crib.
+            self.hands['The Crib'] = cards.Hand(self.deck)
         # Get and parse the discards.
-        discard_word, s = [('', ''), (' two', 's')][self.discards != 1]
+        s = ('', 's')[self.discards != 1]
+        discard_word = utility.number_word(self.discards)
         query = 'Which{} card{} would you like to discard to the crib, {}? '
         answer = player.ask(query.format(discard_word, s, player.name))
         discards = cards.Card.card_re.findall(answer)
@@ -840,11 +845,11 @@ class CribBot(player.Bot):
         if 'discard' in query:
             dealer = (self == self.game.players[self.game.dealer_index])
             possibles = []
-            for keepers in itertools.combinations(hand, len(self.hand) - self.game.discards):
+            for keepers in itertools.combinations(hand, len(hand) - self.game.discards):
                 discards = [card for card in hand if card not in keepers]
                 if dealer and self.game.solo:
                     score = self.score_four(keepers) + self.score_four(discards)
-                elif dealer
+                elif dealer:
                     score = self.score_four(keepers) + self.score_discards(discards)
                 else:
                     score = self.score_four(keepers) - self.score_discards(discards)
