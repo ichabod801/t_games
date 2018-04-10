@@ -107,6 +107,8 @@ skunk=: The score needed to avoid a skunk (defualt = 91, only in match play).
 solo: The players are teamed against the dealer, and the dealer can swap cards
     with the crib.
 target-score= (win=): The score needed to win (default = 121).
+three-solo (3-solo): Equivalent to one-go cards=5 discards=1 win=61 skunk=31 
+    n-bots=2 solo
 """
 
 
@@ -284,6 +286,9 @@ class Cribbage(game.Game):
     def game_over(self):
         """Check for the end of the game. (None)"""
         if max(self.scores.values()) >= self.target_score:
+            # Reset the teams in solo play.
+            if self.solo:
+                self.teams = {player.name: [player.name] for player in self.players}
             # Determine the winner.
             scores = [(score, name) for name, score in self.scores.items()]
             scores.sort(reverse = True)
@@ -404,7 +409,7 @@ class Cribbage(game.Game):
         # Get and parse the discards.
         s = ('', 's')[self.discards != 1]
         discard_word = utility.number_word(self.discards)
-        query = 'Which{} card{} would you like to discard to the crib, {}? '
+        query = 'Which {} card{} would you like to discard to the crib, {}? '
         answer = player.ask(query.format(discard_word, s, player.name))
         discards = cards.Card.card_re.findall(answer)
         if not discards:
@@ -553,7 +558,11 @@ class Cribbage(game.Game):
         # Loop through the players, starting on the dealer's left.
         player_index = (self.dealer_index + 1) % len(self.players)
         names = [player.name for player in self.players[player_index:] + self.players[:player_index]]
-        for name in names + ['The Crib']:
+        names.append('The Crib')
+        # Dealer score first with the solo option.
+        if self.solo:
+            names = names[-2:] + names[:-2]
+        for name in names:
             self.human.tell()
             hand_score = 0
             # Score the crib to the dealer.
@@ -752,6 +761,9 @@ class Cribbage(game.Game):
         four_partners = 'n-bots=3 partners cards=5 discards=1'
         self.option_set.add_group('four-partners', four_partners)
         self.option_set.add_group('4-partners', four_partners)
+        three_solo = 'one-go cards=5 discards=1 win=61 skunk=31 n-bots=2 solo'
+        self.option_set.add_group('three-solo', three_solo)
+        self.option_set.add_group('3-solo', three_solo)
         # Interface options (do not count in num_options)
         self.option_set.add_group('fast', 'auto-go auto-score no-cut no-pick')
         self.option_set.add_option('auto-go', 

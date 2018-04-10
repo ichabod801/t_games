@@ -280,3 +280,5 @@ Cribbage,0,1,0,78,111,3,auto-go auto-score no-cut no-pick
 Cribbage,2,0,1,122,178,1,cards=5 discards=1 n-bots=3 partners
 Cribbage,0,1,0,97,152,1,cards=5 discards=1 n-bots=3 partners
 Cribbage,1,0,0,61,31,1,cards=5 discards=1 last=3 n-bots=2 one-go skunk=31 solo target-score=61
+Cribbage,0,2,0,52,45,1,cards=5 discards=1 n-bots=2 one-go skunk=31 solo target-score=61
+Cribbage,1,1,0,57,51,1,cards=5 discards=1 n-bots=2 one-go skunk=31 solo target-score=61
