@@ -134,3 +134,44 @@ FreeCell,1,0,0,796,76,0,
 FreeCell,1,0,0,806,63,0,
 FreeCell,1,0,0,812,60,0,
 FreeCell,1,0,0,808,59,0,
+FreeCell,1,0,0,812,55,0,
+FreeCell,1,0,0,814,51,0,
+FreeCell,1,0,0,824,45,0,
+FreeCell,1,0,0,813,56,0,
+FreeCell,1,0,0,801,78,0,
+FreeCell,1,0,0,814,52,0,
+FreeCell,1,0,0,825,44,0,
+FreeCell,1,0,0,803,64,0,
+FreeCell,1,0,0,818,45,0,
+FreeCell,1,0,0,821,43,0,
+FreeCell,1,0,0,823,40,0,
+FreeCell,1,0,0,813,55,0,
+Pig,3,0,0,100,39,1,medium satan x
+FreeCell,1,0,0,812,56,0,
+FreeCell,1,0,0,800,67,0,
+Pig,3,0,0,103,50,1,medium satan x
+Solitaire Dice,0,0,1,480,46,0,
+FreeCell,1,0,0,815,51,0,
+FreeCell,1,0,0,805,60,0,
+FreeCell,1,0,0,705,165,0,
+FreeCell,1,0,0,819,50,0,
+FreeCell,1,0,0,803,60,0,
+FreeCell,1,0,0,743,129,0,
+Pig,0,3,0,48,25,1,medium satan x
+Pig,3,0,0,101,29,1,medium satan x
+Solitaire Dice,0,1,0,-400,44,0,
+FreeCell,1,0,0,814,61,0,
+FreeCell,1,0,0,793,72,0,
+FreeCell,1,0,0,814,58,0,
+Pig,0,3,0,51,45,1,medium satan x
+Pig,3,0,0,102,37,1,medium satan x
+Pig,2,1,0,98,34,1,medium satan x
+Pig,0,3,0,45,20,1,medium satan x
+Pig,0,3,0,28,51,1,medium satan x
+Pig,3,0,0,107,33,1,medium satan x
+FreeCell,1,0,0,806,64,0,
+FreeCell,1,0,0,810,61,0,
+FreeCell,1,0,0,811,68,0,
+FreeCell,1,0,0,807,60,0,
+FreeCell,1,0,0,814,53,0,
+FreeCell,1,0,0,812,57,0,

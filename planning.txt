@@ -86,134 +86,44 @@ other: 3
 
 == Gipf Planning ==
 
-accordion             -> spit
-accordion             -> canfield
-adventure             -> hunt the wumpus
-adventure             -> zip
-bacarat               -> mexico
-bacarat               -> rock-paper-scissors
 backgammon            -> connect four
-backgammon            -> snakes and ladders
-battleships           -> chess                (win if you sink their battleship)
-battleships           -> 
-beleaguered castle    -> war
-beleaguered castle    -> forty thieves
-bisley                -> blackjack
-bisley                -> martha
-black hole            -> space traders
-black hole            -> interregnum
-blackjack             -> bacarat
+battleships           -> canfield                
+battleships           -> pig                  (bonus shot if you get a hit)
+battleships           -> hunt the wumpus      (learn the location of a specific ship type)
 blackjack             -> ninety-nine          (the dealer can't draw (their turn is skipped))
-canfield              -> la belle lucie
 canfield              -> blackjack            (build a jack on any thing)
-chess                 -> mancala              (take a row and move it one square left or right)
-chess                 -> mate
 connect four          -> roulette             (your opponent's next move is random)
-connect four          -> halma
-craps                 -> zip
+connect four          -> hunt the wumpus
 craps                 -> crazy eights
-crazy eights          -> mexico
-crazy eights          -> spit
-crescent              -> tafl
-crescent              -> beleaguered castle
-cribbage              -> backgammon
-cribbage              -> tonk
-dudo                  -> liar's dice
-dudo                  -> poker dice
-freecell              -> hamurabi
-freecell              -> nestor
-forty thieves         -> bisley
+crazy eights          -> strategy
+cribbage              -> backgammon           (pairs score four points for one round)
+cribbage              -> craps                (discard a card and get a new one)
+cribbage              -> crazy eights
+freecell              -> hamurabi             (put a free cell card on any tableau pile)
 forty thieves         -> freecell             (move any one card from the waste)
-fox and geese         -> dudo
-fox and geese         -> ghost
-ghost                 -> hangman              (switch the ghost word to the hangman word)
-ghost                 -> rock-paper-scissors
-global thermonuclear  -> peace and love
-global thermonuclear  -> forty thieves
-golf                  -> black hole
-golf                  -> spider
-golf ii               -> golf
-golf ii               -> spades
-halma                 -> chess
-halma                 -> mancala
+forty thieves         -> pig
 hamurabi              -> cribbage
-hamurabi              -> pyramid
-hangman               -> fox and geese
-hangman               -> ghost
-hearts                -> rummy
-hearts                -> strategy
+hamurabi              -> yacht
+hangman               -> craps
+hunt the wumpus       -> pig                  (giant bats)
+hunt the wumpus       -> battleships          (moves the wumpus)
 hunt the wumpus       -> hangman
-hunt the wumpus       ->
-interregnum           -> martha
-interregnum           -> labyrinth
-klondike              -> quadrille
+klondike              -> battleships
+klondike              -> hangman
 klondike              -> solitaire dice       (place one card from the stock at the end of the stock)
-la belle lucie        -> black hole
-la belle lucie        -> canfield
-labyrinth             -> tafl
-labyrinth             -> interregnum
-liar's dice           -> la belle lucie
-liar's dice           -> yacht
-mancala               -> backgammon
-mancala               -> hearts
-martha                -> bisley
-martha                -> nestor
-mate                  -> dudo
-mate                  -> monte carlo
-mexico                -> adventure
-mexico                -> craps
-monte carlo           -> pyramid
-monte carlo           -> strategy
-nestor                -> crescent
-nestor                -> monte carlo
 ninety-nine           -> blackjack            (pass without losing a token)
-ninety-nine           -> golf ii
-number guessing       -> snip snap snorem
-number guessing       -> slot machine
-peace and love        -> golf ii
-peace and love        -> space traders
+ninety-nine           -> crazy eights
+ninety-nine           -> yacht
+pig                   -> battleships          (roll a two)
+pig                   -> hunt the wumpus      (see your next roll, then choose to roll or stop)
 pig                   -> solitaire dice       (pick one of two rolls)
-pig                   -> zip
-poker dice            -> liar's dice
-poker dice            -> roulette
-pyramid               -> golf
-pyramid               -> spider
-quadrille             -> accordion
-quadrille             -> crescent
-rock-paper-scissors   -> number guessing
-rock-paper-scissors   -> peace and love
+rock-paper-scissors   -> forty thieves
+roulette              -> blackjack
 roulette              -> connect four         (make a corner bet, one of them will win at 4:1)
-roulette              -> slot machine
-rummy                 -> klondike
-rummy                 -> tonk
-slot machine          -> bacarat
-slot machine          -> number guessing
-snakes and ladders    -> global thermonuclear
-snakes and ladders    -> rummy
-snip snap snorem      -> cribbage
-snip snap snorem      -> yacht
-spades                -> crazy eights
-spades                -> hearts
-spit                  -> klondike
-spit                  -> snip snap snorem
+roulette              -> klondike
 solitaire dice        -> freecell             (free ride)
-solitaire dice        -> mate
-space traders         -> adventure
-space traders         -> hamurabi
-spider                -> beleaguered castle
-spider                -> labyrinth
-strategy              -> snakes and ladders
-strategy              -> quadrille
-tafl                  -> fox and geese
-tafl                  -> halma
-tonk                  -> accordion
-tonk                  -> war
-war                   -> global thermonuclear
-war                   -> ninety-nine
-yacht                 -> poker dice
-yacht                 -> spades
-zip                   -> craps
-zip                   -> yacht
+strategy              -> roulette
+yacht                 -> rock-paper-scissors
 
 battleships              Gesundheit
 blackjack                ValueError: gipf
@@ -682,3 +592,135 @@ Take the games I have planned through backgammon/craps/hangman. Add the followin
 
 That gives a fully connected graph. You have the hub of battleships/pig/hunt the wumpus. You have a chain going out from each of those and reconnecting to the hub elsewhere. Those chains contain all of the games, so it's a loop and fully connected. In addition, there are cross links between each pair of chains. There are some extraneous links, and it may go over the idea of a two in/two out limit for anything outside the hub, but it works, and you could link into it.
 
+I am going forward with this one.
+
+==== Old Plan ====
+
+accordion             -> spit
+accordion             -> canfield
+adventure             -> hunt the wumpus
+adventure             -> zip
+bacarat               -> mexico
+bacarat               -> rock-paper-scissors
+backgammon            -> connect four
+backgammon            -> snakes and ladders
+battleships           -> chess                (win if you sink their battleship)
+battleships           -> 
+beleaguered castle    -> war
+beleaguered castle    -> forty thieves
+bisley                -> blackjack
+bisley                -> martha
+black hole            -> space traders
+black hole            -> interregnum
+blackjack             -> bacarat
+blackjack             -> ninety-nine          (the dealer can't draw (their turn is skipped))
+canfield              -> la belle lucie
+canfield              -> blackjack            (build a jack on any thing)
+chess                 -> mancala              (take a row and move it one square left or right)
+chess                 -> mate
+connect four          -> roulette             (your opponent's next move is random)
+connect four          -> halma
+craps                 -> zip
+craps                 -> crazy eights
+crazy eights          -> mexico
+crazy eights          -> spit
+crescent              -> tafl
+crescent              -> beleaguered castle
+cribbage              -> backgammon
+cribbage              -> tonk
+dudo                  -> liar's dice
+dudo                  -> poker dice
+freecell              -> hamurabi
+freecell              -> nestor
+forty thieves         -> bisley
+forty thieves         -> freecell             (move any one card from the waste)
+fox and geese         -> dudo
+fox and geese         -> ghost
+ghost                 -> hangman              (switch the ghost word to the hangman word)
+ghost                 -> rock-paper-scissors
+global thermonuclear  -> peace and love
+global thermonuclear  -> forty thieves
+golf                  -> black hole
+golf                  -> spider
+golf ii               -> golf
+golf ii               -> spades
+halma                 -> chess
+halma                 -> mancala
+hamurabi              -> cribbage
+hamurabi              -> pyramid
+hangman               -> fox and geese
+hangman               -> ghost
+hearts                -> rummy
+hearts                -> strategy
+hunt the wumpus       -> hangman
+hunt the wumpus       ->
+interregnum           -> martha
+interregnum           -> labyrinth
+klondike              -> quadrille
+klondike              -> solitaire dice       (place one card from the stock at the end of the stock)
+la belle lucie        -> black hole
+la belle lucie        -> canfield
+labyrinth             -> tafl
+labyrinth             -> interregnum
+liar's dice           -> la belle lucie
+liar's dice           -> yacht
+mancala               -> backgammon
+mancala               -> hearts
+martha                -> bisley
+martha                -> nestor
+mate                  -> dudo
+mate                  -> monte carlo
+mexico                -> adventure
+mexico                -> craps
+monte carlo           -> pyramid
+monte carlo           -> strategy
+nestor                -> crescent
+nestor                -> monte carlo
+ninety-nine           -> blackjack            (pass without losing a token)
+ninety-nine           -> golf ii
+number guessing       -> snip snap snorem
+number guessing       -> slot machine
+peace and love        -> golf ii
+peace and love        -> space traders
+pig                   -> solitaire dice       (pick one of two rolls)
+pig                   -> zip
+poker dice            -> liar's dice
+poker dice            -> roulette
+pyramid               -> golf
+pyramid               -> spider
+quadrille             -> accordion
+quadrille             -> crescent
+rock-paper-scissors   -> number guessing
+rock-paper-scissors   -> peace and love
+roulette              -> connect four         (make a corner bet, one of them will win at 4:1)
+roulette              -> slot machine
+rummy                 -> klondike
+rummy                 -> tonk
+slot machine          -> bacarat
+slot machine          -> number guessing
+snakes and ladders    -> global thermonuclear
+snakes and ladders    -> rummy
+snip snap snorem      -> cribbage
+snip snap snorem      -> yacht
+spades                -> crazy eights
+spades                -> hearts
+spit                  -> klondike
+spit                  -> snip snap snorem
+solitaire dice        -> freecell             (free ride)
+solitaire dice        -> mate
+space traders         -> adventure
+space traders         -> hamurabi
+spider                -> beleaguered castle
+spider                -> labyrinth
+strategy              -> snakes and ladders
+strategy              -> quadrille
+tafl                  -> fox and geese
+tafl                  -> halma
+tonk                  -> accordion
+tonk                  -> war
+war                   -> global thermonuclear
+war                   -> ninety-nine
+yacht                 -> poker dice
+yacht                 -> spades
+zip                   -> craps
+zip                   -> yacht

@@ -168,6 +168,7 @@ class Pool(object):
 
     Overridden Methods:
     __init__
+    __iter__
     __repr__
     __str__
     """
@@ -190,6 +191,10 @@ class Pool(object):
             else:
                 self.dice.append(Die(die))
         self.roll()
+
+    def __iter__(self):
+        """Iterate over the dice. (iterator)"""
+        return iter(self.held + self.dice)
 
     def __repr__(self):
         """Debugging text representation. (str)"""

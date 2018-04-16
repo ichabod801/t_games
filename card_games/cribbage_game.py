@@ -105,7 +105,7 @@ partners: Pair players off into teams.
 seven-card (7-card): equivalent to cards=7 target-score=181 skunk=151
 skunk=: The score needed to avoid a skunk (defualt = 91, only in match play).
 solo: The players are teamed against the dealer, and the dealer can swap cards
-    with the crib.
+    with the crib. The dealer scores first, along with the crib.
 target-score= (win=): The score needed to win (default = 121).
 three-solo (3-solo): Equivalent to one-go cards=5 discards=1 win=61 skunk=31 
     n-bots=2 solo
