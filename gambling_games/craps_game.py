@@ -6,6 +6,79 @@ A game of Craps.
 !! look into the standard casino play order, and try to mimic that.
 !! standard order is anyone can bet, shooter rolls, bets payed out.
 
+max bet notes:
+line bet: pass/don't pass
+proposition bets are one roll bets (for hard or easy?)
+field bets: that the next total will be x
+place/buy bets: That a given number will show before the next 7
+big six and big 8: Bet that a six or eight comes before a 7 (one or two bets? two)
+available bets:
+    pass/don't pass
+    free-odds on line
+    come/don't come
+    free-odds on come
+    place numbers
+    buy bets
+    lay bets
+    field numbers
+    big six/big 8
+    center or proposition bets.
+pass/don't pass: before point
+    7 or 11 pass wins even, don'ts lose.
+    2, 3, 12 (craps): pass wins, 2 or 12 pushes depending on casino, dont's win.
+    other rolls is point, pass/don't pass bets remain.
+    pass/don't pass convert to point/seven (?)
+    only a 7 after point is made changes the shooter.
+odds bet: bet behind pass after point, but only if on pass or don't pass.
+    additional bet that the point will be made.
+    4/10 pays 2:1
+    5/Nine pays 3:2
+    Six/8 pays 6:5
+    3-4-5x odds tables: 3x for 4/10, 4x for 5/Nine, 5x for Six/8
+        multiple of pass bet.
+        some casinos offer higher.
+        can increase, decrease or remove odds bet at any point.
+come/don't come:
+    only bet after point is determined.
+    must play pass/don't pass to make this bet. Not clear if don't has to match. Assume not.
+    if the roll after is 4, 5, six, 8, nine, or 10, your bet gets moved to that number
+        this establishes a personal point for you.
+    if the shooter rolls that before a seven, you win
+    if the shooter rolls a seven, you lose.
+    you can place odds on a come bet.
+    once your bet is placed on your come point, you can place an additional come bet.
+place number bets:
+    bet that a particular number will appear before a seven. After come roll.
+    placed in the rectangles just below the place-number boxes.
+    4/10 pay 9:5, 5/nine pay 7-5; six/8 pay 7-6.
+    valid on all rolls except come out rolls.
+buy bets:
+    as place number bets.
+    casino takes 5% on top of the bet, bet pays out true odds.
+    placed in upper third of place number boxes.
+    valid on all rolls except come out rolls.
+lay bets:
+    similar to don't-place-number. Betting a seven will come before that number.
+    betting and payout as buy bets.
+    placed in upper third porthion of the rectangles farthes above the place number boxes, at top of layout
+field bets:
+    bets that one number will be rolled next.
+    can be made on come out roll.
+    six/8 pays 7:6.
+    4/6/8/10 hard way: Must come up as pair before a seven or a non-pair of that number.
+big six/big 8:
+    bet on 6 or 8 (either) coming before a seven. Pays even. Play at any time.
+center/proposition bets:
+    Determined by next roll, except hardways with stay until that number is rolled and lose if not a pair.
+    any 7: 4 to 1
+    any craps: 7 to 1
+    2 or 12: 30 to 1
+    3 or 11: 15 to 1
+    hardway 4/10: 7 to 1
+    hardway 6/8: 9 to 1
+    horn: 2, 3, 11, and 12.
+    c&e bet: any craps plus 11.
+
 Classes:
 Craps: A game of Craps. (game.Game)
 """
@@ -20,10 +93,13 @@ class Craps(game.Game):
     A game of Craps. (game.Game)
 
     Basic play is that every one gets a chance to bet, then the shooter throws,
-    and then bets are resolved.
+    and then bets are resolved. Basic program flow is player_action gets the bets,
+    handles everything else as a command. Done command checks for shooter, if so 
+    rolls and resolves bets. Each bet has it's own resolution method, which is 
+    found with getattr using the internal bet name from the bet_aliases attribute.
 
     Attributes:
-    bets: The bets the players have made this round. (dict of str: dict)
+    bets: The bets the players have made this round. (dict of str: list)
     dice: The dice that get rolled. (dice.Pool)
     limit: The maximum bet that can be made. (int)
     point: The point to be made, or zero if no point yet. (int)
@@ -35,11 +111,17 @@ class Craps(game.Game):
 
     Methods:
     do_done: Finish the player's turn. (bool)
+    resolve_bets: Resolve player bets after a roll. (None)
 
     Overridden Methods:
+    player_action
     set_options
     set_up
     """
+
+    self.bet_aliases = {'come': 'come', "don't come": "dont_come", "don't pass": "dont_pass", 
+        'pass': 'pass'}
+    self.bet_maxes = {'come': 1, "dont_come": 1, "dont_pass": 1, 'pass': 1}
 
     def do_done(self, argument):
         """
@@ -50,10 +132,12 @@ class Craps(game.Game):
         """
         player = self.players[self.player_index]
         if self.player_index == self.shooter_index:
-            player.error('You are the shooter. You must roll before ending your turn.')
-            return True
-        else:
-            return False
+            # If it's the shooter's turn, have them roll the dice.
+            player.ask('You are the shooter. Press enter to roll the dice: ')
+            self.dice.roll()
+            self.human.tell('\n{} rolled {}.'.format(player.name, self.dice))
+            self.resolve_bets()
+        return True
 
     def player_action(self, player):
         """
@@ -62,16 +146,37 @@ class Craps(game.Game):
         Parameters:
         player: The current player. (player.Player)
         """
-        bet = player.ask('What sort of bet would you like to make? ')
-        if bet.lower() in self.bet_alliases:
-            bet = self.bet_alliases[bet.lower()]
+        # Get the player action.
+        raw_bet = player.ask('What sort of bet would you like to make? ')
+        if raw_bet.lower() in self.bet_alliases:
+            # Check for bet being valid at this time.
+            bet = self.bet_alliases[raw_bet.lower()]
             if bet in ('pass', "don't pass") and point:
                 player.error('That bet cannot be made after the point has been established.')
             elif bet in ('come', "don't come") and not point:
                 player.error('That bet cannot be made before the point has been established.')
             else:
-                wager = player.ask_int('How much would you like to wager? ')
-                # !! not sure about maximums.
+                # Get the wager.
+                max_bet = max(self.limit * self.bet_maxes[bet], self.scores[player.name])
+                wager = player.ask_int('How much would you like to wager? ', low = 1, high = max_bet)
+                # Store the bet.
+                self.bets[player.name].append((raw_bet, wager))
+            return True
+        else:
+            # Handle other commands
+            return self.handle_cmd(raw_bet)
+
+    def resolve_bets(self):
+        """Resolve player bets after a roll. (None)"""
+        # Loop through the player bets.
+        for player in self.players:
+            for raw_bet, wager in self.bets[player.name][:]: # loop through copy to allow changes.
+                # Get the bet details.
+                raw_bet, slash, number = raw_bet.partition('/')
+                bet = self.bet_aliases[raw_bet.lower()]
+                # Resolve the bet.
+                getattr(self, 'resolve_' + bet)(player, wager)
+        # !! not done. set point/next shooter
 
     def set_options(self):
         """Set the game options. (None)"""
@@ -85,7 +190,7 @@ class Craps(game.Game):
         """Set up the game. (None)"""
         # Set up the tracking variables.
         self.scores = {player.name: self.stake for player in self.players}
-        self.bets = {player.name: {} for player in self.players}
+        self.bets = {player.name: [] for player in self.players}
         self.shooter_index = len(self.players) - 1
         self.point = 0
         # Set up the dice.
