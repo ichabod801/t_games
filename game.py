@@ -293,7 +293,7 @@ class Game(OtherCmd):
                 self.gipfed.append(game_name)
                 game = games[game_name](self.human, 'none', self.interface)
                 results = game.play()
-                results[6] |= 16
+                results[5] |= 16
                 self.human.store_results(game.name, results)
                 self.human.game = self
                 return game_name, results[1] # !! incorrect for match play

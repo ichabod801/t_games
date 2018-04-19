@@ -119,9 +119,10 @@ class Craps(game.Game):
     set_up
     """
 
-    self.bet_aliases = {'come': 'come', "don't come": "dont_come", "don't pass": "dont_pass", 
-        'pass': 'pass'}
-    self.bet_maxes = {'come': 1, "dont_come": 1, "dont_pass": 1, 'pass': 1}
+    bet_aliases = {'come': 'come', "don't come": "dont_come", "don't pass": "dont_pass", 
+        'pass': 'pass', 'right': 'pass', 'wrong': 'dont_pass'}
+    bet_maxes = {'come': 1, "dont_come": 1, "dont_pass": 1, 'pass': 1}
+    reverse_bet = {'win': 'lose', 'lose': 'win', 'hold': 'hold'}
 
     def do_done(self, argument):
         """
@@ -148,9 +149,9 @@ class Craps(game.Game):
         """
         # Get the player action.
         raw_bet = player.ask('What sort of bet would you like to make? ')
-        if raw_bet.lower() in self.bet_alliases:
+        if raw_bet.lower() in self.bet_aliases:
             # Check for bet being valid at this time.
-            bet = self.bet_alliases[raw_bet.lower()]
+            bet = self.bet_aliases[raw_bet.lower()]
             if bet in ('pass', "don't pass") and point:
                 player.error('That bet cannot be made after the point has been established.')
             elif bet in ('come', "don't come") and not point:
@@ -161,6 +162,7 @@ class Craps(game.Game):
                 wager = player.ask_int('How much would you like to wager? ', low = 1, high = max_bet)
                 # Store the bet.
                 self.bets[player.name].append((raw_bet, wager))
+                self.scores[player.name] -= wager
             return True
         else:
             # Handle other commands
@@ -175,8 +177,57 @@ class Craps(game.Game):
                 raw_bet, slash, number = raw_bet.partition('/')
                 bet = self.bet_aliases[raw_bet.lower()]
                 # Resolve the bet.
-                getattr(self, 'resolve_' + bet)(player, wager)
-        # !! not done. set point/next shooter
+                getattr(self, 'resolve_' + bet)(player, raw_bet, wager)
+        # Set the point and shooter.
+        if self.point:
+            if sum(self.dice) == self.point:
+                self.point = 0
+            elif sum(self.dice) == 7:
+                self.point = 0
+                self.shooter_index = (self.shooter_index + 1) % len(self.players)
+                self.player_index = self.shooter_indx
+        elif sum(self.dice) in (4, 5, 6, 8, 9, 10):
+            self.point = sum(self.dice)
+
+    def resolve_dont_pass(self, player, raw_bet, wager):
+        """
+        Resolve don't pass bets. (None)
+
+        Parameters:
+        player: The player who made the don't pass bet. (player.Player)
+        raw_bet: The name used for the bet. (str)
+        wager: The amount of the pass bet. (wager)
+        """
+        self.resolve_pass(player, raw_bet, wager, reverse = True)
+
+    def resolve_pass(self, player, raw_bet, wager, reverse = False):
+        """
+        Resolve pass bets. (None)
+
+        Parameters:
+        player: The player who made the pass bet. (player.Player)
+        raw_bet: The name used for the bet. (str)
+        wager: The amount of the pass bet. (wager)
+        reverse: A flag for handling as a don't pass bet. (bool)
+        """
+        # Determine the status of the bet.
+        status = 'hold'
+        if sum(self.dice) == self.point or (sum(self.dice) in (7, 11) and not self.point):
+            status = 'win'
+        elif (self.point and sum(self.dice) == 7) or (sum(self.dice) in (2, 3, 12) and not self.point):
+            status = 'lose'
+        # Reverse the status if necessary.
+        if reverse:
+            status = self.reverse_bet[status]
+        # Handle winning the bet.
+        if status == 'win':
+            self.scores[player.name] += wager * 2
+            self.bets[player.name].remove((raw_bet, wager))
+            self.human.tell('{} won {} dollars on their {} bet.'.format(player.name, wager, raw_bet))
+        # Handle losing the bet.
+        elif status == 'lose':
+            self.bets[player.name].remove((raw_bet, wager))
+            self.human.tell('{} lost {} dollars on their {} bet.'.format(player.name, wager, raw_bet))
 
     def set_options(self):
         """Set the game options. (None)"""
