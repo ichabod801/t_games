@@ -463,12 +463,12 @@ class Pig(game.Game):
         arguments: The name of the game to gipf to. (str)
         """
         game, losses = self.gipf_check(arguments, ('battleships', 'wumpus', 'solitaire dice'))
+        go = True
         # Battleships.
         if game == 'battleships':
             if not losses:
                 self.turn_score += 2
                 self.human.tell('You rolled a 2. Your turn score is now {}.'.format(self.turn_score))
-            go = True
         # Hunt the Wumpus
         elif game == 'wumpus':
             if not losses:
@@ -485,9 +485,6 @@ class Pig(game.Game):
                     else:
                         self.turn_score += roll
                         self.human.tell('Your turn score is {}.'.format(self.turn_score))
-                        go = True
-            else:
-                go = True
         elif game == 'solitaire dice':
             if not losses:
                 first = self.die.roll()
@@ -497,13 +494,14 @@ class Pig(game.Game):
                         break
                 prompt = 'Do you want to roll a {} or a {}? '.format(first, second)
                 choice = self.human.ask_int(prompt, valid = [first, second], cmd = False)
-                self.turn_score += choice
-                message = 'You rolled a {}. Your turn score is now {}.'
-                self.human.tell(message.format(choice, self.turn_score))
-                go = True
+                if choice == self.bad:
+                    go == False
+                else:
+                    self.turn_score += choice
+                    message = 'You rolled a {}. Your turn score is now {}.'
+                    self.human.tell(message.format(choice, self.turn_score))
         else:
             self.human.error('Say what?')
-            go = True
         return go
 
     def do_scores(self, arguments):

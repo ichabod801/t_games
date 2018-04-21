@@ -81,11 +81,13 @@ center/proposition bets:
 
 Classes:
 Craps: A game of Craps. (game.Game)
+CrapsBot: A bot to play Craps against. (player.Bot)
 """
 
 
 import tgames.dice as dice
 import tgames.game as game
+import tgames.player as player
 
 
 class Craps(game.Game):
@@ -112,6 +114,10 @@ class Craps(game.Game):
     Methods:
     do_done: Finish the player's turn. (bool)
     resolve_bets: Resolve player bets after a roll. (None)
+    resolve_call: Resolve call bets. (None)
+    resolve_dont_call: Resolve don't call bets. (None)
+    resolve_dont_pass: Resolve don't pass bets. (None)
+    resolve_pass: Resolve pass bets. (None)
 
     Overridden Methods:
     player_action
@@ -189,6 +195,58 @@ class Craps(game.Game):
         elif sum(self.dice) in (4, 5, 6, 8, 9, 10):
             self.point = sum(self.dice)
 
+    def resolve_call(self, player, raw_bet, wager, reverse = False):
+        """
+        Resolve call bets. (None)
+
+        Parameters:
+        player: The player who made the call bet. (player.Player)
+        raw_bet: The name used for the bet. (str)
+        wager: The amount of the call bet. (wager)
+        reverse: A flag for handling as a don't call bet. (bool)
+        """
+        # Get the bet details.
+        raw_bet, slash, number = raw_bet.partition('/')
+        # Determine the status of the bet.
+        status = 'hold'
+        if number:
+            number = int(number)
+            if number == sum(self.dice):
+                status = 'win'
+            elif sum(self.dice) == 7:
+                status = 'lose'
+        else:
+            status = 'point'
+        # Reverse the status if necessary.
+        if reverse:
+            status = self.reverse_bet.get(status, status)
+        # Handle winning the bet.
+        if status == 'win':
+            self.scores[player.name] += wager * 2
+            self.bets[player.name].remove((raw_bet, wager))
+            self.human.tell('{} won {} dollars on their {} bet.'.format(player.name, wager, raw_bet))
+        # Handle losing the bet.
+        elif status == 'lose':
+            self.bets[player.name].remove((raw_bet, wager))
+            self.human.tell('{} lost {} dollars on their {} bet.'.format(player.name, wager, raw_bet))
+        # Handle setting the point.
+        elif status == 'point':
+            self.bets[player.name].remove((raw_bet, wager))
+            message = "The point for {}'s {} bet is set to {}."
+            self.human.tell(message.format(player.name, raw_bet, sum(self.dice)))
+            self.bets[player.name].append(('{}/{}'.format(raw_bet, sum(self.dice)), wager))
+
+    def resolve_dont_call(self, player, raw_bet, wager):
+        """
+        Resolve don't call bets. (None)
+
+        Parameters:
+        player: The player who made the don't call bet. (player.Player)
+        raw_bet: The name used for the bet. (str)
+        wager: The amount of the call bet. (wager)
+        """
+        self.resolve_call(player, raw_bet, wager, reverse = True)
+
     def resolve_dont_pass(self, player, raw_bet, wager):
         """
         Resolve don't pass bets. (None)
@@ -246,3 +304,40 @@ class Craps(game.Game):
         self.point = 0
         # Set up the dice.
         self.dice = dice.Pool()
+
+
+class CrapsBot(player.Bot):
+    """
+    A bot to play Craps with. (player.Bot)
+
+    Overridden Methods:
+    ask
+    ask_int
+    tell
+    """
+
+    def ask(self, prompt):
+        """
+        Ask the bot a question. (str)
+
+        Parameters:
+        prompt: The queston to ask. (str)
+        """
+        if prompt.startswith('What sort of bet'):
+            bets = self.game.bets[self.name]
+            if not bets:
+                return "Don't Pass"
+            else:
+                return 'done'
+        else:
+            raise player.BotError('Unexpected question to CrapsBot: {!r}'.format(prompt))
+
+if __name__ == '__main__':
+    import tgames.player as player
+    try:
+        input = raw_input
+    except NameError:
+        pass
+    name = input('What is your name? ')
+    craps = Craps(player.Player(name), '')
+    print(craps.play())

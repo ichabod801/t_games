@@ -247,9 +247,9 @@ class Game(OtherCmd):
             self.human.tell('\nPoof!')
             self.human.tell('You are now playing {}.\n'.format(game.name))
             results = game.play()
-            results[4] |= 64
+            results[5] |= 64
             self.human.store_results(game.name, results)
-            if results[1] == 0:
+            if results[1] == 0: # !! match play
                 self.flags |= 128
                 self.force_end = 'win'
                 self.win_loss_draw = [max(len(self.players) - 1, 1), 0, 0]
@@ -293,6 +293,7 @@ class Game(OtherCmd):
                 self.gipfed.append(game_name)
                 game = games[game_name](self.human, 'none', self.interface)
                 results = game.play()
+                print(results)
                 results[5] |= 16
                 self.human.store_results(game.name, results)
                 self.human.game = self

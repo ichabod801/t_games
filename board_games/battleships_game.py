@@ -249,6 +249,7 @@ class BattleBot(player.Bot):
     Overridden Methods:
     __init__
     ask
+    error
     tell
     """
 
@@ -286,6 +287,20 @@ class BattleBot(player.Bot):
         # Handle firing shots.
         elif prompt.startswith('\nWhere'):
             return self.fire()
+
+    def error(self, *args, **kwargs):
+        """
+        Warn the player about an invalid play. (None)
+
+        Parameters:
+        The parameters are as teh built-in print function.
+        """
+        # Ignore errors when placing ships, as the bot places at random until it fits.
+        if 'overlaps' in args[0]:
+            pass
+        # Handle other errrors normally.
+        else:
+            super(BattleBot, self).error(*args, **kwargs)
 
     def fire(self):
         """Decide where to fire the next shot. (str)"""
