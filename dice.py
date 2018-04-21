@@ -27,6 +27,9 @@ class Die(object):
 
     Overridden Methods:
     __init__
+    __add__
+    __eq__
+    __hash__
     __repr__
     __str__
     """
@@ -45,6 +48,20 @@ class Die(object):
             self.sides = sides
         # Get an initial value for the die.
         self.roll()
+
+    def __add__(self, other):
+        """
+        Addition.
+
+        Parameters:
+        other: The item to add to. (object)
+        """
+        # dice add by sides.
+        if isinstance(other, Die):
+            return self.value + other.value
+        # add value to other objects.
+        else:
+            return self.value + other
 
     def __eq__(self, other):
         """
@@ -77,6 +94,15 @@ class Die(object):
             return self.value < other
         else:
             return NotImplemented
+
+    def __radd__(self, other):
+        """
+        Right-side addition.
+
+        Parameters:
+        other: The item to add to. (object)
+        """
+        return self + other
 
     def __repr__(self):
         """Debugging text representation. (str)"""

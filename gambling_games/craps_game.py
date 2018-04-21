@@ -171,12 +171,25 @@ class Craps(game.Game):
         Parameters:
         player: The current player. (player.Player)
         """
+        # Display the game status.
+        # Display shooter and point.
+        if self.point:
+            point_text = 'point = {}'.format(self.point)
+        else:
+            point_text = 'off'
+        player.tell('\nThe shooter is {} ({}).'.format(self.players[self.shooter_index].name, point_text))
+        # Display outstanding bets.
+        s = ['s', ''][len(self.bets[player.name]) == 1]
+        bet_total = sum(wager for bet, wager in self.bets[player.name])
+        message = 'You have {} bet{} in play totalling {} dollars.'
+        player.tell(message.format(len(self.bets[player.name]), s, bet_total))
+        # Display remaining money.
+        player.tell('You have {} dollars remaining to bet.\n'.format(self.scores[player.name]))
         # Get the player action.
         raw_bet = player.ask('What sort of bet would you like to make? ')
         if raw_bet.lower() in self.bet_aliases:
             # Check for bet being valid at this time.
             bet = self.bet_aliases[raw_bet.lower()]
-            print(bet)
             if bet in ('pass', 'dont_pass') and self.point:
                 player.error('That bet cannot be made after the point has been established.')
             elif bet in ('come', 'dont_come') and not self.point:
@@ -185,7 +198,6 @@ class Craps(game.Game):
                 # Get the wager.
                 max_bet = min(self.limit * self.bet_maxes[bet], self.scores[player.name])
                 wager = player.ask_int('How much would you like to wager? ', low = 1, high = max_bet)
-                print(wager)
                 # Store the bet.
                 self.bets[player.name].append((raw_bet, wager))
                 self.scores[player.name] -= wager
@@ -211,22 +223,22 @@ class Craps(game.Game):
             elif sum(self.dice) == 7:
                 self.point = 0
                 self.shooter_index = (self.shooter_index + 1) % len(self.players)
-                self.player_index = self.shooter_indx
+                self.player_index = self.shooter_index
         elif sum(self.dice) in (4, 5, 6, 8, 9, 10):
             self.point = sum(self.dice)
 
-    def resolve_call(self, player, raw_bet, wager, reverse = False):
+    def resolve_come(self, player, raw_bet, wager, reverse = False):
         """
-        Resolve call bets. (None)
+        Resolve come bets. (None)
 
         Parameters:
-        player: The player who made the call bet. (player.Player)
+        player: The player who made the come bet. (player.Player)
         raw_bet: The name used for the bet. (str)
-        wager: The amount of the call bet. (wager)
-        reverse: A flag for handling as a don't call bet. (bool)
+        wager: The amount of the come bet. (wager)
+        reverse: A flag for handling as a don't come bet. (bool)
         """
         # Get the bet details.
-        raw_bet, slash, number = raw_bet.partition('/')
+        bet, slash, number = raw_bet.partition('/')
         # Determine the status of the bet.
         status = 'hold'
         if number:
@@ -243,7 +255,7 @@ class Craps(game.Game):
         # Handle winning the bet.
         if status == 'win':
             self.scores[player.name] += wager * 2
-            self.bets[player.name].remove((raw_bet, wager))
+            self.bets[player.name].remove((bet, wager))
             self.human.tell('{} won {} dollars on their {} bet.'.format(player.name, wager, raw_bet))
         # Handle losing the bet.
         elif status == 'lose':
@@ -256,14 +268,14 @@ class Craps(game.Game):
             self.human.tell(message.format(player.name, raw_bet, sum(self.dice)))
             self.bets[player.name].append(('{}/{}'.format(raw_bet, sum(self.dice)), wager))
 
-    def resolve_dont_call(self, player, raw_bet, wager):
+    def resolve_dont_come(self, player, raw_bet, wager):
         """
-        Resolve don't call bets. (None)
+        Resolve don't come bets. (None)
 
         Parameters:
-        player: The player who made the don't call bet. (player.Player)
+        player: The player who made the don't come bet. (player.Player)
         raw_bet: The name used for the bet. (str)
-        wager: The amount of the call bet. (wager)
+        wager: The amount of the come bet. (wager)
         """
         self.resolve_call(player, raw_bet, wager, reverse = True)
 
@@ -352,6 +364,8 @@ class CrapsBot(player.Bot):
                 return "Don't Pass"
             else:
                 return 'done'
+        elif prompt.startswith('You are the shooter.'):
+            return 'CrapsBot needs a new pair of shoes!'
         else:
             raise player.BotError('Unexpected question to CrapsBot: {!r}'.format(prompt))
 
