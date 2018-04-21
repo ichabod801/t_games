@@ -317,8 +317,10 @@ class Game(OtherCmd):
         self.turns = 0
         self.force_end = ''
         self.flags &= 257 # reset everything but the options and match play flags.
+        self.scores = {}
         self.set_up()
-        self.scores = {player.name: 0 for player in self.players}
+        if not self.scores:
+            self.scores = {player.name: 0 for player in self.players}
         for player in self.players:
             player.set_up()
         # Loop through the players repeatedly.

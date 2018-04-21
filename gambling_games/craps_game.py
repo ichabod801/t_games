@@ -90,6 +90,12 @@ import tgames.game as game
 import tgames.player as player
 
 
+CREDITS = """
+Game Design: Barnard Xavier Phillippe de Marigny de Mandeville
+Game Programming: Craig "Ichabod" O'Brien
+"""
+
+
 class Craps(game.Game):
     """
     A game of Craps. (game.Game)
@@ -120,6 +126,7 @@ class Craps(game.Game):
     resolve_pass: Resolve pass bets. (None)
 
     Overridden Methods:
+    game_over
     player_action
     set_options
     set_up
@@ -128,6 +135,9 @@ class Craps(game.Game):
     bet_aliases = {'come': 'come', "don't come": "dont_come", "don't pass": "dont_pass", 
         'pass': 'pass', 'right': 'pass', 'wrong': 'dont_pass'}
     bet_maxes = {'come': 1, "dont_come": 1, "dont_pass": 1, 'pass': 1}
+    categories = ['Gambling Games', 'Dice Games']
+    name = 'Craps'
+    num_options = 2
     reverse_bet = {'win': 'lose', 'lose': 'win', 'hold': 'hold'}
 
     def do_done(self, argument):
@@ -144,7 +154,15 @@ class Craps(game.Game):
             self.dice.roll()
             self.human.tell('\n{} rolled {}.'.format(player.name, self.dice))
             self.resolve_bets()
-        return True
+        return False
+
+    def game_over(self):
+        """Check for the end of the game. (bool)"""
+        if self.scores[self.human.name] == 0 and not self.bets[self.human.name]:
+            self.win_loss_draw[1] = 1
+            return True
+        else:
+            return False
 
     def player_action(self, player):
         """
@@ -158,14 +176,16 @@ class Craps(game.Game):
         if raw_bet.lower() in self.bet_aliases:
             # Check for bet being valid at this time.
             bet = self.bet_aliases[raw_bet.lower()]
-            if bet in ('pass', "don't pass") and point:
+            print(bet)
+            if bet in ('pass', 'dont_pass') and self.point:
                 player.error('That bet cannot be made after the point has been established.')
-            elif bet in ('come', "don't come") and not point:
+            elif bet in ('come', 'dont_come') and not self.point:
                 player.error('That bet cannot be made before the point has been established.')
             else:
                 # Get the wager.
-                max_bet = max(self.limit * self.bet_maxes[bet], self.scores[player.name])
+                max_bet = min(self.limit * self.bet_maxes[bet], self.scores[player.name])
                 wager = player.ask_int('How much would you like to wager? ', low = 1, high = max_bet)
+                print(wager)
                 # Store the bet.
                 self.bets[player.name].append((raw_bet, wager))
                 self.scores[player.name] -= wager
@@ -297,6 +317,10 @@ class Craps(game.Game):
 
     def set_up(self):
         """Set up the game. (None)"""
+        # Set up the players.
+        self.players = [CrapsBot([self.human.name]), self.human]
+        for player in self.players[:-1]:
+            player.game = self
         # Set up the tracking variables.
         self.scores = {player.name: self.stake for player in self.players}
         self.bets = {player.name: [] for player in self.players}
@@ -324,13 +348,21 @@ class CrapsBot(player.Bot):
         prompt: The queston to ask. (str)
         """
         if prompt.startswith('What sort of bet'):
-            bets = self.game.bets[self.name]
-            if not bets:
+            if not self.game.bets[self.name] and self.game.scores[self.name]:
                 return "Don't Pass"
             else:
                 return 'done'
         else:
             raise player.BotError('Unexpected question to CrapsBot: {!r}'.format(prompt))
+
+    def ask_int(self, *args, **kwargs):
+        """
+        Ask the bot for an integer. (int)
+
+        Parameters:
+        the parameters are ingored.
+        """
+        return min(self.game.limit, self.game.scores[self.name])
 
 if __name__ == '__main__':
     import tgames.player as player
