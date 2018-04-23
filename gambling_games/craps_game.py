@@ -154,6 +154,7 @@ class Craps(game.Game):
             self.dice.roll()
             self.human.tell('\n{} rolled {}.'.format(player.name, self.dice))
             self.resolve_bets()
+            self.human.ask('Press enter to continue: ')
         return False
 
     def game_over(self):
@@ -212,8 +213,8 @@ class Craps(game.Game):
         for player in self.players:
             for raw_bet, wager in self.bets[player.name][:]: # loop through copy to allow changes.
                 # Get the bet details.
-                raw_bet, slash, number = raw_bet.partition('/')
-                bet = self.bet_aliases[raw_bet.lower()]
+                bet, slash, number = raw_bet.partition('/')
+                bet = self.bet_aliases[bet.lower()]
                 # Resolve the bet.
                 getattr(self, 'resolve_' + bet)(player, raw_bet, wager)
         # Set the point and shooter.
@@ -242,20 +243,28 @@ class Craps(game.Game):
         # Determine the status of the bet.
         status = 'hold'
         if number:
+            # Check come bet with a point.
             number = int(number)
             if number == sum(self.dice):
                 status = 'win'
             elif sum(self.dice) == 7:
                 status = 'lose'
         else:
-            status = 'point'
+            # Check come bet without a point.
+            if sum(self.dice) in (7, 11):
+                status = 'win'
+            elif sum(self.dice) in (2, 3, 12):
+                status = 'lose'
+            else:
+                status = 'point'
+        print(raw_bet, bet, number)
         # Reverse the status if necessary.
         if reverse:
             status = self.reverse_bet.get(status, status)
         # Handle winning the bet.
         if status == 'win':
             self.scores[player.name] += wager * 2
-            self.bets[player.name].remove((bet, wager))
+            self.bets[player.name].remove((raw_bet, wager))
             self.human.tell('{} won {} dollars on their {} bet.'.format(player.name, wager, raw_bet))
         # Handle losing the bet.
         elif status == 'lose':
