@@ -79,6 +79,11 @@ center/proposition bets:
     horn: 2, 3, 11, and 12.
     c&e bet: any craps plus 11.
 
+Constants:
+BUY_ODDS: The odds for buy bets. (dict of int: tuple of int)
+CREDITS: The credits for Craps. (str)
+PLACE_ODDS: The odds for place bets. (dict of int: tuple of int)
+
 Classes:
 Craps: A game of Craps. (game.Game)
 CrapsBot: A bot to play Craps against. (player.Bot)
@@ -87,15 +92,21 @@ CrapsBot: A bot to play Craps against. (player.Bot)
 
 from __future__ import division
 
+import math
+
 import tgames.dice as dice
 import tgames.game as game
 import tgames.player as player
 
 
+BUY_ODDS = {4: (2, 1), 5: (3, 2), 6: (6, 5), 8: (6, 5), 9: (3, 2), 10: (2, 1)}
+
 CREDITS = """
 Game Design: Barnard Xavier Phillippe de Marigny de Mandeville
 Game Programming: Craig "Ichabod" O'Brien
 """
+
+PLACE_ODDS = {4: (9, 5), 5: (7, 5), 6: (7, 6), 8: (7, 6), 9: (7, 5), 10: (9, 5)}
 
 
 class Craps(game.Game):
@@ -118,8 +129,8 @@ class Craps(game.Game):
 
     Class Attributes:
     bet_aliases: Different names for the various bets. (dict of str: str)
-    buy_odds: The odds for buy bets. (dict of int: tuple of int)
-    place_odds: The odds for place bets. (dict of int: tuple of int)
+    bet_maxes: The multiple of the table max for various bets. (dict of str: int)
+    reverse_bet: A mapping for reversing bet results. (dict of str: str)
 
     Methods:
     do_done: Finish the player's turn. (bool)
@@ -137,14 +148,12 @@ class Craps(game.Game):
     set_up
     """
 
-    bet_aliases = {'come': 'come', "don't come": "dont_come", "don't pass": "dont_pass", 
+    bet_aliases = {'buy': 'buy', 'come': 'come', "don't come": "dont_come", "don't pass": "dont_pass", 
         'pass': 'pass', 'place': 'place', 'right': 'pass', 'wrong': 'dont_pass'}
-    bet_maxes = {'come': 1, "dont_come": 1, "dont_pass": 1, 'pass': 1, 'place': 1}
-    buy_odds = {4: (2, 1), 5: (3, 2), 6: (6, 5), 8: (6, 5), 9: (3, 2), 10: (2, 1)}
+    bet_maxes = {'buy': 1, 'come': 1, "dont_come": 1, "dont_pass": 1, 'pass': 1, 'place': 1}
     categories = ['Gambling Games', 'Dice Games']
     name = 'Craps'
     num_options = 2
-    place_odds = {4: (9, 5), 5: (7, 5), 6: (7, 6), 8: (7, 6), 9: (7, 5), 10: (9, 5)}
     reverse_bet = {'win': 'lose', 'lose': 'win', 'hold': 'hold'}
 
     def do_done(self, argument):
@@ -195,6 +204,8 @@ class Craps(game.Game):
         player.tell('You have {} dollars remaining to bet.\n'.format(self.scores[player.name]))
         # Get the player action.
         raw_bet = player.ask('What sort of bet would you like to make? ')
+        if not raw_bet.strip():
+            raw_bet = 'done'
         words = raw_bet.split()
         if words[-1].isdigit():
             raw_bet = ' '.join(words[:-1])
@@ -211,15 +222,28 @@ class Craps(game.Game):
                 player.error('That bet cannot be made before the point has been established.')
             elif bet in ('come', 'dont_come') and bet in bets_made:
                 player.error('You can only make that be once each roll.')
+            elif bet in ('buy', 'place') and not number:
+                player.error('You must pick a number to play for that bet.')
             else:
                 # Get the wager.
                 max_bet = min(self.limit * self.bet_maxes[bet], self.scores[player.name])
                 wager = player.ask_int('How much would you like to wager? ', low = 1, high = max_bet)
-                # Store the bet.
-                if number:
-                    raw_bet = '{}/{}'.format(raw_bet, number)
-                self.bets[player.name].append((raw_bet, wager))
-                self.scores[player.name] -= wager
+                if bet in ('buy',):
+                    cut = math.ceil(wager * 0.05)
+                    if self.scores[player.name] >= cut:
+                        self.scores[player.name] -= cut
+                        s = ('s', '')[cut == 1]
+                        player.tell('The bank takes a cut of {} dollar{} for the buy bet.'.format(cut, s))
+                        self.resolve_place(player, raw_bet, wager, odds = BUY_ODDS)
+                    else:
+                        player.tell("You do not have enough money to cover the bank's 5% cut on that bet.")
+                        wager = 0
+                if wager:
+                    # Store the bet.
+                    if number:
+                        raw_bet = '{}/{}'.format(raw_bet, number)
+                    self.bets[player.name].append((raw_bet, wager))
+                    self.scores[player.name] -= wager
             return True
         else:
             # Handle other commands
@@ -245,6 +269,25 @@ class Craps(game.Game):
                 self.player_index = self.shooter_index
         elif sum(self.dice) in (4, 5, 6, 8, 9, 10):
             self.point = sum(self.dice)
+
+    def resolve_buy(self, player, raw_bet, wager):
+        """
+        Resolve place bets. (None)
+
+        Parameters:
+        player: The player who made the pass bet. (player.Player)
+        raw_bet: The name used for the bet. (str)
+        wager: The amount of the pass bet. (wager)
+        reverse: A flag for handling as a don't pass bet. (bool)
+        """
+        cut = math.ceil(wager * 0.05)
+        if self.scores[player.name] >= cut:
+            self.scores[player.name] -= cut
+            s = ('s', '')[cut == 1]
+            player.tell('The bank takes a cut of {} dollar{} for the buy bet.'.format(cut, s))
+            self.resolve_place(player, raw_bet, wager, odds = BUY_ODDS)
+        else:
+            player.tell("You do not have enough money to cover the bank's 5% cut on that bet.")
 
     def resolve_come(self, player, raw_bet, wager, reverse = False):
         """
@@ -345,7 +388,7 @@ class Craps(game.Game):
             self.bets[player.name].remove((raw_bet, wager))
             self.human.tell('{} lost {} dollars on their {} bet.'.format(player.name, wager, raw_bet))
 
-    def resolve_place(self, player, raw_bet, wager, odds = self.place_odds):
+    def resolve_place(self, player, raw_bet, wager, odds = PLACE_ODDS):
         """
         Resolve place bets. (None)
 
