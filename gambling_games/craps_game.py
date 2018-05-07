@@ -227,14 +227,13 @@ class Craps(game.Game):
             else:
                 # Get the wager.
                 max_bet = min(self.limit * self.bet_maxes[bet], self.scores[player.name])
-                wager = player.ask_int('How much would you like to wager? ', low = 1, high = max_bet)
+                wager = player.ask_int('How much would you like to wager? ', low = 1, high = max_bet, cmd = False)
                 if bet in ('buy',):
                     cut = math.ceil(wager * 0.05)
-                    if self.scores[player.name] >= cut:
+                    if self.scores[player.name] >= cut + wager:
                         self.scores[player.name] -= cut
                         s = ('s', '')[cut == 1]
                         player.tell('The bank takes a cut of {} dollar{} for the buy bet.'.format(cut, s))
-                        self.resolve_place(player, raw_bet, wager, odds = BUY_ODDS)
                     else:
                         player.tell("You do not have enough money to cover the bank's 5% cut on that bet.")
                         wager = 0
@@ -280,14 +279,7 @@ class Craps(game.Game):
         wager: The amount of the pass bet. (wager)
         reverse: A flag for handling as a don't pass bet. (bool)
         """
-        cut = math.ceil(wager * 0.05)
-        if self.scores[player.name] >= cut:
-            self.scores[player.name] -= cut
-            s = ('s', '')[cut == 1]
-            player.tell('The bank takes a cut of {} dollar{} for the buy bet.'.format(cut, s))
-            self.resolve_place(player, raw_bet, wager, odds = BUY_ODDS)
-        else:
-            player.tell("You do not have enough money to cover the bank's 5% cut on that bet.")
+        self.resolve_place(player, raw_bet, wager, odds = BUY_ODDS)
 
     def resolve_come(self, player, raw_bet, wager, reverse = False):
         """
