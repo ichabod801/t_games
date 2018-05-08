@@ -152,9 +152,9 @@ class Craps(game.Game):
     """
 
     bet_aliases = {'buy': 'buy', "don't buy": 'dont_buy', 'come': 'come', "don't come": "dont_come", 
-        "don't pass": "dont_pass", 'lay': 'dont_buy', 'pass': 'pass', 'place': 'place', 
-        "don't place": 'dont_place', 'right': 'pass', 'wrong': 'dont_pass'}
-    bet_maxes = {'buy': 1, 'come': 1, 'dont_buy': 1, "dont_come": 1, "dont_pass": 1, 'dont_place': 1, 
+        "don't pass": "dont_pass", 'field': 'field', 'lay': 'dont_buy', 'pass': 'pass', 
+        'place': 'place', 'right': 'pass', 'wrong': 'dont_pass'}
+    bet_maxes = {'buy': 1, 'come': 1, 'dont_buy': 1, "dont_come": 1, "dont_pass": 1, 'field': 1,
         'pass': 1, 'place': 1}
     categories = ['Gambling Games', 'Dice Games']
     name = 'Craps'
@@ -227,8 +227,10 @@ class Craps(game.Game):
                 player.error('That bet cannot be made before the point has been established.')
             elif bet in ('come', 'dont_come') and bet in bets_made:
                 player.error('You can only make that be once each roll.')
-            elif bet in ('buy', 'place') and not number:
+            elif bet in ('buy', 'place', 'dont_buy', 'field') and not number:
                 player.error('You must pick a number to play for that bet.')
+            elif bet == 'field' and number not in ('2', '3', '4', '9', '10', '11', '12'):
+                player.error('You may not make a field bet with that number.')
             else:
                 # Get the wager.
                 max_bet = min(self.limit * self.bet_maxes[bet], self.scores[player.name])
@@ -367,16 +369,28 @@ class Craps(game.Game):
         """
         self.resolve_pass(player, raw_bet, wager, reverse = True)
 
-    def resolve_dont_place(self, player, raw_bet, wager):
+    def resolve_field(self, player, raw_bet, wager):
         """
-        Resolve don't place bets. (None)
+        Resolve field bets. (None)
 
         Parameters:
-        player: The player who made the don't place bet. (player.Player)
+        player: The player who made the don't pass bet. (player.Player)
         raw_bet: The name used for the bet. (str)
         wager: The amount of the pass bet. (wager)
         """
-        self.resolve_place(player, raw_bet, wager, reverse = True)
+        # Get the bet details.
+        bet, slash, number = raw_bet.partition('/')
+        number = int(number)
+        if sum(self.dice) == number:
+            payout = wager
+            if number in (2, 12):
+                payout *= 3
+            self.scores[player.name] += payout
+            message = '{} won {} dollars on their {} bet. The bet remains in play.'
+            self.human.tell(message.format(player.name, payout, raw_bet))
+        else:
+            self.bets[player.name].remove((raw_bet, wager))
+            self.human.tell('{} lost {} dollars on their {} bet.'.format(player.name, payout, raw_bet))
 
     def resolve_pass(self, player, raw_bet, wager, reverse = False):
         """
@@ -437,7 +451,10 @@ class Craps(game.Game):
         # Handle resolution of the bret.
         if status == 'win':
             n, to = odds[number]
-            payout = int(wager / to * n)
+            if reverse:
+                payout = int(wager / n * to)
+            else:
+                payout = int(wager / to * n)
             self.scores[player.name] += payout
             message = '{} won {} dollars on their {} bet on {}. The bet remains in play.'
             self.human.tell(message.format(player.name, payout, bet, number))
