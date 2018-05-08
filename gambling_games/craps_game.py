@@ -135,9 +135,12 @@ class Craps(game.Game):
     Methods:
     do_done: Finish the player's turn. (bool)
     resolve_bets: Resolve player bets after a roll. (None)
+    resolve_buy: Resolve buy bets. (None)
     resolve_call: Resolve call bets. (None)
+    resolve_dont_buy: Resolve don't buy bets. (None)
     resolve_dont_call: Resolve don't call bets. (None)
     resolve_dont_pass: Resolve don't pass bets. (None)
+    resolve_dont_place: Resolve don't place bets. (None)
     resolve_pass: Resolve pass bets. (None)
     resolve_place: Resolve place bets. (None)
 
@@ -148,8 +151,9 @@ class Craps(game.Game):
     set_up
     """
 
-    bet_aliases = {'buy': 'buy', 'come': 'come', "don't come": "dont_come", "don't pass": "dont_pass", 
-        'pass': 'pass', 'place': 'place', 'right': 'pass', 'wrong': 'dont_pass'}
+    bet_aliases = {'buy': 'buy', "don't buy": 'dont_buy', 'come': 'come', "don't come": "dont_come", 
+        "don't pass": "dont_pass", 'lay': 'dont_buy', 'pass': 'pass', 'place': 'place', 
+        "don't place": 'dont_place', 'right': 'pass', 'wrong': 'dont_pass'}
     bet_maxes = {'buy': 1, 'come': 1, "dont_come": 1, "dont_pass": 1, 'pass': 1, 'place': 1}
     categories = ['Gambling Games', 'Dice Games']
     name = 'Craps'
@@ -269,7 +273,7 @@ class Craps(game.Game):
         elif sum(self.dice) in (4, 5, 6, 8, 9, 10):
             self.point = sum(self.dice)
 
-    def resolve_buy(self, player, raw_bet, wager):
+    def resolve_buy(self, player, raw_bet, wager, reverse = False):
         """
         Resolve place bets. (None)
 
@@ -279,7 +283,7 @@ class Craps(game.Game):
         wager: The amount of the pass bet. (wager)
         reverse: A flag for handling as a don't pass bet. (bool)
         """
-        self.resolve_place(player, raw_bet, wager, odds = BUY_ODDS)
+        self.resolve_place(player, raw_bet, wager, odds = BUY_ODDS, reverse = reverse)
 
     def resolve_come(self, player, raw_bet, wager, reverse = False):
         """
@@ -329,6 +333,17 @@ class Craps(game.Game):
             self.human.tell(message.format(player.name, raw_bet, sum(self.dice)))
             self.bets[player.name].append(('{}/{}'.format(raw_bet, sum(self.dice)), wager))
 
+    def resolve_dont_buy(self, player, raw_bet, wager):
+        """
+        Resolve don't buy bets. (None)
+
+        Parameters:
+        player: The player who made the don't buy bet. (player.Player)
+        raw_bet: The name used for the bet. (str)
+        wager: The amount of the pass bet. (wager)
+        """
+        self.resolve_place(player, raw_bet, wager, reverse = True, odds = BUY_ODDS)
+
     def resolve_dont_come(self, player, raw_bet, wager):
         """
         Resolve don't come bets. (None)
@@ -350,6 +365,17 @@ class Craps(game.Game):
         wager: The amount of the pass bet. (wager)
         """
         self.resolve_pass(player, raw_bet, wager, reverse = True)
+
+    def resolve_dont_place(self, player, raw_bet, wager):
+        """
+        Resolve don't place bets. (None)
+
+        Parameters:
+        player: The player who made the don't place bet. (player.Player)
+        raw_bet: The name used for the bet. (str)
+        wager: The amount of the pass bet. (wager)
+        """
+        self.resolve_place(player, raw_bet, wager, reverse = True)
 
     def resolve_pass(self, player, raw_bet, wager, reverse = False):
         """
@@ -380,7 +406,7 @@ class Craps(game.Game):
             self.bets[player.name].remove((raw_bet, wager))
             self.human.tell('{} lost {} dollars on their {} bet.'.format(player.name, wager, raw_bet))
 
-    def resolve_place(self, player, raw_bet, wager, odds = PLACE_ODDS):
+    def resolve_place(self, player, raw_bet, wager, reverse = False, odds = PLACE_ODDS):
         """
         Resolve place bets. (None)
 
@@ -394,17 +420,27 @@ class Craps(game.Game):
         # Get the bet details.
         bet, slash, number = raw_bet.partition('/')
         number = int(number)
+        # Determine the outcome of the bet.
         if not self.point:
             # No valid on come out roll.
-            pass
+            status = 'hold'
         elif sum(self.dice) == number:
-            # Payout and keep if the number is rolled.
+            status = 'win'
+        elif sum(self.dice) == 7:
+            status = 'loss'
+        else:
+            status = 'hold'
+        # Reverse the status if necessary.
+        if reverse:
+            status = self.reverse_bet[status]
+        # Handle resolution of the bret.
+        if result == 'win':
             n, to = odds[number]
             payout = int(wager / to * n)
             self.scores[player.name] += payout
             message = '{} won {} dollars on their {} bet on {}. The bet remains in play.'
             self.human.tell(message.format(player.name, payout, bet, number))
-        elif sum(self.dice) == 7:
+        elif result == 'loss':
             message = '{} lost {} dollars on their {} bet on {}.'
             self.human.tell(message.format(player.name, wager, bet, number))
             self.bets[player.name].remove((raw_bet, wager))
