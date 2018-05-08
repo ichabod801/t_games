@@ -154,7 +154,8 @@ class Craps(game.Game):
     bet_aliases = {'buy': 'buy', "don't buy": 'dont_buy', 'come': 'come', "don't come": "dont_come", 
         "don't pass": "dont_pass", 'lay': 'dont_buy', 'pass': 'pass', 'place': 'place', 
         "don't place": 'dont_place', 'right': 'pass', 'wrong': 'dont_pass'}
-    bet_maxes = {'buy': 1, 'come': 1, "dont_come": 1, "dont_pass": 1, 'pass': 1, 'place': 1}
+    bet_maxes = {'buy': 1, 'come': 1, 'dont_buy': 1, "dont_come": 1, "dont_pass": 1, 'dont_place': 1, 
+        'pass': 1, 'place': 1}
     categories = ['Gambling Games', 'Dice Games']
     name = 'Craps'
     num_options = 2
@@ -232,8 +233,8 @@ class Craps(game.Game):
                 # Get the wager.
                 max_bet = min(self.limit * self.bet_maxes[bet], self.scores[player.name])
                 wager = player.ask_int('How much would you like to wager? ', low = 1, high = max_bet, cmd = False)
-                if bet in ('buy',):
-                    cut = math.ceil(wager * 0.05)
+                if bet in ('buy', 'dont_buy'):
+                    cut = int(math.ceil(wager * 0.05))
                     if self.scores[player.name] >= cut + wager:
                         self.scores[player.name] -= cut
                         s = ('s', '')[cut == 1]
@@ -427,20 +428,20 @@ class Craps(game.Game):
         elif sum(self.dice) == number:
             status = 'win'
         elif sum(self.dice) == 7:
-            status = 'loss'
+            status = 'lose'
         else:
             status = 'hold'
         # Reverse the status if necessary.
         if reverse:
             status = self.reverse_bet[status]
         # Handle resolution of the bret.
-        if result == 'win':
+        if status == 'win':
             n, to = odds[number]
             payout = int(wager / to * n)
             self.scores[player.name] += payout
             message = '{} won {} dollars on their {} bet on {}. The bet remains in play.'
             self.human.tell(message.format(player.name, payout, bet, number))
-        elif result == 'loss':
+        elif status == 'lose':
             message = '{} lost {} dollars on their {} bet on {}.'
             self.human.tell(message.format(player.name, wager, bet, number))
             self.bets[player.name].remove((raw_bet, wager))
