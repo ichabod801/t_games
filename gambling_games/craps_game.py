@@ -227,10 +227,8 @@ class Craps(game.Game):
                 player.error('That bet cannot be made before the point has been established.')
             elif bet in ('come', 'dont_come') and bet in bets_made:
                 player.error('You can only make that be once each roll.')
-            elif bet in ('buy', 'place', 'dont_buy', 'field') and not number:
+            elif bet in ('buy', 'place', 'dont_buy') and not number:
                 player.error('You must pick a number to play for that bet.')
-            elif bet == 'field' and number not in ('2', '3', '4', '9', '10', '11', '12'):
-                player.error('You may not make a field bet with that number.')
             else:
                 # Get the wager.
                 max_bet = min(self.limit * self.bet_maxes[bet], self.scores[player.name])
@@ -378,13 +376,10 @@ class Craps(game.Game):
         raw_bet: The name used for the bet. (str)
         wager: The amount of the pass bet. (wager)
         """
-        # Get the bet details.
-        bet, slash, number = raw_bet.partition('/')
-        number = int(number)
-        if sum(self.dice) == number:
+        if sum(self.dice) in (2, 3, 4, 9, 10, 11, 12):
             payout = wager
-            if number in (2, 12):
-                payout *= 3
+            if sum(self.dice) in (2, 12):
+                payout *= 2
             self.scores[player.name] += payout
             message = '{} won {} dollars on their {} bet. The bet remains in play.'
             self.human.tell(message.format(player.name, payout, raw_bet))
