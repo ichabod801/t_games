@@ -223,7 +223,7 @@ class Craps(game.Game):
             bet = self.bet_aliases[raw_bet.lower()]
             if bet in ('pass', 'dont_pass') and self.point:
                 player.error('That bet cannot be made after the point has been established.')
-            elif bet in ('come', 'dont_come', 'place') and not self.point:
+            elif bet in ('come', 'dont_come', 'place', 'buy', 'dont_buy') and not self.point:
                 player.error('That bet cannot be made before the point has been established.')
             elif bet in ('come', 'dont_come') and bet in bets_made:
                 player.error('You can only make that be once each roll.')
@@ -390,7 +390,7 @@ class Craps(game.Game):
             self.human.tell(message.format(player.name, payout, raw_bet))
         else:
             self.bets[player.name].remove((raw_bet, wager))
-            self.human.tell('{} lost {} dollars on their {} bet.'.format(player.name, payout, raw_bet))
+            self.human.tell('{} lost {} dollars on their {} bet.'.format(player.name, wager, raw_bet))
 
     def resolve_pass(self, player, raw_bet, wager, reverse = False):
         """
