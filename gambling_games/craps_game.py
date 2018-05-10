@@ -143,6 +143,8 @@ class Craps(game.Game):
     resolve_dont_place: Resolve don't place bets. (None)
     resolve_pass: Resolve pass bets. (None)
     resolve_place: Resolve place bets. (None)
+    resolve_proposition: Resolve proposition bets. (None)
+    resolve_yo: Resolve yo (11) bets. (None)
 
     Overridden Methods:
     game_over
@@ -153,13 +155,18 @@ class Craps(game.Game):
 
     bet_aliases = {'buy': 'buy', "don't buy": 'dont_buy', 'come': 'come', "don't come": "dont_come", 
         "don't pass": "dont_pass", 'field': 'field', 'lay': 'dont_buy', 'pass': 'pass', 
-        'place': 'place', 'right': 'pass', 'wrong': 'dont_pass'}
+        'place': 'place', 'prop': 'proposition', 'proposition': 'proposition', 'right': 'pass', 
+        'wrong': 'dont_pass'}
     bet_maxes = {'buy': 1, 'come': 1, 'dont_buy': 1, "dont_come": 1, "dont_pass": 1, 'field': 1,
         'pass': 1, 'place': 1}
     categories = ['Gambling Games', 'Dice Games']
     name = 'Craps'
     num_options = 2
+    prop_bets = {'2': ((2,), 30, 1), '3': ((3,), 15, 1), 'yo': ((11,), 15, 1), '12': ((12,), 30, 1), 
+        'hi-lo': ((2, 12), 15, 1), 'craps': ((2, 3, 12), 7, 1)}
     reverse_bet = {'win': 'lose', 'lose': 'win', 'hold': 'hold'}
+    valid_prop = ('2', '3', '7', '11', '12', 'yo', 'hi-lo', 'c & e', 'craps', 'any 7', 'field', 'horn', 
+        'whirl', 'world')
 
     def do_done(self, argument):
         """
@@ -212,7 +219,13 @@ class Craps(game.Game):
         if not raw_bet.strip():
             raw_bet = 'done'
         words = raw_bet.split()
-        if words[-1].isdigit():
+        if words[0].lower() in ('prop', 'proposition'):
+            raw_bet = words[0]
+            number = words[1]
+            if number.lower() not in self.valid_prop:
+                player.error('{!r} is not a valid proposition bet.'.format(number))
+                return True
+        elif words[-1].isdigit():
             raw_bet = ' '.join(words[:-1])
             number = words[-1]
         else:
@@ -252,6 +265,17 @@ class Craps(game.Game):
         else:
             # Handle other commands
             return self.handle_cmd(raw_bet)
+
+    def resolve_2(self, player, raw_bet, wager):
+        """
+        Resolve yo (11) bets. (None)
+
+        Parameters:
+        player: The player who made the yo bet. (player.Player)
+        raw_bet: The name used for the bet. (str)
+        wager: The amount of the pass bet. (wager)
+        """
+        self.resolve_proposition(player, raw_bet, wager, (11,), (15, 1))
 
     def resolve_bets(self):
         """Resolve player bets after a roll. (None)"""
@@ -376,16 +400,8 @@ class Craps(game.Game):
         raw_bet: The name used for the bet. (str)
         wager: The amount of the pass bet. (wager)
         """
-        if sum(self.dice) in (2, 3, 4, 9, 10, 11, 12):
-            payout = wager
-            if sum(self.dice) in (2, 12):
-                payout *= 2
-            self.scores[player.name] += payout
-            message = '{} won {} dollars on their {} bet. The bet remains in play.'
-            self.human.tell(message.format(player.name, payout, raw_bet))
-        else:
-            self.bets[player.name].remove((raw_bet, wager))
-            self.human.tell('{} lost {} dollars on their {} bet.'.format(player.name, wager, raw_bet))
+        targets = (2, 3, 4, 9, 10, 11, 12)
+        self.resolve_proposition(player, raw_bet, wager, targets, (1, 1), {2: (2, 1), 12: (2, 1)})
 
     def resolve_pass(self, player, raw_bet, wager, reverse = False):
         """
@@ -457,6 +473,39 @@ class Craps(game.Game):
             message = '{} lost {} dollars on their {} bet on {}.'
             self.human.tell(message.format(player.name, wager, bet, number))
             self.bets[player.name].remove((raw_bet, wager))
+
+    def resolve_proposition(self, player, raw_bet, wager, targets, odds, special_odds = {}):
+        """
+        Resolve proposition bets. (None)
+
+        Parameters:
+        player: The player who made the proposition bet. (player.Player)
+        raw_bet: The name used for the bet. (str)
+        wager: The amount of the pass bet. (wager)
+        targets: The numbers that win the bet. (tuple of int)
+        odds: The payout odds for the bet. (tuple of int)
+        special_odds: Higher odds for certain numbers. (dict of int: tuple of int)
+        """
+        if sum(self.dice) in targets:
+            odds_paid = special_odds.get(sum(self.dice), odds)
+            payout = int(wager * odds_paid[0] / odds_paid[1])
+            self.scores[player.name] += payout
+            message = '{} won {} dollars on their {} bet. The bet remains in play.'
+            self.human.tell(message.format(player.name, payout, raw_bet))
+        else:
+            self.bets[player.name].remove((raw_bet, wager))
+            self.human.tell('{} lost {} dollars on their {} bet.'.format(player.name, wager, raw_bet))
+
+    def resolve_yo(self, player, raw_bet, wager):
+        """
+        Resolve yo (11) bets. (None)
+
+        Parameters:
+        player: The player who made the yo bet. (player.Player)
+        raw_bet: The name used for the bet. (str)
+        wager: The amount of the pass bet. (wager)
+        """
+        self.resolve_proposition(player, raw_bet, wager, (11,), (15, 1))
 
     def set_options(self):
         """Set the game options. (None)"""
