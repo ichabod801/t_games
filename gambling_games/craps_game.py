@@ -4,7 +4,6 @@ craps_game.py
 A game of Craps.
 
 To Do:
-comment check
 more options
 more bots
     remove bots with 0 dollars.
@@ -18,14 +17,17 @@ PLACE_ODDS: The odds for place bets. (dict of int: tuple of int)
 Classes:
 Craps: A game of Craps. (game.Game)
 CrapsBot: A bot to play Craps against. (player.Bot)
+OverBot: A bot that slowly puts its whole stake on the table. (CrapsBot)
+OverPoliteBot: A bot that politely puts its whole stake out. (OverBot)
+OverSemiPoliteBot: A bot that kinda politely puts all its stake out. (OverBot)
 PoliteBot: A bot that roots for the shooter. (CrapsBot)
 CrapsBet: A bet in a game of craps. (object)
 HardWayBet: A bet that a number will come up as a pair first. (CrapsBet)
-OddsBet: An odds bet on a do/don't pass/come bet. (CrapsBet)
 PassBet: A bet that the shooter will win. (CrapsBet)
 ComeBet: A pass-style bet after the come out roll. (PassBet)
 DontComeBet: A don't-pass-style bet after the come out roll. (ComeBet)
 DontPassBet: A bet that the shooter will lose. (PassBet)
+OddsBet: An odds bet on a do/don't pass/come bet. (PassBet)
 PlaceBet: A bet that a particular number will come up before a 7. (CrapsBet)
 BuyBet: A place bet with better odds and a commission. (PlaceBet)
 LayBet: A buy bet that a seven will come before a given number. (BuyBet)
@@ -36,6 +38,7 @@ PropositionBet: A single-roll bet on one or more specific numbers. (CrapsBet)
 from __future__ import division
 
 import math
+import random
 import re
 
 import tgames.dice as dice
@@ -70,6 +73,7 @@ class Craps(game.Game):
     dice: The dice that get rolled. (dice.Pool)
     limit: The maximum bet that can be made. (int)
     max_payout: The multiple of the limit that can be paid out on one bet. (int)
+    max_player: The limit on the sise of self.players. (int)
     point: The point to be made, or zero if no point yet. (int)
     shooter_index: Index of the current shooter in self.players. (int)
     stake: How much money the players start with. (int)
@@ -99,7 +103,7 @@ class Craps(game.Game):
     aliases = {'b': 'bets', 'd': 'done', 'r': 'roll'}
     categories = ['Gambling Games', 'Dice Games']
     name = 'Craps'
-    num_options = 3
+    num_options = 4
     odds_multiples = {4: 3, 5: 4, 6: 5, 8: 5, 9: 4, 10: 3}
 
     def __str__(self):
@@ -380,13 +384,28 @@ class Craps(game.Game):
             question = 'What should the maximum bet be (return for 8)? ')
         self.option_set.add_option('max-payout', [], int, 3, check = lambda times: 1 <= times,
             question = 'What multiple of the maximum bet should the maximum payout be (return for 3)? ')
+        self.option_set.add_option('max-players', [], int, 7, valid = range(1, 21),
+            question = 'How many players should be able to play (return for 7)? ')
 
     def set_up(self):
         """Set up the game. (None)"""
+        self.bot_classes = []
+        classes = [CrapsBot]
+        while classes:
+            cls = classes.pop()
+            self.bot_classes.append(cls)
+            classes.extend(cls.__subclasses__())
         # Set up the players.
-        self.players = [CrapsBot([self.human.name]), self.human]
-        for player in self.players[:-1]:
+        self.players = []
+        taken_names = [self.human.name]
+        while True:
+            self.players.append(random.choice(self.bot_classes)(taken_names))
+            taken_names.append(self.players[-1].name)
+            if not random.randrange(self.max_players - len(self.players)):
+                break
+        for player in self.players:
             player.game = self
+        self.players.append(self.human)
         # Set up the tracking variables.
         self.scores = {player.name: self.stake for player in self.players}
         self.bets = {player.name: [] for player in self.players}
@@ -396,13 +415,13 @@ class Craps(game.Game):
         self.dice = dice.Pool()
         # Set up the bets.
         self.bet_classes = {}
-        self.classes = [CrapsBet]
-        while self.classes:
-            cls = self.classes.pop()
+        classes = [CrapsBet]
+        while classes:
+            cls = classes.pop()
             self.bet_classes[cls.match_text] = cls
             for alias in cls.aliases:
                 self.bet_classes[alias] = cls
-            self.classes.extend(cls.__subclasses__())
+            classes.extend(cls.__subclasses__())
 
 
 class CrapsBot(player.Bot):
@@ -434,14 +453,15 @@ class CrapsBot(player.Bot):
         if prompt.startswith('What kind of bet'):
             # Make pass or don't pass bets, and then odds bets on them.
             my_bets = self.game.bets[self.name]
-            if not self.game.scores[self.name]:
-                return 'Done'
+            if not self.game.scores[self.name] or self.last_act == 'wager':
+                self.last_act = 'done'
             elif not my_bets:
-                return self.bet_type
+                self.last_act = self.bet_type
             elif my_bets and self.game.point and not my_bets[0].odds_bet:
-                return "{} odds {}".format(, self.bet_type, my_bets[0].number)
+                self.last_act = "{} odds {}".format(self.bet_type, my_bets[0].number)
             else:
                 return 'done'
+            return self.last_act
         elif prompt.startswith('You are the shooter.'):
             return 'CrapsBot needs a new pair of shoes!'
         else:
@@ -456,13 +476,14 @@ class CrapsBot(player.Bot):
         """
         max_bet = int(self.max_re.search(args[0]).group())
         wager = min(max_bet, self.game.scores[self.name])
-        if self.game.bets[self.name]:
-            odds = 'odds '
-        else:
-            odds = ''
-        message = "{} made a {} {}bet for {} bucks."
-        self.game.human.tell(message.format(self.name, self.bet_type, odds, wager))
+        message = "{} made a {} bet for {} bucks."
+        self.game.human.tell(message.format(self.name, self.last_act, wager))
+        self.last_act = 'wager'
         return wager
+
+    def set_up(self):
+        """Set up bot specific attributes."""
+        self.last_act = ''
 
     def tell(self, *args, **kwargs):
         """
@@ -474,9 +495,67 @@ class CrapsBot(player.Bot):
         pass
 
 
+class OverBot(CrapsBot):
+    """
+    A bot that slowly puts its whole stake on the table. (CrapsBot)
+
+    Overridden Methods:
+    ask
+    ask_int
+    """
+
+    # The main type of bet to make.
+    bet_type = ("don't pass", "don't come")
+
+    def ask(self, prompt):
+        """
+        Ask the bot a question. (str)
+
+        Parameters:
+        prompt: The queston to ask. (str)
+        """
+        if prompt.startswith('What kind of bet'):
+            # Make pass or don't pass bets, and then odds bets on them.
+            my_bets = self.game.bets[self.name]
+            oddsable = []
+            for bet in my_bets:
+                #print('Oddsing', bet.match_text, bet.number)
+                if not bet.odds_bet and bet.match_text[-4:] in ('pass', 'come') and bet.number:
+                    #print('Oddsed')
+                    oddsable.append(bet)
+            if not self.game.scores[self.name] or self.last_act == 'wager':
+                self.last_act = 'Done'
+            elif not my_bets:
+                self.last_act = self.bet_type[0]
+            elif oddsable:
+                self.last_act = "{} odds {}".format(oddsable[0].match_text, oddsable[0].number)
+            else:
+                self.last_act = self.bet_type[1]
+            return self.last_act
+        elif prompt.startswith('You are the shooter.'):
+            return '{} needs a new pair of shoes!'.format(self.name)
+        else:
+            raise player.BotError('Unexpected question to CrapsBot: {!r}'.format(prompt))
+
+
+class OverPoliteBot(OverBot):
+    """A bot that politely puts its whole stake on the board. (OverBot)"""
+
+    # The main type of bet to make.
+    bet_type = ('pass', 'come')
+
+
+class OverSemiPoliteBot(OverBot):
+    """A bot that somewhat politely puts its whole stake on the board. (OverBot)"""
+
+    # The main type of bet to make.
+    bet_type = ('pass', "don't come")
+
+
 class PoliteBot(CrapsBot):
     """A bot that roots for the shooter. (CrapsBot)"""
 
+    # The main type of bet to make.
     bet_type = 'pass'
 
 
@@ -659,83 +738,6 @@ class HardWayBet(CrapsBet):
         return ' '.join(errors)
 
 
-class OddsBet(PassBet):
-    """
-    An odds bet on a do/don't pass/come bet. (CrapsBet)
-
-    Methods:
-    dont_resolve: Alternate resolve method for don't bets. (int)
-
-    Overridden Methods:
-    __init__
-    max_bet
-    set_wager
-    validate
-    """
-
-    aliases = []
-    match_text = 'odds'
-    removable = True
-
-    def __init__(self, player, raw_text, number, parent):
-        """
-        Set up the bet's attributes. (None)
-
-        Parameters:
-        player: The player who made the bet. (player.Player)
-        raw_text: The user's name for the bet. (str)
-        number: The number associated with the bet. (int)
-        """
-        super(OddsBet, self).__init__(player, raw_text, number)
-        self.parent = parent
-        if "don't" in self.parent.match_text:
-            self.do_resolve = self.resolve
-            self.resolve = self.dont_resolve
-
-    def dont_resolve(self, roll):
-        """
-        Determine if the bet won or lost. (int)
-
-        Parameters:
-        roll: The dice roll this turn. (Pool)
-        """
-        if sum(roll) == 12:
-            result = 0
-        else:
-            result = -1 * self.do_resolve(roll)
-        return result
-
-    def max_bet(self, limit, max_payout):
-        """
-        Calculate the maximum odds wager. (int)
-
-        Parameters:
-        odds_multiples: The multipliers for odds bets. (dict of int: int)
-        """
-        if self.number:
-            max_bet = self.game.odds_multiples[self.number] * self.parent.wager - self.wager
-        else:
-            max_bet = 0
-        return max_bet
-
-    def set_wager(self, wager):
-        """
-        Set the bet's wager and calculate it's payout. (None)
-
-        Parameters:
-        wager: The amount of money bet. (int)
-        """
-        self.wager = wager
-        multiplier, divisor = BUY_ODDS[self.number]
-        if "don't" in self.parent.match_text:
-            multiplier, divisor = divisor, multiplier
-        self.payout = int(wager * multiplier / divisor)
-
-    def validate(self):
-        """Check that the bet is valid. (str)"""
-        return ''
-
-
 class PassBet(CrapsBet):
     """
     A bet that the shooter will win. (CrapsBet)
@@ -870,6 +872,83 @@ class DontPassBet(PassBet):
         else:
             result = -1 * super(DontPassBet, self).resolve(roll)
         return result
+
+
+class OddsBet(PassBet):
+    """
+    An odds bet on a do/don't pass/come bet. (CrapsBet)
+
+    Methods:
+    dont_resolve: Alternate resolve method for don't bets. (int)
+
+    Overridden Methods:
+    __init__
+    max_bet
+    set_wager
+    validate
+    """
+
+    aliases = []
+    match_text = 'odds'
+    removable = True
+
+    def __init__(self, player, raw_text, number, parent):
+        """
+        Set up the bet's attributes. (None)
+
+        Parameters:
+        player: The player who made the bet. (player.Player)
+        raw_text: The user's name for the bet. (str)
+        number: The number associated with the bet. (int)
+        """
+        super(OddsBet, self).__init__(player, raw_text, number)
+        self.parent = parent
+        if "don't" in self.parent.match_text:
+            self.do_resolve = self.resolve
+            self.resolve = self.dont_resolve
+
+    def dont_resolve(self, roll):
+        """
+        Determine if the bet won or lost. (int)
+
+        Parameters:
+        roll: The dice roll this turn. (Pool)
+        """
+        if sum(roll) == 12:
+            result = 0
+        else:
+            result = -1 * self.do_resolve(roll)
+        return result
+
+    def max_bet(self, limit, max_payout):
+        """
+        Calculate the maximum odds wager. (int)
+
+        Parameters:
+        odds_multiples: The multipliers for odds bets. (dict of int: int)
+        """
+        if self.number:
+            max_bet = self.game.odds_multiples[self.number] * self.parent.wager - self.wager
+        else:
+            max_bet = 0
+        return max_bet
+
+    def set_wager(self, wager):
+        """
+        Set the bet's wager and calculate it's payout. (None)
+
+        Parameters:
+        wager: The amount of money bet. (int)
+        """
+        self.wager = wager
+        multiplier, divisor = BUY_ODDS[self.number]
+        if "don't" in self.parent.match_text:
+            multiplier, divisor = divisor, multiplier
+        self.payout = int(wager * multiplier / divisor)
+
+    def validate(self):
+        """Check that the bet is valid. (str)"""
+        return ''
 
 
 class PlaceBet(CrapsBet):
