@@ -296,3 +296,5 @@ Pig,3,0,0,102,41,3,medium satan x
 Pig,2,1,0,75,33,3,medium satan x
 Craps,0,1,0,100,1,0,
 Craps,0,1,0,146,21,6,
+Craps,1,1,0,16,37,2,
+Craps,1,1,0,7,8,0,
