@@ -5,9 +5,6 @@ A game of Craps.
 
 To Do:
 more options
-more bots
-    remove bots with 0 dollars.
-    max_players option
 
 Constants:
 BUY_ODDS: The odds for buy bets. (dict of int: tuple of int)
@@ -21,6 +18,7 @@ OverBot: A bot that slowly puts its whole stake on the table. (CrapsBot)
 OverPoliteBot: A bot that politely puts its whole stake out. (OverBot)
 OverSemiPoliteBot: A bot that kinda politely puts all its stake out. (OverBot)
 PoliteBot: A bot that roots for the shooter. (CrapsBot)
+Randy: A bot that bets completely randomly. (CrapsBot)
 CrapsBet: A bet in a game of craps. (object)
 HardWayBet: A bet that a number will come up as a pair first. (CrapsBet)
 PassBet: A bet that the shooter will win. (CrapsBet)
@@ -214,7 +212,7 @@ class Craps(game.Game):
             # Check for a pass or don't pass bet:
             bets = [bet.match_text for bet in self.bets[player.name]]
             if 'pass' not in bets and "don't pass" not in bets:
-                player.tell("You must have a pass or a don't pass bet when you are the shooter.")
+                player.error("You must have a pass or a don't pass bet when you are the shooter.")
                 return True
             # Have them roll the dice.
             if argument.lower() not in ('r', 'roll'):
@@ -281,7 +279,7 @@ class Craps(game.Game):
         self.scores[self.human.name] -= self.stake
         if self.scores[self.human.name] > 0:
             self.win_loss_draw[0] = 1
-        if self.scores[self.human.name] > 0:
+        elif self.scores[self.human.name] < 0:
             self.win_loss_draw[1] = 1
         else:
             self.win_loss_draw[2] = 1
@@ -319,6 +317,25 @@ class Craps(game.Game):
             bet.player.tell('The bank charges a {} dollar commission on that bet.'.format(commission))
             self.scores[bet.player.name] -= commission
 
+    def next_shooter(self):
+        """"Determine the next shooter and the next player (better). (None)"""
+        # Check for new players.
+        if len(self.players) < self.max_players and random.random() < (1 / len(self.players)):
+            newbie = random.choice(self.bot_classes)(self.scores.keys())
+            newbie.game = self
+            newbie.set_up()
+            self.players.append(newbie)
+            self.scores[newbie.name] = self.stake
+            self.bets[newbie.name] = []
+            self.human.tell('\n{} has joined the game.\n'.format(newbie.name))
+        # Go to the next player who has money to bet.
+        while True:
+            self.shooter_index = (self.shooter_index + 1) % len(self.players)
+            if self.scores[self.players[self.shooter_index].name]:
+                break
+        # Set the next person to the shooter, assuming end of turn will adjust it to the next player.
+        self.player_index = self.shooter_index
+
     def player_action(self, player):
         """
         Handle any actions by the current player. (bool)
@@ -326,6 +343,23 @@ class Craps(game.Game):
         Parameters:
         player: The current player. (player.Player)
         """
+        # Check for removing a player.
+        if not (self.scores[player.name] or self.bets[player.name]):
+            self.players.remove(player)
+            self.human.tell('\n{} dropped out due to lack of funds.\n'.format(player.name))
+            self.player_index -= 1
+            if self.shooter_index > self.player_index:
+                self.shooter_index -= 1
+            return False
+        # Pass the dice if the shooter has no money for a pass/don't pass bet.
+        # !! more complex than this, make a validate shooter function.
+        elif self.shooter_index == self.player_index and not self.scores[player.name] and not self.point:
+            for bet in self.bets[player.name]:
+                if 'pass' in bet.match_text and not bet.number:
+                    break
+            else:
+                self.next_shooter()
+                return False
         # Display the game status.
         player.tell(str(self))
         # Get the bet or other command.
@@ -370,8 +404,7 @@ class Craps(game.Game):
                 self.point = 0
             elif sum(self.dice) == 7:
                 self.point = 0
-                self.shooter_index = (self.shooter_index + 1) % len(self.players)
-                self.player_index = self.shooter_index
+                self.next_shooter()
         elif sum(self.dice) in (4, 5, 6, 8, 9, 10):
             self.point = sum(self.dice)
 
@@ -435,6 +468,7 @@ class CrapsBot(player.Bot):
     Overridden Methods:
     ask
     ask_int
+    set_up
     tell
     """
 
@@ -453,7 +487,9 @@ class CrapsBot(player.Bot):
         if prompt.startswith('What kind of bet'):
             # Make pass or don't pass bets, and then odds bets on them.
             my_bets = self.game.bets[self.name]
-            if not self.game.scores[self.name] or self.last_act == 'wager':
+            if self.last_act[:4] == 'must':
+                self.last_act = self.last_act[5:]
+            elif not self.game.scores[self.name] or self.last_act == 'wager':
                 self.last_act = 'done'
             elif not my_bets:
                 self.last_act = self.bet_type
@@ -480,6 +516,22 @@ class CrapsBot(player.Bot):
         self.game.human.tell(message.format(self.name, self.last_act, wager))
         self.last_act = 'wager'
         return wager
+
+    def error(self, message):
+        """
+        Handle error warnings from the game. (None)
+
+        Parameters:
+        message: The error warning. (str)
+        """
+        if message.startswith('You can only have'):
+            self.last_act = 'must done'
+        elif message.startswith('You must have a'):
+            self.last_act = "must don't pass"
+        elif message.startswith('You have already'):
+            self.last_act = 'must done'
+        else:
+            super(CrapsBot, self).error(message)
 
     def set_up(self):
         """Set up bot specific attributes."""
@@ -523,14 +575,28 @@ class OverBot(CrapsBot):
                 if not bet.odds_bet and bet.match_text[-4:] in ('pass', 'come') and bet.number:
                     #print('Oddsed')
                     oddsable.append(bet)
-            if not self.game.scores[self.name] or self.last_act == 'wager':
+            if self.last_act[:4] == 'must':
+                self.last_act = self.last_act[5:]
+            elif not self.game.scores[self.name] or self.last_act == 'wager':
                 self.last_act = 'Done'
-            elif not my_bets:
-                self.last_act = self.bet_type[0]
+            elif not self.game.point and self.game.players[self.game.shooter_index] == self:
+                for bet in my_bets:
+                    if bet.match(self.bet_type[0], 0):
+                        self.last_act = 'done'
+                        break
+                else:
+                    self.last_act = self.bet_type[0]
             elif oddsable:
                 self.last_act = "{} odds {}".format(oddsable[0].match_text, oddsable[0].number)
-            else:
+            elif self.game.point:
                 self.last_act = self.bet_type[1]
+            else:
+                for bet in my_bets:
+                    if bet.match(self.bet_type[0], 0):
+                        self.last_act = 'done'
+                        break
+                else:
+                    self.last_act = self.bet_type[0]
             return self.last_act
         elif prompt.startswith('You are the shooter.'):
             return '{} needs a new pair of shoes!'.format(self.name)
@@ -557,6 +623,94 @@ class PoliteBot(CrapsBot):
 
     # The main type of bet to make.
     bet_type = 'pass'
+
+
+class Randy(CrapsBot):
+    """
+    A bot that bets completely randomly. (CrapsBot)
+
+    Class Attributes:
+    any_times: Names of bets that can be made any time. (tuple of str)
+    post_point: Names of bets that can only be made before a point. (tuple of str)
+    pre_point: Names of bets that can only be made after a point. (tuple of str)
+
+    Overridden Methods:
+    ask
+    ask_int
+    """
+
+    any_time = ('place x', 'buy x', 'lay x', 'proposition x', 'hard x')
+    post_point = ('come', "don't come")
+    pre_point = ('pass', "don't pass", 'done')
+
+    def ask(self, prompt):
+        """
+        Ask the bot a question. (str)
+
+        Parameters:
+        prompt: The queston to ask. (str)
+        """
+        if prompt.startswith('What kind of bet'):
+            # Make pass or don't pass bets, and then odds bets on them.
+            my_bets = self.game.bets[self.name]
+            oddsable = []
+            for bet in my_bets:
+                #print('Oddsing', bet.match_text, bet.number)
+                if not bet.odds_bet and bet.match_text[-4:] in ('pass', 'come') and bet.number:
+                    #print('Oddsed')
+                    oddsable.append(bet)
+            if self.last_act[:4] == 'must':
+                self.last_act = self.last_act[5:]
+            elif not self.game.scores[self.name] or self.last_act == 'wager':
+                self.last_act = 'Done'
+            elif not self.game.point and self.game.players[self.game.shooter_index] == self:
+                for bet in my_bets:
+                    if bet.match('pass', 0) or bet.match("don't pass", 0):
+                        self.last_act = 'done'
+                        break
+                else:
+                    self.last_act = random.choice(('pass', "don't pass"))
+            elif oddsable and random.random() > 0.5:
+                self.last_act = "{} odds {}".format(oddsable[0].match_text, oddsable[0].number)
+            elif self.game.point:
+                for bet in my_bets:
+                    if bet.match('pass', 0) or bet.match("don't pass", 0):
+                        self.last_act = 'done'
+                        break
+                else:
+                    self.last_act = random.choice(self.post_point + self.any_time)
+            elif random.random() > 0.5:
+                self.last_act = random.choice(self.pre_point + self.any_time)
+            else:
+                self.last_act = 'done'
+            if self.last_act.endswith('x'):
+                if self.last_act.startswith('prop'):
+                    prop_bet = random.choice(PropositionBet.prop_bets.keys())
+                    self.last_act = self.last_act.replace('x', prop_bet)
+                elif self.last_act.startswith('hard'):
+                    self.last_act = self.last_act.replace('x', random.choice(('4', '6', '8', '10')))
+                else:
+                    number = random.choice(('4', '5', '6', '8', '9', '10'))
+                    self.last_act = self.last_act.replace('x', number)
+            return self.last_act
+        elif prompt.startswith('You are the shooter.'):
+            return '{} needs a new pair of shoes!'.format(self.name)
+        else:
+            raise player.BotError('Unexpected question to CrapsBot: {!r}'.format(prompt))
+
+    def ask_int(self, *args, **kwargs):
+        """
+        Ask the bot for an integer. (int)
+
+        Parameters:
+        the parameters are ingored.
+        """
+        max_bet = min(int(self.max_re.search(args[0]).group()), self.game.scores[self.name])
+        wager = random.randint(1, max_bet)
+        message = "{} made a {} bet for {} bucks."
+        self.game.human.tell(message.format(self.name, self.last_act, wager))
+        self.last_act = 'wager'
+        return wager
 
 
 class CrapsBet(object):
@@ -781,6 +935,10 @@ class PassBet(CrapsBet):
             errors.append('{} bets cannot be made when there is a point.'.format(self.raw_text))
         if self.number:
             errors.append('{} bets are not made with a number.'.format(self.raw_text))
+        for bet in self.game.bets[self.player.name]:
+            if bet.match(self.match_text, 0):
+                errors.append('You can only have one open {} bet at a time.'.format(self.raw_text))
+                break
         return ' '.join(errors)
 
 
@@ -820,6 +978,10 @@ class ComeBet(PassBet):
             errors.append('{} bets cannot be made before there is a point.'.format(self.raw_text))
         if self.number:
             errors.append('{} bets are not made with a number.'.format(self.raw_text))
+        for bet in self.game.bets[self.player.name]:
+            if bet.match(self.match_text, 0):
+                errors.append('You can only have one open {} bet at a time.'.format(self.raw_text))
+                break
         return ' '.join(errors)
 
 
@@ -879,6 +1041,7 @@ class OddsBet(PassBet):
     An odds bet on a do/don't pass/come bet. (CrapsBet)
 
     Methods:
+    come_resulve: Alternative resolve method for come bets. (int)
     dont_resolve: Alternate resolve method for don't bets. (int)
 
     Overridden Methods:
@@ -906,6 +1069,20 @@ class OddsBet(PassBet):
         if "don't" in self.parent.match_text:
             self.do_resolve = self.resolve
             self.resolve = self.dont_resolve
+        elif self.parent.match_text == 'come':
+            self.resolve = self.come_resolve
+
+    def come_resolve(self, roll):
+        """
+        Determine if the bet won or lost. (int)
+
+        Parameters:
+        roll: The dice roll this turn. (Pool)
+        """
+        if self.game.point:
+            return super(OddsBet, self).resolve(roll)
+        else:
+            return 0
 
     def dont_resolve(self, roll):
         """
