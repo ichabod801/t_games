@@ -4,7 +4,6 @@ hangman_game.py
 A game of hangman.
 
 to do:
-special cases (no such word)
 special words
 guessing the whole word.
 better difficulty estimation
@@ -132,6 +131,8 @@ class Hangman(game.Game):
             word = self.human.ask('What was the word? ').lower()
         else:
             word = self.guess
+        if word not in self.words:
+            self.human.tell('I cry foul. That word is not in my dictionary.')
         # Find a word of similar difficulty.
         self.word = random.choice(self.scored_words[self.score_word(word)])
         # Set the word-dependent tracking variables.
@@ -166,15 +167,28 @@ class Hangman(game.Game):
 
     def player_answer(self):
         """Handle the player answering if letters are correct. (bool)"""
-        # Get the frequency of unknown letters in possible words.
-        sub_freq = collections.Counter()
-        valid = []
-        for char_index, char in enumerate(self.guess):
-            if char == '_':
-                sub_freq += collections.Counter(word[char_index] for word in self.possibles)
-                valid.append(char_index + 1)
-        # Guess the most freuent unknown letter in the possible words.
-        guess = sub_freq.most_common(1)[0][0]
+        if self.possibles:
+            # Update the human on the computer's status.
+            if self.status:
+                count = len(self.possibles)
+                if count > 1:
+                    self.human.tell('I have narrowed it down to {} words.'.format(count))
+                else:
+                    self.human.tell('I know the word.')
+            # Get the frequency of unknown letters in possible words.
+            sub_freq = collections.Counter()
+            valid = []
+            for char_index, char in enumerate(self.guess):
+                if char == '_':
+                    sub_freq += collections.Counter(word[char_index] for word in self.possibles)
+                    valid.append(char_index + 1)
+            # Guess the most freuent unknown letter in the possible words.
+            guess = sub_freq.most_common(1)[0][0]
+        else:
+            # If the word isn't in the dictionary, guess by overall frequency.
+            for guess in self.frequency:
+                if guess not in self.guessed_letters:
+                    break
         query = '\nI guess {0!r}. Please enter the indexes where {0!r} occurs in the word: '
         matches = self.human.ask_int_list(query.format(guess), valid = valid)
         self.guessed_letters += guess
@@ -224,6 +238,11 @@ class Hangman(game.Game):
         letters = len(set(word))
         worst = max(self.rank_dict[letter] for letter in word.lower())
         return worst - letters
+
+    def set_options(self):
+        """Set the available game options. (None)"""
+        self.option_set.add_option('status', 
+            question = "Would you like updates on the computer's thinking? bool")
 
     def set_up(self):
         """Set up the game. (None)"""
