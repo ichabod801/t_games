@@ -10,6 +10,7 @@ Constants:
 BUY_ODDS: The odds for buy bets. (dict of int: tuple of int)
 CREDITS: The credits for Craps. (str)
 PLACE_ODDS: The odds for place bets. (dict of int: tuple of int)
+RULES: The rules for Craps. (str)
 
 Classes:
 Craps: A game of Craps. (game.Game)
@@ -55,6 +56,102 @@ Game Programming: Craig "Ichabod" O'Brien
 # The odds for place bets.
 PLACE_ODDS = {4: (9, 5), 5: (7, 5), 6: (7, 6), 8: (7, 6), 9: (7, 5), 10: (9, 5)}
 
+# The rules for Craps.
+RULES = """
+A player is set to be the shooter (the person who rolls the dice). The base 
+game of craps goes as follows: The first roll in the round is the come out
+roll. On the come out roll the shooter "wins" if they roll a 7 or 11 on two
+dice. They "lose" on the come out roll if they roll a 2, 3, or 12. Any other
+roll sets the point. The shooter continues to roll, "winning" if they re-roll
+the point and "losing" if they roll a 7.
+
+At the end of a round where the shooter "wins" or "loses," they start over 
+again with a new come out roll. The exception is if the shooter gets a point
+and then loses with a roll of 7. In that case, the dice pass to the next 
+player, who becomes the shooter for a new come out roll.
+
+The base game is not really the game. The real game is making various bets on
+the die rolls. The shooter can easily bet that they will "lose," and then if
+they "lose," they win money. The bets are described below. The only real
+restriction that the base game places on betting is that the shooter must 
+make a pass or a don't pass bet for each come out roll.
+
+To play, specify which bet you want to make. Then you will be asked how much
+you want to wager on the bet. When you are done betting on a particular roll, 
+enter 'done' or just hit return.
+
+BETS:
+Pass (Right): A bet that the shooter will "win". Pays 1:1
+Don't Pass (Wrong): A bet that the shooter will "lose". Note that a don't pass
+    bet is not resolved on a 12 on the come out roll. It remains in play for
+    the next come out roll. Pays 1:1
+Come: This bet is like a pass bet that treats the next roll as a new come out 
+    roll. So it wins if the next roll is 7 or 11, loses if the next roll is 2,
+    3, or 12; and otherwise a point is set and the bet wins if the point is
+    rolled before a seven and loses if a seven is rolled first. Pays 1:1
+Don't Come: This is the don't pass equivalent of the come bet. Pays 1:1
+Odds: Any of the above bets can have an odds bet placed on them after a point
+    is set. This pays out at true odds that the point will (or won't for don't
+    pass/don't come odds) be rolled before a 7. This is a key bet in craps, as
+    it is the only fair bet (no house edge) in the game. To make this bet, bet
+    the base bet plus "odds", such as "pass odds" or "don't pass odds." for
+    come/don't come odds, you must state the point as well, such as "come odds
+    4." Odds bets may be made with a higher maximum, often depending on the
+    point the odds are on. Payouts are 2:1 for 4 or 10, 3:2 for 5 or 9, and 
+    6:5 for 6 or 8. The reverse odds are payed for don't pass/don't come odds.
+Place: A bet that a specific number (4, 5, 6, 8, 9, or 10) will be rolled 
+    before a 7. Pays 9:5 on 4 or 10, 7:5 on 5 or 9, and 7:6 on 6 or 8.
+Buy Bet: A place bet that pays true odds. However, you must pay a 5% 
+    commission to make the bet. Pays out as Odds bet.
+Lay Bet: The revers of a buy bet, betting that a 7 will be rolled first. It
+    also pays true odds (as a don't pass odds bet), and requires a 5%
+    commission to be paid.
+Hard Way (Hard): A hard way bet can be played on 4, 6, 8, or 10. It is a bet 
+    that the number will be rolled as a pair before it is rolled otherwise. It 
+    pays out 7:1 for 4 or 10, 9:1 for 6 or 8.
+
+PROPOSITION (SINGLE-ROLL) BETS:
+(To make a proposition bet, type "prop" or "propositon" and the name of the 
+    bet.)
+2 (snake eyes/aces): Wins if the next roll is a 2. Pays 
+3 (ace-duece): Wins if the next roll is a 3. Pays
+11 (yo): Wins if the next roll is an 11. Pays
+12 (boxcars/midnight/cornrows): Wins if the next roll is a 12. Pays
+Any 7: Wins if the next roll is a 7. Pays 4:1
+Any Craps (craps/three-way): Wins if the next roll is a 2, 3, or 12. Pays
+Field: Wins if the next roll is 2, 3, 4, 9, 10, 11, or 12. Pays 1:1, or 2:1
+    if the 2 or 12 are rolled.
+Hi-lo (2 or 12): Wins if the next roll is either a 2 or a 12. Pays
+Horn: Wins if the next roll is 2, 3, 11, or 12. Pays 27:4 if 2 or 12 is 
+    rolled, 3:1 if 3 or 11 is rolled.
+Whirl (world): Wins if the next rolls is a 2, 3, 11, or 12. Pays 26:5 if 2 or 
+    12 is rolled, 11:5 if 3 or 11 is rolled, and pushes (remains in play) if 
+    the 7 is rolled.
+
+Some bets, including proposition bets, have their maximum bet determined by
+the maximum payout on the table (typically 3 times the maximum bet). You can't
+bet so much that you would win more than the maximum payout.
+
+OTHER COMMANDS:
+Bets (b): See the bets you currently have in play.
+Done (d): Finish betting on the next roll.
+Remove (x): Some bets can be taken back after being made. This command will 
+    show you your removable bets and allow you to take them back.
+Roll (r): Finish betting and roll the dice.
+
+OPTIONS:
+cars-pay-3: Make 12 (boxcars) pay 3:1 on a field bet.
+lazy-hard: Turns hard way bets on during the come out roll.
+limit: The maximum ammount that can be bet (20).
+max-payout: The multiple of the limit that is the maximum payout (3).
+max-players: The maximum number of players at the table (7).
+odds-max: The multiple of the limit for odds bets. If odds-max = 345, the 
+    maximum is 3x the limit for 4 or 10, 4x the limit for 5 or 9, and 5x the
+    limit for 6 or 10. (345)
+stake: The ammount of money the player starts with (250).
+yo-pays-2: Makes 11 (yo) pay 2:1 on a field bet.
+"""
+
 
 class Craps(game.Game):
     """
@@ -68,13 +165,17 @@ class Craps(game.Game):
 
     Attributes:
     bets: The bets the players have made this round. (dict of str: list)
+    cars_pay_3: A flag for 12 paying at 3:1 on field bets. (bool)
     dice: The dice that get rolled. (dice.Pool)
+    lazy_hard: A flag for hard ways bets to be off on come out rolls. (bool)
     limit: The maximum bet that can be made. (int)
     max_payout: The multiple of the limit that can be paid out on one bet. (int)
     max_player: The limit on the sise of self.players. (int)
+    odds_max: The multiple of the max bet for odds bets. (int)
     point: The point to be made, or zero if no point yet. (int)
     shooter_index: Index of the current shooter in self.players. (int)
     stake: How much money the players start with. (int)
+    yo_pays_2: A flag for 11 paying at 2:1 on field bets. (bool)
 
     Class Attributes:
     odds_multiples: The multiples of the max bets for odds bets. (dict)
@@ -85,6 +186,7 @@ class Craps(game.Game):
     do_remove: Remove bets that are in play. (bool)
     do_roll: Finish the player's turn and roll. (bool)
     get_wager: Get the ammount to wager on the bet. (int)
+    next_shooter: Determine the next shooter and the next player (better). (None)
     remove_bet: Remove a bet from play. (None)
     resolve_bets: Resolve player bets after a roll. (None)
 
@@ -93,16 +195,19 @@ class Craps(game.Game):
     default
     do_quit
     game_over
+    handle_options
     player_action
     set_options
     set_up
     """
 
-    aliases = {'b': 'bets', 'd': 'done', 'r': 'roll'}
+    aliases = {'b': 'bets', 'd': 'done', 'r': 'roll', 'x': 'remove'}
     categories = ['Gambling Games', 'Dice Games']
+    credits = CREDITS
     name = 'Craps'
-    num_options = 4
+    num_options = 8
     odds_multiples = {4: 3, 5: 4, 6: 5, 8: 5, 9: 4, 10: 3}
+    rules = RULES
 
     def __str__(self):
         """Human readable text representation. (str)"""
@@ -195,7 +300,7 @@ class Craps(game.Game):
         player = self.players[self.player_index]
         player.tell('\n---Your Bets---\n')
         for bet in self.bets[player.name]:
-            player.tell('{} bet for {} dollars.'.format(bet, bet.wager).capitalize())
+            player.tell('{} for {} dollars.'.format(bet, bet.wager).capitalize())
         player.tell()
         return True
 
@@ -317,6 +422,21 @@ class Craps(game.Game):
             bet.player.tell('The bank charges a {} dollar commission on that bet.'.format(commission))
             self.scores[bet.player.name] -= commission
 
+    def handle_options(self):
+        """Handle the specified options. (None)"""
+        super(Craps, self).handle_options()
+        if self.odds_max != 345:
+            self.odds_multiples = {roll: self.odds_max for roll in (4, 5, 6, 8, 9, 10)}
+        new_field = {}
+        if self.cars_pay_3:
+            new_field[12] = (3, 1)
+        if self.yo_pays_2:
+            new_field[11] = (2, 1)
+        if new_field:
+            field_special = {2: (2, 1), 12: (2, 1)}
+            field_special.update(new_field)
+            PropositionBet.prop_bets['field'] = ((2, 3, 4, 9, 10, 11, 12), 1, 1, field_special)
+
     def next_shooter(self):
         """"Determine the next shooter and the next player (better). (None)"""
         # Check for new players.
@@ -352,8 +472,7 @@ class Craps(game.Game):
                 self.shooter_index -= 1
             return False
         # Pass the dice if the shooter has no money for a pass/don't pass bet.
-        # !! more complex than this, make a validate shooter function.
-        elif self.shooter_index == self.player_index and not self.scores[player.name] and not self.point:
+        elif self.shooter_index == self.player_index and not self.validate_shoot(player):
             for bet in self.bets[player.name]:
                 if 'pass' in bet.match_text and not bet.number:
                     break
@@ -419,6 +538,12 @@ class Craps(game.Game):
             question = 'What multiple of the maximum bet should the maximum payout be (return for 3)? ')
         self.option_set.add_option('max-players', [], int, 7, valid = range(1, 21),
             question = 'How many players should be able to play (return for 7)? ')
+        self.option_set.add_option('odds-max', [], int, 345, check = lambda times: 1 <= times,
+            question = 'What multiple of the max bet should be the max for odds bets (return for 3-4-5)? ')
+        self.option_set.add_option('lazy-hard', 
+            question = 'Should hard ways bets be off on the come out roll? bool')
+        self.option_set.add_option('cars-pay-3', question = 'Should 12 pay 3:1 on field bets? bool')
+        self.option_set.add_option('yo-pays-2', question = 'Should 11 pay 2:1 on field bets? bool')
 
     def set_up(self):
         """Set up the game. (None)"""
@@ -455,6 +580,21 @@ class Craps(game.Game):
             for alias in cls.aliases:
                 self.bet_classes[alias] = cls
             classes.extend(cls.__subclasses__())
+
+    def validate_shooter(self, player):
+        """
+        Make sure the current shooter can make the necessary bets. (bool)
+
+        Parameters:
+        player: The potential shooter to validate. (player.Player)
+        """
+        if not self.scores[player.name] and not self.point:
+            for bet in self.bets[player.name]:
+                if bet.match('pass', 0) or bet.match("don't pass", 0):
+                    return True
+            return False
+        else:
+            return True
 
 
 class CrapsBot(player.Bot):
@@ -856,7 +996,9 @@ class HardWayBet(CrapsBet):
         Parameters:
         roll: The dice roll this turn. (Pool)
         """
-        if sum(roll) == self.number:
+        if self.game.lazy_hard and not self.game.point:
+            result = 0
+        elif sum(roll) == self.number:
             if roll.values[0] == roll.values[1]:
                 result = self.payout
             else:
@@ -888,7 +1030,7 @@ class HardWayBet(CrapsBet):
         if not self.number:
             errors.append('{} bets must be made with a number.'.format(self.raw_text))
         elif self.number not in (4, 6, 8, 10):
-            errors.append('{} bets can only be made on 4, 5, 6, 8, 9, or 10.'.format(self.raw_text))
+            errors.append('{} bets can only be made on 4, 6, 8, or 10.'.format(self.raw_text))
         return ' '.join(errors)
 
 
@@ -929,7 +1071,6 @@ class PassBet(CrapsBet):
 
     def validate(self):
         """Check that the bet is valid. (str)"""
-        # !! one per turn, and children
         errors = []
         if self.game.point:
             errors.append('{} bets cannot be made when there is a point.'.format(self.raw_text))
@@ -1227,10 +1368,12 @@ class PropositionBet(CrapsBet):
     """
 
     # Different names for the various proposition bets.
-    prop_aliases = {'2': '2', '3': '3', '6': '6', '7': '7', '8': '8', '11': 'yo', '12': '12', 'any 7': '7', 
-        'c&e': 'c & e', 'c & e': 'c & e', 'craps': 'craps', 'big 6': '6', 'big 8': '8', 'field': 'field', 
+    prop_aliases = {'2': '2', '2 or 12': 'hi-lo', '3': '3', '6': '6', '7': '7', '8': '8', '11': 'yo', 
+        '12': '12', 'ace-duece': '3', 'aces': '2', 'any 7': '7', 'any craps': 'craps', 'boxcars': '12', 
+        'c&e': 'c & e', 'c & e': 'c & e', 'cornrows': '12', 'craps': 'craps', 'field': 'field', 
         'hi-lo': 'hi-lo', 'hi-low': 'hi-lo', 'high-lo': 'hi-lo', 'high-low': 'hi-lo', 'horn': 'horn', 
-        'whirl': 'whirl', 'world': 'whirl', 'yo': 'yo'}
+        'midnight': '12', 'snake-eyes': '2', 'three-way': 'craps', 'whirl': 'whirl', 'world': 'whirl', 
+        'yo': 'yo'}
     # Data defining the various proposition bets.
     prop_bets = {'2': ((2,), 30, 1), '3': ((3,), 15, 1), '6': ((6,), 1, 1), '7': ((7,), 4, 1), 
         '8': ((8,), 1, 1), 'yo': ((11,), 15, 1), '12': ((12,), 30, 1), 'hi-lo': ((2, 12), 15, 1), 
