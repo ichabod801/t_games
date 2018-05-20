@@ -4,8 +4,6 @@ hangman_game.py
 A game of hangman.
 
 to do:
-special words
-guessing the whole word.
 better difficulty estimation
 difficulty levels
 
@@ -116,6 +114,20 @@ class Hangman(game.Game):
             text += '\nGuessed: {}\n'.format(self.guessed_letters)
         return text
 
+    def do_guess(self, argument):
+        """
+        Handle guessing what the word is. (bool)
+
+        Parameters:
+        argument: The guess. (str)
+        """
+        if self.word == argument.lower():
+            self.guess = self.word
+            self.human.tell('You guessed wisely!')
+        else:
+            self.incorrect += 1
+            self.human.tell('You guessed poorly.')
+
     def game_over(self):
         """Check for end of game. (bool)"""
         # Check for end state.
@@ -197,7 +209,14 @@ class Hangman(game.Game):
             if count > 1:
                 self.human.tell('I have narrowed it down to {} words.'.format(count))
             elif count == 1:
-                self.human.tell('I know the word.')
+                # Guess the only possible word.
+                correct = self.human.ask('Is the word {!r}? '.format(self.possibles[0])).lower
+                if correct in utility.YES:
+                    self.guess = self.word
+                else:
+                    self.incorrect += 1
+                    self.possibles = []
+                return False
             else:
                 self.human.tell('I think you are cheating.')
         if self.possibles:
@@ -215,8 +234,8 @@ class Hangman(game.Game):
             for guess in self.frequency:
                 if guess not in self.guessed_letters:
                     break
-        query = '\nI guess {0!r}. Please enter the indexes where {0!r} occurs in the word: '
-        matches = self.human.ask_int_list(query.format(guess), valid = valid)
+        query = '\nI guess {0!r}. Please enter the indexes where {0!r} occurs in the word: '.format(guess)
+        matches = self.human.ask_int_list(query, valid = valid, cmd = False, valid_lens = range(30))
         self.guessed_letters += guess
         # Readjust possibles based on the results of the guess.
         if not matches:
@@ -239,8 +258,7 @@ class Hangman(game.Game):
         guess = self.human.ask('What letter do you guess? ')
         # Handle non-guesses.
         if len(guess) != 1 or guess.lower() not in 'abcdefghijklmnopqrstuvwxyz':
-            self.handle_cmd(guess)
-            return True
+            return self.handle_cmd(guess)
         # Check for repeated guesses.
         if guess in self.guessed_letters:
             self.human.tell('You already guessed {!r}, try again.'.format(guess))

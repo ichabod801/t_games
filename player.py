@@ -154,6 +154,8 @@ class Player(object):
             response = self.ask(prompt).strip()
             if not response and default is not None:
                 return default
+            elif not response and not cmd and (0 in valid_lens or not valid_lens):
+                return []
             if self.int_re.match(response):
                 response = [int(num) for num in self.int_re.findall(response)]
                 if low is not None and min(response) < low:
