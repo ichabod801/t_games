@@ -3,6 +3,10 @@ Utility functions for tgames.
 
 Constants:
 LOC: tgames location. (str)
+MAX_INT: The largest allowed integer. (int)
+NINETEEN: English words for 1-19. (list of str)
+TENS: English words for multiples of 10. (list of str)
+THOUSAND_UP: English words for powers of one thousand. (list of str)
 YES: Synonyms for 'yes'. (set of str)
 
 Functions:
@@ -30,13 +34,6 @@ try:
 except AttributeError:
     MAX_INT = sys.maxsize
 
-
-# Words for one hundred and higher.
-THOUSAND_UP = ['', 'thousand', 'million', 'billion', 'trillion', 'quadrillion', 'quintillion',
-    'sextillion', 'septillion', 'octillion', 'nonillion', 'decillion', 'undecillion', 'duodecillion',
-    'tredecillion', 'quatturodecillion', 'quindecillion', 'sexdecillion', 'octodecillion',
-    'novemdecillion', 'vigintillion']
-
 # The first twenty number words.
 NINETEEN = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 
     'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen',
@@ -44,6 +41,12 @@ NINETEEN = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eigh
 
 # The words for the tens place.
 TENS = ['', '', 'twenty', 'thirty', 'fourty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety']
+
+# Words for one thousand and higher.
+THOUSAND_UP = ['', 'thousand', 'million', 'billion', 'trillion', 'quadrillion', 'quintillion',
+    'sextillion', 'septillion', 'octillion', 'nonillion', 'decillion', 'undecillion', 'duodecillion',
+    'tredecillion', 'quatturodecillion', 'quindecillion', 'sexdecillion', 'octodecillion',
+    'novemdecillion', 'vigintillion']
 
 # Synonyms for 'yes'. 
 YES = set(['yes', 'y', '1', 'yup', 'sure', 'affirmative', 'yeah', 'indubitably', 'yep', 'aye', 'ok'])

@@ -22,7 +22,7 @@ CREDITS_DATA = [('Interface Programming', """Craig "Ichabod" O'Brien"""),
     ('Bot Programming', """Craig "Ichabod" O'Brien"""),
     ('Play Testing', """Craig "Ichabod" O'Brien"""),
     ('Special Thanks', """Guido van Rossum; python-forum.io, github.com, Wikipedia, pagat.com; 
-        Kris Burm, Matt Groening, David Parlett""")]
+        Alan Beale, Kris Burm, Matt Groening, David Parlett""")]
 
 
 def data_to_text():

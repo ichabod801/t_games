@@ -102,6 +102,7 @@ class Interface(other_cmd.OtherCmd):
     Class Attributes:
     aliases: Alternate command words. (dict of str: str)
     rules: The rules. (str)
+    word_list: The relative location of a word list for word games. (str)
 
     Methods:
     do_credits: Show the programming credits for the interface. (bool)
@@ -122,6 +123,7 @@ class Interface(other_cmd.OtherCmd):
 
     aliases = {'?': 'help'}
     rules = RULES
+    word_list = 'other_games/3of6game.txt'
 
     def __init__(self, human):
         """Set up the interface. (None)"""

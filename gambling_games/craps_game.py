@@ -627,12 +627,16 @@ class CrapsBot(player.Bot):
         if prompt.startswith('What kind of bet'):
             # Make pass or don't pass bets, and then odds bets on them.
             my_bets = self.game.bets[self.name]
+            # Mandatory actions based on errors.
             if self.last_act[:4] == 'must':
                 self.last_act = self.last_act[5:]
+            # One bet per round, when you can.
             elif not self.game.scores[self.name] or self.last_act == 'wager':
                 self.last_act = 'done'
+            # Make the primary bet if no bet.
             elif not my_bets:
                 self.last_act = self.bet_type
+            # Make an odds bet if there is a bet.
             elif my_bets and self.game.point and not my_bets[0].odds_bet:
                 self.last_act = "{} odds {}".format(self.bet_type, my_bets[0].number)
             else:
@@ -664,6 +668,7 @@ class CrapsBot(player.Bot):
         Parameters:
         message: The error warning. (str)
         """
+        # Dictate the next action based on the error.
         if message.startswith('You can only have'):
             self.last_act = 'must done'
         elif message.startswith('You must have a'):
@@ -707,18 +712,19 @@ class OverBot(CrapsBot):
         prompt: The queston to ask. (str)
         """
         if prompt.startswith('What kind of bet'):
-            # Make pass or don't pass bets, and then odds bets on them.
+            # Get bet data for making a decision.
             my_bets = self.game.bets[self.name]
             oddsable = []
             for bet in my_bets:
-                #print('Oddsing', bet.match_text, bet.number)
                 if not bet.odds_bet and bet.match_text[-4:] in ('pass', 'come') and bet.number:
-                    #print('Oddsed')
                     oddsable.append(bet)
+            # Take mandated actions after errors.
             if self.last_act[:4] == 'must':
                 self.last_act = self.last_act[5:]
+            # One bet per round.
             elif not self.game.scores[self.name] or self.last_act == 'wager':
                 self.last_act = 'Done'
+            # Make primary bet if not already done when shooting.
             elif not self.game.point and self.game.players[self.game.shooter_index] == self:
                 for bet in my_bets:
                     if bet.match(self.bet_type[0], 0):
@@ -726,10 +732,13 @@ class OverBot(CrapsBot):
                         break
                 else:
                     self.last_act = self.bet_type[0]
+            # Make an odds bet.
             elif oddsable:
                 self.last_act = "{} odds {}".format(oddsable[0].match_text, oddsable[0].number)
+            # Otherwise make secondary bet if there is a point.
             elif self.game.point:
                 self.last_act = self.bet_type[1]
+            # Make the primary bet otherwise.
             else:
                 for bet in my_bets:
                     if bet.match(self.bet_type[0], 0):
@@ -791,18 +800,19 @@ class Randy(CrapsBot):
         prompt: The queston to ask. (str)
         """
         if prompt.startswith('What kind of bet'):
-            # Make pass or don't pass bets, and then odds bets on them.
+            # Get data for making a decision.
             my_bets = self.game.bets[self.name]
             oddsable = []
             for bet in my_bets:
-                #print('Oddsing', bet.match_text, bet.number)
                 if not bet.odds_bet and bet.match_text[-4:] in ('pass', 'come') and bet.number:
-                    #print('Oddsed')
                     oddsable.append(bet)
+            # Take mandatory actions from errors.
             if self.last_act[:4] == 'must':
                 self.last_act = self.last_act[5:]
+            # One bet per roll.
             elif not self.game.scores[self.name] or self.last_act == 'wager':
                 self.last_act = 'Done'
+            # Make a random required bet if you're the shooter.
             elif not self.game.point and self.game.players[self.game.shooter_index] == self:
                 for bet in my_bets:
                     if bet.match('pass', 0) or bet.match("don't pass", 0):
@@ -810,8 +820,10 @@ class Randy(CrapsBot):
                         break
                 else:
                     self.last_act = random.choice(('pass', "don't pass"))
+            # Make an odds bet haflt the time.
             elif oddsable and random.random() > 0.5:
                 self.last_act = "{} odds {}".format(oddsable[0].match_text, oddsable[0].number)
+            # Make a random bet if there is a point.
             elif self.game.point:
                 for bet in my_bets:
                     if bet.match('pass', 0) or bet.match("don't pass", 0):
@@ -819,10 +831,12 @@ class Randy(CrapsBot):
                         break
                 else:
                     self.last_act = random.choice(self.post_point + self.any_time)
+            # Otherwise make a random bet half the time.
             elif random.random() > 0.5:
                 self.last_act = random.choice(self.pre_point + self.any_time)
             else:
                 self.last_act = 'done'
+            # Pick a random number when necessary.
             if self.last_act.endswith('x'):
                 if self.last_act.startswith('prop'):
                     prop_bet = random.choice(PropositionBet.prop_bets.keys())
@@ -845,6 +859,7 @@ class Randy(CrapsBot):
         Parameters:
         the parameters are ingored.
         """
+        # Make a random bet.
         max_bet = min(int(self.max_re.search(args[0]).group()), self.game.scores[self.name])
         wager = random.randint(1, max_bet)
         message = "{} made a {} bet for {} bucks."
