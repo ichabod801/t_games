@@ -1,3 +1,14 @@
+adamantium
+ansible
+fnord
+ftagn
+gipf
+meatspace
+nanotech
+positronic
+replicant
+unobtainium
+xyzzy
 a
 aah
 aardvark

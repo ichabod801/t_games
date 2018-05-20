@@ -8,12 +8,13 @@ special words
 guessing the whole word.
 better difficulty estimation
 difficulty levels
-rules/credits
 
 Constants:
 BODY_PARTS: The symbols for the parts of the hanging body, in order. (str)
+CREDITS: The credits for Hangman. (str)
 DIAGRAM: The format method ready diagram of the hanging body. (str)
 NUMBERS: Digits for the guess. (str)
+RULES: The rules to Hangman. (str)
 
 Classes:
 Hangman: A game of Hangman. (game.Game)
@@ -32,6 +33,12 @@ import tgames.utility as utility
 # The symbols for the parts of the hanging body, in order.
 BODY_PARTS = 'O|/\\/\\'
 
+# The credits for Hangman.
+CREDITS = """
+Game Design: Traditional
+Game Programming: Craig "Ichabod" O'Brien
+"""
+
 # The format method ready diagram of the hanging body.
 DIAGRAM = """
  +---+
@@ -45,6 +52,21 @@ DIAGRAM = """
 
 # Digits for the guess.
 NUMBERS = '1234567890' * 3
+
+# The rules to Hangman.
+RULES = """
+Hangman is a word guessing game. Each player takes a turn thinking of a secret
+word that the other player must guess letter by letter. To start with, you only
+know how many letters are in the word. For each correct guess, you learn how
+many times the letter is in the word, and where exactly in the word it is. For 
+each incorrect letter guessed, another body part is added to the hanging man: 
+head, torso, arm, arm, leg, leg. If all six body part are added, you fail. If 
+one player can guess their word with fewer errors than the other, they win the 
+game. Otherwise, the game is a draw.
+
+OPTIONS:
+status: See the status of the computer's thinking.
+"""
 
 
 class Hangman(game.Game):
@@ -76,7 +98,9 @@ class Hangman(game.Game):
     """
 
     categories = ['Other Games', 'Word Games']
+    credits = CREDITS
     name = 'Hangman'
+    rules = RULES
 
     def __str__(self):
         """Human readable text representation. (str)"""
@@ -167,14 +191,16 @@ class Hangman(game.Game):
 
     def player_answer(self):
         """Handle the player answering if letters are correct. (bool)"""
+        # Update the human on the computer's status.
+        if self.status:
+            count = len(self.possibles)
+            if count > 1:
+                self.human.tell('I have narrowed it down to {} words.'.format(count))
+            elif count == 1:
+                self.human.tell('I know the word.')
+            else:
+                self.human.tell('I think you are cheating.')
         if self.possibles:
-            # Update the human on the computer's status.
-            if self.status:
-                count = len(self.possibles)
-                if count > 1:
-                    self.human.tell('I have narrowed it down to {} words.'.format(count))
-                else:
-                    self.human.tell('I know the word.')
             # Get the frequency of unknown letters in possible words.
             sub_freq = collections.Counter()
             valid = []
