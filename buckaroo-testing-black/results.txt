@@ -310,3 +310,12 @@ Hangman,0,1,0,6,19,0,
 Hangman,0,1,0,5,21,0,
 Hangman,0,1,0,4,17,0,
 Hangman,1,0,0,5,15,1,status
+Hangman,0,1,0,6,16,1,status
+Hangman,1,0,0,4,18,1,status
+Hangman,0,0,1,6,15,1,status
+Hangman,1,0,0,4,18,1,status
+Hangman,0,0,1,6,18,1,status
+Hangman,1,0,0,3,20,1,status
+Hangman,1,0,0,2,17,1,status
+Hangman,0,1,0,2,15,1,status
+Hangman,0,1,0,6,20,1,status

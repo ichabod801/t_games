@@ -62,6 +62,10 @@ head, torso, arm, arm, leg, leg. If all six body part are added, you fail. If
 one player can guess their word with fewer errors than the other, they win the 
 game. Otherwise, the game is a draw.
 
+COMMANDS:
+frequency (freq): Get a frequency list of letters in dictionary words.
+guess: Guess the whole word. An incorrect word earns a body part.
+
 OPTIONS:
 status: See the status of the computer's thinking.
 """
@@ -72,6 +76,7 @@ class Hangman(game.Game):
     A game of Hangman. (game.Game)
 
     Attributes:
+    foul: A flag for suspected cheating. (bool)
     frequency: The frequency order of letters in the words. (str)
     guess: The current guess, with blanks. (str)
     guessed_letters: The letters guessed so far. (str)
@@ -95,6 +100,7 @@ class Hangman(game.Game):
     set_up
     """
 
+    aliases = {'freq': 'frequency'}
     categories = ['Other Games', 'Word Games']
     credits = CREDITS
     name = 'Hangman'
@@ -128,6 +134,15 @@ class Hangman(game.Game):
             self.incorrect += 1
             self.human.tell('You guessed poorly.')
 
+    def do_frequency(self, argument):
+        """
+        Show the frequency list. (bool)
+
+        Parameters:
+        argument: The (ignored) argument to the command. (str)
+        """
+        self.human.tell('\n{}\n'.format(self.frequency))
+
     def game_over(self):
         """Check for end of game. (bool)"""
         # Check for end state.
@@ -149,8 +164,12 @@ class Hangman(game.Game):
                 self.human.tell('\nYou had {} errors, I had {}.'.format(self.incorrect, self.my_score))
                 # Calculate the winner.
                 if self.incorrect < self.my_score:
-                    self.human.tell('You win!')
-                    self.win_loss_draw[0] = 1
+                    if self.foul:
+                        self.human.tell("It's a draw because you cheated.")
+                        self.win_loss_draw[1] = 1
+                    else:
+                        self.human.tell('You win!')
+                        self.win_loss_draw[0] = 1
                 elif self.incorrect > self.my_score:
                     self.human.tell('You lose.')
                     self.win_loss_draw[1] = 1
@@ -210,15 +229,16 @@ class Hangman(game.Game):
                 self.human.tell('I have narrowed it down to {} words.'.format(count))
             elif count == 1:
                 # Guess the only possible word.
-                correct = self.human.ask('Is the word {!r}? '.format(self.possibles[0])).lower
+                correct = self.human.ask('Is the word {!r}? '.format(self.possibles[0])).lower()
                 if correct in utility.YES:
-                    self.guess = self.word
+                    self.guess = self.possibles[0]
                 else:
                     self.incorrect += 1
                     self.possibles = []
                 return False
             else:
                 self.human.tell('I think you are cheating.')
+                self.foul = True
         if self.possibles:
             # Get the frequency of unknown letters in possible words.
             sub_freq = collections.Counter()
@@ -234,8 +254,9 @@ class Hangman(game.Game):
             for guess in self.frequency:
                 if guess not in self.guessed_letters:
                     break
+            valid = [index for index, letter in enumerate(self.guess) if letter == '_']
         query = '\nI guess {0!r}. Please enter the indexes where {0!r} occurs in the word: '.format(guess)
-        matches = self.human.ask_int_list(query, valid = valid, cmd = False, valid_lens = range(30))
+        matches = self.human.ask_int_list(query, valid = valid, cmd = False, valid_lens = range(10))
         self.guessed_letters += guess
         # Readjust possibles based on the results of the guess.
         if not matches:
@@ -314,6 +335,7 @@ class Hangman(game.Game):
         self.guessed_letters = ''
         self.incorrect = 0
         self.word_length = 0
+        self.foul = False
 
 
 if __name__ == '__main__':
