@@ -4,7 +4,6 @@
 
 == Short Term To Do List ==
 
-redo Baker's Game as a variant of FreeCell.
 Backgammon
 	try to make a bot from pubeval (credit Tesauro)
 Do all of the gipf programing

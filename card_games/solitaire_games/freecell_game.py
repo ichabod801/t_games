@@ -54,27 +54,6 @@ cells: The number of free cells available. 1-10, defaults to 4.
 piles: The number of tableau piles. 4-10, defaults to 8.
 """
 
-# Rules for Baker's Game.
-RULES_BAKER = """
-Cards on the tableau build down in rank and matching suit. Cards are sorted to
-the foundation by suit in ascending rank order. Any card at the top of a 
-tableau pile may be moved to one of the free cells. Empty tableau piles may be
-filled with any card from the top of another tableau pile or one of the free 
-cells.
-
-Technically, cards may only be moved one at a time. However, the computer
-keeps track of how large a stack you could move one card at a time, and allows
-you to move a stack that size as one move. For example, if you two free cells,
-you can move a stack of three cards one at a time: one each to a free cell,
-then third to the destination card, then the two cards back off the free
-cells. So if you have two empty free cells, the game lets you move three cards
-as one.
-
-Options:
-cells: The number of free cells available. 1-10, defaults to 4.
-piles: The number of tableau piles. 4-10, defaults to 8.
-"""
-
 
 class FreeCell(solitaire.Solitaire):
     """
@@ -129,6 +108,8 @@ class FreeCell(solitaire.Solitaire):
         if self.kings_only:
             self.lane_checkers.append(solitaire.lane_king)
         self.pair_checkers = [solitaire.pair_down, solitaire.pair_alt_color]
+        if self.baker:
+            self.pair_checkers[1] = solitaire.pair_suit
         self.sort_checkers = [solitaire.sort_ace, solitaire.sort_up]
         # Set the dealers
         if self.challenge == '2A':
@@ -161,31 +142,8 @@ class FreeCell(solitaire.Solitaire):
             question = 'Should the aces and twos be dealt first? bool')
         self.option_set.add_option(name = 'supercell',
             question = 'Should random cards be flipped face down? bool')
-
-
-class BakersGame(FreeCell):
-    """
-    A game of Baker's Game. (FreeCell)
-
-    Baker's Game is the game that inspired the creation of FreeCell. It is called
-    Baker's Game after C.L. Baker, who described it to Martin Gardner. Baker did
-    not claim to have created the game.
-
-    Overridden Methods:
-    set_checkers
-    """
-
-    aka = ['Brain Jam']
-    credits = CREDITS_BAKER
-    name = "Baker's Game"
-    num_options = 7
-    rules = RULES_BAKER
-
-    def set_checkers(self):
-        """Set up the game specific rules. (None)"""
-        super(BakersGame, self).set_checkers()
-        # Set the rules for this variation.
-        self.pair_checkers = [solitaire.pair_down, solitaire.pair_suit]
+        self.option_set.add_option(name = 'baker',
+            question = "Should tableau cards be built by suit (Baker's Game)? bool")
 
 
 def deal_aces(game):
