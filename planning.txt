@@ -11,16 +11,18 @@ Cut the categories back.
 Any games I can finish before 7/7
 	flesh out solitaire games.
 	liars dice or dudo
-	fox and geese or tafl
 	any simple games
+	fox and geese or tafl
 After 7/7, prep what I have for release
 	coding style guide
 		review all code
+		full rules with options
 	review output
 		one blank line
 		two better than none
 	handle any double bangs
 	update documentation
+		more help text?
 	play testing
 	do what test code I can
 		Finish options_test.py

@@ -50,6 +50,18 @@ import tgames.utility as utility
 # The index of the bar.
 BAR = -1
 
+CONTACT_WEIGHTS = [.25696, -.66937, -1.66135, -2.02487, -2.53398, -.16092, -1.11725, -1.06654, -.92830, 
+    -1.99558, -1.10388, -.80802, .09856, -.62086, -1.27999, -.59220, -.73667, .89032, -.38933, -1.59847, 
+    -1.50197, -.60966, 1.56166, -.47389, -1.80390, -.83425, -.97741, -1.41371, .24500, .10970, -1.36476, 
+    -1.05572, 1.15420, .11069, -.38319, -.74816, -.59244, .81116, -.39511, .11424, -.73169, -.56074, 
+    1.09792, .15977, .13786, -1.18435, -.43363, 1.06169, -.21329, .04798, -.94373, -.22982, 1.22737, 
+    -.13099, -.06295, -.75882, -.13658, 1.78389, .30416, .36797, -.69851, .13003, 1.23070, .40868, -.21081, 
+    -.64073, .31061, 1.59554, .65718, .25429, -.80789, .08240, 1.78964, .54304, .41174, -1.06161, .07851, 
+    2.01451, .49786, .91936, -.90750, .05941, 1.83120, .58722, 1.28777, -.83711, -.33248, 2.64983, .52698, 
+    .82132, -.58897, -1.18223, 3.35809, .62017, .57353, -.07276, -.36214, 4.37655, .45481, .21746, .10504, 
+    -.61977, 3.54001, .04612, -.18108, .63211, -.87046, 2.47673, -.48016, -1.27157, .86505, -1.11342, 
+    1.24612, -.82385, -2.77082, 1.23606, -1.59529, .10438, -1.30206, -4.11520, 5.62596, -2.75800]
+
 # The credits for the game.
 CREDITS = """
 Game Design: Traditional
@@ -66,6 +78,17 @@ FRAME_LOW = ['+-------------+-------------+',  '  1 1 1                      ',
 
 # The index for pieces born off the board.
 OUT = -2
+
+RACE_WEIGHTS = [0, -.17160, .27010, .29906, -.08471, 0, -1.40375, -1.05121, .07217, -.01351, 0, -1.29506, 
+    -2.16183, .13246, -1.03508, 0, -2.29847, -2.34631, .17253, .08302, 0, -1.27266, -2.87401, -.07456, 
+    -.34240, 0, -1.34640, -2.46556, -.13022, -.01591, 0, .27448, .60015, .48302, .25236, 0, .39521, .68178, 
+    .05281, .09266, 0, .24855, -.06844, -.37646, .05685, 0, .17405, .00430, .74427, .00576, 0, .12392, 
+    .31202, -.91035, -.16270, 0, .01418, -.10839, -.02781, -.88035, 0, 1.07274, 2.00366, 1.16242, .22520, 
+    0, .85631, 1.06349, 1.49549, .18966, 0, .37183, -.50352, -.14818, .12039, 0, .13681, .13978, 1.11245, 
+    -.12707, 0, -.22082, .20178, -.06285, -.52728, 0, -.13597, -.19412, -.09308, -1.26062, 0, 3.05454, 
+    5.16874, 1.50680, 5.35000, 0, 2.19605, 3.85390, .88296, 2.30052, 0, .92321, 1.08744, -.11696, -.78560, 
+    0, -.09795, -.83050, -1.09167, -4.94251, 0, -1.00316, -3.66465, -2.56906, -9.67677, 0, -2.77982, 
+    -7.26713, -3.40177, -12.32252, 0, 3.42040]
 
 # The rules of Backgammon.
 RULES = """
@@ -413,6 +436,161 @@ class AdditiveBot(BackgammonBot):
         return sum([f * r for f, r in zip(self.vectors[phase], board_features)])
 
 
+class PubEvalBot(BackgammonBot):
+    """
+    A Backgammon bot based on Gerry Tesauro's pubeval algorithm. (BackgammonBot)
+    """
+
+    def ask(self, prompt):
+        """
+        Get information from the player. (str)
+
+        Parameters:
+        prompt: The question being asked of the player. (str)
+        """
+        # Respond to move requests.
+        if prompt.strip() == 'What is your move?':
+            if not self.held_moves:
+                # Evaluate all the legal plays.
+                possibles = []
+                board = self.game.board
+                for play in board.get_plays(self.piece, self.game.rolls):
+                    sub_board = board.copy()
+                    for move in play:
+                        capture = sub_board.move(*move, piece = self.piece)
+                    possibles.append((self.eval_board(board), play))
+                # Choose the play with the highest evaluation.
+                possibles.sort(reverse = True)
+                self.held_moves = possibles[0][1]
+            # Return the move with the correct syntax.
+            move = self.held_moves.next_move()
+            if move[1] == OUT:
+                point = move[0]
+                if point > 6:
+                    point = 25 - point
+                return 'bear {}'.format(point)
+            elif move[0] == BAR:
+                point = move[1]
+                if point > 6:
+                    point = 25 - point
+                return 'enter {}'.format(point)
+            else:
+                return '{} {}'.format(move[0], move[1])
+        # Respond to no-move notifications.
+        elif prompt.startswith('You have no legal moves'):
+            self.game.human.tell('{} has no legal moves.'.format(self.name))
+            return ''
+        elif prompt.startswith('Your opponent wants to double'):
+            features, points = self.describe_board(self.game.board)
+            if self.eval_board(features, 'accept') < -25:
+                return '1'
+            else:
+                return '0'
+        elif prompt.startswith('Would you like to double'):
+            features, points = self.describe_board(self.game.board)
+            if self.eval_board(features, 'double') > 25:
+                return '1'
+            else:
+                return '0'
+        # Raise an error for any other question.
+        else:
+            raise ValueError('Unexpected question to BackgammonBot: {}'.format(prompt))
+
+    def eval_board(self, board):
+        """
+        Evaluate a board position. (float)
+
+        Parameters:
+        board: The board to evaluate. (BackgammonBoard)
+        """
+        position = self.get_position(board)
+        left, right, = [], []
+        for index, men in enumerate(postion[1:25]):
+            if men < 0:
+                left.append(men)
+            elif men > 0:
+                right.append(men)
+        race = max(left) > min(right)
+        return pub_eval(race, position)
+
+    def get_position(self, board):
+        """
+        Generate a pubeval position vector for a board. (list of int)
+
+        Parameters:
+        board: The board to vectorize. (BackgammonBoard)
+        """
+        foe_piece = {'X': 'O', 'O': 'X'}[self.piece]
+        position = [board.cells[BAR].count(foe_piece) * -1]
+        for location in range(1, 24):
+            pieces = board.cells[location]
+            value = len(pieces)
+            if self.piece not in pieces:
+                value *= -1
+            position.append(value)
+        if self.piece == 'O':
+            position[1:25] = position[25:1:-1]
+        position.append(board.cells[BAR].count(self.piece))
+        position.append(board.cells[OUT].count(self.piece))
+        position.append(board.cells[OUT].count(foe_piece) * -1)
+        return position
+
+    def pub_eval(self, race, position):
+        """
+        Backgammon board evaluation function. (float)
+
+        The position list is as follows:
+            * 0: Opponents men on bar.
+            * 1-24: Board positons 1-24 from bot's perspective.
+            * 25: Bot's men on bar.
+            * 26: Bot's men off board.
+            * 27: Opponent's men off board.
+        The bot's men are represented by positive integers, the opponent's men are
+        always represented by negative integers, even in slots 0 and 27.
+
+        Parameters:
+        race: A flag for a race position. (bool)
+        position: A board position. (list of int)
+        """
+        # Check for a win.
+        if position[26] == 15:
+            return utility.MAX_INT
+        vector = set_vector(positon)
+        if race:
+            weights = RACE_WEIGHTS
+        else:
+            weights = CONTACT_WEIGHTS
+        score = [v * w for v, w in zip(vector, weights)]
+
+    def set_vector(self, position):
+        """
+        Creates an input vector based on the position. (list of int)
+
+        Parameters:
+        position: A board position. (list of int)
+        """
+        vector = [0] * 122
+        # Encode board positions.
+        for point in range(1, 25):
+            men = position[25 - point]
+            if men:
+                if men == -1:
+                    vector[5 * point - 5] = 1
+                elif men == 1:
+                    vector[5 * point - 4] = 1
+                elif men >= 2:
+                    vector[5 * point - 3] = 1
+                    if men == 3:
+                        vector[5 * point - 2] = 1
+                    elif men >= 4:
+                        vector[5 * point - 1] =  (men - 3) / 2
+        # Ecode foes on bar.
+        vector[120] = position[0] / -2
+        # Encode friends off.
+        vector[121] = position[26] / 15
+        return vector
+
+
 class Backgammon(game.Game):
     """
     A game of Backgammon. (game.Game)
@@ -744,7 +922,7 @@ class Backgammon(game.Game):
 
     def set_options(self):
         """Define the options for the game. (None)"""
-        self.option_set.default_bots = [(AdditiveBot, ())]
+        self.option_set.default_bots = [(PubEvalBot, ())]
         self.option_set.add_option('o', target = 'human_piece', value = 'O', default = 'X',
             question = 'Would you like to play with the O piece? bool')
         self.option_set.add_option('match', ['m'], int, 1, check = lambda x: x > 0,

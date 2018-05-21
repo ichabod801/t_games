@@ -67,7 +67,7 @@ class FreeCell(solitaire.Solitaire):
     categories = ['Card Games', 'Solitaire Games', 'Open Games', 'Builders']
     credits = CREDITS
     name = 'FreeCell'
-    num_options = 7
+    num_options = 8
     rules = RULES
 
     def do_gipf(self, arguments):
