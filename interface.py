@@ -38,7 +38,8 @@ O'Brien.
 HELP_TEXT = """
 The games are organized into categories. You can use the menu to browse
 throught the categories to find the game you want. Just type in the 
-letter or letters to the left of the colon to make a selection.
+letter or letters to the left of the colon to make a selection. You can
+type home at any point to get back to the top of the menu.
 
 You can see the rules for a game by typing 'rules game-name'. You should
 also be able to see the rules from within the game by typing 'rules'.
@@ -98,6 +99,8 @@ class Interface(other_cmd.OtherCmd):
     focus: The menu's current location in the category tree. (dict)
     game: The game being played. (game.Game)
     human: The player navigating the menu. (player.Player)
+    previous: Previous menu locations visited. (list)
+    titles: The titles of the previous categories visited. (list)
 
     Class Attributes:
     aliases: Alternate command words. (dict of str: str)
@@ -212,6 +215,17 @@ class Interface(other_cmd.OtherCmd):
         self.human.ask('Press Enter to continue: ')
         return True
 
+    def do_home(self, arguments):
+        """
+        Go to the top of the menu tree.. (bool)
+
+        Parameters:
+        arguments: This parameter is ignored. (str)
+        """
+        self.focus = self.categories
+        self.previous = []
+        self.titles = ['Home Menu']
+
     def do_play(self, arguments):
         """
         Play a game with the specified options, if any. (bool)
@@ -310,7 +324,8 @@ class Interface(other_cmd.OtherCmd):
         """Run the game selection menu. (None)"""
         # Start at the top category.
         self.focus = self.categories
-        previous = []
+        self.previous = []
+        self.titles = ['Home Menu']
         # Display the intro.
         self.human.tell("\nWelcome to Ichabod's Text Game Extravaganza!")
         unique_games = set([g for g in self.games.values() if g.categories[0] != 'Test Games'])
@@ -330,11 +345,13 @@ class Interface(other_cmd.OtherCmd):
                 choice = menu_map[letter]
                 # Check for sub-category choices.
                 if choice[:-9] in self.focus['sub-categories']:
-                    previous.append(self.focus)
+                    self.previous.append(self.focus)
                     self.focus = self.focus['sub-categories'][choice[:-9]]
+                    self.titles.append(choice[:-9])
                 # Check for special choices.
                 elif choice == 'Previous Menu':
-                    self.focus = previous.pop()
+                    self.focus = self.previous.pop()
+                    self.titles.pop()
                 elif choice == 'Quit':
                     break
                 # Assume anything else is a game to play.
@@ -391,6 +408,8 @@ class Interface(other_cmd.OtherCmd):
         if pairs[-2][1] == 'Previous Menu':
             pairs[-2][0] = '<'
         # Display the menu.
+        self.human.tell(' > '.join(self.titles[-3:]))
+        self.human.tell()
         for letter, choice in pairs:
             self.human.tell('{}: {}'.format(letter, choice))
         self.human.tell()

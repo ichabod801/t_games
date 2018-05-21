@@ -3,10 +3,6 @@ hangman_game.py
 
 A game of hangman.
 
-to do:
-better difficulty estimation
-difficulty levels
-
 Constants:
 BODY_PARTS: The symbols for the parts of the hanging body, in order. (str)
 CREDITS: The credits for Hangman. (str)
@@ -76,6 +72,7 @@ class Hangman(game.Game):
     A game of Hangman. (game.Game)
 
     Attributes:
+    difficulty: A level of difficulty. (int)
     foul: A flag for suspected cheating. (bool)
     frequency: The frequency order of letters in the words. (str)
     guess: The current guess, with blanks. (str)
@@ -104,6 +101,7 @@ class Hangman(game.Game):
     categories = ['Other Games', 'Word Games']
     credits = CREDITS
     name = 'Hangman'
+    num_options = 2
     rules = RULES
 
     def __str__(self):
@@ -189,7 +187,10 @@ class Hangman(game.Game):
         if word not in self.words:
             self.human.tell('I cry foul. That word is not in my dictionary.')
         # Find a word of similar difficulty.
-        self.word = random.choice(self.scored_words[self.score_word(word)])
+        level = self.score_word(word) - 10 + self.difficulty
+        while level not in self.scored_words:
+            level += 1
+        self.word = random.choice(self.scored_words[level])
         # Set the word-dependent tracking variables.
         self.word_length = len(self.word)
         self.guess = '_' * self.word_length
@@ -300,14 +301,16 @@ class Hangman(game.Game):
         Parameters:
         word: The word to get a difficulty score for. (str)
         """
-        letters = len(set(word))
-        worst = max(self.rank_dict[letter] for letter in word.lower())
+        letters = len(word)
+        worst = min(self.rank_dict[letter] for letter in word.lower())
         return worst - letters
 
     def set_options(self):
         """Set the available game options. (None)"""
         self.option_set.add_option('status', 
             question = "Would you like updates on the computer's thinking? bool")
+        self.option_set.add_option('difficulty', ['diff'], int, valid = range(1, 11), default = 5,
+            question = "What difficulty level from 1 to 10 would you like to play at (return for 5)? ")
 
     def set_up(self):
         """Set up the game. (None)"""

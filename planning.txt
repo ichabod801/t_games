@@ -4,37 +4,33 @@
 
 == Short Term To Do List ==
 
-Finish options_test.py
 redo Baker's Game as a variant of FreeCell.
-title to menu so you know what category you're in.
-	top command to get to the top of the menu.
-A round of one per penultimate category, two for solitaire.
-	Cribbage (tricky strategy)
-	Craps (complicated play, street vs. casino)
-	Hangman (word list)
-	Backgammon
-		read up on backgammon strategy
-		try (once) to make a better bot
-		gipf
-		variants
-Rinse and repeat
+Backgammon
+	try to make a bot from pubeval (credit Tesauro)
+Do all of the gipf programing
+Cut the categories back.
+Any games I can finish before 7/7
+	flesh out solitaire games.
+	liars dice or dudo
+	fox and geese or tafl
+	any simple games
+After 7/7, prep what I have for release
+	coding style guide
+		review all code
+	review output
+		one blank line
+		two better than none
+	handle any double bangs
+	update documentation
+	play testing
+	do what test code I can
+		Finish options_test.py
 
 == Long Term To Do List ==
 
-Program the games planned for text_games round 2.
-	Try for every category gets one before any gets two.
-	Shoot for at least 25 before releasing (to beat bsdgames)
-		try to have a connected gipf grapf
-		or at least a spanning path.
-		Note that after the current section is done, going by the gipf growth plan (below) does this.
-		Also note that I could just redo the gipf graph to get what I want. Duh.
-Clean Up
-    documentation (style guide)
-    output (one blank line)
-    double bangs
-Play testing
-Release
-108 Games
+Open source it.
+Get the rest of the original planned games done.
+get to 108 games.
 
 == Games to Program ==
 
@@ -45,27 +41,27 @@ board/space: connect four*, halma
 card/solitaire/open/sorters: crescent, black hole
 card/solitaire/open/builders: bisley, beleagured castle, free cell*
 card/solitaire/open/other: pyramid, nestor
-card/solitaire/hybrid/sorters: interregnum, labyrinth, strategy
+card/solitaire/hybrid/sorters: interregnum, labyrinth, strategy*
 card/solitaire/hybrid/builders: martha, la belle lucie, spider
 card/solitaire/closed/sorters: golf, quadrille
 card/solitaire/closed/builders: canfield*, forty thieves*, klondike*
 card/solitaire/closed/other: monte carlo, accordion
 card/trick: hearts, spades
-card/matching: cribbage, snip snap snorem
+card/matching: cribbage*, snip snap snorem
 card/shedding: crazy eights*, spit
 card/rummy: rummy, tonk
 card/accumulating: war, ninety-nine*
 card/other: golf ii, peace and love
 dice/jeopardy: pig!, zip
-dice/category: yacht, poker dice
+dice/category: yacht*, poker dice
 dice/liar: dudo, liar's dice
 dice/other: solitaire dice*, mate
-gambling/dice: craps, mexico
+gambling/dice: craps*, mexico
 gambling/cards: blackjack*, baccarat
 gambling/other: roulette*, slot machines
 other/adventure: hunt the wumpus!, adventure
 other/simulation: hamurabi*, my space traders (with bot traders), global thermonuclear war
-other/word: hangman, ghost (small word list?)
+other/word: hangman*, ghost (small word list?)
 other/other: RPS(LS)*, number guessing game 
 
 An asterisk means the game has been coded. An exclamation point means the game has been coded and is in the gipf graph.
