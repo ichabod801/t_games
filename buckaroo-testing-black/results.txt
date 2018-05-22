@@ -324,3 +324,6 @@ Hangman,0,0,1,1,13,1,status
 Hangman,0,1,0,6,15,1,status
 Hangman,1,0,0,2,17,1,status
 Backgammon,0,1,0,0,53,0,
+Backgammon,3,0,0,0,53,0,
+Backgammon,1,0,0,0,62,0,
+Backgammon,3,0,0,0,61,0,

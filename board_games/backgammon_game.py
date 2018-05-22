@@ -27,6 +27,7 @@ START: The index for pieces not yet in the game. (int)
 Classes:
 BackgammonBot: A bot for a game of Backgammon(player.bot)
 BackGeneBot: A Backgammon bot for genetic engineering. (BackgammonBot)
+PubEvalBot: A bot based on Gerry Tesauro's pubeval algorithm. (BackgammonBot)
 Backgammon: A game of Backgammon. (game.Game)
 BackgammonBoard: A board for Backgammon. (board.LineBoard)
 
@@ -66,6 +67,7 @@ CONTACT_WEIGHTS = [.25696, -.66937, -1.66135, -2.02487, -2.53398, -.16092, -1.11
 CREDITS = """
 Game Design: Traditional
 Game Programming: Craig "Ichabod" O'Brien
+Bot Programming: Gerry Tesauro
 """
 
 # The top of the frame for displaying the board.
@@ -354,6 +356,27 @@ class BackgammonBot(player.Bot):
             super(BackgammonBot, self).tell(text)
 
 
+class AdditiveBot(BackgammonBot):
+
+    def __init__(self, taken_names = []):
+        """
+        Set up the bot. (None)
+        
+        Parameters:
+        taken_names: The names already in use by other players. (list of str)
+        """
+        super(AdditiveBot, self).__init__(taken_names = taken_names)
+        self.vectors = {}
+        self.vectors['mixed'] = [7, 42, 92, 17, 87, 93, 29, 66]
+        self.vectors['split'] = [4, 12, 22, 23, 30, 41, 57, 8]
+        self.vectors['stretch'] = [98, 26, 15, 64, 88, 86, 100, 78]
+        self.vectors['double'] = [-70, 52, 28, -83, 11, 93, -76, -67]
+        self.vectors['accept'] = [-28, 46, 79, 37, 30, 17, -69, 32]
+
+    def eval_board(self, board_features, phase):
+        return sum([f * r for f, r in zip(self.vectors[phase], board_features)])
+
+
 class BackGeneBot(BackgammonBot):
     """
     A Backgammon bot for genetic engineering. (BackgammonBot)
@@ -390,55 +413,23 @@ class BackGeneBot(BackgammonBot):
         pass
 
 
-class AdditiveBot(BackgammonBot):
-
-    def __init__(self, taken_names = []):
-        """
-        Set up the bot. (None)
-
-        A [71, 54, 47, 10, 57, 15, 17, 14]
-        D [38, 8, 40, 9, 81, 44, 44, 88]
-        E [7, 93, 55, 44, 74, 92, 47, 63]
-        O [42, 91, 80, 53, 96, 91, 42, 1]
-        OD [42, 91, 80, 9, 96, 91, 42, 88]
-        ID [38, 8, 40, 20, 14, 36, 44, 88]
-        EOD+ [42, 91, 80, 9, 96, 92, 47, 63]
-        IDE [38, 8, 40, 20, 74, 36, 44, 88]
-        AOD [42, 54, 80, 9, 96, 91, 42, 88]
-        IDE+ [38, 93, 40, 20, 14, 36, 44, 88]
-        EOD+OD [42, 91, 80, 9, 96, 92, 42, 63]
-        EA [71, 93, 47, 44, 57, 92, 47, 14]
-        OOD [42, 91, 80, 9, 96, 91, 42, 88]
-        ODA [71, 54, 80, 9, 57, 15, 42, 14]
-        AE [71, 54, 55, 10, 57, 15, 47, 63]
-
-            * The difference in the number of captured pieces.
-            * The difference in the number of pieces born off the board.
-            * The difference in the number of blots.
-            * The difference in direct hits to blots.
-            * The difference in indirect hits to blots. (!! Not calcualted correctly)
-            * The difference in pip count.
-            * The difference in the farthest piece from being born off.
-            * The difference in the number of controlled points.
-
-        Parameters:
-        taken_names: The names already in use by other players. (list of str)
-        """
-        super(AdditiveBot, self).__init__(taken_names = taken_names)
-        self.vectors = {}
-        self.vectors['mixed'] = [7, 42, 92, 17, 87, 93, 29, 66]
-        self.vectors['split'] = [4, 12, 22, 23, 30, 41, 57, 8]
-        self.vectors['stretch'] = [98, 26, 15, 64, 88, 86, 100, 78]
-        self.vectors['double'] = [-70, 52, 28, -83, 11, 93, -76, -67]
-        self.vectors['accept'] = [-28, 46, 79, 37, 30, 17, -69, 32]
-
-    def eval_board(self, board_features, phase):
-        return sum([f * r for f, r in zip(self.vectors[phase], board_features)])
-
-
 class PubEvalBot(BackgammonBot):
     """
     A Backgammon bot based on Gerry Tesauro's pubeval algorithm. (BackgammonBot)
+
+    This is a linear weights system. There are five weights for each point on the
+    board, each one for a different number of pieces being on the point. There are
+    also two sets of weights: one for a race situation, and one for when contact
+    is still possible.
+
+    Methods:
+    get_position: Generate a pubeval position vector for a board. (list of int)
+    pub_eval: Backgammon board evaluation function. (float)
+    set_vector: Creates an input vector based on the position. (list of int)
+
+    Overridden Methods:
+    ask
+    eval_board
     """
 
     def ask(self, prompt):
@@ -505,39 +496,17 @@ class PubEvalBot(BackgammonBot):
         """
         position = self.get_position(board)
         left, right, = [], []
-        for index, men in enumerate(postion[1:25]):
+        for index, men in enumerate(position[1:25]):
             if men < 0:
                 left.append(men)
             elif men > 0:
                 right.append(men)
         race = max(left) > min(right)
-        return pub_eval(race, position)
+        return self.pub_eval(race, position)
 
     def get_position(self, board):
         """
         Generate a pubeval position vector for a board. (list of int)
-
-        Parameters:
-        board: The board to vectorize. (BackgammonBoard)
-        """
-        foe_piece = {'X': 'O', 'O': 'X'}[self.piece]
-        position = [board.cells[BAR].count(foe_piece) * -1]
-        for location in range(1, 24):
-            pieces = board.cells[location]
-            value = len(pieces)
-            if self.piece not in pieces:
-                value *= -1
-            position.append(value)
-        if self.piece == 'O':
-            position[1:25] = position[25:1:-1]
-        position.append(board.cells[BAR].count(self.piece))
-        position.append(board.cells[OUT].count(self.piece))
-        position.append(board.cells[OUT].count(foe_piece) * -1)
-        return position
-
-    def pub_eval(self, race, position):
-        """
-        Backgammon board evaluation function. (float)
 
         The position list is as follows:
             * 0: Opponents men on bar.
@@ -549,13 +518,37 @@ class PubEvalBot(BackgammonBot):
         always represented by negative integers, even in slots 0 and 27.
 
         Parameters:
+        board: The board to vectorize. (BackgammonBoard)
+        """
+        foe_piece = {'X': 'O', 'O': 'X'}[self.piece]
+        position = [board.cells[BAR].count(foe_piece) * -1]
+        points = []
+        for location in range(1, 24):
+            pieces = board.cells[location]
+            value = len(pieces)
+            if self.piece not in pieces:
+                value *= -1
+            points.append(value)
+        if self.piece == 'O':
+            position.reverse()
+        position.extend(points)
+        position.append(board.cells[BAR].count(self.piece))
+        position.append(board.cells[OUT].count(self.piece))
+        position.append(board.cells[OUT].count(foe_piece) * -1)
+        return position
+
+    def pub_eval(self, race, position):
+        """
+        Backgammon board evaluation function. (float)
+
+        Parameters:
         race: A flag for a race position. (bool)
         position: A board position. (list of int)
         """
         # Check for a win.
         if position[26] == 15:
             return utility.MAX_INT
-        vector = set_vector(positon)
+        vector = self.set_vector(position)
         if race:
             weights = RACE_WEIGHTS
         else:
@@ -922,7 +915,7 @@ class Backgammon(game.Game):
 
     def set_options(self):
         """Define the options for the game. (None)"""
-        self.option_set.default_bots = [(PubEvalBot, ())]
+        self.option_set.default_bots = [(AdditiveBot, ())]
         self.option_set.add_option('o', target = 'human_piece', value = 'O', default = 'X',
             question = 'Would you like to play with the O piece? bool')
         self.option_set.add_option('match', ['m'], int, 1, check = lambda x: x > 0,

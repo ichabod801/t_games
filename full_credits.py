@@ -18,7 +18,8 @@ CREDITS_DATA = [('Interface Programming', """Craig "Ichabod" O'Brien"""),
         Albert Morehead, Geoffrey Mott-Smith, Ned Strongin, Sid Sackson, John Suckling, Gregory Yob, 
         Howard Wexler"""),
     ('Game Programming', """Craig "Ichabod" O'Brien"""),
-    ('Bot Design', """Roger Johnson, Reiner Knizia, Todd Neller, Craig O'Brien, Clifton Presser"""),
+    ('Bot Design', """Roger Johnson, Reiner Knizia, Todd Neller, Craig O'Brien, Clifton Presser.
+        Gerry Tesauro"""),
     ('Bot Programming', """Craig "Ichabod" O'Brien"""),
     ('Play Testing', """Craig "Ichabod" O'Brien"""),
     ('Special Thanks', """Guido van Rossum; python-forum.io, github.com, Wikipedia, pagat.com; 
