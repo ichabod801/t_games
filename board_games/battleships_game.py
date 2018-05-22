@@ -6,6 +6,7 @@ A game of Battleships.
 !! Make the coordiates an object, for easier handling. (should be in board.py)
 !! Have a 3D version named Yamato. 5x5x5, longest ship would be 4.
     (already done by Solvenians, see Wikipedia, but they use singletons)
+!! Scores should be squares left.
 
 Constants:
 CREDITS: The design and programming credits. (str)
@@ -118,7 +119,8 @@ class Battleships(game.Game):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
-        game, losses = self.gipf_check(arguments, ('wumpus', 'pig'))
+        game, losses = self.gipf_check(arguments, ('wumpus', 'pig', 'canfield'))
+        go = True
         # Hunt the Wumpus
         if game == 'wumpus':
             if not losses:
@@ -138,7 +140,6 @@ class Battleships(game.Game):
                     name, squares = random.choice(ships)
                     square = random.choice(squares)
                     self.human.tell(square)
-            go = True
         # Pig
         elif game == 'pig':
             if not losses:
@@ -166,11 +167,25 @@ class Battleships(game.Game):
                 self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
                 self.human.tell(self.boards[self.human.name].show())
                 go = False
-            go = True
+        # Canfield
+        elif game == 'canfield':
+            if not losses:
+                not_hit = []
+                for ship, ship_squares in self.boards[self.bot.name].fleet:
+                    not_hit.extend(set(ship_squares) - self.boards[self.bot.name].hits)
+                human_shot = random.choice(not_hit)
+                self.human.tell('You fired on {}.'.format(human_shot))
+                bot_shot = self.bot.ask('\nWhere do you want to shoot? ')
+                # Fire the shots.
+                self.boards[self.bot.name].fire(human_shot.upper(), self.human)
+                self.boards[self.human.name].fire(bot_shot, self.bot)
+                # Update the human. (Bots don't need updates.)
+                self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
+                self.human.tell(self.boards[self.human.name].show())
+                go = False
         # Game with no gipf link
         else:
             self.human.tell('Gesundheit.')
-            go = True
         return go
 
     def game_over(self):

@@ -37,6 +37,7 @@ After 7/7, prep what I have for release
 	genetic for backgammon with pub_eval vector
 	do what test code I can
 		Finish options_test.py
+	release before the x-mas
 
 == Long Term To Do List ==
 
@@ -47,16 +48,16 @@ get to 108 games.
 == Games to Program ==
 
 board/chase: fox and geese, tafl
-board/displace: mancala, chess (wrapper for Sunfish), battleships!
-board/race: backgammon, snakes and ladders
+board/displace: mancala, chess (wrapper for Sunfish), battleships*
+board/race: backgammon!, snakes and ladders
 board/space: connect four*, halma
 card/solitaire/open/sorters: crescent, black hole
-card/solitaire/open/builders: bisley, beleagured castle, free cell*
+card/solitaire/open/builders: bisley, beleagured castle, free cell!
 card/solitaire/open/other: pyramid, nestor
 card/solitaire/hybrid/sorters: interregnum, labyrinth, strategy*
 card/solitaire/hybrid/builders: martha, la belle lucie, spider
 card/solitaire/closed/sorters: golf, quadrille
-card/solitaire/closed/builders: canfield*, forty thieves*, klondike*
+card/solitaire/closed/builders: canfield!, forty thieves!, klondike*
 card/solitaire/closed/other: monte carlo, accordion
 card/trick: hearts, spades
 card/matching: cribbage*, snip snap snorem
@@ -67,9 +68,9 @@ card/other: golf ii, peace and love
 dice/jeopardy: pig!, zip
 dice/category: yacht*, poker dice
 dice/liar: dudo, liar's dice
-dice/other: solitaire dice*, mate
+dice/other: solitaire dice!, mate
 gambling/dice: craps*, mexico
-gambling/cards: blackjack*, baccarat
+gambling/cards: blackjack!, baccarat
 gambling/other: roulette*, slot machines
 other/adventure: hunt the wumpus!, adventure
 other/simulation: hamurabi*, my space traders (with bot traders), global thermonuclear war
@@ -79,7 +80,7 @@ other/other: RPS(LS)*, number guessing game
 An asterisk means the game has been coded. An exclamation point means the game has been coded and is in the gipf graph.
 
 games planned: 63
-games coded:   17
+games coded:   21
 
 Note that bsd games has 24 of what I would call games. I need to at least beat that before releasing.
 
@@ -87,14 +88,14 @@ coded by penultimate category:
 
 board: 3
 card: 3
-card/solitaire: 6 (which has about twice the terminal categories of any other penultimate category)
+card/solitaire: 5 (which has about twice the terminal categories of any other penultimate category)
 dice: 3
 gambling: 3
 other: 4
 
 == Gipf Planning ==
 
-backgammon            -> connect four         (move a piece vertically)
+backgammon            -> connect four         [move a piece vertically]
 battleships           -> canfield             (free random hit)   
 battleships           -> pig                  [bonus shot if you get a hit]
 battleships           -> hunt the wumpus      [learn the location of a specific ship type]
