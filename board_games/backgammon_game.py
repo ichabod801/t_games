@@ -9,7 +9,7 @@ Terminology:
     play: A full turn of moves.
 
 !! Ichabod's Rule: Instead of capturing, hitting a blot bears the moving
-    piece off the board.
+    piece off the board. Makes it a pure race game.
 
 I need to read up on backgammon strategy. See if I can find a better set of
 board features to redo additive bot with. Get a good additive bot, then move
@@ -734,6 +734,35 @@ class Backgammon(game.Game):
         capture = self.board.move(BAR, point, piece)
         self.rolls.remove(needed_roll)
         return self.rolls
+
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        game, losses = self.gipf_check(arguments, ('connect four',))
+        # Hunt the Wumpus
+        if game == 'connect four':
+            if not losses:
+                player = self.players[self.player_index]
+                piece = self.pieces[player.name]
+                while True:
+                    point = player.ask('\nPick a point to move a piece verically from: ', low = 1, high = 24)
+                    target = 25 - point
+                    if piece not in self.board.cells[point]:
+                        player.tell('You do not have a piece on that point.')
+                    elif len(self.board.cells[target]) > 2 and piece not in self.board.cells[target]:
+                        player.tell('You could not move a piece to that square normally.')
+                    else:
+                        break
+                self.board.move(point, target, piece)
+                go = False
+        else:
+            player.tell("I'm sorry, I didn't catch that.")
+            go = True
+        return go
 
     def do_pips(self, argument):
         """

@@ -6,12 +6,21 @@
 
 Do all of the gipf programing
 Cut the categories back.
+Gambling games: subtract stake from score.
 Any games I can finish before 7/7
 	flesh out solitaire games.
 	liars dice or dudo
 	any simple games
 	fox and geese or tafl
 After 7/7, prep what I have for release
+	Trac instance
+		Would GitHub issues suffice?
+	choose and apply license.
+		GPLv3 would keep it from getting closed sourced. Do I care?
+		Why should I be worried about patent rights?
+	README
+	CONTRIBUTING
+	CODE_OF_CONDUCT
 	coding style guide
 		review all code
 		full rules with options
@@ -21,6 +30,8 @@ After 7/7, prep what I have for release
 	handle any double bangs
 	update documentation
 		more help text?
+	no question with no option
+		options for all games
 	play testing
 	genetic for backgammon with pub_eval vector
 	do what test code I can
@@ -73,54 +84,57 @@ Note that bsd games has 24 of what I would call games. I need to at least beat t
 
 coded by penultimate category:
 
-board: 2
-card: 2
-card/solitaire: 4 (which has about twice the terminal categories of any other penultimate category)
-dice: 2
-gambling: 2
-other: 3
+board: 3
+card: 3
+card/solitaire: 6 (which has about twice the terminal categories of any other penultimate category)
+dice: 3
+gambling: 3
+other: 4
 
 == Gipf Planning ==
 
-backgammon            -> connect four
-battleships           -> canfield                
-battleships           -> pig                  (bonus shot if you get a hit)
-battleships           -> hunt the wumpus      (learn the location of a specific ship type)
-blackjack             -> ninety-nine          (the dealer can't draw (their turn is skipped))
-canfield              -> blackjack            (build a jack on any thing)
-connect four          -> roulette             (your opponent's next move is random)
-connect four          -> hunt the wumpus
-craps                 -> crazy eights
-crazy eights          -> strategy
-cribbage              -> backgammon           (pairs score four points for one round)
-cribbage              -> craps                (discard a card and get a new one)
-cribbage              -> crazy eights
-freecell              -> hamurabi             (put a free cell card on any tableau pile)
-forty thieves         -> freecell             (move any one card from the waste)
-forty thieves         -> pig
-hamurabi              -> cribbage
-hamurabi              -> yacht
-hangman               -> craps
-hunt the wumpus       -> pig                  (giant bats)
-hunt the wumpus       -> battleships          (moves the wumpus)
-hunt the wumpus       -> hangman
-klondike              -> battleships
-klondike              -> hangman
+backgammon            -> connect four         (move a piece vertically)
+battleships           -> canfield             (free random hit)   
+battleships           -> pig                  [bonus shot if you get a hit]
+battleships           -> hunt the wumpus      [learn the location of a specific ship type]
+blackjack             -> ninety-nine          [the dealer can't draw (their turn is skipped)]
+canfield              -> blackjack            [build a jack on any thing]
+connect four          -> roulette             [your opponent's next move is random]
+connect four          -> hunt the wumpus      (reverse one column)
+craps                 -> crazy eights         (next roll is an eight)
+crazy eights          -> strategy             (can match one lower or higher in rank)
+cribbage              -> backgammon           [pairs score four points for one round]
+cribbage              -> craps                [discard a card and get a new one]
+cribbage              -> crazy eights         (skip the next player's turn)
+freecell              -> hamurabi             [put a free cell card on any tableau pile]
+forty thieves         -> freecell             [move any one card from the waste]
+forty thieves         -> pig                  [free any one ace by moving the cards above it to the waste]
+hamurabi              -> cribbage             (stop the next set of rats)
+hamurabi              -> yacht                (+1 to grain yield next turn)
+hangman               -> craps                (your craps winnings go into your treasury)
+hunt the wumpus       -> pig                  [giant bats]
+hunt the wumpus       -> battleships          [moves the wumpus]
+hunt the wumpus       -> hangman              (learn where the pit is)
+klondike              -> battleships          (flip over one hidden card. If you can use it, do so)
+klondike              -> hangman              (move any one jack to the top of the waste)
 klondike              -> solitaire dice       (place one card from the stock at the end of the stock)
-ninety-nine           -> blackjack            (pass without losing a token)
-ninety-nine           -> crazy eights
-ninety-nine           -> yacht
-pig                   -> battleships          (roll a two)
-pig                   -> hunt the wumpus      (see your next roll, then choose to roll or stop)
-pig                   -> solitaire dice       (pick one of two rolls)
-rock-paper-scissors   -> forty thieves
-roulette              -> blackjack
-roulette              -> connect four         (make a corner bet, one of them will win at 4:1)
-roulette              -> klondike
-solitaire dice        -> freecell             (free ride)
-strategy              -> roulette
-yacht                 -> rock-paper-scissors
+ninety-nine           -> blackjack            [pass without losing a token]
+ninety-nine           -> crazy eights         (eights and nines are reversed for one play)
+ninety-nine           -> yacht                (if you have a pair of a card you can play, play both)
+pig                   -> battleships          [roll a two]
+pig                   -> hunt the wumpus      [see your next roll, then choose to roll or stop]
+pig                   -> solitaire dice       [pick one of two rolls]
+rock-paper-scissors   -> forty thieves        (loss counts as draw)
+roulette              -> blackjack            (the next spin will be black)
+roulette              -> connect four         [make a corner bet, one of them will win at 4:1]
+roulette              -> klondike             (the next spin will be a multiple of 7)
+solitaire dice        -> freecell             [free ride]
+strategy              -> roulette             (switch two adjacent cards in a pile)
+yacht                 -> rock-paper-scissors  (change one die to a 3)
 
+Perens = planned, brackets = coded.
+
+backgammon               I'm sorry, I didn't catch that.
 battleships              Gesundheit
 blackjack                ValueError: gipf
 canfield                 I'm sorry, I don't speak Flemish.
@@ -135,12 +149,12 @@ wumpus                   You're hunting a wumpus, not a gipf.
 
 Does not compute.
 Look, I only speak two languages: English and Bad English.
-I'm sorry, I didn't catch that.
 Tamsk.
 No hablo Ingles.
 No thank you.
 I'm sorry, I quit gipfing for Lent.
 My hovercraft is full of eels.
+Non sequitur, one-love.
 
 == 108 Games ==
 
