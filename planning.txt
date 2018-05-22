@@ -33,6 +33,7 @@ After 7/7, prep what I have for release
 	no question with no option
 		options for all games
 	play testing
+		me first - play every game
 	genetic for backgammon with pub_eval vector
 	do what test code I can
 		Finish options_test.py

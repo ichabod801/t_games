@@ -88,14 +88,14 @@ class Player(object):
         prompt: The question being asked of the player. (str)
         """
         if not self.held_inputs:
-            answer = input(prompt)
+            answer = input(prompt).strip()
             if ';' in answer:
                 self.held_inputs = [part.strip() for part in answer.split(';')]
-            else:
-                first, space, rest = answer.strip().partition(' ')
-                first = self.shortcuts.get(first, first)
-                return '{} {}'.format(first, rest).strip()
-        return self.held_inputs.pop(0)
+        if self.held_inputs:
+            answer = self.held_inputs.pop(0)
+        first, space, rest = answer.partition(' ')
+        first = self.shortcuts.get(first, first)
+        return '{} {}'.format(first, rest).strip()
 
     def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
         """

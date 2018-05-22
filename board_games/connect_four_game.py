@@ -433,7 +433,7 @@ class C4Board(board.DimBoard):
             height = self.column_height(column)
             # attempt the move
             if height <= self.dimensions[1]:
-                self.place(piece, (column, height + 1))
+                self.place((column, height + 1), piece)
             else:
                 raise ValueError('Invalid move: column {} is full'.format(column + 1))
 

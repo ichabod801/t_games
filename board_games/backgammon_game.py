@@ -748,8 +748,10 @@ class Backgammon(game.Game):
             if not losses:
                 player = self.players[self.player_index]
                 piece = self.pieces[player.name]
+                player.tell(self.board.get_text(piece))
                 while True:
-                    point = player.ask('\nPick a point to move a piece verically from: ', low = 1, high = 24)
+                    query = '\nPick a point to move a piece verically from: '
+                    point = player.ask_int(query, low = 1, high = 24)
                     target = 25 - point
                     if piece not in self.board.cells[point]:
                         player.tell('You do not have a piece on that point.')

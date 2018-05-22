@@ -1,30 +1,20 @@
 c8full	crazy eights / draw = 2 reverse = a skip = q
 pig3	pig / x medium satan
-test	blackjack / stake = 200 limit = 64 decks = 2 spam
-bgm	backgammon / none
-bgmo	backgammon
-bts	battleships / none
-btso	battleships
-blj	blackjack / none
-bljo	blackjack
-caf	canfield / none
-cafo	canfield
-cnf	connect four / none
-cnfo	connect four
-cze	crazy eights / none
-czeo	crazy eights
-frc	freecell / none
-frco	freecell
-ftt	forty thieves / none
-ftto	forty thieves
-hmr	hamurabi / none
-hmro	hamurabi
-kld	klondike / none
-kldo	klondike
-ntn	ninety nine / none
-ntno	ninety nine
-rol	roulette / none
-rolo	roulette
-pig3	pig / x medium satan
-wum	wumpus / none
-wumo	wumpus
+rpsls	rock-paper-scissors / lizard-spock
+bgm	backgammon
+bts	battleships
+blj	blackjack
+caf	canfield
+cnf	connect four
+crp	craps
+cze	crazy eights
+crb	cribbage
+frc	freecell
+ftt	forty thieves
+hmr	hamurabi
+kld	klondike
+ntn	ninety nine
+rol	roulette
+str	strategy
+yat	yacht
+wum	wumpus
