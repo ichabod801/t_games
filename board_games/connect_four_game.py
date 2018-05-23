@@ -497,11 +497,25 @@ class ConnectFour(game.Game):
         arguments: The name of the game to gipf to. (str)
         """
         # Check/play the gipf game.
-        game, losses = self.gipf_check(arguments, ('roulette',)) # +halma when done.
+        game, losses = self.gipf_check(arguments, ('roulette', 'wumpus'))
         #print(game, losses)
         if game == 'roulette':
             if not losses:
                 self.bot_random = True
+        elif game == 'wumpus':
+            if not losses:
+                self.human.tell(self)
+                query = 'Which column would you like to reverse? '
+                col = self.human.ask_int(query, low = 1, high = self.board.dimensions[0])
+                pieces = []
+                for row in range(self.board.dimensions[1], 0, -1):
+                    pieces.append(self.board.cells[(col, row)].contents)
+                row = 1
+                for piece in pieces:
+                    if piece is not None:
+                        self.board.cells[(col, row)].contents = piece
+                        row += 1
+                return False
         else:
             self.human.tell("Yeah, just go two blocks up and take a right. You can't miss it.")
         return True

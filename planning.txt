@@ -10,8 +10,8 @@ Gambling games: subtract stake from score.
 Any games I can finish before 7/7
 	flesh out solitaire games.
 	liars dice or dudo
-	any simple games
 	fox and geese or tafl
+	no simple games - leave them for play testers
 After 7/7, prep what I have for release
 	Trac instance
 		Would GitHub issues suffice?
@@ -24,6 +24,7 @@ After 7/7, prep what I have for release
 	coding style guide
 		review all code
 		full rules with options
+		you win
 	review output
 		one blank line
 		two better than none
@@ -43,12 +44,13 @@ After 7/7, prep what I have for release
 
 Open source it.
 Get the rest of the original planned games done.
+Solidify the features
 get to 108 games.
 
 == Games to Program ==
 
 board/chase: fox and geese, tafl
-board/displace: mancala, chess (wrapper for Sunfish), battleships*
+board/displace: mancala, chess (wrapper for Sunfish), battleships!
 board/race: backgammon!, snakes and ladders
 board/space: connect four*, halma
 card/solitaire/open/sorters: crescent, black hole
@@ -96,7 +98,7 @@ other: 4
 == Gipf Planning ==
 
 backgammon            -> connect four         [move a piece vertically]
-battleships           -> canfield             (free random hit)   
+battleships           -> canfield             [free random hit]
 battleships           -> pig                  [bonus shot if you get a hit]
 battleships           -> hunt the wumpus      [learn the location of a specific ship type]
 blackjack             -> ninety-nine          [the dealer can't draw (their turn is skipped)]
