@@ -283,6 +283,7 @@ class Game(OtherCmd):
         argument: The argument to the gipf command. (str)
         game_name: The names of the games to check. (list of str)
         """
+        # !! carry cheating flag up the gipf chain (if you win)
         self.flags |= 8
         games = {game_name: self.interface.games[game_name] for game_name in game_names}
         aliases = {}

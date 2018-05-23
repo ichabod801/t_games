@@ -323,11 +323,32 @@ class Craps(game.Game):
             if argument.lower() not in ('r', 'roll'):
                 player.ask('You are the shooter. Press enter to roll the dice: ')
             self.dice.roll()
+            while self.force_roll and sum(self.dice) != self.force_roll:
+                self.dice.roll()
+            self.force_roll = 0
             self.human.tell('\n{} rolled {}.'.format(player.name, self.dice))
             self.resolve_bets()
             self.human.ask('Press enter to continue: ')
             self.human.tell()
         return False
+
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        game, losses = self.gipf_check(arguments, ('crazy eights',))
+        go = True
+        # Hunt the Wumpus
+        if game == 'crazy eights':
+            if not losses:
+                self.human.tell('The next roll will be an eight.')
+                self.force_roll = 8
+        else:
+            self.human.tell('Look, I only speak two languages: English and Bad English.')
+        return go
 
     def do_remove(self, argument):
         """
@@ -472,7 +493,7 @@ class Craps(game.Game):
                 self.shooter_index -= 1
             return False
         # Pass the dice if the shooter has no money for a pass/don't pass bet.
-        elif self.shooter_index == self.player_index and not self.validate_shoot(player):
+        elif self.shooter_index == self.player_index and not self.validate_shooter(player):
             for bet in self.bets[player.name]:
                 if 'pass' in bet.match_text and not bet.number:
                     break
@@ -569,6 +590,7 @@ class Craps(game.Game):
         self.bets = {player.name: [] for player in self.players}
         self.shooter_index = len(self.players) - 1
         self.point = 0
+        self.force_roll = 0
         # Set up the dice.
         self.dice = dice.Pool()
         # Set up the bets.

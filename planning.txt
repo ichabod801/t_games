@@ -14,7 +14,7 @@ Any games I can finish before 7/7
 	no simple games - leave them for play testers
 After 7/7, prep what I have for release
 	Trac instance
-		Would GitHub issues suffice?
+		Would GitHub issues suffice? Looks like it.
 	choose and apply license.
 		GPLv3 would keep it from getting closed sourced. Do I care?
 		Why should I be worried about patent rights?
@@ -31,7 +31,7 @@ After 7/7, prep what I have for release
 	handle any double bangs
 	update documentation
 		more help text?
-	no question with no option
+	no question with no options
 		options for all games
 	play testing
 		me first - play every game
@@ -52,7 +52,7 @@ get to 108 games.
 board/chase: fox and geese, tafl
 board/displace: mancala, chess (wrapper for Sunfish), battleships!
 board/race: backgammon!, snakes and ladders
-board/space: connect four*, halma
+board/space: connect four!, halma
 card/solitaire/open/sorters: crescent, black hole
 card/solitaire/open/builders: bisley, beleagured castle, free cell!
 card/solitaire/open/other: pyramid, nestor
@@ -104,8 +104,8 @@ battleships           -> hunt the wumpus      [learn the location of a specific 
 blackjack             -> ninety-nine          [the dealer can't draw (their turn is skipped)]
 canfield              -> blackjack            [build a jack on any thing]
 connect four          -> roulette             [your opponent's next move is random]
-connect four          -> hunt the wumpus      (reverse one column)
-craps                 -> crazy eights         (next roll is an eight)
+connect four          -> hunt the wumpus      [reverse one column]
+craps                 -> crazy eights         [next roll is an eight]
 crazy eights          -> strategy             (can match one lower or higher in rank)
 cribbage              -> backgammon           [pairs score four points for one round]
 cribbage              -> craps                [discard a card and get a new one]
@@ -143,6 +143,7 @@ battleships              Gesundheit
 blackjack                ValueError: gipf
 canfield                 I'm sorry, I don't speak Flemish.
 connect four             Yeah, just go two blocks up and take a right. You can't miss it.
+craps                    Look, I only speak two languages: English and Bad English.
 cribbage                 I'm sorry, sir, but that is simply not acceptable in this venue.
 freecell                 There are no valid moves for the gipf of spades.
 ninety-nine              Girls in pillow fights? Come on, this is a family game.
@@ -152,7 +153,6 @@ solitaire dice           I don't understand.
 wumpus                   You're hunting a wumpus, not a gipf.
 
 Does not compute.
-Look, I only speak two languages: English and Bad English.
 Tamsk.
 No hablo Ingles.
 No thank you.
