@@ -35,14 +35,15 @@ After 7/7, prep what I have for release
 		options for all games
 	play testing
 		me first - play every game
+		outside testers before x-mas
 	genetic for backgammon with pub_eval vector
 	do what test code I can
 		Finish options_test.py
-	release before the x-mas
 
 == Long Term To Do List ==
 
 Open source it.
+pypi
 Get the rest of the original planned games done.
 Solidify the features
 get to 108 games.
@@ -63,7 +64,7 @@ card/solitaire/closed/builders: canfield!, forty thieves!, klondike*
 card/solitaire/closed/other: monte carlo, accordion
 card/trick: hearts, spades
 card/matching: cribbage*, snip snap snorem
-card/shedding: crazy eights*, spit
+card/shedding: crazy eights!, spit
 card/rummy: rummy, tonk
 card/accumulating: war, ninety-nine*
 card/other: golf ii, peace and love
@@ -71,7 +72,7 @@ dice/jeopardy: pig!, zip
 dice/category: yacht*, poker dice
 dice/liar: dudo, liar's dice
 dice/other: solitaire dice!, mate
-gambling/dice: craps*, mexico
+gambling/dice: craps!, mexico
 gambling/cards: blackjack!, baccarat
 gambling/other: roulette*, slot machines
 other/adventure: hunt the wumpus!, adventure
@@ -106,7 +107,7 @@ canfield              -> blackjack            [build a jack on any thing]
 connect four          -> roulette             [your opponent's next move is random]
 connect four          -> hunt the wumpus      [reverse one column]
 craps                 -> crazy eights         [next roll is an eight]
-crazy eights          -> strategy             (can match one lower or higher in rank)
+crazy eights          -> strategy             [can match one lower or higher in rank]
 cribbage              -> backgammon           [pairs score four points for one round]
 cribbage              -> craps                [discard a card and get a new one]
 cribbage              -> crazy eights         (skip the next player's turn)
@@ -118,7 +119,7 @@ hamurabi              -> yacht                (+1 to grain yield next turn)
 hangman               -> craps                (your craps winnings go into your treasury)
 hunt the wumpus       -> pig                  [giant bats]
 hunt the wumpus       -> battleships          [moves the wumpus]
-hunt the wumpus       -> hangman              (learn where the pit is)
+hunt the wumpus       -> hangman              (learn where the nearest pit is)
 klondike              -> battleships          (flip over one hidden card. If you can use it, do so)
 klondike              -> hangman              (move any one jack to the top of the waste)
 klondike              -> solitaire dice       (place one card from the stock at the end of the stock)
@@ -144,6 +145,7 @@ blackjack                ValueError: gipf
 canfield                 I'm sorry, I don't speak Flemish.
 connect four             Yeah, just go two blocks up and take a right. You can't miss it.
 craps                    Look, I only speak two languages: English and Bad English.
+crazy eights             I'm sorry, I quit gipfing for Lent.
 cribbage                 I'm sorry, sir, but that is simply not acceptable in this venue.
 freecell                 There are no valid moves for the gipf of spades.
 ninety-nine              Girls in pillow fights? Come on, this is a family game.
@@ -156,7 +158,6 @@ Does not compute.
 Tamsk.
 No hablo Ingles.
 No thank you.
-I'm sorry, I quit gipfing for Lent.
 My hovercraft is full of eels.
 Non sequitur, one-love.
 

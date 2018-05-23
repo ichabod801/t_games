@@ -331,6 +331,24 @@ class CrazyEights(game.Game):
             self.hands[self.human.name].cards.sort()
             self.hands[self.human.name].cards.sort(key = lambda card: card.suit)
 
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        game, losses = self.gipf_check(arguments, ('strategy',))
+        go = True
+        # Strategy
+        if game == 'strategy':
+            if not losses:
+                self.human.tell('Your next play may be one rank above or below the required rank.')
+                self.fuzzy_ranks = True
+        else:
+            self.human.tell("I'm sorry, I quit gipfing for Lent.")
+        return go
+
     def draw(self, player):
         """
         Draw a card. (bool)
@@ -648,6 +666,7 @@ class CrazyEights(game.Game):
         self.suit = ''
         self.pass_count = 0
         self.forced_draw = 0
+        self.fuzzy_ranks = False
         # Deal the hands.
         self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
         self.deal()
@@ -670,12 +689,19 @@ class CrazyEights(game.Game):
             valid_ranks = (discard.rank,)
         else:
             valid_ranks = (discard.rank, self.change_rank)
+        if self.fuzzy_ranks:
+            rank_index = discard.ranks.index(discard.rank)
+            if rank_index > 0:
+                valid_ranks += (discard.ranks[rank_index - 1],)
+            if rank_index + 1 < len(discard.ranks):
+                valid_ranks += (discard.ranks[rank_index + 1],)
         if self.suit:
             valid_suit = self.suit
         else:
             valid_suit = discard.suit
         if card_text[0].upper() in valid_ranks or card_text[1].upper() in valid_suit:
             self.play_card(player, card_text)
+            self.fuzzy_ranks = False
         # Warn for invalid plays.
         else:
             player.error('That is not a valid play.')
