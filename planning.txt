@@ -15,9 +15,11 @@ Any games I can finish before 7/7
 After 7/7, prep what I have for release
 	Trac instance
 		Would GitHub issues suffice? Looks like it.
+		They have wikis and web pages for documentation as well.
 	choose and apply license.
 		GPLv3 would keep it from getting closed sourced. Do I care?
 		Why should I be worried about patent rights?
+		Copyright 2018 by Craig O'Brien and the tgame contributors.
 	README
 	CONTRIBUTING
 	CODE_OF_CONDUCT
@@ -110,7 +112,7 @@ craps                 -> crazy eights         [next roll is an eight]
 crazy eights          -> strategy             [can match one lower or higher in rank]
 cribbage              -> backgammon           [pairs score four points for one round]
 cribbage              -> craps                [discard a card and get a new one]
-cribbage              -> crazy eights         (skip the next player's turn)
+cribbage              -> crazy eights         (skip the next player's turn during layout)
 freecell              -> hamurabi             [put a free cell card on any tableau pile]
 forty thieves         -> freecell             [move any one card from the waste]
 forty thieves         -> pig                  [free any one ace by moving the cards above it to the waste]

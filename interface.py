@@ -375,6 +375,7 @@ class Interface(other_cmd.OtherCmd):
         while True:
             results = self.game.play()
             self.human.store_results(self.game.name, results)
+            # !! don't show stats if last game not counted.
             self.do_stats(self.game.name)
             again = self.human.ask('Would you like to play again? ').strip().lower()
             if again in ('!', '!!'):

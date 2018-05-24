@@ -259,7 +259,7 @@ class Cribbage(game.Game):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
-        game, losses = self.gipf_check(arguments, ('backgammon',))
+        game, losses = self.gipf_check(arguments, ('backgammon', 'craps', 'crazy eights'))
         # Backgammon
         if game == 'backgammon':
             self.human.tell('Pairs score four points each this round.')
@@ -278,6 +278,11 @@ class Cribbage(game.Game):
                     break
             hand.discard(card)
             hand.draw()
+        # Crazy Eights
+        elif game == 'crazy eights':
+            next_player = self.players[(self.player_index + 1) % len(self.players)]
+            self.skip_player = next_player
+            self.human.tell("{}'s next discard will be skipped.".format(next_player.name))
         # Game with no gipf link
         else:
             self.human.error("I'm sorry, sir, but that is simply not acceptable in this venue.")
@@ -390,7 +395,12 @@ class Cribbage(game.Game):
         if self.phase == 'discard':
             return self.player_discards(player)
         elif self.phase == 'play':
-            return self.player_play(player)
+            if self.skip_player == player:
+                print("{}'s discard is skipped.".format(player.name))
+                self.skip_player = None
+                return False
+            else:
+                return self.player_play(player)
 
     def player_discards(self, player):
         """
@@ -785,6 +795,7 @@ class Cribbage(game.Game):
         self.go_count = 0
         self.match_scores = {player.name: 0 for player in self.players}
         self.double_pairs = False
+        self.skip_player = None
         # Set up the deck.
         self.deck = cards.Deck(card_class = CribCard)
         self.deck.shuffle()
