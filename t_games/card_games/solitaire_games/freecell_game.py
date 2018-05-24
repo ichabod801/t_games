@@ -3,6 +3,9 @@ freecell_game.py
 
 FreeCell and related games.
 
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Constants:
 CREDITS: Credits for FreeCell. (str)
 CREDITS_BAKER: Credits for Baker's Game. (str)

@@ -3,10 +3,8 @@ cribbage_game.py
 
 A game of Cribbage.
 
-To Do (not in order)
-    get gipfing and anything else done, then flesh out options until the 15th.
-    options:
-        solo
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Cribbage. (str)

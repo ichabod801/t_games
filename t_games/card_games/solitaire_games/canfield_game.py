@@ -3,6 +3,9 @@ canfield_game.py
 
 game of Canfield.
 
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Classes:
 Canfield: A game of Canfield. (Solitaire)
 

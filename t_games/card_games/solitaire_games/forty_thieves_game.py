@@ -3,6 +3,9 @@ forty_thieves_game.py
 
 A game of Forty Thieves.
 
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Classes:
 FortyThieves: A game of Forty Thieves. (solitaire.Solitaire)
 """

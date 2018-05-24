@@ -4,6 +4,9 @@ strategy_game.py
 Classes:
 Strategy: A game of Strategy. (solitaire.Solitaire)
 
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Functions:
 build_reserve: Build only from the reserve. (bool)
 lane_reserve: Lane only from the reserve (bool)

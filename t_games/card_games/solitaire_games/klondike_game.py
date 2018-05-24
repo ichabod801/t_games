@@ -3,6 +3,9 @@ klondike_game.py
 
 Klondike solitaire and variants.
 
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Constants:
 CREDITS: Credits for Klondike. (str)
 RULES: Rules for Klondike. (str)

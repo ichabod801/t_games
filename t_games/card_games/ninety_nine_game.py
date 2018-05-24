@@ -3,6 +3,9 @@ ninety_nine_game.py
 
 This is the accumulating game, not the trick taking game.
 
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Constants:
 CREDITS: The credits for Ninety-Nine. (str)
 RULES: The rules of Ninety-Nine.
