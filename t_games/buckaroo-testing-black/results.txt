@@ -1,0 +1,354 @@
+Crazy Eights,0,2,0,81,231,2,
+Crazy Eights,1,1,0,109,192,2,
+Crazy Eights,1,1,0,66,198,0,
+Crazy Eights,1,1,0,74,198,0,
+Crazy Eights,0,4,0,0,193,0,
+Crazy Eights,2,0,0,163,171,2,
+Crazy Eights,0,2,0,0,114,0,
+Crazy Eights,0,4,0,102,277,0,
+Crazy Eights,1,1,0,72,76,0,
+Crazy Eights,0,2,2,0,162,2,
+Crazy Eights,0,3,1,0,142,0,
+Crazy Eights,3,1,0,209,464,2,
+Crazy Eights,4,0,0,312,212,0,
+Crazy Eights,0,2,2,0,116,2,
+Crazy Eights,3,1,0,231,248,1,
+Crazy Eights,0,4,0,0,320,1,
+Crazy Eights,2,2,0,182,205,0,
+Crazy Eights,2,0,0,261,173,3,
+Crazy Eights,0,2,0,90,226,1,
+Crazy Eights,3,1,0,218,207,1,
+Crazy Eights,0,1,3,0,22,1,
+Crazy Eights,4,0,0,338,309,1,
+Crazy Eights,3,1,0,252,183,1,
+Crazy Eights,1,1,0,138,292,1,
+Crazy Eights,0,4,0,0,6,7,
+Crazy Eights,0,4,0,0,3,7,
+Crazy Eights,2,2,0,139,90,1,
+Crazy Eights,4,0,0,312,127,1,
+Crazy Eights,0,3,1,0,145,1,
+Crazy Eights,3,1,0,62,108,1,
+Crazy Eights,0,3,1,0,115,1,
+Crazy Eights,0,3,1,0,284,1,
+FreeCell,0,1,0,801,5,6,
+Pig,0,1,0,53,17,4,
+Pig,0,1,0,21,5,6,
+Solitaire Dice,0,1,0,0,1,4,
+Pig,0,3,0,74,37,1,
+Pig,3,0,0,101,32,1,
+Pig,3,0,0,103,54,1,
+Blackjack,1,0,0,112,2,4,
+Blackjack,1,0,0,208,3,5,
+Roulette,0,1,0,95,1,0,
+Roulette,0,1,0,95,2,4,
+Roulette,0,1,0,85,3,4,
+Roulette,0,1,0,85,2,7,
+Roulette,1,0,0,175,4,6,
+Roulette,0,1,0,95,2,4,
+Roulette,0,1,0,75,4,4,
+Roulette,1,0,0,121,4,6,
+Blackjack,0,0,1,100,15,4,
+Roulette,0,1,0,86,1,4,
+Roulette,0,1,0,96,2,4,
+Roulette,0,1,0,82,2,5,
+Roulette,1,0,0,118,2,5,
+Roulette,0,1,0,82,3,5,
+Roulette,1,0,0,102,4,5,
+Roulette,0,0,1,100,1,5,
+Roulette,0,1,0,80,3,5,
+Roulette,0,1,0,55,5,5,
+Roulette,0,1,0,20,3,5,
+Roulette,0,1,0,72,5,5,
+Roulette,0,1,0,75,2,5,
+Roulette,0,1,0,92,2,5,
+Roulette,0,1,0,88,2,5,
+Roulette,0,1,0,88,2,5,
+Roulette,0,1,0,96,3,5,
+Roulette,0,1,0,56,1,7,
+Roulette,0,1,0,94,26,7,
+Roulette,0,1,0,79,4,5,
+Roulette,1,0,0,158,2,4,
+Roulette,1,0,0,282,3,4,
+Roulette,0,1,0,95,4,4,
+Roulette,1,0,0,121,6,4,
+Roulette,0,1,0,93,3,4,
+Connect Four,0,1,1,0,58,0,
+Roulette,1,0,0,105,15,12,
+Connect Four,1,0,0,0,30,0,
+Connect Four,0,1,0,0,18,0,
+Roulette,1,0,0,105,3,12,
+Connect Four,0,1,0,0,30,0,
+Roulette,1,0,0,105,3,12,
+Connect Four,0,1,0,0,31,0,
+Roulette,1,0,0,105,3,12,
+Connect Four,0,1,0,0,48,0,
+Roulette,0,1,0,95,3,12,
+Connect Four,0,1,0,0,26,0,
+Roulette,1,0,0,156,4,12,
+Roulette,0,0,1,100,1,4,
+Roulette,1,0,0,101,18,4,
+Roulette,1,0,0,101,18,4,
+Roulette,1,0,0,101,18,4,
+Connect Four,0,1,0,0,19,8,
+Connect Four,0,1,0,0,7,0,
+Roulette,1,0,0,101,19,4,
+Connect Four,0,1,0,0,21,10,
+Roulette,1,0,0,101,18,4,
+Connect Four,0,1,0,0,17,8,
+Roulette,1,0,0,101,19,4,
+Connect Four,0,1,0,0,16,8,
+Roulette,1,0,0,101,19,4,
+Connect Four,0,1,0,0,16,8,
+Roulette,1,0,0,101,18,4,
+Connect Four,0,1,0,0,18,8,
+Roulette,1,0,0,101,27,4,
+Connect Four,1,0,0,0,14,8,
+Roulette,1,0,0,101,18,4,
+Connect Four,0,1,0,0,22,8,
+Roulette,1,0,0,101,18,4,
+Connect Four,1,0,0,0,14,8,
+Ninety-Nine,0,1,0,3,1,4,
+Ninety-Nine,0,3,0,-3,99,2,
+Ninety-Nine,3,0,0,1,128,0,
+Ninety-Nine,3,0,0,1,117,0,
+Ninety-Nine,1,2,0,-2,50,0,
+Ninety-Nine,2,1,0,-1,97,0,
+Ninety-Nine,2,1,0,-1,168,1,
+Ninety-Nine,0,3,0,3,3,5,
+Ninety-Nine,1,2,0,-2,92,1,
+Ninety-Nine,3,0,0,1,104,1,
+Ninety-Nine,3,0,0,1,158,3,
+Blackjack,1,0,0,116,23,4,
+Ninety-Nine,3,0,0,3,154,11,
+Blackjack,1,0,0,108,20,4,
+Ninety-Nine,3,0,0,1,95,11,
+Blackjack,0,1,0,92,21,4,
+Ninety-Nine,3,0,0,2,103,11,
+Ninety-Nine,1,2,0,-2,113,2,
+Blackjack,0,1,0,60,18,12,
+Ninety-Nine,0,3,0,-3,157,0,
+Blackjack,0,1,0,92,9,12,
+Ninety-Nine,3,0,0,1,183,2,
+Blackjack,0,0,1,100,18,12,
+FreeCell,1,0,0,801,71,0,
+FreeCell,1,0,0,816,51,1,cells=5 piles=7
+FreeCell,1,0,0,829,40,1,cells=1 piles=13 deal-num=30
+FreeCell,1,0,0,831,37,1,cells=1 piles=13 deal-num=99
+FreeCell,1,0,0,809,65,2,
+Pig,2,1,0,94,41,1,medium satan x
+Pig,0,1,0,27,11,0,
+Pig,0,1,0,76,12,0,
+Pig,1,0,0,103,13,0,
+Pig,3,0,0,101,32,1,medium satan x
+Pig,0,1,0,77,28,1,base-pace-race=10/10/10
+Pig,0,1,0,72,22,0,
+Pig,11,1,0,81,74,3,medium medium value=18
+Pig,2,1,0,101,56,1,even-turns medium medium rolls=5
+Pig,4,0,0,102,38,3,base-pace-race=11/11/12 medium stupid stupid
+Pig,1,0,0,103,15,0,
+Pig,0,1,0,91,14,0,
+Pig,2,1,0,89,23,3,satan satan value=18
+Pig,3,0,0,100,37,1,pace-race=8/6 satan satan
+Battleships,1,0,0,1,56,1,inventory=wikipedia
+Blackjack,1,0,0,240,140,5,decks=2 limit=64 stake=200
+Blackjack,0,1,0,71,220,7,hit-split-ace no-double-split no-resplit s17 split-rank surrender true-double
+Canfield,0,1,0,564,128,4,
+Canfield,1,0,0,681,113,1,variant=rainbow
+Canfield,0,1,0,750,111,5,variant=rainbow-one
+Canfield,0,1,0,736,31,5,variant=selective
+Canfield,0,1,0,762,79,7,variant=storehouse
+Crazy Eights,2,2,0,161,216,2,
+Crazy Eights,2,2,0,78,89,3,draw=2 reverse=a skip=q
+Crazy Eights,1,3,0,200,420,3,change-set draw-one empty-deck=reshuffle multi-score one-alert
+Crazy Eights,4,0,0,150,27,1,change-match one-round
+FreeCell,0,1,0,773,43,5,kings-only deal-num=39
+FreeCell,1,0,0,795,71,1,challenge
+FreeCell,0,1,0,801,1,5,egnellahc
+FreeCell,1,0,0,796,73,1,egnellahc
+FreeCell,0,1,0,795,11,5,supercell
+Klondike,0,1,0,635,81,4,
+Klondike,0,1,0,745,77,5,
+Klondike,1,0,0,712,95,1,
+Klondike,1,0,0,724,90,1,piles=6
+Ninety-Nine,0,2,0,-2,74,0,
+Ninety-Nine,0,2,0,-2,147,1,99=k minus=t skip=9 zero=9
+Ninety-Nine,0,4,0,-4,136,1,99=k minus=t reverse= skip=9 zero=9
+Ninety-Nine,4,0,0,1,230,3,easy=1 medium=3 reverse=2
+Ninety-Nine,1,3,0,-3,255,3,minus=5
+Ninety-Nine,3,1,0,-1,235,1,easy=1 jokers=2 medium=3 minus=5
+Roulette,1,0,0,205,4,5,french stake=200 uk-rule
+Roulette,1,0,0,101,11,4,
+Roulette,1,0,0,203,7,5,limit=200 stake=200 uk-rule=si
+Rock-Paper-Scissors,2,1,0,0,6,0,
+Rock-Paper-Scissors,3,2,0,0,10,1,bot-name=lisa match=5
+Rock-Paper-Scissors,0,3,2,0,10,1,bot=randy lizard-spock
+Rock-Paper-Scissors,2,1,1,0,8,0,
+Backgammon,1,0,0,0,48,0,
+Backgammon,1,0,0,0,50,0,
+Backgammon,1,0,0,0,57,0,
+Backgammon,1,0,0,0,79,0,
+Backgammon,0,1,0,0,59,0,
+Backgammon,2,0,0,0,43,0,
+Rock-Paper-Scissors,1,2,1,0,8,1,
+Rock-Paper-Scissors,1,2,2,0,10,3,
+Rock-Paper-Scissors,0,5,4,0,18,1,match=5
+Rock-Paper-Scissors,2,1,1,0,8,1,
+Rock-Paper-Scissors,4,1,4,0,18,1,match=5
+Rock-Paper-Scissors,2,3,0,0,10,257,match=5
+Rock-Paper-Scissors,2,3,4,0,18,257,match=5
+Rock-Paper-Scissors,3,2,1,0,12,257,match=5
+Backgammon,3,0,0,0,94,0,
+Backgammon,1,0,0,0,53,2,
+Backgammon,3,0,0,0,71,0,
+Backgammon,1,0,0,0,44,0,
+Backgammon,6,0,0,0,0,259,match=5
+Backgammon,2,1,0,0,3,259,match=4
+Backgammon,0,1,0,0,69,257,match=4
+Backgammon,7,0,0,0,0,257,match=4
+Backgammon,12,0,0,0,0,257,match=4
+Backgammon,4,0,0,0,0,257,match=4
+Backgammon,0,4,0,0,4,257,match=4
+Backgammon,9,2,0,0,0,257,match=4
+Backgammon,1,4,0,0,21,257,match=4
+Backgammon,4,2,0,0,0,257,match=4
+Backgammon,0,5,0,0,13,257,match=4
+Backgammon,0,4,0,0,0,257,match=4
+Forty Thieves,0,1,0,801,2,4,
+Forty Thieves,0,1,0,784,18,4,
+Forty Thieves,0,1,0,724,119,5,streets
+Forty Thieves,1,0,0,738,239,1,streets deal-num=1
+FreeCell,1,0,0,810,59,0,
+Forty Thieves,0,1,0,797,5,12,
+FreeCell,1,0,0,805,62,0,
+Forty Thieves,0,1,0,797,6,12,
+FreeCell,1,0,0,803,82,0,
+Forty Thieves,0,1,0,797,5,12,
+Forty Thieves,0,1,0,795,16,4,
+FreeCell,1,0,0,816,54,0,
+Pig,1,2,0,52,38,1,medium satan x
+Strategy,1,0,0,805,70,0,
+Pig,0,1,0,29,17,1,shuffle=2
+Yacht,0,0,0,9,1,0,
+Yacht,0,0,0,97,24,2,
+Yacht,0,1,0,95,24,0,
+Yacht,0,1,0,108,24,0,
+FreeCell,1,0,0,813,60,0,
+Pig,3,0,0,101,27,1,medium satan x
+Yacht,1,0,0,110,22,1,big-straight=25 five-name=Cheerio four-kind=0 low-straight=20 max-rolls=2
+Yacht,1,0,0,0,2,1,super-five
+Yacht,1,0,0,50,8,1,super-five
+Yacht,1,0,0,136,18,3,super-five
+Yacht,1,0,0,272,24,3,extra-five=100 strict-four strict-full
+Yacht,1,0,0,137,24,1,strict-four strict-full
+Yacht,1,0,0,78,22,1,big-straight=25 five-name=Cheerio four-kind=0 low-straight=20 max-rolls=2
+Yacht,1,0,0,90,4,3,big-straight=25/20 chance=0 five-kind=60 five-name=Small_General four-kind=45/40 full-house=35/30 low-straight=0 super-five wild-straight
+Yacht,1,0,0,143,20,3,big-straight=25/20 chance=0 five-kind=60 five-name=Small_General four-kind=45/40 full-house=35/30 low-straight=0 super-five wild-straight
+Yacht,1,0,0,106,20,1,big-straight=20 chance=0 five-kind=30 five-name=Hindenberg four-kind=0 low-straight=15
+Yacht,1,0,0,227,26,1,big-straight=40 extra-five=100 five-name=Yahtzee full-house=25 n-bonus=63/35 three-kind=total
+Yacht,1,0,0,227,22,1,big-straight=total+30 five-kind=total+40 five-name=Yam four-kind=0 full-house=total+20 low-chance=total low-straight=0 n-bonus=60/30
+Yacht,0,1,0,97,24,0,
+Yacht,0,1,0,135,24,0,
+Yacht,1,0,0,128,24,0,
+Yacht,1,0,0,88,24,0,
+Yacht,1,0,0,194,24,0,
+Yacht,1,0,0,162,24,0,
+Yacht,3,0,0,182,48,0,
+Yacht,0,3,0,127,48,0,
+Yacht,3,0,0,295,44,1,big-straight=total+30 five-kind=total+40 five-name=Yam four-kind=0 full-house=total+20 low-chance=total low-straight=0 n-bonus=60/30
+Cribbage,0,1,0,89,109,2,
+Cribbage,1,0,0,130,143,0,
+Cribbage,0,1,0,101,114,0,
+Cribbage,0,1,0,105,122,0,
+Cribbage,0,1,0,105,143,0,
+Cribbage,0,1,0,80,119,0,
+Cribbage,1,0,0,125,107,0,
+Cribbage,1,2,0,114,364,1,n-bots=3
+Cribbage,1,0,0,61,69,1,last=3 target-score=61
+Cribbage,1,0,0,21,14,1,target-score=18
+Cribbage,0,1,0,60,42,1,cards=5 discards=1 last=3 one-go skunk=31 target-score=61
+Cribbage,1,0,0,186,153,1,cards=7 skunk=151 target-score=181
+Cribbage,4,2,0,33,119,259,match=3 skunk=15 target-score=31
+Cribbage,3,0,0,37,27,257,auto-go auto-score match=3 no-cut no-pick skunk=15 target-score=31
+Cribbage,3,0,0,31,25,257,auto-go auto-score match=3 no-cut no-pick skunk=15 target-score=31
+Cribbage,4,0,0,34,74,257,auto-go auto-score match=3 no-cut no-pick skunk=15 target-score=31
+Cribbage,2,4,0,23,114,257,auto-go auto-score match=3 no-cut no-pick skunk=15 target-score=31
+Backgammon,1,0,0,0,49,0,
+Backgammon,1,0,0,0,63,0,
+Cribbage,0,1,0,120,126,8,
+Pig,2,1,0,52,20,1,medium satan x
+Cribbage,0,1,0,78,111,3,auto-go auto-score no-cut no-pick
+Cribbage,2,0,1,122,178,1,cards=5 discards=1 n-bots=3 partners
+Cribbage,0,1,0,97,152,1,cards=5 discards=1 n-bots=3 partners
+Cribbage,1,0,0,61,31,1,cards=5 discards=1 last=3 n-bots=2 one-go skunk=31 solo target-score=61
+Cribbage,0,2,0,52,45,1,cards=5 discards=1 n-bots=2 one-go skunk=31 solo target-score=61
+Cribbage,1,1,0,57,51,1,cards=5 discards=1 n-bots=2 one-go skunk=31 solo target-score=61
+Pig,0,3,0,23,33,1,medium satan x
+Hunt the Wumpus,0,1,0,1,1,16,
+Solitaire Dice,0,1,0,-690,40,16,
+Hunt the Wumpus,1,0,0,9,9,16,
+Pig,0,3,0,50,45,9,medium satan x
+Pig,0,3,0,45,49,1,medium satan x
+Pig,2,1,0,70,20,1,medium satan x
+Pig,2,1,0,72,36,1,medium satan x
+Pig,1,2,0,54,27,1,medium satan x
+Pig,0,3,0,49,67,1,medium satan x
+Pig,3,0,0,102,41,3,medium satan x
+Pig,2,1,0,75,33,3,medium satan x
+Craps,0,0,1,0,1,0,
+Craps,1,0,0,46,21,6,
+Craps,1,0,0,16,37,2,
+Craps,1,0,0,7,8,0,
+Craps,1,0,0,27,126,2,
+Craps,1,0,0,67,151,2,
+Craps,1,0,0,81,305,2,
+Craps,0,1,0,-100,397,2,
+Craps,1,0,0,34,32,2,
+Craps,1,0,0,62,101,3,cars-pay-3 lazy-hard odds-max=5
+Craps,1,0,0,107,198,2,
+Hangman,0,0,1,6,16,0,
+Hangman,0,1,0,6,19,0,
+Hangman,0,1,0,5,21,0,
+Hangman,0,1,0,4,17,0,
+Hangman,1,0,0,5,15,1,status
+Hangman,0,1,0,6,16,1,status
+Hangman,1,0,0,4,18,1,status
+Hangman,0,0,1,6,15,1,status
+Hangman,1,0,0,4,18,1,status
+Hangman,0,0,1,6,18,1,status
+Hangman,1,0,0,3,20,1,status
+Hangman,1,0,0,2,17,1,status
+Hangman,0,1,0,2,15,1,status
+Hangman,0,1,0,6,20,1,status
+Hangman,0,1,0,6,15,1,status
+Hangman,0,0,1,1,13,1,status
+Hangman,0,1,0,6,15,1,status
+Hangman,1,0,0,2,17,1,status
+Backgammon,0,1,0,0,53,0,
+Backgammon,3,0,0,0,53,0,
+Backgammon,1,0,0,0,62,0,
+Backgammon,3,0,0,0,61,0,
+Roulette,1,0,0,101,2,20,
+Connect Four,1,0,0,0,16,24,
+Roulette,1,0,0,105,8,20,
+Connect Four,1,0,0,0,14,24,
+Backgammon,1,0,0,0,48,8,
+Canfield,1,0,0,803,3,18,
+Canfield,1,0,0,803,1,18,
+Canfield,1,0,0,803,1,18,
+Canfield,1,0,0,803,1,18,
+Battleships,1,0,0,3,38,8,
+Hunt the Wumpus,0,1,0,2,2,16,
+Hunt the Wumpus,1,0,0,7,7,16,
+Hunt the Wumpus,1,0,0,15,15,16,
+Hunt the Wumpus,1,0,0,2,2,16,
+Connect Four,1,0,0,0,11,8,
+Crazy Eights,3,1,0,246,165,16,
+Crazy Eights,4,0,0,250,39,18,
+Craps,1,0,0,25,24,8,
+Strategy,1,0,0,805,63,16,
+Crazy Eights,4,0,0,314,103,8,
+Crazy Eights,4,0,0,120,26,18,
+Crazy Eights,4,0,0,99,27,18,
+Crazy Eights,4,0,0,259,78,16,
+Cribbage,1,0,0,125,124,8,
+FreeCell,1,0,0,805,57,0,
