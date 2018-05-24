@@ -3,6 +3,9 @@ solitaire_dice_game.py
 
 A game of solitaire dice.
 
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Constants:
 CREDITS: The credits for the game and the programming. (str)
 RULES: The rules of Solitaire Dice. (str)

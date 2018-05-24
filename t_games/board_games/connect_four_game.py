@@ -3,8 +3,8 @@ connect4_game.py
 
 Connect four and related games.
 
-Once commmented this module will be on hold until alpha beta pruning is fixed. 
-Work on correcting that is being (will be) done in the tictactoe_game module.
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The design and programming credits for Connect Four. (str)

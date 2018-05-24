@@ -3,6 +3,9 @@ yacht_game.py
 
 Games similar to Yacht.
 
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Constants:
 CREDITS: The credits for Yacht. (str)
 RULES: The rules and options for Yacht. (str)

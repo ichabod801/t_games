@@ -15,6 +15,9 @@ If you write a new kind of bot, it will not be usable unless you:
 !! New roll-n bot: rolls n times and stops, ignoring ones.
     So if the third roll is 1, the next turn he'll roll twice and stop.
 
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Constants:
 CREDITS: The credits for the game, progamming, and bots. (str)
 RULES: The rules of Pig. (str)

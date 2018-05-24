@@ -8,6 +8,9 @@ A game of Battleships.
     (already done by Solvenians, see Wikipedia, but they use singletons)
 !! Scores should be squares left.
 
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Constants:
 CREDITS: The design and programming credits. (str)
 INVENTORIES: Different inventories of ships to place. (dict of str: tuple of int)

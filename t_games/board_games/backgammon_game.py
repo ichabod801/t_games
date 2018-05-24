@@ -11,9 +11,8 @@ Terminology:
 !! Ichabod's Rule: Instead of capturing, hitting a blot bears the moving
     piece off the board. Makes it a pure race game.
 
-I need to read up on backgammon strategy. See if I can find a better set of
-board features to redo additive bot with. Get a good additive bot, then move
-on to expectamax or a neural net.
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
 
 Constants:
 BAR: The index of the bar. (int)
