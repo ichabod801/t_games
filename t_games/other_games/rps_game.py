@@ -5,6 +5,9 @@ Rock-paper-scissors.
 
 !! Implement the Iocaine Powder bot.
 
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Constants:
 CREDITS: Credits for Rock-Paper-Scissors. (str)
 RULES: Rulse for Rock-Paper-Scissors. (str)

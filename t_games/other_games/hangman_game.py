@@ -3,6 +3,9 @@ hangman_game.py
 
 A game of hangman.
 
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Constants:
 BODY_PARTS: The symbols for the parts of the hanging body, in order. (str)
 CREDITS: The credits for Hangman. (str)

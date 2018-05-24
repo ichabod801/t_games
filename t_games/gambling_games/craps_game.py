@@ -3,6 +3,9 @@ craps_game.py
 
 A game of Craps.
 
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Constants:
 BUY_ODDS: The odds for buy bets. (dict of int: tuple of int)
 CREDITS: The credits for Craps. (str)

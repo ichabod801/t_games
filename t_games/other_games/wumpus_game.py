@@ -7,6 +7,9 @@ This is at least the third time I have used the Cave and Dodecahedron objects
 to create a Hunt the Wumpus game. However, I want to redo those as subclasses
 of Board and MultiCell.
 
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Constants:
 ADJACENT: Adjacent points on a dodecahedron. (list of tuple of int)
 CREDITS: The game design and programming credits. (str)

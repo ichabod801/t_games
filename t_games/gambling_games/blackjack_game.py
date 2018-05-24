@@ -9,6 +9,9 @@ Blackjack.
     So: dictionary of side bets made, names match methods, check after
     deal. Some you check later, like Bust It! Maybe check at showdown too.
 
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Constants:
 CREDITS: Credits for Blackjack. (str)
 HINT_KEYS: The meanings of the entries in the hint tables. (dict of str:str)
