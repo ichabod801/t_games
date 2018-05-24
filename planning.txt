@@ -65,7 +65,7 @@ card/solitaire/closed/sorters: golf, quadrille
 card/solitaire/closed/builders: canfield!, forty thieves!, klondike*
 card/solitaire/closed/other: monte carlo, accordion
 card/trick: hearts, spades
-card/matching: cribbage*, snip snap snorem
+card/matching: cribbage!, snip snap snorem
 card/shedding: crazy eights!, spit
 card/rummy: rummy, tonk
 card/accumulating: war, ninety-nine*
@@ -112,7 +112,7 @@ craps                 -> crazy eights         [next roll is an eight]
 crazy eights          -> strategy             [can match one lower or higher in rank]
 cribbage              -> backgammon           [pairs score four points for one round]
 cribbage              -> craps                [discard a card and get a new one]
-cribbage              -> crazy eights         (skip the next player's turn during layout)
+cribbage              -> crazy eights         [skip the next player's turn play phase]
 freecell              -> hamurabi             [put a free cell card on any tableau pile]
 forty thieves         -> freecell             [move any one card from the waste]
 forty thieves         -> pig                  [free any one ace by moving the cards above it to the waste]
