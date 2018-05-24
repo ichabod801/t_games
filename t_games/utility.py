@@ -1,6 +1,9 @@
 """
 Utility functions for tgames.
 
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Constants:
 LOC: tgames location. (str)
 MAX_INT: The largest allowed integer. (int)

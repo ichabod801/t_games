@@ -3,6 +3,9 @@ cards.py
 
 Cards and decks of cards for tgames.
 
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Classes:
 Card: A standard playing card, with a suit and a rank. (object)
 Deck: A standard deck of cards. (object)

@@ -3,6 +3,9 @@ full_credits.py
 
 Generate the full credits for tgames.
 
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Constants:
 CREDITS_DATA: The sections and people who worked on those sections. (list)
 FULL_CREDITS: The formatted text of CREDITS_DATA. (str)

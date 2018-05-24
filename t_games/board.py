@@ -3,7 +3,8 @@ board.py
 
 Boards for text games.
 
-!! contents instead of piece/pieces
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
 
 Classes:
 BoardCell: A square (or other shape) in a board that holds one piece. (object)

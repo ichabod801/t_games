@@ -3,6 +3,9 @@ test.py
 
 Testing t_games.
 
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Classes:
 Test: An object for saving state when testing. (object)
 

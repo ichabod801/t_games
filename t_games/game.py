@@ -3,6 +3,9 @@ game.py
 
 The base game object for t_games.
 
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Classes:
 Game: A game with a text interface. (OtherCmd)
 Flip: A test game of flipping coins. (Game)
