@@ -134,6 +134,30 @@ class Hamurabi(game.Game):
             self.storage -= bales
         return True
 
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        game, losses = self.gipf_check(arguments, ('cribbage', 'yacht'))
+        go = True
+        # Cribbage
+        if game == 'cribbage':
+            if not losses:
+                self.human.tell('You have encouraged a clutter of cats to reside in your granaries.')
+                self.cats = True
+        # Yacht
+        elif game == 'yacht':
+            if not losses:
+                self.human.tell('Your offering to the fertility gods has been accepted.')
+                self.grain_mod = 1
+        # Anything else.
+        else:
+            self.human.tell('The priests of Gipf reject your offering.')
+        return go
+
     def do_next(self, arguments):
         """
         Move on to the next turn. (bool)
@@ -152,9 +176,15 @@ class Hamurabi(game.Game):
                 return False    
         # Determine values for next turn.
         # Update grain values.
-        self.bushels_per_acre = random.randint(1, 5)
+        self.bushels_per_acre = random.randint(1, 5) + self.grain_mod
+        self.grain_mod = 0
         if random.random() <= self.rat_chance / 100.0:
-            self.rats = int(self.storage / 2 / random.randint(1, 2))
+            if self.cats:
+                self.human.tell('A vicious rat vs. cat battle broke out in your granaries.')
+                self.human.tell('There are bodies everywhere.')
+                self.rats = 0
+            else:
+                self.rats = int(self.storage / 2 / random.randint(1, 2))
         else:
             self.rats = 0
         self.storage += self.seed * self.bushels_per_acre - self.rats
@@ -311,6 +341,8 @@ class Hamurabi(game.Game):
         self.storage = min(self.start_acres, self.population * 10) * self.bushels_per_acre - self.rats
         self.seed = 0
         self.feed = 0
+        self.cats = False
+        self.grain_mod = 0
         # Display the introduction.
         intro = '\nTry your hand at ruling ancient Sumeria for a {}-year term of office.'
         self.human.tell(intro.format(self.game_length))

@@ -297,7 +297,6 @@ class Game(OtherCmd):
                 self.gipfed.append(game_name)
                 game = games[game_name](self.human, 'none', self.interface)
                 results = game.play()
-                print(results)
                 results[5] |= 16
                 self.human.store_results(game.name, results)
                 self.human.game = self
