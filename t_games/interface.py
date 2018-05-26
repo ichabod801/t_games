@@ -11,6 +11,8 @@ See the top level __init__.py file for details on the t_games license.
 Contants:
 CREDITS: Programming credits and play testers. (str)
 HELP_TEXT: General help for the interface. (str)
+LICENSE: Info on the GPLv3 license that t_games uses. (str)
+RULES: Some basic guidelines for life. (str)
 
 Classes:
 Interface: A menu interface for playing games. (OtherCmd)
@@ -84,6 +86,25 @@ You can get this help text by typing help or ?
 """
 
 
+# Info on the GPLv3 license that t_games uses.
+LICENSE = """
+Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+
+This program is free software: you can redistribute it and/or modify it under 
+the terms of the GNU General Public License as published by the Free Software 
+Foundation, either version 3 of the License, or (at your option) any later 
+version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT 
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
+FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more 
+details.
+
+See <http://www.gnu.org/licenses/> for details on this license (GPLv3).
+"""
+
+
+# Some basic guidelines for life.
 RULES = """
 1. Abstain from causing harm.
 2. Abstain from deception.
@@ -214,7 +235,10 @@ class Interface(other_cmd.OtherCmd):
         Parameters:
         arguments: This parameter is ignored. (str)
         """
-        self.human.tell(HELP_TEXT)
+        if 'license' in arguments.lower():
+            self.human.tell(LICENSE)
+        else:
+            self.human.tell(HELP_TEXT)
         self.human.ask('Press Enter to continue: ')
         return True
 
@@ -335,6 +359,8 @@ class Interface(other_cmd.OtherCmd):
         num_options = sum(game.num_options for game in unique_games)
         count_text = 'Currently hosting {} different games with {} settable options.\n'
         self.human.tell(count_text.format(len(unique_games), num_options))
+        self.human.tell("Copyright (C) 2018 by Craig O'Brien and the tgame contributors.")
+        self.human.tell('For more details type help license.')
         # Loop through player choices.
         while True:
             # Show the menu and get the possible choices.
@@ -412,6 +438,7 @@ class Interface(other_cmd.OtherCmd):
         if pairs[-2][1] == 'Previous Menu':
             pairs[-2][0] = '<'
         # Display the menu.
+        self.human.tell()
         self.human.tell(' > '.join(self.titles[-3:]))
         self.human.tell()
         for letter, choice in pairs:
