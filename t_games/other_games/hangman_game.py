@@ -121,6 +121,28 @@ class Hangman(game.Game):
             text += '\nGuessed: {}\n'.format(self.guessed_letters)
         return text
 
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        game, losses = self.gipf_check(arguments, ('craps',))
+        go = True
+        # Craps
+        if game == 'craps':
+            if not losses:
+                un_guessed = [letter for letter in set(self.word) if letter not in self.guessed_letters]
+                bonus = random.choice(un_guessed)
+                self.human.tell('Your bonus letter is {!r}.'.format(bonus))
+                for letter_index, letter in enumerate(self.word):
+                    if letter == bonus:
+                        self.guess = self.guess[:letter_index] + letter + self.guess[letter_index + 1:]
+        # Anything else
+        else:
+            self.human.tell('Tamsk.')
+
     def do_guess(self, argument):
         """
         Handle guessing what the word is. (bool)
