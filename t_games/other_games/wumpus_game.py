@@ -315,7 +315,7 @@ class Wumpus(game.Game):
         arguments: The name of the game to gipf to. (str)
         """
         # Check the argument.
-        game, losses = self.gipf_check(argument, ('battleships', 'pig'))
+        game, losses = self.gipf_check(argument, ('battleships', 'hangman', 'pig'))
         # Successful Battleships moves the wumpus.
         if game == 'battleships':
             if losses:
@@ -325,6 +325,23 @@ class Wumpus(game.Game):
                 self.dodec.move_wumpus()
                 self.status_check()
                 return False
+        # Successful Hangman finds the nearest pit.
+        elif game == 'hangman':
+            if not losses:
+                caves = [('', self.dodec.previous, self.dodec.current)]
+                while True:
+                    path, previous, current = caves.pop(0)
+                    for direction in ('L', 'R'):
+                        new_cave = self.dodec.next_cave(previous, current, direction)
+                        new_path = path + direction
+                        if new_cave.pit:
+                            break
+                        else:
+                            caves.append((new_path, current, new_cave))
+                    if new_cave.pit:
+                        break
+                self.human.tell('The path to the nearest pit is {}.'.format(new_path))
+                return True
         # Successful Pig summons a giant bat.
         elif game == 'pig':
             if losses:
