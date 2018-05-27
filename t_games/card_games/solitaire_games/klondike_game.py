@@ -226,9 +226,11 @@ class Klondike(solitaire.Solitaire):
         """
         game, losses = self.gipf_check(arguments, ('battleships', 'hangman', 'solitaire dice'))
         go = True
+        card = None
         # Battleships
         if game == 'battleships':
             if not losses:
+                # Remind the human.
                 self.human.tell(self)
                 # Get a pile with down cards.
                 while True:
@@ -246,18 +248,45 @@ class Klondike(solitaire.Solitaire):
                 # Get a down card from that pile.
                 query = 'Which down card do you want to see (1 = bottom, {} = top)? '.format(len(down))
                 card_index = self.human.ask_int(query, low = 1, high = len(down), cmd = False) - 1
-                base_card = down[card_index]
-                card = cards.TrackingCard(base_card.rank, base_card.suit, None)
-                card.up = True
-                card.game_location = [card]
+                card = down[card_index]
                 # Reveal the card.
                 self.human.tell('The card you chose is the {}.'.format(card.name))
-                # Find moves.
-                if card.rank == 'K' and [pile for pile in self.tableau if not pile]:
-                    lane = True
-                else:
-                    lane = False
-                builds = []
+        # Hangman
+        elif game == 'hangman':
+            if not losses:
+                # Remind the human.
+                self.human.tell(self)
+                # Get the suit.
+                while True:
+                    suit = self.human.ask('\nSelect the suit of a jack to move to the top of the waste: ')
+                    if suit.upper() not in self.deck.suits:
+                        self.human.tell('That suit is not in the deck.')
+                    else:
+                        break
+                card = self.deck.find('J' + suit)
+        elif game == 'solitaire dice':
+            if not losses:
+                # Remind the human.
+                self.human.tell(self)
+                # Get the card.
+                while True:
+                    card_text = self.human.ask('\nSelect a card in the waste to move to the top of the waste: ')
+                    if card_text not in self.waste:
+                        self.human.tell('That card is not in the waste.')
+                    else:
+                        break
+                card = self.deck.find(card_text)
+        # No matching game.
+        else:
+            self.human.tell('My hovercraft is full of eels.')
+        if card is not None:
+            # Move the card to the end of the waste.
+            card.game_location.remove(card)
+            self.waste.append(card)
+            card.up = True
+            card.game_location = self.waste
+            go = False
+        return go
 
     def do_switch(self, arguments):
         """
