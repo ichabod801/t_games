@@ -217,6 +217,48 @@ class Klondike(solitaire.Solitaire):
     num_options = 3
     rules = RULES
 
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        game, losses = self.gipf_check(arguments, ('battleships', 'hangman', 'solitaire dice'))
+        go = True
+        # Battleships
+        if game == 'battleships':
+            if not losses:
+                self.human.tell(self)
+                # Get a pile with down cards.
+                while True:
+                    top_card = self.human.ask('\nPick the top card of a tableau pile that has down cards: ')
+                    pile = [pile for pile in self.tableau if pile[-1] == top_card]
+                    if not pile:
+                        self.human.tell('That is not the top card of a tableau pile.')
+                    else:
+                        pile = pile[0]
+                        down = [card for card in pile if not card.up]
+                        if not down:
+                            self.human.tell('That pile has no down cards in it.')
+                        else:
+                            break
+                # Get a down card from that pile.
+                query = 'Which down card do you want to see (1 = bottom, {} = top)? '.format(len(down))
+                card_index = self.human.ask_int(query, low = 1, high = len(down), cmd = False) - 1
+                base_card = down[card_index]
+                card = cards.TrackingCard(base_card.rank, base_card.suit, None)
+                card.up = True
+                card.game_location = [card]
+                # Reveal the card.
+                self.human.tell('The card you chose is the {}.'.format(card.name))
+                # Find moves.
+                if card.rank == 'K' and [pile for pile in self.tableau if not pile]:
+                    lane = True
+                else:
+                    lane = False
+                builds = []
+
     def do_switch(self, arguments):
         """
         Switch from three cards at a time to one card at a time. (bool)
