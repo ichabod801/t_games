@@ -134,10 +134,17 @@ class NinetyNine(game.Game):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
-        game, losses = self.gipf_check(arguments, ('blackjack',)) # golf ii when it's done.
+        game, losses = self.gipf_check(arguments, ('blackjack', 'crazy eights', 'yacht'))
+        # Blackjack.
         if game == 'blackjack':
             if not losses:
+                self.human.tell('You can pass without losing a token.')
                 self.free_pass = True
+        if game == 'crazy eights':
+            if not losses:
+                self.human.tell('Eights and nines are reversed for this play.')
+                self.eight_nine = True
+        # Games with no edges.
         else:
             self.human.tell('Girls in pillow fights? Come on, this is a family game.')
         return True
@@ -258,8 +265,14 @@ class NinetyNine(game.Game):
             new_total = int(new_total)
             # Check for a valid card.
             if card in hand.cards:
+                # Get the rank of the card.
+                if self.eight_nine and card[0] in '89':
+                    rank = {'8': '9', '9': '8'}[card[0]]
+                    self.eight_nine = False
+                else:
+                    rank = card[0]
                 # Check for a valid total
-                values = self.card_values[card[0]]
+                values = self.card_values[rank]
                 valid_add = (new_total < 100) and (new_total - self.total in values)
                 if valid_add or (new_total == 99 and 99 in values): 
                     # Play the card.
