@@ -135,19 +135,24 @@ class NinetyNine(game.Game):
         arguments: The name of the game to gipf to. (str)
         """
         game, losses = self.gipf_check(arguments, ('blackjack', 'crazy eights', 'yacht'))
+        go = True
         # Blackjack.
         if game == 'blackjack':
             if not losses:
                 self.human.tell('You can pass without losing a token.')
                 self.free_pass = True
-        if game == 'crazy eights':
+        # Crazy eights.
+        elif game == 'crazy eights':
             if not losses:
                 self.human.tell('Eights and nines are reversed for this play.')
                 self.eight_nine = True
+        elif game == 'yacht':
+            if not losses:
+                go = self.yacht_edge()
         # Games with no edges.
         else:
             self.human.tell('Girls in pillow fights? Come on, this is a family game.')
-        return True
+        return go
 
     def do_pass(self, arguments):
         """
@@ -349,6 +354,68 @@ class NinetyNine(game.Game):
         self.deal()
         # Set the tracking variables
         self.total = 0
+
+    def yacht_edge(self):
+        """Handle a Yacht edge. (bool)"""
+        go = False
+        # Check that there is a pair
+        hand = self.hands[self.human.name]
+        cards = sorted(hand.cards[:], key = lamdba card: card.ranks.index(card.rank))
+        pairs = False
+        for card_a, card_b in zip(cards, cards[1:]):
+            if card_a.rank == card_b.rank:
+                pairs = True
+                break
+        if pairs:
+            # Remind the human
+            self.human.tell('\nThe total to you is {}.'.format(self.total))
+            self.human.tell('Your hand is: {}'.format(hand))
+            # Get the pair
+            while True:
+                pair = self.human.ask('\nWhat pair of cards would you like to play? ')
+                cards = self.deck.card_re.findall(pair)
+                if len(cards) == 2:
+                    # Get the new total.
+                    total_text = self.human.ask('What is the new total? ')
+                    try:
+                        new_total = int(total_text)
+                    except ValueError:
+                        self.human.tell('Please enter an integer.')
+                        continue
+                    # Check the new total.
+                    rank = cards[0][0].upper()
+                    values = self.card_values[rank]
+                    total_values = []
+                    for value_a, value_b in zip(values, values):
+                        total_values.append(value_a + value_b)
+                    if new_total > 100 or new_total - self.totals not in total_values:
+                        self.human.tell('That is an invalid total.')
+                        continue
+                    # Play the cards.
+                    hand.discard(cards[0])
+                    hand.discard(cards[1])
+                    self.total = new_total
+                    # If they play the reverse rank, it's double reversed, so no effect.
+                    # Handle skipping a player's turn.
+                    if card[0].upper() == self.skip_rank:
+                        self.player_index = (self.player_index + 1) % len(self.players)
+                        name = self.players[self.player_index].name
+                        self.human.tell("{}'s turn is skipped.".format(name))
+                        self.player_index = (self.player_index + 1) % len(self.players)
+                        name = self.players[self.player_index].name
+                        self.human.tell("{}'s turn is skipped.".format(name))
+                    # Draw cards.
+                    hand.draw()
+                    hand.draw()
+                    break
+                else:
+                    self.human.tell('A pair is two cards.')
+            go = False
+        else:
+            # Warn the human.
+            self.human.tell("\nI'm sorry, but you do not appear to have a pair in your hand.")
+            go = True
+    return go
 
 
 class Bot99(player.Bot):
