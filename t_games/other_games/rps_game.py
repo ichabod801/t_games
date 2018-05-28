@@ -268,6 +268,7 @@ class RPS(game.Game):
         # Any other game.
         else:
             self.human.tell('No thank you.')
+        return go
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
