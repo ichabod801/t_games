@@ -146,6 +146,7 @@ class NinetyNine(game.Game):
             if not losses:
                 self.human.tell('Eights and nines are reversed for this play.')
                 self.eight_nine = True
+        # Yacht.
         elif game == 'yacht':
             if not losses:
                 self.scores[self.human.name] += 1
