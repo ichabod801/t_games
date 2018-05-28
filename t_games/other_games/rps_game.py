@@ -251,15 +251,32 @@ class RPS(game.Game):
     rules = RULES
     wins = {'rock': ['scissors'], 'scissors': ['paper'], 'paper': ['rock']}
 
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        game, losses = self.gipf_check(arguments, ('forty thieves',))
+        go = True
+        # Forty thieves.
+        if game == 'forty thieves':
+            if not losses:
+                self.loss_draw = True
+                self.human.tell("Your next loss will be a draw.")
+        # Any other game.
+        else:
+            self.human.tell('No thank you.')
+
     def game_over(self):
         """Check for the end of the game. (bool)"""
-        # !! reports loss unless you sweep, since you have one loss.
         # Only check if both players have moved.
         if not self.turns % 2:
             move = self.moves[self.human.name]
             bot_move = self.moves[self.bot.name]
             # Check for bot win.
-            if move in self.wins[bot_move]:
+            if move in self.wins[bot_move] and not self.loss_draw:
                 self.human.tell('{} beats {}, you lose.'.format(bot_move, move))
                 self.win_loss_draw[1] += 1
             # Check for human win.
@@ -268,7 +285,11 @@ class RPS(game.Game):
                 self.win_loss_draw[0] += 1
             # Otherwise assume tie.
             else:
-                self.human.tell('You both played {}, play again.'.format(move))
+                if move == bot_move:
+                    self.human.tell('You both played {}, play again.'.format(move))
+                else:
+                    self.human.tell('You should have lost to {}, but you drew.'.format(bot_move))
+                    self.loss_draw = False
                 self.win_loss_draw[2] += 1
             # Update the players.
             self.human.tell('The score is now {}-{}-{}.'.format(*self.win_loss_draw))
@@ -311,6 +332,7 @@ class RPS(game.Game):
     def set_up(self):
         """Set up the game. (None)"""
         self.moves = {player.name: '' for player in self.players}
+        self.loss_draw = False
 
 
 if __name__ == '__main__':
