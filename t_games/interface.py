@@ -235,6 +235,7 @@ class Interface(other_cmd.OtherCmd):
         Parameters:
         arguments: This parameter is ignored. (str)
         """
+        # Show help based on arguments.
         if 'license' in arguments.lower():
             self.human.tell(LICENSE)
         else:
