@@ -50,6 +50,43 @@ class Strategy(solitaire.Solitaire):
     num_options = 1
     rules = RULES
 
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        game, losses = self.gipf_check(arguments, ('roulette',))
+        go = True
+        # Roulette
+        if game == 'roulette':
+            if not losses:
+                # Remind the human.
+                self.human.tell(self)
+                while True:
+                    # Get two cards from the human.
+                    card_text = self.human.ask('\nWhich two adjacent cards would you like to spin? ')
+                    cards = self.deck.card_re.findall(card_text)
+                    cards = [self.deck.find(card) for card in cards]
+                    # Check that they are next to each other.
+                    if len(cards) != 2:
+                        self.human.tell('Please pick two cards.')
+                    elif cards[0].game_location != cards[1].game_location:
+                        self.human.tell('The two cards must be in the same tableau pile.')
+                    else:
+                        pile = cards[0].game_location
+                        indexes = [pile.index(card) for card in cards]
+                        if abs(indexes[0] - indexes[1]) == 1:
+                            # Swap (spin) the two cards.
+                            pile[indexes[0]], pile[indexes[1]] = pile[indexes[1]], pile[indexes[0]]
+                            break
+                        else:
+                            self.human.tell('Those cards are not next to each other.')
+        # Any other game.
+        else:
+            self.human.tell('That does not compute.')
+
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
         # Cards only move from the reserve (at first).
