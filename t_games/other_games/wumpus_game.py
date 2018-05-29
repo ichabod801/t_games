@@ -316,19 +316,22 @@ class Wumpus(game.Game):
         """
         # Check the argument.
         game, losses = self.gipf_check(argument, ('battleships', 'hangman', 'pig'))
+        go = True
         # Successful Battleships moves the wumpus.
         if game == 'battleships':
-            if losses:
-                return True
-            else:
-                self.human.tell('You hear a grumbling roar and a strange suck-pop sound.\n')
+            if not losses:
+                self.human.tell('\nYou hear a grumbling roar and a strange suck-pop sound.\n')
                 self.dodec.move_wumpus()
                 self.status_check()
                 return False
         # Successful Hangman finds the nearest pit.
         elif game == 'hangman':
             if not losses:
+                # Breadth first search to find the nearest pit.
                 caves = [('', self.dodec.previous, self.dodec.current)]
+                # Allow going backwards, but only as the first move
+                back_cave = self.dodec.next_cave(self.dodec.previous, self.dodec.current, 'B')
+                caves.append(('B', self.dodec.current, back_cave))
                 while True:
                     path, previous, current = caves.pop(0)
                     for direction in ('L', 'R'):
@@ -338,23 +341,24 @@ class Wumpus(game.Game):
                             break
                         else:
                             caves.append((new_path, current, new_cave))
+                    # Double break from while loop.
                     if new_cave.pit:
                         break
-                self.human.tell('The path to the nearest pit is {}.'.format(new_path))
-                return True
+                # Display the result.
+                self.human.tell('\nThe path to the nearest pit is {}.'.format(new_path))
         # Successful Pig summons a giant bat.
         elif game == 'pig':
-            if losses:
-                return True
-            else:
-                self.human.tell("You are grabbed by a giant, screeching bat and flown through")
+            if not losses:
+                self.human.tell("\nYou are grabbed by a giant, screeching bat and flown through")
                 self.human.tell("the caves at random.")
                 self.dodec.bats()
                 self.status_check()
                 return False
         # Handle invalid games.
         elif game == 'invalid-game':
-            self.human.tell("You're hunting a wumpus, not a gipf.")
+            self.human.tell("\nYou're hunting a wumpus, not a gipf.")
+        self.status_check()
+        return go
 
     def game_over(self):
         """Check for the game being over. (None)"""

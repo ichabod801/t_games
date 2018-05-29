@@ -130,7 +130,7 @@ class Hangman(game.Game):
         """
         game, losses = self.gipf_check(arguments, ('craps',))
         go = True
-        # Craps
+        # A win at Craps gives you a random letter.
         if game == 'craps':
             if not losses:
                 un_guessed = [letter for letter in set(self.word) if letter not in self.guessed_letters]
@@ -139,7 +139,7 @@ class Hangman(game.Game):
                 for letter_index, letter in enumerate(self.word):
                     if letter == bonus:
                         self.guess = self.guess[:letter_index] + letter + self.guess[letter_index + 1:]
-        # Anything else
+        # Respond to any other games.
         else:
             self.human.tell('Tamsk.')
 
