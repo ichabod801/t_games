@@ -143,19 +143,19 @@ class Hamurabi(game.Game):
         """
         game, losses = self.gipf_check(arguments, ('cribbage', 'yacht'))
         go = True
-        # Cribbage
+        # Wins at Cribbage prevent the next set of rats.
         if game == 'cribbage':
             if not losses:
-                self.human.tell('You have encouraged a clutter of cats to reside in your granaries.')
+                self.human.tell('\nYou have encouraged a clutter of cats to reside in your granaries.')
                 self.cats = True
-        # Yacht
+        # Wins at Yacht add one to the grain yield for next turn.
         elif game == 'yacht':
             if not losses:
-                self.human.tell('Your offering to the fertility gods has been accepted.')
+                self.human.tell('\nYour offering to the fertility gods has been accepted.')
                 self.grain_mod = 1
-        # Anything else.
+        # Any other game gets an error.
         else:
-            self.human.tell('The priests of Gipf reject your offering.')
+            self.human.tell('\nThe priests of Gipf reject your offering.')
         return go
 
     def do_next(self, arguments):
@@ -175,15 +175,18 @@ class Hamurabi(game.Game):
             if seed_check.lower() not in utility.YES:
                 return False    
         # Determine values for next turn.
-        # Update grain values.
+        # Update grain values and reset the grain bonus.
         self.bushels_per_acre = random.randint(1, 5) + self.grain_mod
         self.grain_mod = 0
         if random.random() <= self.rat_chance / 100.0:
             if self.cats:
-                self.human.tell('A vicious rat vs. cat battle broke out in your granaries.')
+                # If the user got cats, they kill the rats and die.
+                self.human.tell('\nA vicious rat vs. cat battle broke out in your granaries.')
                 self.human.tell('There are bodies everywhere.')
+                self.cats = False
                 self.rats = 0
             else:
+                # Otherwise the rats each some of the storage (1/2 or 1/4).
                 self.rats = int(self.storage / 2 / random.randint(1, 2))
         else:
             self.rats = 0
