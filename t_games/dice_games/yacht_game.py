@@ -712,6 +712,38 @@ class Yacht(game.Game):
         # Return as one string.
         return '\n'.join(lines)
 
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        game, losses = self.gipf_check(arguments, ('rock-paper-scissors',))
+        go = True
+        # Handle Rock-Paper-Scissors
+        if game == 'rock-paper-scissors':
+            if not losses:
+                # Remind the human.
+                self.human.tell(self)
+                self.human.tell('\nThe roll to you is {}.'.format(self.dice))
+                self.human.tell('You have {} rerolls left.\n'.format(self.max_rolls - self.roll_count))
+                # Get the value to change.
+                query = 'Which value would you like to turn into a three? '
+                value = self.human.ask_int(query, valid = self.dice.values, cmd = False)
+                # Change the value and the underlying die.
+                die_index = self.dice.values.index(value)
+                self.dice.values[die_index] = 3
+                if die_index >= len(self.dice.held):
+                    die_index -= len(self.dice.held)
+                    self.dice.dice[die_index].value = 3
+                else:
+                    self.dice.held[die_index].value = 3
+        # Handle games without edges.
+        else:
+            self.human.tell('No hablo Ingles.')
+        return go
+
     def do_hold(self, arguments):
         """
         Hold back dice for scoring. (bool)
