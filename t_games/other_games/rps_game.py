@@ -264,7 +264,7 @@ class RPS(game.Game):
         if game == 'forty thieves':
             if not losses:
                 self.loss_draw = True
-                self.human.tell("Your next loss will be a draw.")
+                self.human.tell('\nYour next loss will be a draw.')
         # Any other game.
         else:
             self.human.tell('No thank you.')

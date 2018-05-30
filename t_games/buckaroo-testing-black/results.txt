@@ -406,3 +406,6 @@ Crazy Eights,3,1,0,160,209,16,
 Crazy Eights,4,0,0,250,27,18,
 Yacht,0,3,0,26,48,16,
 Ninety-Nine,3,1,0,-1,136,8,
+Forty Thieves,0,1,0,801,1,20,
+Rock-Paper-Scissors,7,4,6,0,34,265,match=11
+Forty Thieves,1,0,0,789,185,18,
