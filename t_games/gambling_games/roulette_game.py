@@ -556,7 +556,7 @@ class Roulette(game.Game):
         """
         # Check/play the gipf game.
         game, losses = self.gipf_check(arguments, ('blackjack', 'connect four', 'klondike'))
-        # Connect Four.
+        # Connect Four lets you select a square and one of those numbers will come up.
         if game == 'connect four':
             if not losses:
                 # Get a a corner bet
@@ -577,14 +577,17 @@ class Roulette(game.Game):
                         break
                     else:
                         self.human.error('That is not a valid corner bet.')
+        # A Blackjack win makes the next number black.
         elif game == 'blackjack':
             if not losses:
                 self.forced_spin = self.black[:]
-                self.human.tell('The next spin will be black.')
+                self.human.tell('\nThe next spin will be black.')
+        # A Klondike win makes the next number a multiple of seven.
         elif game == 'klondike':
             if not losses:
                 self.forced_spin = ['7', '14', '21', '28', '35']
-                self.human.tell('The next spin will be a multiple of 7.')
+                self.human.tell('\nThe next spin will be a multiple of 7.')
+        # Handle any other arguments.
         else:
             self.human.error("That bet is not available on this layout.")
 
