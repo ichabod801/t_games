@@ -235,7 +235,7 @@ class Klondike(solitaire.Solitaire):
                 # Get a pile with down cards.
                 while True:
                     top_card = self.human.ask('\nPick the top card of a tableau pile that has down cards: ')
-                    pile = [pile for pile in self.tableau if pile[-1] == top_card]
+                    pile = [pile for pile in self.tableau if pile and pile[-1] == top_card]
                     if not pile:
                         self.human.tell('That is not the top card of a tableau pile.')
                     else:
@@ -250,7 +250,7 @@ class Klondike(solitaire.Solitaire):
                 card_index = self.human.ask_int(query, low = 1, high = len(down), cmd = False) - 1
                 card = down[card_index]
                 # Reveal the card.
-                self.human.tell('The card you chose is the {}.'.format(card.name))
+                self.human.tell('\nThe card you chose is the {}.'.format(card.name))
         # Hangman
         elif game == 'hangman':
             if not losses:
