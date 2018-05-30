@@ -719,21 +719,23 @@ class Yacht(game.Game):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
+        # Check the game and play it if valid.
         game, losses = self.gipf_check(arguments, ('rock-paper-scissors',))
         go = True
-        # Handle Rock-Paper-Scissors
+        # A Rock-Paper-Scissors win lets you turn one die to 3.
         if game == 'rock-paper-scissors':
             if not losses:
                 # Remind the human.
                 self.human.tell(self)
                 self.human.tell('\nThe roll to you is {}.'.format(self.dice))
-                self.human.tell('You have {} rerolls left.\n'.format(self.max_rolls - self.roll_count))
+                self.human.tell('You have {} rerolls left.'.format(self.max_rolls - self.roll_count))
                 # Get the value to change.
-                query = 'Which value would you like to turn into a three? '
-                value = self.human.ask_int(query, valid = self.dice.values, cmd = False)
+                query = '\nWhich value would you like to turn into a three? '
+                value = self.human.ask_int(query, valid = set(self.dice.values), cmd = False)
                 # Change the value and the underlying die.
                 die_index = self.dice.values.index(value)
                 self.dice.values[die_index] = 3
+                # Check if the die is held or waiting to be rolled.
                 if die_index >= len(self.dice.held):
                     die_index -= len(self.dice.held)
                     self.dice.dice[die_index].value = 3
