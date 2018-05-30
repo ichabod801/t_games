@@ -57,9 +57,10 @@ class Strategy(solitaire.Solitaire):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
+        # Check and possibly play the game.
         game, losses = self.gipf_check(arguments, ('roulette',))
         go = True
-        # Roulette
+        # A Roulette win lets you swap (spin) two adjacent cards.
         if game == 'roulette':
             if not losses:
                 # Remind the human.
@@ -83,9 +84,11 @@ class Strategy(solitaire.Solitaire):
                             break
                         else:
                             self.human.tell('Those cards are not next to each other.')
-        # Any other game.
+                go = False
+        # Handle other games or arguments.
         else:
             self.human.tell('That does not compute.')
+        return go
 
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
