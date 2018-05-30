@@ -139,12 +139,12 @@ class NinetyNine(game.Game):
         # Blackjack.
         if game == 'blackjack':
             if not losses:
-                self.human.tell('You can pass without losing a token.')
+                self.human.tell('\nYou can pass without losing a token.')
                 self.free_pass = True
         # Crazy eights.
         elif game == 'crazy eights':
             if not losses:
-                self.human.tell('Eights and nines are reversed for this play.')
+                self.human.tell('\nEights and nines are reversed for this play.')
                 self.eight_nine = True
         # Yacht.
         elif game == 'yacht':
@@ -275,8 +275,8 @@ class NinetyNine(game.Game):
             if card in hand.cards:
                 # Get the rank of the card.
                 if self.eight_nine and card[0] in '89':
+                    # Handle swapping eights and nines.
                     rank = {'8': '9', '9': '8'}[card[0]]
-                    self.eight_nine = False
                 else:
                     rank = card[0]
                 # Check for a valid total
@@ -286,6 +286,7 @@ class NinetyNine(game.Game):
                     # Play the card.
                     hand.discard(card)
                     self.total = new_total
+                    self.eight_nine = False
                     message = '{} played the {}, the total is {}.'
                     self.human.tell(message.format(player.name, card, self.total))
                     # Handle reversing the order of play.
