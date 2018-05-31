@@ -104,7 +104,8 @@ class NinetyNine(game.Game):
 
     aka = ['99']
     aliases = {'p': 'pass'}
-    categories = ['Card Games', 'Accumulating Games']
+    # Interface categories for the game.
+    categories = ['Card Games']
     credits = CREDITS
     name = 'Ninety-Nine'
     nn_re = re.compile('([1-9atjqkx][cdhs]).*?(-?\d\d?)', re.I)

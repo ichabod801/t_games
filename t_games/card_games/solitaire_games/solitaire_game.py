@@ -91,7 +91,6 @@ class Solitaire(game.Game):
 
     aliases = {'a': 'auto', 'b': 'build', 'f': 'free', 'l': 'lane', 'otto': 'auto', 's': 'sort', 
         'q': 'quit', 't': 'turn', 'u': 'undo'}
-    categories = ['Test Games', 'Solitaire Games']
     name = 'Solitaire Base'
     
     def __str__(self):

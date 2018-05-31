@@ -67,7 +67,8 @@ class FreeCell(solitaire.Solitaire):
     set_up
     """
 
-    categories = ['Card Games', 'Solitaire Games', 'Open Games', 'Builders']
+    # Interface categories for the game.
+    categories = ['Card Games', 'Solitaire Games', 'Open Games']
     credits = CREDITS
     name = 'FreeCell'
     num_options = 8
