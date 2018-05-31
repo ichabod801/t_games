@@ -303,9 +303,9 @@ class Roulette(game.Game):
             targets = []
             if column.lower() in ('1', 'p', 'f'):
                 targets = [str(number) for number in range(1, 37, 3)]
-            elif column.lower in ('2', 'm', 's'):
+            elif column.lower() in ('2', 'm', 's'):
                 targets = [str(number) for number in range(2, 37, 3)]
-            elif column.lower in ('3', 'd', 't'):
+            elif column.lower() in ('3', 'd', 't'):
                 targets = [str(number) for number in range(2, 37, 3)]
             if targets:
                 # Make the bet.
