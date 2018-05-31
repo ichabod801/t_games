@@ -446,3 +446,4 @@ Blackjack,1,0,0,108,7,22,
 Roulette,1,0,0,222,4,13,french limit=20 stake=200 uk-rule
 Blackjack,1,0,0,108,7,22,
 Roulette,0,1,0,96,10,12,
+Roulette,1,0,0,140,3,4,
