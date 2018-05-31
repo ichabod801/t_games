@@ -138,7 +138,7 @@ class Blackjack(game.Game):
     aliases = {'b': 'bet', 'd': 'double', 'h': 'hit', 'q': 'quit', 's': 'stand', 'sp': 'split',
         'su': 'surrender'}
     # Interface categories for the game.
-    categories = ['Gambling Games', 'Card Games']
+    categories = ['Gambling Games']
     # Credits for the game.
     credits = CREDITS
     # The name of the game.

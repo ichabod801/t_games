@@ -202,7 +202,8 @@ class Craps(game.Game):
     """
 
     aliases = {'b': 'bets', 'd': 'done', 'r': 'roll', 'x': 'remove'}
-    categories = ['Gambling Games', 'Dice Games']
+    # Interface categories for the game.
+    categories = ['Gambling Games']
     credits = CREDITS
     name = 'Craps'
     num_options = 8

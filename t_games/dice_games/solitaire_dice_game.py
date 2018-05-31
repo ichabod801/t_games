@@ -86,7 +86,8 @@ class SolitaireDice(game.Game):
     """
 
     aka = ['SoDi']
-    categories = ['Dice Games', 'Other']
+    # Interface categories for the game.
+    categories = ['Dice Games']
     credits = CREDITS
     name = 'Solitaire Dice'
     rules = RULES

@@ -475,7 +475,8 @@ class ConnectFour(game.Game):
     """
 
     bot_classes = {'alpha-beta': C4BotAlphaBeta, 'gamma': C4BotGamma}
-    categories = ['Board Games', 'Space Games']
+    # Interface categories for the game.
+    categories = ['Board Games']
     credits = CREDITS
     name = 'Connect Four'
     num_options = 4

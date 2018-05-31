@@ -289,7 +289,8 @@ class CrazyEights(game.Game):
     """
 
     aka = ['Rockaway', 'Swedish Rummy']
-    categories = ['Card Games', 'Shedding Games']
+    # Interface categories for the game.
+    categories = ['Card Games']
     credits = CREDITS
     name = 'Crazy Eights'
     num_options = 13

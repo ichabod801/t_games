@@ -165,7 +165,8 @@ class Cribbage(game.Game):
     """
 
     aka = ['Crib']
-    categories = ['Card Games', 'Matching Game']
+    # Interface categories for the game.
+    categories = ['Card Games']
     credits = CREDITS
     name = 'Cribbage'
     num_options = 11

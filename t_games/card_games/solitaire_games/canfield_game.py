@@ -78,7 +78,8 @@ class Canfield(solitaire.Solitaire):
     """
 
     aka = ['Demon']
-    categories = categories = ['Card Games', 'Solitaire Games', 'Closed Games', 'Builders']
+    # Interface categories for the game.
+    categories = ['Card Games', 'Solitaire Games', 'Closed Games']
     credits = CREDITS
     name = 'Canfield'
     num_options = 7 # There are basically seven things the options modify.

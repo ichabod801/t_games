@@ -242,7 +242,8 @@ class RPS(game.Game):
 
     aka = ['RPS', 'Rock Paper Scissors', 'Roshambo']
     bot_classes = {'bart': Bart, 'lisa': Lisa, 'memor': Memor, 'randy': Randy}
-    categories = ['Other Games', 'Other Games']
+    # Interface categories for the game.
+    categories = ['Other Games']
     credits = CREDITS
     lizard_spock = {'rock': ['scissors', 'lizard'], 'scissors': ['paper', 'lizard'], 
         'paper': ['rock', 'spock'], 'lizard': ['paper', 'spock'], 'spock': ['scissors', 'rock']}

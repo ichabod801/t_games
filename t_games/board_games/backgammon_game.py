@@ -606,7 +606,8 @@ class Backgammon(game.Game):
     """
 
     aliases = {'b': 'bear', 'd': 'double', 'e': 'enter', 'p': 'pips', 's': 'start'}
-    categories = ['Board Games', 'Race Games']
+    # Interface categories for the game.
+    categories = ['Board Games']
     credits = CREDITS
     layouts = {'hyper': ((24, 1), (23, 1), (22, 1)), 'long': ((24, 15),), 
         'nack': ((6, 4), (8, 3), (13, 4), (23, 2), (24, 2)), 

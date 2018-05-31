@@ -91,7 +91,8 @@ class Game(OtherCmd):
 
     aka = []
     aliases = {'!!': 'quit_quit', '&': 'debug', '=': 'rpn', '?': 'help', '!': 'quit'}
-    categories = ['Test Games', 'Solitaire']
+    # Interface categories for the game.
+    categories = ['Test Games']
     credits = 'No credits have been specified for this game.'
     help = {}
     # A regular expression for catching floats.
@@ -417,7 +418,6 @@ class Flip(Game):
     set_up
     """
 
-    categories = ['Test Games', 'Multi-Player']
     credits = 'Design and programming by Craig "Ichabod" O''Brien'
     name = 'Flip'
     rules = 'Whoever gets two more heads than their opponent wins.'

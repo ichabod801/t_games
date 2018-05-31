@@ -447,7 +447,8 @@ class Pig(game.Game):
     """
 
     name = 'Pig'
-    categories = ['Dice Games', 'Jeopardy Games']
+    # Interface categories for the game.
+    categories = ['Dice Games']
     credits = CREDITS
     bot_classes = {'value': PigBotValue, 'base-pace-race': PigBotBasePaceRace, 
         'scoring-turns': PigBotScoringTurns, 'pace-race': PigBotPaceRace, 'rolls': PigBotRolls}
