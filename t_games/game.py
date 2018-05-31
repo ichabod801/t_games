@@ -287,21 +287,27 @@ class Game(OtherCmd):
         game_name: The names of the games to check. (list of str)
         """
         # !! carry cheating flag up the gipf chain (if you win)
-        self.flags |= 8
+        # Get the possible games and their aliases.
         games = {game_name: self.interface.games[game_name] for game_name in game_names}
-        aliases = {}
         for game_name in game_names:
-            aliases[game_name] = [alias.lower() for alias in games[game_name].aliases] + [game_name]
-        for game_name in game_names:
-            if argument in aliases[game_name] and game_name not in self.gipfed:
-                self.gipfed.append(game_name)
-                game = games[game_name](self.human, 'none', self.interface)
-                results = game.play()
-                results[5] |= 16
-                self.human.store_results(game.name, results)
-                self.human.game = self
-                return game_name, results[1] # !! incorrect for match play
-        return 'invalid-game', 1 
+            games.update({alias.lower(): games[game_name] for alias in games[game_name].aka})
+        # Find the correct game.
+        if argument.lower() in games and game_name not in self.gipfed:
+            # Play the game.
+            game = games[argument.lower()](self.human, 'none', self.interface)
+            results = game.play()
+            # Record the giphing.
+            self.flags |= 8
+            self.gipfed.append(game_name)
+            results[5] |= 16
+            self.human.store_results(game.name, results)
+            # Reset the human's focus.
+            self.human.game = self
+            # Return the result.
+            return game.name.lower(), results[1] # !! incorrect for match play, and solitaire draw is a win.
+        # Return dummy results for incorrect games.
+        else:
+            return 'invalid-game', 1 
 
     def handle_options(self):
         """Handle game options and set the player list. (None)"""

@@ -264,6 +264,7 @@ class Klondike(solitaire.Solitaire):
                     else:
                         break
                 card = self.deck.find('J' + suit)
+        # Solitaire moves any waste card to the top of the waste.
         elif game == 'solitaire dice':
             if not losses:
                 # Remind the human.

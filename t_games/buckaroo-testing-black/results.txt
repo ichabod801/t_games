@@ -427,3 +427,22 @@ Rock-Paper-Scissors,3,0,0,0,3,274,
 Rock-Paper-Scissors,3,0,0,0,6,274,
 Rock-Paper-Scissors,3,0,0,0,6,274,
 Yacht,3,0,0,178,48,8,
+Hangman,0,1,0,6,19,2,
+Solitaire Dice,0,0,1,260,40,16,
+Klondike,1,0,0,737,79,10,
+Klondike,0,1,0,718,59,4,
+Blackjack,0,1,0,92,4,20,
+Roulette,1,0,0,102,7,12,
+Blackjack,1,0,0,108,4,20,
+Roulette,1,0,0,349,6,12,
+Blackjack,0,1,0,92,5,20,
+Roulette,1,0,0,206,10,15,french limit=16 stake=200 uk-rule=n
+Blackjack,1,0,0,108,10,22,
+Blackjack,1,0,0,108,6,22,
+Roulette,1,0,0,219,6,13,limit=20 stake=200
+Blackjack,1,0,0,108,4,20,
+Roulette,1,0,0,225,8,13,french limit=20 stake=200 uk-rule
+Blackjack,1,0,0,108,7,22,
+Roulette,1,0,0,222,4,13,french limit=20 stake=200 uk-rule
+Blackjack,1,0,0,108,7,22,
+Roulette,0,1,0,96,10,12,
