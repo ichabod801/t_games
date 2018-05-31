@@ -662,7 +662,8 @@ class Yacht(game.Game):
     """
 
     aliases = {'h': 'hold', 'r': 'roll', 's': 'score'}
-    categories = ['Dice Games', 'Category Games']
+    # Interface categories for the game.
+    categories = ['Dice Games']
     credits = CREDITS
     letters = '123456ABCDEFGH'
     name = 'Yacht'

@@ -302,7 +302,8 @@ class Wumpus(game.Game):
     """
 
     aka = ['Wumpus']
-    categories = ['Other Games', 'Adventure Games']
+    # Interface categories for the game.
+    categories = ['Other Games']
     credits = CREDITS
     name = 'Hunt the Wumpus'
     rules = RULES

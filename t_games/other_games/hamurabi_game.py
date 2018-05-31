@@ -86,7 +86,8 @@ class Hamurabi(game.Game):
     aka = ['The Sumer Game']
     aliases = {'b': 'buy', 'f': 'feed', 'n': 'next', 'p': 'plant', 's': 'sell'}
     credits = CREDITS
-    categories = ['Other Games', 'Simulation Games']
+    # Interface categories for the game.
+    categories = ['Other Games']
     name = 'Hamurabi'
     rules = RULES
     year_intro = '\nHamurabi, I beg to report to you, in year {}, {} people starved and {} came to the '

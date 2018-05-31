@@ -101,7 +101,8 @@ class Hangman(game.Game):
     """
 
     aliases = {'freq': 'frequency'}
-    categories = ['Other Games', 'Word Games']
+    # Interface categories for the game.
+    categories = ['Other Games']
     credits = CREDITS
     name = 'Hangman'
     num_options = 2
