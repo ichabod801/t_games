@@ -450,3 +450,5 @@ Roulette,1,0,0,140,3,4,
 Roulette,1,0,0,118,32,4,
 Roulette,1,0,0,121,9,5,french
 Roulette,1,0,0,106,2,4,
+Blackjack,0,0,1,100,5,6,
+Blackjack,0,1,0,84,5,6,

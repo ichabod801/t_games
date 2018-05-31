@@ -462,18 +462,20 @@ class Blackjack(game.Game):
             num_bets = [1]
         else:
             num_bets = [1, self.hand_count]
-        bets = self.human.ask_int_list(prompt, low = 1, high = max_bet, default = [max_bet],
-            valid_lens = num_bets)
-        if isinstance(bets, list):
-            # Handle single bets.
-            if len(bets) == 1:
-                bets = bets * self.hand_count
-            self.bets = bets
-            self.scores[self.human.name] -= sum(bets)
-            self.status = 'play'
-            return True
-        else:
-            return self.handle_cmd(bets)
+        while True:
+            bets = self.human.ask_int_list(prompt, low = 1, high = max_bet, default = [max_bet],
+                valid_lens = num_bets)
+            if isinstance(bets, list):
+                # Handle single bets.
+                if len(bets) == 1:
+                    bets = bets * self.hand_count
+                self.bets = bets
+                self.scores[self.human.name] -= sum(bets)
+                self.status = 'play'
+                return True
+            else:
+                if not self.handle_cmd(bets):
+                    return False
 
     def load_hints(self):
         """Parse the hint table from the condensed string. (None)"""
