@@ -734,7 +734,6 @@ class MultiSolitaire(Solitaire):
     """
 
     aliases = {'alt': 'alternate'}
-    categories = ['Test Games', 'Solitaire Games']
     name = 'Solitaire Base'
     
     def do_alternate(self, argument):
