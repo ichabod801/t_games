@@ -57,6 +57,9 @@ card down. If either you or the dealer has blackjack, that is dealt with right
 away. Otherwise you can continue to get hit (get another card) until you are
 ready to stand (stay with the cards you have). If you go over 21 you lose.
 
+If you are betting on multiple hands (send the hands= option), you can enter
+one bet and it will be applied to all of the hands.
+
 You may increase your bet up to double at any point, on the condition that you
 get one and only more card. If you have a pair, you may split it into two 
 hands, and get another card for each hand (you must bet the same amount for
