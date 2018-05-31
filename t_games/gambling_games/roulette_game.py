@@ -301,12 +301,15 @@ class Roulette(game.Game):
         if column:
             # Get the numbers for the column
             targets = []
+            # Check for first column.
             if column.lower() in ('1', 'p', 'f'):
                 targets = [str(number) for number in range(1, 37, 3)]
-            elif column.lower in ('2', 'm', 's'):
+            # Check for second column.
+            elif column.lower() in ('2', 'm', 's'):
                 targets = [str(number) for number in range(2, 37, 3)]
-            elif column.lower in ('3', 'd', 't'):
-                targets = [str(number) for number in range(2, 37, 3)]
+            # Check for third column.
+            elif column.lower() in ('3', 'd', 't'):
+                targets = [str(number) for number in range(3, 37, 3)]
             if targets:
                 # Make the bet.
                 self.scores[self.human.name] -= bet
