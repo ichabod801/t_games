@@ -57,6 +57,9 @@ card down. If either you or the dealer has blackjack, that is dealt with right
 away. Otherwise you can continue to get hit (get another card) until you are
 ready to stand (stay with the cards you have). If you go over 21 you lose.
 
+If you are betting on multiple hands (send the hands= option), you can enter
+one bet and it will be applied to all of the hands.
+
 You may increase your bet up to double at any point, on the condition that you
 get one and only more card. If you have a pair, you may split it into two 
 hands, and get another card for each hand (you must bet the same amount for
@@ -455,25 +458,33 @@ class Blackjack(game.Game):
 
     def get_bet(self):
         """Get the bet from the user. (None)"""
+        # Prepare the query.
         self.human.tell('\nYou have {} bucks.'.format(self.scores[self.human.name]))
         prompt = 'How much would you like to bet this round (return for max): '
         max_bet = min(self.limit, self.scores[self.human.name])
+        # Check for multiple bets.
         if self.hand_count == 1:
             num_bets = [1]
         else:
             num_bets = [1, self.hand_count]
+        # Loop until you have a bet or no-go command (like quit).
         while True:
+            # Query the user.
             bets = self.human.ask_int_list(prompt, low = 1, high = max_bet, default = [max_bet],
                 valid_lens = num_bets)
+            # Handle bets.
             if isinstance(bets, list):
-                # Handle single bets.
+                # Single bets are assumed to be for all hands.
                 if len(bets) == 1:
                     bets = bets * self.hand_count
+                # Record the bets.
                 self.bets = bets
                 self.scores[self.human.name] -= sum(bets)
+                # Continue the game.
                 self.status = 'play'
                 return True
             else:
+                # Handle other commands, looping unless they call for end of turn.
                 if not self.handle_cmd(bets):
                     return False
 
