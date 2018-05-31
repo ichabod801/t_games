@@ -304,7 +304,7 @@ class Game(OtherCmd):
             # Reset the human's focus.
             self.human.game = self
             # Return the result.
-            return game_name, results[1] # !! incorrect for match play, solitaire draw is a win.
+            return game.name.lower(), results[1] # !! incorrect for match play, and solitaire draw is a win.
         # Return dummy results for incorrect games.
         else:
             return 'invalid-game', 1 

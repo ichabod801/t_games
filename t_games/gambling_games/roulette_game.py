@@ -1157,7 +1157,7 @@ class Roulette(game.Game):
         self.option_set.add_option('limit', [], int, 10, target = 'max_bet',
             check = lambda bucks: bucks > 0, question = 'What should the maximum bet be (return for 10)? ')
         self.option_set.add_option('uk-rule', 
-            question = 'Should the UK rule (1/2 back on lost 1:1 bets) be in effect? ')
+            question = 'Should the UK rule (1/2 back on lost 1:1 bets) be in effect? bool')
 
     def set_up(self):
         """Set up the game. (None)"""
