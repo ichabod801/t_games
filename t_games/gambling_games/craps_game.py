@@ -80,6 +80,11 @@ To play, specify which bet you want to make. Then you will be asked how much
 you want to wager on the bet. When you are done betting on a particular roll, 
 enter 'done' or just hit return.
 
+Your score in the results and statistics will be how much money you won
+(positive) or lost (negative). This means you can calcuate your total winnings
+or losses by multiplying you average score times the number of games you have
+played.
+
 BETS:
 Pass (Right): A bet that the shooter will "win". Pays 1:1
 Don't Pass (Wrong): A bet that the shooter will "lose". Note that a don't pass
@@ -360,7 +365,7 @@ class Craps(game.Game):
         """
         # Determine overall winnings or losses.
         self.scores[self.human.name] -= self.stake
-        # Determine game win or loss.
+        # Determine if the game is a win or a loss.
         if self.scores[self.human.name] > 0:
             self.win_loss_draw[0] = 1
         elif self.scores[self.human.name] < 0:
