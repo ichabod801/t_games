@@ -360,7 +360,7 @@ class Craps(game.Game):
         """
         # Determine overall winnings or losses.
         self.scores[self.human.name] -= self.stake
-        # Determine game win or loss.
+        # Determine if the game is a win or a loss.
         if self.scores[self.human.name] > 0:
             self.win_loss_draw[0] = 1
         elif self.scores[self.human.name] < 0:
