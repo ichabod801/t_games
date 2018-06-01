@@ -351,6 +351,26 @@ class Craps(game.Game):
             self.human.tell('Look, I only speak two languages: English and Bad English.')
         return go
 
+    def do_quit(self, argument):
+        """
+        Stop playing Craps. (bool)
+
+        Parameters:
+        argument: The (ignored) argument to the done command. (str)
+        """
+        # Determine overall winnings or losses.
+        self.scores[self.human.name] -= self.stake
+        # Determine game win or loss.
+        if self.scores[self.human.name] > 0:
+            self.win_loss_draw[0] = 1
+        elif self.scores[self.human.name] < 0:
+            self.win_loss_draw[1] = 1
+        else:
+            self.win_loss_draw[2] = 1
+        # Quit the game.
+        self.flags |= 4
+        self.force_end = True
+
     def do_remove(self, argument):
         """
         Remove bets. (bool)
@@ -396,25 +416,11 @@ class Craps(game.Game):
         """
         return self.do_done('r')
 
-    def do_quit(self, argument):
-        """
-        Stop playing craps. (bool)
-
-        Parameters:
-        argument: The (ignored) argument to the done command. (str)
-        """
-        self.scores[self.human.name] -= self.stake
-        if self.scores[self.human.name] > 0:
-            self.win_loss_draw[0] = 1
-        elif self.scores[self.human.name] < 0:
-            self.win_loss_draw[1] = 1
-        else:
-            self.win_loss_draw[2] = 1
-        self.force_end = True
-
     def game_over(self):
         """Check for the end of the game. (bool)"""
+        # The game is over when the human is out of money (and live bets).
         if self.scores[self.human.name] == 0 and not self.bets[self.human.name]:
+            # Set the results.
             self.win_loss_draw[1] = 1
             self.scores[self.human.name] -= self.stake
             return True

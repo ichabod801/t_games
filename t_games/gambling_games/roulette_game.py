@@ -764,28 +764,25 @@ class Roulette(game.Game):
                 self.human.error('{} and {} are not distinct prime numbers.'.format(low, high))
         return True
 
-    def do_quit(self, arguments):
+    def do_quit(self, argument):
         """
-        Stop playing before losing all your money. (bool)
+        Stop playing Roulette. (bool)
 
         Parameters:
-        arguments: The number of the hand to hit. (str)
+        argument: The (ignored) argument to the done command. (str)
         """
-        # Set the quit flag.
-        self.flags |= 4
-        # Check for winner.
-        if self.scores[self.human.name] > self.stake:
+        # Determine overall winnings or losses.
+        self.scores[self.human.name] -= self.stake
+        # Determine game win or loss.
+        if self.scores[self.human.name] > 0:
             self.win_loss_draw[0] = 1
-            self.force_end = 'win'
-        # Check for loser.
-        elif self.scores[self.human.name] < self.stake:
+        elif self.scores[self.human.name] < 0:
             self.win_loss_draw[1] = 1
-            self.force_end = 'draw'
-        # Otherwise it's a draw.
         else:
             self.win_loss_draw[2] = 1
-            self.force_end = 'loss'
-        return False
+        # Quit the game.
+        self.flags |= 4
+        self.force_end = True
 
     def do_red(self, arguments):
         """
@@ -1068,9 +1065,12 @@ class Roulette(game.Game):
         return True
 
     def game_over(self):
-        """Determine the end of game. (bool)"""
-        if self.scores[self.human.name] == 0:
+        """Check for the end of the game. (bool)"""
+        # The game is over when the human is out of money (and live bets).
+        if self.scores[self.human.name] == 0 and not self.bets:
+            # Set the results.
             self.win_loss_draw[1] = 1
+            self.scores[self.human.name] -= self.stake
             return True
         else:
             return False
