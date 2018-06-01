@@ -70,6 +70,11 @@ If you stand, the dealer reveals their hole card, and draws cards until they
 get 17 or higher. If they bust (go over 21) or get a lower value than you, you
 win.
 
+Your score in the results and statistics will be how much money you won
+(positive) or lost (negative). This means you can calcuate your total winnings
+or losses by multiplying you average score times the number of games you have
+played.
+
 COMMANDS:
 Double (d): Increse your bet up to double and get one more card. If you are 
     not doubling the bet, specify the bet after the command.

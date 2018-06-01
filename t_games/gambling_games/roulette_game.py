@@ -48,6 +48,11 @@ that must be specified for the bet. Bets with a capital F in the brackets may
 only be made on the French layout, and bets with a capital A may only be made
 on the American layout (see options).
 
+Your score in the results and statistics will be how much money you won
+(positive) or lost (negative). This means you can calcuate your total winnings
+or losses by multiplying you average score times the number of games you have
+played.
+
 INSIDE BETS:
 Basket/First Four: A bet on the first two rows of numbers (0, 1, 2, 3). [0F]
 Column: Bet on a column of 12 numbers. The column can be specified with 1/2/3,
