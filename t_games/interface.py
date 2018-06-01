@@ -3,8 +3,6 @@ interface.py
 
 The interface for the t_games game suite.
 
-!! Add options after / for menu selections.
-
 Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
 See the top level __init__.py file for details on the t_games license.
 
@@ -405,7 +403,6 @@ class Interface(other_cmd.OtherCmd):
         while True:
             results = self.game.play()
             self.human.store_results(self.game.name, results)
-            # !! don't show stats if last game not counted.
             self.do_stats(self.game.name)
             again = self.human.ask('Would you like to play again? ').strip().lower()
             if again in ('!', '!!'):

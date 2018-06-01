@@ -3,9 +3,6 @@ hamurabi_game.py
 
 The computer classic Hamurabi.
 
-!! check that all attributes need to be attributes.
-!! does not give access to other commands.
-
 Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
 See the top level __init__.py file for details on the t_games license.
 

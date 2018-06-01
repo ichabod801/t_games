@@ -252,8 +252,6 @@ class C4BotGamma(C4BotAlphaBeta):
         The value of the board is based on piece location and two or threes in  a row, 
         considering how blocked they are.
 
-        !! still needs to consider odd/even open ends (I think, check for strategy)
-
         Parameters:
         board: The game board. (C4Board)
         player_index: The index (turn order) of the player to evaluate. (int)
@@ -325,7 +323,6 @@ class C4Board(board.DimBoard):
 
     def __repr__(self):
         """Debugging text representation."""
-        # !! doesn't take into acount pieces and poppable parameters.
         return 'C4Board({})'.format(self.dimensions)
 
     def __str__(self):
@@ -459,8 +456,6 @@ class ConnectFour(game.Game):
     """
     A game of Connect Four. (game.Game)
 
-    !! implement rules variants from wikipedia.
-
     Attributes:
     board: The game board. (C4Board)
     symbols: The symbols for the players pieces. (list of str)
@@ -567,7 +562,7 @@ class ConnectFour(game.Game):
         self.option_set.add_option('columns', ['c'], int, 7, valid = range(4, 36),
             question = 'How many columns should there be on the board (return for 7)? ')
         self.option_set.add_option('rows', ['r'], int, 6, valid = range(4, 20),
-            question = 'How many rows should there be on theh board (return for 6)? ')
+            question = 'How many rows should there be on the board (return for 6)? ')
         self.option_set.add_option('pop', ['p'], target = 'poppable',
             question = 'Should you be able to pop out the bottom piece in a row? bool')
         self.option_set.add_option('bot-level', ['b'], 

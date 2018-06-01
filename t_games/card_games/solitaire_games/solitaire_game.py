@@ -908,7 +908,6 @@ class MultiSolitaire(Solitaire):
         Parameters:
         card: The card being moved. (str)
         """
-        # !! sorting cards from the stock.
         # get the card
         if not self.deck.card_re.match(card):
             self.human.error('Invalid card passed to sort command: {!r}.'.format(card))
@@ -1074,8 +1073,6 @@ def deal_reserve_n(n, up = False):
     Create a dealer that deals n cards to the reserve (function)
 
     The top card is always dealt face up.
-
-    !! Generalize for different number of reserve stacks.
 
     Parameters:
     n: The number of cards to deal to the reserve. (int)

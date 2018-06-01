@@ -312,7 +312,7 @@ class Bacht(player.Bot):
                 move = 'hold ' + ' '.join([str(x) for x in self.get_holds()])
                 if move == 'hold ':
                     move = 'roll'
-                elif self.game.dice.dice: # !! does not work, since hald hasn't happened yet.
+                elif self.game.dice.dice:
                     self.next = 'roll'
                 else:
                     self.next = 'score'
@@ -437,7 +437,6 @@ class Bachter(Bacht):
                 # Rank by difference from target score.
                 score = category.score(self.game.dice, self.game.roll_count)
                 score -= self.category_data[category.name][2]
-                # !!! repeated code, needs refactoring. Score method of Yacht?
                 if category.name == 'low Chance' and 'Chance' in my_scores:
                     chance = my_scores['Chance']
                     if chance is not None and chance <= score:

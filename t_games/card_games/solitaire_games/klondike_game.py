@@ -58,8 +58,6 @@ class Klonbot(player.Bot):
     The bot is designed to run several games by deal number and record the wins. 
     To play one random game, set the start parameter to -1.
 
-    !! Add a final check to see if cards can be moved around to sort out cards.
-
     Attributes:
     last_num: The last deal number to be played. (int)
     made_moves: The moves made this game, to prevent loops. (set of str)
@@ -102,7 +100,7 @@ class Klonbot(player.Bot):
         Parameters:
         prompt: The question from the game. (str)
         """
-        # Do not set options. !! I could add an options attribute to allow this.
+        # Do not set options.
         if 'options' in prompt:
             response = 'nope'
         # Provide the next deal number unless set for random game.

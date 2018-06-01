@@ -3,12 +3,6 @@ blackjack_game.py
 
 Blackjack.
 
-!! Side bets would be nice, but I'm not implementing them now. I need to 
-    reckon how to do it first. It needs to have pre/post deal bets with
-    varied payouts. Or is it just pre? That would simplify a litte.
-    So: dictionary of side bets made, names match methods, check after
-    deal. Some you check later, like Bust It! Maybe check at showdown too.
-
 Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
 See the top level __init__.py file for details on the t_games license.
 

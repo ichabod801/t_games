@@ -3,8 +3,6 @@ player.py
 
 Base player classes for tgames.
 
-!! reorganize this so the human stuff is in Human.
-
 Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
 See the top level __init__.py file for details on the t_games license.
 
