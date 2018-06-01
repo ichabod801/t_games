@@ -80,6 +80,11 @@ To play, specify which bet you want to make. Then you will be asked how much
 you want to wager on the bet. When you are done betting on a particular roll, 
 enter 'done' or just hit return.
 
+Your score in the results and statistics will be how much money you won
+(positive) or lost (negative). This means you can calcuate your total winnings
+or losses by multiplying you average score times the number of games you have
+played.
+
 BETS:
 Pass (Right): A bet that the shooter will "win". Pays 1:1
 Don't Pass (Wrong): A bet that the shooter will "lose". Note that a don't pass
@@ -351,6 +356,26 @@ class Craps(game.Game):
             self.human.tell('Look, I only speak two languages: English and Bad English.')
         return go
 
+    def do_quit(self, argument):
+        """
+        Stop playing Craps. (bool)
+
+        Parameters:
+        argument: The (ignored) argument to the done command. (str)
+        """
+        # Determine overall winnings or losses.
+        self.scores[self.human.name] -= self.stake
+        # Determine if the game is a win or a loss.
+        if self.scores[self.human.name] > 0:
+            self.win_loss_draw[0] = 1
+        elif self.scores[self.human.name] < 0:
+            self.win_loss_draw[1] = 1
+        else:
+            self.win_loss_draw[2] = 1
+        # Quit the game.
+        self.flags |= 4
+        self.force_end = True
+
     def do_remove(self, argument):
         """
         Remove bets. (bool)
@@ -396,25 +421,11 @@ class Craps(game.Game):
         """
         return self.do_done('r')
 
-    def do_quit(self, argument):
-        """
-        Stop playing craps. (bool)
-
-        Parameters:
-        argument: The (ignored) argument to the done command. (str)
-        """
-        self.scores[self.human.name] -= self.stake
-        if self.scores[self.human.name] > 0:
-            self.win_loss_draw[0] = 1
-        elif self.scores[self.human.name] < 0:
-            self.win_loss_draw[1] = 1
-        else:
-            self.win_loss_draw[2] = 1
-        self.force_end = True
-
     def game_over(self):
         """Check for the end of the game. (bool)"""
+        # The game is over when the human is out of money (and live bets).
         if self.scores[self.human.name] == 0 and not self.bets[self.human.name]:
+            # Set the results.
             self.win_loss_draw[1] = 1
             self.scores[self.human.name] -= self.stake
             return True

@@ -463,3 +463,14 @@ FreeCell,1,0,0,812,51,0,
 Solitaire Dice,0,0,1,0,34,0,
 Craps,1,0,0,24,10,0,
 Hangman,1,0,0,0,14,0,
+Blackjack,0,1,0,-8,11,4,
+Roulette,0,1,0,-100,10,0,
+Roulette,0,1,0,-8,9,4,
+Roulette,1,0,0,3,6,5,stake=256
+Roulette,0,1,0,-256,21,3,stake=256
+Craps,0,1,0,-100,204,2,
+Craps,1,0,0,14,6,4,
+Craps,0,1,0,-9,28,5,limit=12 stake=81
+Blackjack,0,0,1,0,3,4,
+Blackjack,0,1,0,-8,20,4,
+Blackjack,0,1,0,-50,14,1,limit=10 stake=50

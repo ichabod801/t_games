@@ -70,6 +70,11 @@ If you stand, the dealer reveals their hole card, and draws cards until they
 get 17 or higher. If they bust (go over 21) or get a lower value than you, you
 win.
 
+Your score in the results and statistics will be how much money you won
+(positive) or lost (negative). This means you can calcuate your total winnings
+or losses by multiplying you average score times the number of games you have
+played.
+
 COMMANDS:
 Double (d): Increse your bet up to double and get one more card. If you are 
     not doubling the bet, specify the bet after the command.
@@ -333,24 +338,25 @@ class Blackjack(game.Game):
         if self.flags & 1:
             self.human.tell('Hints may not be valid with the current options.')
 
-    def do_quit(self, arguments):
+    def do_quit(self, argument):
         """
-        Stop playing before losing all your money. (bool)
+        Stop playing Blackjack. (bool)
 
         Parameters:
-        arguments: The number of the hand to hit. (str)
+        argument: The (ignored) argument to the done command. (str)
         """
-        self.flags |= 4
-        if self.scores[self.human.name] > self.stake:
+        # Determine overall winnings or losses.
+        self.scores[self.human.name] -= self.stake
+        # Determine if the game is a win or a loss.
+        if self.scores[self.human.name] > 0:
             self.win_loss_draw[0] = 1
-            self.force_end = 'win'
-        elif self.scores[self.human.name] < self.stake:
+        elif self.scores[self.human.name] < 0:
             self.win_loss_draw[1] = 1
-            self.force_end = 'draw'
         else:
             self.win_loss_draw[2] = 1
-            self.force_end = 'loss'
-        return False
+        # Quit the game.
+        self.flags |= 4
+        self.force_end = True
 
     def do_split(self, arguments):
         """
@@ -450,11 +456,15 @@ class Blackjack(game.Game):
             self.scores[self.human.name] += int(self.bets[hand_index] / 2)
 
     def game_over(self):
-        """Determine the end of game. (bool)"""
-        loss = self.scores[self.human.name] == 0 and self.phase == 'bet'
-        if loss:
+        """Check for the end of the game. (bool)"""
+        # The game is over when the human is out of money (and live bets).
+        if self.scores[self.human.name] == 0 and self.phase == 'bet':
+            # Set the results.
             self.win_loss_draw[1] = 1
-        return loss
+            self.scores[self.human.name] -= self.stake
+            return True
+        else:
+            return False
 
     def get_bet(self):
         """Get the bet from the user. (None)"""
