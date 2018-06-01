@@ -17,6 +17,8 @@ CrazyEights: A game of Crazy Eights (game.Game)
 """
 
 
+from __future__ import division
+
 import random
 
 import t_games.cards as cards
@@ -629,10 +631,12 @@ class CrazyEights(game.Game):
                     round_scores[name] += 1
                 else:
                     round_scores[name] += int(card.rank)
-            # Track the lowest hand to find the winner.
+            # Track the lowest hand to find the winner(s).
             if round_scores[name] < low_score:
-                winner = name
+                winners = [name]
                 low_score = round_scores[name]
+            elif round_scores[name] == low_score:
+                winners.append(name)
             self.human.tell('{} had {} points in their hand.'.format(name, round_scores[name]))
         if self.multi_score:
             self.human.tell()
@@ -649,9 +653,11 @@ class CrazyEights(game.Game):
             for name in round_scores:
                 round_scores[name] -= low_score
                 winner_bump += round_scores[name]
-            # Lowest score scores the relative total.
-            self.human.tell('\n{} scores {} points.\n'.format(winner, winner_bump))
-            self.scores[winner] += winner_bump
+            # Lowest score scores the relative total, divided by the number of players with that score.
+            winner_bump = int(winner_bump / len(winners))
+            for winner in winners:
+                self.human.tell('\n{} scores {} points.\n'.format(winner, winner_bump))
+                self.scores[winner] += winner_bump
         for player in self.players:
             self.human.tell('{} has {} points.'.format(player.name, self.scores[player.name]))
 
