@@ -331,7 +331,6 @@ class Cribbage(game.Game):
                 # Reset for the next game in the match.
                 self.scores = {player.name: 0 for player in self.players}
                 self.deal()
-                # !! duplicate code (see reset method)
                 self.card_count = 0
                 self.go_count = 0
                 self.in_play['Play Sequence'].cards = []
@@ -476,7 +475,7 @@ class Cribbage(game.Game):
             if self.go_count == len(self.players):
                 self.human.tell('\nEveryone has passed.')
                 self.add_points(player, 1)
-                self.human.tell('{} scores 1 for the go.'.format(player.name)) # !! no check for win?
+                self.human.tell('{} scores 1 for the go.'.format(player.name))
                 if not self.auto_score:
                     self.human.ask(ENTER_TEXT)
                 self.reset()
@@ -506,7 +505,7 @@ class Cribbage(game.Game):
                 if self.card_total == 31:
                     self.human.tell('\nThe count has reached 31.')
                     self.add_points(player, 2)
-                    self.human.tell('{} scores 2 points for reaching 31.'.format(player.name)) # !! no check for win?
+                    self.human.tell('{} scores 2 points for reaching 31.'.format(player.name))
                     if not self.auto_score:
                         self.human.ask(ENTER_TEXT)
                     self.reset()
@@ -624,7 +623,6 @@ class Cribbage(game.Game):
             # Announce and record total.
             self.human.tell('{} scored a total of {} points for this hand.'.format(name, hand_score))
             self.add_points(name, hand_score)
-            # Check for a win. !! won't work with partnership.
             if self.scores[name] >= self.target_score:
                 #self.human.tell('{} has won with {} points.'.format(name, self.scores[name]))
                 return True

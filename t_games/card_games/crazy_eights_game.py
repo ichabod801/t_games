@@ -187,8 +187,6 @@ class C8SmartBot(C8Bot):
         """
         Get information from the player. (str)
 
-        !! account for change-set. Hell account for all options.
-
         Parameters:
         prompt: The question being asked of the player. (str)
         """
@@ -466,7 +464,7 @@ class CrazyEights(game.Game):
         self.players = [self.human]
         taken_names = [self.human.name]
         if not self.num_easy + self.num_medium:
-            self.num_medium = 10 # !! switch this to num_hard when a hard bot is available.
+            self.num_medium = 7
         for bot in range(self.num_easy):
             self.players.append(C8Bot(taken_names))
             taken_names.append(self.players[-1].name)
@@ -633,7 +631,6 @@ class CrazyEights(game.Game):
                     round_scores[name] += int(card.rank)
             # Track the lowest hand to find the winner.
             if round_scores[name] < low_score:
-                # !! does not track tied winners well (that is, at all).
                 winner = name
                 low_score = round_scores[name]
             self.human.tell('{} had {} points in their hand.'.format(name, round_scores[name]))
