@@ -3,11 +3,6 @@ battleships_game.py
 
 A game of Battleships.
 
-!! Make the coordiates an object, for easier handling. (should be in board.py)
-!! Have a 3D version named Yamato. 5x5x5, longest ship would be 4.
-    (already done by Solvenians, see Wikipedia, but they use singletons)
-!! Scores should be squares left.
-
 Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
 See the top level __init__.py file for details on the t_games license.
 
@@ -347,7 +342,6 @@ class BattleBot(player.Bot):
         Parameters:
         length: How long the ship should be. (int)
         """
-        # !! I might want to move this to SeaBoard so it is an option for humans.
         # Find a random start.
         start = (random.randrange(10), random.randrange(10))
         # Return the start for one-square ships.

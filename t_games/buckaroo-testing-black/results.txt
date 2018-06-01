@@ -474,3 +474,4 @@ Craps,0,1,0,-9,28,5,limit=12 stake=81
 Blackjack,0,0,1,0,3,4,
 Blackjack,0,1,0,-8,20,4,
 Blackjack,0,1,0,-50,14,1,limit=10 stake=50
+Pig,2,1,0,92,36,1,medium satan x

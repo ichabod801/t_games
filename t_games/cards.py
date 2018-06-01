@@ -467,9 +467,6 @@ class TrackingDeck(Deck):
     """
     A deck that keeps track of the location of the cards in it. (Deck)
 
-    !! max_rank works differently, and may cause a problem in solitaire games.
-    !! left implementing some solitaire methods until proven necessary.
-
     Attributes:
     card_map: A map for finding cards in the deck. (dict of str(card): card}
     card_re: A regular expression to match a card.

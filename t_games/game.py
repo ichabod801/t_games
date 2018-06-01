@@ -253,7 +253,7 @@ class Game(OtherCmd):
             results = game.play()
             results[5] |= 64
             self.human.store_results(game.name, results)
-            if results[1] == 0: # !! match play
+            if results[1] == 0:
                 self.flags |= 128
                 self.force_end = 'win'
                 self.win_loss_draw = [max(len(self.players) - 1, 1), 0, 0]
@@ -287,7 +287,6 @@ class Game(OtherCmd):
         argument: The argument to the gipf command. (str)
         game_name: The names of the games to check. (list of str)
         """
-        # !! carry cheating flag up the gipf chain (if you win)
         # Get the possible games and their aliases.
         games = {game_name: self.interface.games[game_name] for game_name in game_names}
         for game_name in game_names:
@@ -305,7 +304,7 @@ class Game(OtherCmd):
             # Reset the human's focus.
             self.human.game = self
             # Return the result.
-            return game.name.lower(), results[1] # !! incorrect for match play, and solitaire draw is a win.
+            return game.name.lower(), results[1]
         # Return dummy results for incorrect games.
         else:
             return 'invalid-game', 1 

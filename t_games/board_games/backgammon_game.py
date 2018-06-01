@@ -8,9 +8,6 @@ Terminology:
     move: One roll's move.
     play: A full turn of moves.
 
-!! Ichabod's Rule: Instead of capturing, hitting a blot bears the moving
-    piece off the board. Makes it a pure race game.
-
 Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
 See the top level __init__.py file for details on the t_games license.
 
@@ -246,7 +243,7 @@ class BackgammonBot(player.Bot):
             * The difference in the number of pieces born off the board.
             * The difference in the number of blots.
             * The difference in direct hits to blots.
-            * The difference in indirect hits to blots. (!! Not calcualted correctly)
+            * The difference in indirect hits to blots.
             * The difference in pip count.
             * The difference in the farthest piece from being born off.
             * The difference in the number of controlled points.
@@ -652,7 +649,6 @@ class Backgammon(game.Game):
         Parameters:
         argument: The point or points to bear off from. (str)
         """
-        # !! bot can't bear
         # Get the current player.
         player = self.players[self.player_index]
         piece = self.pieces[player.name]
@@ -1304,8 +1300,6 @@ class BackgammonBoard(board.LineBoard):
 class BackgammonPlay(object):
     """
     A possible play (set of moves) in Backgammon. (object)
-
-    !! consider having a sorted_moves attribute for efficiency.
 
     The moves attribute is a tuple of three integers: the start point of the move,
     the end point of the move, and the roll used.
