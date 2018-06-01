@@ -453,7 +453,7 @@ class Blackjack(game.Game):
     def game_over(self):
         """Check for the end of the game. (bool)"""
         # The game is over when the human is out of money (and live bets).
-        if self.scores[self.human.name] == 0 and self.phase == 'bet'
+        if self.scores[self.human.name] == 0 and self.phase == 'bet':
             # Set the results.
             self.win_loss_draw[1] = 1
             self.scores[self.human.name] -= self.stake
