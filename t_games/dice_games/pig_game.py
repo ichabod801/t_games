@@ -9,12 +9,6 @@ If you write a new kind of bot, it will not be usable unless you:
     3. Give a list of paramter descriptions as a class attribute.
     4. Put it in the general bots class attribute of the Pig Class.
 
-!! Piglet: coin tosses to 10 points, heads = 1, tails = turn end.
-    Dan Fendel, Diane Resek, Lynne Alper, and Sherry Fraser.
-!! Two die pig, seven ends turn.
-!! New roll-n bot: rolls n times and stops, ignoring ones.
-    So if the third roll is 1, the next turn he'll roll twice and stop.
-
 Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
 See the top level __init__.py file for details on the t_games license.
 
