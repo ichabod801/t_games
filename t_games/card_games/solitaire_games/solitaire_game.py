@@ -93,8 +93,8 @@ class Solitaire(game.Game):
     set_up
     """
 
-    aliases = {'a': 'auto', 'b': 'build', 'f': 'free', 'l': 'lane', 'otto': 'auto', 's': 'sort', 
-        'q': 'quit', 't': 'turn', 'u': 'undo'}
+    aliases = {'a': 'auto', 'b': 'build', 'f': 'free', 'l': 'lane', 'm': 'match', 'otto': 'auto', 
+        's': 'sort', 'q': 'quit', 't': 'turn', 'u': 'undo'}
     name = 'Solitaire Base'
     
     def __str__(self):
@@ -313,7 +313,7 @@ class Solitaire(game.Game):
         else:
             return True
 
-    def do_match(self, card):
+    def do_match(self, cards):
         """
         Match two cards and discard them.
 
@@ -326,8 +326,8 @@ class Solitaire(game.Game):
             return True
         cards = [self.deck.find(card) for card in cards]
         if self.match_check(cards):
-            self.transfer([card[0]], self.waste)
-            self.transfer([card[1]], self.waste)
+            self.transfer([cards[0]], self.foundations[0])
+            self.transfer([cards[1]], self.foundations[0])
     
     def do_sort(self, card):
         """
@@ -539,7 +539,7 @@ class Solitaire(game.Game):
         # check game specific rules
         else:
             for checker in self.match_checkers:
-                error = checker(self, cardw)
+                error = checker(self, cards)
                 if error:
                     break
         # handle determination

@@ -7,18 +7,24 @@ Constants:
 CREDITS: The credits for Monte Carlo. (str_)
 RULES: The rules for Monte Carlo. (str)
 
+Classes:
+MonteCarlo: A game of Monte Carlo. (solitaire.Solitaire)
+
 Functions
 match_adjacent: Allow matching of cards are in adjacent tableau piles. (str)
 match_pairs: Allow matching cards of the same rank. (str)
 match_tableau: Allow matching if the cards are in the tableau. (str)
 match_thirteen: Allow matching cards that sum to 13. (str)
+no_build: No building is allowed. (str)
+no_lane: Cards may not be moved to empty lanes. (str)
+no_sort: No sorting is allowed. (str)
 sort_kings: Allow sorting kings. (str)
 """
 
 
 import itertools
 
-import tgames.card_games.solitaire_game as solitaire_game
+import t_games.card_games.solitaire_games.solitaire_game as solitaire
 
 
 # The credits for Monte Carlo.
@@ -44,9 +50,9 @@ rows=: The number of rows dealt (defaults to 5).
 """
 
 
-class MonteCarlo(solitare_game.Solitaire):
+class MonteCarlo(solitaire.Solitaire):
     """
-    A game of Monte Carlo. (solitaire_game.Solitaire)
+    A game of Monte Carlo. (solitaire.Solitaire)
 
     Attributes:
     thirteen: A flag for matching pairs that add to thirteen. (bool)
@@ -74,9 +80,9 @@ class MonteCarlo(solitare_game.Solitaire):
         """
         self.tableau = [pile for pile in self.tableau if pile]
         while self.deck.cards and len(self.tableau) < self.options['num-tableau']:
-            self.tableau.append([self.deck.deal()])
-        while len(self.tableau) < self.options['num-tableau']:
             self.tableau.append([])
+            if self.deck.cards:
+                self.deck.deal(self.tableau[-1])
 
     def find_foundation(self, card):
         """
@@ -90,18 +96,21 @@ class MonteCarlo(solitare_game.Solitaire):
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
         super(MonteCarlo, self).set_checkers()
-        self.dealers = [solitiare_game.deal_n(self.options['num-foundations'])]
-        self.match_checkers = [match_tableau, match_adjacent, match_pair]
+        self.dealers = [solitaire.deal_n(self.options['num-tableau'])]
+        self.build_checkers = [no_build]
+        self.match_checkers = [match_tableau, match_adjacent, match_pairs]
         if self.thirteen:
             self.match_checkers[-1] = match_thirteen
             self.sort_checkers = [sort_kings]
+        else:
+            self.sort_checkers = [no_sort]
 
     def set_options(self):
         """Set the options for the game. (None)"""
         self.options = {'num-foundations': 1}
         self.option_set.add_option('thirteen', question = 'Do you want to match sums of 13? bool')
         self.option_set.add_option('rows', action = "key=num-tableau", converter = lambda x: int(x) * 5,
-            default = 5, valid = (4, 5, 6), target = self.options,
+            default = 25, valid = (4, 5, 6), target = self.options,
             question = 'How many rows should be dealt (4-6, return for 5)? ')
 
     def tableau_text(self):
@@ -110,7 +119,10 @@ class MonteCarlo(solitare_game.Solitaire):
         for pile_index, pile in enumerate(self.tableau):
             if not pile_index % 5:
                 lines.append('')
-            lines[-1] += str(pile[0]) + ' '
+            if pile:
+                lines[-1] += str(pile[0]) + ' '
+            else:
+                lines[-1] += '   '
         return '\n'.join(lines)
 
 
@@ -124,7 +136,7 @@ def match_adjacent(game, cards):
     """
     error = ''
     # Get the distance between the cards.
-    start, end = [self.game.tableau.index([card]) for card in cards]
+    start, end = [game.tableau.index([card]) for card in cards]
     distance = end - start
     # Get the valid distances.
     valid_distances = []
@@ -171,7 +183,7 @@ def match_tableau(game, cards):
     """
     error = ''
     for card in cards:
-        if card.game_location not in game.tableua:
+        if card.game_location not in game.tableau:
             error = '{} is not in the tableau'.format(card)
             break
     return error
@@ -186,12 +198,46 @@ def match_thirteen(game, cards):
     cards: The cards being matched. (list of cards.TrackingCard)
     """
     error = ''
-    total = sum(self.deck.ranks.index(card) for card.rank in cards)
+    total = sum(game.deck.ranks.index(card) for card.rank in cards)
     if total != 13:
         error = 'The ranks of {} and {} do not sum to thirteen.'.format(*cards)
     return error
 
-def sort_kinds(game, card, foundation):
+def no_build(game, mover, target, moving_stack):
+    """
+    No building is allowed. (bool)
+    
+    Parameters:
+    game: The game being played. (Solitaire)
+    mover: The card to move. (TrackingCard)
+    target: The destination card. (TrackingCard)
+    moving_stack: The stack of cards that would move. (list of TrackingCard)
+    """
+    return 'Building is not allowed in this game.'
+        
+def no_lane(game, card, moving_stack):
+    """
+    Cards may not be moved to empty lanes. (bool)
+    
+    Parameters:
+    game: The game being played. (Solitaire)
+    card: The card to move into the lane. (TrackingCard)
+    moving_stack: The cards on top of the card moving. (list of TrackingCard)
+    """
+    return 'Cards may not be moved to empty lanes.'
+
+def no_sort(game, card, foundation):
+    """
+    No sorting is allowed. (str)
+
+    Parameters:
+    game: The game being played. (solitaire.Solitaire)
+    card: The card to be sorted. (cards.TrackingCard)
+    foundation: The foundation to sort to. (list of cards.TrackingCard)
+    """
+    return 'Sorting is not allowed in this game.'
+
+def sort_kings(game, card, foundation):
     """
     Allow sorting kings. (str)
 
