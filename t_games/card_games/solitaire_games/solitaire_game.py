@@ -308,6 +308,22 @@ class Solitaire(game.Game):
             return False
         else:
             return True
+
+    def do_match(self, card):
+        """
+        Match two cards and discard them.
+
+        Parameters:
+        cards: The cards being matched. (str)
+        """
+        cards = self.deck.card_re.findall(cards)
+        if len(cards) != 2:
+            self.human.error('You must provide two valid cards to the match command.')
+            return True
+        cards = [self.deck.find(card) for card in cards]
+        if self.match_check(cards):
+            self.transfer([card[0]], self.waste)
+            self.transfer([card[1]], self.waste)
     
     def do_sort(self, card):
         """
@@ -497,6 +513,36 @@ class Solitaire(game.Game):
             self.human.error(error)
         return not error
 
+    def match_check(self, cards, show_error = True):
+        """
+        Check ofr a valid match of two cards. (bool)
+
+        Parameters:
+        cards: The two cards being moved. (list of card.TrackingCard)
+        show_error: A flag for showing why the card can't be moved. (bool)
+        """
+        error = ''
+        # check for sorted cards
+        if cards[0].game_location in self.foundations:
+            error = 'The {} is sorted and cannot be moved.'.format(cards[0].name)
+        elif cards[1].game_location in self.foundations:
+            error = 'The {} is sorted and cannot be moved.'.format(cards[1].name)
+        # check for face down cards
+        elif not cards[0].up:
+            error = 'The {} is face down and cannot be moved.'.format(cards[0].name)
+        elif not cards[1].up:
+            error = 'The {} is face down and cannot be moved.'.format(cards[1].name)
+        # check game specific rules
+        else:
+            for checker in self.match_checkers:
+                error = checker(self, cardw)
+                if error:
+                    break
+        # handle determination
+        if error and show_error:
+            self.human.error(error)
+        return not error
+
     def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
@@ -529,6 +575,7 @@ class Solitaire(game.Game):
         self.build_checkers = []
         self.free_checkers = []
         self.lane_checkers = []
+        self.match_checkers = [no_match]
         self.pair_checkers = []
         self.sort_checkers = []
         # dealers
@@ -1169,6 +1216,15 @@ def move_one_size(game, to_lane = False):
     else:
         lanes = game.tableau.count([]) - to_lane
     return (1 + free) * 2 ** lanes
+
+def no_match(game, cards):
+    """
+    Disallow any matchest. (bool)
+
+    Parameters:
+    cards: The cards to match (list of TrackingCard)
+    """
+    return 'Matching cards is not allowed in this game.'
     
 def pair_alt_color(self, mover, target):
     """
