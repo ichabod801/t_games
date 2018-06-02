@@ -781,7 +781,8 @@ class MultiSolitaire(Solitaire):
     do_alternate: Redo the last command with different but matching cards. (bool)
 
     Overridden Methods:
-    find_foundation: Find the foundations a card can be sorted to. (list of list)
+    do_match
+    find_foundation
     """
 
     aliases = {'alt': 'alternate'}
@@ -950,6 +951,37 @@ class MultiSolitaire(Solitaire):
             return False
         else:
             self.human.error('There are no valid moves for laning a {}.'.format(card))
+            return True
+
+    def do_match(self, card):
+        """
+        Match two cards and discard them.
+
+        Parameters:
+        cards: The cards being matched. (str)
+        """
+        # Get the cards to match.
+        cards = self.deck.card_re.findall(cards)
+        # Check for a valid number of cards.
+        if len(cards) != 2:
+            self.human.error('You must provide two valid cards to the match command.')
+            return True
+        # Check the actual cards.
+        cards = [self.deck.find(card) for card in cards]
+        # Check all possibled combinations of cards for valid moves.
+        for card_a in cards[0]:
+            for card_b in cards[1]:
+                if self.match_check([card_a, card_b], False):
+                    self.alt_moves.append((card_a, card_b))
+        if self.alt_moves:
+            # If there are valid moves, make one of them.
+            cards = self.alt_moves.pop()
+            self.transfer([card[0]], self.waste)
+            self.transfer([card[1]], self.waste)
+            return False
+        else:
+            # If there are no valid moves, warn the user.
+            self.human.error('There are not valid moves for matching a {} and a {}.'.format(*cards))
             return True
     
     def do_sort(self, card):
