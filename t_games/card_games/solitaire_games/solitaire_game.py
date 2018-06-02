@@ -976,8 +976,8 @@ class MultiSolitaire(Solitaire):
         if self.alt_moves:
             # If there are valid moves, make one of them.
             cards = self.alt_moves.pop()
-            self.transfer([card[0]], self.waste)
-            self.transfer([card[1]], self.waste)
+            self.transfer([card[0]], self.foundations[0])
+            self.transfer([card[1]], self.foundations[0])
             return False
         else:
             # If there are no valid moves, warn the user.
