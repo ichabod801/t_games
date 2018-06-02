@@ -45,10 +45,11 @@ they can (or choose to) play a card.
 
 When a player runs out of cards, the cards in all the other hands are added up
 (face cards are 10, eights are 50, all other cards are face value), and the
-player who ran out of cards wins. If the deck runs out of cards, the player 
-with the least points in their hand scores the difference between their points
-and the points in each hand. After scoring, all cards are shuffled into the
-deck and the game is started again. 
+player who ran out of cards scores that many points. If the deck runs out of 
+cards, the player with the least points in their hand scores the difference 
+between their points and the points in each hand. In the case of ties, the 
+points are split between the tied players. After scoring, all cards are 
+shuffled into the deck and the game is started again. 
 
 The first player to get 50 points times the number of players wins the game.
 
