@@ -315,6 +315,7 @@ class CrazyEights(game.Game):
         # Reset and the deck.
         self.deck.shuffle()
         self.forced_draw = 0
+        self.suit = ''
         # Set the discard pile.
         if keep_one:
             self.deck.discards = [keeper]
