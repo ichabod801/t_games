@@ -17,6 +17,8 @@ CrazyEights: A game of Crazy Eights (game.Game)
 """
 
 
+from __future__ import division
+
 import random
 
 import t_games.cards as cards
@@ -43,10 +45,11 @@ they can (or choose to) play a card.
 
 When a player runs out of cards, the cards in all the other hands are added up
 (face cards are 10, eights are 50, all other cards are face value), and the
-player who ran out of cards wins. If the deck runs out of cards, the player 
-with the least points in their hand scores the difference between their points
-and the points in each hand. After scoring, all cards are shuffled into the
-deck and the game is started again. 
+player who ran out of cards scores that many points. If the deck runs out of 
+cards, the player with the least points in their hand scores the difference 
+between their points and the points in each hand. In the case of ties, the 
+points are split between the tied players. After scoring, all cards are 
+shuffled into the deck and the game is started again. 
 
 The first player to get 50 points times the number of players wins the game.
 
@@ -629,10 +632,13 @@ class CrazyEights(game.Game):
                     round_scores[name] += 1
                 else:
                     round_scores[name] += int(card.rank)
-            # Track the lowest hand to find the winner.
+            # Track the lowest hand to find the winner(s).
             if round_scores[name] < low_score:
-                winner = name
+                winners = [name]
                 low_score = round_scores[name]
+            # Record any ties for lowest score.
+            elif round_scores[name] == low_score:
+                winners.append(name)
             self.human.tell('{} had {} points in their hand.'.format(name, round_scores[name]))
         if self.multi_score:
             self.human.tell()
@@ -649,9 +655,11 @@ class CrazyEights(game.Game):
             for name in round_scores:
                 round_scores[name] -= low_score
                 winner_bump += round_scores[name]
-            # Lowest score scores the relative total.
-            self.human.tell('\n{} scores {} points.\n'.format(winner, winner_bump))
-            self.scores[winner] += winner_bump
+            # Lowest score scores the relative total, divided by the number of players with that score.
+            winner_bump = int(winner_bump / len(winners))
+            for winner in winners:
+                self.human.tell('\n{} scores {} points.\n'.format(winner, winner_bump))
+                self.scores[winner] += winner_bump
         for player in self.players:
             self.human.tell('{} has {} points.'.format(player.name, self.scores[player.name]))
 
