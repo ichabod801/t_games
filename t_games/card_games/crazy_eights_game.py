@@ -635,6 +635,7 @@ class CrazyEights(game.Game):
             if round_scores[name] < low_score:
                 winners = [name]
                 low_score = round_scores[name]
+            # Record any ties for lowest score.
             elif round_scores[name] == low_score:
                 winners.append(name)
             self.human.tell('{} had {} points in their hand.'.format(name, round_scores[name]))
