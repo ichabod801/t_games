@@ -142,12 +142,12 @@ def match_adjacent(game, cards):
     valid_distances = []
     # Get the valid orthogonal distances.
     if start % 5:
-        valid_distances.append(1)
-    elif start % 5 != 4:
         valid_distances.append(-1)
+    if start % 5 != 4:
+        valid_distances.append(1)
     if start < 20:
         valid_distances.append(5)
-    elif start > 4:
+    if start > 4:
         valid_distances.append(-5)
     # get the valid diagonal distances.
     for x, y in itertools.combinations(valid_distances, 2):
