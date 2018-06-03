@@ -109,9 +109,9 @@ class MonteCarlo(solitaire.Solitaire):
     def set_options(self):
         """Set the options for the game. (None)"""
         self.options = {'num-foundations': 1}
-        self.option_set.add_option('thirteen', question = 'Do you want to match sums of 13? bool')
-        self.option_set.add_option('rows', action = "key=num-tableau", converter = lambda x: int(x) * 5,
-            default = 25, valid = (4, 5, 6), target = self.options,
+        self.option_set.add_option('thirteen', ['13'], question = 'Do you want to match sums of 13? bool')
+        self.option_set.add_option('rows', ['r'], action = "key=num-tableau", 
+            converter = lambda x: int(x) * 5, default = 25, valid = (20, 25, 30), target = self.options,
             question = 'How many rows should be dealt (4-6, return for 5)? ')
 
     def tableau_text(self):
