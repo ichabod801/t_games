@@ -191,7 +191,14 @@ class Solitaire(game.Game):
         elif len(cards) == 1:
             return self.guess(cards[0])
         elif len(cards) == 2:
-            return self.do_build(' '.join(cards))
+            mover, target = [self.deck.find(card) for card in cards]
+            moving_stack = self.super_stack(mover)
+            if self.build_check(mover, target, moving_stack):
+                self.do_build('{} {}'.format(mover, target))
+            elif self.match_check(mover, target):
+                self.do_match('{} {}'.format(mover, target))
+            else:
+                self.human.error('There are no legal moves using the {} and the {}.'.format(mover, target))
         else:
             self.human.error("I don't know what to do with that many cards.")
         
