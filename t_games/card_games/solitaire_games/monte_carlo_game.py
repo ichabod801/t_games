@@ -98,6 +98,7 @@ class MonteCarlo(solitaire.Solitaire):
         super(MonteCarlo, self).set_checkers()
         self.dealers = [solitaire.deal_n(self.options['num-tableau'])]
         self.build_checkers = [no_build]
+        self.lane_checkers = [no_lane]
         self.match_checkers = [match_tableau, match_adjacent, match_pairs]
         if self.thirteen:
             self.match_checkers[-1] = match_thirteen
@@ -198,7 +199,7 @@ def match_thirteen(game, cards):
     cards: The cards being matched. (list of cards.TrackingCard)
     """
     error = ''
-    total = sum(game.deck.ranks.index(card) for card.rank in cards)
+    total = sum(game.deck.ranks.index(card.rank) for card in cards)
     if total != 13:
         error = 'The ranks of {} and {} do not sum to thirteen.'.format(*cards)
     return error
