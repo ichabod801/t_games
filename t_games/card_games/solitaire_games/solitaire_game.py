@@ -193,9 +193,9 @@ class Solitaire(game.Game):
         elif len(cards) == 2:
             mover, target = [self.deck.find(card) for card in cards]
             moving_stack = self.super_stack(mover)
-            if self.build_check(mover, target, moving_stack):
+            if self.build_check(mover, target, moving_stack, False):
                 self.do_build('{} {}'.format(mover, target))
-            elif self.match_check(mover, target):
+            elif self.match_check([mover, target], False):
                 self.do_match('{} {}'.format(mover, target))
             else:
                 self.human.error('There are no legal moves using the {} and the {}.'.format(mover, target))
