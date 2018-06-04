@@ -146,7 +146,7 @@ def match_adjacent(game, cards):
         valid_distances.append(-1)
     if start % 5 != 4:
         valid_distances.append(1)
-    if start < 5 * (game.rows - 1):
+    if start < game.options['num-tableau'] - 5:
         valid_distances.append(5)
     if start > 4:
         valid_distances.append(-5)
