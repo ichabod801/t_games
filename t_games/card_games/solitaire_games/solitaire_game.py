@@ -18,6 +18,7 @@ deal_free: Deal all the cards out onto the tableau. (None)
 deal_reserve_n: Create a dealer that deals n cards to the reserve (None)
 lane_one: Check moving one card at a time into a lane. (bool)
 move_one_size: Calculate maximum stack under "move one" rules. (int)
+no_match: Disallow any match moves. (bool)
 sort_ace: Sort starting with the ace. (bool)
 sort_up: Sort sequentially up in rank. (bool)
 """
@@ -42,6 +43,7 @@ class Solitaire(game.Game):
     dealers: The deal functions for setting up the tableau. (list of callable)
     foundations: The piles to fill to win the game. (list of list of Card)
     free_checkers: Functions for determining valid cell moves. (list of callable)
+    match_checkers: Functions for determining valid matches. (list of callable)
     max_passes: The number of allowed passes through the stock. (int)
     moves: The moves taken in the game. (list of list)
     num_cells: The number of cells in the game. (int)
@@ -63,6 +65,7 @@ class Solitaire(game.Game):
     do_build: Build card(s) into stacks on the tableau. (bool)
     do_free: Move a card to one of the free cells. (bool)
     do_lane: Move a card into an empty lane. (None)
+    do_match: Match two cards and discard them. (None)
     do_sort: Move a card to the foundation. (bool)
     do_turn: Turn cards from the stock into the waste. (bool)
     do_undo: Undo one or more previous moves. (bool)
@@ -72,6 +75,7 @@ class Solitaire(game.Game):
     game_over: Check for the foundations being full. (bool)
     guess: Guess what move to make for a particular card. (None)
     lane_check: Check for a valid move into a lane. (bool)
+    match_check: Check for a valid match of two cards. (bool)
     reserve_text: Generate text for the reserve piles. (str)
     set_solitaire: Special initialization for solitaire games. (None)
     set_up: Set up the game. (None)
@@ -89,8 +93,8 @@ class Solitaire(game.Game):
     set_up
     """
 
-    aliases = {'a': 'auto', 'b': 'build', 'f': 'free', 'l': 'lane', 'otto': 'auto', 's': 'sort', 
-        'q': 'quit', 't': 'turn', 'u': 'undo'}
+    aliases = {'a': 'auto', 'b': 'build', 'f': 'free', 'l': 'lane', 'm': 'match', 'otto': 'auto', 
+        's': 'sort', 'q': 'quit', 't': 'turn', 'u': 'undo'}
     name = 'Solitaire Base'
     
     def __str__(self):
@@ -187,7 +191,14 @@ class Solitaire(game.Game):
         elif len(cards) == 1:
             return self.guess(cards[0])
         elif len(cards) == 2:
-            return self.do_build(' '.join(cards))
+            mover, target = [self.deck.find(card) for card in cards]
+            moving_stack = self.super_stack(mover)
+            if self.build_check(mover, target, moving_stack, False):
+                self.do_build('{} {}'.format(mover, target))
+            elif self.match_check([mover, target], False):
+                self.do_match('{} {}'.format(mover, target))
+            else:
+                self.human.error('There are no legal moves using the {} and the {}.'.format(mover, target))
         else:
             self.human.error("I don't know what to do with that many cards.")
         
@@ -308,6 +319,22 @@ class Solitaire(game.Game):
             return False
         else:
             return True
+
+    def do_match(self, cards):
+        """
+        Match two cards and discard them.
+
+        Parameters:
+        cards: The cards being matched. (str)
+        """
+        cards = self.deck.card_re.findall(cards)
+        if len(cards) != 2:
+            self.human.error('You must provide two valid cards to the match command.')
+            return True
+        cards = [self.deck.find(card) for card in cards]
+        if self.match_check(cards):
+            self.transfer([cards[0]], self.foundations[0])
+            self.transfer([cards[1]], self.foundations[0])
     
     def do_sort(self, card):
         """
@@ -497,6 +524,36 @@ class Solitaire(game.Game):
             self.human.error(error)
         return not error
 
+    def match_check(self, cards, show_error = True):
+        """
+        Check ofr a valid match of two cards. (bool)
+
+        Parameters:
+        cards: The two cards being moved. (list of card.TrackingCard)
+        show_error: A flag for showing why the card can't be moved. (bool)
+        """
+        error = ''
+        # check for sorted cards
+        if cards[0].game_location in self.foundations:
+            error = 'The {} is sorted and cannot be moved.'.format(cards[0].name)
+        elif cards[1].game_location in self.foundations:
+            error = 'The {} is sorted and cannot be moved.'.format(cards[1].name)
+        # check for face down cards
+        elif not cards[0].up:
+            error = 'The {} is face down and cannot be moved.'.format(cards[0].name)
+        elif not cards[1].up:
+            error = 'The {} is face down and cannot be moved.'.format(cards[1].name)
+        # check game specific rules
+        else:
+            for checker in self.match_checkers:
+                error = checker(self, cards)
+                if error:
+                    break
+        # handle determination
+        if error and show_error:
+            self.human.error(error)
+        return not error
+
     def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
@@ -529,6 +586,7 @@ class Solitaire(game.Game):
         self.build_checkers = []
         self.free_checkers = []
         self.lane_checkers = []
+        self.match_checkers = [no_match]
         self.pair_checkers = []
         self.sort_checkers = []
         # dealers
@@ -730,7 +788,8 @@ class MultiSolitaire(Solitaire):
     do_alternate: Redo the last command with different but matching cards. (bool)
 
     Overridden Methods:
-    find_foundation: Find the foundations a card can be sorted to. (list of list)
+    do_match
+    find_foundation
     """
 
     aliases = {'alt': 'alternate'}
@@ -899,6 +958,37 @@ class MultiSolitaire(Solitaire):
             return False
         else:
             self.human.error('There are no valid moves for laning a {}.'.format(card))
+            return True
+
+    def do_match(self, card):
+        """
+        Match two cards and discard them.
+
+        Parameters:
+        cards: The cards being matched. (str)
+        """
+        # Get the cards to match.
+        cards = self.deck.card_re.findall(cards)
+        # Check for a valid number of cards.
+        if len(cards) != 2:
+            self.human.error('You must provide two valid cards to the match command.')
+            return True
+        # Check the actual cards.
+        cards = [self.deck.find(card) for card in cards]
+        # Check all possibled combinations of cards for valid moves.
+        for card_a in cards[0]:
+            for card_b in cards[1]:
+                if self.match_check([card_a, card_b], False):
+                    self.alt_moves.append((card_a, card_b))
+        if self.alt_moves:
+            # If there are valid moves, make one of them.
+            cards = self.alt_moves.pop()
+            self.transfer([card[0]], self.foundations[0])
+            self.transfer([card[1]], self.foundations[0])
+            return False
+        else:
+            # If there are no valid moves, warn the user.
+            self.human.error('There are not valid moves for matching a {} and a {}.'.format(*cards))
             return True
     
     def do_sort(self, card):
@@ -1169,6 +1259,15 @@ def move_one_size(game, to_lane = False):
     else:
         lanes = game.tableau.count([]) - to_lane
     return (1 + free) * 2 ** lanes
+
+def no_match(game, cards):
+    """
+    Disallow any matchest. (bool)
+
+    Parameters:
+    cards: The cards to match (list of TrackingCard)
+    """
+    return 'Matching cards is not allowed in this game.'
     
 def pair_alt_color(self, mover, target):
     """
