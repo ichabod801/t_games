@@ -59,6 +59,7 @@ class MonteCarlo(solitaire.Solitaire):
 
     Overridden Methods:
     do_turn
+    find_foundation
     set_checkers
     set_options
     tableau_text
@@ -156,7 +157,7 @@ def match_adjacent(game, cards):
         valid_distances.append(5)
     if start > 4:
         valid_distances.append(-5)
-    # get the valid diagonal distances.
+    # Use the orthogonal distances to get the valid diagonal distances.
     for x, y in itertools.combinations(valid_distances, 2):
         if x + y != 0:
             valid_distances.append(x + y)
