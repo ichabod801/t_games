@@ -66,10 +66,16 @@ class MonteCarlo(solitaire.Solitaire):
 
     # Aliases for the game.
     aka = ['Weddings']
+    # The categories the game is in.
+    categories = ['Card Games', 'Solitaire Games', 'Closed Games']
+    # The credits for the game.
+    credits = CREDITS
     # The name of the game.
     name = 'Monte Carlo'
     # The number of settable options.
     num_options = 2
+    # The rules of the game.
+    rules = RULES
 
     def do_turn(self, arguments):
         """
