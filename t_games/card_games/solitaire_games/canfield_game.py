@@ -116,12 +116,12 @@ class Canfield(solitaire.Solitaire):
         # Set the default options.
         self.options = {'num-tableau': 4, 'num-reserve': 1, 'wrap-ranks': True}
         # Set options based on variant (see also set_checkers).
-        if self.option_set.settings_text:
-            if self.option_set.settings_text.endswith('chameleon'):
+        if self.variant:
+            if self.variant.endswith('chameleon'):
                 self.options['num-tableau'] = 3
                 self.options['turn-count'] = 1
                 self.options['max-passes'] = 1
-            elif self.option_set.settings_text in ('variant=rainbow-one', 'variant=storehouse'):
+            elif self.variant in ('rainbow-one', 'storehouse'):
                 self.options['turn-count'] = 1
                 self.options['max-passes'] = 2
 
@@ -138,19 +138,19 @@ class Canfield(solitaire.Solitaire):
         self.dealers = [solitaire.deal_reserve_n(13), solitaire.deal_start_foundation, 
             solitaire.deal_one_row, solitaire.deal_stock_all]
         # Check for variant rules.
-        if self.option_set.settings_text.endswith('chameleon'):
+        if self.variant.endswith('chameleon'):
             self.build_checkers = []
             self.pair_checkers = [solitaire.pair_down]
-        elif 'rainbow' in self.option_set.settings_text:
+        elif 'rainbow' in self.variant:
             self.pair_checkers = [solitaire.pair_down]
-        elif self.option_set.settings_text == 'variant=selective':
+        elif self.variant == 'selective':
             self.dealers = [solitaire.deal_reserve_n(13), solitaire.deal_selective, 
                 solitaire.deal_stock_all]
-        elif self.option_set.settings_text == 'variant=storehouse':
+        elif self.variant == 'storehouse':
             self.pair_checkers[1] = solitaire.pair_suit
             self.dealers = [solitaire.deal_twos_foundations, solitaire.deal_reserve_n(13), 
                 solitaire.deal_one_row, solitaire.deal_stock_all]
-        elif self.option_set.settings_text == 'variant=superior':
+        elif self.variant == 'superior':
             self.lane_checkers = []
             self.dealers[0] = solitaire.deal_reserve_n(13, True)
             self.reserve_text = self.superior_text
