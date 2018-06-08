@@ -32,7 +32,7 @@ alt-color (streets): The tableau is built down in rank by alternating color.
 columns (c): The number of tableau columns (stacks) dealt.
 down-rows: The number of tabelau rows that are dealt face down.
 dress-parade (rank-and-file) Equivalent to 'alt-color down-rows=3 move-seq'.
-emporer (deauville): Equivalent to 'alt-color down-rows=3'.
+emperor (deauville): Equivalent to 'alt-color down-rows=3'.
 found-aces: Start the game with the aces on the foundations.
 indian: Equivalent to 'down-rows=1 c=10 r=3 not-suit'.
 limited: Equivalent to 'c=12 r=3'.
@@ -104,12 +104,12 @@ class FortyThieves(solitaire.MultiSolitaire):
         if self.streets:
             self.pair_checkers[-1] = solitaire.pair_alt_color
         elif self.not_suit:
-            self.pair_checkers[-1] = pair_not_suit
+            self.pair_checkers[-1] = solitaire.pair_not_suit
         self.sort_checkers = [solitaire.sort_ace, solitaire.sort_up]
         # Set the dealers.
         self.dealers = []
         if self.found_aces:
-            self.dealers.append(deal_aces_multi)
+            self.dealers.append(solitaire.deal_aces_multi)
         if self.down_rows:
             self.down_rows = min(self.down_rows, self.rows - 1)
             self.dealers.append(solitaire.deal_n(self.columns * self.down_rows, False))
@@ -152,35 +152,6 @@ class FortyThieves(solitaire.MultiSolitaire):
         # waste
         stock_text += ' '.join(str(card) for card in self.waste)
         return stock_text
-
-
-def deal_aces_multi(game):
-    """
-    Deal the aces to the foundations in a multi-deck game.
-
-    Parameters:
-    game: A multi-deck game of solitaire. (MultiSolitaire)
-    """
-    for suit in game.deck.suits:
-        ace_text = 'A' + suit
-        ace = game.deck.find(ace_text)[0]
-        for foundation in game.find_foundation(ace):
-            game.deck.force(ace_text, foundation)
-
-def pair_not_suit(game, mover, target):
-    """
-    Build in anything but suits. (str)
-    
-    Parameters:
-    game: The game buing played. (Solitaire)
-    mover: The card to move. (TrackingCard)
-    target: The destination card. (TrackingCard)
-    """
-    error = ''
-    if mover.suit == target.suit:
-        error = 'The {} is the same suit as the {}'
-        error = error.format(mover.name, target.name)
-    return error
 
 
 if __name__ == '__main__':

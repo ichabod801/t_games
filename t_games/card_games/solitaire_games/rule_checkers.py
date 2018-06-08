@@ -19,6 +19,7 @@ _move_one_size: Calculate maximum stack under "move one" rules. (int)
 build_one: Build moving one card at a time. (bool)
 build_whole: Check that only complete tableau stacks are moved. (str)
 ----------------------------------------------------------
+deal_aces_multi: Deal the aces to the foundations in a multi-deck game. (None)
 deal_free: Deal all the cards out onto the tableau. (None)
 deal_reserve_n: Create a dealer that deals n cards to the reserve (None)
 deal_n: Create a dealer that deals n cards onto the tableau. (function)
@@ -36,6 +37,8 @@ match_none: Disallow any match moves. (bool)
 --------------------------------------------
 pair_alt_color: Build in alternating colors. (str)
 pair_down: Build sequentially down in rank. (str)
+pair_suit: Build in suits. (str)
+pair_not_suit: Build in anything but suits. (str)
 --------------------------------------------
 sort_ace: Sort starting with the ace. (bool)
 sort_rank: Sort starting with a specific rank. (bool)
@@ -96,6 +99,19 @@ def build_whole(game, mover, target, moving_stack):
     return error
 
 # Define dealers.
+
+def deal_aces_multi(game):
+    """
+    Deal the aces to the foundations in a multi-deck game.
+
+    Parameters:
+    game: A multi-deck game of solitaire. (MultiSolitaire)
+    """
+    for suit in game.deck.suits:
+        ace_text = 'A' + suit
+        ace = game.deck.find(ace_text)[0]
+        for foundation in game.find_foundation(ace):
+            game.deck.force(ace_text, foundation)
 
 def deal_free(game):
     """
@@ -271,7 +287,7 @@ def match_none(game, card, match):
     """
     return 'Matching cards is not allowed in this game.'
 
-# Define pair matchers.
+# Define pair checkers.
     
 def pair_alt_color(self, mover, target):
     """
@@ -302,6 +318,21 @@ def pair_down(self, mover, target):
         error = 'The {} is not one rank lower than the {}'
         error = error.format(mover.name, target.name)
     return error
+
+def pair_not_suit(game, mover, target):
+    """
+    Build in anything but suits. (str)
+    
+    Parameters:
+    game: The game buing played. (Solitaire)
+    mover: The card to move. (TrackingCard)
+    target: The destination card. (TrackingCard)
+    """
+    error = ''
+    if mover.suit == target.suit:
+        error = 'The {} is the same suit as the {}'
+        error = error.format(mover.name, target.name)
+    return error
     
 def pair_suit(self, mover, target):
     """
@@ -317,6 +348,8 @@ def pair_suit(self, mover, target):
         error = 'The {} is not the same suit as the {}'
         error = error.format(mover.name, target.name)
     return error
+
+# Define sort checkers.
 
 def sort_ace(game, card, foundation):
     """
