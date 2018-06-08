@@ -18,6 +18,7 @@ _move_one_size: Calculate maximum stack under "move one" rules. (int)
 ------------------------------------------
 build_none: No building is allowed. (bool)
 build_one: Build moving one card at a time. (bool)
+build_reserve: Build only from the reserve. (bool)
 build_whole: Check that only complete tableau stacks are moved. (str)
 -------------------------------------------------
 deal_aces: Deal the aces onto the tableau. (None)
@@ -37,7 +38,8 @@ flip_random: Flip random tableau cards face down. (None)
 ------------------------------------------------------
 lane_king: Check moving only kings into a lane. (bool)
 lane_none: Cards may not be moved to empty lanes. (bool)
-lane_reserve: Check only laning cards from the reserve. (str)
+lane_reserve: Lane only from the reserve (bool)
+lane_reserve_waste: Check only laning cards from the reserve. (str)
 lane_one: Check moving one card at a time into a lane. (bool)
 -------------------------------------------------------------
 match_adjacent: Allow matching of cards are in adjacent tableau piles. (str)
@@ -53,6 +55,7 @@ pair_not_suit: Build in anything but suits. (str)
 --------------------------------------------
 sort_ace: Sort starting with the ace. (bool)
 sort_kinds: Only kings may be sorted. (str)
+sort_no_reserve: Sort non-starters only when the reserve is empty. (bool)
 sort_none: No sorting is allowed. (str)
 sort_rank: Sort starting with a specific rank. (bool)
 sort_up: Sort sequentially up in rank. (bool)
@@ -110,6 +113,22 @@ def build_one(game, mover, target, moving_stack):
     # Check for enough space to move the cards
     if len(moving_stack) > _move_one_size(game):
         error = 'You may only move {} cards at this time.'.format(_move_one_size(game))
+    return error
+
+def build_reserve(game, mover, target, moving_stack):
+    """
+    Build only from the reserve. (bool)
+    
+    Parameters:
+    game: The game being played. (Solitaire)
+    mover: The card to move. (TrackingCard)
+    target: The destination card. (TrackingCard)
+    moving_stack: The stack of cards that would move. (list of TrackingCard)
+    """
+    error = ''
+    # check that mover is the top card of the waste.
+    if (not game.reserve[0]) or mover != game.reserve[0][-1]:
+        error = 'You may only build the top card from the reserve.'
     return error
 
 def build_whole(game, mover, target, moving_stack):
@@ -371,6 +390,21 @@ def lane_one(game, card, moving_stack):
 
 def lane_reserve(game, card, moving_stack):
     """
+    Lane only from the reserve (bool)
+    
+    Parameters:
+    game: The game being played. (Solitaire)
+    card: The card to move into the lane. (TrackingCard)
+    moving_stack: The cards on top of the card moving. (list of TrackingCard)
+    """
+    error = ''
+    # check for the moving card being a king.
+    if (not game.reserve[0]) or card !=  game.reserve[0][-1]:
+        error = 'You can only lane the top card from the reserve.'
+    return error
+
+def lane_reserve_waste(game, card, moving_stack):
+    """
     Check only laning cards from the reserve. (str)
 
     If nothing is in the reserve, the waste pile may be used.
@@ -567,6 +601,21 @@ def sort_kings(game, card, foundation):
     error = ''
     if card.rank != 'K':
         error = 'Only kings may be sorted.'
+    return error
+
+def sort_no_reserve(game, card, foundation):
+    """
+    Sort non-starters only when the reserve is empty. (bool)
+    
+    Parameters:
+    game: The game being played. (Solitiaire)
+    card: The card to be sorted. (TrackingCard)
+    foundation: The target foundation. (list of TrackingCard)
+    """
+    error = ''
+    # check for match to foundation pile
+    if game.reserve[0] and foundation:
+        error = 'Only base cards can be sorted before the reserve is emptied.'
     return error
 
 def sort_none(game, card, foundation):

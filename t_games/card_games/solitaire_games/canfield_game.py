@@ -131,7 +131,7 @@ class Canfield(solitaire.Solitaire):
         super(Canfield, self).set_checkers()
         # Set the rules.
         self.build_checkers = [solitaire.build_whole]
-        self.lane_checkers = [solitaire.lane_reserve]
+        self.lane_checkers = [solitaire.lane_reserve_waste]
         self.pair_checkers = [solitaire.pair_down, solitaire.pair_alt_color]
         self.sort_checkers = [solitaire.sort_rank, solitaire.sort_up]
         # Set the dealers.
