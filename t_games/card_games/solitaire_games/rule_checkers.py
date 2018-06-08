@@ -15,7 +15,8 @@ The parameter list for each type of function:
 
 Functions:
 _move_one_size: Calculate maximum stack under "move one" rules. (int)
---------------------------------------------------
+------------------------------------------
+build_none: No building is allowed. (bool)
 build_one: Build moving one card at a time. (bool)
 build_whole: Check that only complete tableau stacks are moved. (str)
 -------------------------------------------------
@@ -35,10 +36,15 @@ deal_stock_all: Move the rest of the deck into the stock. (None)
 flip_random: Flip random tableau cards face down. (None)
 ------------------------------------------------------
 lane_king: Check moving only kings into a lane. (bool)
+lane_none: Cards may not be moved to empty lanes. (bool)
 lane_reserve: Check only laning cards from the reserve. (str)
 lane_one: Check moving one card at a time into a lane. (bool)
---------------------------------------------
+-------------------------------------------------------------
+match_adjacent: Allow matching of cards are in adjacent tableau piles. (str)
 match_none: Disallow any match moves. (bool)
+match_pairs: Allow matching cards of the same rank. (str)
+match_tableau: Allow matching if the cards are in the tableau. (str)
+match_thirteen: Allow matching cards that sum to 13. (str)
 --------------------------------------------
 pair_alt_color: Build in alternating colors. (str)
 pair_down: Build sequentially down in rank. (str)
@@ -46,11 +52,14 @@ pair_suit: Build in suits. (str)
 pair_not_suit: Build in anything but suits. (str)
 --------------------------------------------
 sort_ace: Sort starting with the ace. (bool)
+sort_kinds: Only kings may be sorted. (str)
+sort_none: No sorting is allowed. (str)
 sort_rank: Sort starting with a specific rank. (bool)
 sort_up: Sort sequentially up in rank. (bool)
 """
 
 
+import itertools
 import random
 
 
@@ -74,6 +83,18 @@ def _move_one_size(game, to_lane = False):
     return (1 + free) * 2 ** lanes
 
 # Define build checkers.
+
+def build_none(game, mover, target, moving_stack):
+    """
+    No building is allowed. (bool)
+    
+    Parameters:
+    game: The game being played. (Solitaire)
+    mover: The card to move. (TrackingCard)
+    target: The destination card. (TrackingCard)
+    moving_stack: The stack of cards that would move. (list of TrackingCard)
+    """
+    return 'Building is not allowed in this game.'
     
 def build_one(game, mover, target, moving_stack):
     """
@@ -321,6 +342,17 @@ def lane_king(game, card, moving_stack):
         error = 'You can only move kings into an empty lane.'
     return error
         
+def lane_none(game, card, moving_stack):
+    """
+    Cards may not be moved to empty lanes. (bool)
+    
+    Parameters:
+    game: The game being played. (Solitaire)
+    card: The card to move into the lane. (TrackingCard)
+    moving_stack: The cards on top of the card moving. (list of TrackingCard)
+    """
+    return 'Cards may not be moved to empty lanes.'
+        
 def lane_one(game, card, moving_stack):
     """
     Check moving one card at a time into a lane. (bool)
@@ -358,6 +390,38 @@ def lane_reserve(game, card, moving_stack):
 
 # Define match checkers.
 
+def match_adjacent(game, cards):
+    """
+    Allow matching of cards are in adjacent tableau piles. (str)
+
+    Parameters:
+    game: The game being played. (solitaire.Solitaire)
+    cards: The cards being matched. (list of card.TrackingCard)
+    """
+    error = ''
+    # Get the distance between the cards.
+    start, end = [game.tableau.index([card]) for card in cards]
+    distance = end - start
+    # Get the valid distances.
+    valid_distances = []
+    # Get the valid orthogonal distances.
+    if start % 5:
+        valid_distances.append(-1)
+    if start % 5 != 4:
+        valid_distances.append(1)
+    if start < game.options['num-tableau'] - 5:
+        valid_distances.append(5)
+    if start > 4:
+        valid_distances.append(-5)
+    # Use the orthogonal distances to get the valid diagonal distances.
+    for x, y in itertools.combinations(valid_distances, 2):
+        if x + y != 0:
+            valid_distances.append(x + y)
+    # Check that the distance is valid.
+    if distance not in valid_distances:
+        error = '{} and {} are not adjacent to each other on the tableau.'.format(*cards)
+    return error
+
 def match_none(game, card, match):
     """
     Disallow any matchest. (bool)
@@ -366,6 +430,51 @@ def match_none(game, card, match):
     cards: The cards to match (list of TrackingCard)
     """
     return 'Matching cards is not allowed in this game.'
+
+
+def match_pairs(game, cards):
+    """
+    Allow matching cards of the same rank. (str)
+
+    Parameters:
+    game: The game being played. (solitaire.Solitaire)
+    cards: The cards being matched. (list of card.TrackingCard)
+    """
+    error = ''
+    if cards[0].rank != cards[1].rank:
+        error = '{} and {} are not the same rank.'.format(*cards)
+    return error
+
+
+def match_tableau(game, cards):
+    """
+    Allow matching if the cards are in the tableau. (str)
+
+    Parameters:
+    game: The game being played. (solitaire.Solitaire)
+    cards: The cards being matched. (list of card.TrackingCard)
+    """
+    error = ''
+    for card in cards:
+        if card.game_location not in game.tableau:
+            error = '{} is not in the tableau'.format(card)
+            break
+    return error
+
+
+def match_thirteen(game, cards):
+    """
+    Allow matching cards that sum to 13. (str)
+
+    Parameters:
+    game: The game being played. (solitaire.Solitaire)
+    cards: The cards being matched. (list of cards.TrackingCard)
+    """
+    error = ''
+    total = sum(game.deck.ranks.index(card.rank) for card in cards)
+    if total != 13:
+        error = 'The ranks of {} and {} do not sum to thirteen.'.format(*cards)
+    return error
 
 # Define pair checkers.
     
@@ -445,6 +554,31 @@ def sort_ace(game, card, foundation):
     if not foundation and card.rank_num != 1:
         error = 'Only aces can be sorted to empty foundations.'
     return error
+
+def sort_kings(game, card, foundation):
+    """
+    Only allow kings to be sorted. (str)
+
+    Parameters:
+    game: The game being played. (solitaire.Solitaire)
+    card: The card to be sorted. (cards.TrackingCard)
+    foundation: The foundation to sort to. (list of cards.TrackingCard)
+    """
+    error = ''
+    if card.rank != 'K':
+        error = 'Only kings may be sorted.'
+    return error
+
+def sort_none(game, card, foundation):
+    """
+    No sorting is allowed. (str)
+
+    Parameters:
+    game: The game being played. (solitaire.Solitaire)
+    card: The card to be sorted. (cards.TrackingCard)
+    foundation: The foundation to sort to. (list of cards.TrackingCard)
+    """
+    return 'Sorting is not allowed in this game.'
 
 def sort_rank(game, card, foundation):
     """
