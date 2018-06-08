@@ -579,7 +579,7 @@ class Solitaire(game.Game):
         self.pair_checkers = []
         self.sort_checkers = []
         # dealers
-        self.dealers = [deal_free]
+        self.dealers = [deal_all]
 
     def set_options(self):
         """Handle game options and set the player list. (None)"""

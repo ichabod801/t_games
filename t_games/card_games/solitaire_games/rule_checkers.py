@@ -18,16 +18,20 @@ _move_one_size: Calculate maximum stack under "move one" rules. (int)
 --------------------------------------------------
 build_one: Build moving one card at a time. (bool)
 build_whole: Check that only complete tableau stacks are moved. (str)
-----------------------------------------------------------
+-------------------------------------------------
+deal_aces: Deal the aces onto the tableau. (None)
 deal_aces_multi: Deal the aces to the foundations in a multi-deck game. (None)
-deal_free: Deal all the cards out onto the tableau. (None)
+deal_all: Deal all the cards out onto the tableau. (None)
+deal_free: Fill the free cells with the last cards dealt. (None)
 deal_reserve_n: Create a dealer that deals n cards to the reserve (None)
 deal_n: Create a dealer that deals n cards onto the tableau. (function)
 deal_one_row: Deal one card face up to each tableau pile. (None)
 deal_selective: Deal tableau cards with selection of foundation rank. (None)
 deal_start_foundation: Deal an initial foundation card. (None)
+deal_twos: Deal the twos onto the tableau. (None)
 deal_twos_foundation: Deal the twos to the foundations. (None)
 deal_stock_all: Move the rest of the deck into the stock. (None)
+flip_random: Flip random tableau cards face down. (None)
 ------------------------------------------------------
 lane_king: Check moving only kings into a lane. (bool)
 lane_reserve: Check only laning cards from the reserve. (str)
@@ -44,6 +48,10 @@ sort_ace: Sort starting with the ace. (bool)
 sort_rank: Sort starting with a specific rank. (bool)
 sort_up: Sort sequentially up in rank. (bool)
 """
+
+
+import random
+
 
 # Define helper functions for the dealers and checkers.
 
@@ -100,6 +108,22 @@ def build_whole(game, mover, target, moving_stack):
 
 # Define dealers.
 
+def deal_aces(game):
+    """
+    Deal the aces onto the tableau. (None)
+
+    Parameters:
+    game: The game to deal the cards for. (Solitaire)
+    """
+    # Find the next pile to deal to.
+    min_tableau = min([len(pile) for pile in game.tableau])
+    next_index = [index for index, pile in enumerate(game.tableau) if len(pile) == min_tableau][0]
+    # Deal the aces.
+    for card in game.deck.cards[::-1]:
+        if card.rank == 'A':
+            game.deck.force(card, game.tableau[next_index])
+            next_index = (next_index + 1) % len(game.tableau)
+
 def deal_aces_multi(game):
     """
     Deal the aces to the foundations in a multi-deck game.
@@ -113,7 +137,7 @@ def deal_aces_multi(game):
         for foundation in game.find_foundation(ace):
             game.deck.force(ace_text, foundation)
 
-def deal_free(game):
+def deal_all(game):
     """
     Deal all the cards out onto the tableau. (None)
 
@@ -122,6 +146,23 @@ def deal_free(game):
     """
     for card_ndx in range(len(game.deck.cards)):
         game.deck.deal(game.tableau[card_ndx % len(game.tableau)])
+
+def deal_free(game):
+    """
+    Fill the free cells with the last cards dealt. (None)
+
+    Parameters:
+    game: The game to deal the cards for. (Solitaire)
+    """
+    # Find the last card dealt.
+    max_tableau = max([len(pile) for pile in game.tableau])
+    last_index = [index for index, pile in enumerate(game.tableau) if len(pile) == max_tableau][-1]
+    # Move them to the free cells.
+    unfilled = game.num_cells - len(game.cells)
+    for card in range(unfilled):
+        game.cells.append(game.tableau[last_index].pop())
+        game.cells[-1].game_location = game.cells
+        last_index = (last_index - 1) % len(game.tableau)
 
 def deal_reserve_n(n, up = False):
     """
@@ -212,6 +253,22 @@ def deal_stock_all(game):
         game.deck.deal(game.stock, face_up = False)
     game.stock.reverse()
 
+def deal_twos(game):
+    """
+    Deal the twos onto the tableau. (None)
+
+    Parameters:
+    game: The game to deal the cards for. (Solitaire)
+    """
+    # Find the next pile to deal to.
+    min_tableau = min([len(pile) for pile in game.tableau])
+    next_index = [index for index, pile in enumerate(game.tableau) if len(pile) == min_tableau][0]
+    # Deal the aces.
+    for card in game.deck.cards[::-1]:
+        if card.rank == '2':
+            game.deck.force(card, game.tableau[next_index])
+            next_index = (next_index + 1) % len(game.tableau)
+
 def deal_twos_foundations(game):
     """
     Deal the twos to the foundations. (None)
@@ -223,6 +280,16 @@ def deal_twos_foundations(game):
         deuce = game.deck.find('2' + suit)
         target = game.find_foundation(deuce)
         game.deck.force(deuce, target)
+
+def flip_random(game):
+    """
+    Flip random tableau cards face down. (None)
+
+    Parameters:
+    game: The game to deal the cards for. (Solitaire)
+    """
+    for pile in game.tableau:
+        random.choice(pile[:-1]).up = False
 
 # Define lane checkers.
 
@@ -252,7 +319,7 @@ def lane_one(game, card, moving_stack):
     """
     error = ''
     # check for open space to move the stack
-    max_lane = move_one_size(game, to_lane = True)
+    max_lane = _move_one_size(game, to_lane = True)
     if len(moving_stack) > max_lane:
         error = 'You can only move {} cards to a lane at the moment.'.format(max_lane)
     return error
