@@ -317,7 +317,7 @@ class Klondike(solitaire.Solitaire):
         self.pair_checkers = [solitaire.pair_down, solitaire.pair_alt_color]
         self.sort_checkers = [solitaire.sort_ace, solitaire.sort_up]
         # Set the dealers
-        self.dealers = [deal_klondike, solitaire.deal_stock_all]
+        self.dealers = [solitaire.deal_klondike, solitaire.deal_stock_all]
 
     def set_options(self):
         """Define the options for the game. (None)"""
@@ -330,18 +330,6 @@ class Klondike(solitaire.Solitaire):
             value = 1, default = 3,
             question = 'Would you like to go through the stock one card at a time? bool')
 
-
-def deal_klondike(game):
-    """
-    Deal deal a triangle in the tableau. (None)
-
-    Parameters:
-    game: The game to deal the cards for. (Solitaire)
-    """
-    # Deal out the triangle of cards.
-    for card_ndx in range(len(game.tableau)):
-        for tableau_ndx in range(card_ndx, len(game.tableau)):
-            game.deck.deal(game.tableau[tableau_ndx], card_ndx == tableau_ndx)
 
 def sim_test(start = 1, end = 10):
     bot = Klonbot()

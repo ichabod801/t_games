@@ -23,6 +23,7 @@ deal_aces: Deal the aces onto the tableau. (None)
 deal_aces_multi: Deal the aces to the foundations in a multi-deck game. (None)
 deal_all: Deal all the cards out onto the tableau. (None)
 deal_free: Fill the free cells with the last cards dealt. (None)
+deal_klondike: Deal deal a triangle in the tableau. (None)
 deal_reserve_n: Create a dealer that deals n cards to the reserve (None)
 deal_n: Create a dealer that deals n cards onto the tableau. (function)
 deal_one_row: Deal one card face up to each tableau pile. (None)
@@ -163,6 +164,18 @@ def deal_free(game):
         game.cells.append(game.tableau[last_index].pop())
         game.cells[-1].game_location = game.cells
         last_index = (last_index - 1) % len(game.tableau)
+
+def deal_klondike(game):
+    """
+    Deal deal a triangle in the tableau. (None)
+
+    Parameters:
+    game: The game to deal the cards for. (Solitaire)
+    """
+    # Deal out the triangle of cards.
+    for card_ndx in range(len(game.tableau)):
+        for tableau_ndx in range(card_ndx, len(game.tableau)):
+            game.deck.deal(game.tableau[tableau_ndx], card_ndx == tableau_ndx)
 
 def deal_reserve_n(n, up = False):
     """
