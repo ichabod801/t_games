@@ -424,13 +424,14 @@ def lane_reserve_waste(game, card, moving_stack):
 
 # Define match checkers.
 
-def match_adjacent(game, cards):
+def match_adjacent(game, card, match):
     """
     Allow matching of cards are in adjacent tableau piles. (str)
 
     Parameters:
     game: The game being played. (solitaire.Solitaire)
-    cards: The cards being matched. (list of card.TrackingCard)
+    card: The card to match. (TrackingCard)
+    match: The card to match it to. (TrackingCard)
     """
     error = ''
     # Get the distance between the cards.
@@ -461,18 +462,21 @@ def match_none(game, card, match):
     Disallow any matchest. (bool)
 
     Parameters:
-    cards: The cards to match (list of TrackingCard)
+    game: The game being played. (solitaire.Solitaire)
+    card: The card to match. (TrackingCard)
+    match: The card to match it to. (TrackingCard)
     """
     return 'Matching cards is not allowed in this game.'
 
 
-def match_pairs(game, cards):
+def match_pairs(game, card, match):
     """
     Allow matching cards of the same rank. (str)
 
     Parameters:
     game: The game being played. (solitaire.Solitaire)
-    cards: The cards being matched. (list of card.TrackingCard)
+    card: The card to match. (TrackingCard)
+    match: The card to match it to. (TrackingCard)
     """
     error = ''
     if cards[0].rank != cards[1].rank:
@@ -480,13 +484,14 @@ def match_pairs(game, cards):
     return error
 
 
-def match_tableau(game, cards):
+def match_tableau(game, card, match):
     """
     Allow matching if the cards are in the tableau. (str)
 
     Parameters:
     game: The game being played. (solitaire.Solitaire)
-    cards: The cards being matched. (list of card.TrackingCard)
+    card: The card to match. (TrackingCard)
+    match: The card to match it to. (TrackingCard)
     """
     error = ''
     for card in cards:
@@ -496,13 +501,14 @@ def match_tableau(game, cards):
     return error
 
 
-def match_thirteen(game, cards):
+def match_thirteen(game, card, match):
     """
     Allow matching cards that sum to 13. (str)
 
     Parameters:
     game: The game being played. (solitaire.Solitaire)
-    cards: The cards being matched. (list of cards.TrackingCard)
+    card: The card to match. (TrackingCard)
+    match: The card to match it to. (TrackingCard)
     """
     error = ''
     total = sum(game.deck.ranks.index(card.rank) for card in cards)

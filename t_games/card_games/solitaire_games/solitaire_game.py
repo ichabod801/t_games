@@ -535,7 +535,7 @@ class Solitaire(game.Game):
         # check game specific rules
         else:
             for checker in self.match_checkers:
-                error = checker(self, cards)
+                error = checker(self, *cards)
                 if error:
                     break
         # handle determination
