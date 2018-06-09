@@ -512,7 +512,7 @@ def match_thirteen(game, card, match):
     match: The card to match it to. (TrackingCard)
     """
     error = ''
-    total = card.rank_index + match.rank_index
+    total = card.rank_num + match.rank_num
     if total != 13:
         error = 'The ranks of {} and {} do not sum to thirteen.'.format(card, match)
     return error
