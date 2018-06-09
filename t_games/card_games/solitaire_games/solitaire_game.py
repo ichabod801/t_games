@@ -184,7 +184,7 @@ class Solitaire(game.Game):
             if error:
                 self.do_match(line)
             if error:
-                self.human.error('There are no legal moves using the {} and the {}.'.format(mover, target))
+                self.human.error('There are no legal moves using the {} and the {}.'.format(*cards))
         else:
             self.human.error("I don't know what to do with that many cards.")
         
