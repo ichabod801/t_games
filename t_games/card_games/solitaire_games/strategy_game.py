@@ -93,6 +93,7 @@ class Strategy(solitaire.Solitaire):
 
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
+        super(Strategy, self).set_checkers()
         # Cards only move from the reserve (at first).
         self.build_checkers = [solitaire.build_reserve]
         self.lane_checkers = [solitaire.lane_reserve]
