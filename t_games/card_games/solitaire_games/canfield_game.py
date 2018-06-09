@@ -157,7 +157,7 @@ class Canfield(solitaire.Solitaire):
 
     def set_options(self):
         """Define the game options. (None)"""
-        self.option_set.add_option('variant', [], options.lower, default = None, valid = self.variants,
+        self.option_set.add_option('variant', [], options.lower, default = '', valid = self.variants,
             question = 'Which variant would you like to play? ',
             error_text = 'The valid variants are: {}.'.format(', '.join(self.variants)))
 
