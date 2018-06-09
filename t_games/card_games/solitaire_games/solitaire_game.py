@@ -946,7 +946,7 @@ class MultiSolitaire(Solitaire):
             self.human.error('There are no valid moves for laning a {}.'.format(card))
             return True
 
-    def do_match(self, card):
+    def do_match(self, cards):
         """
         Match two cards and discard them.
 
