@@ -435,7 +435,8 @@ def match_adjacent(game, card, match):
     """
     error = ''
     # Get the distance between the cards.
-    start, end = [game.tableau.index([card]) for card in cards]
+    start = game.tableau.index([card])
+    end = game.tableau.index([match])
     distance = end - start
     # Get the valid distances.
     valid_distances = []
@@ -454,7 +455,7 @@ def match_adjacent(game, card, match):
             valid_distances.append(x + y)
     # Check that the distance is valid.
     if distance not in valid_distances:
-        error = '{} and {} are not adjacent to each other on the tableau.'.format(*cards)
+        error = '{} and {} are not adjacent to each other on the tableau.'.format(card, match)
     return error
 
 def match_none(game, card, match):
@@ -479,8 +480,8 @@ def match_pairs(game, card, match):
     match: The card to match it to. (TrackingCard)
     """
     error = ''
-    if cards[0].rank != cards[1].rank:
-        error = '{} and {} are not the same rank.'.format(*cards)
+    if card.rank != match.rank:
+        error = '{} and {} are not the same rank.'.format(card, match)
     return error
 
 
@@ -494,7 +495,7 @@ def match_tableau(game, card, match):
     match: The card to match it to. (TrackingCard)
     """
     error = ''
-    for card in cards:
+    for card in [card, match]:
         if card.game_location not in game.tableau:
             error = '{} is not in the tableau'.format(card)
             break
@@ -511,9 +512,9 @@ def match_thirteen(game, card, match):
     match: The card to match it to. (TrackingCard)
     """
     error = ''
-    total = sum(game.deck.ranks.index(card.rank) for card in cards)
+    total = card.rank_index + match.rank_index
     if total != 13:
-        error = 'The ranks of {} and {} do not sum to thirteen.'.format(*cards)
+        error = 'The ranks of {} and {} do not sum to thirteen.'.format(card, match)
     return error
 
 # Define pair checkers.
