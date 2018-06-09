@@ -481,7 +481,7 @@ def match_pairs(game, card, match):
     """
     error = ''
     if card.rank != match.rank:
-        error = '{} and {} are not the same rank.'.format(*cards)
+        error = '{} and {} are not the same rank.'.format(card, match)
     return error
 
 
