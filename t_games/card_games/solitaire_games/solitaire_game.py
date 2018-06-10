@@ -67,6 +67,7 @@ class Solitaire(game.Game):
     free_check: Check that a card can be moved to a free cell. (bool)
     game_over: Check for the foundations being full. (bool)
     guess: Guess what move to make for a particular card. (None)
+    guess_two: Guess what move to make for two given cards. (bool)
     lane_check: Check for a valid move into a lane. (bool)
     match_check: Check for a valid match of two cards. (bool)
     reserve_text: Generate text for the reserve piles. (str)
@@ -179,12 +180,15 @@ class Solitaire(game.Game):
         line: The user's input. (str)
         """
         cards = self.deck.card_re.findall(line)
+        # No cards is just standard error.
         if not cards:
             self.human.error('\nI do not recognize that command.')
+        # One or two cards are guess moves.
         elif len(cards) == 1:
             return self.guess(cards[0])
         elif len(cards) == 2:
             return self.guess_two(*cards)
+        # More than two cards is someone being silly.
         else:
             self.human.error("\nI don't know what to do with that many cards.")
         
@@ -808,6 +812,8 @@ class MultiSolitaire(Solitaire):
     Overridden Methods:
     do_match
     find_foundation
+    guess
+    guess_two
     """
 
     aliases = {'alt': 'alternate'}
