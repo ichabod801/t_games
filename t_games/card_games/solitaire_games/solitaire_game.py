@@ -176,17 +176,13 @@ class Solitaire(game.Game):
         """
         cards = self.deck.card_re.findall(line)
         if not cards:
-            self.human.error('I do not recognize that command.')
+            self.human.error('\nI do not recognize that command.')
         elif len(cards) == 1:
             return self.guess(cards[0])
         elif len(cards) == 2:
-            error = self.do_build(line)
-            if error:
-                self.do_match(line)
-            if error:
-                self.human.error('There are no legal moves using {!r}.'.format(line))
+            return self.guess_two(*cards)
         else:
-            self.human.error("I don't know what to do with that many cards.")
+            self.human.error("\nI don't know what to do with that many cards.")
         
     def do_auto(self, max_rank):
         """
@@ -318,7 +314,7 @@ class Solitaire(game.Game):
             self.human.error('You must provide two valid cards to the match command.')
             return True
         cards = [self.deck.find(card) for card in cards]
-        if self.match_check(cards):
+        if self.match_check(*cards):
             self.transfer([cards[0]], self.foundations[0])
             self.transfer([cards[1]], self.foundations[0])
     
@@ -449,33 +445,66 @@ class Solitaire(game.Game):
     
     def guess(self, card):
         """
-        Guess what move to make for a particular card. (None)
+        Guess what move to make for a particular card. (bool)
         
         Parameters:
         card: The card to move. (str)
         """
-        # get the card.
+        go = True
+        # Get the card.
         card = self.deck.find(card)
-        # check sorting
+        # Check sorting the card.
         if self.foundations and self.sort_check(card, self.find_foundation(card), False):
-            self.do_sort(str(card))
+            go = self.do_sort(str(card))
         else:
-            # check building
             moving_stack = self.super_stack(card)
             for pile in self.tableau:
+                # Check building the card
                 if pile and self.build_check(card, pile[-1], moving_stack, False):
-                    self.do_build('{} {}'.format(str(card), str(pile[-1])))
+                    go = self.do_build('{} {}'.format(card, pile[-1]))
+                    break
+                # Check matching the card.
+                elif pile and self.match_check(card, pile[-1], False):
+                    go = self.do_match('{} {}'.format(card, pile[-1]))
                     break
             else:
-                # check freeing
+                # Check freeing the card.
                 if card.game_location is not self.cells and self.free_check(card, False):
-                    self.do_free(str(card))
-                # check laning
+                    go = self.do_free(str(card))
+                # Check laning the card.
                 elif self.lane_check(card, moving_stack, False):
-                    self.do_lane(str(card))
+                    go = self.do_lane(str(card))
                 else:
-                    # error out if nothing else works
-                    print('There are no valid moves for the {}.'.format(card.name))
+                    # Error out if nothing works.
+                    player = self.players[self.player_index]
+                    player.error('\nThere are no valid moves for the {}.'.format(card.name))
+        return go
+
+    def guess_two(self, card, target):
+        """
+        Guess what move to make for two given cards. (bool)
+
+        Parameters:
+        card: The first card specified. (str)
+        target: The second card specified. (str)
+        """
+        go = True
+        # Get the card information.
+        card = self.deck.find(card)
+        target = self.deck.find(target)
+        moving_stack = self.super_stack(card)
+        card_text = '{} {}'.format(card, target)
+        # Check for building the card on the target.
+        if self.build_check(card, target, moving_stack, False):
+            go = self.do_build(card_text)
+        # Check for matching the card with the target.
+        elif self.match_check(card, target, False):
+            go = self.do_match(card_text)
+        # Error out if you can't build or match.
+        else:
+            player = self.players[self.player_index]
+            player.error('There are no valid moves for {} and {}.'.format(card, target))
+        return go
     
     def lane_check(self, card, moving_stack, show_error = True):
         """
@@ -510,29 +539,28 @@ class Solitaire(game.Game):
             self.human.error(error)
         return not error
 
-    def match_check(self, cards, show_error = True):
+    def match_check(self, card, match, show_error = True):
         """
         Check ofr a valid match of two cards. (bool)
 
         Parameters:
-        cards: The two cards being moved. (list of card.TrackingCard)
+        card: The card being checked. (card.TrackingCard)
+        match: The card it is being matched to. (card.TrackingCard)
         show_error: A flag for showing why the card can't be moved. (bool)
         """
         error = ''
-        # check for sorted cards
-        if cards[0].game_location in self.foundations:
-            error = 'The {} is sorted and cannot be moved.'.format(cards[0].name)
-        elif cards[1].game_location in self.foundations:
-            error = 'The {} is sorted and cannot be moved.'.format(cards[1].name)
-        # check for face down cards
-        elif not cards[0].up:
-            error = 'The {} is face down and cannot be moved.'.format(cards[0].name)
-        elif not cards[1].up:
-            error = 'The {} is face down and cannot be moved.'.format(cards[1].name)
+        # Check both cards equally.
+        for check_it in [card, match]:
+            # Check for sorted cards.
+            if check_it.game_location in self.foundations:
+                error = 'The {} is sorted and cannot be moved.'.format(check_it.name)
+            # check for face down cards
+            elif not check_it.up:
+                error = 'The {} is face down and cannot be moved.'.format(check_it.name)
         # check game specific rules
         else:
             for checker in self.match_checkers:
-                error = checker(self, *cards)
+                error = checker(self, card, match)
                 if error:
                     break
         # handle determination
