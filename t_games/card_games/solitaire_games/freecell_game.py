@@ -117,15 +117,15 @@ class FreeCell(solitaire.Solitaire):
         self.sort_checkers = [solitaire.sort_ace, solitaire.sort_up]
         # Set the dealers
         if self.challenge == '2A':
-            self.dealers = [deal_twos, deal_aces, solitaire.deal_free]
+            self.dealers = [solitaire.deal_twos, solitaire.deal_aces, solitaire.deal_all]
         elif self.challenge == 'A2':
-            self.dealers = [deal_aces, deal_twos, solitaire.deal_free]
+            self.dealers = [solitaire.deal_aces, solitaire.deal_twos, solitaire.deal_all]
         else:
-            self.dealers = [solitaire.deal_free]
+            self.dealers = [solitaire.deal_all]
         if self.fill_free:
-            self.dealers.append(fill_free)
+            self.dealers.append(solitaire.deal_free)
         if self.supercell:
-            self.dealers.append(flip_random)
+            self.dealers.append(solitaire.flip_random)
 
     def set_options(self):
         """Set the game options. (None)"""
@@ -148,66 +148,6 @@ class FreeCell(solitaire.Solitaire):
             question = 'Should random cards be flipped face down? bool')
         self.option_set.add_option(name = 'baker',
             question = "Should tableau cards be built by suit (Baker's Game)? bool")
-
-
-def deal_aces(game):
-    """
-    Deal the aces onto the tableau. (None)
-
-    Parameters:
-    game: The game to deal the cards for. (Solitaire)
-    """
-    # Find the next pile to deal to.
-    min_tableau = min([len(pile) for pile in game.tableau])
-    next_index = [index for index, pile in enumerate(game.tableau) if len(pile) == min_tableau][0]
-    # Deal the aces.
-    for card in game.deck.cards[::-1]:
-        if card.rank == 'A':
-            game.deck.force(card, game.tableau[next_index])
-            next_index = (next_index + 1) % len(game.tableau)
-
-def deal_twos(game):
-    """
-    Deal the aces onto the tableau. (None)
-
-    Parameters:
-    game: The game to deal the cards for. (Solitaire)
-    """
-    # Find the next pile to deal to.
-    min_tableau = min([len(pile) for pile in game.tableau])
-    next_index = [index for index, pile in enumerate(game.tableau) if len(pile) == min_tableau][0]
-    # Deal the aces.
-    for card in game.deck.cards[::-1]:
-        if card.rank == '2':
-            game.deck.force(card, game.tableau[next_index])
-            next_index = (next_index + 1) % len(game.tableau)
-
-def fill_free(game):
-    """
-    Fill the free cells with the last cards dealt. (None)
-
-    Parameters:
-    game: The game to deal the cards for. (Solitaire)
-    """
-    # Find the last card dealt.
-    max_tableau = max([len(pile) for pile in game.tableau])
-    last_index = [index for index, pile in enumerate(game.tableau) if len(pile) == max_tableau][-1]
-    # Move them to the free cells.
-    unfilled = game.num_cells - len(game.cells)
-    for card in range(unfilled):
-        game.cells.append(game.tableau[last_index].pop())
-        game.cells[-1].game_location = game.cells
-        last_index = (last_index - 1) % len(game.tableau)
-
-def flip_random(game):
-    """
-    Flip random tableau cards face down. (None)
-
-    Parameters:
-    game: The game to deal the cards for. (Solitaire)
-    """
-    for pile in game.tableau:
-        random.choice(pile[:-1]).up = False
 
 
 if __name__ == '__main__':

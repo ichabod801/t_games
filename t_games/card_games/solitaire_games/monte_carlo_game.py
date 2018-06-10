@@ -11,18 +11,12 @@ Classes:
 MonteCarlo: A game of Monte Carlo. (solitaire.Solitaire)
 
 Functions
-match_adjacent: Allow matching of cards are in adjacent tableau piles. (str)
-match_pairs: Allow matching cards of the same rank. (str)
-match_tableau: Allow matching if the cards are in the tableau. (str)
-match_thirteen: Allow matching cards that sum to 13. (str)
 no_build: No building is allowed. (str)
 no_lane: Cards may not be moved to empty lanes. (str)
 no_sort: No sorting is allowed. (str)
 sort_kings: Allow sorting kings. (str)
 """
 
-
-import itertools
 
 import t_games.card_games.solitaire_games.solitaire_game as solitaire
 
@@ -104,14 +98,14 @@ class MonteCarlo(solitaire.Solitaire):
         """Set up the game specific rules. (None)"""
         super(MonteCarlo, self).set_checkers()
         self.dealers = [solitaire.deal_n(self.options['num-tableau'])]
-        self.build_checkers = [no_build]
-        self.lane_checkers = [no_lane]
-        self.match_checkers = [match_tableau, match_adjacent, match_pairs]
+        self.build_checkers = [solitaire.build_none]
+        self.lane_checkers = [solitaire.lane_none]
+        self.match_checkers = [solitaire.match_tableau, solitaire.match_adjacent, solitaire.match_pairs]
         if self.thirteen:
-            self.match_checkers[-1] = match_thirteen
-            self.sort_checkers = [sort_kings]
+            self.match_checkers[-1] = solitaire.match_thirteen
+            self.sort_checkers = [solitaire.sort_kings]
         else:
-            self.sort_checkers = [no_sort]
+            self.sort_checkers = [solitaire.sort_none]
 
     def set_options(self):
         """Set the options for the game. (None)"""
@@ -133,128 +127,3 @@ class MonteCarlo(solitaire.Solitaire):
                 lines[-1] += '   '
         return '\n'.join(lines)
 
-
-def match_adjacent(game, cards):
-    """
-    Allow matching of cards are in adjacent tableau piles. (str)
-
-    Parameters:
-    game: The game being played. (solitaire.Solitaire)
-    cards: The cards being matched. (list of card.TrackingCard)
-    """
-    error = ''
-    # Get the distance between the cards.
-    start, end = [game.tableau.index([card]) for card in cards]
-    distance = end - start
-    # Get the valid distances.
-    valid_distances = []
-    # Get the valid orthogonal distances.
-    if start % 5:
-        valid_distances.append(-1)
-    if start % 5 != 4:
-        valid_distances.append(1)
-    if start < game.options['num-tableau'] - 5:
-        valid_distances.append(5)
-    if start > 4:
-        valid_distances.append(-5)
-    # Use the orthogonal distances to get the valid diagonal distances.
-    for x, y in itertools.combinations(valid_distances, 2):
-        if x + y != 0:
-            valid_distances.append(x + y)
-    # Check that the distance is valid.
-    if distance not in valid_distances:
-        error = '{} and {} are not adjacent to each other on the tableau.'.format(*cards)
-    return error
-
-
-def match_pairs(game, cards):
-    """
-    Allow matching cards of the same rank. (str)
-
-    Parameters:
-    game: The game being played. (solitaire.Solitaire)
-    cards: The cards being matched. (list of card.TrackingCard)
-    """
-    error = ''
-    if cards[0].rank != cards[1].rank:
-        error = '{} and {} are not the same rank.'.format(*cards)
-    return error
-
-
-def match_tableau(game, cards):
-    """
-    Allow matching if the cards are in the tableau. (str)
-
-    Parameters:
-    game: The game being played. (solitaire.Solitaire)
-    cards: The cards being matched. (list of card.TrackingCard)
-    """
-    error = ''
-    for card in cards:
-        if card.game_location not in game.tableau:
-            error = '{} is not in the tableau'.format(card)
-            break
-    return error
-
-
-def match_thirteen(game, cards):
-    """
-    Allow matching cards that sum to 13. (str)
-
-    Parameters:
-    game: The game being played. (solitaire.Solitaire)
-    cards: The cards being matched. (list of cards.TrackingCard)
-    """
-    error = ''
-    total = sum(game.deck.ranks.index(card.rank) for card in cards)
-    if total != 13:
-        error = 'The ranks of {} and {} do not sum to thirteen.'.format(*cards)
-    return error
-
-def no_build(game, mover, target, moving_stack):
-    """
-    No building is allowed. (bool)
-    
-    Parameters:
-    game: The game being played. (Solitaire)
-    mover: The card to move. (TrackingCard)
-    target: The destination card. (TrackingCard)
-    moving_stack: The stack of cards that would move. (list of TrackingCard)
-    """
-    return 'Building is not allowed in this game.'
-        
-def no_lane(game, card, moving_stack):
-    """
-    Cards may not be moved to empty lanes. (bool)
-    
-    Parameters:
-    game: The game being played. (Solitaire)
-    card: The card to move into the lane. (TrackingCard)
-    moving_stack: The cards on top of the card moving. (list of TrackingCard)
-    """
-    return 'Cards may not be moved to empty lanes.'
-
-def no_sort(game, card, foundation):
-    """
-    No sorting is allowed. (str)
-
-    Parameters:
-    game: The game being played. (solitaire.Solitaire)
-    card: The card to be sorted. (cards.TrackingCard)
-    foundation: The foundation to sort to. (list of cards.TrackingCard)
-    """
-    return 'Sorting is not allowed in this game.'
-
-def sort_kings(game, card, foundation):
-    """
-    Allow sorting kings. (str)
-
-    Parameters:
-    game: The game being played. (solitaire.Solitaire)
-    card: The card to be sorted. (cards.TrackingCard)
-    foundation: The foundation to sort to. (list of cards.TrackingCard)
-    """
-    error = ''
-    if card.rank != 'K':
-        error = 'Only kings may be sorted.'
-    return error
