@@ -11,9 +11,13 @@ Solitaire: A generalized solitaire game. (game.game)
 MultiSolitaire: A game of solitaire that uses multiple decks. (Solitaire)
 """
 
+
+import itertools
+
 import t_games.cards as cards
 import t_games.game as game
 from t_games.card_games.solitaire_games.rule_checkers import *
+
 
 class Solitaire(game.Game):
     """
@@ -807,7 +811,7 @@ class MultiSolitaire(Solitaire):
     """
 
     aliases = {'alt': 'alternate'}
-    name = 'Solitaire Base'
+    name = 'MultiSolitaire Base'
     
     def do_alternate(self, argument):
         """
@@ -1096,10 +1100,42 @@ class MultiSolitaire(Solitaire):
                         moves.append('lane {}'.format(card))
             if moves:
                 break
+        # Make a move if you have one.
         if moves:
-            self.handle_cmd(moves.pop())
+            return self.handle_cmd(moves.pop())
+        # If no moves were found, errror out.
         else:
-            self.human.error('There is no valid move for a {}.'.format(card_arg))
+            self.human.error('\nThere is no valid move for a {}.'.format(card_arg))
+
+    def guess_two(self, card, target):
+        """
+        Guess what move to make for two given cards. (bool)
+
+        Parameters:
+        card: The first card specified. (str)
+        target: The second card specified. (str)
+        """
+        # Get the card information.
+        card_text = '{} {}'.format(card, target)
+        cards = self.deck.find(card)
+        targets = self.deck.find(target)
+        moves = []
+        # Loop through all combinations of cards.
+        for card, target in itertools.product(cards, targets):
+            moving_stack = self.super_stack(card)
+            # Check for building the card on the target.
+            if self.build_check(card, target, moving_stack, False):
+                moves.append('build {}'.format(card_text))
+            # Check for matching the card with the target.
+            elif self.match_check(card, target, False):
+                moves.append('match {}'.format(card_text))
+        # Make a move if you have one.
+        if moves:
+            return self.handle_cmd(moves.pop())
+        # If no moves were found, errror out.
+        else:
+            message = '\nThere is no valid move for a {}{} and a {}{}.'
+            self.human.error(message.format(card.rank, card.suit, target.rank, target.suit))
 
     def set_solitaire(self):
         """
