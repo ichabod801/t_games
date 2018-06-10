@@ -507,7 +507,7 @@ class Solitaire(game.Game):
         # Error out if you can't build or match.
         else:
             player = self.players[self.player_index]
-            player.error('There are no valid moves for {} and {}.'.format(card, target))
+            player.error('\nThere are no valid moves for a {} and a {}.'.format(card, target))
         return go
     
     def lane_check(self, card, moving_stack, show_error = True):
@@ -1102,6 +1102,7 @@ class MultiSolitaire(Solitaire):
                 break
         # Make a move if you have one.
         if moves:
+            moves.reverse()
             return self.handle_cmd(moves.pop())
         # If no moves were found, errror out.
         else:
