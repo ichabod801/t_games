@@ -3,18 +3,12 @@ quadrille_game.py
 
 A game of Quadrille.
 
-       5H
-  6D
-       QH
-5D  QD    QS
-       QC
-
 Classes:
 Quadrille: A game of Quadrille. (solitaire.Solitaire)
 """
 
 
-import t_games.card_games.solitaire_games as solitaire
+import t_games.card_games.solitaire_games.solitaire_game as solitaire
 
 
 class Quadrille(solitaire.Solitaire):
@@ -26,6 +20,21 @@ class Quadrille(solitaire.Solitaire):
     categories = ['Card Games', 'Solitaire Games', 'Closed Games']
     # The name of the game.
     name = 'Quadrille'
+
+    def __str__(self):
+        """Human readable text representation. (str)"""
+        piles = self.foundations
+        lines = ['      {}'.format(piles[2][-1])]
+        lines.append('  {}      {}'.format(piles[5][-1], piles[6][-1]))
+        lines.append('      QH')
+        lines.append('{}  QD  QS  {}'.format(piles[1][-1], piles[3][-1]))
+        lines.append('      QC')
+        lines.append('  {}      {}'.format(piles[4][-1], piles[7][-1]))
+        lines.append('      {}'.format(piles[0][-1]))
+        lines.append('')
+        lines.append(self.stock_text())
+        lines.append('')
+        return '\n'.join(lines)
     
     def do_sort(self, card):
         """
@@ -57,26 +66,19 @@ class Quadrille(solitaire.Solitaire):
         foundation_index = self.deck.suits.index(card.suit)
         return self.foundations[foundation_index], self.foundations[foundation_index + 4]
 
+    def set_checkers(self):
+        """Set the game specific rule checking functions. (None)"""
+        super(Quadrille, self).set_checkers()
+        # Set the rule checking functions.
+        self.build_checkers = [solitaire.build_none]
+        self.lane_checkers = [solitaire.lane_none]
+        self.sort_checkers = [solitaire.sort_up_down]
+        # Set the dealers
+        self.dealers = [solitaire.deal_reserve_queens, solitaire.deal_five_six, solitaire.deal_stock_all]
+
     def set_options(self):
         """Set the available game options."""
         self.options = {'num-foundations': 8, 'num-reserve': 4, 'turn-count': 1, 'max-passes': 3}
-
-
-def sort_up_down(game, card, foundation):
-    """
-    Sort a card up or down, depending on the foundation. (str)
-
-    Parameters:
-    game: The game being played. (solitaire.Solitaire)
-    card: The card to sort. (card.TrackingCard)
-    foundation: The foundation to sort it to. (list of card.TrackingCard)
-    """
-    error = ''
-    if game.foundations.index(foundation) < 4:
-        if not card.below(foundation[-1]):
-            error = 'The {} is not one rank below the {}.'.format(card, foundation[-1])
-    elif not card.above(foundation[-1]):
-        error = 'The {} is not one rank above the {}.'.format(card, foundation[-1])
 
 
 if __name__ == '__main__':
