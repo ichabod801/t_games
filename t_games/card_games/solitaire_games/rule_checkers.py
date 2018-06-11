@@ -21,7 +21,7 @@ For the reasoning behind the existence of this file, see the wiki.
 
 Functions:
 _move_one_size: Calculate maximum stack under "move one" rules. (int)
-------------------------------------------
+-----------------------------------------
 build_none: No building is allowed. (str)
 build_one: Build moving one card at a time. (str)
 build_reserve: Build only from the reserve. (str)
@@ -30,18 +30,20 @@ build_whole: Check that only complete tableau stacks are moved. (str)
 deal_aces: Deal the aces onto the tableau. (None)
 deal_aces_multi: Deal the aces to the foundations in a multi-deck game. (None)
 deal_all: Deal all the cards out onto the tableau. (None)
+deal_five_six: Deal the fives and sixes as foundations. (None)
 deal_free: Fill the free cells with the last cards dealt. (None)
 deal_klondike: Deal deal a triangle in the tableau. (None)
-deal_reserve_n: Create a dealer that deals n cards to the reserve (None)
 deal_n: Create a dealer that deals n cards onto the tableau. (function)
 deal_one_row: Deal one card face up to each tableau pile. (None)
+deal_queens_out: Discard the queensl (None)
+deal_reserve_n: Create a dealer that deals n cards to the reserve (None)
 deal_selective: Deal tableau cards with selection of foundation rank. (None)
 deal_start_foundation: Deal an initial foundation card. (None)
 deal_stock_all: Move the rest of the deck into the stock. (None)
 deal_twos: Deal the twos onto the tableau. (None)
 deal_twos_foundation: Deal the twos to the foundations. (None)
 flip_random: Flip random tableau cards face down. (None)
-------------------------------------------------------
+-----------------------------------------------------
 lane_king: Check moving only kings into a lane. (str)
 lane_none: Cards may not be moved to empty lanes. (str)
 lane_one: Check moving one card at a time into a lane. (str)
@@ -65,6 +67,7 @@ sort_no_reserve: Sort non-starters only when the reserve is empty. (str)
 sort_none: No sorting is allowed. (str)
 sort_rank: Sort starting with a specific rank. (str)
 sort_up: Sort sequentially up in rank. (str)
+sort_up_down: Sort a card up or down, depending on the foundation. (str)
 """
 
 
@@ -200,6 +203,20 @@ def deal_all(game):
         game.deck.deal(game.tableau[card_ndx % len(game.tableau)])
 
 
+def deal_five_six(game):
+    """
+    Deal the fives and sixes as foundations. (None)
+
+    Parameters:
+    game: The game to deal cards for. (solitaire.Solitaire)
+    """
+    for foundation_index, suit in enumerate(game.deck.suits):
+        five = game.deck.find('5' + suit)
+        game.deck.force(five, game.foundations[foundation_index])
+        six = game.deck.find('6' + suit)
+        game.deck.force(six, game.foundations[foundation_index + 4])
+
+
 def deal_free(game):
     """
     Fill the free cells with the last cards dealt. (None)
@@ -231,23 +248,6 @@ def deal_klondike(game):
             game.deck.deal(game.tableau[tableau_ndx], face_up = card_ndx == tableau_ndx)
 
 
-def deal_reserve_n(n, up = False):
-    """
-    Create a dealer that deals n cards to the reserve (function)
-
-    The top card is always dealt face up.
-
-    Parameters:
-    n: The number of cards to deal to the reserve. (int)
-    up: A flag for dealing the cards face up. (str)
-    """
-    def dealer(game):
-        for card_index in range(n):
-            game.deck.deal(game.reserve[0], up)
-        game.reserve[0][-1].up = True
-    return dealer
-
-
 def deal_n(n, up = True):
     """
     Create a dealer that deals n cards onto the tableau. (function)
@@ -273,6 +273,36 @@ def deal_one_row(game):
     """
     for stack in game.tableau:
         game.deck.deal(stack, True)
+
+
+def deal_queens_out(game):
+    """
+    Discard the queens. (None)
+
+    Parameters:
+    game: The game to deal cards for. (solitaire.Solitaire)
+    """
+    for reserve_index, suit in enumerate(game.deck.suits):
+        queen = game.deck.find('Q' + suit)
+        game.deck.force(queen, game.reserve[reserve_index])
+        game.deck.discard(queen) # discard assumes the card is in play.
+
+
+def deal_reserve_n(n, up = False):
+    """
+    Create a dealer that deals n cards to the reserve (function)
+
+    The top card is always dealt face up.
+
+    Parameters:
+    n: The number of cards to deal to the reserve. (int)
+    up: A flag for dealing the cards face up. (str)
+    """
+    def dealer(game):
+        for card_index in range(n):
+            game.deck.deal(game.reserve[0], up)
+        game.reserve[0][-1].up = True
+    return dealer
 
 
 def deal_selective(game):
@@ -714,4 +744,22 @@ def sort_up(game, card, foundation):
     # Check for match to foundation pile.
     if foundation and not card.above(foundation[-1]):
         error = '{} is not one rank higher than {}.'.format(card, foundation[-1])
+    return error
+
+
+def sort_up_down(game, card, foundation):
+    """
+    Sort a card up or down, depending on the foundation. (str)
+
+    Parameters:
+    game: The game being played. (solitaire.Solitaire)
+    card: The card to sort. (card.TrackingCard)
+    foundation: The foundation to sort it to. (list of card.TrackingCard)
+    """
+    error = ''
+    if game.foundations.index(foundation) < 4:
+        if not card.below(foundation[-1]):
+            error = 'The {} is not one rank below the {}.'.format(card, foundation[-1])
+    elif not card.above(foundation[-1]):
+        error = 'The {} is not one rank above the {}.'.format(card, foundation[-1])
     return error
