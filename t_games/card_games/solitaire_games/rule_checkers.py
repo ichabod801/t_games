@@ -762,3 +762,4 @@ def sort_up_down(game, card, foundation):
             error = 'The {} is not one rank below the {}.'.format(card, foundation[-1])
     elif not card.above(foundation[-1]):
         error = 'The {} is not one rank above the {}.'.format(card, foundation[-1])
+    return error

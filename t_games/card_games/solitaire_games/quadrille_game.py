@@ -60,7 +60,8 @@ class Quadrille(solitaire.Solitaire):
 
     def set_options(self):
         """Set the available game options."""
-        self.options = {'num-foundations': 8, 'num-reserve': 4, 'turn-count': 1, 'max-passes': 3}
+        self.options = {'num-foundations': 8, 'num-reserve': 4, 'turn-count': 1, 'max-passes': 3,
+            'wrap-ranks': True}
 
 
 if __name__ == '__main__':
