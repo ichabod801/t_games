@@ -47,8 +47,12 @@ class Quadrille(solitaire.Solitaire):
     aka = ['Captive Queens', 'La Francaise', 'Partners']
     # The menu categories for the game.
     categories = ['Card Games', 'Solitaire Games', 'Closed Games']
+    # The credits for Quadrille.
+    credits = CREDITS
     # The name of the game.
     name = 'Quadrille'
+    # The rules to Quadrille.
+    rules = RULES
 
     def do_auto(self, arguments):
         """
