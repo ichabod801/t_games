@@ -62,6 +62,13 @@ class FreeCell(solitaire.Solitaire):
     """
     A game of FreeCell. (Solitaire)
 
+    Attributes:
+    challenge: A flag for dealing the twos and aces first. (bool)
+    egnellahc: A flag for dealing the aces and twos first. (bool)
+    fill_free: A flag for filling the free cells with the last four cards. (bool)
+    kings_only: A flag for only allowing kings in empty lanes. (bool)
+    supercell: A flag for flipping tableau cards over randomly. (bool)
+
     Overridden Methods:
     handle_options
     set_up
