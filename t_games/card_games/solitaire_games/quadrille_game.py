@@ -35,26 +35,6 @@ class Quadrille(solitaire.Solitaire):
         lines.append(self.stock_text())
         lines.append('')
         return '\n'.join(lines)
-    
-    def do_sort(self, card):
-        """
-        Move a card to the foundation. (bool)
-        
-        Parameters:
-        card: The card being moved. (str)
-        """
-        # get the card
-        if not self.deck.card_re.match(card):
-            self.human.error('Invalid card passed to sort command: {!r}.'.format(card))
-            return True
-        card = self.deck.find(card)
-        for foundation in self.find_foundation(card):
-            if self.sort_check(card, foundation, False):
-                self.transfer([card], foundation)
-                return False
-        message = 'The {} cannot be sorted to either the up or down foundation at the moment.'
-        self.human.error(message.format(card))
-        return True
 
     def find_foundation(self, card):
         """
@@ -64,7 +44,9 @@ class Quadrille(solitaire.Solitaire):
         card: The card to find foundations for. (card.TrackingCard)
         """
         foundation_index = self.deck.suits.index(card.suit)
-        return self.foundations[foundation_index], self.foundations[foundation_index + 4]
+        if card.rank in '789TJ':
+            foundation_index += 4
+        return self.foundations[foundation_index]
 
     def set_checkers(self):
         """Set the game specific rule checking functions. (None)"""
@@ -74,7 +56,7 @@ class Quadrille(solitaire.Solitaire):
         self.lane_checkers = [solitaire.lane_none]
         self.sort_checkers = [solitaire.sort_up_down]
         # Set the dealers
-        self.dealers = [solitaire.deal_reserve_queens, solitaire.deal_five_six, solitaire.deal_stock_all]
+        self.dealers = [solitaire.deal_queens_out, solitaire.deal_five_six, solitaire.deal_stock_all]
 
     def set_options(self):
         """Set the available game options."""

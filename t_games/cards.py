@@ -567,7 +567,7 @@ class TrackingDeck(Deck):
         # remove the card from the game
         card.game_location.remove(card)
         # reset the card status
-        card.game_location = game.deck.discards
+        card.game_location = self.game.deck.discards
         card.deck_location = self.discards
     
     def find(self, card_text):

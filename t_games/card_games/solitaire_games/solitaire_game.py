@@ -441,7 +441,7 @@ class Solitaire(game.Game):
     def game_over(self):
         """Check for the foundations being full. (bool)"""
         check = sum([len(foundation) for foundation in self.foundations])
-        target = len(self.deck.cards) + len(self.deck.in_play) + len(self.deck.discards)
+        target = len(self.deck.cards) + len(self.deck.in_play)
         if check == target:
             message = 'Congratulations! You won in {} moves (with {} undos), for a score of {}.'
             moves = len(self.moves) + 2 * self.undo_count

@@ -35,8 +35,8 @@ deal_free: Fill the free cells with the last cards dealt. (None)
 deal_klondike: Deal deal a triangle in the tableau. (None)
 deal_n: Create a dealer that deals n cards onto the tableau. (function)
 deal_one_row: Deal one card face up to each tableau pile. (None)
+deal_queens_out: Discard the queensl (None)
 deal_reserve_n: Create a dealer that deals n cards to the reserve (None)
-deal_reserve_queens: Deal the queens into the reserve. (None)
 deal_selective: Deal tableau cards with selection of foundation rank. (None)
 deal_start_foundation: Deal an initial foundation card. (None)
 deal_stock_all: Move the rest of the deck into the stock. (None)
@@ -275,6 +275,19 @@ def deal_one_row(game):
         game.deck.deal(stack, True)
 
 
+def deal_queens_out(game):
+    """
+    Discard the queens. (None)
+
+    Parameters:
+    game: The game to deal cards for. (solitaire.Solitaire)
+    """
+    for reserve_index, suit in enumerate(game.deck.suits):
+        queen = game.deck.find('Q' + suit)
+        game.deck.force(queen, game.reserve[reserve_index])
+        game.deck.discard(queen) # discard assumes the card is in play.
+
+
 def deal_reserve_n(n, up = False):
     """
     Create a dealer that deals n cards to the reserve (function)
@@ -290,18 +303,6 @@ def deal_reserve_n(n, up = False):
             game.deck.deal(game.reserve[0], up)
         game.reserve[0][-1].up = True
     return dealer
-
-
-def deal_reserve_queens(game):
-    """
-    Deal the queens into the reserve. (None)
-
-    Parameters:
-    game: The game to deal cards for. (solitaire.Solitaire)
-    """
-    for reserve_index, suit in enumerate(game.deck.suits):
-        queen = game.deck.find('Q' + suit)
-        game.deck.force(queen, game.reserve[reserve_index])
 
 
 def deal_selective(game):
