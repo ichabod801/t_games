@@ -62,6 +62,13 @@ class FreeCell(solitaire.Solitaire):
     """
     A game of FreeCell. (Solitaire)
 
+    Attributes:
+    challenge: A flag for dealing the twos and aces first. (bool)
+    egnellahc: A flag for dealing the aces and twos first. (bool)
+    fill_free: A flag for filling the free cells with the last four cards. (bool)
+    kings_only: A flag for only allowing kings in empty lanes. (bool)
+    supercell: A flag for flipping tableau cards over randomly. (bool)
+
     Overridden Methods:
     handle_options
     set_up
@@ -116,9 +123,9 @@ class FreeCell(solitaire.Solitaire):
             self.pair_checkers[1] = solitaire.pair_suit
         self.sort_checkers = [solitaire.sort_ace, solitaire.sort_up]
         # Set the dealers
-        if self.challenge == '2A':
+        if self.challenge:
             self.dealers = [solitaire.deal_twos, solitaire.deal_aces, solitaire.deal_all]
-        elif self.challenge == 'A2':
+        elif self.egnellahc:
             self.dealers = [solitaire.deal_aces, solitaire.deal_twos, solitaire.deal_all]
         else:
             self.dealers = [solitaire.deal_all]
@@ -140,9 +147,9 @@ class FreeCell(solitaire.Solitaire):
             question = 'Should the free cells be filled with the last four cards dealt? bool')
         self.option_set.add_option(name = 'kings-only',
             question = 'Should the kings be the only card playable to empty lanes? bool')
-        self.option_set.add_option(name = 'challenge', value = '2A', default = '',
+        self.option_set.add_option(name = 'challenge',
             question = 'Should the twos and aces be dealt first? bool')
-        self.option_set.add_option(name = 'egnellahc', value = 'A2', default = '', target = 'challenge',
+        self.option_set.add_option(name = 'egnellahc', 
             question = 'Should the aces and twos be dealt first? bool')
         self.option_set.add_option(name = 'supercell',
             question = 'Should random cards be flipped face down? bool')
