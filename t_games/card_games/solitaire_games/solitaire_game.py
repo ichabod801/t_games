@@ -439,16 +439,25 @@ class Solitaire(game.Game):
         return not error
 
     def game_over(self):
-        """Check for the foundations being full. (bool)"""
+        """
+        Check for the foundations being full. (bool)
+
+        'Full' is defined as containing all cards that are were not discarded.
+        """
+        # Get the card counts.
         check = sum([len(foundation) for foundation in self.foundations])
         target = len(self.deck.cards) + len(self.deck.in_play)
+        # Check for the win.
         if check == target:
+            # Give a contrats message.
             message = 'Congratulations! You won in {} moves (with {} undos), for a score of {}.'
             moves = len(self.moves) + 2 * self.undo_count
             self.human.tell(message.format(moves, self.undo_count, self.scores[self.human.name]))
+            # Update the score.
             self.win_loss_draw[0] = 1
             return True
         else:
+            # Carry on.
             return False
     
     def guess(self, card):
