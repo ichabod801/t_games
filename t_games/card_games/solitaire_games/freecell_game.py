@@ -142,7 +142,7 @@ class FreeCell(solitaire.Solitaire):
             question = 'Should the kings be the only card playable to empty lanes? bool')
         self.option_set.add_option(name = 'challenge', value = '2A', default = '',
             question = 'Should the twos and aces be dealt first? bool')
-        self.option_set.add_option(name = 'egnellahc', value = 'A2', default = '', target = 'challenge',
+        self.option_set.add_option(name = 'egnellahc', value = 'A2', default = None, target = 'challenge',
             question = 'Should the aces and twos be dealt first? bool')
         self.option_set.add_option(name = 'supercell',
             question = 'Should random cards be flipped face down? bool')
