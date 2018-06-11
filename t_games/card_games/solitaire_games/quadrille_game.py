@@ -3,6 +3,10 @@ quadrille_game.py
 
 A game of Quadrille.
 
+Constants:
+CREDITS: The credits for Qualdrille. (str)
+RULES: The rules for Quadrille. (str)
+
 Classes:
 Quadrille: A game of Quadrille. (solitaire.Solitaire)
 """
@@ -13,11 +17,34 @@ import time
 import t_games.card_games.solitaire_games.solitaire_game as solitaire
 
 
+# The credits for Quadrille.
+CREDITS = """
+Game Design: Traditional
+Game Programming: Craig "Ichabod" O'Brien
+"""
+
+# The rules for Quadrille.
+RULES = """
+The queens are layed out in the center. The fives and sixes are dealt around
+them as foundations. The fives build down to the kings, and the sixes build up
+to the jacks.
+
+You can flip cards from the stock one at a time into the waste, and sort the
+top card of the waste. You get three passes through the deck.
+
+You may use the command 'auto full' (or just 'auto f') to have the computer 
+play the game for you. You can add a number from 0 to 10 to adjust the speed
+at which it plays.
+"""
+
+
 class Quadrille(solitaire.Solitaire):
     """
     A game of Quadrille. (solitaire.Solitaire)
     """
 
+    # Aliases for the game.
+    aka = ['Captive Queens', 'La Francaise', 'Partners']
     # The menu categories for the game.
     categories = ['Card Games', 'Solitaire Games', 'Closed Games']
     # The name of the game.
