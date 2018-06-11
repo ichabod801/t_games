@@ -41,6 +41,16 @@ at which it plays.
 class Quadrille(solitaire.Solitaire):
     """
     A game of Quadrille. (solitaire.Solitaire)
+
+    Methods:
+    full_auto: Automatically play the game for the user. (bool)
+
+    Overridden Methods:
+    __str__
+    do_auto
+    find_foundation
+    set_checkers
+    set_options
     """
 
     # Aliases for the game.
@@ -53,6 +63,19 @@ class Quadrille(solitaire.Solitaire):
     name = 'Quadrille'
     # The rules to Quadrille.
     rules = RULES
+
+    def __str__(self):
+        """Human readable text representation. (str)"""
+        piles = self.foundations
+        lines = ['', '      {}'.format(piles[2][-1])]
+        lines.append('  {}      {}'.format(piles[5][-1], piles[6][-1]))
+        lines.append('      QH')
+        lines.append('{}  QD  QS  {}'.format(piles[1][-1], piles[3][-1]))
+        lines.append('      QC')
+        lines.append('  {}      {}'.format(piles[4][-1], piles[7][-1]))
+        lines.append('      {}'.format(piles[0][-1]))
+        lines.extend(('', self.stock_text(), ''))
+        return '\n'.join(lines)
 
     def do_auto(self, arguments):
         """
@@ -69,19 +92,6 @@ class Quadrille(solitaire.Solitaire):
         else:
             return super(Quadrille, self).do_auto(arguments)
 
-    def __str__(self):
-        """Human readable text representation. (str)"""
-        piles = self.foundations
-        lines = ['', '      {}'.format(piles[2][-1])]
-        lines.append('  {}      {}'.format(piles[5][-1], piles[6][-1]))
-        lines.append('      QH')
-        lines.append('{}  QD  QS  {}'.format(piles[1][-1], piles[3][-1]))
-        lines.append('      QC')
-        lines.append('  {}      {}'.format(piles[4][-1], piles[7][-1]))
-        lines.append('      {}'.format(piles[0][-1]))
-        lines.extend(('', self.stock_text(), ''))
-        return '\n'.join(lines)
-
     def find_foundation(self, card):
         """
         Determine which foudations a card could be sorted to. (list of list)
@@ -89,21 +99,22 @@ class Quadrille(solitaire.Solitaire):
         Parameters:
         card: The card to find foundations for. (card.TrackingCard)
         """
+        # Find the base foundation.
         foundation_index = self.deck.suits.index(card.suit)
+        # Switch foundations for cards building up.
         if card.rank in '789TJ':
             foundation_index += 4
         return self.foundations[foundation_index]
 
     def full_auto(self, arguments):
         """
-        Automatically play the game. (bool)
+        Automatically play the game for the user. (bool)
         
         Parameters:
         arguments: The arguments to the sort command. (str)
         """
         # Strip out non-digits from the front of the argument.
-        while arguments and not arguments.isdigit():
-            arguments = arguments[1:]
+        arguments = ''.join([char for char in arguments if char.isdigit()])
         # Convert the arguments to a 0-10 digit.
         if arguments:
             speed = 10 - min(10, max(0, int(arguments)))
@@ -152,6 +163,7 @@ class Quadrille(solitaire.Solitaire):
 
 
 if __name__ == '__main__':
+    # Play the game without the full interface.
     import t_games.player as player
     try:
         input = raw_input
