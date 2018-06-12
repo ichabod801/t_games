@@ -10,7 +10,8 @@ LiarsDice: A game of Liar's Dice. (game.Game)
 
 import t_games.dice as dice
 import t_games.game as game
-from t_games.utility import number_word
+import t_games.player as player
+from t_games.utility import number_word, YES
 
 
 class LiarsDice(game.Game):
@@ -26,6 +27,7 @@ class LiarsDice(game.Game):
     phase: The current action the player needs to take. (str)
 
     Methods:
+    challenge: Handle someone making a claim. (None)
     poker_score: Generate a poker hand score for a set of values. (list of int)
     poker_text: Convert a poker score into text. (str)
     validate_claim: Validate that a claim is higher than the previosu one. (bool)
@@ -40,11 +42,39 @@ class LiarsDice(game.Game):
     # The menu categories for the game.
     categories = ['Dice Games']
     # The name templates for the poker hand versions of the dice.
-    hand_names ['five {}s', 'four {}s and a {}', 'full house {}s over {}s', 'a {}-high straight', 
+    hand_names = ['five {}s', 'four {}s and a {}', 'full house {}s over {}s', 'a {}-high straight', 
         'three {}s with {} and {}', 'two pair {}s over {}s with a {}', 'a pair of {}s with {}',
         'six high missing {}.']
     # The name of the game.
     name = "Liar's Dice"
+
+    def challenge(self):
+        """Handle someone making a claim. (None)"""
+        # Get the relevant players.
+        next_player = self.players[(self.player_index + 1) % len(self.players)]
+        player = self.players[self.player_index]
+        # Show the claim.
+        claim_score = poker_score(self.claim)
+        next_player.tell('\n{} claims they have {}.'.format(player.name, self.poker_text(claim_score)))
+        # Check for a challenge to the claim.
+        challenge = next_player.ask('Do you wish to call {} a liar? '.format(player.name))
+        if challenge in YES:
+            # Show the real score.
+            real_score = poker_score(self.dice.values)
+            next_player.tell('\n{} actually had {}.')
+            # Handle challengers win.
+            if claim_score > real_score:
+                next_player.tell('\n{} is a liar.'.format(player.name))
+                self.scores[player.name] -= 1
+                if not self.scores[player.name]:
+                    self.players.remove(player)
+                    self.player_index -= 1
+            # Handle challenger loss
+            else:
+                next_player.tell('\n{} told the truth.')
+                self.scores[next_player.name] -= 1
+                if not self.scores[next_player.name]:
+                    self.players.remove(next_player)
 
     def player_action(self, player):
         """
@@ -56,6 +86,7 @@ class LiarsDice(game.Game):
         # Display the game state.
         if self.phase == 'start':
             self.dice.roll()
+            self.reset()
             player.tell('\nThe new roll to you is {}.'.format(self.dice))
             self.phase = 'claim'
         elif self.phase == 'reroll':
@@ -85,6 +116,7 @@ class LiarsDice(game.Game):
                 return self.handle_cmd(rerolls)
             # Reroll the specified dice and move to making a claim.
             else:
+                self.rerolls = len(rerolls)
                 for die_index, value in enumerate(self.dice.values):
                     if value in rerolls:
                         self.dice.reroll(die_index)
@@ -100,6 +132,16 @@ class LiarsDice(game.Game):
         for five of a kind to 0 for high card. The rest of the numbers are the dice
         values in comparison order for that type of hand. Therefore you can naively
         compare the two integer lists to find out which is the higher hand.
+
+        score[0] mapping:
+            7 = five of a kind
+            6 = four of a kind
+            5 = full house
+            4 = straight
+            3 = three of a kind
+            2 = two pair
+            1 = pair
+            0 = high card
 
         Parmeters:
         values: The claimed or rolled dice values. (lsit of int)
@@ -172,11 +214,22 @@ class LiarsDice(game.Game):
         # Return the hand name after fixing and six plural.
         return hand_name.replace('sixs', 'sixes')
 
+    def reset(self):
+        """Reset the tracking variables. (None)"""
+        self.claim = [1, 2, 3, 4, 6]
+        self.history = []
+        self.rerolls = 5
+
     def set_up(self):
         """Set up the game. (None)"""
+        self.players = [self.human]
+        taken_names = [self.human.name]
+        for bot in range(3):
+            self.players.append(ABBot(taken_names))
+            taken_names.append(self.players[-1].name)
         self.scores = {player.name: 3 for player in self.players}
         self.dice = dice.Pool([6] * 5)
-        self.claim = [1, 2, 3, 4, 6]
+        self.reset()
         self.phase = 'start'
 
     def validate_claim(self, claim, player):
@@ -190,6 +243,7 @@ class LiarsDice(game.Game):
         new_score = self.poker_score(claim)
         old_score = self.poker_score(self.claim)
         if new_score > old_score:
+            self.history.append(self.claim)
             self.claim = claim
             return True
         else:
@@ -199,3 +253,95 @@ class LiarsDice(game.Game):
             self.player.error(message.format(new_text, old_text))
             return False
 
+
+class ABBot(player.Bot):
+    """
+    An honest Liar's Dice bot. (player.Bot)
+
+    Well, as honest as they can be.
+    """
+
+    believable = {7: [7], 6: [6, 7], 5: [5], 4: [4], 3: [5, 6], 2: [2, 5], 1: [1, 2, 3, 4], 
+        0: [0, 1, 2, 4]}
+
+    def ask(query):
+        """
+        Ask the bot a question.
+
+        query: The question asked of the bot. (str)
+        """
+        if 'challenge' in query:
+            claim_score = self.game.poker_score(self.game.claim)
+            prev_score = self.game.poker_score(self.game.history[-1])
+            if claim_score[0] in self.believable[prev_score[0]]:
+                return 'nope'
+            else:
+                return 'yup'
+        else:
+            raise player.BotError('Unexpected question to ABBot: {!r}'.format(query))
+
+    def ask_int_list(self, prompt, low = None, high = None, valid = [], valid_lens = [], default = None,
+        cmd = True):
+        """
+        Get a multiple integer response from the human. (int)
+            7 = five of a kind
+            6 = four of a kind
+            5 = full house
+            4 = straight
+            3 = three of a kind
+            2 = two pair
+            1 = pair
+            0 = high card
+
+        Parameters:
+        prompt: The question asking for the interger. (str)
+        low: The lowest acceptable value for the integer. (list or None)
+        high: The highest acceptable value for the integer. (laist or None)
+        valid: The valid values for the integer. (list of int)
+        valid_lens: The valid numbers of values. (list of int)
+        default: The default choice. (list or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        if 'reroll' in prompt:
+            score = self.game.poker_score(valid)
+            # Reroll any dice not involved in scoring the hand type.
+            if score[0] in (4, 5, 7):
+                reroll = []
+            elif score[0] in (6, 2):
+                reroll = [score[5]]
+            elif score[0] == 3:
+                reroll = score[-2:]
+            elif score[0] == 1:
+                reroll = score[-3:]
+            elif score[0] == 0:
+                reroll = [value for value in valid if value < 5]
+            return reroll
+        elif 'claim' in prompt:
+            roll_score = self.game.poker_score(self.game.dice.values)
+            claim_score = self.game.poker_scores(self.game.claim)
+            # Be honest if you can.
+            if roll_score > claim_score:
+                claim = self.game.dice.values
+            else:
+                if score[0] == 7:
+                    claim = [score[1] + 1] * 5
+                elif score[0] in (2, 6):
+                    if score[5] == 6:
+                        claim = [value + 1 for value in score[1:5]] + [score[5]]
+                    else:
+                        claim = score[1:5] + [score[5] + 1]
+                elif score[0] == 5:
+                    if score[5] == 6:
+                        claim = [score[1] + 1] * 3 + score[-2:]
+                    else:
+                        claim = score[1:4] + [score[5] + 1] * 2
+                elif score[0] == 4:
+                    if score[1] == 6:
+                        claim = [2, 2, 2, 3, 3]
+                    else:
+                        claim = [2, 3, 4, 5, 6]
+                elif score[0] in (0, 1, 3):
+                    claim = score[1:5] + [score[5] + 1]
+            return claim
+        else:
+            raise player.BotError('Unexpected question to ABBot: {!r}'.format(prompt))
