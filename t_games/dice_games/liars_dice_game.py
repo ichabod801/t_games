@@ -287,8 +287,8 @@ class LiarsDice(game.Game):
         # Set up the players.
         self.players = [self.human]
         taken_names = [self.human.name]
-        for bot in range(3):
-            bot_class = random.choice((ABBot, Challenger))
+        for bot in range(4):
+            bot_class = random.choice((ABBot, Challenger, Liar))
             self.players.append(bot_class(taken_names))
             taken_names.append(self.players[-1].name)
             self.players[-1].game = self
@@ -486,13 +486,13 @@ class ABBot(player.Bot):
 
 class Challenger(ABBot):
     """
-    A liar's dice bot that challenges based on the odds. (ABBot)
+    A Liar's Dice bot that challenges based on the odds. (ABBot)
 
     Note that the odds calculated assume that all numbers were distinct. This
     is just an approximation for decision making purposes.
 
     Class Attributes:
-    odds: The odds matrix for getting n numbers on d dice. (list of list of int)
+    odds: The odds matrix for getting n numbers on d dice. (dict of tuple: int)
 
     Overridden Methods:
     claim_check
@@ -523,3 +523,28 @@ class Challenger(ABBot):
             elif rolled < 5 and random.random() > self.odds[(rolled, changed)]:
                 challenge = '1'
         return challenge
+
+
+class Liar(ABBot):
+    """
+    A Liar's Dice bot that lies more than it needs to. (ABBot)
+
+    Overridden Methods:
+    make_claim
+    """
+
+    def make_claim(self, roll):
+        """
+        Make a claim about the current roll. (list of int)
+
+        Parameters:
+        roll: What was actually rolled. (list of int)
+        """
+        # Get the standard claim.
+        claim = super(Liar, self).make_claim(roll)
+        # Consider lying if not already lying.
+        if claim != roll:
+            score = self.game.poker_score(claim)
+            if random.random() > score[0] / 7:
+                claim = self.lie(score)
+        return claim
