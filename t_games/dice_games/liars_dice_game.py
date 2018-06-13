@@ -163,7 +163,7 @@ class LiarsDice(game.Game):
             elif self.validate_claim(claim, player):
                 self.challenge()
                 return False
-        elif self.phase == 'reroll':
+        elif self.phase.startswith('reroll'):
             # Get the dice to reroll.
             query = 'Enter the numbers you would like to reroll: '
             rerolls = player.ask_int_list(query, valid = self.dice.values, valid_lens = range(6), 
@@ -173,7 +173,10 @@ class LiarsDice(game.Game):
                 return self.handle_cmd(rerolls)
             # Reroll the specified dice and move to making a claim.
             else:
-                self.rerolls = len(rerolls)
+                if self.phase == 'reroll-two':
+                    self.rerolls = max(self.rerolls, len(rerolls))
+                else:
+                    self.rerolls = len(rerolls)
                 # Announce the rerolls
                 reroll_text = number_word(self.rerolls)
                 dice = ['dice', 'die'][self.rerolls == 1]
@@ -183,7 +186,10 @@ class LiarsDice(game.Game):
                     if value in rerolls:
                         self.dice.roll(die_index)
                         rerolls.remove(value)
-                self.phase = 'claim'
+                if self.two_rerolls:
+                    self.phase = 'reroll-two'
+                else:
+                    self.phase = 'claim'
         return True
 
     def poker_score(self, values):
@@ -281,6 +287,11 @@ class LiarsDice(game.Game):
         self.claim = [0, 1, 2, 3, 6]
         self.history = []
         self.rerolls = 5
+
+    def set_options(self):
+        """Set the game specific options. (None)"""
+        self.option_set.add_option('two-rerolls', 
+            question = 'Should you be able to make a second reroll? bool')
 
     def set_up(self):
         """Set up the game. (None)"""
@@ -498,7 +509,7 @@ class Challenger(ABBot):
     claim_check
     """
 
-    odds = {(1, 1): 1 / 6, (2, 2): 2 / 36, (1, 2): 11 / 36, (3, 3): 1 / 36, (3, 2): 91 / 216, 
+    odds = {(1, 1): 1 / 6, (2, 2): 2 / 36, (2, 1): 11 / 36, (3, 3): 1 / 36, (3, 2): 91 / 216, 
         (3, 1): 5 / 36, (4, 4): 1 / 54, (4, 3): 1 / 12, (4, 2): 302 / 1296, (4, 1): 671 / 1296}
 
     def claim_check(self):
