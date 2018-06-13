@@ -61,7 +61,11 @@ class LiarsDice(game.Game):
         # Show the claim.
         claim_score = self.poker_score(self.claim)
         # Check for a challenge to the claim.
-        challenge = next_player.ask('Do you wish to call {} a liar? '.format(player.name))
+        if self.claim == [6, 6, 6, 6, 6]:
+            next_player.ask('The claim is five sixes, you must challenge. Press Enter to continue: ')
+            challenge = 'yes'
+        else:
+            challenge = next_player.ask('Do you wish to call {} a liar? '.format(player.name))
         if challenge in YES:
             self.human.tell('{} challenges {}.'.format(next_player.name, player.name))
             # Show the real score.
@@ -330,6 +334,8 @@ class ABBot(player.Bot):
                 return 'nope'
             else:
                 return 'yup'
+        if 'must' in query:
+            return 'uh oh'
         else:
             # Error on unknown questions.
             raise player.BotError('Unexpected question to ABBot: {!r}'.format(query))
