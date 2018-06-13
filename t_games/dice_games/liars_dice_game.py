@@ -259,7 +259,7 @@ class LiarsDice(game.Game):
 
     def reset(self):
         """Reset the tracking variables. (None)"""
-        self.claim = [1, 2, 3, 4, 6]
+        self.claim = [0, 1, 2, 3, 6]
         self.history = []
         self.rerolls = 5
 
@@ -300,7 +300,7 @@ class LiarsDice(game.Game):
         else:
             # If the new score isn't higher, post a warning and ask again.
             new_text = self.poker_text(new_score)
-            old_score = self.poker_text(old_score)
+            old_text = self.poker_text(old_score)
             message = 'Your claim of {} is not better than the previous claim of {}.'
             player.error(message.format(new_text, old_text))
             return False
