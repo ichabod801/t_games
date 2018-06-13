@@ -422,7 +422,7 @@ class ABBot(player.Bot):
         claim_score = self.game.poker_score(self.game.claim)
         # Be honest if you can.
         if roll_score > claim_score:
-            claim = default
+            claim = roll
         else:
             # Otherwise, try and for the next highest claim.
             claim = self.lie(claim_score)
