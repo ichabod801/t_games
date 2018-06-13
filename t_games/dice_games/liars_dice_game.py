@@ -9,7 +9,10 @@ ABBot: An honest Liar's Dice bot. (player.Bot)
 """
 
 
+from __future__ import division
+
 import collections
+import random
 
 import t_games.dice as dice
 import t_games.game as game
@@ -285,7 +288,8 @@ class LiarsDice(game.Game):
         self.players = [self.human]
         taken_names = [self.human.name]
         for bot in range(3):
-            self.players.append(ABBot(taken_names))
+            bot_class = random.choice((ABBot, Challenger))
+            self.players.append(bot_class(taken_names))
             taken_names.append(self.players[-1].name)
             self.players[-1].game = self
         # Set up the scores.
@@ -478,3 +482,44 @@ class ABBot(player.Bot):
         The parameters are as per the built-in print function.
         """
         pass
+
+
+class Challenger(ABBot):
+    """
+    A liar's dice bot that challenges based on the odds. (ABBot)
+
+    Note that the odds calculated assume that all numbers were distinct. This
+    is just an approximation for decision making purposes.
+
+    Class Attributes:
+    odds: The odds matrix for getting n numbers on d dice. (list of list of int)
+
+    Overridden Methods:
+    claim_check
+    """
+
+    odds = {(1, 1): 1 / 6, (2, 2): 2 / 36, (1, 2): 11 / 36, (3, 3): 1 / 36, (3, 2): 91 / 216, 
+        (3, 1): 5 / 36, (4, 4): 1 / 54, (4, 3): 1 / 12, (4, 2): 302 / 1296, (4, 1): 671 / 1296}
+
+    def claim_check(self):
+        """Decide whether or not to call someone a liar. (str)"""
+        # Do the standard check.
+        challenge = super(Challenger, self).claim_check()
+        # If that's okay, look at the odds.
+        if challenge == 'nope':
+            # Get the number of changed dice.
+            current = self.game.claim
+            old = self.game.history[-1]
+            for die in old:
+                if die in current:
+                    current.remove(die)
+            changed = len(current)
+            # Get the number of rolled dice.
+            rolled = self.game.rerolls
+            # Challenge the impossible
+            if changed > rolled:
+                challenge = 'da'
+            # Challenge the rest at odds
+            elif rolled < 5 and random.random() > self.odds[(rolled, changed)]:
+                challenge = '1'
+        return challenge
