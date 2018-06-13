@@ -124,6 +124,7 @@ class LiarsDice(game.Game):
         if self.phase == 'start':
             self.dice.roll()
             self.reset()
+            self.human.tell('\n{} starts a new round by rolling all five dice.'.format(player.name))
             player.tell('\nThe new roll to you is {}.'.format(self.dice))
             self.phase = 'claim'
         elif self.phase == 'reroll':
@@ -154,7 +155,11 @@ class LiarsDice(game.Game):
             # Reroll the specified dice and move to making a claim.
             else:
                 self.rerolls = len(rerolls)
-                self.human.tell('\n{} rerolled {} dice.'.format(player.name, self.rerolls))
+                # Announce the rerolls
+                reroll_text = number_word(self.rerolls)
+                dice = ['dice', 'die'][self.rerolls == 1]
+                self.human.tell('\n{} rerolled {} {}.'.format(player.name, reroll_text, dice))
+                # Make the rerolls
                 for die_index, value in enumerate(self.dice.values):
                     if value in rerolls:
                         self.dice.roll(die_index)
