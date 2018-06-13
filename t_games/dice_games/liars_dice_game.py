@@ -60,28 +60,28 @@ class LiarsDice(game.Game):
         player = self.players[self.player_index]
         # Show the claim.
         claim_score = self.poker_score(self.claim)
-        next_player.tell('\n{} claims they have {}.'.format(player.name, self.poker_text(claim_score)))
         # Check for a challenge to the claim.
         challenge = next_player.ask('Do you wish to call {} a liar? '.format(player.name))
         if challenge in YES:
             self.human.tell('{} challenges {}.'.format(next_player.name, player.name))
             # Show the real score.
             real_score = self.poker_score(self.dice.values)
-            next_player.tell('\n{} actually had {}.'.format(player.name, self.poker_text(real_score)))
+            self.human.tell('{} actually had {}.'.format(player.name, self.poker_text(real_score)))
             # Handle challengers win.
             if claim_score > real_score:
-                next_player.tell('\n{} is a liar.'.format(player.name))
+                self.human.tell('{} is a liar.'.format(player.name))
                 self.scores[player.name] -= 1
                 if not self.scores[player.name]:
                     self.players.remove(player)
                     self.player_index -= 1
             # Handle challenger loss
             else:
-                next_player.tell('\n{} told the truth.'.format(player.name))
+                self.human.tell('{} told the truth.'.format(player.name))
                 self.scores[next_player.name] -= 1
                 if not self.scores[next_player.name]:
                     self.players.remove(next_player)
             self.phase = 'start'
+            self.human.tell()
         else:
             self.phase = 'reroll'
 
@@ -147,7 +147,7 @@ class LiarsDice(game.Game):
             # Reroll the specified dice and move to making a claim.
             else:
                 self.rerolls = len(rerolls)
-                self.human.tell('{} rerolled {} dice.'.format(player.name, self.rerolls))
+                self.human.tell('\n{} rerolled {} dice.'.format(player.name, self.rerolls))
                 for die_index, value in enumerate(self.dice.values):
                     if value in rerolls:
                         self.dice.roll(die_index)
@@ -281,6 +281,7 @@ class LiarsDice(game.Game):
         old_score = self.poker_score(self.claim)
         if new_score > old_score:
             # If new score is higher, update tracking and move on.
+            self.human.tell('{} claims they have {}.'.format(player.name, self.poker_text(new_score)))
             self.history.append(self.claim)
             self.claim = claim
             return True
@@ -414,3 +415,11 @@ class ABBot(player.Bot):
             claim = claim_score[1:5] + [claim_score[5] + 1]
         return claim
 
+    def tell(self, *args, **kwargs):
+        """
+        Give information to the player. (None)
+
+        Parameters:
+        The parameters are as per the built-in print function.
+        """
+        pass
