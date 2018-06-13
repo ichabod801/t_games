@@ -72,11 +72,13 @@ class LiarsDice(game.Game):
             real_score = self.poker_score(self.dice.values)
             self.human.tell('{} actually had {}.'.format(player.name, self.poker_text(real_score)))
             # Handle challengers win.
+            drop_message = '\n{} has lost all of their tokens and is out of the game.'
             if claim_score > real_score:
                 self.human.tell('{} is a liar.'.format(player.name))
                 self.scores[player.name] -= 1
                 if not self.scores[player.name]:
                     self.players.remove(player)
+                    self.human.tell(drop_message.format(player.name))
                     self.player_index -= 1
             # Handle challenger loss
             else:
@@ -84,6 +86,7 @@ class LiarsDice(game.Game):
                 self.scores[next_player.name] -= 1
                 if not self.scores[next_player.name]:
                     self.players.remove(next_player)
+                    self.human.tell(drop_message.format(next_player.name))
             self.phase = 'start'
             self.human.tell()
         else:
