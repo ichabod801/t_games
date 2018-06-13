@@ -316,7 +316,10 @@ class ABBot(player.Bot):
     believable: Score changes that will not be challenged. (dict of int: list)
 
     Methods:
+    claim_check: Decide whether or not to call someone a liar. (str)
     lie: Generate a lie based on the current claim. (list of int)
+    make_claim: Make a claim about the current roll. (list of int)
+    reroll_check: Decide which dice to reroll. (list of int)
 
     Overridden Methods:
     ask
@@ -334,14 +337,7 @@ class ABBot(player.Bot):
         query: The question asked of the bot. (str)
         """
         if 'liar' in query:
-            # Get the relevant scores.
-            claim_score = self.game.poker_score(self.game.claim)
-            prev_score = self.game.poker_score(self.game.history[-1])
-            # Check them against the believability matrix.
-            if claim_score[0] in self.believable[prev_score[0]]:
-                return 'nope'
-            else:
-                return 'yup'
+            return self.claim_check()
         if 'must' in query:
             return 'uh oh'
         else:
@@ -363,38 +359,23 @@ class ABBot(player.Bot):
         cmd: A flag for returning commands for processing. (bool)
         """
         if 'reroll' in prompt:
-            score = self.game.poker_score(valid)
-            # Reroll any dice not involved in scoring the hand type.
-            # Straights, five of a kind and full houses score on all dice.
-            if score[0] in (4, 5, 7):
-                reroll = []
-            # Four of a kind and two pair have one die to roll.
-            elif score[0] in (6, 2):
-                reroll = [score[5]]
-            # Three of kind has two dice to reroll
-            elif score[0] == 3:
-                reroll = score[-2:]
-            # One pair has three dice to reroll
-            elif score[0] == 1:
-                reroll = score[-3:]
-            # For high card, keep the 6 and the 5 if there is one.
-            elif score[0] == 0:
-                reroll = [value for value in valid if value < 5]
-            return reroll
+            return self.reroll_check(valid)
         elif 'claim' in prompt:
-            # Get the scores for the roll and thre previous claim.
-            roll_score = self.game.poker_score(self.game.dice.values)
-            claim_score = self.game.poker_score(self.game.claim)
-            # Be honest if you can.
-            if roll_score > claim_score:
-                claim = default
-            else:
-                # Otherwise, try and for the next highest claim.
-                claim = self.lie(claim_score)
-            return claim
+            return self.make_claim()
         else:
             # Error on unexpected question.
             raise player.BotError('Unexpected question to ABBot: {!r}'.format(prompt))
+
+    def claim_check(self):
+        """Decide whether or not to call someone a liar. (str)"""
+        # Get the relevant scores.
+        claim_score = self.game.poker_score(self.game.claim)
+        prev_score = self.game.poker_score(self.game.history[-1])
+        # Check them against the believability matrix.
+        if claim_score[0] in self.believable[prev_score[0]]:
+            return 'nope'
+        else:
+            return 'yup'
 
     def lie(self, claim_score):
         """
@@ -428,6 +409,45 @@ class ABBot(player.Bot):
         elif claim_score[0] in (0, 1, 3):
             claim = claim_score[1:5] + [claim_score[5] + 1]
         return claim
+
+    def make_claim(self):
+        """Make a claim about the current roll. (list of int)"""
+        # Get the scores for the roll and thre previous claim.
+        roll_score = self.game.poker_score(self.game.dice.values)
+        claim_score = self.game.poker_score(self.game.claim)
+        # Be honest if you can.
+        if roll_score > claim_score:
+            claim = default
+        else:
+            # Otherwise, try and for the next highest claim.
+            claim = self.lie(claim_score)
+        return claim
+
+    def reroll_check(self, roll):
+        """
+        Decide which dice to reroll. (list of int)
+        
+        Parameters:
+        roll: The dice that were rolled.
+        """
+        score = self.game.poker_score(roll)
+        # Reroll any dice not involved in scoring the hand type.
+        # Straights, five of a kind and full houses score on all dice.
+        if score[0] in (4, 5, 7):
+            reroll = []
+        # Four of a kind and two pair have one die to roll.
+        elif score[0] in (6, 2):
+            reroll = [score[5]]
+        # Three of kind has two dice to reroll
+        elif score[0] == 3:
+            reroll = score[-2:]
+        # One pair has three dice to reroll
+        elif score[0] == 1:
+            reroll = score[-3:]
+        # For high card, keep the 6 and the 5 if there is one.
+        elif score[0] == 0:
+            reroll = [value for value in roll if value < 5]
+        return reroll
 
     def tell(self, *args, **kwargs):
         """
