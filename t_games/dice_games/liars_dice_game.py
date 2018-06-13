@@ -92,6 +92,22 @@ class LiarsDice(game.Game):
         else:
             self.phase = 'reroll'
 
+    def do_score(self, arguments):
+        """
+        Show how many tokens players have left. (bool)
+
+        Parameters:
+        arguments: The (ignored) arguments to the score command. (str)
+        """
+        # Get the sorted scores.
+        scores = [(score, name) for name, score in self.scores.items() if score]
+        scores.sort(reverse = True)
+        # Show the scores
+        player.tell()
+        for score, name in scores:
+            player.tell('{}: {}'.format(score, name))
+        return True
+
     def game_over(self):
         """Check for the human losing or winning."""
         # Check for the human being out of the game.
