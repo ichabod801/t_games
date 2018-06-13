@@ -361,7 +361,7 @@ class ABBot(player.Bot):
         if 'reroll' in prompt:
             return self.reroll_check(valid)
         elif 'claim' in prompt:
-            return self.make_claim()
+            return self.make_claim(default)
         else:
             # Error on unexpected question.
             raise player.BotError('Unexpected question to ABBot: {!r}'.format(prompt))
@@ -410,8 +410,13 @@ class ABBot(player.Bot):
             claim = claim_score[1:5] + [claim_score[5] + 1]
         return claim
 
-    def make_claim(self):
-        """Make a claim about the current roll. (list of int)"""
+    def make_claim(self, roll):
+        """
+        Make a claim about the current roll. (list of int)
+
+        Parameters:
+        roll: What was actually rolled. (list of int)
+        """
         # Get the scores for the roll and thre previous claim.
         roll_score = self.game.poker_score(self.game.dice.values)
         claim_score = self.game.poker_score(self.game.claim)
