@@ -324,8 +324,8 @@ class ABBot(player.Bot):
     """
 
     # Score changes that will not be challenged.
-    believable = {7: [7], 6: [6, 7], 5: [5], 4: [4], 3: [5, 6], 2: [2, 5], 1: [1, 2, 3, 4], 
-        0: [0, 1, 2, 4]}
+    believable = {7: [7], 6: [6, 7], 5: [5], 4: [4], 3: [3, 5, 6], 2: [2, 5], 1: [1, 2, 3, 4], 
+        0: [0, 1, 2, 3]}
 
     def ask(self, query):
         """
