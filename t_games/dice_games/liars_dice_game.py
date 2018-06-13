@@ -56,6 +56,8 @@ class LiarsDice(game.Game):
         'five {}s']
     # The name of the game.
     name = "Liar's Dice"
+    # The number of game options.
+    num_options = 2
 
     def challenge(self):
         """Handle someone making a claim. (None)"""
