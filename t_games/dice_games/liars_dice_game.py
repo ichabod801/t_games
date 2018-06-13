@@ -37,6 +37,7 @@ class LiarsDice(game.Game):
     poker_score: Generate a poker hand score for a set of values. (list of int)
     poker_text: Convert a poker score into text. (str)
     reset: Reset the tracking variables. (None)
+    resolve_challenge: Handle the result of a challenge. (None)
     validate_claim: Validate that a claim is higher than the previosu one. (bool)
 
     Overridden Methods:
@@ -75,21 +76,13 @@ class LiarsDice(game.Game):
             real_score = self.poker_score(self.dice.values)
             self.human.tell('{} actually had {}.'.format(player.name, self.poker_text(real_score)))
             # Handle challengers win.
-            drop_message = '\n{} has lost all of their tokens and is out of the game.'
             if claim_score > real_score:
                 self.human.tell('{} is a liar.'.format(player.name))
-                self.scores[player.name] -= 1
-                if not self.scores[player.name]:
-                    self.players.remove(player)
-                    self.human.tell(drop_message.format(player.name))
-                    self.player_index -= 1
+                self.resolve_challenge(next_player, player)
             # Handle challenger loss
             else:
                 self.human.tell('{} told the truth.'.format(player.name))
-                self.scores[next_player.name] -= 1
-                if not self.scores[next_player.name]:
-                    self.players.remove(next_player)
-                    self.human.tell(drop_message.format(next_player.name))
+                self.resolve_challenge(player, next_player)
             self.phase = 'start'
             self.human.tell()
         else:
@@ -288,8 +281,31 @@ class LiarsDice(game.Game):
         self.history = []
         self.rerolls = 5
 
+    def resolve_challenge(self, winner, loser):
+        """
+        Handle the result of a challenge. (None)
+
+        Parameters:
+        winner: The player who won the challenge. (player.Player)
+        loser: The player who lost the challenge. (player.Player)
+        """
+        # Adjust the scores.
+        self.scores[loser.name] -= 1
+        if self.betting:
+            self.score[winner.name] += 1
+        # Remove players if necessary.
+        if not self.scores[loser.name]:
+            self.players.remove(loser)
+            drop_message = '\n{} has lost all of their tokens and is out of the game.'
+            self.human.tell(drop_message.format(loser.name))
+            # Adjust the next player if the current player is removed.
+            if self.players[self.player_index] == loser:
+                self.player_index -= 1
+
     def set_options(self):
         """Set the game specific options. (None)"""
+        self.option_set.add_option('betting',
+            question = 'Should lost tokens be given to the winner of the challenge? bool')
         self.option_set.add_option('two-rerolls', 
             question = 'Should you be able to make a second reroll? bool')
 
