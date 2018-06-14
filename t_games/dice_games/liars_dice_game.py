@@ -306,7 +306,7 @@ class LiarsDice(game.Game):
             drop_message = '\n{} has lost all of their tokens and is out of the game.'
             self.human.tell(drop_message.format(loser.name))
             # Adjust the next player if the current player is removed.
-            if self.players[self.player_index] == loser:
+            if self.player_index > len(self.players) or self.players[self.player_index] == loser:
                 self.player_index -= 1
 
     def set_options(self):
