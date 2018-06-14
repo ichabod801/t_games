@@ -53,7 +53,7 @@ class LiarsDice(game.Game):
     # The menu categories for the game.
     categories = ['Dice Games']
     # The name templates for the poker hand versions of the dice.
-    hand_names = ['six high missing {}.', 'a pair of {}s with {}', 'two pair {}s over {}s with a {}', 
+    hand_names = ['six high missing {}', 'a pair of {}s with {}', 'two pair {}s over {}s with a {}', 
         'three {}s with {} and {}', 'a {}-high straight', 'full house {}s over {}s', 'four {}s and a {}', 
         'five {}s']
     # The name of the game.
@@ -299,7 +299,7 @@ class LiarsDice(game.Game):
         # Adjust the scores.
         self.scores[loser.name] -= 1
         if self.betting:
-            self.score[winner.name] += 1
+            self.scores[winner.name] += 1
         # Remove players if necessary.
         if not self.scores[loser.name]:
             self.players.remove(loser)
