@@ -28,12 +28,19 @@ class LiarsDice(game.Game):
     hand_names: The name templates for the poker hand versions of the dice. (str)
 
     Attributes:
+    betting: A flag for passing chips instead of losing them. (bool)
+    chips: The number of tokens each player starts with. (int)
     claim: The claim made by the last player. (list of int)
     dice: The dice used in the game. (dice.Pool)
+    one_six: A flag for ones counting as sixes. (bool)
+    one_wild: A flag for ones being wild. (bool)
     phase: The current action the player needs to take. (str)
+    two_rerolls: A flag for getting a second reroll. (bool)
 
     Methods:
     challenge: Handle someone making a claim. (None)
+    one_six_adjust: Adjust value counts for the one-six option. (dict)
+    one_wild_adjust: Adjust value counts for the one-six option. (tuple)
     poker_score: Generate a poker hand score for a set of values. (list of int)
     poker_text: Convert a poker score into text. (str)
     reset: Reset the tracking variables. (None)
@@ -59,7 +66,7 @@ class LiarsDice(game.Game):
     # The name of the game.
     name = "Liar's Dice"
     # The number of game options.
-    num_options = 2
+    num_options = 5
 
     def challenge(self):
         """Handle someone making a claim. (None)"""
@@ -128,6 +135,55 @@ class LiarsDice(game.Game):
             return False
         # If not continuing, end.
         return True
+
+    def one_six_adjust(self, by_count, values):
+        """
+        Adjust value counts for the one-six option. (dict of int: list of int)
+
+        Parameters:
+        by_count: The counts and values with those counts. (dict of int: list of int)
+        values: The values that were counted. (list of int)
+        """
+        # Get the counts.
+        ones = values.count(1)
+        sixes = values.count(6)
+        # Remove the counts (if they exist)
+        if ones:
+            by_count[ones].remove(1)
+            if sixes:
+                by_count[sixes].remove(6)
+            # Add the new count.
+            by_count[ones + sixes].append(6)
+        return by_count
+
+    def one_wild_adjust(self, by_count, values):
+        """
+        Adjust value counts for the one-six option. (tuple of dict, list)
+
+        Parameters:
+        by_count: The counts and values with those counts. (dict of int: list of int)
+        values: The values that were counted. (list of int)
+        """
+        ones = values.count(1)
+        if ones:
+            # Remove the count of ones.
+            by_count[ones].remove(1)
+            if not by_count[ones]:
+                del by_count[ones]
+            # Get the largest value with the largest count.
+            max_count = max(by_count)
+            max_value = max(by_count[max_count])
+            # Check for a straight
+            if max(by_count) == 1 and ones < 3:
+                by_count = {1: [2, 3, 4, 5, 6]}
+                values = [2, 3, 4, 5, 6]
+            else:
+                # Otherwise increase the best group.
+                by_count[max_count].remove(max_value)
+                if not by_count[max_count]:
+                    del by_count[max_count]
+                by_count[max_count + ones].append(max_value)
+        return by_count, values
 
     def player_action(self, player):
         """
@@ -218,10 +274,19 @@ class LiarsDice(game.Game):
         by_count = collections.defaultdict(list)
         for value in set(values):
             by_count[values.count(value)].append(value)
+        # Account for ones being wild.
+        if self.one_wild:
+            by_count, values = self.one_wild_adjust(by_count, values)
+        # Account for ones counting as sixes
+        elif self.one_six:
+            by_count = self.one_six_adjust(by_count, values)
         max_count = max(by_count)
         # Score by value.
+        # Score a dummy hand.
+        if 0 in values:
+            score = [0] * 6
         # Score five of a kind.
-        if max_count == 5:
+        elif max_count == 5:
             score = [7] + by_count[5] * 5
         # Score four of a kind.
         elif max_count == 4:
@@ -262,6 +327,7 @@ class LiarsDice(game.Game):
             hand_name = hand_name.format(number_word(score[1]))
         # Four of a kind and full house need the first and the last word.
         elif score[0] in (5, 6):
+            print(score, self.dice)
             hand_name = hand_name.format(number_word(score[1]), number_word(score[5]))
         # Three of a kind needs the first word and two trailing words.
         elif score[0] == 3:
@@ -284,7 +350,7 @@ class LiarsDice(game.Game):
 
     def reset(self):
         """Reset the tracking variables. (None)"""
-        self.claim = [0, 1, 2, 3, 6]
+        self.claim = [0, 0, 0, 0, 0]
         self.history = []
         self.rerolls = 5
 
@@ -315,6 +381,10 @@ class LiarsDice(game.Game):
             question = 'Should lost tokens be given to the winner of the challenge? bool')
         self.option_set.add_option('two-rerolls', 
             question = 'Should you be able to make a second reroll? bool')
+        self.option_set.add_option('chips', [], int, check = lambda x: x > 1,
+            question = 'How many chips should each player start with (return for 3)? ')
+        self.option_set.add_option('one-six', question = 'Should ones count as sixes? bool')
+        self.option_set.add_option('one-wild', question = 'Should ones be wild? bool')
 
     def set_up(self):
         """Set up the game. (None)"""
@@ -327,7 +397,7 @@ class LiarsDice(game.Game):
             taken_names.append(self.players[-1].name)
             self.players[-1].game = self
         # Set up the scores.
-        self.scores = {player.name: 3 for player in self.players}
+        self.scores = {player.name: self.chips for player in self.players}
         # Set up the dice.
         self.dice = dice.Pool([6] * 5)
         # Set up the tracking variables.
