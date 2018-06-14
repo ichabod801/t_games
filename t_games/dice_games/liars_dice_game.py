@@ -3,9 +3,15 @@ liars_dice_game.py
 
 A game of Liar's Dice.
 
+Constants:
+CREDITS: The credits for Liar's Dice. (str)
+RULES: The rules for Liar's Dice. (str)
+
 Classes:
 LiarsDice: A game of Liar's Dice. (game.Game)
 ABBot: An honest Liar's Dice bot. (player.Bot)
+Challenger: A Liar's Dice bot that challenges based on the odds. (ABBot)
+Liar: A Liar's Dice bot that lies more than it needs to. (ABBot)
 """
 
 
@@ -20,11 +26,59 @@ import t_games.player as player
 from t_games.utility import number_word, YES
 
 
+# The credits for Liar's Dice.
+CREDITS = """
+Game Design: Traditional
+Game Programming: Craig "Ichabod" O'Brien
+"""
+
+# The rules for Liar's Dice.
+RULES = """
+There are five dice. The first player rolls them secretly, and announces what
+they rolled. They can lie about what they rolled if they want. If the next 
+player thinks they are lying, they can challenge the current player. If the
+current player is lying, they lose a token. If they are telling the truth, 
+the person who challenged loses a token.
+
+If the next player accepts the current player's claim, the dice pass to the
+next player. They can reroll any of the dice passed to them and then they must
+make a new claim (they must also announce how many dice they rolled). The new 
+claim must be higher than the previous player's claim. Then the next player in
+order gets a chance to challenge.
+
+The claims are made in terms of poker hands. The order of hands, from highest
+to lowest, is:
+    * Five of a kind
+    * Four of a kind
+    * Full house
+    * Straight
+    * Three of a kind
+    * Two pair
+    * Pair
+    * High card
+All five dice are announced and count toward claims being "better" than the 
+previous claim. So four fives and a three is better than four fives and a two.
+
+Each player starts with three tokens. The last person with tokens left wins 
+the game.
+
+Options:
+betting: Instead of tokens going out of the game, they go to the winner of the
+    challenge.
+chips=: Change the number of tokens each player has. (default = 3)
+one-six: Ones count as sixes.
+one-wild: Ones are wild.
+two-rerolls: Each player can roll the dice twice before stating their claim.
+"""
+
+
 class LiarsDice(game.Game):
     """
     A game of Liar's Dice. (game.Game)
 
     Class Attributes:
+    credits: The credits for Liar's Dice. (str)
+    rules: The rules for Liar's Dice. (str)
     hand_names: The name templates for the poker hand versions of the dice. (str)
 
     Attributes:
@@ -59,6 +113,8 @@ class LiarsDice(game.Game):
     aliases = {'scores': 'score'}
     # The menu categories for the game.
     categories = ['Dice Games']
+    # The credits for the game.
+    credits = CREDITS
     # The name templates for the poker hand versions of the dice.
     hand_names = ['six high missing {}', 'a pair of {}s with {}', 'two pair {}s over {}s with a {}', 
         'three {}s with {} and {}', 'a {}-high straight', 'full house {}s over {}s', 'four {}s and a {}', 
@@ -67,6 +123,8 @@ class LiarsDice(game.Game):
     name = "Liar's Dice"
     # The number of game options.
     num_options = 5
+    # The rules of the game.
+    rules = RULES
 
     def challenge(self):
         """Handle someone making a claim. (None)"""
