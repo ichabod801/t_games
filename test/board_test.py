@@ -15,7 +15,7 @@ MultiCellTest: Tests of the multi-cell class. (TestCase)
 
 import unittest
 
-import tgames.board as board
+import t_games.board as board
 
 
 class BoardTest(unittest.TestCase):
