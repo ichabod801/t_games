@@ -48,6 +48,8 @@ class LiarsDice(game.Game):
 
     # Other names for the game.
     aka = ['Doubting Dice', 'Schummeln']
+    # Command aliases
+    aliases = {'scores': 'score'}
     # The menu categories for the game.
     categories = ['Dice Games']
     # The name templates for the poker hand versions of the dice.
@@ -101,9 +103,9 @@ class LiarsDice(game.Game):
         scores = [(score, name) for name, score in self.scores.items() if score]
         scores.sort(reverse = True)
         # Show the scores
-        player.tell()
+        self.human.tell()
         for score, name in scores:
-            player.tell('{}: {}'.format(score, name))
+            self.human.tell('{}: {}'.format(score, name))
         return True
 
     def game_over(self):
@@ -176,7 +178,7 @@ class LiarsDice(game.Game):
                 else:
                     self.rerolls = len(rerolls)
                 # Announce the rerolls
-                reroll_text = number_word(self.rerolls)
+                reroll_text = number_word(len(rerolls))
                 dice = ['dice', 'die'][len(rerolls) == 1]
                 self.human.tell('\n{} rerolled {} {}.'.format(player.name, reroll_text, dice))
                 # Make the rerolls
@@ -426,6 +428,8 @@ class ABBot(player.Bot):
         # Check them against the believability matrix.
         if claim_score[0] in self.believable[prev_score[0]]:
             return 'nope'
+        elif self.game.two_rerolls:
+            return 'nah'
         else:
             return 'yup'
 
@@ -538,7 +542,7 @@ class Challenger(ABBot):
         # Do the standard check.
         challenge = super(Challenger, self).claim_check()
         # If that's okay, look at the odds.
-        if challenge == 'nope':
+        if challenge != 'yup':
             # Get the number of changed dice.
             current = self.game.claim
             old = self.game.history[-1]
@@ -552,8 +556,13 @@ class Challenger(ABBot):
             if changed > rolled:
                 challenge = 'da'
             # Challenge the rest at odds
-            elif rolled < 5 and random.random() > self.odds[(rolled, changed)]:
-                challenge = '1'
+            elif rolled < 5:
+                # Get the odds
+                odds = self.odds[(rolled, changed)]
+                if self.game.two_rerolls:
+                    odds = odds + (1 - odds) * odds
+                if random.random() > odds:
+                    challenge = '1'
         return challenge
 
 
