@@ -8,10 +8,11 @@ CREDITS: The credits for Liar's Dice. (str)
 RULES: The rules for Liar's Dice. (str)
 
 Classes:
-LiarsDice: A game of Liar's Dice. (game.Game)
 ABBot: An honest Liar's Dice bot. (player.Bot)
 Challenger: A Liar's Dice bot that challenges based on the odds. (ABBot)
 Liar: A Liar's Dice bot that lies more than it needs to. (ABBot)
+DoubleTrouble: A Liar's Dice both that challenges and lies. (Challenger, Liar)
+LiarsDice: A game of Liar's Dice. (game.Game)
 """
 
 
@@ -72,13 +73,248 @@ two-rerolls: Each player can roll the dice twice before stating their claim.
 """
 
 
+class ABBot(player.Bot):
+    """
+    An honest Liar's Dice bot. (player.Bot)
+
+    Well, as honest as they can be.
+
+    Class Attributes:
+    believable: Score changes that will not be challenged. (dict of int: list)
+
+    Methods:
+    claim_check: Decide whether or not to call someone a liar. (str)
+    lie: Generate a lie based on the current claim. (list of int)
+    make_claim: Make a claim about the current roll. (list of int)
+    reroll_check: Decide which dice to reroll. (list of int)
+
+    Overridden Methods:
+    ask
+    ask_int
+    """
+
+    # Score changes that will not be challenged.
+    believable = {7: [7], 6: [6, 7], 5: [5], 4: [4], 3: [3, 5, 6], 2: [2, 5], 1: [1, 2, 3, 4], 
+        0: [0, 1, 2, 3]}
+
+    def ask(self, query):
+        """
+        Ask the bot a question.
+
+        query: The question asked of the bot. (str)
+        """
+        if 'liar' in query:
+            return self.claim_check()
+        if 'must' in query:
+            return 'uh oh'
+        else:
+            # Error on unknown questions.
+            raise player.BotError('Unexpected question to ABBot: {!r}'.format(query))
+
+    def ask_int_list(self, prompt, low = None, high = None, valid = [], valid_lens = [], default = None,
+        cmd = True):
+        """
+        Get a multiple integer response from the human. (int)
+
+        Parameters:
+        prompt: The question asking for the interger. (str)
+        low: The lowest acceptable value for the integer. (list or None)
+        high: The highest acceptable value for the integer. (laist or None)
+        valid: The valid values for the integer. (list of int)
+        valid_lens: The valid numbers of values. (list of int)
+        default: The default choice. (list or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        if 'reroll' in prompt:
+            return self.reroll_check(valid)
+        elif 'claim' in prompt:
+            return self.make_claim(default)
+        else:
+            # Error on unexpected question.
+            raise player.BotError('Unexpected question to ABBot: {!r}'.format(prompt))
+
+    def claim_check(self):
+        """Decide whether or not to call someone a liar. (str)"""
+        # Get the relevant scores.
+        claim_score = self.game.poker_score(self.game.claim)
+        prev_score = self.game.poker_score(self.game.history[-1])
+        # Check them against the believability matrix.
+        if claim_score[0] in self.believable[prev_score[0]]:
+            return 'nope'
+        elif self.game.two_rerolls:
+            return 'nah'
+        else:
+            return 'yup'
+
+    def lie(self, claim_score):
+        """
+        Generate a lie based on the current claim. (list of int)
+
+        Parameters:
+        claim_score: The poker_score output for the claim to lie about. (list of int)
+        """
+        # Five of a kind goes up one. Obvious, but what you gonna do?
+        if claim_score[0] == 7:
+            claim = [claim_score[1] + 1] * 5
+        # Four kind/two pair bumps off die if possible, otherwise the scoring dice.
+        elif claim_score[0] in (2, 6):
+            if claim_score[5] == 6:
+                claim = [value + 1 for value in claim_score[1:5]] + [1]
+            else:
+                claim = claim_score[1:5] + [claim_score[5] + 1]
+        # Full house bump the two if possible, otherwise the three.
+        elif claim_score[0] == 5:
+            if claim_score[5] == 6:
+                claim = [claim_score[1] + 1] * 3 + claim_score[-2:]
+            else:
+                claim = claim_score[1:4] + [claim_score[5] + 1] * 2
+        # Straight go to high straight if possible, low full house otherwise.
+        elif claim_score[0] == 4:
+            if claim_score[1] == 6:
+                claim = [2, 2, 2, 3, 3]
+            else:
+                claim = [2, 3, 4, 5, 6]
+        # Otherwise bump the lowest die.
+        elif claim_score[0] in (0, 1, 3):
+            claim = claim_score[1:5] + [claim_score[5] + 1]
+        return claim
+
+    def make_claim(self, roll):
+        """
+        Make a claim about the current roll. (list of int)
+
+        Parameters:
+        roll: What was actually rolled. (list of int)
+        """
+        # Get the scores for the roll and thre previous claim.
+        roll_score = self.game.poker_score(self.game.dice.values)
+        claim_score = self.game.poker_score(self.game.claim)
+        # Be honest if you can.
+        if roll_score > claim_score:
+            claim = roll
+        else:
+            # Otherwise, try and for the next highest claim.
+            claim = self.lie(claim_score)
+        return claim
+
+    def reroll_check(self, roll):
+        """
+        Decide which dice to reroll. (list of int)
+        
+        Parameters:
+        roll: The dice that were rolled.
+        """
+        score = self.game.poker_score(roll)
+        # Reroll any dice not involved in scoring the hand type.
+        # Straights, five of a kind and full houses score on all dice.
+        if score[0] in (4, 5, 7):
+            reroll = []
+        # Four of a kind and two pair have one die to roll.
+        elif score[0] in (6, 2):
+            reroll = [score[5]]
+        # Three of kind has two dice to reroll
+        elif score[0] == 3:
+            reroll = score[-2:]
+        # One pair has three dice to reroll
+        elif score[0] == 1:
+            reroll = score[-3:]
+        # For high card, keep the 6 and the 5 if there is one.
+        elif score[0] == 0:
+            reroll = [value for value in roll if value < 5]
+        return reroll
+
+    def tell(self, *args, **kwargs):
+        """
+        Give information to the player. (None)
+
+        Parameters:
+        The parameters are as per the built-in print function.
+        """
+        pass
+
+
+class Challenger(ABBot):
+    """
+    A Liar's Dice bot that challenges based on the odds. (ABBot)
+
+    Note that the odds calculated assume that all numbers were distinct. This
+    is just an approximation for decision making purposes.
+
+    Class Attributes:
+    odds: The odds matrix for getting n numbers on d dice. (dict of tuple: int)
+
+    Overridden Methods:
+    claim_check
+    """
+
+    odds = {(1, 1): 1 / 6, (2, 2): 2 / 36, (2, 1): 11 / 36, (3, 3): 1 / 36, (3, 2): 91 / 216, 
+        (3, 1): 5 / 36, (4, 4): 1 / 54, (4, 3): 1 / 12, (4, 2): 302 / 1296, (4, 1): 671 / 1296}
+
+    def claim_check(self):
+        """Decide whether or not to call someone a liar. (str)"""
+        # Do the standard check.
+        challenge = super(Challenger, self).claim_check()
+        # If that's okay, look at the odds.
+        if challenge != 'yup':
+            # Get the number of changed dice.
+            current = self.game.claim
+            old = self.game.history[-1]
+            for die in old:
+                if die in current:
+                    current.remove(die)
+            changed = len(current)
+            # Get the number of rolled dice.
+            rolled = self.game.rerolls
+            # Challenge the impossible
+            if changed > rolled:
+                challenge = 'da'
+            # Challenge the rest at odds
+            elif rolled < 5:
+                # Get the odds
+                odds = self.odds[(rolled, changed)]
+                if self.game.two_rerolls:
+                    odds = odds + (1 - odds) * odds
+                if random.random() > odds:
+                    challenge = '1'
+        return challenge
+
+
+class Liar(ABBot):
+    """
+    A Liar's Dice bot that lies more than it needs to. (ABBot)
+
+    Overridden Methods:
+    make_claim
+    """
+
+    def make_claim(self, roll):
+        """
+        Make a claim about the current roll. (list of int)
+
+        Parameters:
+        roll: What was actually rolled. (list of int)
+        """
+        # Get the standard claim.
+        claim = super(Liar, self).make_claim(roll)
+        # Consider lying if not already lying.
+        if claim != roll:
+            score = self.game.poker_score(claim)
+            if random.random() > score[0] / 7:
+                claim = self.lie(score)
+        return claim
+
+
+class DoubleTrouble(Challenger, Liar):
+    """A Liar's Dice both that challenges and lies. (Challenger, Liar)"""
+    pass
+
+
 class LiarsDice(game.Game):
     """
     A game of Liar's Dice. (game.Game)
 
     Class Attributes:
-    credits: The credits for Liar's Dice. (str)
-    rules: The rules for Liar's Dice. (str)
+    bot_classes: The bot classes available for the game. (dict of str: class)
     hand_names: The name templates for the poker hand versions of the dice. (str)
 
     Attributes:
@@ -111,6 +347,8 @@ class LiarsDice(game.Game):
     aka = ['Doubting Dice', 'Schummeln']
     # Command aliases
     aliases = {'scores': 'score'}
+    # The bot classes available for the game.
+    bot_classes = {'challenger': Challenger, 'double': DoubleTrouble, 'honest': ABBot, 'Liar': Liar}
     # The menu categories for the game.
     categories = ['Dice Games']
     # The credits for the game.
@@ -385,7 +623,6 @@ class LiarsDice(game.Game):
             hand_name = hand_name.format(number_word(score[1]))
         # Four of a kind and full house need the first and the last word.
         elif score[0] in (5, 6):
-            print(score, self.dice)
             hand_name = hand_name.format(number_word(score[1]), number_word(score[5]))
         # Three of a kind needs the first word and two trailing words.
         elif score[0] == 3:
@@ -435,6 +672,7 @@ class LiarsDice(game.Game):
 
     def set_options(self):
         """Set the game specific options. (None)"""
+        # Set up the game options.
         self.option_set.add_option('betting',
             question = 'Should lost tokens be given to the winner of the challenge? bool')
         self.option_set.add_option('two-rerolls', 
@@ -443,17 +681,17 @@ class LiarsDice(game.Game):
             question = 'How many chips should each player start with (return for 3)? ')
         self.option_set.add_option('one-six', question = 'Should ones count as sixes? bool')
         self.option_set.add_option('one-wild', question = 'Should ones be wild? bool')
+        # Set up the bot options.
+        self.option_set.add_option('honest', action = 'bot', value = (), default = None)
+        self.option_set.add_option('liar', action = 'bot', value = (), default = None)
+        self.option_set.add_option('challenger', action = 'bot', value = (), default = None)
+        self.option_set.add_option('double', action = 'bot', value = (), default = None)
+        # Set the default bots.
+        self.option_set.default_bots = [(ABBot, ()), (Challenger, ()), (Liar, ()), (DoubleTrouble, ())]
 
     def set_up(self):
         """Set up the game. (None)"""
-        # Set up the players.
-        self.players = [self.human]
-        taken_names = [self.human.name]
-        for bot in range(4):
-            bot_class = random.choice((ABBot, Challenger, Liar))
-            self.players.append(bot_class(taken_names))
-            taken_names.append(self.players[-1].name)
-            self.players[-1].game = self
+        random.shuffle(self.players)
         # Set up the scores.
         self.scores = {player.name: self.chips for player in self.players}
         # Set up the dice.
@@ -488,232 +726,11 @@ class LiarsDice(game.Game):
             return False
 
 
-class ABBot(player.Bot):
-    """
-    An honest Liar's Dice bot. (player.Bot)
-
-    Well, as honest as they can be.
-
-    Class Attributes:
-    believable: Score changes that will not be challenged. (dict of int: list)
-
-    Methods:
-    claim_check: Decide whether or not to call someone a liar. (str)
-    lie: Generate a lie based on the current claim. (list of int)
-    make_claim: Make a claim about the current roll. (list of int)
-    reroll_check: Decide which dice to reroll. (list of int)
-
-    Overridden Methods:
-    ask
-    ask_int
-    """
-
-    # Score changes that will not be challenged.
-    believable = {7: [7], 6: [6, 7], 5: [5], 4: [4], 3: [3, 5, 6], 2: [2, 5], 1: [1, 2, 3, 4], 
-        0: [0, 1, 2, 3]}
-
-    def ask(self, query):
-        """
-        Ask the bot a question.
-
-        query: The question asked of the bot. (str)
-        """
-        if 'liar' in query:
-            return self.claim_check()
-        if 'must' in query:
-            return 'uh oh'
-        else:
-            # Error on unknown questions.
-            raise player.BotError('Unexpected question to ABBot: {!r}'.format(query))
-
-    def ask_int_list(self, prompt, low = None, high = None, valid = [], valid_lens = [], default = None,
-        cmd = True):
-        """
-        Get a multiple integer response from the human. (int)
-
-        Parameters:
-        prompt: The question asking for the interger. (str)
-        low: The lowest acceptable value for the integer. (list or None)
-        high: The highest acceptable value for the integer. (laist or None)
-        valid: The valid values for the integer. (list of int)
-        valid_lens: The valid numbers of values. (list of int)
-        default: The default choice. (list or None)
-        cmd: A flag for returning commands for processing. (bool)
-        """
-        if 'reroll' in prompt:
-            return self.reroll_check(valid)
-        elif 'claim' in prompt:
-            return self.make_claim(default)
-        else:
-            # Error on unexpected question.
-            raise player.BotError('Unexpected question to ABBot: {!r}'.format(prompt))
-
-    def claim_check(self):
-        """Decide whether or not to call someone a liar. (str)"""
-        # Get the relevant scores.
-        claim_score = self.game.poker_score(self.game.claim)
-        prev_score = self.game.poker_score(self.game.history[-1])
-        # Check them against the believability matrix.
-        if claim_score[0] in self.believable[prev_score[0]]:
-            return 'nope'
-        elif self.game.two_rerolls:
-            return 'nah'
-        else:
-            return 'yup'
-
-    def lie(self, claim_score):
-        """
-        Generate a lie based on the current claim. (list of int)
-
-        Parameters:
-        claim_score: The poker_score output for the claim to lie about. (list of int)
-        """
-        # Five of a kind goes up one. Obvious, but what you gonna do?
-        if claim_score[0] == 7:
-            claim = [claim_score[1] + 1] * 5
-        # Four kind/two pair bumps off die if possible, otherwise the scoring dice.
-        elif claim_score[0] in (2, 6):
-            if claim_score[5] == 6:
-                claim = [value + 1 for value in claim_score[1:5]] + [1]
-            else:
-                claim = claim_score[1:5] + [claim_score[5] + 1]
-        # Full house bump the two if possible, otherwise the three.
-        elif claim_score[0] == 5:
-            if claim_score[5] == 6:
-                claim = [claim_score[1] + 1] * 3 + claim_score[-2:]
-            else:
-                claim = claim_score[1:4] + [claim_score[5] + 1] * 2
-        # Straight go to high straight if possible, low full house otherwise.
-        elif claim_score[0] == 4:
-            if claim_score[1] == 6:
-                claim = [2, 2, 2, 3, 3]
-            else:
-                claim = [2, 3, 4, 5, 6]
-        # Otherwise bump the lowest die.
-        elif claim_score[0] in (0, 1, 3):
-            claim = claim_score[1:5] + [claim_score[5] + 1]
-        return claim
-
-    def make_claim(self, roll):
-        """
-        Make a claim about the current roll. (list of int)
-
-        Parameters:
-        roll: What was actually rolled. (list of int)
-        """
-        # Get the scores for the roll and thre previous claim.
-        roll_score = self.game.poker_score(self.game.dice.values)
-        claim_score = self.game.poker_score(self.game.claim)
-        # Be honest if you can.
-        if roll_score > claim_score:
-            claim = roll
-        else:
-            # Otherwise, try and for the next highest claim.
-            claim = self.lie(claim_score)
-        return claim
-
-    def reroll_check(self, roll):
-        """
-        Decide which dice to reroll. (list of int)
-        
-        Parameters:
-        roll: The dice that were rolled.
-        """
-        score = self.game.poker_score(roll)
-        # Reroll any dice not involved in scoring the hand type.
-        # Straights, five of a kind and full houses score on all dice.
-        if score[0] in (4, 5, 7):
-            reroll = []
-        # Four of a kind and two pair have one die to roll.
-        elif score[0] in (6, 2):
-            reroll = [score[5]]
-        # Three of kind has two dice to reroll
-        elif score[0] == 3:
-            reroll = score[-2:]
-        # One pair has three dice to reroll
-        elif score[0] == 1:
-            reroll = score[-3:]
-        # For high card, keep the 6 and the 5 if there is one.
-        elif score[0] == 0:
-            reroll = [value for value in roll if value < 5]
-        return reroll
-
-    def tell(self, *args, **kwargs):
-        """
-        Give information to the player. (None)
-
-        Parameters:
-        The parameters are as per the built-in print function.
-        """
+if __name__ == '__main__':
+    try:
+        input = raw_input
+    except NameError:
         pass
-
-
-class Challenger(ABBot):
-    """
-    A Liar's Dice bot that challenges based on the odds. (ABBot)
-
-    Note that the odds calculated assume that all numbers were distinct. This
-    is just an approximation for decision making purposes.
-
-    Class Attributes:
-    odds: The odds matrix for getting n numbers on d dice. (dict of tuple: int)
-
-    Overridden Methods:
-    claim_check
-    """
-
-    odds = {(1, 1): 1 / 6, (2, 2): 2 / 36, (2, 1): 11 / 36, (3, 3): 1 / 36, (3, 2): 91 / 216, 
-        (3, 1): 5 / 36, (4, 4): 1 / 54, (4, 3): 1 / 12, (4, 2): 302 / 1296, (4, 1): 671 / 1296}
-
-    def claim_check(self):
-        """Decide whether or not to call someone a liar. (str)"""
-        # Do the standard check.
-        challenge = super(Challenger, self).claim_check()
-        # If that's okay, look at the odds.
-        if challenge != 'yup':
-            # Get the number of changed dice.
-            current = self.game.claim
-            old = self.game.history[-1]
-            for die in old:
-                if die in current:
-                    current.remove(die)
-            changed = len(current)
-            # Get the number of rolled dice.
-            rolled = self.game.rerolls
-            # Challenge the impossible
-            if changed > rolled:
-                challenge = 'da'
-            # Challenge the rest at odds
-            elif rolled < 5:
-                # Get the odds
-                odds = self.odds[(rolled, changed)]
-                if self.game.two_rerolls:
-                    odds = odds + (1 - odds) * odds
-                if random.random() > odds:
-                    challenge = '1'
-        return challenge
-
-
-class Liar(ABBot):
-    """
-    A Liar's Dice bot that lies more than it needs to. (ABBot)
-
-    Overridden Methods:
-    make_claim
-    """
-
-    def make_claim(self, roll):
-        """
-        Make a claim about the current roll. (list of int)
-
-        Parameters:
-        roll: What was actually rolled. (list of int)
-        """
-        # Get the standard claim.
-        claim = super(Liar, self).make_claim(roll)
-        # Consider lying if not already lying.
-        if claim != roll:
-            score = self.game.poker_score(claim)
-            if random.random() > score[0] / 7:
-                claim = self.lie(score)
-        return claim
+    name = input('What is your name? ')
+    liars = LiarsDice(player.Player(name), '')
+    liars.play()
