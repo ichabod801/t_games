@@ -7,13 +7,74 @@ Classes:
 OneSixeScoreTest: Test of calling poker hands with ones counting as sixes.
 PokerScoreTest: Tests of calling poker hands on dice.
 PokerTextTest: Tests of converting poker hands to text.
+
+Function:
+by_count: Crate a counts dictionary for testing. (collections.defaultdict)
 """
 
 
+import collections
 import unittest
 
 import t_games.dice_games.liars_dice_game as liar
 import t_games.player as player
+
+
+class OneSixAdjustTest(unittest.TestCase):
+    """Test adjusting counts for ones counting as sixes. (TestCase)"""
+
+    def setUp(self):
+        """Set up the tests."""
+        self.game = liar.LiarsDice(player.Tester(), 'one-six')
+
+    def testBothUnique(self):
+        """Test one-six adjustemnt with unique ones count and sixes count."""
+        values = [1, 6, 1, 1, 6]
+        adjusted = self.game.one_six_adjust(by_count(values), values)
+        check = by_count([6, 6, 6, 6, 6])
+        self.assertEqual(check, adjusted)
+
+    def testNeighterUnique(self):
+        """Test one-six adjustemnt with no unique counts."""
+        values = [1, 6, 2, 3, 4]
+        adjusted = self.game.one_six_adjust(by_count(values), values)
+        check = by_count([6, 6, 2, 3, 4])
+        self.assertEqual(check, adjusted)
+
+    def testNoOnesNoSixes(self):
+        """Test one-six adjustemnt with no ones or sixes."""
+        values = [2, 2, 4, 3, 5]
+        adjusted = self.game.one_six_adjust(by_count(values), values)
+        check = by_count([2, 2, 4, 3, 5])
+        self.assertEqual(check, adjusted)
+
+    def testOnesUnique(self):
+        """Test one-six adjustemnt with unique ones count."""
+        values = [1, 1, 2, 3, 6]
+        adjusted = self.game.one_six_adjust(by_count(values), values)
+        check = by_count([2, 3, 6, 6, 6])
+        self.assertEqual(check, adjusted)
+
+    def testOnesUniqueNoSixes(self):
+        """Test one-six adjustemnt with unique ones count and no sixes."""
+        values = [1, 1, 2, 3, 5]
+        adjusted = self.game.one_six_adjust(by_count(values), values)
+        check = by_count([2, 3, 5, 6, 6])
+        self.assertEqual(check, adjusted)
+
+    def testSixesUnique(self):
+        """Test one-six adjustemnt with unique sixes count."""
+        values = [1, 6, 2, 3, 6]
+        adjusted = self.game.one_six_adjust(by_count(values), values)
+        check = by_count([2, 3, 6, 6, 6])
+        self.assertEqual(check, adjusted)
+
+    def testSixesUniqueNoOnes(self):
+        """Test one-six adjustemnt with unique sixes count."""
+        values = [5, 6, 2, 3, 6]
+        adjusted = self.game.one_six_adjust(by_count(values), values)
+        check = by_count([2, 3, 5, 6, 6])
+        self.assertEqual(check, adjusted)
 
 
 class OneSixScoreTest(unittest.TestCase):
@@ -302,6 +363,19 @@ class PokerTextTest(unittest.TestCase):
         text = self.game.poker_text([2, 4, 4, 2, 2, 3])
         check = 'two pair fours over twos with a three'
         self.assertEqual(check, text)
+
+
+def by_count(values):
+    """
+    Create a counts dictionary for testing. (collections.defaultdict)
+
+    Parameters:
+    values: The values to create as a count.
+    """
+    counts = collections.defaultdict(list)
+    for value in set(values):
+        counts[values.count(value)].append(value)
+    return counts
 
 
 if __name__ == '__main__':
