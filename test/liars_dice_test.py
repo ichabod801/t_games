@@ -4,8 +4,9 @@ liars_dice_test.py
 Unit testing for dice_games/liars_dice_game.py
 
 Classes:
-PokerScoreTest: Tests of calling poker hands on dice. (unittest.TestCase)
-PokerTextTest: Tests of converting poker hands to text. (unittest.TestCase)
+OneSixeScoreTest: Test of calling poker hands with ones counting as sixes.
+PokerScoreTest: Tests of calling poker hands on dice.
+PokerTextTest: Tests of converting poker hands to text.
 """
 
 
@@ -13,6 +14,62 @@ import unittest
 
 import t_games.dice_games.liars_dice_game as liar
 import t_games.player as player
+
+
+class OneSixScoreTest(unittest.TestCase):
+    """Test of calling poker hands with ones counting as sixes. (TestCase)"""
+
+    def setUp(self):
+        """Set up the tests."""
+        self.game = liar.LiarsDice(player.Tester(), 'one-six')
+
+    def testFiveKind(self):
+        """Test scoring five of a kind with ones as sixes."""
+        score = self.game.poker_score((6, 6, 1, 6, 1))
+        check = [7, 6, 6, 6, 6, 6]
+        self.assertEqual(check, score)
+
+    def testFourKind(self):
+        """Test scoring five of a kind with ones as sixes."""
+        score = self.game.poker_score((6, 3, 1, 6, 1))
+        check = [6, 6, 6, 6, 6, 3]
+        self.assertEqual(check, score)
+
+    def testFullHouse(self):
+        """Test scoring a full house with ones as sixes."""
+        score = self.game.poker_score((6, 2, 1, 6, 2))
+        check = [5, 6, 6, 6, 2, 2]
+        self.assertEqual(check, score)
+
+    def testStraight(self):
+        """Test scoring a straight with ones as sixes."""
+        score = self.game.poker_score((3, 2, 5, 1, 4))
+        check = [4, 6, 5, 4, 3, 2]
+        self.assertEqual(check, score)
+
+    def testTrips(self):
+        """Test scoring three of a kind with ones as sixes."""
+        score = self.game.poker_score((6, 1, 4, 6, 5))
+        check = [3, 6, 6, 6, 5, 4]
+        self.assertEqual(check, score)
+
+    def testTripsNoSixes(self):
+        """Test scoring three of a kind with ones as sixes and no sixes."""
+        score = self.game.poker_score((1, 1, 4, 1, 5))
+        check = [3, 6, 6, 6, 5, 4]
+        self.assertEqual(check, score)
+
+    def testTwoPair(self):
+        """Test scoring two pair with ones as sixes."""
+        score = self.game.poker_score((2, 1, 3, 6, 2))
+        check = [2, 6, 6, 2, 2, 3]
+        self.assertEqual(check, score)
+
+    def testPair(self):
+        """Test scoring a pair with ones as sixes."""
+        score = self.game.poker_score((6, 1, 4, 5, 2))
+        check = [1, 6, 6, 5, 4, 2]
+        self.assertEqual(check, score)
 
 
 class PokerScoreTest(unittest.TestCase):
