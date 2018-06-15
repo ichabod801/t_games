@@ -446,8 +446,12 @@ class LiarsDice(game.Game):
         # Remove the counts (if they exist)
         if ones:
             by_count[ones].remove(1)
+            if not by_count[ones]:
+                del by_count[ones]
             if sixes:
                 by_count[sixes].remove(6)
+                if not by_count[sixes]:
+                    del by_count[sixes]
             # Add the new count.
             by_count[ones + sixes].append(6)
         return by_count
@@ -576,6 +580,7 @@ class LiarsDice(game.Game):
         # Account for ones counting as sixes
         elif self.one_six:
             by_count = self.one_six_adjust(by_count, values)
+            values = [(value if value != 1 else 6) for value in values]
         max_count = max(by_count)
         # Score by value.
         # Score a dummy hand.
