@@ -4,6 +4,8 @@ liars_dice_test.py
 Unit testing for dice_games/liars_dice_game.py
 
 Classes:
+OneSixAdjustTest: Test adjusting counts for ones counting as sixes.
+OneWildAdjustTest: Test adjusting counts for ones wild.
 OneSixeScoreTest: Test of calling poker hands with ones counting as sixes.
 PokerScoreTest: Tests of calling poker hands on dice.
 PokerTextTest: Tests of converting poker hands to text.
@@ -75,6 +77,86 @@ class OneSixAdjustTest(unittest.TestCase):
         adjusted = self.game.one_six_adjust(by_count(values), values)
         check = by_count([2, 3, 5, 6, 6])
         self.assertEqual(check, adjusted)
+
+
+class OneWildAdjustTest(unittest.TestCase):
+    """Test adjusting counts for ones wild. (TestCase)"""
+
+    def setUp(self):
+        """Set up the tests."""
+        self.game = liar.LiarsDice(player.Tester(), 'one-wild')
+
+    def testFiveKind(self):
+        """Test one-wild adjustment with five of a kind."""
+        values = [1, 2, 1, 1, 2]
+        adj_counts, adj_values = self.game.one_wild_adjust(by_count(values), values)
+        check = by_count([2, 2, 2, 2, 2])
+        self.assertEqual(check, adj_counts)
+        self.assertEqual(values, adj_values)
+
+    def testFiveSixes(self):
+        """Test one-wild adjustment with five of a ones."""
+        values = [1, 1, 1, 1, 1]
+        adj_counts, adj_values = self.game.one_wild_adjust(by_count(values), values)
+        check = by_count([6, 6, 6, 6, 6])
+        self.assertEqual(check, adj_counts)
+        self.assertEqual(values, adj_values)
+
+    def testFourKind(self):
+        """Test one-wild adjustment with four of a kind."""
+        values = [4, 5, 1, 1, 1]
+        adj_counts, adj_values = self.game.one_wild_adjust(by_count(values), values)
+        check = by_count([5, 5, 5, 4, 5])
+        self.assertEqual(check, adj_counts)
+        self.assertEqual(values, adj_values)
+
+    def testFourKindLow(self):
+        """Test one-wild adjustment with four of a kind forced low."""
+        values = [4, 5, 1, 4, 1]
+        adj_counts, adj_values = self.game.one_wild_adjust(by_count(values), values)
+        check = by_count([4, 4, 5, 4, 4])
+        self.assertEqual(check, adj_counts)
+        self.assertEqual(values, adj_values)
+
+    def testFullHouse(self):
+        """Test one-wild adjustment with a full house."""
+        values = [2, 3, 3, 2, 1]
+        adj_counts, adj_values = self.game.one_wild_adjust(by_count(values), values)
+        check = by_count([2, 3, 2, 3, 3])
+        self.assertEqual(check, adj_counts)
+        self.assertEqual(values, adj_values)
+
+    def testOnesUnique(self):
+        """Test one-wild adjustment with a unique count of ones."""
+        values = [1, 2, 2, 3, 3]
+        adj_counts, adj_values = self.game.one_wild_adjust(by_count(values), values)
+        check = by_count([3, 2, 2, 3, 3])
+        self.assertEqual(check, adj_counts)
+        self.assertEqual(values, adj_values)
+
+    def testStraight(self):
+        """Test one-wild adjustment with a straight."""
+        values = [1, 2, 3, 6, 5]
+        adj_counts, adj_values = self.game.one_wild_adjust(by_count(values), values)
+        check = by_count([2, 3, 4, 5, 6])
+        self.assertEqual(check, adj_counts)
+        self.assertEqual([2, 3, 4, 5, 6], adj_values)
+
+    def testStraightTwo(self):
+        """Test one-wild adjustment with a straight and two ones."""
+        values = [1, 2, 1, 6, 5]
+        adj_counts, adj_values = self.game.one_wild_adjust(by_count(values), values)
+        check = by_count([2, 3, 4, 5, 6])
+        self.assertEqual(check, adj_counts)
+        self.assertEqual([2, 3, 4, 5, 6], adj_values)
+
+    def testTrips(self):
+        """Test one-wild adjustment with a three of a kind."""
+        values = [4, 5, 6, 5, 1]
+        adj_counts, adj_values = self.game.one_wild_adjust(by_count(values), values)
+        check = by_count([5, 5, 4, 5, 6])
+        self.assertEqual(check, adj_counts)
+        self.assertEqual(values, adj_values)
 
 
 class OneSixScoreTest(unittest.TestCase):
