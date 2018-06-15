@@ -18,6 +18,7 @@ by_count: Crate a counts dictionary for testing. (collections.defaultdict)
 import collections
 import unittest
 
+import _test_utility
 import t_games.dice_games.liars_dice_game as liar
 import t_games.player as player
 
@@ -445,6 +446,255 @@ class PokerTextTest(unittest.TestCase):
         text = self.game.poker_text([2, 4, 4, 2, 2, 3])
         check = 'two pair fours over twos with a three'
         self.assertEqual(check, text)
+
+
+class ValidateClaimTest(unittest.TestCase):
+    """Test validating that the new claim is better than the old."""
+
+    def setUp(self):
+        self.player = _test_utility.Mute()
+        self.game = liar.LiarsDice(self.player, 'none')
+        self.game.reset()
+
+    def testFiveFive(self):
+        """Test comparing five of a kind to a different five of a kind."""
+        # Test the higher against the lower.
+        claim = [6, 6, 6, 6, 6]
+        self.game.claim = [5, 5, 5, 5, 5]
+        self.assertTrue(self.game.validate_claim(claim, self.player))
+        # Test the higher against itself.
+        self.assertFalse(self.game.validate_claim(self.game.claim, self.player))
+        # Test the lower the higher.
+        claim = self.game.history[0]
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+        # Test the lower against itself.
+        self.game.claim = claim
+        self.assertFalse(self.game.validate_claim(claim, self.player)) 
+
+    def testFiveFour(self):
+        """Test comparing five of a kind to four of a kind."""
+        # Test the higher against the lower.
+        claim = [1, 1, 1, 1, 1]
+        self.game.claim = [1, 1, 1, 1, 2]
+        self.assertTrue(self.game.validate_claim(claim, self.player))
+        # Test the higher against itself.
+        self.assertFalse(self.game.validate_claim(self.game.claim, self.player))
+        # Test the lower the higher.
+        claim = self.game.history[0]
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+        # Test the lower against itself.
+        self.game.claim = claim
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+
+    def testFourFour(self):
+        """Test comparing four of a kind to a different four of a kind."""
+        # Test the higher against the lower.
+        claim = [3, 3, 3, 3, 2]
+        self.game.claim = [2, 2, 2, 2, 3]
+        self.assertTrue(self.game.validate_claim(claim, self.player))
+        # Test the higher against itself.
+        self.assertFalse(self.game.validate_claim(self.game.claim, self.player))
+        # Test the lower the higher.
+        claim = self.game.history[0]
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+        # Test the lower against itself.
+        self.game.claim = claim
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+
+    def testFourFull(self):
+        """Test comparing five of a kind to four of a kind."""
+        # Test the higher against the lower.
+        claim = [2, 2, 2, 2, 1]
+        self.game.claim = [3, 3, 3, 4, 4]
+        self.assertTrue(self.game.validate_claim(claim, self.player))
+        # Test the higher against itself.
+        self.assertFalse(self.game.validate_claim(self.game.claim, self.player))
+        # Test the lower the higher.
+        claim = self.game.history[0]
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+        # Test the lower against itself.
+        self.game.claim = claim
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+
+    def testFullFull(self):
+        """Test comparing a full house to a different full house."""
+        # Test the higher against the lower.
+        claim = [4, 4, 4, 1, 1]
+        self.game.claim = [1, 1, 1, 4, 4]
+        self.assertTrue(self.game.validate_claim(claim, self.player))
+        # Test the higher against itself.
+        self.assertFalse(self.game.validate_claim(self.game.claim, self.player))
+        # Test the lower the higher.
+        claim = self.game.history[0]
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+        # Test the lower against itself.
+        self.game.claim = claim
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+
+    def testFullStraight(self):
+        """Test comparing a full house to a straight"""
+        # Test the higher against the lower.
+        claim = [3, 5, 3, 5, 3]
+        self.game.claim = [6, 3, 2, 4, 5]
+        self.assertTrue(self.game.validate_claim(claim, self.player))
+        # Test the higher against itself.
+        self.assertFalse(self.game.validate_claim(self.game.claim, self.player))
+        # Test the lower the higher.
+        claim = self.game.history[0]
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+        # Test the lower against itself.
+        self.game.claim = claim
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+
+    def testHighCardDummy(self):
+        """Test comparing a high card to a dummy hand."""
+        # Test the higher against the lower.
+        claim = [1, 2, 4, 5, 6]
+        self.game.claim = [0, 0, 0, 0, 0]
+        self.assertTrue(self.game.validate_claim(claim, self.player))
+        # Test the higher against itself.
+        self.assertFalse(self.game.validate_claim(self.game.claim, self.player))
+        # Test the lower the higher.
+        claim = self.game.history[0]
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+        # Test the lower against itself.
+        self.game.claim = claim
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+
+    def testHighCardHighCard(self):
+        """Test comparing a high card to a different high card."""
+        # Test the higher against the lower.
+        claim = [1, 3, 4, 5, 6]
+        self.game.claim = [1, 2, 3, 4, 6]
+        self.assertTrue(self.game.validate_claim(claim, self.player))
+        # Test the higher against itself.
+        self.assertFalse(self.game.validate_claim(self.game.claim, self.player))
+        # Test the lower the higher.
+        claim = self.game.history[0]
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+        # Test the lower against itself.
+        self.game.claim = claim
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+
+    def testPairHighCard(self):
+        """Test comparing a pair to a high card."""
+        # Test the higher against the lower.
+        claim = [4, 3, 4, 2, 5]
+        self.game.claim = [6, 1, 2, 3, 5]
+        self.assertTrue(self.game.validate_claim(claim, self.player))
+        # Test the higher against itself.
+        self.assertFalse(self.game.validate_claim(self.game.claim, self.player))
+        # Test the lower the higher.
+        claim = self.game.history[0]
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+        # Test the lower against itself.
+        self.game.claim = claim
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+
+    def testPairPair(self):
+        """Test comparing a pair to a different pair."""
+        # Test the higher against the lower.
+        claim = [6, 6, 5, 4, 3]
+        self.game.claim = [1, 1, 4, 3, 2]
+        self.assertTrue(self.game.validate_claim(claim, self.player))
+        # Test the higher against itself.
+        self.assertFalse(self.game.validate_claim(self.game.claim, self.player))
+        # Test the lower the higher.
+        claim = self.game.history[0]
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+        # Test the lower against itself.
+        self.game.claim = claim
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+
+    def testStraightStraight(self):
+        """Test comparing a high straight to a low straight."""
+        # Test the higher against the lower.
+        claim = [2, 3, 4, 5, 6]
+        self.game.claim = [5, 4, 1, 2, 3]
+        self.assertTrue(self.game.validate_claim(claim, self.player))
+        # Test the higher against itself.
+        self.assertFalse(self.game.validate_claim(self.game.claim, self.player))
+        # Test the lower the higher.
+        claim = self.game.history[0]
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+        # Test the lower against itself.
+        self.game.claim = claim
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+
+    def testStraightTrip(self):
+        """Test comparing a straight to three of a kind."""
+        # Test the higher against the lower.
+        claim = [1, 2, 3, 4, 5]
+        self.game.claim = [6, 1, 6, 6, 2]
+        self.assertTrue(self.game.validate_claim(claim, self.player))
+        # Test the higher against itself.
+        self.assertFalse(self.game.validate_claim(self.game.claim, self.player))
+        # Test the lower the higher.
+        claim = self.game.history[0]
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+        # Test the lower against itself.
+        self.game.claim = claim
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+
+    def testTwoPairPair(self):
+        """Test comparing two pair to a pair."""
+        # Test the higher against the lower.
+        claim = [3, 1, 2, 1, 2]
+        self.game.claim = [2, 2, 6, 5, 4]
+        self.assertTrue(self.game.validate_claim(claim, self.player))
+        # Test the higher against itself.
+        self.assertFalse(self.game.validate_claim(self.game.claim, self.player))
+        # Test the lower the higher.
+        claim = self.game.history[0]
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+        # Test the lower against itself.
+        self.game.claim = claim
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+
+    def testTwoPairTwoPair(self):
+        """Test comparing two pair to a different two pair."""
+        # Test the higher against the lower.
+        claim = [4, 5, 4, 6, 5]
+        self.game.claim = [5, 5, 4, 4, 2]
+        self.assertTrue(self.game.validate_claim(claim, self.player))
+        # Test the higher against itself.
+        self.assertFalse(self.game.validate_claim(self.game.claim, self.player))
+        # Test the lower the higher.
+        claim = self.game.history[0]
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+        # Test the lower against itself.
+        self.game.claim = claim
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+
+    def testTripTrip(self):
+        """Test comparing a trip to a different trip."""
+        # Test the higher against the lower.
+        claim = [4, 5, 2, 5, 5]
+        self.game.claim = [5, 3, 5, 5, 2]
+        self.assertTrue(self.game.validate_claim(claim, self.player))
+        # Test the higher against itself.
+        self.assertFalse(self.game.validate_claim(self.game.claim, self.player))
+        # Test the lower the higher.
+        claim = self.game.history[0]
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+        # Test the lower against itself.
+        self.game.claim = claim
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+
+    def testTripTwoPair(self):
+        """Test comparing a trip to two pair."""
+        # Test the higher against the lower.
+        claim = [6, 6, 1, 6, 3]
+        self.game.claim = [1, 1, 6, 3, 6]
+        self.assertTrue(self.game.validate_claim(claim, self.player))
+        # Test the higher against itself.
+        self.assertFalse(self.game.validate_claim(self.game.claim, self.player))
+        # Test the lower the higher.
+        claim = self.game.history[0]
+        self.assertFalse(self.game.validate_claim(claim, self.player))
+        # Test the lower against itself.
+        self.game.claim = claim
+        self.assertFalse(self.game.validate_claim(claim, self.player))
 
 
 def by_count(values):
