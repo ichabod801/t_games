@@ -100,7 +100,7 @@ class OneWildAdjustTest(unittest.TestCase):
         adj_counts, adj_values = self.game.one_wild_adjust(by_count(values), values)
         check = by_count([6, 6, 6, 6, 6])
         self.assertEqual(check, adj_counts)
-        self.assertEqual(values, adj_values)
+        self.assertEqual([6, 6, 6, 6, 6], adj_values)
 
     def testFourKind(self):
         """Test one-wild adjustment with four of a kind."""

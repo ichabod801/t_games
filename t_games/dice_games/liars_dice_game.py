@@ -471,12 +471,19 @@ class LiarsDice(game.Game):
             if not by_count[ones]:
                 del by_count[ones]
             # Get the largest value with the largest count.
-            max_count = max(by_count)
-            max_value = max(by_count[max_count])
+            try:
+                max_count = max(by_count)
+                max_value = max(by_count[max_count])
+            except ValueError:
+                max_count = 0
             # Check for a straight
-            if max(by_count) == 1 and ones < 3:
+            if max_count == 1 and ones < 3:
                 by_count = {1: [2, 3, 4, 5, 6]}
                 values = [2, 3, 4, 5, 6]
+            # Check for five ones
+            elif max_count == 0:
+                by_count[5].append(6)
+                values = [6] * 5
             else:
                 # Otherwise increase the best group.
                 by_count[max_count].remove(max_value)
