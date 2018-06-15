@@ -4,7 +4,8 @@ liars_dice_test.py
 Unit testing for dice_games/liars_dice_game.py
 
 Classes:
-PokerScoreTest: Tests of LiarsDice.poker_score. (unittest.TestCase)
+PokerScoreTest: Tests of calling poker hands on dice. (unittest.TestCase)
+PokerTextTest: Tests of converting poker hands to text. (unittest.TestCase)
 """
 
 
@@ -15,7 +16,7 @@ import t_games.player as player
 
 
 class PokerScoreTest(unittest.TestCase):
-    """Tests of LiarsDice.poker_score. (unittest.TestCase)"""
+    """Tests of calling poker hands on dice. (unittest.TestCase)"""
 
     def setUp(self):
         """Set up the tests."""
@@ -128,6 +129,122 @@ class PokerScoreTest(unittest.TestCase):
         score = self.game.poker_score((4, 2, 3, 4, 2))
         check = [2, 4, 4, 2, 2, 3]
         self.assertEqual(check, score)
+
+
+class PokerTextTest(unittest.TestCase):
+    """Tests of converting poker hands to text. (unittest.TestCase)"""
+
+    def setUp(self):
+        """Set up the tests."""
+        self.game = liar.LiarsDice(player.Tester(), 'none')
+
+    def testFiveKind(self):
+        """Test text generation for five of a kind."""
+        text = self.game.poker_text([7, 5, 5, 5, 5, 5])
+        check = 'five fives'
+        self.assertEqual(check, text)
+
+    def testFourKindHigh(self):
+        """Test text generation for four of a kind with a high kicker."""
+        text = self.game.poker_text([6, 5, 5, 5, 5, 6])
+        check = 'four fives and a six'
+        self.assertEqual(check, text)
+
+    def testFourKindLow(self):
+        """Test text generation for four of a kind with a low kicker."""
+        text = self.game.poker_text([6, 3, 3, 3, 3, 2])
+        check = 'four threes and a two'
+        self.assertEqual(check, text)
+
+    def testFullHouseHigh(self):
+        """Test text generation for a full house with a high trip."""
+        text = self.game.poker_text([5, 4, 4, 4, 2, 2])
+        check = 'full house fours over twos'
+        self.assertEqual(check, text)
+
+    def testFullHouseLow(self):
+        """Test text generation for a full house with a low trip."""
+        text = self.game.poker_text([5, 1, 1, 1, 6, 6])
+        check = 'full house ones over sixes'
+        self.assertEqual(check, text)
+
+    def testHighCardNoFive(self):
+        """Test text generation for a high card hand with no five."""
+        text = self.game.poker_text([0, 6, 4, 3, 2, 1])
+        check = 'six high missing five'
+        self.assertEqual(check, text)
+
+    def testHighCardNoTwo(self):
+        """Test text generation for a high card hand with no two."""
+        text = self.game.poker_text([0, 6, 5, 4, 3, 1])
+        check = 'six high missing two'
+        self.assertEqual(check, text)
+
+    def testPairHigh(self):
+        """Test text generation for a pair with high kickers."""
+        text = self.game.poker_text([1, 1, 1, 6, 3, 2])
+        check = 'a pair of ones with six, three, two'
+        self.assertEqual(check, text)
+
+    def testPairLow(self):
+        """Test text generation for a pair with low kickers."""
+        text = self.game.poker_text([1, 5, 5, 3, 2, 1])
+        check = 'a pair of fives with three, two, one'
+        self.assertEqual(check, text)
+
+    def testPairMixed(self):
+        """Test text generation for a pair with high and low kickers."""
+        text = self.game.poker_text([1, 3, 3, 6, 4, 1])
+        check = 'a pair of threes with six, four, one'
+        self.assertEqual(check, text)
+
+    def testStraightHigh(self):
+        """Test text generation for a high straight."""
+        text = self.game.poker_text([4, 6, 5, 4, 3, 2])
+        check = 'a six-high straight'
+        self.assertEqual(check, text)
+
+    def testStraightLow(self):
+        """Test text generation for a low straight."""
+        text = self.game.poker_text([4, 5, 4, 3, 2, 1])
+        check = 'a five-high straight'
+        self.assertEqual(check, text)
+
+    def testTripHigh(self):
+        """Test text generation for trips with high kickers."""
+        text = self.game.poker_text([3, 1, 1, 1, 4, 2])
+        check = 'three ones with four and two'
+        self.assertEqual(check, text)
+
+    def testTripLow(self):
+        """Test text generation for trips with low kickers."""
+        text = self.game.poker_text([3, 6, 6, 6, 2, 1])
+        check = 'three sixes with two and one'
+        self.assertEqual(check, text)
+
+    def testTripMixed(self):
+        """Test text generation for trips with high and low kickers."""
+        text = self.game.poker_text([3, 4, 4, 4, 6, 3])
+        check = 'three fours with six and three'
+        self.assertEqual(check, text)
+
+    def testTwoPairHigh(self):
+        """Test text generation for two pair with a high kicker."""
+        text = self.game.poker_text([2, 3, 3, 2, 2, 6])
+        check = 'two pair threes over twos with a six'
+        self.assertEqual(check, text)
+
+    def testTwoPairLow(self):
+        """Test text generation for two pair with a low kicker."""
+        text = self.game.poker_text([2, 6, 6, 4, 4, 1])
+        check = 'two pair sixes over fours with a one'
+        self.assertEqual(check, text)
+
+    def testTwoPairMiddle(self):
+        """Test text generation for two pair with a kicker between the pairs."""
+        text = self.game.poker_text([2, 4, 4, 2, 2, 3])
+        check = 'two pair fours over twos with a three'
+        self.assertEqual(check, text)
 
 
 if __name__ == '__main__':
