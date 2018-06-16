@@ -257,7 +257,7 @@ class Challenger(ABBot):
         # If that's okay, look at the odds.
         if challenge != 'yup':
             # Get the number of changed dice.
-            current = self.game.claim
+            current = self.game.claim[:]
             old = self.game.history[-1]
             for die in old:
                 if die in current:
@@ -722,7 +722,6 @@ class LiarsDice(game.Game):
         # Get the old and new scores.
         new_score = self.poker_score(claim)
         old_score = self.poker_score(self.claim)
-        print(new_score, old_score)
         if new_score > old_score:
             # If new score is higher, update tracking and move on.
             self.human.tell('{} claims they have {}.'.format(player.name, self.poker_text(new_score)))
