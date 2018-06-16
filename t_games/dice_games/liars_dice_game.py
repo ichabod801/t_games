@@ -141,8 +141,10 @@ class ABBot(player.Bot):
         # Check them against the believability matrix.
         if claim_score[0] in self.believable[prev_score[0]]:
             return 'nope'
-        elif self.game.two_rerolls:
+        elif self.game.two_rerolls or self.game.one_wild:
             return 'nah'
+        elif self.game.one_six and 6 in claim_score[1:4]:
+            return 'no'
         else:
             return 'yup'
 
@@ -274,6 +276,8 @@ class Challenger(ABBot):
                 odds = self.odds[(rolled, changed)]
                 if self.game.two_rerolls:
                     odds = odds + (1 - odds) * odds
+                if self.game.one_wild or (self.game.one_six and 6 in self.game.claim):
+                    odds *= 2
                 if random.random() > odds:
                     challenge = '1'
         return challenge
