@@ -413,15 +413,15 @@ class LiarsDice(game.Game):
     def game_over(self):
         """Check for the human losing or winning."""
         # Check for the human being out of the game.
-        if self.human not in self.players:
+        if not self.scores[self.human.name]:
             # Announce the loss.
             self.human.tell('\nYou have no more tokens, you lose the game.')
-            before = len(self.scores) - len(self.players) - 1
+            before = len([player for player in self.players if not self.scores[player.name]]) - 1
             self.human.tell('{} players left the game before you did.'.format(before))
             # Record the win/loss/draw.
-            self.win_loss_draw = [len(self.players), before, 0]
+            self.win_loss_draw = [before, len(self.players) - before - 1, 0]
         # Check for the human being the only one left.
-        elif len(self.players) == 1:
+        elif len([player for player in self.players if self.scores[player.name]]) == 1:
             # Announce and record the win.
             self.human.tell('\nYou win!')
             self.win_loss_draw = [len(self.scores) - 1, 0, 0]
@@ -498,6 +498,10 @@ class LiarsDice(game.Game):
         Parameter:
         player: The current player. (player.Player)
         """
+        # Skip players with no score.
+        if not self.scores[player.name]:
+            self.turns -= 1
+            return False
         # Display the game state.
         if self.phase == 'start':
             self.dice.roll()
@@ -674,12 +678,8 @@ class LiarsDice(game.Game):
             self.scores[winner.name] += 1
         # Remove players if necessary.
         if not self.scores[loser.name]:
-            self.players.remove(loser)
             drop_message = '\n{} has lost all of their tokens and is out of the game.'
             self.human.tell(drop_message.format(loser.name))
-            # Adjust the next player if the current player is removed.
-            if self.player_index > len(self.players) or self.players[self.player_index] == loser:
-                self.player_index -= 1
 
     def set_options(self):
         """Set the game specific options. (None)"""
