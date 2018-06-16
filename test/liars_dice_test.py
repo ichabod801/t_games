@@ -9,6 +9,7 @@ OneWildAdjustTest: Test adjusting counts for ones wild.
 OneSixeScoreTest: Test of calling poker hands with ones counting as sixes.
 PokerScoreTest: Tests of calling poker hands on dice.
 PokerTextTest: Tests of converting poker hands to text.
+ValidateClaimTest: Test validating that the new claim is better than the old.
 
 Function:
 by_count: Crate a counts dictionary for testing. (collections.defaultdict)
@@ -449,7 +450,7 @@ class PokerTextTest(unittest.TestCase):
 
 
 class ValidateClaimTest(unittest.TestCase):
-    """Test validating that the new claim is better than the old."""
+    """Test validating that the new claim is better than the old. (TestCase)"""
 
     def setUp(self):
         self.player = _test_utility.Mute()
