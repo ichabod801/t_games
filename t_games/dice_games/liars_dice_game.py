@@ -391,7 +391,6 @@ class LiarsDice(game.Game):
                 self.human.tell('{} told the truth.'.format(player.name))
                 self.resolve_challenge(player, next_player)
             self.phase = 'start'
-            self.human.tell()
         else:
             self.phase = 'reroll'
 
@@ -723,6 +722,7 @@ class LiarsDice(game.Game):
         # Get the old and new scores.
         new_score = self.poker_score(claim)
         old_score = self.poker_score(self.claim)
+        print(new_score, old_score)
         if new_score > old_score:
             # If new score is higher, update tracking and move on.
             self.human.tell('{} claims they have {}.'.format(player.name, self.poker_text(new_score)))
