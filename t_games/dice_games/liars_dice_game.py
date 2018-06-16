@@ -689,7 +689,7 @@ class LiarsDice(game.Game):
             question = 'Should lost tokens be given to the winner of the challenge? bool')
         self.option_set.add_option('two-rerolls', 
             question = 'Should you be able to make a second reroll? bool')
-        self.option_set.add_option('chips', [], int, check = lambda x: x > 1,
+        self.option_set.add_option('chips', [], int, check = lambda x: x > 1, default = 3,
             question = 'How many chips should each player start with (return for 3)? ')
         self.option_set.add_option('one-six', question = 'Should ones count as sixes? bool')
         self.option_set.add_option('one-wild', question = 'Should ones be wild? bool')
