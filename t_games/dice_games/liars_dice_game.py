@@ -244,13 +244,24 @@ class Challenger(ABBot):
 
     Class Attributes:
     odds: The odds matrix for getting n numbers on d dice. (dict of tuple: int)
+    neeeded_dice: The dice needed to improve one hand type to another. (list)
 
     Overridden Methods:
     claim_check
     """
 
-    odds = {(1, 1): 1 / 6, (2, 2): 2 / 36, (2, 1): 11 / 36, (3, 3): 1 / 36, (3, 2): 91 / 216, 
-        (3, 1): 5 / 36, (4, 4): 1 / 54, (4, 3): 1 / 12, (4, 2): 302 / 1296, (4, 1): 671 / 1296}
+    # The odds matrix for getting n numbers on d dice.
+    odds = {(1, 1): 1 / 6, (2, 2): 2 / 36, (2, 1): 11 / 36, (3, 3): 1 / 216, (3, 2): 30 / 216, 
+        (3, 1): 91 / 216, (4, 4): 1 / 54, (4, 3): 1 / 12, (4, 2): 302 / 1296, (4, 1): 671 / 1296}
+    # The dice needed to improve one hand type to another.
+    needed_dice = [[1, 1, 2, 2, 1, 3, 3, 4],
+        [0, 1, 1, 2, 1, 2, 2, 3],
+        [0, 0, 1, 1, 2, 1, 2, 3],
+        [0, 0, 0, 1, 3, 2, 1, 2],
+        [0, 0, 0, 0, 1, 3, 3, 4],
+        [0, 0, 0, 0, 0, 2, 1, 2],
+        [0, 0, 0, 0, 0, 0, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 5]]
 
     def claim_check(self):
         """Decide whether or not to call someone a liar. (str)"""
@@ -267,13 +278,17 @@ class Challenger(ABBot):
             changed = len(current)
             # Get the number of rolled dice.
             rolled = self.game.rerolls
+            # Get the number of dice needed to improve.
+            old_score = self.game.poker_score(old)
+            current_score = self.game.poker_score(self.game.claim)
+            needed = self.needed_dice[old_score[0]][current_score[0]]
             # Challenge the impossible
-            if changed > rolled:
+            if changed > rolled or needed > rolled:
                 challenge = 'da'
             # Challenge the rest at odds
             elif rolled < 5:
                 # Get the odds
-                odds = self.odds[(rolled, changed)]
+                odds = self.odds[(rolled, needed)]
                 if self.game.two_rerolls:
                     odds = odds + (1 - odds) * odds
                 if self.game.one_wild or (self.game.one_six and 6 in self.game.claim):
