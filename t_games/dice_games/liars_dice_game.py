@@ -367,7 +367,12 @@ class LiarsDice(game.Game):
     def challenge(self):
         """Handle someone making a claim. (None)"""
         # Get the relevant players.
-        next_player = self.players[(self.player_index + 1) % len(self.players)]
+        player_index = self.player_index
+        while True:
+            player_index += 1
+            next_player = self.players[(player_index) % len(self.players)]
+            if self.scores[next_player.name]:
+                break
         player = self.players[self.player_index]
         # Show the claim.
         claim_score = self.poker_score(self.claim)
