@@ -377,7 +377,7 @@ class LiarsDice(game.Game):
         # Show the claim.
         claim_score = self.poker_score(self.claim)
         # Check for a challenge to the claim.
-        if self.claim == [6, 6, 6, 6, 6]:
+        if claim_score == [7, 6, 6, 6, 6, 6]:
             next_player.ask('The claim is five sixes, you must challenge. Press Enter to continue: ')
             challenge = 'yes'
         else:
