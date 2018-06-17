@@ -341,9 +341,9 @@ class Liar(ABBot):
         # Get the standard claim.
         claim = super(Liar, self).make_claim(roll)
         # Consider lying if not already lying.
-        if claim != roll:
+        if sorted(claim) != sorted(roll) and self.game.scores[self.name] > 1:
             score = self.game.poker_score(claim)
-            if random.random() > score[0] / 7:
+            if random.random() < (1 - score[0] / 5) / 2:
                 claim = self.lie(score)
         return claim
 
