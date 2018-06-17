@@ -81,6 +81,7 @@ class ABBot(player.Bot):
 
     Class Attributes:
     believable: Score changes that will not be challenged. (dict of int: list)
+    conservative: Used instead of believable with one token left. (dict)
 
     Methods:
     claim_check: Decide whether or not to call someone a liar. (str)
@@ -94,7 +95,10 @@ class ABBot(player.Bot):
     """
 
     # Score changes that will not be challenged.
-    believable = {7: [7], 6: [6, 7], 5: [5], 4: [4], 3: [3, 5, 6], 2: [2, 5], 1: [1, 2, 3, 4], 
+    believable = {7: [], 6: [6], 5: [5, 6], 4: [], 3: [3, 5], 2: [2, 3], 1: [1, 2, 3], 
+        0: [0, 1, 2, 3]}
+    # Score changes that will not be challenged with one token left.
+    conservative = {7: [], 6: [6, 7], 5: [5, 6], 4: [4], 3: [3, 5, 6], 2: [2, 3], 1: [1, 2, 3],
         0: [0, 1, 2, 3]}
 
     def ask(self, query):
@@ -138,8 +142,24 @@ class ABBot(player.Bot):
         # Get the relevant scores.
         claim_score = self.game.poker_score(self.game.claim)
         prev_score = self.game.poker_score(self.game.history[-1])
-        # Check them against the believability matrix.
-        if claim_score[0] in self.believable[prev_score[0]]:
+        # Get the correct believability matrix.
+        if self.game.scores[self.name] == 1:
+            dont_challenge = self.conservative
+        else:
+            dont_challenge = self.believable
+        # Get the number of changed dice.
+        current = self.game.claim[:]
+        old = self.game.history[-1]
+        for die in old:
+            if die in current:
+                current.remove(die)
+        changed = len(current)
+        # Get the number of rolled dice.
+        rolled = self.game.rerolls
+        # Determine the challenge.
+        if changed > rolled:
+            return 'yes'
+        elif claim_score[0] in dont_challenge[prev_score[0]]:
             return 'nope'
         elif self.game.two_rerolls or self.game.one_wild:
             return 'nah'
