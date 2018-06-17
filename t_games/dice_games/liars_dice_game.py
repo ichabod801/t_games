@@ -267,59 +267,39 @@ class Challenger(ABBot):
     Note that the odds calculated assume that all numbers were distinct. This
     is just an approximation for decision making purposes.
 
-    Class Attributes:
-    odds: The odds matrix for getting n numbers on d dice. (dict of tuple: int)
-    neeeded_dice: The dice needed to improve one hand type to another. (list)
-
     Overridden Methods:
     claim_check
     """
-
-    # The odds matrix for getting n numbers on d dice.
-    odds = {(1, 1): 1 / 6, (2, 2): 2 / 36, (2, 1): 11 / 36, (3, 3): 1 / 216, (3, 2): 30 / 216, 
-        (3, 1): 91 / 216, (4, 4): 1 / 54, (4, 3): 1 / 12, (4, 2): 302 / 1296, (4, 1): 671 / 1296}
-    # The dice needed to improve one hand type to another.
-    needed_dice = [[1, 1, 2, 2, 1, 3, 3, 4],
-        [0, 1, 1, 2, 1, 2, 2, 3],
-        [0, 0, 1, 1, 2, 1, 2, 3],
-        [0, 0, 0, 1, 3, 2, 1, 2],
-        [0, 0, 0, 0, 1, 3, 3, 4],
-        [0, 0, 0, 0, 0, 2, 1, 2],
-        [0, 0, 0, 0, 0, 0, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 5]]
 
     def claim_check(self):
         """Decide whether or not to call someone a liar. (str)"""
         # Do the standard check.
         challenge = super(Challenger, self).claim_check()
         # If that's okay, look at the odds.
-        if challenge != 'yup':
-            # Get the number of changed dice.
+        if challenge != 'yes':
+            # Get the different claims with scores.
             current = self.game.claim[:]
             old = self.game.history[-1]
-            for die in old:
-                if die in current:
-                    current.remove(die)
-            changed = len(current)
-            # Get the number of rolled dice.
-            rolled = self.game.rerolls
-            # Get the number of dice needed to improve.
             old_score = self.game.poker_score(old)
             current_score = self.game.poker_score(self.game.claim)
-            needed = self.needed_dice[old_score[0]][current_score[0]]
-            # Challenge the impossible
-            if changed > rolled or needed > rolled:
-                challenge = 'da'
-            # Challenge the rest at odds
-            elif rolled < 5:
-                # Get the odds
-                odds = self.odds[(rolled, needed)]
-                if self.game.two_rerolls:
-                    odds = odds + (1 - odds) * odds
-                if self.game.one_wild or (self.game.one_six and 6 in self.game.claim):
-                    odds *= 2
-                if random.random() > odds:
-                    challenge = '1'
+            # Get the possible rolls.
+            rolled = self.game.rerolls
+            kept = old_score[1:(rolled + 1)]
+            rolls = itertools.product(range(1, 7), repeat = rolled)
+            scores = [self.game.poker_score(kept + list(roll)) for roll in rolls]
+            # Calculate the probability.
+            as_good = [score for score in scores if score > current_score]
+            truth_chance = len(as_good) / len(scores)
+            # Calculate the expected value.
+            total_score = sum(self.game.scores.values())
+            my_score = self.game.scores[self.name]
+            lie_value = 1 / (total_score - my_score)
+            truth_value = 1 / my_score
+            # Make determination.
+            if truth_chance * truth_value < (1 - truth_chance) * lie_value:
+                challenge = '1'
+            else:
+                challenge = '0'
         return challenge
 
 
