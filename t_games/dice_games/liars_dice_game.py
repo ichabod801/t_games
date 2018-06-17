@@ -228,15 +228,29 @@ class ABBot(player.Bot):
         """
         score = self.game.poker_score(roll)
         # Reroll any dice not involved in scoring the hand type.
-        # Straights, five of a kind and full houses score on all dice.
-        if score[0] in (4, 5, 7):
-            reroll = []
-        # Four of a kind and two pair have one die to roll.
-        elif score[0] in (6, 2):
+        # Straights and five of a kind score on all dice.
+        if score[0] in (4, 7):
+            if score[0] == 4 and score[-1] == 1:
+                reroll = [1]
+            else:
+                reroll = score[1:]
+        # Four of a kind has one die to roll.
+        elif score[0] == 6:
             reroll = [score[5]]
-        # Three of kind has two dice to reroll
-        elif score[0] == 3:
+        # Three of kind/full house has two dice to reroll
+        elif score[0] in (5, 3):
             reroll = score[-2:]
+        # Two pair may reroll one or three dice.
+        elif score[0] == 2:
+            trigger = score[5]
+            if trigger > score[3]:
+                trigger += 1
+            if trigger > score[1]:
+                trigger += 1
+            if trigger > 4:
+                reroll = score[-3:]
+            else:
+                reroll = [score[5]]
         # One pair has three dice to reroll
         elif score[0] == 1:
             reroll = score[-3:]
