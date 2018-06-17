@@ -19,6 +19,7 @@ LiarsDice: A game of Liar's Dice. (game.Game)
 from __future__ import division
 
 import collections
+import itertools
 import random
 
 import t_games.dice as dice
@@ -168,38 +169,28 @@ class ABBot(player.Bot):
         else:
             return 'yup'
 
-    def lie(self, claim_score):
+    def lie(self, claim_score, roll_score):
         """
         Generate a lie based on the current claim. (list of int)
 
         Parameters:
         claim_score: The poker_score output for the claim to lie about. (list of int)
+        claim_score: The poker_score output for the actual roll. (list of int)
         """
-        # Five of a kind goes up one. Obvious, but what you gonna do?
-        if claim_score[0] == 7:
-            claim = [claim_score[1] + 1] * 5
-        # Four kind/two pair bumps off die if possible, otherwise the scoring dice.
-        elif claim_score[0] in (2, 6):
-            if claim_score[5] == 6:
-                claim = [value + 1 for value in claim_score[1:5]] + [1]
-            else:
-                claim = claim_score[1:5] + [claim_score[5] + 1]
-        # Full house bump the two if possible, otherwise the three.
-        elif claim_score[0] == 5:
-            if claim_score[5] == 6:
-                claim = [claim_score[1] + 1] * 3 + claim_score[-2:]
-            else:
-                claim = claim_score[1:4] + [claim_score[5] + 1] * 2
-        # Straight go to high straight if possible, low full house otherwise.
-        elif claim_score[0] == 4:
-            if claim_score[1] == 6:
-                claim = [2, 2, 2, 3, 3]
-            else:
-                claim = [2, 3, 4, 5, 6]
-        # Otherwise bump the lowest die.
-        elif claim_score[0] in (0, 1, 3):
-            claim = claim_score[1:5] + [claim_score[5] + 1]
-        return claim
+        # Figure out what I kept.
+        kept = roll_score[1:(self.game.rolled + 1)]
+        # Get the possible claims.
+        rolls = itertools.product(range(1, 7), repeat = self.game.rolled)
+        possible = [self.game.poker_score(kept + list(roll)) for roll in rolls]
+        possible = [score for score in possible if score > claim_score]
+        # If no possible claims based on rerolls, assume rolled all five dice.
+        if not possible:
+            rolls = itertools.product(range(1, 7), repeat = 5)
+            possible = [self.game.poker_score(kept + list(roll)) for roll in rolls]
+            possible = [score for score in possible if score > claim_score]
+        # Pick something close to an improvement.
+        possible.sort()
+        return random.choice(possible[:3])[1:]
 
     def make_claim(self, roll):
         """
@@ -216,7 +207,7 @@ class ABBot(player.Bot):
             claim = roll
         else:
             # Otherwise, try and for the next highest claim.
-            claim = self.lie(claim_score)
+            claim = self.lie(claim_score, roll_score)
         return claim
 
     def reroll_check(self, roll):
