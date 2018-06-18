@@ -9,7 +9,7 @@ RULES: The rules for Liar's Dice. (str)
 
 Classes:
 ABBot: An honest Liar's Dice bot. (player.Bot)
-Challenger: A Liar's Dice bot that challenges based on the odds. (ABBot)
+Challenger: A Liar's Dice bot that challenges with other heuristics. (ABBot)
 Liar: A Liar's Dice bot that lies more than it needs to. (ABBot)
 DoubleTrouble: A Liar's Dice both that challenges and lies. (Challenger, Liar)
 LiarsDice: A game of Liar's Dice. (game.Game)
@@ -96,10 +96,10 @@ class ABBot(player.Bot):
     """
 
     # Score changes that will not be challenged.
-    believable = {7: [], 6: [6], 5: [5, 6], 4: [], 3: [3, 5], 2: [2, 3], 1: [1, 2, 3], 
+    believable = {7: [], 6: [6], 5: [5, 6], 4: [], 3: [3, 5], 2: [2, 3, 5], 1: [1, 2, 3], 
         0: [0, 1, 2, 3]}
     # Score changes that will not be challenged with one token left.
-    conservative = {7: [], 6: [6, 7], 5: [5, 6], 4: [4], 3: [3, 5, 6], 2: [2, 3], 1: [1, 2, 3],
+    conservative = {7: [], 6: [6, 7], 5: [5, 6], 4: [4], 3: [3, 5, 6], 2: [2, 3, 5], 1: [1, 2, 3],
         0: [0, 1, 2, 3]}
 
     def ask(self, query):
@@ -262,14 +262,16 @@ class ABBot(player.Bot):
 
 class Challenger(ABBot):
     """
-    A Liar's Dice bot that challenges based on the odds. (ABBot)
+    A Liar's Dice bot that challenges with different heuristics. (ABBot)
 
-    Note that the odds calculated assume that all numbers were distinct. This
-    is just an approximation for decision making purposes.
+    Class Attributes:
+    valid_dice: The dice you would expect rolled for a give hand type. (dict)
 
     Overridden Methods:
     claim_check
     """
+
+    valid_dice = {0: [1, 2, 3, 4, 5], 1: [3], 2: [1, 3], 3: [2], 4: [1, 5], 5: [2, 3], 6: [1], 7: [5]}
 
     def claim_check(self):
         """Decide whether or not to call someone a liar. (str)"""
@@ -279,8 +281,11 @@ class Challenger(ABBot):
         if challenge != 'yes':
             # Get the different claims with scores.
             current = self.game.claim[:]
-            old = self.game.history[-1]
-            old_score = self.game.poker_score(old)
+            old_score = self.game.poker_score(self.game.history[-1])
+            if len(self.game.history) > 1:
+                older_score = self.game.poker_score(self.game.history[-2])
+            else:
+                older_score = [-1, 0, 0, 0, 0, 0]
             current_score = self.game.poker_score(self.game.claim)
             # Get the possible rolls.
             rolled = self.game.rerolls
@@ -288,16 +293,21 @@ class Challenger(ABBot):
             rolls = itertools.product(range(1, 7), repeat = rolled)
             scores = [self.game.poker_score(kept + list(roll)) for roll in rolls]
             # Calculate the probability.
-            as_good = [score for score in scores if score > current_score]
+            as_good = [score for score in scores if score >= current_score]
             truth_chance = len(as_good) / len(scores)
-            # Calculate the expected value.
-            total_score = sum(self.game.scores.values())
+            # Decide about the risk.
             my_score = self.game.scores[self.name]
-            lie_value = 1 / (total_score - my_score)
-            truth_value = 1 / my_score
+            total_score = sum(self.game.scores.values())
+            challenge_chance = random.random() < my_score / (total_score - my_score)
             # Make determination.
-            if truth_chance * truth_value < (1 - truth_chance) * lie_value:
+            if current_score[0] == 7:
+                challenge = 'yes'
+            elif rolled not in self.valid_dice[old_score[0]]:
+                challenge = 'da'
+            elif truth_chance > 0.95 and challenge_chance and current_score[0] > 0:
                 challenge = '1'
+            elif older_score[0] == current_score[0] and challenge_chance:
+                challenge = 'si'
             else:
                 challenge = '0'
         return challenge
