@@ -131,6 +131,12 @@ class ABBot(player.Bot):
         cmd: A flag for returning commands for processing. (bool)
         """
         if 'reroll' in prompt:
+            # Check for already having beat the claim.
+            if self.game.two_rerolls:
+                claim_score = self.game.poker_score(self.game.claim)
+                roll_score = self.game.poker_score(self.game.dice.values)
+                if claim_score[0] and roll_score > claim_score:
+                    return []
             return self.reroll_check(valid)
         elif 'claim' in prompt:
             return self.make_claim(default)
@@ -157,12 +163,14 @@ class ABBot(player.Bot):
         changed = len(current)
         # Get the number of rolled dice.
         rolled = self.game.rerolls
+        if self.game.two_rerolls:
+            rolled *= 2
         # Determine the challenge.
         if changed > rolled:
             return 'yes'
         elif claim_score[0] in dont_challenge[prev_score[0]]:
             return 'nope'
-        elif self.game.two_rerolls or self.game.one_wild:
+        elif (self.game.two_rerolls or self.game.one_wild) and claim_score[0] != 7:
             return 'nah'
         elif self.game.one_six and 6 in claim_score[1:4]:
             return 'no'
@@ -302,9 +310,9 @@ class Challenger(ABBot):
             # Make determination.
             if current_score[0] == 7:
                 challenge = 'yes'
-            elif rolled not in self.valid_dice[old_score[0]]:
+            elif rolled not in self.valid_dice[old_score[0]] and not self.game.two_rerolls:
                 challenge = 'da'
-            elif truth_chance > 0.95 and challenge_chance and current_score[0] > 0:
+            elif truth_chance > 0.95 and challenge_chance and current_score[0]:
                 challenge = '1'
             elif older_score[0] == current_score[0] and challenge_chance:
                 challenge = 'si'
