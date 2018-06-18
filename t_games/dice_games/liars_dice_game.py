@@ -178,9 +178,9 @@ class ABBot(player.Bot):
         claim_score: The poker_score output for the actual roll. (list of int)
         """
         # Figure out what I kept.
-        kept = roll_score[1:(self.game.rolled + 1)]
+        kept = roll_score[1:(6 - self.game.rerolls)]
         # Get the possible claims.
-        rolls = itertools.product(range(1, 7), repeat = self.game.rolled)
+        rolls = itertools.product(range(1, 7), repeat = self.game.rerolls)
         possible = [self.game.poker_score(kept + list(roll)) for roll in rolls]
         possible = [score for score in possible if score > claim_score]
         # If no possible claims based on rerolls, assume rolled all five dice.
@@ -247,7 +247,7 @@ class ABBot(player.Bot):
             reroll = score[-3:]
         # For high card, keep the 6 and the 5 if there is one.
         elif score[0] == 0:
-            reroll = [value for value in roll if value < 5]
+            reroll = roll[:]
         return reroll
 
     def tell(self, *args, **kwargs):
@@ -284,7 +284,7 @@ class Challenger(ABBot):
             current_score = self.game.poker_score(self.game.claim)
             # Get the possible rolls.
             rolled = self.game.rerolls
-            kept = old_score[1:(rolled + 1)]
+            kept = old_score[1:(6 - rolled)]
             rolls = itertools.product(range(1, 7), repeat = rolled)
             scores = [self.game.poker_score(kept + list(roll)) for roll in rolls]
             # Calculate the probability.
@@ -324,7 +324,7 @@ class Liar(ABBot):
         if sorted(claim) != sorted(roll) and self.game.scores[self.name] > 1:
             score = self.game.poker_score(claim)
             if random.random() < (1 - score[0] / 5) / 2:
-                claim = self.lie(score)
+                claim = self.lie(score, self.game.poker_score(roll))
         return claim
 
 
