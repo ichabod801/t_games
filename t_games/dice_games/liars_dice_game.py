@@ -386,7 +386,7 @@ class LiarsDice(game.Game):
     """
 
     # Other names for the game.
-    aka = ['Doubting Dice', 'Schummeln']
+    aka = ['Doubting Dice', 'Schummeln', 'Liars Dice']
     # Command aliases
     aliases = {'scores': 'score'}
     # The bot classes available for the game.
@@ -424,7 +424,7 @@ class LiarsDice(game.Game):
             challenge = 'yes'
         else:
             challenge = next_player.ask('Do you wish to call {} a liar? '.format(player.name))
-        if challenge in YES:
+        if challenge in YES or challenge[:4].lower() == 'liar':
             self.human.tell('{} challenges {}.'.format(next_player.name, player.name))
             # Show the real score.
             real_score = self.poker_score(self.dice.values)
@@ -561,7 +561,9 @@ class LiarsDice(game.Game):
                 self.phase = 'claim'
         elif self.phase == 'reroll':
             player.tell('\nThe roll passed to you is {}.'.format(self.dice))
-        elif self.phase in ('claim', 'reroll-two'):
+        elif self.phase == 'reroll-two':
+            player.tell('Your roll is {}.'.format(self.dice))
+        elif self.phase == 'claim':
             player.tell('\nYour roll is {}.'.format(self.dice))
         # Get the player action
         if self.phase == 'claim':
@@ -583,9 +585,13 @@ class LiarsDice(game.Game):
                 default = [])
             # Handle other commands.
             if isinstance(rerolls, str):
-                return self.handle_cmd(rerolls)
+                # Check for rerolling all of the dice
+                if rerolls.lower() == 'all':
+                    rerolls = self.dice.values[:]
+                else:
+                    return self.handle_cmd(rerolls)
             # Reroll the specified dice and move to making a claim.
-            else:
+            if isinstance(rerolls, list):
                 if self.phase == 'reroll-two':
                     self.rerolls = max(self.rerolls, len(rerolls))
                 else:
@@ -721,8 +727,10 @@ class LiarsDice(game.Game):
         """
         # Adjust the scores.
         self.scores[loser.name] -= 1
+        self.human.tell('{} now has {} tokens.'.format(loser.name, self.scores[loser.name]))
         if self.betting:
             self.scores[winner.name] += 1
+            self.human.tell('{} now has {} tokens.'.format(winner.name, self.scores[winner.name]))
         # Remove players if necessary.
         if not self.scores[loser.name]:
             drop_message = '\n{} has lost all of their tokens and is out of the game.'
