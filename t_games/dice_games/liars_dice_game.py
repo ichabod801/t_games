@@ -465,7 +465,8 @@ class LiarsDice(game.Game):
             self.human.tell('\nYou have no more tokens, you lose the game.')
             before = len([player for player in self.players if not self.scores[player.name]]) - 1
             before_text = number_word(before).capitalize()
-            self.human.tell('{} players left the game before you did.'.format(before_text))
+            s = ['s', ''][before == 1]
+            self.human.tell('{} player{} left the game before you did.'.format(before_text, s))
             # Record the win/loss/draw.
             self.win_loss_draw = [before, len(self.players) - before - 1, 0]
         # Check for the human being the only one left.
