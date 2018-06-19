@@ -241,12 +241,12 @@ class ABBot(player.Bot):
             reroll = score[-2:]
         # Two pair may reroll one or three dice.
         elif score[0] == 2:
-            trigger = score[5]
+            trigger = 6 - score[5]
             if trigger > score[3]:
                 trigger += 1
             if trigger > score[1]:
                 trigger += 1
-            if trigger > 4:
+            if trigger < 3:
                 reroll = score[-3:]
             else:
                 reroll = [score[5]]
@@ -386,7 +386,7 @@ class LiarsDice(game.Game):
     """
 
     # Other names for the game.
-    aka = ['Doubting Dice', 'Schummeln']
+    aka = ['Doubting Dice', 'Schummeln', 'Liars Dice']
     # Command aliases
     aliases = {'scores': 'score'}
     # The bot classes available for the game.
@@ -424,7 +424,7 @@ class LiarsDice(game.Game):
             challenge = 'yes'
         else:
             challenge = next_player.ask('Do you wish to call {} a liar? '.format(player.name))
-        if challenge in YES:
+        if challenge in YES or challenge[:4].lower() == 'liar':
             self.human.tell('{} challenges {}.'.format(next_player.name, player.name))
             # Show the real score.
             real_score = self.poker_score(self.dice.values)
@@ -583,17 +583,24 @@ class LiarsDice(game.Game):
                 default = [])
             # Handle other commands.
             if isinstance(rerolls, str):
-                return self.handle_cmd(rerolls)
+                # Check for rerolling all of the dice
+                if rerolls.lower() == 'all':
+                    rerolls = self.dice.values[:]
+                else:
+                    return self.handle_cmd(rerolls)
             # Reroll the specified dice and move to making a claim.
-            else:
+            if isinstance(rerolls, list):
+                # Account for two-rerolls option
                 if self.phase == 'reroll-two':
                     self.rerolls = max(self.rerolls, len(rerolls))
+                    line_feed = ''
                 else:
                     self.rerolls = len(rerolls)
+                    line_feed = '\n'
                 # Announce the rerolls
                 reroll_text = number_word(len(rerolls))
                 dice = ['dice', 'die'][len(rerolls) == 1]
-                self.human.tell('\n{} rerolled {} {}.'.format(player.name, reroll_text, dice))
+                self.human.tell('{}{} rerolled {} {}.'.format(line_feed, player.name, reroll_text, dice))
                 # Make the rerolls
                 for die_index, value in enumerate(self.dice.values):
                     if value in rerolls:
@@ -721,8 +728,11 @@ class LiarsDice(game.Game):
         """
         # Adjust the scores.
         self.scores[loser.name] -= 1
+        s = ['s', ''][self.scores[loser.name] == 1]
+        self.human.tell('{} now has {} token{}.'.format(loser.name, self.scores[loser.name], s))
         if self.betting:
             self.scores[winner.name] += 1
+            self.human.tell('{} now has {} tokens.'.format(winner.name, self.scores[winner.name]))
         # Remove players if necessary.
         if not self.scores[loser.name]:
             drop_message = '\n{} has lost all of their tokens and is out of the game.'
