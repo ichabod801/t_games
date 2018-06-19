@@ -752,10 +752,10 @@ class LiarsDice(game.Game):
         self.option_set.add_option('one-six', question = 'Should ones count as sixes? bool')
         self.option_set.add_option('one-wild', question = 'Should ones be wild? bool')
         # Set up the bot options.
-        self.option_set.add_option('honest', action = 'bot', value = (), default = None)
-        self.option_set.add_option('liar', action = 'bot', value = (), default = None)
-        self.option_set.add_option('challenger', action = 'bot', value = (), default = None)
-        self.option_set.add_option('double', action = 'bot', value = (), default = None)
+        self.option_set.add_option('honest', ['abe'], action = 'bot', value = (), default = None)
+        self.option_set.add_option('liar', ['lr'], action = 'bot', value = (), default = None)
+        self.option_set.add_option('challenger', ['chal'], action = 'bot', value = (), default = None)
+        self.option_set.add_option('double', ['dbl'], action = 'bot', value = (), default = None)
         # Set the default bots.
         self.option_set.default_bots = [(ABBot, ()), (Challenger, ()), (Liar, ()), (DoubleTrouble, ())]
 
