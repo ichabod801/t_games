@@ -390,15 +390,15 @@ class LiarsDice(game.Game):
     # Command aliases
     aliases = {'scores': 'score'}
     # The bot classes available for the game.
-    bot_classes = {'challenger': Challenger, 'double': DoubleTrouble, 'honest': ABBot, 'Liar': Liar}
+    bot_classes = {'challenger': Challenger, 'double': DoubleTrouble, 'honest': ABBot, 'liar': Liar}
     # The menu categories for the game.
     categories = ['Dice Games']
     # The credits for the game.
     credits = CREDITS
     # The name templates for the poker hand versions of the dice.
-    hand_names = ['six high missing {}', 'a pair of {}s with {}', 'two pair {}s over {}s with a {}', 
-        'three {}s with {} and {}', 'a {}-high straight', 'full house {}s over {}s', 'four {}s and a {}', 
-        'five {}s']
+    hand_names = ['a six-high missing {}', 'a pair of {}s with {}', 'two pair {}s over {}s with a {}', 
+        'three {}s with a {} and a {}', 'a {}-high straight', 'a full house {}s over {}s', 
+        'four {}s and a {}', 'five {}s']
     # The name of the game.
     name = "Liar's Dice"
     # The number of game options.
@@ -464,6 +464,7 @@ class LiarsDice(game.Game):
             # Announce the loss.
             self.human.tell('\nYou have no more tokens, you lose the game.')
             before = len([player for player in self.players if not self.scores[player.name]]) - 1
+            before = number_word(before).capitalize()
             self.human.tell('{} players left the game before you did.'.format(before))
             # Record the win/loss/draw.
             self.win_loss_draw = [before, len(self.players) - before - 1, 0]
@@ -728,8 +729,10 @@ class LiarsDice(game.Game):
         """
         # Adjust the scores.
         self.scores[loser.name] -= 1
-        s = ['s', ''][self.scores[loser.name] == 1]
-        self.human.tell('{} now has {} token{}.'.format(loser.name, self.scores[loser.name], s))
+        loser_score = self.scores[loser.name]
+        if loser_score:
+            s = ['s', ''][loser_score == 1]
+            self.human.tell('{} now has {} token{}.'.format(loser.name, loser_score, s))
         if self.betting:
             self.scores[winner.name] += 1
             self.human.tell('{} now has {} tokens.'.format(winner.name, self.scores[winner.name]))
@@ -750,10 +753,10 @@ class LiarsDice(game.Game):
         self.option_set.add_option('one-six', question = 'Should ones count as sixes? bool')
         self.option_set.add_option('one-wild', question = 'Should ones be wild? bool')
         # Set up the bot options.
-        self.option_set.add_option('honest', action = 'bot', value = (), default = None)
-        self.option_set.add_option('liar', action = 'bot', value = (), default = None)
-        self.option_set.add_option('challenger', action = 'bot', value = (), default = None)
-        self.option_set.add_option('double', action = 'bot', value = (), default = None)
+        self.option_set.add_option('honest', ['abe'], action = 'bot', value = (), default = None)
+        self.option_set.add_option('liar', ['lr'], action = 'bot', value = (), default = None)
+        self.option_set.add_option('challenger', ['chal'], action = 'bot', value = (), default = None)
+        self.option_set.add_option('double', ['dbl'], action = 'bot', value = (), default = None)
         # Set the default bots.
         self.option_set.default_bots = [(ABBot, ()), (Challenger, ()), (Liar, ()), (DoubleTrouble, ())]
 
