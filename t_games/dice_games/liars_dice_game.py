@@ -93,6 +93,7 @@ class ABBot(player.Bot):
     Overridden Methods:
     ask
     ask_int
+    tell
     """
 
     # Score changes that will not be challenged.
@@ -114,7 +115,8 @@ class ABBot(player.Bot):
             return 'uh oh'
         else:
             # Error on unknown questions.
-            raise player.BotError('Unexpected question to ABBot: {!r}'.format(query))
+            class_name = self.__class__.__name__
+            raise player.BotError('Unexpected question to {}: {!r}'.format(class_name, query))
 
     def ask_int_list(self, prompt, low = None, high = None, valid = [], valid_lens = [], default = None,
         cmd = True):
@@ -130,6 +132,7 @@ class ABBot(player.Bot):
         default: The default choice. (list or None)
         cmd: A flag for returning commands for processing. (bool)
         """
+        # Handle based on the question.
         if 'reroll' in prompt:
             # Check for already having beat the claim.
             if self.game.two_rerolls:
@@ -142,7 +145,8 @@ class ABBot(player.Bot):
             return self.make_claim(default)
         else:
             # Error on unexpected question.
-            raise player.BotError('Unexpected question to ABBot: {!r}'.format(prompt))
+            class_name = self.__class__.__name__
+            raise player.BotError('Unexpected question to {}: {!r}'.format(class_name, prompt))
 
     def claim_check(self):
         """Decide whether or not to call someone a liar. (str)"""
@@ -183,7 +187,7 @@ class ABBot(player.Bot):
 
         Parameters:
         claim_score: The poker_score output for the claim to lie about. (list of int)
-        claim_score: The poker_score output for the actual roll. (list of int)
+        roll_score: The poker_score output for the actual roll. (list of int)
         """
         # Figure out what I kept.
         kept = roll_score[1:(6 - self.game.rerolls)]
@@ -207,7 +211,7 @@ class ABBot(player.Bot):
         Parameters:
         roll: What was actually rolled. (list of int)
         """
-        # Get the scores for the roll and thre previous claim.
+        # Get the scores for the roll and the previous claim.
         roll_score = self.game.poker_score(self.game.dice.values)
         claim_score = self.game.poker_score(self.game.claim)
         # Be honest if you can.
@@ -240,6 +244,7 @@ class ABBot(player.Bot):
         elif score[0] in (5, 3):
             reroll = score[-2:]
         # Two pair may reroll one or three dice.
+        # (Three dice is just under 50% chance of improvement.)
         elif score[0] == 2:
             trigger = 6 - score[5]
             if trigger > score[3]:
@@ -279,22 +284,22 @@ class Challenger(ABBot):
     claim_check
     """
 
+    # The dice you would expect rolled for a give hand type.
     valid_dice = {0: [1, 2, 3, 4, 5], 1: [3], 2: [1, 3], 3: [2], 4: [1, 5], 5: [2, 3], 6: [1], 7: [5]}
 
     def claim_check(self):
         """Decide whether or not to call someone a liar. (str)"""
         # Do the standard check.
         challenge = super(Challenger, self).claim_check()
-        # If that's okay, look at the odds.
+        # If it isn't obvious, look at other heuristics.
         if challenge != 'yes':
             # Get the different claims with scores.
-            current = self.game.claim[:]
+            current_score = self.game.poker_score(self.game.claim)
             old_score = self.game.poker_score(self.game.history[-1])
             if len(self.game.history) > 1:
                 older_score = self.game.poker_score(self.game.history[-2])
             else:
                 older_score = [-1, 0, 0, 0, 0, 0]
-            current_score = self.game.poker_score(self.game.claim)
             # Get the possible rolls.
             rolled = self.game.rerolls
             kept = old_score[1:(6 - rolled)]
@@ -364,17 +369,21 @@ class LiarsDice(game.Game):
     chips: The number of tokens each player starts with. (int)
     claim: The claim made by the last player. (list of int)
     dice: The dice used in the game. (dice.Pool)
+    history: The claims made since the last challenge. (list of list)
     one_six: A flag for ones counting as sixes. (bool)
     one_wild: A flag for ones being wild. (bool)
     phase: The current action the player needs to take. (str)
+    rerolls: How many dice the last player rerolled. (int)
     two_rerolls: A flag for getting a second reroll. (bool)
 
     Methods:
     challenge: Handle someone making a claim. (None)
+    do_score: Show how many tokens players have left. (bool)
     one_six_adjust: Adjust value counts for the one-six option. (dict)
     one_wild_adjust: Adjust value counts for the one-six option. (tuple)
     poker_score: Generate a poker hand score for a set of values. (list of int)
     poker_text: Convert a poker score into text. (str)
+    reroll: Reroll the dice. (None)
     reset: Reset the tracking variables. (None)
     resolve_challenge: Handle the result of a challenge. (None)
     validate_claim: Validate that a claim is higher than the previosu one. (bool)
@@ -382,6 +391,7 @@ class LiarsDice(game.Game):
     Overridden Methods:
     game_over
     player_action
+    set_options
     set_up
     """
 
@@ -458,17 +468,17 @@ class LiarsDice(game.Game):
         return True
 
     def game_over(self):
-        """Check for the human losing or winning."""
+        """Check for the human losing or winning. (bool)"""
         # Check for the human being out of the game.
         if not self.scores[self.human.name]:
+            # Record the win/loss/draw.
+            before = len([player for player in self.players if not self.scores[player.name]]) - 1
+            self.win_loss_draw = [before, len(self.players) - before - 1, 0]
             # Announce the loss.
             self.human.tell('\nYou have no more tokens, you lose the game.')
-            before = len([player for player in self.players if not self.scores[player.name]]) - 1
             before_text = number_word(before).capitalize()
             s = ['s', ''][before == 1]
             self.human.tell('{} player{} left the game before you did.'.format(before_text, s))
-            # Record the win/loss/draw.
-            self.win_loss_draw = [before, len(self.players) - before - 1, 0]
         # Check for the human being the only one left.
         elif len([player for player in self.players if self.scores[player.name]]) == 1:
             # Announce and record the win.
@@ -488,7 +498,7 @@ class LiarsDice(game.Game):
         by_count: The counts and values with those counts. (dict of int: list of int)
         values: The values that were counted. (list of int)
         """
-        # Get the counts.
+        # Get the one and six counts.
         ones = values.count(1)
         sixes = values.count(6)
         # Remove the counts (if they exist)
@@ -512,6 +522,7 @@ class LiarsDice(game.Game):
         by_count: The counts and values with those counts. (dict of int: list of int)
         values: The values that were counted. (list of int)
         """
+        # Get the count of wilds.
         ones = values.count(1)
         if ones:
             # Remove the count of ones.
@@ -522,22 +533,24 @@ class LiarsDice(game.Game):
             try:
                 max_count = max(by_count)
                 max_value = max(by_count[max_count])
+            # Note if there are five wilds.
             except ValueError:
                 max_count = 0
             # Check for a straight
             if max_count == 1 and ones < 3:
                 by_count = {1: [2, 3, 4, 5, 6]}
                 values = [2, 3, 4, 5, 6]
-            # Check for five ones
+            # Five wilds are five sixes.
             elif max_count == 0:
                 by_count[5].append(6)
                 values = [6] * 5
             else:
                 # Otherwise increase the best group.
                 by_count[max_count].remove(max_value)
+                by_count[max_count + ones].append(max_value)
+                # Delete the old best group if necessary.
                 if not by_count[max_count]:
                     del by_count[max_count]
-                by_count[max_count + ones].append(max_value)
         return by_count, values
 
     def player_action(self, player):
@@ -592,26 +605,7 @@ class LiarsDice(game.Game):
                     return self.handle_cmd(rerolls)
             # Reroll the specified dice and move to making a claim.
             if isinstance(rerolls, list):
-                # Account for two-rerolls option
-                if self.phase == 'reroll-two':
-                    self.rerolls = max(self.rerolls, len(rerolls))
-                    line_feed = ''
-                else:
-                    self.rerolls = len(rerolls)
-                    line_feed = '\n'
-                # Announce the rerolls
-                reroll_text = number_word(len(rerolls))
-                dice = ['dice', 'die'][len(rerolls) == 1]
-                self.human.tell('{}{} rerolled {} {}.'.format(line_feed, player.name, reroll_text, dice))
-                # Make the rerolls
-                for die_index, value in enumerate(self.dice.values):
-                    if value in rerolls:
-                        self.dice.roll(die_index)
-                        rerolls.remove(value)
-                if self.two_rerolls and self.phase != 'reroll-two':
-                    self.phase = 'reroll-two'
-                else:
-                    self.phase = 'claim'
+                self.reroll(player, rerolls)
         return True
 
     def poker_score(self, values):
@@ -621,7 +615,7 @@ class LiarsDice(game.Game):
         The score is a list of integers. The first number is the type of hand, from 7
         for five of a kind to 0 for high card. The rest of the numbers are the dice
         values in comparison order for that type of hand. Therefore you can naively
-        compare the two integer lists to find out which is the higher hand.
+        compare two poker_score integer lists to find out which is the higher hand.
 
         score[0] mapping:
             7 = five of a kind
@@ -714,6 +708,36 @@ class LiarsDice(game.Game):
         # Return the hand name after fixing and six plural.
         return hand_name.replace('sixs', 'sixes')
 
+    def reroll(self, player, rerolls):
+        """
+        Reroll the dice. (None)
+
+        Paramters:
+        player: The player rerolling. (player.Player)
+        rerolls: The values to reroll. (list of int)
+        """
+        # Account for two-rerolls option.
+        if self.phase == 'reroll-two':
+            self.rerolls = max(self.rerolls, len(rerolls))
+            line_feed = ''
+        else:
+            self.rerolls = len(rerolls)
+            line_feed = '\n'
+        # Announce the rerolls.
+        reroll_text = number_word(len(rerolls))
+        dice = ['dice', 'die'][len(rerolls) == 1]
+        self.human.tell('{}{} rerolled {} {}.'.format(line_feed, player.name, reroll_text, dice))
+        # Make the rerolls.
+        for die_index, value in enumerate(self.dice.values):
+            if value in rerolls:
+                self.dice.roll(die_index)
+                rerolls.remove(value)
+        # Determine the next game phase.
+        if self.two_rerolls and self.phase != 'reroll-two':
+            self.phase = 'reroll-two'
+        else:
+            self.phase = 'claim'
+
     def reset(self):
         """Reset the tracking variables. (None)"""
         self.claim = [0, 0, 0, 0, 0]
@@ -728,7 +752,7 @@ class LiarsDice(game.Game):
         winner: The player who won the challenge. (player.Player)
         loser: The player who lost the challenge. (player.Player)
         """
-        # Adjust the scores.
+        # Adjust and announce the scores.
         self.scores[loser.name] -= 1
         loser_score = self.scores[loser.name]
         if loser_score:
@@ -737,7 +761,7 @@ class LiarsDice(game.Game):
         if self.betting:
             self.scores[winner.name] += 1
             self.human.tell('{} now has {} tokens.'.format(winner.name, self.scores[winner.name]))
-        # Remove players if necessary.
+        # Remove the loser if necessary.
         if not self.scores[loser.name]:
             drop_message = '\n{} has lost all of their tokens and is out of the game.'
             self.human.tell(drop_message.format(loser.name))
@@ -763,6 +787,7 @@ class LiarsDice(game.Game):
 
     def set_up(self):
         """Set up the game. (None)"""
+        # Mix up the players.
         random.shuffle(self.players)
         # Set up the scores.
         self.scores = {player.name: self.chips for player in self.players}
@@ -799,6 +824,7 @@ class LiarsDice(game.Game):
 
 
 if __name__ == '__main__':
+    # Play Liar's Dice.
     try:
         input = raw_input
     except NameError:
