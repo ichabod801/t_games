@@ -390,7 +390,7 @@ class LiarsDice(game.Game):
     # Command aliases
     aliases = {'scores': 'score'}
     # The bot classes available for the game.
-    bot_classes = {'challenger': Challenger, 'double': DoubleTrouble, 'honest': ABBot, 'Liar': Liar}
+    bot_classes = {'challenger': Challenger, 'double': DoubleTrouble, 'honest': ABBot, 'liar': Liar}
     # The menu categories for the game.
     categories = ['Dice Games']
     # The credits for the game.
@@ -728,8 +728,10 @@ class LiarsDice(game.Game):
         """
         # Adjust the scores.
         self.scores[loser.name] -= 1
-        s = ['s', ''][self.scores[loser.name] == 1]
-        self.human.tell('{} now has {} token{}.'.format(loser.name, self.scores[loser.name], s))
+        loser_score = self.scores[loser.name]
+        if loser_score:
+            s = ['s', ''][loser_score == 1]
+            self.human.tell('{} now has {} token{}.'.format(loser.name, loser_score, s))
         if self.betting:
             self.scores[winner.name] += 1
             self.human.tell('{} now has {} tokens.'.format(winner.name, self.scores[winner.name]))
