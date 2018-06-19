@@ -396,9 +396,9 @@ class LiarsDice(game.Game):
     # The credits for the game.
     credits = CREDITS
     # The name templates for the poker hand versions of the dice.
-    hand_names = ['six high missing {}', 'a pair of {}s with {}', 'two pair {}s over {}s with a {}', 
-        'three {}s with {} and {}', 'a {}-high straight', 'full house {}s over {}s', 'four {}s and a {}', 
-        'five {}s']
+    hand_names = ['a six-high missing {}', 'a pair of {}s with {}', 'two pair {}s over {}s with a {}', 
+        'three {}s with a {} and a {}', 'a {}-high straight', 'a full house {}s over {}s', 
+        'four {}s and a {}', 'five {}s']
     # The name of the game.
     name = "Liar's Dice"
     # The number of game options.
