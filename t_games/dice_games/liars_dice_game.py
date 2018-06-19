@@ -561,9 +561,7 @@ class LiarsDice(game.Game):
                 self.phase = 'claim'
         elif self.phase == 'reroll':
             player.tell('\nThe roll passed to you is {}.'.format(self.dice))
-        elif self.phase == 'reroll-two':
-            player.tell('Your roll is {}.'.format(self.dice))
-        elif self.phase == 'claim':
+        elif self.phase in ('claim', 'reroll-two'):
             player.tell('\nYour roll is {}.'.format(self.dice))
         # Get the player action
         if self.phase == 'claim':
@@ -592,14 +590,17 @@ class LiarsDice(game.Game):
                     return self.handle_cmd(rerolls)
             # Reroll the specified dice and move to making a claim.
             if isinstance(rerolls, list):
+                # Account for two-rerolls option
                 if self.phase == 'reroll-two':
                     self.rerolls = max(self.rerolls, len(rerolls))
+                    line_feed = ''
                 else:
                     self.rerolls = len(rerolls)
+                    line_feed = '\n'
                 # Announce the rerolls
                 reroll_text = number_word(len(rerolls))
                 dice = ['dice', 'die'][len(rerolls) == 1]
-                self.human.tell('\n{} rerolled {} {}.'.format(player.name, reroll_text, dice))
+                self.human.tell('{}{} rerolled {} {}.'.format(line_feed, player.name, reroll_text, dice))
                 # Make the rerolls
                 for die_index, value in enumerate(self.dice.values):
                     if value in rerolls:
@@ -727,7 +728,8 @@ class LiarsDice(game.Game):
         """
         # Adjust the scores.
         self.scores[loser.name] -= 1
-        self.human.tell('{} now has {} tokens.'.format(loser.name, self.scores[loser.name]))
+        s = ['s', ''][self.scores[loser.name] == 1]
+        self.human.tell('{} now has {} token{}.'.format(loser.name, self.scores[loser.name], s))
         if self.betting:
             self.scores[winner.name] += 1
             self.human.tell('{} now has {} tokens.'.format(winner.name, self.scores[winner.name]))
