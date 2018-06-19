@@ -241,12 +241,12 @@ class ABBot(player.Bot):
             reroll = score[-2:]
         # Two pair may reroll one or three dice.
         elif score[0] == 2:
-            trigger = score[5]
+            trigger = 6 - score[5]
             if trigger > score[3]:
                 trigger += 1
             if trigger > score[1]:
                 trigger += 1
-            if trigger > 4:
+            if trigger < 3:
                 reroll = score[-3:]
             else:
                 reroll = [score[5]]
