@@ -42,8 +42,17 @@ foundation.
 
 Options:
 cells= (c): The number of free cells available. 0 to 10, defaults to 0.
+klondike: Klondike style stock and waste. Equivalent to 'passes = -1 
+    turn-count = 3'.
+passes= (p): The number of passes through the stock you get. -1 gives 
+    unlimited passes. If this is not one, the standard-turn option is in
+    effect. Defaults to 1.
+relaxed-win (rw): If the pyramid is clear, you can win even if there are
+    cards in the stock or waste.
 standard-turn (st): Cards are not sorted from the waste when turning cards
     from the stock.
+turn-count= (tc): How many cards are turned over from the stock at a time.
+    Defaults to 1.
 """
 
 
@@ -52,7 +61,10 @@ class Pyramid(solitaire.Solitaire):
     A game of Pyramid (solitaire.Solitaire)
 
     Overridden Methods:
+    do_turn
     find_foundation
+    game_over
+    handle_options
     set_checkers
     set_options
     tableau_text
@@ -65,7 +77,7 @@ class Pyramid(solitaire.Solitaire):
     # The name of the game.
     name = 'Pyramid'
     # The number of settable options.
-    num_options = 2
+    num_options = 5
     # The rules of the game.
     rules = RULES
 
@@ -78,7 +90,7 @@ class Pyramid(solitaire.Solitaire):
         """
         # Move the current waste card to the foundation.
         if self.stock_passes != self.max_passes and self.waste:
-            self.transfer(self.waste[-1:], self.foundations[0])
+            self.transfer(self.waste[:], self.foundations[0])
         # Do the turn as normal.
         super(Pyramid, self).do_turn(arguments)
         # Update the undo count for the turned cards.
@@ -94,9 +106,24 @@ class Pyramid(solitaire.Solitaire):
         """
         return self.foundations[0]
 
+    def game_over(self):
+        """Check for the end of the game."""
+        # Check for relaxed win and empty pyramid.
+        if self.relaxed_win and not self.tableau[0]:
+            print('rw triggered')
+            # Transfer the stock and the waste to the foundation for a win.
+            if self.waste:
+                self.transfer(self.waste[:], self.foundations[0])
+            if self.stock:
+                self.transfer(self.stock[:], self.foundations[0])
+        # Return the normal check.
+        return super(Pyramid, self).game_over()
+
     def handle_options(self):
         """Handle the particular option settings. (None)"""
         super(Pyramid, self).handle_options()
+        if self.options['max-passes'] > 1 or self.options['max-passes'] == -1:
+            self.standard_turn = True
         if self.standard_turn:
             self.do_turn = super(Pyramid, self).do_turn
 
@@ -111,12 +138,23 @@ class Pyramid(solitaire.Solitaire):
 
     def set_options(self):
         """Set up the game specific options. (None)"""
+        # Set the solitaire options.
         self.options = {'max-passes': 1, 'num-foundations': 1, 'num-tableau': 7, 'turn-count': 1}
+        # Set the option groups.
+        self.option_set.add_group('klondike', 'passes=-1 turn-count=3')
+        # Set the game options.
         self.option_set.add_option('cells', ['c'], int, action = "key=num-cells", default = 0, 
             valid = range(11), target = self.options,
             question = 'How many free cells should be available (0-10, return for 0)? ')
+        self.option_set.add_option('passes', ['p'], int, action = "key=max-passes", default = 1, 
+            check = lambda passes: passes > 1 or passes == -1, target = self.options,
+            question = 'How many passes through the stock (-1 for infinite, return for 1)? ')
+        self.option_set.add_option('relaxed-win', ['rw'])
         self.option_set.add_option('standard-turn', ['st'],
             question = 'Should cards stay in the waste when new ones are turned from the stock? bool')
+        self.option_set.add_option('turn-count', ['tc'], int, action = "key=turn-count", default = 1, 
+            valid = (1, 2, 3), target = self.options,
+            question = 'How many cards turned from the stock at a time (1-3, return for 1)? ')
 
     def tableau_text(self):
         """Generate the text representation of the tableau piles. (str)"""
