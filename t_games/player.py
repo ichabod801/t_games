@@ -168,7 +168,7 @@ class Player(object):
                     for number in set(response):
                         if response.count(number) > valid.count(number):
                             self.error("You have more {}'s than allowed".format(number))
-                            self.error("You must choose from:", ', '.join(valid))
+                            self.error("You must choose from:", ', '.join([str(x) for x in valid]))
                             break
                     else:
                         break

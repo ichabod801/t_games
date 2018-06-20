@@ -112,6 +112,8 @@ def number_word(n):
     n: A number to give the word form of. (int)
     """
     word = ''
+    if not n:
+        word = NINETEEN[n]
     level = 0
     while n:
         word = '{} {} {}'.format(thousand_word(n), THOUSAND_UP[level], word).strip()

@@ -351,6 +351,7 @@ class OptionSet(object):
                 bots = []
                 for bot_class, params in setting:
                     bots.append(bot_class(*params, taken_names = taken_names))
+                    taken_names.append(bots[-1].name)
                 self.game.players = [self.game.human] + bots
             else:
                 setattr(self.game, option, setting)

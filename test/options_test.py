@@ -7,8 +7,8 @@ Unit testing of options.py
 
 import unittest
 
-from tgames import game
-from tgames import options
+from t_games import game
+from t_games import options
 
 
 class ParseTestTest(unittest.TestCase):

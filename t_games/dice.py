@@ -262,13 +262,21 @@ class Pool(object):
         self.dice.extend(self.held)
         self.held = []
 
-    def roll(self):
-        """Roll the dice in the pool. (list)"""
-        self.values = []
-        for die in self.held:
-            self.values.append(die.value)
-        for die in self.dice:
-            self.values.append(die.roll())
+    def roll(self, index = None):
+        """
+        Roll the dice in the pool. (list)
+        
+        Parameters:
+        index: The specific die to roll, if any. (int or None)
+        """
+        if index is not None:
+            self.values[index] = self.dice[index].roll()
+        else:
+            self.values = []
+            for die in self.held:
+                self.values.append(die.value)
+            for die in self.dice:
+                self.values.append(die.roll())
         return self.values
 
     def sort(self, key = None, reverse = False):
