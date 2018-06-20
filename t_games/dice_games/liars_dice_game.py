@@ -67,7 +67,11 @@ the game.
 Options:
 betting: Instead of tokens going out of the game, they go to the winner of the
     challenge.
-chips=: Change the number of tokens each player has. (default = 3)
+challenge (chal): Add a bot with different challenge heuristics to the game.
+double (dbl): Add a double trouble (challenger + liar) bot to the game.
+honest (abe): Add an honest (mostly) bot to the game.
+liar (lr): Add a dishonest (sometimes) bot to the game.
+tokens=: Change the number of tokens each player has. (default = 3)
 one-six: Ones count as sixes.
 one-wild: Ones are wild.
 two-rerolls: Each player can roll the dice twice before stating their claim.
@@ -365,8 +369,8 @@ class LiarsDice(game.Game):
     hand_names: The name templates for the poker hand versions of the dice. (str)
 
     Attributes:
-    betting: A flag for passing chips instead of losing them. (bool)
-    chips: The number of tokens each player starts with. (int)
+    betting: A flag for passing tokens instead of losing them. (bool)
+    tokens: The number of tokens each player starts with. (int)
     claim: The claim made by the last player. (list of int)
     dice: The dice used in the game. (dice.Pool)
     history: The claims made since the last challenge. (list of list)
@@ -773,8 +777,8 @@ class LiarsDice(game.Game):
             question = 'Should lost tokens be given to the winner of the challenge? bool')
         self.option_set.add_option('two-rerolls', 
             question = 'Should you be able to make a second reroll? bool')
-        self.option_set.add_option('chips', [], int, check = lambda x: x > 1, default = 3,
-            question = 'How many chips should each player start with (return for 3)? ')
+        self.option_set.add_option('tokens', [], int, check = lambda x: x > 0, default = 3,
+            question = 'How many tokens should each player start with (return for 3)? ')
         self.option_set.add_option('one-six', question = 'Should ones count as sixes? bool')
         self.option_set.add_option('one-wild', question = 'Should ones be wild? bool')
         # Set up the bot options.
@@ -790,7 +794,7 @@ class LiarsDice(game.Game):
         # Mix up the players.
         random.shuffle(self.players)
         # Set up the scores.
-        self.scores = {player.name: self.chips for player in self.players}
+        self.scores = {player.name: self.tokens for player in self.players}
         # Set up the dice.
         self.dice = dice.Pool([6] * 5)
         # Set up the tracking variables.
