@@ -35,6 +35,7 @@ deal_free: Fill the free cells with the last cards dealt. (None)
 deal_klondike: Deal deal a triangle in the tableau. (None)
 deal_n: Create a dealer that deals n cards onto the tableau. (function)
 deal_one_row: Deal one card face up to each tableau pile. (None)
+deal_pyramid: Deal a pyramid of cards. (None)
 deal_queens_out: Discard the queensl (None)
 deal_reserve_n: Create a dealer that deals n cards to the reserve (None)
 deal_selective: Deal tableau cards with selection of foundation rank. (None)
@@ -53,8 +54,10 @@ lane_reserve_waste: Check only laning cards from the reserve. (str)
 match_adjacent: Allow matching of cards are in adjacent tableau piles. (str)
 match_none: Disallow any match moves. (str)
 match_pairs: Allow matching cards of the same rank. (str)
+match_pyramid: Allow matching cards open below and to the right. (str)
 match_tableau: Allow matching if the cards are in the tableau. (str)
 match_thirteen: Allow matching cards that sum to 13. (str)
+match_top: Allow matching cards on the top of a pile. (str)
 --------------------------------------------------
 pair_alt_color: Build in alternating colors. (str)
 pair_down: Build sequentially down in rank. (str)
@@ -273,6 +276,19 @@ def deal_one_row(game):
     """
     for stack in game.tableau:
         game.deck.deal(stack, True)
+
+
+def deal_pyramid(game):
+    """
+    Deal a pyramid of cards. (None)
+
+    Parameters:
+    game: The game being played. (solitaire.Solitaire)
+    """
+    num_piles = game.options['num-tableau']
+    for pile_count in range(num_piles):
+        for pile_index in range(pile_count + 1):
+            game.deck.deal(game.tableau[pile_index])
 
 
 def deal_queens_out(game):
@@ -549,6 +565,26 @@ def match_pairs(game, card, match):
     return error
 
 
+def match_pyramid(game, target, match):
+    """
+    Allow matching cards open below and to the right. (str)
+
+    Parameters:
+    game: The game being played. (solitaire.Solitaire)
+    target: The card to match. (TrackingCard)
+    match: The card to match it to. (TrackingCard)
+    """
+    error = ''
+    for card in (target, match):
+        if card.game_location in game.tableau:
+            pile_index = game.tableau.index(card.game_location)
+            if pile_index < 6 and len(card.game_location) <= len(game.tableau[pile_index + 1]):
+                error = '{} is blocked by the {}.'.format(card, game.tableau[pile_index + 1][-1])
+        if error:
+            break
+    return error
+
+
 def match_tableau(game, card, match):
     """
     Allow matching if the cards are in the tableau. (str)
@@ -581,6 +617,24 @@ def match_thirteen(game, card, match):
     total = card.rank_num + match.rank_num
     if total != 13:
         error = 'The ranks of {} and {} do not sum to thirteen.'.format(card, match)
+    return error
+
+
+def match_top(game, target, match):
+    """
+    Allow matching cards on the top of a pile. (str)
+
+    Parameters:
+    game: The game being played. (solitaire.Solitaire)
+    target: The card to match. (TrackingCard)
+    match: The card to match it to. (TrackingCard)
+    """
+    error = ''
+    for card in (target, match):
+        if card != card.game_location[-1]:
+            error = '{} is not on the top of a pile.'.format(card)
+        if error:
+            break
     return error
 
 # Define pair checkers.
