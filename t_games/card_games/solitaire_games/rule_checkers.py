@@ -317,9 +317,12 @@ def deal_reserve_n(n, up = False):
     up: A flag for dealing the cards face up. (str)
     """
     def dealer(game):
+        reserve_index = 0
         for card_index in range(n):
-            game.deck.deal(game.reserve[0], up)
-        game.reserve[0][-1].up = True
+            game.deck.deal(game.reserve[reserve_index], up)
+            reserve_index = (reserve_index + 1) % game.options['num-reserve']
+        for pile in game.reserve:
+            pile[-1].up = True
     return dealer
 
 
@@ -549,23 +552,6 @@ def match_none(game, card, match):
     match: The card to match it to. (TrackingCard)
     """
     return 'Matching cards is not allowed in this game.'
-
-
-def match_not_sorted(game, target, match):
-    """
-    Disallow any matches involving foundation cards. (str)
-
-    Parameters:
-    game: The game being played. (solitaire.Solitaire)
-    target: The card to match. (TrackingCard)
-    match: The card to match it to. (TrackingCard)
-    """
-    error = ''
-    for card in (target, match):
-        if card.game_location in game.foundations:
-            error = '{} has been sorted and cannot be matched.'.format(card)
-            break
-    return error
 
 
 def match_pairs(game, card, match):

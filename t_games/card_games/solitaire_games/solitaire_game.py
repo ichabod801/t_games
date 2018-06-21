@@ -571,9 +571,11 @@ class Solitaire(game.Game):
             # Check for sorted cards.
             if check_it.game_location in self.foundations:
                 error = 'The {} is sorted and cannot be moved.'.format(check_it.name)
+                break
             # check for face down cards
             elif not check_it.up:
                 error = 'The {} is face down and cannot be moved.'.format(check_it.name)
+                break
         # check game specific rules
         else:
             for checker in self.match_checkers:

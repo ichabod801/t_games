@@ -17,6 +17,7 @@ import t_games.card_games.solitaire_games.solitaire_game as solitaire
 # The credits for Pyramid.
 CREDITS = """
 Game Design: Traditional
+    Giza option designed by Michael Keller
 Game Programming: Craig "Ichabod" O'Brien
 """
 
@@ -50,6 +51,8 @@ passes= (p): The number of passes through the stock you get. -1 gives
 relaxed-match (rm): You may match cards even if one is blocking the other.
 relaxed-win (rw): If the pyramid is clear, you can win even if there are
     cards in the stock or waste.
+reserve= (r): The number of reserve piles. 0 to 8, defaults to 0.
+reserve-rows= (rr): The number of reserve rows. 0 to 3, defaults to 1.
 standard-turn (st): Cards are not sorted from the waste when turning cards
     from the stock.
 turn-count= (tc): How many cards are turned over from the stock at a time.
@@ -83,7 +86,7 @@ class Pyramid(solitaire.Solitaire):
     # The name of the game.
     name = 'Pyramid'
     # The number of settable options.
-    num_options = 5
+    num_options = 8
     # The rules of the game.
     rules = RULES
 
@@ -133,17 +136,33 @@ class Pyramid(solitaire.Solitaire):
         if self.standard_turn:
             self.do_turn = super(Pyramid, self).do_turn
 
+    def reserve_text(self):
+        """Generate text for the reserve piles. (str)"""
+        max_reserve = max([len(pile) for pile in self.reserve])
+        reserve_lines = [['  ' for pile in self.reserve] for row in range(max_reserve)]
+        for pile_index, pile in enumerate(self.reserve):
+            for card_index, card in enumerate(pile):
+                reserve_lines[card_index][pile_index] = str(card)
+        padding = '  ' * (7 - self.options['num-reserve'])
+        return '\n'.join(['{}{}'.format(padding, '  '.join(line)) for line in reserve_lines])
+
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
         super(Pyramid, self).set_checkers()
-        self.dealers = [solitaire.deal_pyramid, solitaire.deal_stock_all]
+        # Set the dealers.
+        self.dealers = [solitaire.deal_pyramid]
+        if self.options['num-reserve']:
+            reserve_cards = self.options['num-reserve'] * self.reserve_rows
+            self.dealers.append(solitaire.deal_reserve_n(reserve_cards, up = True))
+        self.dealers.append(solitaire.deal_stock_all)
+        # Set the rule checkers.
         self.build_checkers = [solitaire.build_none]
         self.lane_checkers = [solitaire.lane_none]
         if self.relaxed_match:
             self.match_checkers = [solitaire.match_top_two, solitaire.match_pyramid_relax]
         else:
             self.match_checkers = [solitaire.match_top, solitaire.match_pyramid]
-        self.match_checkers.extend((solitaire.match_thirteen, solitaire.match_not_sorted))
+        self.match_checkers.append(solitaire.match_thirteen)
         self.sort_checkers = [solitaire.sort_kings]
 
     def set_options(self):
@@ -151,6 +170,7 @@ class Pyramid(solitaire.Solitaire):
         # Set the solitaire options.
         self.options = {'max-passes': 1, 'num-foundations': 1, 'num-tableau': 7, 'turn-count': 1}
         # Set the option groups.
+        self.option_set.add_group('giza', 'reserve=8 reserve-rows=3')
         self.option_set.add_group('klondike', 'passes=-1 turn-count=3')
         # Set the game options.
         self.option_set.add_option('cells', ['c'], int, action = "key=num-cells", default = 0, 
@@ -163,6 +183,11 @@ class Pyramid(solitaire.Solitaire):
             question = 'Should you be able to match cards that are blocking each other? bool')
         self.option_set.add_option('relaxed-win', ['rw'],
             question = 'Should you be able to win just by clearing the pyramid? bool')
+        self.option_set.add_option('reserve', ['r'], int, action = "key=num-reserve", default = 0, 
+            valid = range(9), target = self.options,
+            question = 'How reserve piles should there be (0-8, return for 0)? ')
+        self.option_set.add_option('reserve-rows', ['rr'], int, default = 1, valid = range(4),
+            question = 'How many reserve rows should there be (0-3, return for 1)? ')
         self.option_set.add_option('standard-turn', ['st'],
             question = 'Should cards stay in the waste when new ones are turned from the stock? bool')
         self.option_set.add_option('turn-count', ['tc'], int, action = "key=turn-count", default = 1, 
@@ -173,7 +198,7 @@ class Pyramid(solitaire.Solitaire):
         """Generate the text representation of the tableau piles. (str)"""
         lines = ['']
         for pile_count in range(len(self.tableau)):
-            lines.append('  ' * (6 - pile_count))
+            lines.append('  ' * (6 - pile_count + (self.options['num-reserve'] == 8)))
             for pile_index in range(pile_count + 1):
                 if len(self.tableau[pile_index]) > (pile_count - pile_index):
                     card_text = str(self.tableau[pile_index][pile_count - pile_index])
