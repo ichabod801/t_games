@@ -119,7 +119,6 @@ class Pyramid(solitaire.Solitaire):
         """Check for the end of the game."""
         # Check for relaxed win and empty pyramid.
         if self.relaxed_win and not self.tableau[0]:
-            print('rw triggered')
             # Transfer the stock and the waste to the foundation for a win.
             if self.waste:
                 self.transfer(self.waste[:], self.foundations[0])
