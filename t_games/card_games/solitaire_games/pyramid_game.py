@@ -103,8 +103,8 @@ class Pyramid(solitaire.Solitaire):
         # Do the turn as normal.
         super(Pyramid, self).do_turn(arguments)
         # Update the undo count for the turned cards.
-        for card_index in range(self.options['turn-count']):
-            self.moves[-card_index][-1] += 1
+        for move in self.moves[-self.options['turn-count']:]:
+            move[-2] += 1
 
     def find_foundation(self, card):
         """
