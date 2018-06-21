@@ -47,6 +47,7 @@ klondike: Klondike style stock and waste. Equivalent to 'passes = -1
 passes= (p): The number of passes through the stock you get. -1 gives 
     unlimited passes. If this is not one, the standard-turn option is in
     effect. Defaults to 1.
+relaxed-match (rm): You may match cards even if one is blocking the other.
 relaxed-win (rw): If the pyramid is clear, you can win even if there are
     cards in the stock or waste.
 standard-turn (st): Cards are not sorted from the waste when turning cards
@@ -59,6 +60,11 @@ turn-count= (tc): How many cards are turned over from the stock at a time.
 class Pyramid(solitaire.Solitaire):
     """
     A game of Pyramid (solitaire.Solitaire)
+
+    Attributes:
+    relaxed_match: A flag for relaxing the matching rules. (bool)
+    relaxed_wins: A flag for winning just by clearing the pyramid. (bool)
+    standard_turn: A flag for using the default turning rules. (bool)
 
     Overridden Methods:
     do_turn
@@ -133,7 +139,11 @@ class Pyramid(solitaire.Solitaire):
         self.dealers = [solitaire.deal_pyramid, solitaire.deal_stock_all]
         self.build_checkers = [solitaire.build_none]
         self.lane_checkers = [solitaire.lane_none]
-        self.match_checkers = [solitaire.match_top, solitaire.match_pyramid, solitaire.match_thirteen]
+        if self.relaxed_match:
+            self.match_checkers = [solitaire.match_top_two, solitaire.match_pyramid_relax]
+        else:
+            self.match_checkers = [solitaire.match_top, solitaire.match_pyramid]
+        self.match_checkers.extend((solitaire.match_thirteen, solitaire.match_not_sorted))
         self.sort_checkers = [solitaire.sort_kings]
 
     def set_options(self):
@@ -149,7 +159,10 @@ class Pyramid(solitaire.Solitaire):
         self.option_set.add_option('passes', ['p'], int, action = "key=max-passes", default = 1, 
             check = lambda passes: passes > 1 or passes == -1, target = self.options,
             question = 'How many passes through the stock (-1 for infinite, return for 1)? ')
-        self.option_set.add_option('relaxed-win', ['rw'])
+        self.option_set.add_option('relaxed-match', ['rm'],
+            question = 'Should you be able to match cards that are blocking each other? bool')
+        self.option_set.add_option('relaxed-win', ['rw'],
+            question = 'Should you be able to win just by clearing the pyramid? bool')
         self.option_set.add_option('standard-turn', ['st'],
             question = 'Should cards stay in the waste when new ones are turned from the stock? bool')
         self.option_set.add_option('turn-count', ['tc'], int, action = "key=turn-count", default = 1, 

@@ -55,9 +55,11 @@ match_adjacent: Allow matching of cards are in adjacent tableau piles. (str)
 match_none: Disallow any match moves. (str)
 match_pairs: Allow matching cards of the same rank. (str)
 match_pyramid: Allow matching cards open below and to the right. (str)
+match_pyramid_relax: Match cards open below and right, or adjacent. (str)
 match_tableau: Allow matching if the cards are in the tableau. (str)
 match_thirteen: Allow matching cards that sum to 13. (str)
 match_top: Allow matching cards on the top of a pile. (str)
+match_top_two: Match cards on top of pile, even on top of each other. (str)
 --------------------------------------------------
 pair_alt_color: Build in alternating colors. (str)
 pair_down: Build sequentially down in rank. (str)
@@ -539,7 +541,7 @@ def match_adjacent(game, card, match):
 
 def match_none(game, card, match):
     """
-    Disallow any matchest. (str)
+    Disallow any matches. (str)
 
     Parameters:
     game: The game being played. (solitaire.Solitaire)
@@ -547,6 +549,23 @@ def match_none(game, card, match):
     match: The card to match it to. (TrackingCard)
     """
     return 'Matching cards is not allowed in this game.'
+
+
+def match_not_sorted(game, target, match):
+    """
+    Disallow any matches involving foundation cards. (str)
+
+    Parameters:
+    game: The game being played. (solitaire.Solitaire)
+    target: The card to match. (TrackingCard)
+    match: The card to match it to. (TrackingCard)
+    """
+    error = ''
+    for card in (target, match):
+        if card.game_location in game.foundations:
+            error = '{} has been sorted and cannot be matched.'.format(card)
+            break
+    return error
 
 
 def match_pairs(game, card, match):
@@ -580,6 +599,27 @@ def match_pyramid(game, target, match):
             pile_index = game.tableau.index(card.game_location)
             if pile_index < 6 and len(card.game_location) <= len(game.tableau[pile_index + 1]):
                 error = '{} is blocked by the {}.'.format(card, game.tableau[pile_index + 1][-1])
+        if error:
+            break
+    return error
+
+
+def match_pyramid_relax(game, target, match):
+    """
+    Match cards open below and right, even right of each other. (str)
+
+    Parameters:
+    game: The game being played. (solitaire.Solitaire)
+    target: The card to match. (TrackingCard)
+    match: The card to match it to. (TrackingCard)
+    """
+    error = ''
+    for card in (target, match):
+        if card.game_location in game.tableau:
+            pile_index = game.tableau.index(card.game_location)
+            if pile_index < 6 and len(card.game_location) <= len(game.tableau[pile_index + 1]):
+                if game.tableau[pile_index + 1][-1] not in (target, match):
+                    error = '{} is blocked by the {}.'.format(card, game.tableau[pile_index + 1][-1])
         if error:
             break
     return error
@@ -630,6 +670,26 @@ def match_top(game, target, match):
     match: The card to match it to. (TrackingCard)
     """
     error = ''
+    for card in (target, match):
+        if card != card.game_location[-1]:
+            error = '{} is not on the top of a pile.'.format(card)
+        if error:
+            break
+    return error
+
+
+def match_top_two(game, target, match):
+    """
+    Allow matching cards on the top of a pile, even if on top of each other. (str)
+
+    Parameters:
+    game: The game being played. (solitaire.Solitaire)
+    target: The card to match. (TrackingCard)
+    match: The card to match it to. (TrackingCard)
+    """
+    error = ''
+    if target.game_location[-2:] in [[target, match], [match, target]]:
+        return error
     for card in (target, match):
         if card != card.game_location[-1]:
             error = '{} is not on the top of a pile.'.format(card)
