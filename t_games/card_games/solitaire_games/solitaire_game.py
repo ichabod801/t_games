@@ -324,7 +324,7 @@ class Solitaire(game.Game):
         cards = [self.deck.find(card) for card in cards]
         if self.match_check(*cards):
             self.transfer([cards[0]], self.foundations[0])
-            self.transfer([cards[1]], self.foundations[0])
+            self.transfer([cards[1]], self.foundations[0], undo_ndx = 1)
     
     def do_sort(self, card):
         """
@@ -394,7 +394,7 @@ class Solitaire(game.Game):
                 self.transfer(move_stack, old_location, track = False)
                 if undo_ndx:
                     self.undo_count -= 1
-                    self.do_undo()
+                    self.do_undo('')
             # no move to undo
             else:
                 self.human.error('There are no moves to undo.')
