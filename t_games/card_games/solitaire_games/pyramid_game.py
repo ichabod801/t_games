@@ -98,7 +98,7 @@ class Pyramid(solitaire.Solitaire):
         arguments: The (ignored) arguments to the turn command. (str)
         """
         # Move the current waste card to the foundation.
-        if self.stock_passes != self.max_passes and self.waste:
+        if self.waste:
             self.transfer(self.waste[:], self.foundations[0])
         # Do the turn as normal.
         super(Pyramid, self).do_turn(arguments)
