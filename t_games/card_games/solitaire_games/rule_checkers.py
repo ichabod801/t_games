@@ -657,7 +657,7 @@ def match_top(game, target, match):
     """
     error = ''
     for card in (target, match):
-        if card != card.game_location[-1]:
+        if card != card.game_location[-1] and card.game_location != game.cells:
             error = '{} is not on the top of a pile.'.format(card)
         if error:
             break
@@ -677,7 +677,7 @@ def match_top_two(game, target, match):
     if target.game_location[-2:] in [[target, match], [match, target]]:
         return error
     for card in (target, match):
-        if card != card.game_location[-1]:
+        if card != card.game_location[-1] and card.game_location != game.cells:
             error = '{} is not on the top of a pile.'.format(card)
         if error:
             break
