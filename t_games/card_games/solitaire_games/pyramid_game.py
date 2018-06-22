@@ -43,8 +43,10 @@ foundation.
 
 Options:
 cells= (c): The number of free cells available. 0 to 10, defaults to 0.
-klondike: Klondike style stock and waste. Equivalent to 'passes = -1 
-    turn-count = 3'.
+giza: Fully open game with 8 reserve piles. Equivalent to 'reserve=8
+    reserve-rows=3'.
+klondike: Klondike style stock and waste. Equivalent to 'passes=-1 
+    turn-count=3'.
 passes= (p): The number of passes through the stock you get. -1 gives 
     unlimited passes. If this is not one, the standard-turn option is in
     effect. Defaults to 1.
@@ -67,6 +69,7 @@ class Pyramid(solitaire.Solitaire):
     Attributes:
     relaxed_match: A flag for relaxing the matching rules. (bool)
     relaxed_wins: A flag for winning just by clearing the pyramid. (bool)
+    reserve_rows: The number of cards in each reserve pile. (int)
     standard_turn: A flag for using the default turning rules. (bool)
 
     Overridden Methods:
@@ -74,6 +77,7 @@ class Pyramid(solitaire.Solitaire):
     find_foundation
     game_over
     handle_options
+    reserve_text
     set_checkers
     set_options
     tableau_text
@@ -130,8 +134,10 @@ class Pyramid(solitaire.Solitaire):
     def handle_options(self):
         """Handle the particular option settings. (None)"""
         super(Pyramid, self).handle_options()
+        # Multiple passes through the stock requires standard turn rules.
         if self.options['max-passes'] > 1 or self.options['max-passes'] == -1:
             self.standard_turn = True
+        # Apply standard turn rules.
         if self.standard_turn:
             self.do_turn = super(Pyramid, self).do_turn
 
@@ -172,33 +178,38 @@ class Pyramid(solitaire.Solitaire):
         self.option_set.add_group('giza', 'reserve=8 reserve-rows=3')
         self.option_set.add_group('klondike', 'passes=-1 turn-count=3')
         # Set the game options.
-        self.option_set.add_option('cells', ['c'], int, action = "key=num-cells", default = 0, 
-            valid = range(11), target = self.options,
-            question = 'How many free cells should be available (0-10, return for 0)? ')
+        # Set the stock and waste options.
         self.option_set.add_option('passes', ['p'], int, action = "key=max-passes", default = 1, 
             check = lambda passes: passes > 1 or passes == -1, target = self.options,
             question = 'How many passes through the stock (-1 for infinite, return for 1)? ')
-        self.option_set.add_option('relaxed-match', ['rm'],
-            question = 'Should you be able to match cards that are blocking each other? bool')
-        self.option_set.add_option('relaxed-win', ['rw'],
-            question = 'Should you be able to win just by clearing the pyramid? bool')
-        self.option_set.add_option('reserve', ['r'], int, action = "key=num-reserve", default = 0, 
-            valid = range(9), target = self.options,
-            question = 'How reserve piles should there be (0-8, return for 0)? ')
-        self.option_set.add_option('reserve-rows', ['rr'], int, default = 1, valid = range(4),
-            question = 'How many reserve rows should there be (0-3, return for 1)? ')
         self.option_set.add_option('standard-turn', ['st'],
             question = 'Should cards stay in the waste when new ones are turned from the stock? bool')
         self.option_set.add_option('turn-count', ['tc'], int, action = "key=turn-count", default = 1, 
             valid = (1, 2, 3), target = self.options,
             question = 'How many cards turned from the stock at a time (1-3, return for 1)? ')
+        # Set the relaxed rules options.
+        self.option_set.add_option('relaxed-match', ['rm'],
+            question = 'Should you be able to match cards that are blocking each other? bool')
+        self.option_set.add_option('relaxed-win', ['rw'],
+            question = 'Should you be able to win just by clearing the pyramid? bool')
+        # Set options for additional piles.
+        self.option_set.add_option('cells', ['c'], int, action = "key=num-cells", default = 0, 
+            valid = range(11), target = self.options,
+            question = 'How many free cells should be available (0-10, return for 0)? ')
+        self.option_set.add_option('reserve', ['r'], int, action = "key=num-reserve", default = 0, 
+            valid = range(9), target = self.options,
+            question = 'How reserve piles should there be (0-8, return for 0)? ')
+        self.option_set.add_option('reserve-rows', ['rr'], int, default = 1, valid = range(4),
+            question = 'How many reserve rows should there be (0-3, return for 1)? ')
 
     def tableau_text(self):
         """Generate the text representation of the tableau piles. (str)"""
         lines = []
         for pile_count in range(len(self.tableau)):
+            # Pad each row to make a triantle shape.
             lines.append('  ' * (6 - pile_count + (self.options['num-reserve'] == 8)))
             for pile_index in range(pile_count + 1):
+                # Show each row diagonally (down to the left) in the triangle shape.
                 if len(self.tableau[pile_index]) > (pile_count - pile_index):
                     card_text = str(self.tableau[pile_index][pile_count - pile_index])
                 else:
