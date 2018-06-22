@@ -195,7 +195,7 @@ class Pyramid(solitaire.Solitaire):
 
     def tableau_text(self):
         """Generate the text representation of the tableau piles. (str)"""
-        lines = ['']
+        lines = []
         for pile_count in range(len(self.tableau)):
             lines.append('  ' * (6 - pile_count + (self.options['num-reserve'] == 8)))
             for pile_index in range(pile_count + 1):
