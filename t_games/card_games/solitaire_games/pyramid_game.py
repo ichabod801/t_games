@@ -14,6 +14,7 @@ Pyramid: A game of Pyramid. (solitaire.Solitaire)
 
 import t_games.card_games.solitaire_games.solitaire_game as solitaire
 
+
 # The credits for Pyramid.
 CREDITS = """
 Game Design: Traditional
