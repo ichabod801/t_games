@@ -352,7 +352,7 @@ class Solitaire(game.Game):
         Parameters:
         arguments: The (ignored) arguments to the turn command. (str)
         """
-        if self.stock_passes != self.max_passes:
+        if self.stock_passes != self.max_passes and (self.stock or self.waste):
             # put the waste back in the stock if necessary
             if not self.stock:
                 self.transfer(self.waste[:], self.stock, face_up = False)
@@ -366,8 +366,11 @@ class Solitaire(game.Game):
             if not self.stock:
                 self.stock_passes += 1
             return False
-        else:
+        elif self.stock or self.waste:
             self.human.error('You may not make any more passes through the stock.')
+            return True
+        else:
+            self.human.error('There are no cards to turn.')
             return True
     
     def do_undo(self, num_moves):
