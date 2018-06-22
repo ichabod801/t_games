@@ -324,7 +324,7 @@ class Solitaire(game.Game):
         cards = [self.deck.find(card) for card in cards]
         if self.match_check(*cards):
             self.transfer([cards[0]], self.foundations[0])
-            self.transfer([cards[1]], self.foundations[0])
+            self.transfer([cards[1]], self.foundations[0], undo_ndx = 1)
     
     def do_sort(self, card):
         """
@@ -352,7 +352,7 @@ class Solitaire(game.Game):
         Parameters:
         arguments: The (ignored) arguments to the turn command. (str)
         """
-        if self.stock_passes != self.max_passes:
+        if self.stock_passes != self.max_passes and (self.stock or self.waste):
             # put the waste back in the stock if necessary
             if not self.stock:
                 self.transfer(self.waste[:], self.stock, face_up = False)
@@ -366,8 +366,11 @@ class Solitaire(game.Game):
             if not self.stock:
                 self.stock_passes += 1
             return False
-        else:
+        elif self.stock or self.waste:
             self.human.error('You may not make any more passes through the stock.')
+            return True
+        else:
+            self.human.error('There are no cards to turn.')
             return True
     
     def do_undo(self, num_moves):
@@ -394,7 +397,7 @@ class Solitaire(game.Game):
                 self.transfer(move_stack, old_location, track = False)
                 if undo_ndx:
                     self.undo_count -= 1
-                    self.do_undo()
+                    self.do_undo('')
             # no move to undo
             else:
                 self.human.error('There are no moves to undo.')
@@ -571,9 +574,11 @@ class Solitaire(game.Game):
             # Check for sorted cards.
             if check_it.game_location in self.foundations:
                 error = 'The {} is sorted and cannot be moved.'.format(check_it.name)
+                break
             # check for face down cards
             elif not check_it.up:
                 error = 'The {} is face down and cannot be moved.'.format(check_it.name)
+                break
         # check game specific rules
         else:
             for checker in self.match_checkers:

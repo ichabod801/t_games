@@ -1,5 +1,5 @@
 """
-monty_carlo_game.py
+monte_carlo_game.py
 
 A game of Monte Carlo.
 
