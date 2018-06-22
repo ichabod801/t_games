@@ -169,7 +169,7 @@ class Pyramid(solitaire.Solitaire):
         else:
             self.match_checkers = [solitaire.match_top, solitaire.match_pyramid]
         self.match_checkers.append(solitaire.match_thirteen)
-        self.sort_checkers = [solitaire.sort_kings]
+        self.sort_checkers = [solitaire.sort_kings_only]
 
     def set_options(self):
         """Set up the game specific options. (None)"""
