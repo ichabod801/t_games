@@ -22,9 +22,11 @@ For the reasoning behind the existence of this file, see the wiki.
 Functions:
 _move_one_size: Calculate maximum stack under "move one" rules. (int)
 -----------------------------------------
+build_down: Check that only stacks of descending ranks are moved. (str)
 build_none: No building is allowed. (str)
 build_one: Build moving one card at a time. (str)
 build_reserve: Build only from the reserve. (str)
+build_suit: Check that only stacks of the same suit are moved. (str)
 build_whole: Check that only complete tableau stacks are moved. (str)
 -------------------------------------------------
 deal_aces: Deal the aces onto the tableau. (None)
@@ -47,11 +49,13 @@ deal_twos: Deal the twos onto the tableau. (None)
 deal_twos_foundation: Deal the twos to the foundations. (None)
 flip_random: Flip random tableau cards face down. (None)
 -----------------------------------------------------
+lane_down: Check moving only stacks of descending ranks into a lane. (str)
 lane_king: Check moving only kings into a lane. (str)
 lane_none: Cards may not be moved to empty lanes. (str)
 lane_one: Check moving one card at a time into a lane. (str)
 lane_reserve: Lane only from the reserve (str)
 lane_reserve_waste: Check only laning cards from the reserve. (str)
+lane_suit: Check moving only stacks of the same suit to empty lanes. (str)
 -------------------------------------------------------------------
 match_adjacent: Allow matching of cards are in adjacent tableau piles. (str)
 match_none: Disallow any match moves. (str)
@@ -105,6 +109,24 @@ def _move_one_size(game, to_lane = False):
 
 # Define build checkers.
 
+def build_down(game, mover, target, moving_stack):
+    """
+    Check that only stacks of descending ranks are moved. (str)
+
+    Parameters:
+    game: The game being played. (Solitaire)
+    mover: The card being moved. (TrackingCard)
+    target: The card being moved to. (TrackingCard)
+    moving_stack: The stack the mover is the base of. (list of TrackingCard)
+    """
+    error = ''
+    suit = mover.suit
+    for card, next_card in zip(moving_stack, moving_stack[1:]):
+        if not next_card.below(card):
+            error = 'Only stacks of descending rank may be moved together.'
+            break
+    return error
+
 def build_none(game, mover, target, moving_stack):
     """
     No building is allowed. (str)
@@ -152,11 +174,31 @@ def build_reserve(game, mover, target, moving_stack):
     return error
 
 
+def build_suit(game, mover, target, moving_stack):
+    """
+    Check that only stacks of the same suit are moved. (str)
+
+    Parameters:
+    game: The game being played. (Solitaire)
+    mover: The card being moved. (TrackingCard)
+    target: The card being moved to. (TrackingCard)
+    moving_stack: The stack the mover is the base of. (list of TrackingCard)
+    """
+    error = ''
+    suit = mover.suit
+    for card in moving_stack[1:]:
+        if card.suit != suit:
+            error = 'Only stacks of the same suit may be moved together.'
+            break
+    return error
+
+
 def build_whole(game, mover, target, moving_stack):
     """
     Check that only complete tableau stacks are moved. (str)
 
     Parameters:
+    game: The game being played. (Solitaire)
     mover: The card being moved. (TrackingCard)
     target: The card being moved to. (TrackingCard)
     moving_stack: The stack the mover is the base of. (list of TrackingCard)
@@ -293,6 +335,8 @@ def deal_n(n, up = True):
     def dealer(game):
         for card_index in range(n):
             game.deck.deal(game.tableau[card_index % len(game.tableau)], face_up = up)
+        for pile in game.tableau:
+            pile[-1].up = True
     return dealer
 
 
@@ -450,6 +494,23 @@ def flip_random(game):
 
 # Define lane checkers.
 
+def lane_down(game, card, moving_stack):
+    """
+    Check moving only stacks of descending ranks into a lane. (str)
+
+    Parameters:
+    game: The game being played. (Solitaire)
+    card: The card being moved. (TrackingCard)
+    moving_stack: The stack the mover is the base of. (list of TrackingCard)
+    """
+    error = ''
+    suit = card.suit
+    for this_card, next_card in zip(moving_stack, moving_stack[1:]):
+        if not next_card.below(this_card):
+            error = 'Only stacks of descending rank may be moved into an empty lane.'
+            break
+    return error
+
 def lane_king(game, card, moving_stack):
     """
     Check moving only kings into a lane. (str)
@@ -530,6 +591,24 @@ def lane_reserve_waste(game, card, moving_stack):
         error = 'If the reserve is empty, you can only lane cards from the waste.'
     elif any(game.reserve) and card not in [stack[-1] for stack in game.reserve]:
         error = 'You can only move cards from the reserve into an empty lane.'
+    return error
+
+
+def lane_suit(game, card, moving_stack):
+    """
+    Check moving only stacks of the same suit to empty lanes. (str)
+
+    Parameters:
+    game: The game being played. (Solitaire)
+    card: The card to move into the lane. (TrackingCard)
+    moving_stack: The stack the mover is the base of. (list of TrackingCard)
+    """
+    error = ''
+    suit = card.suit
+    for other_card in moving_stack[1:]:
+        if other_card.suit != suit:
+            error = 'Only stacks of the same suit may be moved to empty lanes.'
+            break
     return error
 
 # Define match checkers.

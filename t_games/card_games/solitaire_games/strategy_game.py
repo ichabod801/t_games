@@ -46,7 +46,7 @@ class Strategy(solitaire.Solitaire):
 
     credits = CREDITS
     # Interface categories for the game.
-    categories = ['Card Games', 'Solitaire Games', 'Closed Games']
+    categories = ['Card Games', 'Solitaire Games', 'Hybrid Games']
     name = 'Strategy'
     num_options = 1
     rules = RULES
