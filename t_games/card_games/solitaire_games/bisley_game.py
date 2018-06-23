@@ -139,6 +139,7 @@ class Bisley(solitaire.Solitaire):
 
 
 if __name__ == '__main__':
+    # Play the game without the full interface.
     import t_games.player as player
     try:
         input = raw_input
