@@ -29,7 +29,9 @@ build_whole: Check that only complete tableau stacks are moved. (str)
 -------------------------------------------------
 deal_aces: Deal the aces onto the tableau. (None)
 deal_aces_multi: Deal the aces to the foundations in a multi-deck game. (None)
+deal_aces_up: Deal the aces onto the foundations. (None)
 deal_all: Deal all the cards out onto the tableau. (None)
+deal_bisley: Deal cards to the tableau with the first four piles short. (None)
 deal_five_six: Deal the fives and sixes as foundations. (None)
 deal_free: Fill the free cells with the last cards dealt. (None)
 deal_klondike: Deal deal a triangle in the tableau. (None)
@@ -65,9 +67,11 @@ pair_alt_color: Build in alternating colors. (str)
 pair_down: Build sequentially down in rank. (str)
 pair_not_suit: Build in anything but suits. (str)
 pair_suit: Build in suits. (str)
+pair_up_down: Build sequentially up or down in rank. (str)
 --------------------------------
 sort_ace: Sort starting with the ace. (str)
-sort_kings: Only kings may be sorted. (str)
+sort_kings: Sort starting with a king. (str)
+sort_kings_only: Only kings may be sorted. (str)
 sort_no_reserve: Sort non-starters only when the reserve is empty. (str)
 sort_none: No sorting is allowed. (str)
 sort_rank: Sort starting with a specific rank. (str)
@@ -182,7 +186,6 @@ def deal_aces(game):
             game.deck.force(card, game.tableau[next_index])
             next_index = (next_index + 1) % len(game.tableau)
 
-
 def deal_aces_multi(game):
     """
     Deal the aces to the foundations in a multi-deck game.
@@ -196,6 +199,19 @@ def deal_aces_multi(game):
         for foundation in game.find_foundation(ace):
             game.deck.force(ace_text, foundation)
 
+def deal_aces_up(game):
+    """
+    Deal the aces onto the foundations. (None)
+
+    Parameters:
+    game: The game to deal the cards for. (Solitaire)
+    """
+    # Deal the aces.
+    for suit in game.deck.suits:
+        card = game.deck.find('A{}'.format(suit))
+        foundation = game.find_foundation(card)
+        game.deck.force(card, foundation)
+
 
 def deal_all(game):
     """
@@ -206,6 +222,17 @@ def deal_all(game):
     """
     for card_ndx in range(len(game.deck.cards)):
         game.deck.deal(game.tableau[card_ndx % len(game.tableau)])
+
+
+def deal_bisley(game):
+    """
+    Deal all the cards out onto the tableau with the first four piles short. (None)
+
+    Parameters:
+    game: The game to deal the cards for. (Solitaire)
+    """
+    for card_ndx in range(len(game.deck.cards)):
+        game.deck.deal(game.tableau[(card_ndx + 4) % len(game.tableau)])
 
 
 def deal_five_six(game):
@@ -751,6 +778,23 @@ def pair_suit(self, mover, target):
         error = 'The {} is not the same suit as the {}'
         error = error.format(mover.name, target.name)
     return error
+    
+
+def pair_up_down(self, mover, target):
+    """
+    Build sequentially up or down in rank. (str)
+    
+    Parameters:
+    game: The game being played. (Solitaire)
+    mover: The card to move. (TrackingCard)
+    target: The destination card. (TrackingCard)
+    """
+    error = ''
+    # Check for descending ranks.
+    if not mover.below(target) and not mover.above(target):
+        error = 'The {} is not one rank higher or lower than the {}'
+        error = error.format(mover.name, target.name)
+    return error
 
 # Define sort checkers.
 
@@ -769,8 +813,23 @@ def sort_ace(game, card, foundation):
         error = 'Only aces can be sorted to empty foundations.'
     return error
 
-
 def sort_kings(game, card, foundation):
+    """
+    Sort starting with the king. (str)
+    
+    Parameters:
+    game: The game being played. (Solitiaire)
+    card: The card to be sorted. (TrackingCard)
+    foundation: The target foundation. (list of TrackingCard)
+    """
+    error = ''
+    # Check for match to foundation pile.
+    if not foundation and card.rank_num != 13:
+        error = 'Only kings can be sorted to empty foundations.'
+    return error
+
+
+def sort_kings_only(game, card, foundation):
     """
     Only allow kings to be sorted. (str)
 
@@ -858,8 +917,8 @@ def sort_up_down(game, card, foundation):
     """
     error = ''
     if game.foundations.index(foundation) < 4:
-        if not card.below(foundation[-1]):
+        if foundation and not card.below(foundation[-1]):
             error = 'The {} is not one rank below the {}.'.format(card, foundation[-1])
-    elif not card.above(foundation[-1]):
+    elif foundation and not card.above(foundation[-1]):
         error = 'The {} is not one rank above the {}.'.format(card, foundation[-1])
     return error
