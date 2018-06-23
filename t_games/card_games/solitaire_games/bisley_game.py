@@ -60,7 +60,7 @@ class Bisley(solitaire.Solitaire):
     def __str__(self):
         """Human readable text representation. (str)"""
         # Mix the foundation text in with the tableau text.
-        return '\n\n{}{}\n'.format(self.foundation_text(), self.tableau_text())
+        return '\n{}{}\n'.format(self.foundation_text(), self.tableau_text())
 
     def find_foundation(self, card):
         """
