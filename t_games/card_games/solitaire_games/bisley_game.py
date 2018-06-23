@@ -111,9 +111,13 @@ class Bisley(solitaire.Solitaire):
 
     def tableau_text(self):
         """Generate the text representation of the foundations."""
+        # Get the tallest row, account for the ace foundations.
+        row_heights = [len(pile) for pile in self.tableau]
+        for pushed in range(4):
+            row_heights[pushed] += 1
+        row_max = max(row_heights)
         # Loop through the rows.
         rows = []
-        row_max = max([len(pile) for pile in self.tableau])
         for row_index in range(row_max):
             # Add a row and loop through the columns.
             rows.append([])
