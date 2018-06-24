@@ -31,6 +31,39 @@ class Spider(solitaire.MultiSolitaire):
     categories = ['Card Games', 'Solitaire Games', 'Hybrid Games']
     # The name of the game.
     name = 'Spider'
+    
+    def do_alternate(self, arguments):
+        """
+        Redo the last command with different but matching cards. (bool)
+        
+        This is for when there are two cards of the same rank and suit that 
+        can make the same move, and the game makes the wrong one.
+
+        Parameters:
+        arguments: The (ignored) argument to the command. (str)
+        """
+        # Do the building
+        go = super(Spider, self).do_alternate(arguments)
+        # If there was building, check for a sortable stack.
+        if not go:
+            self.auto_sort_check()
+        return go
+
+    def auto_sort_check(self):
+        """Check if the stack just made is sortable. (None)"""
+        # If there are thirteen cards in the new location
+        moving_stack, old_location, new_location, undo_index, turn = self.moves[-1]
+        stack = new_location[-13:]
+        if len(stack) == 13:
+            # Check those thirteen for validity.
+            for checker in self.lane_checkers:
+                if checker(self, stack[0], stack):
+                    break
+            else:
+                # Sort any valid stacks as a whole.
+                foundations = self.find_foundation(stack[0])
+                foundation = [foundation for foundation in foundations if not foundation][0]
+                self.transfer(stack, foundation, undo_ndx = 1)
 
     def do_build(self, arguments):
         """
@@ -43,19 +76,7 @@ class Spider(solitaire.MultiSolitaire):
         go = super(Spider, self).do_build(arguments)
         # If there was building, check for a sortable stack.
         if not go:
-            # If there are thirteen cards in the new location
-            moving_stack, old_location, new_location, undo_index, turn = self.moves[-1]
-            stack = new_location[-13:]
-            if len(stack) == 13:
-                # Check those thirteen for validity.
-                for checker in self.lane_checkers:
-                    if checker(self, stack[0], stack):
-                        break
-                else:
-                    # Sort any valid stacks as a whole.
-                    foundations = self.find_foundation(stack[0])
-                    foundation = [foundation for foundation in foundations if not foundation][0]
-                    self.transfer(stack, foundation, undo_ndx = 1)
+            self.auto_sort_check()
         return go
 
     def do_turn(self, arguments):
