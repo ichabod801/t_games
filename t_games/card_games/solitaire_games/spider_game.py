@@ -8,6 +8,7 @@ Spider: A game of Spider. (solitaire.MultiSolitaire)
 """
 
 
+import t_games.cards as cards
 import t_games.card_games.solitaire_games.solitaire_game as solitaire
 
 
@@ -15,7 +16,12 @@ class Spider(solitaire.MultiSolitaire):
     """
     A game of Spider. (solitaire.MultiSolitaire)
 
+    Attributes:
+    one_suit: A flag for the deck only having one suit. (bool)
+    two_suit: A flag for the deck only having two suits. (bool)
+
     Overridden Methods:
+    do_build
     do_turn
     set_checkers
     set_options
@@ -37,17 +43,19 @@ class Spider(solitaire.MultiSolitaire):
         go = super(Spider, self).do_build(arguments)
         # If there was building, check for a sortable stack.
         if not go:
+            # If there are thirteen cards in the new location
             moving_stack, old_location, new_location, undo_index, turn = self.moves[-1]
-            for checker in self.build_checkers:
-                if len(moving_stack) != 13:
-                    break
-                if not checker(self, moving_stack[0], new_location[-len(moving_stack)], moving_stack):
-                    break
-            else:
-                # Sort any valid stacks as a whole.
-                foundations = self.find_foundation(moving_stack[0])
-                foundation = [foundation for foundation in foundations if not foundnation][0]
-                self.transfer(moving_stack, foundation, undo_index = 1)
+            stack = new_location[-13:]
+            if len(stack) == 13:
+                # Check those thirteen for validity.
+                for checker in self.lane_checkers:
+                    if checker(self, stack[0], stack):
+                        break
+                else:
+                    # Sort any valid stacks as a whole.
+                    foundations = self.find_foundation(stack[0])
+                    foundation = [foundation for foundation in foundations if not foundation][0]
+                    self.transfer(stack, foundation, undo_ndx = 1)
         return go
 
     def do_turn(self, arguments):
@@ -79,3 +87,9 @@ class Spider(solitaire.MultiSolitaire):
     def set_options(self):
         """Set up the game specific options. (None)"""
         self.options = {'num-foundations': 8, 'num-tableau': 10}
+        self.option_set.add_option('one-suit', ['1s'], action = 'key=deck-specs', target = self.options,
+            value = (8, cards.TrackOneSuit),
+            question = 'Should the deck only have one suit? bool')
+        self.option_set.add_option('two-suit', ['2s'], action = 'key=deck-specs', target = self.options,
+            value = (4, cards.TrackTwoSuit),
+            question = 'Should the deck only have two suits? bool')
