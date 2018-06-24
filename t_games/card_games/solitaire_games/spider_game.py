@@ -3,6 +3,10 @@ spider_game.py
 
 A game of Spider.
 
+Constants:
+CREDITS: The credits for Spider. (str)
+RULES: The rules of Spider. (str)
+
 Classes:
 Spider: A game of Spider. (solitaire.MultiSolitaire)
 """
@@ -12,15 +16,50 @@ import t_games.cards as cards
 import t_games.card_games.solitaire_games.solitaire_game as solitaire
 
 
+# # The credits for Spider.
+CREDITS = """
+Game Design: Traditional
+Game Programming: Craig "Ichabod" O'Brien
+"""
+
+# The rules of Spider.
+RULES = """
+Spider is two deck game, with ten tableau piles. Four of the tableau piles
+start with six cards, the rest start with five cards.
+
+Cards on the tableau can be built regardless of suit. However, only stacks of
+a single suit can be moved as a unit. Otherwise cards must be built one at a
+time. Cards on the tableau are built down in rank.
+
+If you ever build a stack that goes from king to ace in the same suit, it will
+be automatically sorted.
+
+Turning cards over from the stock deals one face up card to the top of each 
+tableau pile. You may not turn over cards from the stock if you have any empty
+tableau piles.
+
+Options:
+one-suit (1s): The deck is all one suit (spades).
+open (o): All tableau cards are dealt face up.
+relaxed-turn (relaxed, rt): You may turn over cards from the deck when you
+    have empty tableau piles.
+two-suit (2s): The deck has only two suits: hearts and spades.
+"""
+
+
 class Spider(solitaire.MultiSolitaire):
     """
     A game of Spider. (solitaire.MultiSolitaire)
 
     Attributes:
-    one_suit: A flag for the deck only having one suit. (bool)
-    two_suit: A flag for the deck only having two suits. (bool)
+    open: A flag for the tableau being totally face up. (bool)
+    relaxed_turn: A flag for being able to turn with empty lanes. (bool)
+
+    Methods:
+    auto_sort_check: Check if the stack just made is sortable. (None)
 
     Overridden Methods:
+    do_alternate
     do_build
     do_turn
     set_checkers
@@ -29,10 +68,30 @@ class Spider(solitaire.MultiSolitaire):
 
     # The menu categories for the game.
     categories = ['Card Games', 'Solitaire Games', 'Hybrid Games']
+    # The credits for Spider.
+    credits = CREDITS
     # The name of the game.
     name = 'Spider'
     # The number of game options.
     num_options = 4
+    # The rules of Spider.
+    rules = RULES
+
+    def auto_sort_check(self):
+        """Check if the stack just made is sortable. (None)"""
+        # If there are thirteen cards in the new location
+        moving_stack, old_location, new_location, undo_index, turn = self.moves[-1]
+        stack = new_location[-13:]
+        if len(stack) == 13:
+            # Check those thirteen for validity.
+            for checker in self.lane_checkers:
+                if checker(self, stack[0], stack):
+                    break
+            else:
+                # Sort any valid stacks as a whole.
+                foundations = self.find_foundation(stack[0])
+                foundation = [foundation for foundation in foundations if not foundation][0]
+                self.transfer(stack, foundation, undo_ndx = 1)
     
     def do_alternate(self, arguments):
         """
@@ -50,22 +109,6 @@ class Spider(solitaire.MultiSolitaire):
         if not go:
             self.auto_sort_check()
         return go
-
-    def auto_sort_check(self):
-        """Check if the stack just made is sortable. (None)"""
-        # If there are thirteen cards in the new location
-        moving_stack, old_location, new_location, undo_index, turn = self.moves[-1]
-        stack = new_location[-13:]
-        if len(stack) == 13:
-            # Check those thirteen for validity.
-            for checker in self.lane_checkers:
-                if checker(self, stack[0], stack):
-                    break
-            else:
-                # Sort any valid stacks as a whole.
-                foundations = self.find_foundation(stack[0])
-                foundation = [foundation for foundation in foundations if not foundation][0]
-                self.transfer(stack, foundation, undo_ndx = 1)
 
     def do_build(self, arguments):
         """
