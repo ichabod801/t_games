@@ -99,7 +99,7 @@ class Spider(solitaire.MultiSolitaire):
     def set_checkers(self):
         """Set the game specific rule checkers. (None)"""
         super(Spider, self).set_checkers()
-        self.dealers = [solitaire.deal_n(54), solitaire.deal_stock_all]
+        self.dealers = [solitaire.deal_n(54, up = False), solitaire.deal_stock_all]
         self.build_checkers = [solitaire.build_suit, solitaire.build_down]
         self.lane_checkers = [solitaire.lane_suit, solitaire.lane_down]
         self.pair_checkers = [solitaire.pair_down]
@@ -109,8 +109,8 @@ class Spider(solitaire.MultiSolitaire):
         """Set up the game specific options. (None)"""
         self.options = {'num-foundations': 8, 'num-tableau': 10}
         self.option_set.add_option('one-suit', ['1s'], action = 'key=deck-specs', target = self.options,
-            value = (8, cards.TrackOneSuit),
+            value = (8, cards.TrackOneSuit), default = None,
             question = 'Should the deck only have one suit? bool')
         self.option_set.add_option('two-suit', ['2s'], action = 'key=deck-specs', target = self.options,
-            value = (4, cards.TrackTwoSuit),
+            value = (4, cards.TrackTwoSuit), default = None,
             question = 'Should the deck only have two suits? bool')
