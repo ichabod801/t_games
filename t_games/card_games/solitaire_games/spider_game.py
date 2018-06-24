@@ -31,6 +31,8 @@ class Spider(solitaire.MultiSolitaire):
     categories = ['Card Games', 'Solitaire Games', 'Hybrid Games']
     # The name of the game.
     name = 'Spider'
+    # The number of game options.
+    num_options = 4
     
     def do_alternate(self, arguments):
         """
@@ -88,7 +90,7 @@ class Spider(solitaire.MultiSolitaire):
         """
         if not self.stock:
             self.human.error('There are no more cards to turn over.')
-        elif not all(self.tableau):
+        elif not all(self.tableau) and not self.relaxed_turn:
             self.human.error('You cannot turn over cards from the stock if you have empty tableau piles.')
         else:
             for pile_index, pile in enumerate(self.tableau):
@@ -99,7 +101,7 @@ class Spider(solitaire.MultiSolitaire):
     def set_checkers(self):
         """Set the game specific rule checkers. (None)"""
         super(Spider, self).set_checkers()
-        self.dealers = [solitaire.deal_n(54, up = False), solitaire.deal_stock_all]
+        self.dealers = [solitaire.deal_n(54, up = self.open), solitaire.deal_stock_all]
         self.build_checkers = [solitaire.build_suit, solitaire.build_down]
         self.lane_checkers = [solitaire.lane_suit, solitaire.lane_down]
         self.pair_checkers = [solitaire.pair_down]
@@ -107,10 +109,16 @@ class Spider(solitaire.MultiSolitaire):
 
     def set_options(self):
         """Set up the game specific options. (None)"""
+        # Set the base solitaire options.
         self.options = {'num-foundations': 8, 'num-tableau': 10}
+        # Set the deal options.
         self.option_set.add_option('one-suit', ['1s'], action = 'key=deck-specs', target = self.options,
             value = (8, cards.TrackOneSuit), default = None,
             question = 'Should the deck only have one suit? bool')
         self.option_set.add_option('two-suit', ['2s'], action = 'key=deck-specs', target = self.options,
             value = (4, cards.TrackTwoSuit), default = None,
             question = 'Should the deck only have two suits? bool')
+        self.option_set.add_option('open', ['o'], question = 'Should the tableau be dealt face up? bool')
+        # Set the play options.
+        self.option_set.add_option('relaxed-turn', ['relaxed', 'rt'],
+            question = 'Should you be able to turn over cards with empty lanes? bool')
