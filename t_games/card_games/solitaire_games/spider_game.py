@@ -27,12 +27,12 @@ RULES = """
 Spider is two deck game, with ten tableau piles. Four of the tableau piles
 start with six cards, the rest start with five cards.
 
-Cards on the tableau can be built regardless of suit. However, only stacks of
-a single suit can be moved as a unit. Otherwise cards must be built one at a
-time. Cards on the tableau are built down in rank.
+Cards on the tableau can be built down in rank regardless of suit. However, 
+only stacks of a single suit can be moved as a unit. Otherwise cards must be 
+built one at a time.
 
-If you ever build a stack that goes from king to ace in the same suit, it will
-be automatically sorted.
+If you ever build a stack that goes from king to ace in the same suit, the
+whole stack will automatically be sorted.
 
 Turning cards over from the stock deals one face up card to the top of each 
 tableau pile. You may not turn over cards from the stock if you have any empty
@@ -131,11 +131,14 @@ class Spider(solitaire.MultiSolitaire):
         Parameters:
         arguments: The (ignored) arguments to the turn command. (str)
         """
+        # Check for no stock.
         if not self.stock:
             self.human.error('There are no more cards to turn over.')
+        # Check for empty piles (or relaxed-turn option)
         elif not all(self.tableau) and not self.relaxed_turn:
             self.human.error('You cannot turn over cards from the stock if you have empty tableau piles.')
         else:
+            # Deal the cards to the tableau.
             for pile_index, pile in enumerate(self.tableau):
                 self.transfer([self.stock[-1]], pile, face_up = True, undo_ndx = pile_index)
                 if not self.stock:
@@ -144,7 +147,9 @@ class Spider(solitaire.MultiSolitaire):
     def set_checkers(self):
         """Set the game specific rule checkers. (None)"""
         super(Spider, self).set_checkers()
+        # Set the dealers.
         self.dealers = [solitaire.deal_n(54, up = self.open), solitaire.deal_stock_all]
+        # Set the rule checkers.
         self.build_checkers = [solitaire.build_suit, solitaire.build_down]
         self.lane_checkers = [solitaire.lane_suit, solitaire.lane_down]
         self.pair_checkers = [solitaire.pair_down]
@@ -165,3 +170,15 @@ class Spider(solitaire.MultiSolitaire):
         # Set the play options.
         self.option_set.add_option('relaxed-turn', ['relaxed', 'rt'],
             question = 'Should you be able to turn over cards with empty lanes? bool')
+
+
+if __name__ == '__main__':
+    # Play the game without the full interface.
+    import t_games.player as player
+    try:
+        input = raw_input
+    except NameError:
+        pass
+    name = input('What is your name? ')
+    spider = Spider(player.Player(name), '')
+    spider.play()
