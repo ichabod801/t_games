@@ -11,7 +11,10 @@ Card: A standard playing card, with a suit and a rank. (object)
 Deck: A standard deck of cards. (object)
 Hand: A hand of cards held by a player. (object)
 TrackingCard: A card that tracks it's location. (Card)
+TrackOneSuit: A tracking card with only one suit. (TrackingCard)
+TrackTwoSuit: A tracking card with only two suits. (TrackingCard)
 TrackingDeck: A deck that keeps track of the location of its cards. (Deck)
+MultiTrackingDeck: A deck that keeps track of multiple duplicate cards. (Deck)
 """
 
 
@@ -461,6 +464,32 @@ class TrackingCard(Card):
         Discard the card. (None)
         """
         self.deck.discard(self)
+
+
+class TrackOneSuit(TrackingCard):
+    """A tracking card with only one suit. (TrackingCard)"""
+
+    # The card ranks.
+    ranks = 'XA23456789TJQK'
+    # The card suits.
+    suits = 'S'
+    # The names of the card suits.
+    suit_names = ['Spades']
+    # A regular expression matching the card.
+    card_re = re.compile('[{}][{}]'.format(ranks, suits), re.IGNORECASE)
+
+
+class TrackTwoSuit(TrackingCard):
+    """A tracking card with only two suits. (TrackingCard)"""
+
+    # The card ranks.
+    ranks = 'XA23456789TJQK'
+    # The card suits.
+    suits = 'HS'
+    # The names of the card suits.
+    suit_names = ['Hearts', 'Spades']
+    # A regular expression matching the card.
+    card_re = re.compile('[{}][{}]'.format(ranks, suits), re.IGNORECASE)
 
 
 class TrackingDeck(Deck):
