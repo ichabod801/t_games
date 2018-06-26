@@ -12,6 +12,8 @@ Bisley: A game of Bisley. (solitaire.Solitaire)
 """
 
 
+import random
+
 import t_games.card_games.solitaire_games.solitaire_game as solitaire
 
 
@@ -61,6 +63,34 @@ class Bisley(solitaire.Solitaire):
         """Human readable text representation. (str)"""
         # Mix the foundation text in with the tableau text.
         return '\n{}{}\n'.format(self.foundation_text(), self.tableau_text())
+
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        game, losses = self.gipf_check(arguments, ("liar's dice",))
+        go = True
+        # Strategy
+        if game == "liar's dice":
+            if not losses:
+                self.human.tell(self)
+                while True:
+                    card_text = self.human.ask('Pick a card on the foundation: ')
+                    if self.deck.card_re.match(card_text):
+                        card = self.deck.find(card_text)
+                        if card.game_location in self.tableau:
+                            break
+                        else:
+                            self.human.error('That card is not in the tableau.')
+                    else:
+                        self.human.error('I do not recognize that card.')
+                random.shuffle(card.game_location)
+        else:
+            self.human.tell('Only the spider crawls the web.')
+        return go
 
     def find_foundation(self, card):
         """
