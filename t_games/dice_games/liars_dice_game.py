@@ -378,6 +378,7 @@ class LiarsDice(game.Game):
     one_wild: A flag for ones being wild. (bool)
     phase: The current action the player needs to take. (str)
     rerolls: How many dice the last player rerolled. (int)
+    thirteen: A flag for getting a token with a sum of 13. (bool)
     two_rerolls: A flag for getting a second reroll. (bool)
 
     Methods:
@@ -390,6 +391,7 @@ class LiarsDice(game.Game):
     reroll: Reroll the dice. (None)
     reset: Reset the tracking variables. (None)
     resolve_challenge: Handle the result of a challenge. (None)
+    thirteen_check: Check if there is a sum of dice equalling 13. (None)
     validate_claim: Validate that a claim is higher than the previosu one. (bool)
 
     Overridden Methods:
@@ -454,6 +456,24 @@ class LiarsDice(game.Game):
             self.phase = 'start'
         else:
             self.phase = 'reroll'
+
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        game, losses = self.gipf_check(arguments, ('pyramid',))
+        go = True
+        # Strategy
+        if game == 'pyramid':
+            if not losses:
+                self.human.tell('If the sum of any dice from your next roll is 13, you get a token.')
+                self.thirteen = True
+        else:
+            self.human.tell("I'm sorry, I quit gipfing for Lent.")
+        return go
 
     def do_score(self, arguments):
         """
@@ -574,6 +594,8 @@ class LiarsDice(game.Game):
             self.reset()
             self.human.tell('\n{} starts a new round by rolling all five dice.'.format(player.name))
             player.tell('\nThe new roll to you is {}.'.format(self.dice))
+            if self.thirteen:
+                self.thirteen_check(player)
             if self.two_rerolls:
                 self.phase = 'reroll-two'
             else:
@@ -736,6 +758,9 @@ class LiarsDice(game.Game):
             if value in rerolls:
                 self.dice.roll(die_index)
                 rerolls.remove(value)
+        # Check for thirteens
+        if self.thirteen and reroll_text != 'zero':
+            self.thirteen_check(player)
         # Determine the next game phase.
         if self.two_rerolls and self.phase != 'reroll-two':
             self.phase = 'reroll-two'
@@ -800,6 +825,27 @@ class LiarsDice(game.Game):
         # Set up the tracking variables.
         self.reset()
         self.phase = 'start'
+        self.thirteen = False
+
+    def thirteen_check(self, player):
+        """
+        Check if there is a sum of dice equalling 13. (None)
+
+        Parameters:
+        player: The current player. (player.Player)
+        """
+        for size in range(3, 6):
+            for sub_values in itertools.combinations(self.dice.values, size):
+                if sum(sub_values) == 13:
+                    self.thirteen = False
+                    self.scores[player.name] += 1
+                    sum_text = ' + '.join(str(value) for value in sub_values)
+                    player.tell('{} = 13, you get an extra token.'.format(sum_text))
+                    player.tell('You now have {} tokens.'.format(number_word(self.scores[player.name])))
+                    break
+            if not self.thirteen:
+                break
+        self.thirteen = False
 
     def validate_claim(self, claim, player):
         """
