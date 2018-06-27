@@ -89,7 +89,7 @@ class Bisley(solitaire.Solitaire):
                         self.human.error('I do not recognize that card.')
                 random.shuffle(card.game_location)
         else:
-            self.human.tell('Only the spider crawls the web.')
+            self.human.tell('Non-sequitur, one-love.')
         return go
 
     def find_foundation(self, card):

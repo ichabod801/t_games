@@ -472,7 +472,7 @@ class LiarsDice(game.Game):
                 self.human.tell('If the sum of any dice from your next roll is 13, you get a token.')
                 self.thirteen = True
         else:
-            self.human.tell("I'm sorry, I quit gipfing for Lent.")
+            self.human.tell("You believe that old wive's tale?")
         return go
 
     def do_score(self, arguments):
