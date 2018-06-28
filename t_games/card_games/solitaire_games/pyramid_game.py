@@ -102,7 +102,7 @@ class Pyramid(solitaire.Solitaire):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
-        game, losses = self.gipf_check(arguments, ('monte carlo',))
+        game, losses = self.gipf_check(arguments, ('monte carlo', 'spider'))
         go = True
         # Strategy
         if game == 'monte carlo':
@@ -119,6 +119,14 @@ class Pyramid(solitaire.Solitaire):
                             undo_index += 1
                     # If no cards were moved, stop trying to move cards.
                     if not undo_index:
+                        break
+        elif game == 'spider':
+            if not losses and self.stock:
+                # Deal cards to non-empty/non-full stacks.
+                for pile_index, pile in enumerate(self.tableau):
+                    if pile and len(pile) < (7 - pile_index):
+                        self.transfer([self.stock[-1]], pile, undo_ndx = pile_index)
+                    if not self.stock:
                         break
         else:
             self.human.tell("No, it's Giza. Gee-zah.")
