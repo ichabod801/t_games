@@ -71,7 +71,7 @@ class Bisley(solitaire.Solitaire):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
-        game, losses = self.gipf_check(arguments, ("liar's dice",))
+        game, losses = self.gipf_check(arguments, ("liar's dice", 'strategy'))
         go = True
         # Strategy
         if game == "liar's dice":
@@ -88,8 +88,24 @@ class Bisley(solitaire.Solitaire):
                     else:
                         self.human.error('I do not recognize that card.')
                 random.shuffle(card.game_location)
+        if game == 'strategy':
+            if not losses:
+                self.human.tell('\nYou may lane any one stack.')
+                self.lane_checkers = []
         else:
             self.human.tell('Non-sequitur, one-love.')
+        return go
+        
+    def do_lane(self, card):
+        """
+        Move a card into an empty lane. (bool)
+        
+        Parameters:
+        card: The string identifying the card. (str)
+        """
+        go = super(Bisley, self).do_lane(card)
+        if not self.lane_checkers:
+            self.lane_checkers = [solitaire.lane_none]
         return go
 
     def find_foundation(self, card):
