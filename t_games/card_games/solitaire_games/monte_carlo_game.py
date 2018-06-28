@@ -18,6 +18,8 @@ sort_kings: Allow sorting kings. (str)
 """
 
 
+import random
+
 import t_games.card_games.solitaire_games.solitaire_game as solitaire
 
 
@@ -79,13 +81,16 @@ class MonteCarlo(solitaire.Solitaire):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
-        game, losses = self.gipf_check(arguments, ('quadrille',))
+        game, losses = self.gipf_check(arguments, ('quadrille', 'craps'))
         go = True
         # Strategy
         if game == 'quadrille':
             if not losses:
                 self.human.tell('\nYour next match does not have to be adjacent.')
                 del self.match_checkers[1]
+        elif game == 'craps':
+            if not losses:
+                random.shuffle(self.tableau)
         else:
             self.human.tell('But reality is just a simulation, so does gipfing really matter?')
         return go
