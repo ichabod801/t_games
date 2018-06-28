@@ -122,7 +122,10 @@ class Spider(solitaire.MultiSolitaire):
         # If there was building, check for a sortable stack.
         if not go:
             self.auto_sort_check()
+            # Reset changes from gipf.
             self.pair_checkers = [solitaire.pair_down]
+            if len(self.build_checkers) == 1:
+                self.build_checkers.append(solitaire.build_suit)
         return go
 
     def do_gipf(self, arguments):
@@ -132,13 +135,17 @@ class Spider(solitaire.MultiSolitaire):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
-        game, losses = self.gipf_check(arguments, ('bisley',))
+        game, losses = self.gipf_check(arguments, ('bisley', 'freecell'))
         go = True
         # Strategy
         if game == 'bisley':
             if not losses:
                 self.human.tell('Your next build may be up or down one rank.')
                 self.pair_checkers = [solitaire.pair_up_down]
+        elif game == 'freecell':
+            if not losses:
+                self.human.tell('\nYour next build may move a stack regardless of suit.')
+                self.build_checkers = [solitaire.build_down]
         else:
             self.human.tell('Only the spider crawls the web.')
         return go
