@@ -72,6 +72,37 @@ class MonteCarlo(solitaire.Solitaire):
     # The rules of the game.
     rules = RULES
 
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        game, losses = self.gipf_check(arguments, ('quadrille',))
+        go = True
+        # Strategy
+        if game == 'quadrille':
+            if not losses:
+                self.human.tell('\nYour next match does not have to be adjacent.')
+                del self.match_checkers[1]
+        else:
+            self.human.tell('But reality is just a simulation, so does gipfing really matter?')
+        return go
+
+    def do_match(self, cards):
+        """
+        Match two cards and discard them.
+
+        Parameters:
+        cards: The cards being matched. (str)
+        """
+        # Unset non-adjacent matching on successful match.
+        go = super(MonteCarlo, self).do_match(cards)
+        if not go and len(self.match_checkers) == 2:
+            self.match_checkers.append(solitaire.match_adjacent)
+        return go
+
     def do_turn(self, arguments):
         """
         Turn cards from the stock into the waste. (bool)
