@@ -92,6 +92,24 @@ class Quadrille(solitaire.Solitaire):
         else:
             return super(Quadrille, self).do_auto(arguments)
 
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        game, losses = self.gipf_check(arguments, ('yacht',))
+        go = True
+        # Strategy
+        if game == 'yacht':
+            if not losses:
+                self.max_passes += 1
+                self.human.tell('\nYou have gained an extra pass through the deck.')
+        else:
+            self.human.tell("I don't know that dance.")
+        return go
+
     def find_foundation(self, card):
         """
         Determine which foudations a card could be sorted to. (list of list)
