@@ -350,11 +350,11 @@ class CrazyEights(game.Game):
         # Strategy
         if game == 'strategy':
             if not losses:
-                self.human.tell('Your next play may be one rank above or below the required rank.')
+                self.human.tell('\nYour next play may be one rank above or below the required rank.')
                 self.fuzzy_ranks = True
         elif game == 'spider':
             if not losses:
-                self.human.tell("Your can play any card, but it won't change the suit for the next play.")
+                self.human.tell("\nYou can play any card, but it won't change the suit for the next play.")
                 self.any_card = True
         else:
             self.human.tell("I'm sorry, I quit gipfing for Lent.")
