@@ -78,7 +78,7 @@ class Bisley(solitaire.Solitaire):
             if not losses:
                 self.human.tell(self)
                 while True:
-                    card_text = self.human.ask('Pick a card on the foundation: ')
+                    card_text = self.human.ask('Pick a card on the tableau: ')
                     if self.deck.card_re.match(card_text):
                         card = self.deck.find(card_text)
                         if card.game_location in self.tableau:
