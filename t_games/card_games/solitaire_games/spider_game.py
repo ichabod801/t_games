@@ -140,7 +140,7 @@ class Spider(solitaire.MultiSolitaire):
         # Strategy
         if game == 'bisley':
             if not losses:
-                self.human.tell('Your next build may be up or down one rank.')
+                self.human.tell('\nYour next build may be up or down one rank.')
                 self.pair_checkers = [solitaire.pair_up_down]
         elif game == 'freecell':
             if not losses:
