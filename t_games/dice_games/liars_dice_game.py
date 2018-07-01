@@ -478,7 +478,8 @@ class LiarsDice(game.Game):
                     go = False
         elif game == 'pyramid':
             if not losses:
-                self.human.tell('If the sum of any dice from your next roll is 13, you get a token.')
+                message = 'If the sum of any dice from the next roll is 13, that player gets a token.'
+                self.human.tell(message)
                 self.thirteen = True
         else:
             self.human.tell("You believe that old wive's tale?")
