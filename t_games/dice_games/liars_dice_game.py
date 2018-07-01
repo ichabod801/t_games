@@ -482,7 +482,6 @@ class LiarsDice(game.Game):
                 self.thirteen = True
         else:
             self.human.tell("You believe that old wive's tale?")
-            go = False
         return go
 
     def do_score(self, arguments):
