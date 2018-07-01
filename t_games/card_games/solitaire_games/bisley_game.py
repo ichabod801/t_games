@@ -88,7 +88,7 @@ class Bisley(solitaire.Solitaire):
                     else:
                         self.human.error('I do not recognize that card.')
                 random.shuffle(card.game_location)
-        if game == 'strategy':
+        elif game == 'strategy':
             if not losses:
                 self.human.tell('\nYou may lane any one stack.')
                 self.lane_checkers = []
