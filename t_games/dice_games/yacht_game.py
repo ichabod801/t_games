@@ -872,9 +872,9 @@ class Yacht(game.Game):
             self.human.tell(self)
             # Announce the winner(s).
             if len(winners) == 1:
-                self.human.tell('\nThe winner is {} with {} points.\n'.format(winners[0], best))
+                self.human.tell('\nThe winner is {} with {} points.'.format(winners[0], best))
             else:
-                message = '\nThe winners are {} and {}; with {} points.\n'
+                message = '\nThe winners are {} and {}; with {} points.'
                 self.human.tell(message.format(', '.join(winners[:-1]), winners[-1], best))
             # Calculate the win/loss/draw (for the human)
             self.set_wld()
