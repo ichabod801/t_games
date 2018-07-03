@@ -475,6 +475,8 @@ class LiarsDice(game.Game):
                     self.human.tell('\nYou get another roll.')
                     if self.phase == 'claim':
                         self.phase = 'reroll-two'
+                        if self.two_rerolls:
+                            self.temp_reroll = True
                     else:
                         self.temp_reroll = True
                 else:
