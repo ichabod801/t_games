@@ -378,6 +378,7 @@ class LiarsDice(game.Game):
     one_wild: A flag for ones being wild. (bool)
     phase: The current action the player needs to take. (str)
     rerolls: How many dice the last player rerolled. (int)
+    temp_reroll: A flag for getting an extra reroll once. (boo)
     thirteen: A flag for getting a token with a sum of 13. (bool)
     two_rerolls: A flag for getting a second reroll. (bool)
 
@@ -472,13 +473,15 @@ class LiarsDice(game.Game):
                 score = self.poker_score(self.dice.values)
                 if score[0] in (1, 2, 3, 5, 6, 7):
                     self.human.tell('\nYou get another roll.')
-                    self.phase = 'reroll-two'
+                    if self.phase == 'claim':
+                        self.phase = 'reroll-two'
+                    else:
+                        self.temp_reroll = True
                 else:
                     self.human.tell('\nYou have no pair in your roll, so you do not get a reroll.')
-                    go = False
         elif game == 'pyramid':
             if not losses:
-                message = 'If the sum of any dice from the next roll is 13, that player gets a token.'
+                message = '\nIf the sum of any dice from the next roll is 13, that player gets a token.'
                 self.human.tell(message)
                 self.thirteen = True
         else:
@@ -772,8 +775,10 @@ class LiarsDice(game.Game):
         if self.thirteen and reroll_text != 'zero':
             self.thirteen_check(player)
         # Determine the next game phase.
-        if self.two_rerolls and self.phase != 'reroll-two':
+        if (self.two_rerolls and self.phase != 'reroll-two') or self.temp_reroll:
             self.phase = 'reroll-two'
+            if not (self.two_rerolls and self.phase != 'reroll-two'):
+                self.temp_reroll = False
         else:
             self.phase = 'claim'
 
@@ -836,6 +841,7 @@ class LiarsDice(game.Game):
         self.reset()
         self.phase = 'start'
         self.thirteen = False
+        self.temp_reroll = False
 
     def thirteen_check(self, player):
         """
