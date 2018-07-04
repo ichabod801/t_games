@@ -139,7 +139,7 @@ class ABBot(player.Bot):
         # Handle based on the question.
         if 'reroll' in prompt:
             # Check for already having beat the claim.
-            if self.game.two_rerolls:
+            if self.game.rolls_left:
                 claim_score = self.game.poker_score(self.game.claim)
                 roll_score = self.game.poker_score(self.game.dice.values)
                 if claim_score[0] and roll_score > claim_score:
@@ -171,14 +171,14 @@ class ABBot(player.Bot):
         changed = len(current)
         # Get the number of rolled dice.
         rolled = self.game.rerolls
-        if self.game.two_rerolls:
+        if self.game.base_rolls == 2:
             rolled *= 2
         # Determine the challenge.
         if changed > rolled:
             return 'yes'
         elif claim_score[0] in dont_challenge[prev_score[0]]:
             return 'nope'
-        elif (self.game.two_rerolls or self.game.one_wild) and claim_score[0] != 7:
+        elif (self.game.base_rolls == 2 or self.game.one_wild) and claim_score[0] != 7:
             return 'nah'
         elif self.game.one_six and 6 in claim_score[1:4]:
             return 'no'
@@ -319,7 +319,7 @@ class Challenger(ABBot):
             # Make determination.
             if current_score[0] == 7:
                 challenge = 'yes'
-            elif rolled not in self.valid_dice[old_score[0]] and not self.game.two_rerolls:
+            elif rolled not in self.valid_dice[old_score[0]] and not self.game.base_rolls == 2:
                 challenge = 'da'
             elif truth_chance > 0.95 and challenge_chance and current_score[0]:
                 challenge = '1'
@@ -369,6 +369,7 @@ class LiarsDice(game.Game):
     hand_names: The name templates for the poker hand versions of the dice. (str)
 
     Attributes:
+    base_rolls: The default number of rolls a player gets. (int)
     betting: A flag for passing tokens instead of losing them. (bool)
     tokens: The number of tokens each player starts with. (int)
     claim: The claim made by the last player. (list of int)
@@ -378,9 +379,8 @@ class LiarsDice(game.Game):
     one_wild: A flag for ones being wild. (bool)
     phase: The current action the player needs to take. (str)
     rerolls: How many dice the last player rerolled. (int)
-    temp_reroll: A flag for getting an extra reroll once. (boo)
+    rolls_left: How many rolls the player can make. (int)
     thirteen: A flag for getting a token with a sum of 13. (bool)
-    two_rerolls: A flag for getting a second reroll. (bool)
 
     Methods:
     challenge: Handle someone making a claim. (None)
@@ -455,8 +455,11 @@ class LiarsDice(game.Game):
                 self.human.tell('{} told the truth.'.format(player.name))
                 self.resolve_challenge(player, next_player)
             self.phase = 'start'
+            self.rolls_left = self.base_rolls - 1
         else:
             self.phase = 'reroll'
+            self.rolls_left = self.base_rolls
+            self.rerolls = 0
 
     def do_gipf(self, arguments):
         """
@@ -473,12 +476,8 @@ class LiarsDice(game.Game):
                 score = self.poker_score(self.dice.values)
                 if score[0] in (1, 2, 3, 5, 6, 7):
                     self.human.tell('\nYou get another roll.')
-                    if self.phase == 'claim':
-                        self.phase = 'reroll-two'
-                        if self.two_rerolls:
-                            self.temp_reroll = True
-                    else:
-                        self.temp_reroll = True
+                    self.rolls_left += 1
+                    self.phase = 'reroll'
                 else:
                     self.human.tell('\nYou have no pair in your roll, so you do not get a reroll.')
         elif game == 'pyramid':
@@ -606,18 +605,20 @@ class LiarsDice(game.Game):
         # Display the game state.
         if self.phase == 'start':
             self.dice.roll()
+            self.last_roller = player
             self.reset()
             self.human.tell('\n{} starts a new round by rolling all five dice.'.format(player.name))
             player.tell('\nThe new roll to you is {}.'.format(self.dice))
             if self.thirteen:
                 self.thirteen_check(player)
-            if self.two_rerolls:
-                self.phase = 'reroll-two'
+            if self.rolls_left:
+                self.phase = 'reroll'
+                self.rerolls = 5
             else:
                 self.phase = 'claim'
-        elif self.phase == 'reroll':
+        elif self.phase == 'reroll' and self.rolls_left == self.base_rolls:
             player.tell('\nThe roll passed to you is {}.'.format(self.dice))
-        elif self.phase in ('claim', 'reroll-two'):
+        else:
             player.tell('\nYour roll is {}.'.format(self.dice))
         # Get the player action
         if self.phase == 'claim':
@@ -632,7 +633,7 @@ class LiarsDice(game.Game):
             elif self.validate_claim(claim, player):
                 self.challenge()
                 return False
-        elif self.phase.startswith('reroll'):
+        elif self.phase == 'reroll':
             # Get the dice to reroll.
             query = 'Enter the numbers you would like to reroll: '
             rerolls = player.ask_int_list(query, valid = self.dice.values, valid_lens = range(6), 
@@ -758,13 +759,13 @@ class LiarsDice(game.Game):
         rerolls: The values to reroll. (list of int)
         """
         # Account for two-rerolls option.
-        if self.phase == 'reroll-two':
-            self.rerolls = max(self.rerolls, len(rerolls))
-            line_feed = ''
-        else:
-            self.rerolls = len(rerolls)
-            line_feed = '\n'
+        self.rerolls = max(self.rerolls, len(rerolls))
         # Announce the rerolls.
+        if self.last_roller != player:
+            line_feed = '\n'
+        else:
+            line_feed = ''
+        self.last_roller = player
         reroll_text = number_word(len(rerolls))
         dice = ['dice', 'die'][len(rerolls) == 1]
         self.human.tell('{}{} rerolled {} {}.'.format(line_feed, player.name, reroll_text, dice))
@@ -777,11 +778,8 @@ class LiarsDice(game.Game):
         if self.thirteen and reroll_text != 'zero':
             self.thirteen_check(player)
         # Determine the next game phase.
-        if (self.two_rerolls and self.phase != 'reroll-two') or self.temp_reroll:
-            self.phase = 'reroll-two'
-            if not (self.two_rerolls and self.phase != 'reroll-two'):
-                self.temp_reroll = False
-        else:
+        self.rolls_left -= 1
+        if not self.rolls_left:
             self.phase = 'claim'
 
     def reset(self):
@@ -789,6 +787,7 @@ class LiarsDice(game.Game):
         self.claim = [0, 0, 0, 0, 0]
         self.history = []
         self.rerolls = 5
+        self.rolls_left = self.base_rolls - 1
 
     def resolve_challenge(self, winner, loser):
         """
@@ -817,8 +816,8 @@ class LiarsDice(game.Game):
         # Set up the game options.
         self.option_set.add_option('betting',
             question = 'Should lost tokens be given to the winner of the challenge? bool')
-        self.option_set.add_option('two-rerolls', 
-            question = 'Should you be able to make a second reroll? bool')
+        self.option_set.add_option('two-rerolls', [], int, valid = (1, 2), target = 'base_rolls',
+            default = 1, value = 2, question = 'How many rolls should you get (1 or 2, return for 1)? ')
         self.option_set.add_option('tokens', [], int, check = lambda x: x > 0, default = 3,
             question = 'How many tokens should each player start with (return for 3)? ')
         self.option_set.add_option('one-six', question = 'Should ones count as sixes? bool')
@@ -843,7 +842,6 @@ class LiarsDice(game.Game):
         self.reset()
         self.phase = 'start'
         self.thirteen = False
-        self.temp_reroll = False
 
     def thirteen_check(self, player):
         """
