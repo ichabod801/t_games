@@ -124,10 +124,8 @@ class Pyramid(solitaire.Solitaire):
             if not losses and self.stock:
                 # Deal cards to non-empty/non-full stacks.
                 for pile_index, pile in enumerate(self.tableau):
-                    if pile and len(pile) < (7 - pile_index):
-                        self.transfer([self.stock[-1]], pile, undo_ndx = pile_index)
-                    if not self.stock:
-                        break
+                    if pile:
+                        self.transfer(pile[-1:], self.foundations[0], undo_ndx = pile_index)
         else:
             self.human.tell("No, it's Giza. Gee-zah.")
         return go
@@ -206,7 +204,7 @@ class Pyramid(solitaire.Solitaire):
         else:
             self.match_checkers = [solitaire.match_top, solitaire.match_pyramid]
         self.match_checkers.append(solitaire.match_thirteen)
-        self.sort_checkers = [solitaire.sort_kings_only]
+        self.sort_checkers = [solitaire.sort_kings_only, solitaire.sort_pyramid]
 
     def set_options(self):
         """Set up the game specific options. (None)"""

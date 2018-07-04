@@ -78,6 +78,7 @@ sort_kings: Sort starting with a king. (str)
 sort_kings_only: Only kings may be sorted. (str)
 sort_no_reserve: Sort non-starters only when the reserve is empty. (str)
 sort_none: No sorting is allowed. (str)
+sort_pyramid: Sorting of blocked cards in a pyramid layout is banned. (str)
 sort_rank: Sort starting with a specific rank. (str)
 sort_up: Sort sequentially up in rank. (str)
 sort_up_down: Sort a card up or down, depending on the foundation. (str)
@@ -950,6 +951,23 @@ def sort_none(game, card, foundation):
     foundation: The foundation to sort to. (list of cards.TrackingCard)
     """
     return 'Sorting is not allowed in this game.'
+
+
+def sort_pyramid(game, card, foundation):
+    """
+    Sorting of blocked cards in a pyramid layout is banned. (str)
+
+    Parameters:
+    game: The game being played. (solitaire.Solitaire)
+    card: The card to be sorted. (cards.TrackingCard)
+    foundation: The foundation to sort to. (list of cards.TrackingCard)
+    """
+    error = ''
+    if card.game_location in game.tableau:
+        pile_index = game.tableau.index(card.game_location)
+        if pile_index < 6 and len(card.game_location) <= len(game.tableau[pile_index + 1]):
+            error = 'The {} is blocked by the {}.'.format(card, game.tableau[pile_index + 1][-1])
+    return error
 
 
 def sort_rank(game, card, foundation):
