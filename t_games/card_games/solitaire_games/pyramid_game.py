@@ -122,9 +122,9 @@ class Pyramid(solitaire.Solitaire):
                         break
         elif game == 'spider':
             if not losses and self.stock:
-                # Deal cards to non-empty/non-full stacks.
+                # Sort all of the unblocked cards.
                 for pile_index, pile in enumerate(self.tableau):
-                    if pile:
+                    if pile and not solitaire.sort_pyramid(self, pile[-1], self.foundations[0]):
                         self.transfer(pile[-1:], self.foundations[0], undo_ndx = pile_index)
         else:
             self.human.tell("No, it's Giza. Gee-zah.")
