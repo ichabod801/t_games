@@ -104,7 +104,7 @@ class Bisley(solitaire.Solitaire):
         card: The string identifying the card. (str)
         """
         go = super(Bisley, self).do_lane(card)
-        if not self.lane_checkers:
+        if not go and not self.lane_checkers:
             self.lane_checkers = [solitaire.lane_none]
         return go
 
