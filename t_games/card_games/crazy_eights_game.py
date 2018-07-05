@@ -345,20 +345,22 @@ class CrazyEights(game.Game):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
+        # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('strategy', 'spider'))
-        go = True
-        # Strategy
+        # Winning Strategy gets you a fuzzy rank match.
         if game == 'strategy':
             if not losses:
                 self.human.tell('\nYour next play may be one rank above or below the required rank.')
                 self.fuzzy_ranks = True
+        # Winning Spider (hah!) lets you play any card.
         elif game == 'spider':
             if not losses:
                 self.human.tell("\nYou can play any card, but it won't change the suit for the next play.")
                 self.any_card = True
+        # Otherwise I'm confused.
         else:
             self.human.tell("I'm sorry, I quit gipfing for Lent.")
-        return go
+        return True
 
     def draw(self, player):
         """

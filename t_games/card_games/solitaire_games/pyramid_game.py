@@ -102,9 +102,9 @@ class Pyramid(solitaire.Solitaire):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
+        # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('monte carlo', 'spider'))
-        go = True
-        # Strategy
+        # Winning Monte Carlo slides all cards to the left.
         if game == 'monte carlo':
             if not losses:
                 # Move cards over repeatedly.
@@ -120,15 +120,17 @@ class Pyramid(solitaire.Solitaire):
                     # If no cards were moved, stop trying to move cards.
                     if not undo_index:
                         break
+        # Winning Spider (hah!) sorts any unblocked cards.
         elif game == 'spider':
             if not losses and self.stock:
                 # Sort all of the unblocked cards.
                 for pile_index, pile in enumerate(self.tableau):
                     if pile and not solitaire.sort_pyramid(self, pile[-1], self.foundations[0]):
                         self.transfer(pile[-1:], self.foundations[0], undo_ndx = pile_index)
+        # Otherwise I'm confused.
         else:
             self.human.tell("No, it's Giza. Gee-zah.")
-        return go
+        return True
 
     def do_turn(self, arguments):
         """

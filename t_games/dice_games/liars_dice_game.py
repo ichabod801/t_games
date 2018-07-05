@@ -468,9 +468,9 @@ class LiarsDice(game.Game):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
+        # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('pyramid', 'backgammon'))
-        go = True
-        # Strategy
+        # Winning Backgammon gives you a reroll if you have a pair.
         if game == 'backgammon':
             if not losses:
                 score = self.poker_score(self.dice.values)
@@ -480,14 +480,16 @@ class LiarsDice(game.Game):
                     self.phase = 'reroll'
                 else:
                     self.human.tell('\nYou have no pair in your roll, so you do not get a reroll.')
+        # Winning Pyramid gives you a token if you can make 13 next roll.
         elif game == 'pyramid':
             if not losses:
                 message = '\nIf the sum of any dice from the next roll is 13, that player gets a token.'
                 self.human.tell(message)
                 self.thirteen = True
+        # Otherwise I'm confused.
         else:
-            self.human.tell("You believe that old wive's tale?")
-        return go
+            self.human.tell("You believe that old wives' tale?")
+        return True
 
     def do_score(self, arguments):
         """

@@ -71,9 +71,9 @@ class Bisley(solitaire.Solitaire):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
+        # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ("liar's dice", 'strategy'))
-        go = True
-        # Strategy
+        # Winning Liar's Dice randomly shuffles one tableau pile.
         if game == "liar's dice":
             if not losses:
                 self.human.tell(self)
@@ -88,13 +88,15 @@ class Bisley(solitaire.Solitaire):
                     else:
                         self.human.error('I do not recognize that card.')
                 random.shuffle(card.game_location)
+        # Winning Strategy lets you lane one stack.
         elif game == 'strategy':
             if not losses:
                 self.human.tell('\nYou may lane any one stack.')
                 self.lane_checkers = []
+        # Otherwise I'm confused.
         else:
             self.human.tell('Non-sequitur, one-love.')
-        return go
+        return True
         
     def do_lane(self, card):
         """

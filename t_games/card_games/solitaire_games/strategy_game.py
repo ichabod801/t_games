@@ -61,8 +61,27 @@ class Strategy(solitaire.Solitaire):
         # Check and possibly play the game.
         game, losses = self.gipf_check(arguments, ('roulette','monte carlo'))
         go = True
+        # A Monte Carlo win lets you reverse one pile.
+        if game == 'monte carlo':
+            if not losses:
+                # Remind the human.
+                self.human.tell(self)
+                # Get a foundation pile.
+                while True:
+                    card_text = self.human.ask('Pick a card on the tableau: ')
+                    if self.deck.card_re.match(card_text):
+                        card = self.deck.find(card_text)
+                        if card.game_location in self.tableau:
+                            break
+                        else:
+                            self.human.error('That card is not in the tableau.')
+                    else:
+                        self.human.error('I do not recognize that card.')
+                # Reverse the pile.
+                card.game_location.reverse()
+                go = False
         # A Roulette win lets you swap (spin) two adjacent cards.
-        if game == 'roulette':
+        elif game == 'roulette':
             if not losses:
                 # Remind the human.
                 self.human.tell(self)
@@ -86,24 +105,6 @@ class Strategy(solitaire.Solitaire):
                         else:
                             self.human.tell('Those cards are not next to each other.')
                 go = False
-        # A Monte Carlo win lets you reverse one pile.
-        elif game == 'monte carlo':
-            if not losses:
-                # Remind the human.
-                self.human.tell(self)
-                # Get a foundation pile.
-                while True:
-                    card_text = self.human.ask('Pick a card on the tableau: ')
-                    if self.deck.card_re.match(card_text):
-                        card = self.deck.find(card_text)
-                        if card.game_location in self.tableau:
-                            break
-                        else:
-                            self.human.error('That card is not in the tableau.')
-                    else:
-                        self.human.error('I do not recognize that card.')
-                # Reverse the pile.
-                card.game_location.reverse()
         # Handle other games or arguments.
         else:
             self.human.tell('That does not compute.')

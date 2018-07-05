@@ -81,19 +81,21 @@ class MonteCarlo(solitaire.Solitaire):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
+        # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('quadrille', 'craps'))
-        go = True
-        # Strategy
+        # Winning Quadrille allows you to match non-adjacent cards.
         if game == 'quadrille':
             if not losses:
                 self.human.tell('\nYour next match does not have to be adjacent.')
                 del self.match_checkers[1]
+        # Wunning craps shuffles the tableau.
         elif game == 'craps':
             if not losses:
                 random.shuffle(self.tableau)
+        # Otherwise I'm confused.
         else:
             self.human.tell('But reality is just a simulation, so does gipfing really matter?')
-        return go
+        return True
 
     def do_match(self, cards):
         """
