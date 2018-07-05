@@ -18,6 +18,8 @@ sort_kings: Allow sorting kings. (str)
 """
 
 
+import random
+
 import t_games.card_games.solitaire_games.solitaire_game as solitaire
 
 
@@ -71,6 +73,42 @@ class MonteCarlo(solitaire.Solitaire):
     num_options = 2
     # The rules of the game.
     rules = RULES
+
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        # Run the edge, if possible.
+        game, losses = self.gipf_check(arguments, ('quadrille', 'craps'))
+        # Winning Quadrille allows you to match non-adjacent cards.
+        if game == 'quadrille':
+            if not losses:
+                self.human.tell('\nYour next match does not have to be adjacent.')
+                del self.match_checkers[1]
+        # Wunning craps shuffles the tableau.
+        elif game == 'craps':
+            if not losses:
+                random.shuffle(self.tableau)
+        # Otherwise I'm confused.
+        else:
+            self.human.tell('But reality is just a simulation, so does gipfing really matter?')
+        return True
+
+    def do_match(self, cards):
+        """
+        Match two cards and discard them.
+
+        Parameters:
+        cards: The cards being matched. (str)
+        """
+        # Unset non-adjacent matching on successful match.
+        go = super(MonteCarlo, self).do_match(cards)
+        if not go and len(self.match_checkers) == 2:
+            self.match_checkers.append(solitaire.match_adjacent)
+        return go
 
     def do_turn(self, arguments):
         """

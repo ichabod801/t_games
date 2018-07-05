@@ -12,6 +12,8 @@ Bisley: A game of Bisley. (solitaire.Solitaire)
 """
 
 
+import random
+
 import t_games.card_games.solitaire_games.solitaire_game as solitaire
 
 
@@ -61,6 +63,52 @@ class Bisley(solitaire.Solitaire):
         """Human readable text representation. (str)"""
         # Mix the foundation text in with the tableau text.
         return '\n{}{}\n'.format(self.foundation_text(), self.tableau_text())
+
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        # Run the edge, if possible.
+        game, losses = self.gipf_check(arguments, ("liar's dice", 'strategy'))
+        # Winning Liar's Dice randomly shuffles one tableau pile.
+        if game == "liar's dice":
+            if not losses:
+                self.human.tell(self)
+                while True:
+                    card_text = self.human.ask('Pick a card on the tableau: ')
+                    if self.deck.card_re.match(card_text):
+                        card = self.deck.find(card_text)
+                        if card.game_location in self.tableau:
+                            break
+                        else:
+                            self.human.error('That card is not in the tableau.')
+                    else:
+                        self.human.error('I do not recognize that card.')
+                random.shuffle(card.game_location)
+        # Winning Strategy lets you lane one stack.
+        elif game == 'strategy':
+            if not losses:
+                self.human.tell('\nYou may lane any one stack.')
+                self.lane_checkers = []
+        # Otherwise I'm confused.
+        else:
+            self.human.tell('Non-sequitur, one-love.')
+        return True
+        
+    def do_lane(self, card):
+        """
+        Move a card into an empty lane. (bool)
+        
+        Parameters:
+        card: The string identifying the card. (str)
+        """
+        go = super(Bisley, self).do_lane(card)
+        if not go and not self.lane_checkers:
+            self.lane_checkers = [solitaire.lane_none]
+        return go
 
     def find_foundation(self, card):
         """

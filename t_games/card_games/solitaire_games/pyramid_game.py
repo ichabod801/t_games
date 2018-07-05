@@ -95,6 +95,43 @@ class Pyramid(solitaire.Solitaire):
     # The rules of the game.
     rules = RULES
 
+    def do_gipf(self, arguments):
+        """
+        Gipf
+
+        Parameters:
+        arguments: The name of the game to gipf to. (str)
+        """
+        # Run the edge, if possible.
+        game, losses = self.gipf_check(arguments, ('monte carlo', 'spider'))
+        # Winning Monte Carlo slides all cards to the left.
+        if game == 'monte carlo':
+            if not losses:
+                # Move cards over repeatedly.
+                while True:
+                    undo_index = 0
+                    # Loop  through pairs of tabelau piles.
+                    for left, right in zip(self.tableau, self.tableau[1:]):
+                        # Move the appropriate cards if there are any.
+                        stack = right[(len(left) - 1):]
+                        if stack:
+                            self.transfer(stack, left, undo_ndx = undo_index)
+                            undo_index += 1
+                    # If no cards were moved, stop trying to move cards.
+                    if not undo_index:
+                        break
+        # Winning Spider (hah!) sorts any unblocked cards.
+        elif game == 'spider':
+            if not losses and self.stock:
+                # Sort all of the unblocked cards.
+                for pile_index, pile in enumerate(self.tableau):
+                    if pile and not solitaire.sort_pyramid(self, pile[-1], self.foundations[0]):
+                        self.transfer(pile[-1:], self.foundations[0], undo_ndx = pile_index)
+        # Otherwise I'm confused.
+        else:
+            self.human.tell("No, it's Giza. Gee-zah.")
+        return True
+
     def do_turn(self, arguments):
         """
         Turn cards from the stock into the waste. (bool)
@@ -169,7 +206,7 @@ class Pyramid(solitaire.Solitaire):
         else:
             self.match_checkers = [solitaire.match_top, solitaire.match_pyramid]
         self.match_checkers.append(solitaire.match_thirteen)
-        self.sort_checkers = [solitaire.sort_kings_only]
+        self.sort_checkers = [solitaire.sort_kings_only, solitaire.sort_pyramid]
 
     def set_options(self):
         """Set up the game specific options. (None)"""

@@ -361,25 +361,25 @@ class PokerTextTest(unittest.TestCase):
     def testFullHouseHigh(self):
         """Test text generation for a full house with a high trip."""
         text = self.game.poker_text([5, 4, 4, 4, 2, 2])
-        check = 'full house fours over twos'
+        check = 'a full house fours over twos'
         self.assertEqual(check, text)
 
     def testFullHouseLow(self):
         """Test text generation for a full house with a low trip."""
         text = self.game.poker_text([5, 1, 1, 1, 6, 6])
-        check = 'full house ones over sixes'
+        check = 'a full house ones over sixes'
         self.assertEqual(check, text)
 
     def testHighCardNoFive(self):
         """Test text generation for a high card hand with no five."""
         text = self.game.poker_text([0, 6, 4, 3, 2, 1])
-        check = 'six high missing five'
+        check = 'a six-high missing a five'
         self.assertEqual(check, text)
 
     def testHighCardNoTwo(self):
         """Test text generation for a high card hand with no two."""
         text = self.game.poker_text([0, 6, 5, 4, 3, 1])
-        check = 'six high missing two'
+        check = 'a six-high missing a two'
         self.assertEqual(check, text)
 
     def testPairHigh(self):
@@ -415,19 +415,19 @@ class PokerTextTest(unittest.TestCase):
     def testTripHigh(self):
         """Test text generation for trips with high kickers."""
         text = self.game.poker_text([3, 1, 1, 1, 4, 2])
-        check = 'three ones with four and two'
+        check = 'three ones with a four and a two'
         self.assertEqual(check, text)
 
     def testTripLow(self):
         """Test text generation for trips with low kickers."""
         text = self.game.poker_text([3, 6, 6, 6, 2, 1])
-        check = 'three sixes with two and one'
+        check = 'three sixes with a two and a one'
         self.assertEqual(check, text)
 
     def testTripMixed(self):
         """Test text generation for trips with high and low kickers."""
         text = self.game.poker_text([3, 4, 4, 4, 6, 3])
-        check = 'three fours with six and three'
+        check = 'three fours with a six and a three'
         self.assertEqual(check, text)
 
     def testTwoPairHigh(self):

@@ -254,6 +254,7 @@ class CrazyEights(game.Game):
     A game of Crazy Eights. (game.Game)
 
     Attributes:
+    any_card: A flag for being able to play any card. (bool)
     change_match: A flag for the change card having to match suit or rank. (bool)
     change_set: A flag for the change chard only changing to it's own suit. (bool)
     deck: The deck of cards used in the game. (cards.Deck)
@@ -344,16 +345,22 @@ class CrazyEights(game.Game):
         Parameters:
         arguments: The name of the game to gipf to. (str)
         """
-        game, losses = self.gipf_check(arguments, ('strategy',))
-        go = True
-        # Strategy
+        # Run the edge, if possible.
+        game, losses = self.gipf_check(arguments, ('strategy', 'spider'))
+        # Winning Strategy gets you a fuzzy rank match.
         if game == 'strategy':
             if not losses:
-                self.human.tell('Your next play may be one rank above or below the required rank.')
+                self.human.tell('\nYour next play may be one rank above or below the required rank.')
                 self.fuzzy_ranks = True
+        # Winning Spider (hah!) lets you play any card.
+        elif game == 'spider':
+            if not losses:
+                self.human.tell("\nYou can play any card, but it won't change the suit for the next play.")
+                self.any_card = True
+        # Otherwise I'm confused.
         else:
             self.human.tell("I'm sorry, I quit gipfing for Lent.")
-        return go
+        return True
 
     def draw(self, player):
         """
@@ -559,6 +566,10 @@ class CrazyEights(game.Game):
                     self.suit = suit[0]
                     break
                 player.error('Please enter a valid suit (C, D, H, or S).')
+        elif self.any_card:
+            if not self.suit:
+                self.suit = self.history[-2].suit
+            self.any_card = False
         else:
             self.suit = ''
         # Handle forced draws.
@@ -594,7 +605,7 @@ class CrazyEights(game.Game):
         discard = self.deck.discards[-1]
         # Show the game status.
         player.tell('The card to you is {}.'.format(discard.rank + discard.suit))
-        if self.deck.discards[-1].rank == self.change_rank and self.suit:
+        if self.suit:
             player.tell('The suit to you is {}.'.format(self.suit))
         player.tell('Your hand is {}.'.format(hand))
         # Check for forced draw.
@@ -676,6 +687,7 @@ class CrazyEights(game.Game):
         self.suit = ''
         self.pass_count = 0
         self.forced_draw = 0
+        self.any_card = False
         self.fuzzy_ranks = False
         # Deal the hands.
         self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
@@ -709,7 +721,7 @@ class CrazyEights(game.Game):
             valid_suit = self.suit
         else:
             valid_suit = discard.suit
-        if card_text[0].upper() in valid_ranks or card_text[1].upper() in valid_suit:
+        if card_text[0].upper() in valid_ranks or card_text[1].upper() in valid_suit or self.any_card:
             self.play_card(player, card_text)
             self.fuzzy_ranks = False
         # Warn for invalid plays.
