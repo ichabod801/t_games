@@ -262,7 +262,6 @@ class BattleBot(player.Bot):
     Methods:
     add_adjacent: Add adjacent squares of a ship to the don't shoot set. (None)
     fire: Decide where to fire the next shot. (str)
-    place_ship: Place a ship at random. (str)
     retarget: Reset target list based on a recent hit. (None)
 
     Overridden Methods:
@@ -301,8 +300,7 @@ class BattleBot(player.Bot):
         """
         # Handle ship placements.
         if prompt.startswith('\nPlace'):
-            length = int(prompt[-3])
-            return self.place_ship(length)
+            return 'random'
         # Handle firing shots.
         elif prompt.startswith('\nWhere'):
             return self.fire()
@@ -336,43 +334,6 @@ class BattleBot(player.Bot):
         # Return the chosen shot.
         self.dont_shoot.add(self.last_shot)
         return self.last_shot
-
-    def place_ship(self, length):
-        """
-        Place a ship at random. (str)
-
-        Note that this doesn't check for overlapping or adjacent ships. It leaves
-        that to the board doing the set up.
-
-        Parameters:
-        length: How long the ship should be. (int)
-        """
-        # Find a random start.
-        start = (random.randrange(10), random.randrange(10))
-        # Return the start for one-square ships.
-        if length == 1:
-            return chr(65 + start[0]) + str(start[1])
-        # Get a ship of the specified length in every possible direction.
-        options = []
-        text = '{}{} to {}{}'
-        # Check east.
-        if start[0] + length - 1 < 10:
-            end = (start[0] + length - 1, start[1])
-            options.append(text.format(chr(65 + start[0]), start[1], chr(65 + end[0]), end[1]))
-        # Check north.
-        if start[1] + length - 1 < 10:
-            end = (start[0], start[1] + length - 1)
-            options.append(text.format(chr(65 + start[0]), start[1], chr(65 + end[0]), end[1]))
-        # Check west.
-        if start[0] - length + 1 > -1:
-            end = (start[0] - length + 1, start[1])
-            options.append(text.format(chr(65 + start[0]), start[1], chr(65 + end[0]), end[1]))
-        # Check south.
-        if start[1] - length + 1 > -1:
-            end = (start[0], start[1] - length + 1)
-            options.append(text.format(chr(65 + start[0]), start[1], chr(65 + end[0]), end[1]))
-        # Pick a directional layout at random.
-        return random.choice(options)
 
     def retarget(self):
         """Reset target list based on a recent hit. (None)"""
