@@ -435,6 +435,7 @@ class SeaBoard(object):
     adjacent_squares: Get the adjacent squares for a given square. (list of str)
     fire: Fire a shot on the board. (None)
     make_ship: Get a list of ship coordinates from the end points. (list of str)
+    place_random: Place a ship randomly. (list of str)
     place_ships: Get the placement of the ships from the player. (None)
     show: Show the current status of the board. (str)
     """
@@ -541,6 +542,35 @@ class SeaBoard(object):
                 squares.append(letter + start[1])
         return squares
 
+    def place_random(self, size, invalid_squares):
+        """
+        Place a ship randomly. (list of str)
+
+        Parameters:
+        size: The size of the ship to place. (int)
+        invalid_squares: Squares blocked by previously placed ships. (set of str)
+        """
+        while True:
+            # Get a random line of the specified size.
+            same = random.randrange(10)
+            start = random.randrange(11 - size)
+            end = start + size - 1
+            # Get the start and end squares, randomly horizontal or vertical.
+            if random.random() < 0.5:
+                start = self.letters[same] + self.numbers[start]
+                end = self.letters[same] + self.numbers[end]
+            else:
+                start = self.letters[start] + self.numbers[same]
+                end = self.letters[end] + self.numbers[same]
+            # Check the ship for valid placement
+            ship_squares = self.make_ship(start, end)
+            for square in ship_squares:
+                if square in invalid_squares:
+                    break
+            else:
+                # return the first valid placement found.
+                return start, end
+
     def place_ships(self):
         """Get the placement of the ships from the player. (None)"""
         # Get the available ships sorted by size.
@@ -559,6 +589,9 @@ class SeaBoard(object):
                     message = '\nPlace {} #{} of {}, length {}: '
                     move = self.player.ask(message.format(ship.lower(), ship_index + 1, count, size))
                     squares = SQUARE_RE.findall(move.upper())
+                    # Check for random placement.
+                    if move.lower() in ('r', 'rand', 'random'):
+                        squares = self.place_random(size, invalid_squares)
                     # Check for the correct number of squares.
                     if size == 1 and len(squares) != 1:
                         self.player.error('You must enter one square for a {}.'.format(ship.lower()))
