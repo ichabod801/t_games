@@ -65,6 +65,8 @@ coordinates, such as A8. The top grid represents your opponents board, and the
 bottom grid represents your board. Hits are marked 'X', misses are marked '/',
 and ship squares not yet hit (on your board only) are marked 'O'.
 
+The winner's score is the number of un-hit squares that they had left.
+
 Options:
 
 inventory=: This determines the number and size of ships played with. The
@@ -191,18 +193,21 @@ class Battleships(game.Game):
         """Check for the end of the game. (bool)"""
         # Check for a tie.
         if not (self.boards[self.bot.name].fleet or self.boards[self.human.name].fleet):
-            self.human.tell("It's a draw! You destroyed each other's fleets at the same time.")
+            self.human.tell("\nIt's a draw! You destroyed each other's fleets at the same time.")
             self.win_loss_draw[2] = 1
         # Check for a win.
         elif not self.boards[self.bot.name].fleet:
-            self.human.tell("You sank {}'s fleet and won!".format(self.bot.name))
+            self.human.tell("\nYou sank {}'s fleet and won!".format(self.bot.name))
             squares_left = sum([len(squares) for ship, squares in self.boards[self.human.name].fleet])
             self.scores[self.human.name] = squares_left
             self.human.tell("You have {} squares of ships left.".format(squares_left))
             self.win_loss_draw[0] = 1
         # Check for a loss.
         elif not self.boards[self.human.name].fleet:
-            self.human.tell("{} sank your fleet. You lose.".format(self.bot.name))
+            self.human.tell("\n{} sank your fleet. You lose.".format(self.bot.name))
+            squares_left = sum([len(squares) for ship, squares in self.boards[self.bot.name].fleet])
+            self.scores[self.human.name] = squares_left * -1
+            self.human.tell("{} had {} squares of ships left.".format(self.bot.name, squares_left))
             self.win_loss_draw[1] = 1
         else:
             # Otherwise, game on.
