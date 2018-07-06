@@ -50,9 +50,13 @@ INVENTORIES = {'bradley': {'Carrier': (5, 1), 'Battleship': (4, 1), 'Cruiser': (
 
 # The rules of the game.
 RULES = """
-You layout your ships on your board. Only you can see where your ships are. 
+You layout your ships on your board by specifying two squares using the board
+coordinates on the edges of the board. Only you can see where your ships are. 
 Each ship takes up one or more squares on the board. Ships must be arranged
 orthogonally, and cannot be orthogonally adjacent to each other.
+
+Instead of specifying the start and end squares of a ship, you may respond
+with 'random' or just 'r', and the game will place the ship randomly for you.
 
 Then you and your opponent simultaneously fire shots at each other's boards.
 You are told if the shot is a hit or a miss. If all of the squares on a ship
