@@ -554,7 +554,7 @@ class SeaBoard(object):
                     if move.lower() in ('r', 'rand', 'random'):
                         squares = self.place_random(size, invalid_squares)
                     # Check for the correct number of squares.
-                    if size == 1 and len(squares) != 1:
+                    elif size == 1 and len(squares) != 1:
                         self.player.error('You must enter one square for a {}.'.format(ship.lower()))
                         continue
                     elif size > 1 and len(squares) != 2:
