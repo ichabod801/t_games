@@ -976,7 +976,7 @@ class MultiSolitaire(Solitaire):
             self.transfer(*self.alt_moves.pop())
             return False
         else:
-            self.human.error('There are no valid moves for freeing a {}.'.format(card))
+            self.human.error('There are no valid moves for freeing a {}.'.format(card.name))
             return True
         
     def do_lane(self, card):
@@ -1001,7 +1001,7 @@ class MultiSolitaire(Solitaire):
             self.transfer(*self.alt_moves.pop())
             return False
         else:
-            self.human.error('There are no valid moves for laning a {}.'.format(card))
+            self.human.error('There are no valid moves for laning a {}.'.format(card.name))
             return True
 
     def do_match(self, cards):
@@ -1057,7 +1057,7 @@ class MultiSolitaire(Solitaire):
             self.transfer(*self.alt_moves.pop())
             return False
         else:
-            self.human.error('There are no valid moves for sorting a {}.'.format(card))
+            self.human.error('There are no valid moves for sorting a {}.'.format(card.name))
             return True
     
     def do_turn(self, arguments):
