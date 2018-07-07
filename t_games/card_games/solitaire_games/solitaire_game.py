@@ -488,16 +488,22 @@ class Solitaire(game.Game):
                     go = self.do_match('{} {}'.format(card, pile[-1]))
                     break
             else:
-                # Check freeing the card.
-                if card.game_location is not self.cells and self.free_check(card, False):
-                    go = self.do_free(str(card))
-                # Check laning the card.
-                elif self.lane_check(card, moving_stack, False):
-                    go = self.do_lane(str(card))
+                # Check non-tableau matching.
+                for pile in [self.waste] + self.reserve:
+                    if pile and self.match_check(card, pile[-1], False):
+                        go = self.do_match('{} {}'.format(card, pile[-1]))
+                        break
                 else:
-                    # Error out if nothing works.
-                    player = self.players[self.player_index]
-                    player.error('\nThere are no valid moves for the {}.'.format(card.name))
+                    # Check freeing the card.
+                    if card.game_location is not self.cells and self.free_check(card, False):
+                        go = self.do_free(str(card))
+                    # Check laning the card.
+                    elif self.lane_check(card, moving_stack, False):
+                        go = self.do_lane(str(card))
+                    else:
+                        # Error out if nothing works.
+                        player = self.players[self.player_index]
+                        player.error('\nThere are no valid moves for the {}.'.format(card.name))
         return go
 
     def guess_two(self, card, target):
@@ -1105,19 +1111,29 @@ class MultiSolitaire(Solitaire):
                     if self.sort_check(card, foundation, False):
                         moves.append('sort {}'.format(card))
             if not moves:
-                # check bulding
                 moving_stack = self.super_stack(card)
                 for pile in self.tableau:
+                    # Check bulding the card.
                     if pile and self.build_check(card, pile[-1], moving_stack, False):
                         moves.append('build {} {}'.format(card, pile[-1]))
                         break
+                    # Check matching the card.
+                    elif pile and self.match_check(card, pile[-1], False):
+                        moves.append('match {} {}'.format(card, pile[-1]))
+                        break
                 else:
-                    # check freeing
-                    if card.game_location is not self.cells and self.free_check(card, False):
-                        moves.append('free {}'.format(card))
-                    # check laning
-                    elif self.lane_check(card, moving_stack, False):
-                        moves.append('lane {}'.format(card))
+                    # Check non-tableau matching.
+                    for pile in [self.waste] + self.reserve:
+                        if pile and self.match_check(card, pile[-1], False):
+                            moves.append('match {} {}'.format(card, pile[-1]))
+                            break
+                    else:
+                        # check freeing
+                        if card.game_location is not self.cells and self.free_check(card, False):
+                            moves.append('free {}'.format(card))
+                        # check laning
+                        elif self.lane_check(card, moving_stack, False):
+                            moves.append('lane {}'.format(card))
             if moves:
                 break
         # Make a move if you have one.
