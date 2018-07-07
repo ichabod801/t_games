@@ -489,7 +489,7 @@ class Solitaire(game.Game):
                     break
             else:
                 # Check non-tableau matching.
-                for pile in [self.waste] + self.reserve:
+                for pile in [self.waste] + self.reserve + [[free] for free in self.cells]:
                     if pile and self.match_check(card, pile[-1], False):
                         go = self.do_match('{} {}'.format(card, pile[-1]))
                         break
@@ -1123,7 +1123,7 @@ class MultiSolitaire(Solitaire):
                         break
                 else:
                     # Check non-tableau matching.
-                    for pile in [self.waste] + self.reserve:
+                    for pile in [self.waste] + self.reserve + [[free] for free in self.cells]:
                         if pile and self.match_check(card, pile[-1], False):
                             moves.append('match {} {}'.format(card, pile[-1]))
                             break
