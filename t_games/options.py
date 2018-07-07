@@ -199,6 +199,10 @@ class OptionSet(object):
                                 self.errors.append(error.format(definition['name'], setting))
                             else:
                                 self.take_action(definition, setting)
+                    # Apply default on error
+                    if self.errors and self.errors[-1][8:].startswith(definition['name']):
+                        if definition['default'] is not None:
+                            self.take_action(definition, definition['default'])
 
     def ask_bool(self, definition):
         """
@@ -376,7 +380,7 @@ class OptionSet(object):
         for gap, no_gap in ((' =', '='), ('= ', '='), (' /', '/'), ('/ ', '/'), (' *', '*'), ('* ', '*')):
             while gap in settings_text:
                 settings_text = settings_text.replace(gap, no_gap)
-        # Repeat any stared options.
+        # Repeat any starred options.
         words = []
         for word in settings_text.split():
             if '*' in word:
