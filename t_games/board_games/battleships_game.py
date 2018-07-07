@@ -50,9 +50,13 @@ INVENTORIES = {'bradley': {'Carrier': (5, 1), 'Battleship': (4, 1), 'Cruiser': (
 
 # The rules of the game.
 RULES = """
-You layout your ships on your board. Only you can see where your ships are. 
+You layout your ships on your board by specifying two squares using the board
+coordinates on the edges of the board. Only you can see where your ships are. 
 Each ship takes up one or more squares on the board. Ships must be arranged
 orthogonally, and cannot be orthogonally adjacent to each other.
+
+Instead of specifying the start and end squares of a ship, you may respond
+with 'random' or just 'r', and the game will place the ship randomly for you.
 
 Then you and your opponent simultaneously fire shots at each other's boards.
 You are told if the shot is a hit or a miss. If all of the squares on a ship
@@ -262,7 +266,6 @@ class BattleBot(player.Bot):
     Methods:
     add_adjacent: Add adjacent squares of a ship to the don't shoot set. (None)
     fire: Decide where to fire the next shot. (str)
-    place_ship: Place a ship at random. (str)
     retarget: Reset target list based on a recent hit. (None)
 
     Overridden Methods:
@@ -301,8 +304,7 @@ class BattleBot(player.Bot):
         """
         # Handle ship placements.
         if prompt.startswith('\nPlace'):
-            length = int(prompt[-3])
-            return self.place_ship(length)
+            return 'random'
         # Handle firing shots.
         elif prompt.startswith('\nWhere'):
             return self.fire()
@@ -336,43 +338,6 @@ class BattleBot(player.Bot):
         # Return the chosen shot.
         self.dont_shoot.add(self.last_shot)
         return self.last_shot
-
-    def place_ship(self, length):
-        """
-        Place a ship at random. (str)
-
-        Note that this doesn't check for overlapping or adjacent ships. It leaves
-        that to the board doing the set up.
-
-        Parameters:
-        length: How long the ship should be. (int)
-        """
-        # Find a random start.
-        start = (random.randrange(10), random.randrange(10))
-        # Return the start for one-square ships.
-        if length == 1:
-            return chr(65 + start[0]) + str(start[1])
-        # Get a ship of the specified length in every possible direction.
-        options = []
-        text = '{}{} to {}{}'
-        # Check east.
-        if start[0] + length - 1 < 10:
-            end = (start[0] + length - 1, start[1])
-            options.append(text.format(chr(65 + start[0]), start[1], chr(65 + end[0]), end[1]))
-        # Check north.
-        if start[1] + length - 1 < 10:
-            end = (start[0], start[1] + length - 1)
-            options.append(text.format(chr(65 + start[0]), start[1], chr(65 + end[0]), end[1]))
-        # Check west.
-        if start[0] - length + 1 > -1:
-            end = (start[0] - length + 1, start[1])
-            options.append(text.format(chr(65 + start[0]), start[1], chr(65 + end[0]), end[1]))
-        # Check south.
-        if start[1] - length + 1 > -1:
-            end = (start[0], start[1] - length + 1)
-            options.append(text.format(chr(65 + start[0]), start[1], chr(65 + end[0]), end[1]))
-        # Pick a directional layout at random.
-        return random.choice(options)
 
     def retarget(self):
         """Reset target list based on a recent hit. (None)"""
@@ -435,6 +400,7 @@ class SeaBoard(object):
     adjacent_squares: Get the adjacent squares for a given square. (list of str)
     fire: Fire a shot on the board. (None)
     make_ship: Get a list of ship coordinates from the end points. (list of str)
+    place_random: Place a ship randomly. (list of str)
     place_ships: Get the placement of the ships from the player. (None)
     show: Show the current status of the board. (str)
     """
@@ -541,6 +507,35 @@ class SeaBoard(object):
                 squares.append(letter + start[1])
         return squares
 
+    def place_random(self, size, invalid_squares):
+        """
+        Place a ship randomly. (list of str)
+
+        Parameters:
+        size: The size of the ship to place. (int)
+        invalid_squares: Squares blocked by previously placed ships. (set of str)
+        """
+        while True:
+            # Get a random line of the specified size.
+            same_index = random.randrange(10)
+            start_index = random.randrange(11 - size)
+            end_index = start_index + size - 1
+            # Get the start and end squares, randomly horizontal or vertical.
+            if random.random() < 0.5:
+                start = self.letters[same_index] + self.numbers[start_index]
+                end = self.letters[same_index] + self.numbers[end_index]
+            else:
+                start = self.letters[start_index] + self.numbers[same_index]
+                end = self.letters[end_index] + self.numbers[same_index]
+            # Check the ship for valid placement
+            ship_squares = self.make_ship(start, end)
+            for square in ship_squares:
+                if square in invalid_squares:
+                    break
+            else:
+                # return the first valid placement found.
+                return start, end
+
     def place_ships(self):
         """Get the placement of the ships from the player. (None)"""
         # Get the available ships sorted by size.
@@ -559,8 +554,11 @@ class SeaBoard(object):
                     message = '\nPlace {} #{} of {}, length {}: '
                     move = self.player.ask(message.format(ship.lower(), ship_index + 1, count, size))
                     squares = SQUARE_RE.findall(move.upper())
+                    # Check for random placement.
+                    if move.lower() in ('r', 'rand', 'random'):
+                        squares = self.place_random(size, invalid_squares)
                     # Check for the correct number of squares.
-                    if size == 1 and len(squares) != 1:
+                    elif size == 1 and len(squares) != 1:
                         self.player.error('You must enter one square for a {}.'.format(ship.lower()))
                         continue
                     elif size > 1 and len(squares) != 2:
