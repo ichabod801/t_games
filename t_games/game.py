@@ -253,7 +253,7 @@ class Game(OtherCmd):
             results = game.play()
             results[5] |= 64
             self.human.store_results(game.name, results)
-            if results[1] == 0:
+            if (results[1] == 0 and results[0] > 0) or (self.flags & 256 and results[0] > results[1]):
                 self.flags |= 128
                 self.force_end = 'win'
                 self.win_loss_draw = [max(len(self.players) - 1, 1), 0, 0]
@@ -292,18 +292,24 @@ class Game(OtherCmd):
         for game_name in game_names:
             games.update({alias.lower(): games[game_name] for alias in games[game_name].aka})
         # Find the correct game.
-        if argument.lower() in games and game_name not in self.gipfed:
+        argument = argument.lower()
+        if argument in games and games[argument].name not in self.gipfed:
             # Play the game.
-            game = games[argument.lower()](self.human, 'none', self.interface)
+            game = games[argument](self.human, 'none', self.interface)
             results = game.play()
             # Record the giphing.
             self.flags |= 8
-            self.gipfed.append(game_name)
+            self.gipfed.append(game.name)
             results[5] |= 16
             self.human.store_results(game.name, results)
             # Reset the human's focus.
             self.human.game = self
             # Return the result.
+            losses = results[1]
+            if game.flags & 256 and results[0] > results[1]:
+                losses = 0
+            elif not results[0]:
+                losses = 1
             return game.name.lower(), results[1]
         # Return dummy results for incorrect games.
         else:
