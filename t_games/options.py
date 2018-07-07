@@ -301,7 +301,8 @@ class OptionSet(object):
 
     def ask_settings(self):
         """Get the setttings by asking the user. (None)"""
-        if self.game.human.ask('Would you like to change the options? ') in utility.YES:
+        query = 'Would you like to change the options? '
+        if self.definitions and self.game.human.ask(query) in utility.YES:
             self.game.flags |= 1
             pairs = []
             for definition in self.definitions:
