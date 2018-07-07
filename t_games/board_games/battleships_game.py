@@ -517,16 +517,16 @@ class SeaBoard(object):
         """
         while True:
             # Get a random line of the specified size.
-            same = random.randrange(10)
-            start = random.randrange(11 - size)
-            end = start + size - 1
+            same_index = random.randrange(10)
+            start_index = random.randrange(11 - size)
+            end_index = start_index + size - 1
             # Get the start and end squares, randomly horizontal or vertical.
             if random.random() < 0.5:
-                start = self.letters[same] + self.numbers[start]
-                end = self.letters[same] + self.numbers[end]
+                start = self.letters[same_index] + self.numbers[start_index]
+                end = self.letters[same_index] + self.numbers[end_index]
             else:
-                start = self.letters[start] + self.numbers[same]
-                end = self.letters[end] + self.numbers[same]
+                start = self.letters[start_index] + self.numbers[same_index]
+                end = self.letters[end_index] + self.numbers[same_index]
             # Check the ship for valid placement
             ship_squares = self.make_ship(start, end)
             for square in ship_squares:
