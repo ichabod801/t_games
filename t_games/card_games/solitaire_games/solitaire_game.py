@@ -392,9 +392,14 @@ class Solitaire(game.Game):
                 self.undo_count += 1
                 moves_undone = True
                 # undo the move
+                force_down = (old_location == self.stock or old_location in self.reserve)
+                force_down = force_down and not old_location[-1].up
                 if flip:
                     old_location[-1].up = False
                 self.transfer(move_stack, old_location, track = False)
+                if force_down:
+                    for card in move_stack:
+                        card.up = False
                 if undo_ndx:
                     self.undo_count -= 1
                     self.do_undo('')
@@ -506,20 +511,20 @@ class Solitaire(game.Game):
                         player.error('\nThere are no valid moves for the {}.'.format(card.name))
         return go
 
-    def guess_two(self, card, target):
+    def guess_two(self, card_arg, target_arg):
         """
         Guess what move to make for two given cards. (bool)
 
         Parameters:
-        card: The first card specified. (str)
-        target: The second card specified. (str)
+        card_arg: The specification for the first card. (str)
+        target_arg: The specification for the second card. (str)
         """
         go = True
         # Get the card information.
-        card = self.deck.find(card)
-        target = self.deck.find(target)
+        card = self.deck.find(card_arg)
+        target = self.deck.find(target_arg)
         moving_stack = self.super_stack(card)
-        card_text = '{} {}'.format(card, target)
+        card_text = '{} {}'.format(card_arg, target_arg)
         # Check for building the card on the target.
         if self.build_check(card, target, moving_stack, False):
             go = self.do_build(card_text)
@@ -529,7 +534,8 @@ class Solitaire(game.Game):
         # Error out if you can't build or match.
         else:
             player = self.players[self.player_index]
-            player.error('\nThere are no valid moves for a {} and a {}.'.format(card, target))
+            error = '\nThere are no valid moves for a {}{} and a {}{}.'
+            player.error(error.format(card.rank, card.suit, target.rank, target.suit))
         return go
     
     def lane_check(self, card, moving_stack, show_error = True):
