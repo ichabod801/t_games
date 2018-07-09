@@ -392,7 +392,7 @@ class Solitaire(game.Game):
                 self.undo_count += 1
                 moves_undone = True
                 # undo the move
-                if old_location
+                if old_location:
                     force_down = (old_location == self.stock or old_location in self.reserve)
                     force_down = force_down and not old_location[-1].up
                 else:
