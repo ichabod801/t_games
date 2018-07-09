@@ -392,8 +392,11 @@ class Solitaire(game.Game):
                 self.undo_count += 1
                 moves_undone = True
                 # undo the move
-                force_down = (old_location == self.stock or old_location in self.reserve)
-                force_down = force_down and not old_location[-1].up
+                if old_location
+                    force_down = (old_location == self.stock or old_location in self.reserve)
+                    force_down = force_down and not old_location[-1].up
+                else:
+                    force_down = old_location is self.stock
                 if flip:
                     old_location[-1].up = False
                 self.transfer(move_stack, old_location, track = False)
