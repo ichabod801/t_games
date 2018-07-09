@@ -21,7 +21,7 @@ For the reasoning behind the existence of this file, see the wiki.
 
 Functions:
 _move_one_size: Calculate maximum stack under "move one" rules. (int)
------------------------------------------
+---------------------------------------------------------------------
 build_down: Check that only stacks of descending ranks are moved. (str)
 build_none: No building is allowed. (str)
 build_one: Build moving one card at a time. (str)
@@ -48,7 +48,9 @@ deal_stock_all: Move the rest of the deck into the stock. (None)
 deal_twos: Deal the twos onto the tableau. (None)
 deal_twos_foundation: Deal the twos to the foundations. (None)
 flip_random: Flip random tableau cards face down. (None)
------------------------------------------------------
+--------------------------------------------------------
+free_pyramid: Allow freeing cards open below and to the right. (str)
+--------------------------------------------------------------------
 lane_down: Check moving only stacks of descending ranks into a lane. (str)
 lane_king: Check moving only kings into a lane. (str)
 lane_none: Cards may not be moved to empty lanes. (str)
@@ -56,7 +58,7 @@ lane_one: Check moving one card at a time into a lane. (str)
 lane_reserve: Lane only from the reserve (str)
 lane_reserve_waste: Check only laning cards from the reserve. (str)
 lane_suit: Check moving only stacks of the same suit to empty lanes. (str)
--------------------------------------------------------------------
+--------------------------------------------------------------------------
 match_adjacent: Allow matching of cards are in adjacent tableau piles. (str)
 match_none: Disallow any match moves. (str)
 match_pairs: Allow matching cards of the same rank. (str)
@@ -72,7 +74,7 @@ pair_down: Build sequentially down in rank. (str)
 pair_not_suit: Build in anything but suits. (str)
 pair_suit: Build in suits. (str)
 pair_up_down: Build sequentially up or down in rank. (str)
---------------------------------
+-------------------------------------------
 sort_ace: Sort starting with the ace. (str)
 sort_kings: Sort starting with a king. (str)
 sort_kings_only: Only kings may be sorted. (str)
@@ -492,6 +494,23 @@ def flip_random(game):
     """
     for pile in game.tableau:
         random.choice(pile[:-1]).up = False
+
+# Define free checkers.
+
+def free_pyramid(game, card):
+    """
+    Allow freeing cards open below and to the right. (str)
+
+    Parameters:
+    game: The game being played. (solitaire.Solitaire)
+    card: The card being moved. (TrackingCard)
+    """
+    error = ''
+    if card.game_location in game.tableau:
+        pile_index = game.tableau.index(card.game_location)
+        if pile_index < 6 and len(card.game_location) <= len(game.tableau[pile_index + 1]):
+            error = 'The {} is blocked by the {}.'.format(card, game.tableau[pile_index + 1][-1])
+    return error
 
 # Define lane checkers.
 

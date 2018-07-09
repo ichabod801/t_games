@@ -438,6 +438,8 @@ class Solitaire(game.Game):
         # check for blocked card
         elif card.game_location[-1] != card:
             error = 'The {} is not available to be freed.'.format(card.name)
+        elif not card.up:
+            error = 'The {} is face down and cannot be freed.'.format(card.name)
         # check game specific rules
         else:
             for checker in self.free_checkers:

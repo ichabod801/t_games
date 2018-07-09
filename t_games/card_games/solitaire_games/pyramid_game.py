@@ -207,6 +207,9 @@ class Pyramid(solitaire.Solitaire):
             self.match_checkers = [solitaire.match_top, solitaire.match_pyramid]
         self.match_checkers.append(solitaire.match_thirteen)
         self.sort_checkers = [solitaire.sort_kings_only, solitaire.sort_pyramid]
+        # Add free cell rules.
+        if self.options['num-cells']:
+            self.free_checkers = [solitaire.free_pyramid]
 
     def set_options(self):
         """Set up the game specific options. (None)"""
