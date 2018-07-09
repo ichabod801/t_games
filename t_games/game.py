@@ -246,6 +246,7 @@ class Game(OtherCmd):
         """
         if self.interface.valve.blow(self):
             game_class = random.choice(list(self.interface.games.values()))
+            game_class = self.interface.games['RPS']
             game = game_class(self.human, 'none', self.interface)
             self.flags |= 32
             self.human.tell('\nPoof!')
@@ -310,7 +311,7 @@ class Game(OtherCmd):
                 losses = 0
             elif not results[0]:
                 losses = 1
-            return game.name.lower(), results[1]
+            return game.name.lower(), losses
         # Return dummy results for incorrect games.
         else:
             return 'invalid-game', 1 

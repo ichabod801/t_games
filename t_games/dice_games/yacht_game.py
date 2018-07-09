@@ -487,7 +487,7 @@ class Bachter(Bacht):
             elif 'Straight' in category_name:
                 hold = set(self.game.dice.values).intersection(test_values)
                 score_diff = category.score(self.game.dice, 1) - target_score
-                possibles.append((len(hold) - target_dice, hold, score_diff, 'straight'))
+                possibles.append((len(hold) - target_dice, list(hold), score_diff, 'straight'))
             # Check full house.
             elif category_name == 'Full House':
                 count_a, roll_a = counts[0]
