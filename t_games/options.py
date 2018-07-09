@@ -345,7 +345,6 @@ class OptionSet(object):
             self.apply_definitions(prelim_settings)
         else:
             self.ask_settings()
-            self.game.human.tell()
         # Check for unspecified bots.
         if not self.settings['bots']:
             self.settings['bots'] = self.default_bots
