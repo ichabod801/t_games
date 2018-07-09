@@ -246,7 +246,6 @@ class Game(OtherCmd):
         """
         if self.interface.valve.blow(self):
             game_class = random.choice(list(self.interface.games.values()))
-            game_class = self.interface.games['RPS']
             game = game_class(self.human, 'none', self.interface)
             self.flags |= 32
             self.human.tell('\nPoof!')
