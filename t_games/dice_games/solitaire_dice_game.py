@@ -276,5 +276,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    sodi = SolitaireDice(player.Player(name), '')
+    sodi = SolitaireDice(player.Humanoid(name), '')
     sodi.play()

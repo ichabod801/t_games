@@ -628,5 +628,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    pig = Pig(player.Player(name), '')
+    pig = Pig(player.Humanoid(name), '')
     pig.play()

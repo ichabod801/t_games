@@ -1020,5 +1020,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    crib = Cribbage(player.Player(name), '')
+    crib = Cribbage(player.Humanoid(name), '')
     crib.play()

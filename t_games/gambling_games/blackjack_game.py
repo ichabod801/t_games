@@ -804,8 +804,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    if name.lower() == 'sim':
-        bot, sim = sim_test()
-    else:
-        blackjack = Blackjack(player.Player(name), '')
-        print(blackjack.play())
+    blackjack = Blackjack(player.Humanoid(name), '')
+    print(blackjack.play())

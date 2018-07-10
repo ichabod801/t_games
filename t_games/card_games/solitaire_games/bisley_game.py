@@ -194,6 +194,6 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    bisley = Bisley(player.Player(name), '')
+    bisley = Bisley(player.Humanoid(name), '')
     bisley.play()
 

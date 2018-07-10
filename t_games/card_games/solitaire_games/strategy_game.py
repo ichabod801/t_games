@@ -138,5 +138,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    strat = Strategy(player.Player(name), '')
+    strat = Strategy(player.Humanoid(name), '')
     strat.play()

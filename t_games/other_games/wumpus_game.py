@@ -491,5 +491,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    wumpus = Wumpus(player.Player(name), '')
+    wumpus = Wumpus(player.Humanoid(name), '')
     wumpus.play()

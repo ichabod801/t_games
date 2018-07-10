@@ -898,5 +898,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    liars = LiarsDice(player.Player(name), '')
+    liars = LiarsDice(player.Humanoid(name), '')
     liars.play()

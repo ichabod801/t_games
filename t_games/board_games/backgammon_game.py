@@ -1415,5 +1415,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    game = Backgammon(player.Player(name), '')
+    game = Backgammon(player.Humanoid(name), '')
     game.play()

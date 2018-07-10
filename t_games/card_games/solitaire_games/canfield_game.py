@@ -173,5 +173,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    canfield = Canfield(player.Player(name), '')
+    canfield = Canfield(player.Humanoid(name), '')
     canfield.play()

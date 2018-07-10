@@ -454,3 +454,13 @@ class Bot99Medium(Bot99):
         else:
             # Pass if you can't play.
             return 'pass'
+
+
+if __name__ == '__main__':
+    try:
+        input = raw_input
+    except NameError:
+        pass
+    name = input('What is your name? ')
+    nn = NinetyNine(player.Humanoid(name), '')
+    nn.play()

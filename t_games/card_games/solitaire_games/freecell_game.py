@@ -164,5 +164,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    freec = FreeCell(player.Player(name), '')
+    freec = FreeCell(player.Humanoid(name), '')
     freec.play()
