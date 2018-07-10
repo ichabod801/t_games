@@ -391,18 +391,22 @@ class Solitaire(game.Game):
                 move_stack, old_location, new_location, undo_ndx, flip = self.moves.pop()
                 self.undo_count += 1
                 moves_undone = True
-                # undo the move
+                # Check for flipping the undone card(s) back down.
                 if old_location:
                     force_down = (old_location == self.stock or old_location in self.reserve)
                     force_down = force_down and not old_location[-1].up
                 else:
                     force_down = old_location is self.stock
+                # Check for having flipped a revealed card.
                 if flip:
                     old_location[-1].up = False
+                # Move the cards back.
                 self.transfer(move_stack, old_location, track = False)
+                # Handle flipping the undone card(s) back down.
                 if force_down:
                     for card in move_stack:
                         card.up = False
+                # Handle multiple-transfer moves recursively.
                 if undo_ndx:
                     self.undo_count -= 1
                     self.do_undo('')
@@ -438,6 +442,7 @@ class Solitaire(game.Game):
         # check for blocked card
         elif card.game_location[-1] != card:
             error = 'The {} is not available to be freed.'.format(card.name)
+        # Check for a face down card.
         elif not card.up:
             error = 'The {} is face down and cannot be freed.'.format(card.name)
         # check game specific rules
@@ -1133,16 +1138,16 @@ class MultiSolitaire(Solitaire):
                         moves.append('match {} {}'.format(card, pile[-1]))
                         break
                 else:
-                    # Check non-tableau matching.
+                    # Check non-tableau matching of the card.
                     for pile in [self.waste] + self.reserve + [[free] for free in self.cells]:
                         if pile and self.match_check(card, pile[-1], False):
                             moves.append('match {} {}'.format(card, pile[-1]))
                             break
                     else:
-                        # check freeing
+                        # Check freeing the card.
                         if card.game_location is not self.cells and self.free_check(card, False):
                             moves.append('free {}'.format(card))
-                        # check laning
+                        # Check laning the card.
                         elif self.lane_check(card, moving_stack, False):
                             moves.append('lane {}'.format(card))
             if moves:
