@@ -68,6 +68,7 @@ BOT_NAMES = {'a': 'Ash/Abby/Adam/Alan/Alice/Ada/Adele/Alonzo/Angus/Astro',
 
 
 class BotError(ValueError):
+    """An invalid play by a bot. (ValueError)"""
     pass
     
 
@@ -84,14 +85,16 @@ class Player(object):
     ask_int: Get an integer response from the human. (int)
     ask_int_list: Get a multiple integer response from the human. (int)
     ask_valid: Get and validate responses from the user. (str)
-    error: Warn the player about an invalid play. (None)
     clean_up: Do any necessary post-game processing. (None)
+    error: Warn the player about an invalid play. (None)
     set_up: Do any necessary pre-game processing. (None)
     store_results: Store a game result. (None)
     tell: Give information to the player. (None)
 
     Overridden Methods:
     __init__
+    __repr__
+    __str__
     """
 
     int_re = re.compile('[, \t]?(-?\d+)')
@@ -362,6 +365,12 @@ class Human(Humanoid):
     folder_name: The local file with the player's data. (str)
     quest: The player's quest. (str)
 
+    Methods:
+    load_results: Load the player's history of play. (None)
+    load_shortcuts: Load the player's interface shortcuts. (None)
+    store_results: Store game results. (None)
+    store_shortcut: Store new shortcuts. (None)
+
     Overridden Methods:
     __init__
     store_results
@@ -452,17 +461,21 @@ class Tester(Human):
 
     def __init__(self, name = 'Buckaroo', quest = 'testing', color = 'black'):
         """Auto setup a Human. (None)"""
+        # Store the answers to the three questions.
         self.name = name
         self.quest = quest
         self.color = color
+        # Set up the folder for the tester.
         base_name = '{}-{}-{}'.format(self.name, self.quest, self.color).lower()
         self.folder_name = os.path.join(utility.LOC, base_name)
         if not os.path.exists(self.folder_name):
             os.mkdir(self.folder_name)
             with open(os.path.join(self.folder_name, 'results.txt'), 'w') as player_data:
                 player_data.write('')
+        # Load any previous testing data.
         self.load_results()
         self.load_shortcuts()
+        # Set default attributes.
         self.held_inputs = []
 
 
@@ -484,6 +497,7 @@ class Nameless(Player):
         taken_names: Names already used by a player. (list of str)
         initial: The first letter of the bot's name. (str)
         """
+        # Get a random name that hasn't been used yet.
         while True:
             if initial:
                 self.name = random.choice(BOT_NAMES[initial].split('/'))
@@ -491,6 +505,7 @@ class Nameless(Player):
                 self.name = random.choice(BOT_NAMES[random.choice(string.ascii_lowercase)].split('/'))
             if self.name not in taken_names:
                 break
+        # Set default attributes.
         self.held_inputs = []
         self.shortcuts = {}
 
@@ -523,17 +538,18 @@ class Bot(Nameless):
         Parameters:
         The parameters are as per the built-in print function.
         """
+        # Get the base text.
         kwargs['sep'] = kwargs.get('sep', ' ')
         kwargs['end'] = kwargs.get('end', '\n')
         text = kwargs['sep'].join([str(arg) for arg in args]) + kwargs['end']
+        # Reframe as third person.
         possessive = self.name + "'s"
         pairs = (('Your', possessive), ('your', possessive), ('You', self.name), ('you', self.name), 
             ('have', 'has'))
         for pronoun, name in pairs:
             text = text.replace(pronoun, name)
-        del kwargs['sep']
-        del kwargs['end']
-        print(text, **kwargs)
+        # Print the modified text.
+        print(text)
 
 class AlphaBetaBot(Bot):
     """
