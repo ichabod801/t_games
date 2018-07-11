@@ -656,5 +656,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    game = Battleships(player.Player(name), '')
+    game = Battleships(player.Humanoid(name), '')
     game.play()

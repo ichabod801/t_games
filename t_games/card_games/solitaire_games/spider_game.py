@@ -208,5 +208,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    spider = Spider(player.Player(name), '')
+    spider = Spider(player.Humanoid(name), '')
     spider.play()

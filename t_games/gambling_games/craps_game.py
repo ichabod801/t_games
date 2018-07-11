@@ -1507,5 +1507,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    craps = Craps(player.Player(name), '')
+    craps = Craps(player.Humanoid(name), '')
     print(craps.play())

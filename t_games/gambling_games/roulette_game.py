@@ -1182,6 +1182,6 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    roulette = Roulette(player.Player(name), '')
+    roulette = Roulette(player.Humanoid(name), '')
     roulette.play()
 

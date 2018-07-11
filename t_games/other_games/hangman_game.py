@@ -373,5 +373,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    hanger = Hangman(player.Player(name), '')
+    hanger = Hangman(player.Humanoid(name), '')
     hanger.play()

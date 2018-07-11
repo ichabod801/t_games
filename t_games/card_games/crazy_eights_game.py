@@ -736,5 +736,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    crazy_eights = CrazyEights(player.Player(name), 'change-match')
+    crazy_eights = CrazyEights(player.Humanoid(name), 'change-match')
     crazy_eights.play()

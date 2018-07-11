@@ -165,3 +165,13 @@ class MonteCarlo(solitaire.Solitaire):
                 lines[-1] += '   '
         return '\n'.join(lines)
 
+
+if __name__ == '__main__':
+    import t_games.player as player
+    try:
+        input = raw_input
+    except NameError:
+        pass
+    name = input('What is your name? ')
+    monty = MonteCarlo(player.Humanoid(name), '')
+    monte.play()

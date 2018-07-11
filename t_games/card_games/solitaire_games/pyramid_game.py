@@ -267,5 +267,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    pyramid = Pyramid(player.Player(name), '')
+    pyramid = Pyramid(player.Humanoid(name), '')
     pyramid.play()

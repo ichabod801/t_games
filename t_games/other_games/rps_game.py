@@ -341,5 +341,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    rps = RPS(player.Player(name), '')
+    rps = RPS(player.Humanoid(name), '')
     rps.play()

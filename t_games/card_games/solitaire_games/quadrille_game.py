@@ -189,5 +189,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    quad = Quadrille(player.Player(name), '')
+    quad = Quadrille(player.Humanoid(name), '')
     quad.play()

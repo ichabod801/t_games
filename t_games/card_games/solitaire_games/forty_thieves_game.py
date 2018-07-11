@@ -161,5 +161,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    forty = FortyThieves(player.Player(name), '')
+    forty = FortyThieves(player.Humanoid(name), '')
     forty.play()

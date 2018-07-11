@@ -352,5 +352,5 @@ if __name__ == '__main__':
     if name.lower() == 'sim':
         bot, sim = sim_test()
     else:
-        klondike = Klondike(player.Player(name), '')
+        klondike = Klondike(player.Humanoid(name), '')
         klondike.play()

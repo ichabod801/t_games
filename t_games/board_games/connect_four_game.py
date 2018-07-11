@@ -613,5 +613,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    connect_four = ConnectFour(player.Player(name), '')
+    connect_four = ConnectFour(player.Humanoid(name), '')
     connect_four.play()

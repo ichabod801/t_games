@@ -1092,5 +1092,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    yacht = Yacht(player.Player(name), '')
+    yacht = Yacht(player.Humanoid(name), '')
     yacht.play()

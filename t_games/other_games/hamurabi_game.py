@@ -363,3 +363,13 @@ class Hamurabi(game.Game):
         status += 'Land is trading at {} bushels per acre.\n'.format(self.acre_cost)
         # Tell the human.
         self.human.tell(status)
+
+
+if __name__ == '__main__':
+    try:
+        input = raw_input
+    except NameError:
+        pass
+    name = input('What is your name? ')
+    hamurabi = Hamurabi(player.Humanoid(name), '')
+    hamurabi.play()
