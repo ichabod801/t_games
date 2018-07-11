@@ -897,12 +897,29 @@ class CribBot(player.Bot):
                 play = playable[0]
             self.game.human.tell('\n{} played the {}.'.format(self.name, play.name.lower()))
             return str(play)
-        elif query.startswith('Enter a number'):
-            return str(random.randint(1, 121))
         elif query.startswith('Please press enter'):
             return ''
         else:
             raise player.BotError('Unexepected question to CribBot: {!r}'.format(query))
+
+    def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
+        """
+        Get an integer response from the human. (int)
+
+        Parameters:
+        prompt: The question asking for the interger. (str)
+        low: The lowest acceptable value for the integer. (int or None)
+        high: The highest acceptable value for the integer. (int or None)
+        valid: The valid values for the integer. (container of int)
+        default: The default choice. (int or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        # Handle picking cards and cutting the deck.
+        if prompt.startswith('Enter a number'):
+            return random.randint(1, 121)
+        # Raise an error for anything else.
+        else:
+            raise player.BotError('Unexepected question to CribBot: {!r}'.format(prompt))
 
     def tell(self, message):
         """
