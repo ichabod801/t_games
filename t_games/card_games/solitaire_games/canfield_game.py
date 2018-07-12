@@ -84,7 +84,6 @@ class Canfield(solitaire.Solitaire):
     name = 'Canfield'
     num_options = 7 # There are basically seven things the options modify.
     rules = RULES
-    variants = ('chameleon', 'rainbow', 'rainbow-one', 'selective', 'storehouse', 'superior')
 
     def do_gipf(self, arguments):
         """
@@ -157,9 +156,28 @@ class Canfield(solitaire.Solitaire):
 
     def set_options(self):
         """Define the game options. (None)"""
-        self.option_set.add_option('variant', [], options.lower, default = '', valid = self.variants,
-            question = 'Which variant would you like to play? ',
-            error_text = 'The valid variants are: {}.'.format(', '.join(self.variants)))
+        # Set up the deal options.
+        self.option_set.add_option('foundation', ['f'], options.upper, default = '', 
+            valid = 'A23456789TJQK', 
+            question = 'What rank should the foundations be filled with (return for none)? ')
+        self.option_set.add_option('selective', ['s'])
+        self.option_set.add_option('tableau', ['t'], int, action = 'key=num-tableau', default = 4,
+            valid = (3, 4, 5), target = self.options, 
+            question = 'How many tableau piles should there be (3 to 5, return for 4)? ')
+        self.option_set.add_option('visible-reserve', ['vr'])
+        # Set up the stock options.
+        self.option_set.add_option('max-passes', ['mp'], int, action = 'key=max-passes', default = -1,
+            valid = (-1, 1, 2, 3), target = self.options, 
+            question = 'Allow how many passes through the stock (1 to 3, -1 or return for no limit)? ')
+        self.option_set.add_option('turn-count', ['tc'], int, action = 'key=turn-count', default = -1,
+            valid = (-1, 1, 2, 3), target = self.options, 
+            question = 'Turn over how many cards from the stock (1 to 3, return for 3)? ')
+        # Set up the tableau options.
+        self.option_set.add_option('build', ['b'], options.lower, default = 'alt-color',
+            valid = ('alt-color', 'suit', 'any'),
+            question = 'How should cards be built on the tableau (alt-color [default], suit, or any)? ')
+        self.option_set.add_option('waste-lane', ['wl'])
+        self.option_set.add_option('partial-move', ['pm'])
 
     def superior_text(self):
         """Generate text for the reserve in the superior variant. (str)"""
