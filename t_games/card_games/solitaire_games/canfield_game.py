@@ -43,22 +43,23 @@ from the waste may be used to fill empty spots on the tableau.
 Stacks on the tableau may be moved, but only if the whole stack is moved.
 
 Options:
-variant=: Play one of the variants from the list below.
-
-Variants:
-Chameleon: A 12 card reserve and three tableau piles. Tableau building is down
-    regarless of suit, and partial stacks may be moved. The stock is turned
-    one card at a time, but with only one pass through the stock.
-Rainbow: Tableau building is down regardless of suit.
-Rainbow-One: As Rainbow, but cards from the stock are dealt one card at a
-    time, with two passes through the stock allowed.
-Selective: You are given five cards. You get to choose one to go on the
-    foundations. The rest start the tableau piles.
-Storehouse: The foundations start filled with twos. The stock is turned up one
-    card at a time, with two passes through the stock allowed. The tableau is
-    build down by suit.
-Superior: The reserve is visible and empty tableau piles may be filled with 
-    cards from the waste or reserve.
+build= (b): How tableau piles are built by suit. (alt-color, suit, or any)
+chameleon: Equivalent to 'build=any max-passes=1 parial-move reserve=12 
+    tableau=3 turn-count=1'
+foundation= (f): The rank to start the foundations with.
+free-lane (fl): Empty tableau piles may be filled by any card.
+max-passes= (mp): How many passes you get through the deck, -1 for infinite.
+partial-move (pm): Parts of piles may be moved on the tableau.
+rainbow: Equivalent to 'build=any'.
+rainbow-one: Equivalent to 'build=any max-passes=2 turn-count=1'.
+reserve= (r): How many cards go into the reserve. (10-15)
+selective (s): Deal five cards, choose which goes on a foundation.
+storehouse: Equivalent to 'build=suit foundation=2 max-passes=2 turn-count=1'.
+superior: Equivalent to 'visible-reserve waste-lane'.
+tableau= (t): How many tableau piles there are. (3-5)
+turn-count= (tc): How many cards get turned over from the stock at a time.
+two-by-one: Equivalent to 'max-passes=2 turn-count=1'
+visible-reserve: Deal the reserve face up.
 """
 
 
