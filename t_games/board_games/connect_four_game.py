@@ -579,7 +579,7 @@ class ConnectFour(game.Game):
         # show the board
         now_player.tell(self)
         # get the move
-        open_columns = [move[0] + 1 for move in self.board.get_moves()]
+        open_columns = [move[0] for move in self.board.get_moves()]
         if self.bot_random and isinstance(now_player, player.Bot):
             column_index = random.choice(open_columns)
             self.bot_random = False
