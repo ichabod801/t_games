@@ -472,17 +472,19 @@ def deal_twos(game):
             next_index = (next_index + 1) % len(game.tableau)
 
 
-def deal_twos_foundations(game):
+def deal_rank_foundations(rank):
     """
-    Deal the twos to the foundations. (None)
+    Deal a specific rank to the foundations. (None)
 
     Parameters:
-    game: The game to deal cards for. (Solitaire)
+    rank: The rank to deal to the foundations. (str)
     """
-    for suit in game.deck.suits:
-        deuce = game.deck.find('2' + suit)
-        target = game.find_foundation(deuce)
-        game.deck.force(deuce, target)
+    def deal_foundations(game):
+        for suit in game.deck.suits:
+            card = game.deck.find(rank + suit)
+            target = game.find_foundation(card)
+            game.deck.force(card, target)
+    return deal_foundations
 
 
 def flip_random(game):

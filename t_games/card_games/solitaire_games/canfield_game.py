@@ -67,7 +67,12 @@ class Canfield(solitaire.Solitaire):
     A game of Canfield. (Solitaire)
 
     Class Attributes:
-    variants: The recognized variants of Canfield. (tuple of str)
+    build: The type of suit matching needed for building. (str)
+    foundation: The card rank to fill the foundations with. (str)
+    partial_move: A flag for allowing moving partial stacks. (bool)
+    selective: A flag for a deal of five, player chooses foundation. (bool)
+    visible_reserve: A flag for dealing the reserve face up. (bool)
+    waste_lane: A flag to allow filling empty piles from the waste. (bool)
 
     Methods:
     superior_text: Generate text for the reserve in the superior variant. (str)
@@ -75,6 +80,7 @@ class Canfield(solitaire.Solitaire):
     Overridden Methods:
     handle_options
     set_checkers
+    set_options
     """
 
     aka = ['Demon']
@@ -82,7 +88,7 @@ class Canfield(solitaire.Solitaire):
     categories = ['Card Games', 'Solitaire Games', 'Closed Games']
     credits = CREDITS
     name = 'Canfield'
-    num_options = 7 # There are basically seven things the options modify.
+    num_options = 10
     rules = RULES
 
     def do_gipf(self, arguments):
@@ -134,25 +140,27 @@ class Canfield(solitaire.Solitaire):
         self.pair_checkers = [solitaire.pair_down, solitaire.pair_alt_color]
         self.sort_checkers = [solitaire.sort_rank, solitaire.sort_up]
         # Set the dealers.
-        self.dealers = [solitaire.deal_reserve_n(13), solitaire.deal_start_foundation, 
-            solitaire.deal_one_row, solitaire.deal_stock_all]
-        # Check for variant rules.
-        if self.variant.endswith('chameleon'):
+        reserve_dealer = solitaire.deal_reserve_n(self.reserve, self.visible_reserve)
+        self.dealers = [reserve_dealer, solitaire.deal_start_foundation, solitaire.deal_one_row, 
+            solitaire.deal_stock_all]
+        # Handle optional rules.
+        # Handle the deal options.
+        if self.foundation:
+            self.dealers.insert(0, solitaire.deal_rank_foundations(self.foundation))
+            del self.dealers[2]
+        elif self.selective:
+            self.dealers = [reserve_dealer, solitaire.deal_selective, solitaire.deal_stock_all]
+        if self.partial_move:
             self.build_checkers = []
-            self.pair_checkers = [solitaire.pair_down]
-        elif 'rainbow' in self.variant:
-            self.pair_checkers = [solitaire.pair_down]
-        elif self.variant == 'selective':
-            self.dealers = [solitaire.deal_reserve_n(13), solitaire.deal_selective, 
-                solitaire.deal_stock_all]
-        elif self.variant == 'storehouse':
-            self.pair_checkers[1] = solitaire.pair_suit
-            self.dealers = [solitaire.deal_twos_foundations, solitaire.deal_reserve_n(13), 
-                solitaire.deal_one_row, solitaire.deal_stock_all]
-        elif self.variant == 'superior':
+        # Handle the tableau options.
+        if self.build == 'suit':
+            self.pair_checkers[1] = [solitaire.pair_suit]
+        elif self.build == 'any':
+            del self.pair_checkers[1]
+        if self.parial_move:
+            self.build_checkers = []
+        if self.free_lane:
             self.lane_checkers = []
-            self.dealers[0] = solitaire.deal_reserve_n(13, True)
-            self.reserve_text = self.superior_text
 
     def set_options(self):
         """Define the game options. (None)"""
@@ -160,11 +168,15 @@ class Canfield(solitaire.Solitaire):
         self.option_set.add_option('foundation', ['f'], options.upper, default = '', 
             valid = 'A23456789TJQK', 
             question = 'What rank should the foundations be filled with (return for none)? ')
-        self.option_set.add_option('selective', ['s'])
+        self.option_set.add_option('reserve', ['r'], int, default = 13, valid = range(10, 16),
+            question = 'How many cards should be dealt to the reserve (10-15, return for 13)? ')
+        self.option_set.add_option('selective', ['s'], 
+            question = 'Should you be able to choose which starting card goes on the foundations? bool')
         self.option_set.add_option('tableau', ['t'], int, action = 'key=num-tableau', default = 4,
             valid = (3, 4, 5), target = self.options, 
             question = 'How many tableau piles should there be (3 to 5, return for 4)? ')
-        self.option_set.add_option('visible-reserve', ['vr'])
+        self.option_set.add_option('visible-reserve', ['vr'], 
+            question = 'Should the reserve be visible? bool')
         # Set up the stock options.
         self.option_set.add_option('max-passes', ['mp'], int, action = 'key=max-passes', default = -1,
             valid = (-1, 1, 2, 3), target = self.options, 
@@ -176,8 +188,19 @@ class Canfield(solitaire.Solitaire):
         self.option_set.add_option('build', ['b'], options.lower, default = 'alt-color',
             valid = ('alt-color', 'suit', 'any'),
             question = 'How should cards be built on the tableau (alt-color [default], suit, or any)? ')
-        self.option_set.add_option('waste-lane', ['wl'])
-        self.option_set.add_option('partial-move', ['pm'])
+        self.option_set.add_option('free-lane', ['fl'],
+            question = 'Should you be able to fill empty piles with any card? bool')
+        self.option_set.add_option('partial-move', ['pm'],
+            question = 'Should you be able to move partial stacks? bool')
+        # Set the option groups.
+        self.option_set.add_group('chameleon', 
+            'build=any max-passes=1 parial-move reserve=12 tableau=3 turn-count=1')
+        self.option_set.add_group('rainbow', 'build=any')
+        self.option_set.add_group('rainbow-one', 'build=any max-passes=2 turn-count=1')
+        self.option_set.add_group('storehouse', 'build=suit foundation=2 max-passes=2 turn-count=1')
+        self.option_set.add_group('superior', 'visible-reserve waste-lane')
+        self.option_set.add_group('two-by-one', 'max-passes=2 turn-count=1')
+
 
     def superior_text(self):
         """Generate text for the reserve in the superior variant. (str)"""
