@@ -432,7 +432,7 @@ class C4Board(board.DimBoard):
             if height <= self.dimensions[1]:
                 self.place((column, height + 1), piece)
             else:
-                raise ValueError('Invalid move: column {} is full'.format(column + 1))
+                raise ValueError('Invalid move: column {} is full'.format(column))
 
     def pop(self, column, piece):
         """
@@ -449,7 +449,7 @@ class C4Board(board.DimBoard):
             self.cells[(column, self.dimensions[1])].contents = None
             self.pops += 1
         else:
-            raise ValueError('Invalid pop: column {} does not start with {!r}.'.format(column + 1, piece))
+            raise ValueError('Invalid pop: column {} does not start with {!r}.'.format(column, piece))
 
 
 class ConnectFour(game.Game):
