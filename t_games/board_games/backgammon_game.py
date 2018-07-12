@@ -218,18 +218,22 @@ class BackgammonBot(player.Bot):
                 possibles = []
                 board = self.game.board
                 for play in board.get_plays(self.piece, self.game.rolls):
+                    # Make the play.
                     sub_board = board.copy()
                     for move in play:
                         capture = sub_board.move(*move, piece = self.piece)
+                    # Get the board features.
                     features, points = self.describe_board(sub_board)
                     max_x = max(points['X']) if points['X'] else 0
                     max_o = max(points['O']) if points['O'] else 0
+                    # Get the game phase.
                     if max_x + max_o > 24 or sub_board.cells[BAR].contents:
                         phase = 'mixed'
                     elif max_x <= 6 and max_o < 6:
                         phase = 'stretch'
                     else:
                         phase = 'split'
+                    # Store the evaluation with the move.
                     possibles.append((self.eval_board(features, phase), play))
                 # Choose the play with the highest evaluation.
                 possibles.sort(reverse = True)
@@ -237,16 +241,19 @@ class BackgammonBot(player.Bot):
             # Return the move with the correct syntax.
             move = self.held_moves.next_move()
             if move[1] == OUT:
+                # Return bearing of the board syntax.
                 point = move[0]
                 if point > 6:
                     point = 25 - point
                 return 'bear {}'.format(point)
             elif move[0] == BAR:
+                # Return entering the board syntax.
                 point = move[1]
                 if point > 6:
                     point = 25 - point
                 return 'enter {}'.format(point)
             else:
+                # Return an integer list for standard moves.
                 return move[:2]
         # Raise an error for any other question.
         else:
@@ -509,16 +516,19 @@ class PubEvalBot(BackgammonBot):
             # Return the move with the correct syntax.
             move = self.held_moves.next_move()
             if move[1] == OUT:
+                # Return bearing off syntax.
                 point = move[0]
                 if point > 6:
                     point = 25 - point
                 return 'bear {}'.format(point)
             elif move[0] == BAR:
+                # Return entering the board syntax.
                 point = move[1]
                 if point > 6:
                     point = 25 - point
                 return 'enter {}'.format(point)
             else:
+                # Return integer list for standard moves.
                 return move[:2]
         # Raise an error for any other question.
         else:
