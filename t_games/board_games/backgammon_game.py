@@ -159,10 +159,13 @@ class BackgammonBot(player.Bot):
     held_moves: Moves planned but not yet made through ask. (BackgammonPlay)
 
     Methods:
+    describe_board: Determine the features of the current board layout. (list)
     eval_board: Evaluate a board position. (list of int)
 
     Overridden Methods:
     ask
+    ask_int_list
+    error
     set_up
     tell
     """
@@ -174,45 +177,8 @@ class BackgammonBot(player.Bot):
         Parameters:
         prompt: The question being asked of the player. (str)
         """
-        # Respond to move requests.
-        if prompt.strip() == 'What is your move?':
-            if not self.held_moves:
-                # Evaluate all the legal plays.
-                possibles = []
-                board = self.game.board
-                for play in board.get_plays(self.piece, self.game.rolls):
-                    sub_board = board.copy()
-                    for move in play:
-                        capture = sub_board.move(*move, piece = self.piece)
-                    features, points = self.describe_board(sub_board)
-                    max_x = max(points['X']) if points['X'] else 0
-                    max_o = max(points['O']) if points['O'] else 0
-                    if max_x + max_o > 24 or sub_board.cells[BAR].contents:
-                        phase = 'mixed'
-                    elif max_x <= 6 and max_o < 6:
-                        phase = 'stretch'
-                    else:
-                        phase = 'split'
-                    possibles.append((self.eval_board(features, phase), play))
-                # Choose the play with the highest evaluation.
-                possibles.sort(reverse = True)
-                self.held_moves = possibles[0][1]
-            # Return the move with the correct syntax.
-            move = self.held_moves.next_move()
-            if move[1] == OUT:
-                point = move[0]
-                if point > 6:
-                    point = 25 - point
-                return 'bear {}'.format(point)
-            elif move[0] == BAR:
-                point = move[1]
-                if point > 6:
-                    point = 25 - point
-                return 'enter {}'.format(point)
-            else:
-                return '{} {}'.format(move[0], move[1])
         # Respond to no-move notifications.
-        elif prompt.startswith('You have no legal moves'):
+        if prompt.startswith('You have no legal moves'):
             self.game.human.tell('{} has no legal moves.'.format(self.name))
             return ''
         elif prompt.startswith('Your opponent wants to double'):
@@ -227,6 +193,68 @@ class BackgammonBot(player.Bot):
                 return '1'
             else:
                 return '0'
+        # Raise an error for any other question.
+        else:
+            raise ValueError('Unexpected question to BackgammonBot: {}'.format(prompt))
+
+    def ask_int_list(self, prompt, low = None, high = None, valid = [], valid_lens = [], default = None,
+        cmd = True):
+        """
+        Get a multiple integer response from the human. (int)
+
+        Parameters:
+        prompt: The question asking for the interger. (str)
+        low: The lowest acceptable value for the integer. (list or None)
+        high: The highest acceptable value for the integer. (laist or None)
+        valid: The valid values for the integer. (list of int)
+        valid_lens: The valid numbers of values. (list of int)
+        default: The default choice. (list or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        # Respond to move requests.
+        if prompt.strip() == 'What is your move?':
+            if not self.held_moves:
+                # Evaluate all the legal plays.
+                possibles = []
+                board = self.game.board
+                for play in board.get_plays(self.piece, self.game.rolls):
+                    # Make the play.
+                    sub_board = board.copy()
+                    for move in play:
+                        capture = sub_board.move(*move, piece = self.piece)
+                    # Get the board features.
+                    features, points = self.describe_board(sub_board)
+                    max_x = max(points['X']) if points['X'] else 0
+                    max_o = max(points['O']) if points['O'] else 0
+                    # Get the game phase.
+                    if max_x + max_o > 24 or sub_board.cells[BAR].contents:
+                        phase = 'mixed'
+                    elif max_x <= 6 and max_o < 6:
+                        phase = 'stretch'
+                    else:
+                        phase = 'split'
+                    # Store the evaluation with the move.
+                    possibles.append((self.eval_board(features, phase), play))
+                # Choose the play with the highest evaluation.
+                possibles.sort(reverse = True)
+                self.held_moves = possibles[0][1]
+            # Return the move with the correct syntax.
+            move = self.held_moves.next_move()
+            if move[1] == OUT:
+                # Return bearing of the board syntax.
+                point = move[0]
+                if point > 6:
+                    point = 25 - point
+                return 'bear {}'.format(point)
+            elif move[0] == BAR:
+                # Return entering the board syntax.
+                point = move[1]
+                if point > 6:
+                    point = 25 - point
+                return 'enter {}'.format(point)
+            else:
+                # Return an integer list for standard moves.
+                return move[:2]
         # Raise an error for any other question.
         else:
             raise ValueError('Unexpected question to BackgammonBot: {}'.format(prompt))
@@ -435,6 +463,42 @@ class PubEvalBot(BackgammonBot):
         Parameters:
         prompt: The question being asked of the player. (str)
         """
+        # Respond to no-move notifications.
+        if prompt.startswith('You have no legal moves'):
+            self.game.human.tell('{} has no legal moves.'.format(self.name))
+            return ''
+        # Respond to doubling requests.
+        elif prompt.startswith('Your opponent wants to double'):
+            features, points = self.describe_board(self.game.board)
+            if self.eval_board(features, 'accept') < -25:
+                return '1'
+            else:
+                return '0'
+        # Respond to redoubling requests.
+        elif prompt.startswith('Would you like to double'):
+            features, points = self.describe_board(self.game.board)
+            if self.eval_board(features, 'double') > 25:
+                return '1'
+            else:
+                return '0'
+        # Raise an error for any other question.
+        else:
+            raise ValueError('Unexpected question to BackgammonBot: {}'.format(prompt))
+
+    def ask_int_list(self, prompt, low = None, high = None, valid = [], valid_lens = [], default = None,
+        cmd = True):
+        """
+        Get a multiple integer response from the human. (int)
+
+        Parameters:
+        prompt: The question asking for the interger. (str)
+        low: The lowest acceptable value for the integer. (list or None)
+        high: The highest acceptable value for the integer. (laist or None)
+        valid: The valid values for the integer. (list of int)
+        valid_lens: The valid numbers of values. (list of int)
+        default: The default choice. (list or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
         # Respond to move requests.
         if prompt.strip() == 'What is your move?':
             if not self.held_moves:
@@ -452,33 +516,20 @@ class PubEvalBot(BackgammonBot):
             # Return the move with the correct syntax.
             move = self.held_moves.next_move()
             if move[1] == OUT:
+                # Return bearing off syntax.
                 point = move[0]
                 if point > 6:
                     point = 25 - point
                 return 'bear {}'.format(point)
             elif move[0] == BAR:
+                # Return entering the board syntax.
                 point = move[1]
                 if point > 6:
                     point = 25 - point
                 return 'enter {}'.format(point)
             else:
-                return '{} {}'.format(move[0], move[1])
-        # Respond to no-move notifications.
-        elif prompt.startswith('You have no legal moves'):
-            self.game.human.tell('{} has no legal moves.'.format(self.name))
-            return ''
-        elif prompt.startswith('Your opponent wants to double'):
-            features, points = self.describe_board(self.game.board)
-            if self.eval_board(features, 'accept') < -25:
-                return '1'
-            else:
-                return '0'
-        elif prompt.startswith('Would you like to double'):
-            features, points = self.describe_board(self.game.board)
-            if self.eval_board(features, 'double') > 25:
-                return '1'
-            else:
-                return '0'
+                # Return integer list for standard moves.
+                return move[:2]
         # Raise an error for any other question.
         else:
             raise ValueError('Unexpected question to BackgammonBot: {}'.format(prompt))
@@ -1314,8 +1365,12 @@ class BackgammonPlay(object):
     Overridden Methods:
     __init__
     __add__
+    __bool__
     __eq__
+    __hash__
+    __iter__
     __len__
+    __lt__
     __repr__
     """
 
@@ -1387,6 +1442,18 @@ class BackgammonPlay(object):
     def __len__(self):
         """Number of moves in the play. (int)"""
         return len(self.moves)
+
+    def __lt__(self, other):
+        """
+        Check for order between moves. (bool)
+
+        Parameters:
+        other: The play to compare against. (BackgammonPlay)
+        """
+        if isinstance(other, BackgammonPlay):
+            return sorted(self.moves) < sorted(other.moves)
+        else:
+            return NotImplemented
 
     def __repr__(self):
         """Computer readable text representation. (str)"""
