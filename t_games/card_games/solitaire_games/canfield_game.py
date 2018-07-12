@@ -52,7 +52,7 @@ max-passes= (mp): How many passes you get through the deck, -1 for infinite.
 partial-move (pm): Parts of piles may be moved on the tableau.
 rainbow: Equivalent to 'build=any'.
 rainbow-one: Equivalent to 'build=any max-passes=2 turn-count=1'.
-reserve= (r): How many cards go into the reserve. (10-15)
+reserve-size= (rs): How many cards go into the reserve. (10-15)
 selective (s): Deal five cards, choose which goes on a foundation.
 storehouse: Equivalent to 'build=suit foundation=2 max-passes=2 turn-count=1'.
 superior: Equivalent to 'visible-reserve waste-lane'.
@@ -79,7 +79,6 @@ class Canfield(solitaire.Solitaire):
     superior_text: Generate text for the reserve in the superior variant. (str)
 
     Overridden Methods:
-    handle_options
     set_checkers
     set_options
     """
@@ -116,21 +115,6 @@ class Canfield(solitaire.Solitaire):
             self.human.tell("I'm sorry, I don't speak Flemish.")
         return True
 
-    def handle_options(self):
-        """Set up the game options. (None)"""
-        super(Canfield, self).handle_options()
-        # Set the default options.
-        self.options = {'num-tableau': 4, 'num-reserve': 1, 'wrap-ranks': True}
-        # Set options based on variant (see also set_checkers).
-        if self.variant:
-            if self.variant.endswith('chameleon'):
-                self.options['num-tableau'] = 3
-                self.options['turn-count'] = 1
-                self.options['max-passes'] = 1
-            elif self.variant in ('rainbow-one', 'storehouse'):
-                self.options['turn-count'] = 1
-                self.options['max-passes'] = 2
-
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
         # Set the default checkers.
@@ -141,7 +125,7 @@ class Canfield(solitaire.Solitaire):
         self.pair_checkers = [solitaire.pair_down, solitaire.pair_alt_color]
         self.sort_checkers = [solitaire.sort_rank, solitaire.sort_up]
         # Set the dealers.
-        reserve_dealer = solitaire.deal_reserve_n(self.reserve, self.visible_reserve)
+        reserve_dealer = solitaire.deal_reserve_n(self.reserve_size, self.visible_reserve)
         self.dealers = [reserve_dealer, solitaire.deal_start_foundation, solitaire.deal_one_row, 
             solitaire.deal_stock_all]
         # Handle optional rules.
@@ -158,18 +142,19 @@ class Canfield(solitaire.Solitaire):
             self.pair_checkers[1] = [solitaire.pair_suit]
         elif self.build == 'any':
             del self.pair_checkers[1]
-        if self.parial_move:
+        if self.partial_move:
             self.build_checkers = []
         if self.free_lane:
             self.lane_checkers = []
 
     def set_options(self):
         """Define the game options. (None)"""
+        self.options = {'num-reserve': 1, 'wrap-ranks': True}
         # Set up the deal options.
         self.option_set.add_option('foundation', ['f'], options.upper, default = '', 
             valid = 'A23456789TJQK', 
             question = 'What rank should the foundations be filled with (return for none)? ')
-        self.option_set.add_option('reserve', ['r'], int, default = 13, valid = range(10, 16),
+        self.option_set.add_option('reserve-size', ['rs'], int, default = 13, valid = range(10, 16),
             question = 'How many cards should be dealt to the reserve (10-15, return for 13)? ')
         self.option_set.add_option('selective', ['s'], 
             question = 'Should you be able to choose which starting card goes on the foundations? bool')
@@ -182,8 +167,8 @@ class Canfield(solitaire.Solitaire):
         self.option_set.add_option('max-passes', ['mp'], int, action = 'key=max-passes', default = -1,
             valid = (-1, 1, 2, 3), target = self.options, 
             question = 'Allow how many passes through the stock (1 to 3, -1 or return for no limit)? ')
-        self.option_set.add_option('turn-count', ['tc'], int, action = 'key=turn-count', default = -1,
-            valid = (-1, 1, 2, 3), target = self.options, 
+        self.option_set.add_option('turn-count', ['tc'], int, action = 'key=turn-count', default = 3,
+            valid = (1, 2, 3), target = self.options, 
             question = 'Turn over how many cards from the stock (1 to 3, return for 3)? ')
         # Set up the tableau options.
         self.option_set.add_option('build', ['b'], options.lower, default = 'alt-color',
