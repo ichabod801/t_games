@@ -187,7 +187,7 @@ class Canfield(solitaire.Solitaire):
             question = 'Should you be able to move partial stacks? bool')
         # Set the option groups.
         self.option_set.add_group('chameleon', 
-            'build=any max-passes=1 parial-move reserve=12 tableau=3 turn-count=1')
+            'build=any max-passes=1 partial-move reserve-size=12 tableau=3 turn-count=1')
         self.option_set.add_group('rainbow', 'build=any')
         self.option_set.add_group('rainbow-one', 'build=any max-passes=2 turn-count=1')
         self.option_set.add_group('storehouse', 'build=suit foundation=2 max-passes=2 turn-count=1')
