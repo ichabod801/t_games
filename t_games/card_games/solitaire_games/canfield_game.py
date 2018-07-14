@@ -115,6 +115,13 @@ class Canfield(solitaire.Solitaire):
             self.human.tell("I'm sorry, I don't speak Flemish.")
         return True
 
+    def handle_options(self):
+        """Handle the option settings for this game. (None)"""
+        super(Canfield, self).handle_options()
+        # Make the reserve visible, if necessary.
+        if self.visible_reserve:
+            self.reserve_text = self.superior_text
+
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
         # Set the default checkers.
