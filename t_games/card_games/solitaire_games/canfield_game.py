@@ -146,7 +146,7 @@ class Canfield(solitaire.Solitaire):
             self.build_checkers = []
         # Handle the tableau options.
         if self.build == 'suit':
-            self.pair_checkers[1] = [solitaire.pair_suit]
+            self.pair_checkers[1] = solitaire.pair_suit
         elif self.build == 'any':
             del self.pair_checkers[1]
         if self.partial_move:
