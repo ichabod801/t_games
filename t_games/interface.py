@@ -465,7 +465,17 @@ class Interface(other_cmd.OtherCmd):
         while True:
             results = self.game.play()
             self.human.store_results(self.game.name, results)
-            self.do_stats(self.game.name)
+            stats_options = []
+            if results[5] & 2:
+                stats_options.append('cheat')
+            if results[5] & 8:
+                stats_options.append('gipf')
+            if results[5] & 128:
+                stats_options.append('xyzzy')
+            stats_options = ' '.join(stats_options)
+            self.do_stats('{} / {}'.format(self.game.name, stats_options))
+            if stats_options:
+                print('Statistics calculated with the folloing options: {}.'.format(stats_options))
             again = self.human.ask('Would you like to play again? ').strip().lower()
             if again in ('!', '!!'):
                 self.human.held_inputs = ['!']
