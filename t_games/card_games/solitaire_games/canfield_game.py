@@ -67,13 +67,14 @@ class Canfield(solitaire.Solitaire):
     """
     A game of Canfield. (Solitaire)
 
-    Class Attributes:
+    Attributes:
     build: The type of suit matching needed for building. (str)
     foundation: The card rank to fill the foundations with. (str)
+    free_lane: A flag to allow filling empty piles from the waste. (bool)
     partial_move: A flag for allowing moving partial stacks. (bool)
+    reserve_size: How many cards should be dealt to the reserve. (int)
     selective: A flag for a deal of five, player chooses foundation. (bool)
     visible_reserve: A flag for dealing the reserve face up. (bool)
-    waste_lane: A flag to allow filling empty piles from the waste. (bool)
 
     Methods:
     superior_text: Generate text for the reserve in the superior variant. (str)
