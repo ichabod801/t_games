@@ -191,7 +191,7 @@ class Canfield(solitaire.Solitaire):
         self.option_set.add_group('rainbow', 'build=any')
         self.option_set.add_group('rainbow-one', 'build=any max-passes=2 turn-count=1')
         self.option_set.add_group('storehouse', 'build=suit foundation=2 max-passes=2 turn-count=1')
-        self.option_set.add_group('superior', 'visible-reserve waste-lane')
+        self.option_set.add_group('superior', 'visible-reserve free-lane')
         self.option_set.add_group('two-by-one', 'max-passes=2 turn-count=1')
 
 
