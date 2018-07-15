@@ -41,6 +41,7 @@ deal_n: Create a dealer that deals n cards onto the tableau. (function)
 deal_one_row: Deal one card face up to each tableau pile. (None)
 deal_pyramid: Deal a pyramid of cards. (None)
 deal_queens_out: Discard the queensl (None)
+deal_rank_foundations: Deal a specific rank to the foundations. (None)
 deal_reserve_n: Create a dealer that deals n cards to the reserve (None)
 deal_selective: Deal tableau cards with selection of foundation rank. (None)
 deal_start_foundation: Deal an initial foundation card. (None)
@@ -380,6 +381,21 @@ def deal_queens_out(game):
         game.deck.discard(queen) # discard assumes the card is in play.
 
 
+def deal_rank_foundations(rank):
+    """
+    Deal a specific rank to the foundations. (None)
+
+    Parameters:
+    rank: The rank to deal to the foundations. (str)
+    """
+    def deal_foundations(game):
+        for suit in game.deck.suits:
+            card = game.deck.find(rank + suit)
+            target = game.find_foundation(card)
+            game.deck.force(card, target)
+    return deal_foundations
+
+
 def deal_reserve_n(n, up = False):
     """
     Create a dealer that deals n cards to the reserve (function)
@@ -470,19 +486,6 @@ def deal_twos(game):
         if card.rank == '2':
             game.deck.force(card, game.tableau[next_index])
             next_index = (next_index + 1) % len(game.tableau)
-
-
-def deal_twos_foundations(game):
-    """
-    Deal the twos to the foundations. (None)
-
-    Parameters:
-    game: The game to deal cards for. (Solitaire)
-    """
-    for suit in game.deck.suits:
-        deuce = game.deck.find('2' + suit)
-        target = game.find_foundation(deuce)
-        game.deck.force(deuce, target)
 
 
 def flip_random(game):

@@ -43,22 +43,23 @@ from the waste may be used to fill empty spots on the tableau.
 Stacks on the tableau may be moved, but only if the whole stack is moved.
 
 Options:
-variant=: Play one of the variants from the list below.
-
-Variants:
-Chameleon: A 12 card reserve and three tableau piles. Tableau building is down
-    regarless of suit, and partial stacks may be moved. The stock is turned
-    one card at a time, but with only one pass through the stock.
-Rainbow: Tableau building is down regardless of suit.
-Rainbow-One: As Rainbow, but cards from the stock are dealt one card at a
-    time, with two passes through the stock allowed.
-Selective: You are given five cards. You get to choose one to go on the
-    foundations. The rest start the tableau piles.
-Storehouse: The foundations start filled with twos. The stock is turned up one
-    card at a time, with two passes through the stock allowed. The tableau is
-    build down by suit.
-Superior: The reserve is visible and empty tableau piles may be filled with 
-    cards from the waste or reserve.
+build= (b): How tableau piles are built by suit. (alt-color, suit, or any)
+chameleon: Equivalent to 'build=any max-passes=1 parial-move reserve=12 
+    tableau=3 turn-count=1'
+foundation= (f): The rank to start the foundations with.
+free-lane (fl): Empty tableau piles may be filled by any card.
+max-passes= (mp): How many passes you get through the deck, -1 for infinite.
+partial-move (pm): Parts of piles may be moved on the tableau.
+rainbow: Equivalent to 'build=any'.
+rainbow-one: Equivalent to 'build=any max-passes=2 turn-count=1'.
+reserve-size= (rs): How many cards go into the reserve. (10-15)
+selective (s): Deal five cards, choose which goes on a foundation.
+storehouse: Equivalent to 'build=suit foundation=2 max-passes=2 turn-count=1'.
+superior: Equivalent to 'visible-reserve waste-lane'.
+tableau= (t): How many tableau piles there are. (3-5)
+turn-count= (tc): How many cards get turned over from the stock at a time.
+two-by-one: Equivalent to 'max-passes=2 turn-count=1'
+visible-reserve: Deal the reserve face up.
 """
 
 
@@ -66,15 +67,21 @@ class Canfield(solitaire.Solitaire):
     """
     A game of Canfield. (Solitaire)
 
-    Class Attributes:
-    variants: The recognized variants of Canfield. (tuple of str)
+    Attributes:
+    build: The type of suit matching needed for building. (str)
+    foundation: The card rank to fill the foundations with. (str)
+    free_lane: A flag to allow filling empty piles from the waste. (bool)
+    partial_move: A flag for allowing moving partial stacks. (bool)
+    reserve_size: How many cards should be dealt to the reserve. (int)
+    selective: A flag for a deal of five, player chooses foundation. (bool)
+    visible_reserve: A flag for dealing the reserve face up. (bool)
 
     Methods:
     superior_text: Generate text for the reserve in the superior variant. (str)
 
     Overridden Methods:
-    handle_options
     set_checkers
+    set_options
     """
 
     aka = ['Demon']
@@ -82,9 +89,8 @@ class Canfield(solitaire.Solitaire):
     categories = ['Card Games', 'Solitaire Games', 'Closed Games']
     credits = CREDITS
     name = 'Canfield'
-    num_options = 7 # There are basically seven things the options modify.
+    num_options = 10
     rules = RULES
-    variants = ('chameleon', 'rainbow', 'rainbow-one', 'selective', 'storehouse', 'superior')
 
     def do_gipf(self, arguments):
         """
@@ -111,19 +117,11 @@ class Canfield(solitaire.Solitaire):
         return True
 
     def handle_options(self):
-        """Set up the game options. (None)"""
+        """Handle the option settings for this game. (None)"""
         super(Canfield, self).handle_options()
-        # Set the default options.
-        self.options = {'num-tableau': 4, 'num-reserve': 1, 'wrap-ranks': True}
-        # Set options based on variant (see also set_checkers).
-        if self.variant:
-            if self.variant.endswith('chameleon'):
-                self.options['num-tableau'] = 3
-                self.options['turn-count'] = 1
-                self.options['max-passes'] = 1
-            elif self.variant in ('rainbow-one', 'storehouse'):
-                self.options['turn-count'] = 1
-                self.options['max-passes'] = 2
+        # Make the reserve visible, if necessary.
+        if self.visible_reserve:
+            self.reserve_text = self.superior_text
 
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
@@ -135,31 +133,67 @@ class Canfield(solitaire.Solitaire):
         self.pair_checkers = [solitaire.pair_down, solitaire.pair_alt_color]
         self.sort_checkers = [solitaire.sort_rank, solitaire.sort_up]
         # Set the dealers.
-        self.dealers = [solitaire.deal_reserve_n(13), solitaire.deal_start_foundation, 
-            solitaire.deal_one_row, solitaire.deal_stock_all]
-        # Check for variant rules.
-        if self.variant.endswith('chameleon'):
+        reserve_dealer = solitaire.deal_reserve_n(self.reserve_size, self.visible_reserve)
+        self.dealers = [reserve_dealer, solitaire.deal_start_foundation, solitaire.deal_one_row, 
+            solitaire.deal_stock_all]
+        # Handle the deal options.
+        if self.foundation:
+            self.dealers.insert(0, solitaire.deal_rank_foundations(self.foundation))
+            del self.dealers[2]
+        elif self.selective:
+            self.dealers = [reserve_dealer, solitaire.deal_selective, solitaire.deal_stock_all]
+        if self.partial_move:
             self.build_checkers = []
-            self.pair_checkers = [solitaire.pair_down]
-        elif 'rainbow' in self.variant:
-            self.pair_checkers = [solitaire.pair_down]
-        elif self.variant == 'selective':
-            self.dealers = [solitaire.deal_reserve_n(13), solitaire.deal_selective, 
-                solitaire.deal_stock_all]
-        elif self.variant == 'storehouse':
+        # Handle the tableau options.
+        if self.build == 'suit':
             self.pair_checkers[1] = solitaire.pair_suit
-            self.dealers = [solitaire.deal_twos_foundations, solitaire.deal_reserve_n(13), 
-                solitaire.deal_one_row, solitaire.deal_stock_all]
-        elif self.variant == 'superior':
+        elif self.build == 'any':
+            del self.pair_checkers[1]
+        if self.partial_move:
+            self.build_checkers = []
+        if self.free_lane:
             self.lane_checkers = []
-            self.dealers[0] = solitaire.deal_reserve_n(13, True)
-            self.reserve_text = self.superior_text
 
     def set_options(self):
         """Define the game options. (None)"""
-        self.option_set.add_option('variant', [], options.lower, default = '', valid = self.variants,
-            question = 'Which variant would you like to play? ',
-            error_text = 'The valid variants are: {}.'.format(', '.join(self.variants)))
+        self.options = {'num-reserve': 1, 'wrap-ranks': True}
+        # Set up the deal options.
+        self.option_set.add_option('foundation', ['f'], options.upper, default = '', 
+            valid = 'A23456789TJQK', 
+            question = 'What rank should the foundations be filled with (return for none)? ')
+        self.option_set.add_option('reserve-size', ['rs'], int, default = 13, valid = range(10, 16),
+            question = 'How many cards should be dealt to the reserve (10-15, return for 13)? ')
+        self.option_set.add_option('selective', ['s'], 
+            question = 'Should you be able to choose which starting card goes on the foundations? bool')
+        self.option_set.add_option('tableau', ['t'], int, action = 'key=num-tableau', default = 4,
+            valid = (3, 4, 5), target = self.options, 
+            question = 'How many tableau piles should there be (3 to 5, return for 4)? ')
+        self.option_set.add_option('visible-reserve', ['vr'], 
+            question = 'Should the reserve be visible? bool')
+        # Set up the stock options.
+        self.option_set.add_option('max-passes', ['mp'], int, action = 'key=max-passes', default = -1,
+            valid = (-1, 1, 2, 3), target = self.options, 
+            question = 'Allow how many passes through the stock (1 to 3, -1 or return for no limit)? ')
+        self.option_set.add_option('turn-count', ['tc'], int, action = 'key=turn-count', default = 3,
+            valid = (1, 2, 3), target = self.options, 
+            question = 'Turn over how many cards from the stock (1 to 3, return for 3)? ')
+        # Set up the tableau options.
+        self.option_set.add_option('build', ['b'], options.lower, default = 'alt-color',
+            valid = ('alt-color', 'suit', 'any'),
+            question = 'How should cards be built on the tableau (alt-color [default], suit, or any)? ')
+        self.option_set.add_option('free-lane', ['fl'],
+            question = 'Should you be able to fill empty piles with any card? bool')
+        self.option_set.add_option('partial-move', ['pm'],
+            question = 'Should you be able to move partial stacks? bool')
+        # Set the option groups.
+        self.option_set.add_group('chameleon', 
+            'build=any max-passes=1 partial-move reserve-size=12 tableau=3 turn-count=1')
+        self.option_set.add_group('rainbow', 'build=any')
+        self.option_set.add_group('rainbow-one', 'build=any max-passes=2 turn-count=1')
+        self.option_set.add_group('storehouse', 'build=suit foundation=2 max-passes=2 turn-count=1')
+        self.option_set.add_group('superior', 'visible-reserve free-lane')
+        self.option_set.add_group('two-by-one', 'max-passes=2 turn-count=1')
+
 
     def superior_text(self):
         """Generate text for the reserve in the superior variant. (str)"""
