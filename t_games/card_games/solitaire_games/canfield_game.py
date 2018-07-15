@@ -135,7 +135,6 @@ class Canfield(solitaire.Solitaire):
         reserve_dealer = solitaire.deal_reserve_n(self.reserve_size, self.visible_reserve)
         self.dealers = [reserve_dealer, solitaire.deal_start_foundation, solitaire.deal_one_row, 
             solitaire.deal_stock_all]
-        # Handle optional rules.
         # Handle the deal options.
         if self.foundation:
             self.dealers.insert(0, solitaire.deal_rank_foundations(self.foundation))
