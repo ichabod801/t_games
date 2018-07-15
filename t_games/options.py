@@ -373,8 +373,7 @@ class OptionSet(object):
         settings_text: The settings text from the user. (str)
         """
         # Apply the groups.
-        for name, expansion in self.groups.items():
-            settings_text = settings_text.replace(name, expansion)
+        settings_text = ' '.join([self.groups.get(word, word) for word in settings_text.split()])
         # Remove unwanted spaces.
         for gap, no_gap in ((' =', '='), ('= ', '='), (' /', '/'), ('/ ', '/'), (' *', '*'), ('* ', '*')):
             while gap in settings_text:
