@@ -136,6 +136,8 @@ class Interface(other_cmd.OtherCmd):
     do_random: Play a random game. (bool)
     do_rules: Show the rules for the specified game. (bool)
     do_stats: Show game statistics. (bool)
+    figure_win_loss_draw: Determine win/loss/draw numbers and streaks. (tuple) 
+    filter_results: Filter game results based on user requests. (list of lists)
     load_games: Load all of the games defined locally. (None)
     menu: Run the game selection menu. (None)
     play_game: Play a selected game. (None)
@@ -390,6 +392,22 @@ class Interface(other_cmd.OtherCmd):
         current_streak, streak_type, longest_streaks = utility.streaks(wins)
         return game_wld, player_wld, current_streak, streak_type, longest_streaks
 
+    def filter_results(self, results, options):
+        """
+        Filter game results based on user requests. (list of lists)
+
+        Paramters:
+        results: The game results to filter. (list of lists)
+        options: The user provided options, including any filters. (str)
+        """
+        if 'cheat' not in options:
+            results = [result for result in results if not result[6] & 2]
+        if 'gipf' not in options:
+            results = [result for result in results if not result[6] & 8]
+        if 'xyzzy' not in options:
+            results = [result for result in results if not result[6] & 128]
+        return results
+
     def menu(self):
         """Run the game selection menu. (None)"""
         # Start at the top category.
@@ -492,19 +510,20 @@ class Interface(other_cmd.OtherCmd):
             menu_map['Q'] = 'Quit'
         return dict(pairs)
 
-    def show_scores(self, scores, score_type):
+    def show_scores(self, scores, score_type, options):
         """
         Show the base statistics for a set of scores or turns. (None)
 
         Parameters:
         scores: A list of scores or turns. (list of int)
         score_type: The type of scores or turns being shown. (str)
+        options: User specified filtering and statistic options. (str)
         """
         if scores:
             score_stats = [min(scores), utility.mean(scores), utility.median(scores), max(scores)]
             self.human.tell('{}: {} - {:.1f} / {} - {}'.format(score_type, *score_stats))
 
-    def show_stats(self, results, title = '', options):
+    def show_stats(self, results, title = '', options = ''):
         """
         Show the statistics for a set of game results. (None)
 
@@ -522,12 +541,8 @@ class Interface(other_cmd.OtherCmd):
         # Process parameters.
         if not title:
             title = results[0][0] + ' Statistics'
-        if 'cheat' not in options:
-            results = [result for result in results if not result[6] & 2]
-        if 'gipf' not in options:
-            results = [result for result in results if not result[6] & 8]
-        if 'xyzzy' not in options:
-            results = [result for result in results if not result[6] & 128]
+        # Process filters.
+        results = self.filter_results(results, options)
         # Check for no valid results.
         if not results:
             self.human.tell('No game results to show.')
@@ -543,13 +558,13 @@ class Interface(other_cmd.OtherCmd):
         self.human.tell('Overall Win-Loss-Draw: {}-{}-{}'.format(*game_wld))
         self.human.tell('Player Win-Loss-Draw: {}-{}-{}'.format(*player_wld))
         # Display scores.
-        self.show_scores([rez[4] for rez in results], 'Overall Scores')
-        self.show_scores([rez[4] for rez in results if rez[1] and not rez[2]], 'Winning Scores')
-        self.show_scores([rez[4] for rez in results if rez[2]], 'Losing Scores')
+        self.show_scores([rez[4] for rez in results], 'Overall Scores', options)
+        self.show_scores([rez[4] for rez in results if rez[1] and not rez[2]], 'Winning Scores', options)
+        self.show_scores([rez[4] for rez in results if rez[2]], 'Losing Scores', options)
         # Display turns.
-        self.show_scores([rez[5] for rez in results], 'Overall Turns')
-        self.show_scores([rez[5] for rez in results if rez[1] and not rez[2]], 'Winning Turns')
-        self.show_scores([rez[5] for rez in results if rez[2]], 'Losing Turns')
+        self.show_scores([rez[5] for rez in results], 'Overall Turns', options)
+        self.show_scores([rez[5] for rez in results if rez[1] and not rez[2]], 'Winning Turns', options)
+        self.show_scores([rez[5] for rez in results if rez[2]], 'Losing Turns', options)
         # Display streaks.
         if longest_streaks[1]:
             self.human.tell('Longest winning streak: {}'.format(longest_streaks[1]))
