@@ -39,6 +39,12 @@ feed (f): Release the specified number of bales of grain to the people.
 next (n): Finish your turn and go to the next year.
 plant (p): Plant seed in the specified number of acres.
 sell (s): Sell the specified number of acres.
+
+Options:
+plague-chance (pc): The chance of plague. 0 to 100, defaults to 15.
+rat-chance (rc): The chance of rats eating grain. 0 to 100, defaults to 40.
+steady-grain (sg): Grain yields are more likely to be average.
+steady-land (sl): Land prices are more likely to be average.
 """
 
 
@@ -52,8 +58,10 @@ class Hamurabi(game.Game):
     bushels_per_acre: How much grain can grow in an acre. (int)
     feed: How many bushels were given to the people this year. (int)
     game_length: The number of turns in the game. (int)
+    grain_yields: The distribution of grain yields (tuple of int)
     immigration: The immigration modifier. (int)
     impeachment: The impeachment modifier. (int)
+    land_costs: The distribution of land prices. (tuple of int)
     plague_chance: The yearly chance of plague. (int)
     population: The current population. (int)
     rat_chance: The yearly chance of rats. (int)
@@ -63,6 +71,8 @@ class Hamurabi(game.Game):
     start_population: The starting population for the city state. (int)
     start_rats: The starting rat damage. (int)
     starved: The number of people starved this year. (int)
+    steady_grain: A flag for a lower variance of grain yields. (bool)
+    steady_land: A flag for a lower variance of land prices. (bool)
     storage: How many bushels of grain are in storage. (int)
     total_starved: The number of people starved in all years. (int)
 
@@ -86,6 +96,7 @@ class Hamurabi(game.Game):
     # Interface categories for the game.
     categories = ['Other Games']
     name = 'Hamurabi'
+    num_options = 4
     rules = RULES
     year_intro = '\nHamurabi, I beg to report to you, in year {}, {} people starved and {} came to the '
     year_intro += 'city.\nYou havested {} bushels per acre.\nRats ate {} bushels.'
@@ -174,7 +185,7 @@ class Hamurabi(game.Game):
                 return False    
         # Determine values for next turn.
         # Update grain values and reset the grain bonus.
-        self.bushels_per_acre = random.randint(1, 5) + self.grain_mod
+        self.bushels_per_acre = random.choice(self.grain_yields) + self.grain_mod
         self.grain_mod = 0
         if random.random() <= self.rat_chance / 100.0:
             if self.cats:
@@ -198,7 +209,7 @@ class Hamurabi(game.Game):
         self.average_starved += self.total_starved / float(self.population) / self.game_length
         self.population += self.immigrants - self.starved
         # Update real estate values.
-        self.acre_cost = random.randint(17,26)
+        self.acre_cost = random.choice(self.land_costs)
         # Update user.
         format_params = (self.turns + 1, self.starved, self.immigrants, self.bushels_per_acre, self.rats)
         self.human.tell(self.year_intro.format(*format_params))
@@ -303,12 +314,22 @@ class Hamurabi(game.Game):
 
     def handle_options(self):
         """Handle the game options. (None)"""
+        # Process the user's choices.
+        super(Hamurabi, self).handle_options()
+        # Handle the user's choices.
+        if self.steady_land:
+            self.land_costs = (17, 18, 19, 19, 20, 20, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 25, 
+                25, 26, 27)
+        else:
+            self.land_costs = tuple(range(17, 28))
+        if self.steady_grain:
+            self.grain_yields = (1, 2, 2, 3, 3, 3, 4, 4, 5)
+        else:
+            self.grain_yields = (1, 2, 3, 4, 5)
         # Set default options.
         self.game_length = 10
         self.immigration = 20
         self.impeachment = 45
-        self.plague_chance = 15
-        self.rat_chance = 40
         self.start_acres = 1000
         self.start_population = 100
         self.start_rats = 200
@@ -323,6 +344,19 @@ class Hamurabi(game.Game):
         self.show_status()
         # Get the player choices.
         return self.handle_cmd(self.human.ask('What would you like to do? '))
+
+    def set_options(self):
+        """Set up the options for the game. (None)"""
+        # Handle percent chance options.
+        self.option_set.add_option('plague-chance', ['pc'], int, default = 15, valid = range(101),
+            question = 'What should the percent chance of plague be (return for 15)? ')
+        self.option_set.add_option('rat-chance', ['rc'], int, default = 40, valid = range(101),
+            question = 'What should the percent chance of rats be (return for 40)? ')
+        # Handle distributional options.
+        self.option_set.add_option('steady-land', ['sl'],
+            question = 'Should land prices be steadier? bool')
+        self.option_set.add_option('steady-grain', ['sg'],
+            question = 'Should grain yields be steadier? bool')
 
     def set_up(self):
         """Set up the game. (None)"""
