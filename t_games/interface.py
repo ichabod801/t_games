@@ -475,7 +475,7 @@ class Interface(other_cmd.OtherCmd):
             stats_options = ' '.join(stats_options)
             self.do_stats('{} / {}'.format(self.game.name, stats_options))
             if stats_options:
-                print('Statistics calculated with the folloing options: {}.'.format(stats_options))
+                print('\nStatistics were calculated with the folloing options: {}.'.format(stats_options))
             again = self.human.ask('Would you like to play again? ').strip().lower()
             if again in ('!', '!!'):
                 self.human.held_inputs = ['!']
@@ -546,16 +546,16 @@ class Interface(other_cmd.OtherCmd):
         """
         # Check for empty results.
         if not results:
-            self.human.tell('You have never played that game.')
+            self.human.tell('\nYou have never played that game.')
             return None
         # Process parameters.
         if not title:
-            title = results[0][0] + ' Statistics'
+            title = '\n{} Statistics'.format(results[0][0])
         # Process filters.
         results = self.filter_results(results, options)
         # Check for no valid results.
         if not results:
-            self.human.tell('No game results to show.')
+            self.human.tell('\nNo game results to show.')
             return None
         # Calculate total win-loss-draw and get data for streaks.
         stats = self.figure_win_loss_draw(results)
@@ -584,7 +584,6 @@ class Interface(other_cmd.OtherCmd):
             self.human.tell('Longest drawing streak: {}'.format(longest_streaks[0]))
         streak_name = ('drawing', 'winning', 'losing')[streak_type]
         self.human.tell('You are currently on a {} game {} streak.'.format(current_streak, streak_name))
-        self.human.tell()
 
 
 class RandomValve(object):
