@@ -137,11 +137,13 @@ class Interface(other_cmd.OtherCmd):
     do_rules: Show the rules for the specified game. (bool)
     do_stats: Show game statistics. (bool)
     figure_win_loss_draw: Determine win/loss/draw numbers and streaks. (tuple) 
-    filter_results: Filter game results based on user requests. (list of lists)
+    filter_results: Filter game results based on user's input. (list of lists)
     load_games: Load all of the games defined locally. (None)
     menu: Run the game selection menu. (None)
     play_game: Play a selected game. (None)
     show_menu: Display the menu options to the user. (dict)
+    show_scores: Show the base statistics for a set of scores or turns. (None)
+    show_stats: Show the statistics for a set of game results. (None)
 
     Overridden Methods:
     __init__
@@ -385,6 +387,7 @@ class Interface(other_cmd.OtherCmd):
                 else:
                     game_wld[1] += 1
                     wins.append(-1)
+            # Update the per-player stats.
             player_wld[0] += win
             player_wld[1] += loss
             player_wld[2] += draw
@@ -400,12 +403,14 @@ class Interface(other_cmd.OtherCmd):
         results: The game results to filter. (list of lists)
         options: The user provided options, including any filters. (str)
         """
+        # Do the predefined filters.
         if 'cheat' not in options:
             results = [result for result in results if not result[6] & 2]
         if 'gipf' not in options:
             results = [result for result in results if not result[6] & 8]
         if 'xyzzy' not in options:
             results = [result for result in results if not result[6] & 128]
+        # Return the filtered data.
         return results
 
     def menu(self):
@@ -465,7 +470,17 @@ class Interface(other_cmd.OtherCmd):
         while True:
             results = self.game.play()
             self.human.store_results(self.game.name, results)
-            self.do_stats(self.game.name)
+            stats_options = []
+            if results[5] & 2:
+                stats_options.append('cheat')
+            if results[5] & 8:
+                stats_options.append('gipf')
+            if results[5] & 128:
+                stats_options.append('xyzzy')
+            stats_options = ' '.join(stats_options)
+            self.do_stats('{} / {}'.format(self.game.name, stats_options))
+            if stats_options:
+                print('\nStatistics were calculated with the folloing options: {}.'.format(stats_options))
             again = self.human.ask('Would you like to play again? ').strip().lower()
             if again in ('!', '!!'):
                 self.human.held_inputs = ['!']
@@ -519,7 +534,9 @@ class Interface(other_cmd.OtherCmd):
         score_type: The type of scores or turns being shown. (str)
         options: User specified filtering and statistic options. (str)
         """
+        # Show nothing if no matching scores.
         if scores:
+            # Show the base statistics.
             score_stats = [min(scores), utility.mean(scores), utility.median(scores), max(scores)]
             self.human.tell('{}: {} - {:.1f} / {} - {}'.format(score_type, *score_stats))
 
@@ -536,16 +553,16 @@ class Interface(other_cmd.OtherCmd):
         """
         # Check for empty results.
         if not results:
-            self.human.tell('You have never played that game.')
+            self.human.tell('\nYou have never played that game.')
             return None
-        # Process parameters.
+        # Process the parameters.
         if not title:
-            title = results[0][0] + ' Statistics'
-        # Process filters.
+            title = '\n{} Statistics'.format(results[0][0])
+        # Process the filters.
         results = self.filter_results(results, options)
         # Check for no valid results.
         if not results:
-            self.human.tell('No game results to show.')
+            self.human.tell('\nNo game results to show.')
             return None
         # Calculate total win-loss-draw and get data for streaks.
         stats = self.figure_win_loss_draw(results)
@@ -554,18 +571,18 @@ class Interface(other_cmd.OtherCmd):
         # Display the title.
         self.human.tell(title)
         self.human.tell('-' * len(title))
-        # Display win-loss-draw
+        # Display the win-loss-draw numbers.
         self.human.tell('Overall Win-Loss-Draw: {}-{}-{}'.format(*game_wld))
         self.human.tell('Player Win-Loss-Draw: {}-{}-{}'.format(*player_wld))
-        # Display scores.
+        # Display the scores.
         self.show_scores([rez[4] for rez in results], 'Overall Scores', options)
         self.show_scores([rez[4] for rez in results if rez[1] and not rez[2]], 'Winning Scores', options)
         self.show_scores([rez[4] for rez in results if rez[2]], 'Losing Scores', options)
-        # Display turns.
+        # Display the turns.
         self.show_scores([rez[5] for rez in results], 'Overall Turns', options)
         self.show_scores([rez[5] for rez in results if rez[1] and not rez[2]], 'Winning Turns', options)
         self.show_scores([rez[5] for rez in results if rez[2]], 'Losing Turns', options)
-        # Display streaks.
+        # Display the streaks.
         if longest_streaks[1]:
             self.human.tell('Longest winning streak: {}'.format(longest_streaks[1]))
         if longest_streaks[-1]:
@@ -574,7 +591,6 @@ class Interface(other_cmd.OtherCmd):
             self.human.tell('Longest drawing streak: {}'.format(longest_streaks[0]))
         streak_name = ('drawing', 'winning', 'losing')[streak_type]
         self.human.tell('You are currently on a {} game {} streak.'.format(current_streak, streak_name))
-        self.human.tell()
 
 
 class RandomValve(object):
