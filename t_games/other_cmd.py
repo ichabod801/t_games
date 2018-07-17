@@ -78,6 +78,8 @@ class OtherCmd(object):
         arguments: What to provide help for. (str)
         """
         topic = arguments.lower()
+        # check for aliases
+        topic = self.aliases.get(topic, topic)
         # The help_text dictionary takes priority.
         if topic in self.help_text:
             self.human.tell(self.help_text[topic].rstrip())
