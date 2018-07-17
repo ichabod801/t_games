@@ -70,6 +70,9 @@ The commands are:
    SHOOT: Shoot a crooked arrow. You can provide 1-3 directions for the arrow
       to travel through the passages (frex, SHOOT LRL).
    RULES: Read these fascinating, well written instructions again.
+
+Options:
+arrows: How many arrows you get. (1 to 5, defaults to 5)
 """
 
 
@@ -288,7 +291,8 @@ class Wumpus(game.Game):
     A game of Hunt the Wumpus.
 
     Attributes:
-    arrows: The number of crooked arrows left. (int)
+    arrows: The number of crooked arrows to start with. (int)
+    arrows_left: The number of crooked arrows left. (int)
     dodec: The cave system. (Dodecahedron)
 
     Methods:
@@ -298,6 +302,7 @@ class Wumpus(game.Game):
     Overridden Methods:
     game_over
     player_action
+    set_options
     set_up
     """
 
@@ -306,6 +311,8 @@ class Wumpus(game.Game):
     categories = ['Other Games']
     credits = CREDITS
     name = 'Hunt the Wumpus'
+    # The number of game options.
+    num_options = 1
     rules = RULES
 
     def do_gipf(self, argument):
@@ -408,10 +415,15 @@ class Wumpus(game.Game):
             self.human.tell()
             self.status_check()
 
+    def set_options(self):
+        """Set the possible options for the game. (None)"""
+        self.option_set.add_option('arrows', ['a'], int, valid = (1, 2, 3, 4, 5), default = 5,
+            question = "How many arrows should you get (1 to 5, return for 5)? ")
+
     def set_up(self):
         """Set up the caves and the tracking variables. (None)"""
         self.dodec = Dodecahedron()
-        self.arrows = 5
+        self.arrows_left = self.arrows
         self.status_check()
         
     def shoot(self, arg):
@@ -422,9 +434,9 @@ class Wumpus(game.Game):
         arg: The directions to shoot the arrow in. (str)
         """
         # make sure there are arrows
-        if self.arrows:
+        if self.arrows_left:
             # update arrows
-            self.arrows -= 1
+            self.arrows_left -= 1
             # take the shot
             hit = self.dodec.shoot(arg.upper())
             # Show the results
@@ -434,7 +446,7 @@ class Wumpus(game.Game):
                 # miss means wumpus may move
                 self.human.tell('You hear the arrow break uselessly against a wall.')
                 self.human.tell('You hear a grumbling roar and a strange suck-pop sound.')
-                self.human.tell('You have {} crooked arrows left.'.format(self.arrows))
+                self.human.tell('You have {} crooked arrows left.'.format(self.arrows_left))
                 self.dodec.move_wumpus()
             elif hit == 0:
                 # shooting yourself is a loss
