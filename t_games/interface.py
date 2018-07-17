@@ -197,10 +197,7 @@ class Interface(other_cmd.OtherCmd):
 
     def do_credits(self, arguments):
         """
-        Show the programming credits for the interface. (bool)
-
-        Parameters:
-        arguments: This parameter is ignored. (str)
+        Show the full t_games credits.
         """
         self.human.tell(full_credits.FULL_CREDITS)
         self.human.ask('Press Enter to continue: ')
@@ -208,10 +205,10 @@ class Interface(other_cmd.OtherCmd):
 
     def do_games(self, arguments):
         """
-        List the available games in the current category. (None)
+        List the available games.
 
-        Parameters:
-        arguments: This parameter is ignored. (str)
+        The games listed are aware of your location in the menu, so only games in the
+        current category are listed.
         """
         # Get the games in the current context.
         games = self.focus['games'][:]
@@ -233,10 +230,7 @@ class Interface(other_cmd.OtherCmd):
 
     def do_home(self, arguments):
         """
-        Go to the top of the menu tree.. (bool)
-
-        Parameters:
-        arguments: This parameter is ignored. (str)
+        Go to the top of the menu tree.
         """
         self.focus = self.categories
         self.previous = []
@@ -244,10 +238,19 @@ class Interface(other_cmd.OtherCmd):
 
     def do_play(self, arguments):
         """
-        Play a game with the specified options, if any. (bool)
+        Play a game with the specified options.
 
-        Parameters:
-        arguments: The game name, with any options specified after a slash. (str)
+        Anything after the play command but before the first forward slash (/) is
+        taken as the name of the game or an alias for a game. Anything after the first
+        forward slash is given as option settings to the game.
+
+        Note that if the game has options and you don't specify any, it will 
+        immediately ask you if you want to change the options. To avoid this you can 
+        either specify the 'none' option (play game-name / none) or follow the game 
+        name with a semi-colon.
+
+        Also note that the play command is the default. If you just type in a game
+        name, the system will start that game.
         """
         # Get the game name and options.
         if '/' in arguments:
@@ -267,10 +270,12 @@ class Interface(other_cmd.OtherCmd):
 
     def do_random(self, arguments):
         """
-        Play a random game. (bool)
+        Play a random game.
 
-        Parameters:
-        arguments: The arguments for the command. (str)
+        The random command is aware of your location in the menu tree, so it will only
+        choose from games in the current category. To play a random choice from all
+        games, regardless of the current menu category, provide the 'all' argument to
+        the random command.
         """
         if arguments.strip().lower() == 'all':
             game_class = random.choice(list(self.games.values()))
@@ -281,10 +286,7 @@ class Interface(other_cmd.OtherCmd):
 
     def do_rules(self, arguments):
         """
-        Show the rules for the specified game. (bool)
-
-        Parameters:
-        arguments: The game name. (str)
+        Show the rules for the game specified as an argument.
         """
         arguments = arguments.lower()
         if not arguments:
@@ -298,10 +300,13 @@ class Interface(other_cmd.OtherCmd):
 
     def do_stats(self, arguments):
         """
-        Show game statistics. (bool)
+        Show game statistics.
 
-        parameters:
-        arguments: The game to show statistics for. (str)
+        If no arguments are given to the stats command, it will display the stats for
+        all of the games in the current menu category. If the argument given to the 
+        stats command is a game name or an alias for a game, stats will be given for 
+        that game. If 'all' is given as the argument to the stats command, stats will
+        be shown for all games.
         """
         # Process the arguments.
         arguments, slash, options = arguments.partition('/')
@@ -309,9 +314,12 @@ class Interface(other_cmd.OtherCmd):
         options = options.strip().lower()
         # Handle overall stats.
         if not arguments:
-            self.show_stats(self.human.results, 'Overall Statistics', options)
-            games = sorted(set([result[0] for result in self.human.results]))
-            # Show the stats for the individual games.
+            # Find the relevant games.
+            names = [game.name for game in self.category_games()]
+            relevant = [result for result in self.human.results if result[0] in names]
+            # Show the over and individual game stats.
+            self.show_stats(relevant, 'Category Statistics', options)
+            games = sorted(set([result[0] for result in relevant]))
             for game in games:
                 relevant = [result for result in self.human.results if result[0] == game]
                 self.show_stats(relevant, options = options)
@@ -321,13 +329,10 @@ class Interface(other_cmd.OtherCmd):
             relevant = [result for result in self.human.results if result[0] == game_class.name]
             self.show_stats(relevant, options = options)
         # Handle category stats.
-        elif arguments.lower() == 'cat':
-            # Find the relevant games.
-            names = [game.name for game in self.category_games()]
-            relevant = [result for result in self.human.results if result[0] in names]
-            # Show the over and individual game stats.
-            self.show_stats(relevant, 'Category Statistics', options)
-            games = sorted(set([result[0] for result in relevant]))
+        elif arguments.lower() == 'all':
+            self.show_stats(self.human.results, 'Overall Statistics', options)
+            games = sorted(set([result[0] for result in self.human.results]))
+            # Show the stats for the individual games.
             for game in games:
                 relevant = [result for result in self.human.results if result[0] == game]
                 self.show_stats(relevant, options = options)
