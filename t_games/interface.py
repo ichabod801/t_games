@@ -31,12 +31,6 @@ import t_games.player as player
 import t_games.utility as utility
 
 
-# Programming credits and play testers.
-CREDITS = """
-This interface and the t_games framework was programmed by Craig "Ichabod"
-O'Brien.
-"""
-
 # General help for the interface.
 HELP_TEXT = """
 General interface help (?).

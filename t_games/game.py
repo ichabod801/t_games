@@ -94,7 +94,7 @@ class Game(OtherCmd):
     # Interface categories for the game.
     categories = ['Test Games']
     credits = 'No credits have been specified for this game.'
-    help_text = {}
+    help_text = {'help': '\nUse the rules command for instructions on how to play.'}
     # A regular expression for catching floats.
     float_re = re.compile('-?\d*\.\d+')
     name = 'Null'
@@ -134,30 +134,24 @@ class Game(OtherCmd):
 
     def do_credits(self, arguments):
         """
-        Show the credits. (bool)
-
-        Parameters:
-        arguments: This parameter is ignored. (str)
+        Show the credits for the game.
         """
         self.human.tell(self.credits)
         return True
 
     def do_debug(self, arguments):
         """
-        Handle debugging commands. (bool)
-
-        Parameters:
-        arguments: The debugging information needed. (str)
+        I can't help you with that.
         """
         self.flags |= 2
         return super(Game, self).do_debug(arguments)
 
     def do_quit(self, arguments):
         """
-        Quit the game, which counts as a loss. (bool)
+        Quit the game, which counts as a loss. (!)
 
-        Parameters:
-        arguments: The modifiers to the quit. (str)
+        If you pass quit (or q or !) as an argument to the quit command, it quits the
+        game and the entire t_games interface.
         """
         self.flags |= 4
         self.force_end = 'loss'
@@ -168,20 +162,44 @@ class Game(OtherCmd):
 
     def do_quit_quit(self, arguments):
         """
-        Quit the game and the interface. (bool)
-
-        Parameters:
-        arguments: The ignored parameters. (str)
+        Quit the game and the t_games interface. (!!)
         """
         self.human.held_inputs = ['!']
         return self.do_quit('quit')
 
     def do_rpn(self, arguments):
         """
-        Process reverse Polish notation statements to do calculations. (None)
+        Process reverse Polish notation statements to do calculations. (=)
 
-        Parameters:
-        arguments: The calculation to process. (str)
+        The avaible operators are:
+            |     absolute value
+            +     addition
+            C     choose
+            cos   cosine
+            /     division
+            /%    division and modulus
+            ^     exponentiation
+            !     factorial
+            F     flip a coin (1 or 0)
+            //    floor division
+            ln    logarithm (natural)
+            log   logarithm (base 10)
+            %     modulus
+            *     multiplication
+            +-    negation
+            P     permutations
+            R     random number (standard uniform distribution)
+            1/    reciprocal
+            sin   sine
+            -     subtraction
+            V     square root
+            tan   tangent
+            ab/c  a + b / c
+
+        For example, '= 1 1 ^ 2 2 ^ 3 3 ^ * *' returns 108. '= R 108 * 1 + 1 //'
+        returns a random number from 1 to 108. So does '1 1 R 108 * + //'.
+
+        Note that the full stack is displayed at the end of the calculation.
         """
         # Process reverse Polish notation.
         stack = []
@@ -216,20 +234,14 @@ class Game(OtherCmd):
 
     def do_rules(self, arguments):
         """
-        Show the rules text. (bool)
-
-        Parameters:
-        arguments: This parameter is ignored. (str)
+        Show the rules for the game.
         """
         self.human.tell(self.rules)
         return True
 
     def do_xyzzy(self, arguments):
         """
-        Nothing happens. (bool)
-
-        Parameters:
-        arguments: What doesn't happen. (str)
+        Nothing happens.
         """
         if self.interface.valve.blow(self):
             game_class = random.choice(list(self.interface.games.values()))
