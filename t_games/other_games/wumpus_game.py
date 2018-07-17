@@ -302,6 +302,7 @@ class Wumpus(game.Game):
     Overridden Methods:
     game_over
     player_action
+    set_options
     set_up
     """
 

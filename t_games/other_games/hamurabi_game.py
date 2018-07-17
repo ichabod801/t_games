@@ -87,6 +87,7 @@ class Hamurabi(game.Game):
     Overridden Methods:
     game_over
     handle_options
+    set_options
     set_up
     """
 
