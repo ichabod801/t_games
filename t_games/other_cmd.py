@@ -58,10 +58,7 @@ class OtherCmd(object):
 
     def do_debug(self, arguments):
         """
-        Handle debugging commands. (bool)
-
-        Parameters:
-        arguments: The debugging information needed. (str)
+        I can't help you with that.
         """
         try:
             result = eval(arguments)
@@ -96,10 +93,12 @@ class OtherCmd(object):
 
     def do_set(self, arguments):
         """
-        Set a shortcut. (None)
+        Set a shortcut.
 
-        Parameters:
-        arguments: The shortcut to set. (str)
+        The first word provided as an argument to the set command will be the
+        shortcut. The rest of text of the argument will be what the shortcut is
+        expanded into. Any time that shortcut is used as a command, it is replaced
+        with the expanded text.
         """
         shortcut, space, text = arguments.strip().partition(' ')
         self.human.store_shortcut(shortcut, text)
