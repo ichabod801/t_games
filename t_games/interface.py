@@ -39,46 +39,20 @@ O'Brien.
 
 # General help for the interface.
 HELP_TEXT = """
-The games are organized into categories. You can use the menu to browse
-throught the categories to find the game you want. Just type in the 
-letter or letters to the left of the colon to make a selection. You can
-type home at any point to get back to the top of the menu.
+General interface help (?).
 
-You can see the rules for a game by typing 'rules game-name'. You should
-also be able to see the rules from within the game by typing 'rules'.
-
-You can go directly to a game by typing 'play game-name'. If you don't see
-the game you want to play, you might try this. Some games are stored with
-aliases that are not shown in the menu. For example, 'play Broadsides' will
-play the game listed in the menu as 'Battleships'. You can also specify
-options for a game with the play command by putting them after the slash.
-The options for the games should be specified in the game rules. Options
-ending with an equals sign (=) require a value to be specified. Do not put
-spaces around the equals sign. That is, use 'win=108' rather than 'win = 108'.
-If you play a game through the menu or by the play command without options, 
-the game should prompt you to specify the options (if there are any).
-
-You can see the credits (who designed and programmed the game) for any game 
-by typing 'credits'.
+The games are organized into categories. You can use the menu to browse 
+through the categories to find the game you want. Just type in the letter or 
+letters to the left of the colon to make a selection. You can type home at any 
+point to get back to the top of the menu.
 
 When the game is over you will be shown your overall statistics for that game.
-From the interface you can see your statistics for any game by typing 'stats'
-and the name of the game. You can also type 'stats cat' for all games in the
-category you are currently in, or just 'stats' for stats for all of the games
-you have played.
+From the interface you can see your statistics for any game by using the stats
+command.
 
-You can play a random game by typing 'random'. This will be a random game from
-the category you're in currently in the menu system. To play any random game, 
-use 'random all'. You can get a list of available games with the games
-command. It is also context sensitive, and will only show the games for the 
-category that you are in.
-
-You can create shortcuts using the set command. The first word after the set
-command is the shortcut, the rest is what it stands for. Once it is set, any
-time the first word of a line is a shortcut, it will be replaced with the 
-appropriate text. For example, after 'set fc play freecell', you can just
-enter 'fc' to play freecell. You could even type 'fc / cells = 5', which 
-will translate to 'play freecell / cells = 5'.
+You may also type in other commands as listed below. This can allow playing
+games without going through the menu system or getting information about the
+games that can be played or the system in general.
 
 You can get this help text by typing help or ?
 """
@@ -287,6 +261,8 @@ class Interface(other_cmd.OtherCmd):
     def do_rules(self, arguments):
         """
         Show the rules for the game specified as an argument.
+
+        Without a game specified, this just shows the rules for the current game.
         """
         arguments = arguments.lower()
         if not arguments:

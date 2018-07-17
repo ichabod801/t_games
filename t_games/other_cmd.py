@@ -78,16 +78,35 @@ class OtherCmd(object):
         arguments: What to provide help for. (str)
         """
         topic = arguments.lower()
+        # The help_text dictionary takes priority.
         if topic in self.help_text:
             self.human.tell(self.help_text[topic].rstrip())
+        # General help is given with no arguments.
         elif not topic:
+            # Show the base help text.
             self.human.tell(self.help_text['help'].rstrip())
+            # Get the names of other help topics.
+            names = [name[3:] for name in dir(self.__class__) if name.startswith('do_')]
+            names.extend([name[5:] for name in dir(self.__class__) if name.startswith('help_')])
+            names.extend(self.help_text.keys())
+            # Clean up the names.
+            names = list(set(names) - set(('debug', 'gipf', 'help', 'text', 'xyzzy')))
+            names.sort()
+            # Convert the names to cleanly wrapped text and output.
+            name_lines = textwrap.wrap(', '.join(names), width = 79)
+            if name_lines:
+                self.human.tell()
+                self.human.tell("Additional help topics available with 'help <topic>':")
+                self.human.tell('\n'.join(name_lines))
+        # Method docstrings are given for recognized commands.
         elif hasattr(self, 'do_' + topic):
             help_text = getattr(self, 'do_' + topic).__doc__
             help_text = textwrap.dedent(help_text).rstrip()
             self.human.tell(help_text)
+        # Display default text for unknown arguments.
         else:
             self.human.tell("I can't help you with that.")
+        # Don't let the next menu interfere with reading the help text.
         self.human.ask('\nPress Enter to continue: ')
         return True
 
@@ -99,6 +118,11 @@ class OtherCmd(object):
         shortcut. The rest of text of the argument will be what the shortcut is
         expanded into. Any time that shortcut is used as a command, it is replaced
         with the expanded text.
+
+        For example, if you prefer playing freecell with three cells, you could type
+        'set fc play freecell / cells = 3'. Then any time you typed 'fc', it would 
+        play the game freecell with the option 'cells = 3'. You could even type 'fc
+        challenge' to play with three cells and the challenge option.
         """
         shortcut, space, text = arguments.strip().partition(' ')
         self.human.store_shortcut(shortcut, text)
