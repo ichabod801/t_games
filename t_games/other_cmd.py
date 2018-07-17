@@ -92,7 +92,7 @@ class OtherCmd(object):
             names.extend([name[5:] for name in dir(self.__class__) if name.startswith('help_')])
             names.extend(self.help_text.keys())
             # Clean up the names.
-            names = list(set(names) - set(('debug', 'gipf', 'help', 'text', 'xyzzy')))
+            names = list(set(names) - set(('debug', 'help', 'text')))
             names.sort()
             # Convert the names to cleanly wrapped text and output.
             name_lines = textwrap.wrap(', '.join(names), width = 79)
@@ -100,6 +100,10 @@ class OtherCmd(object):
                 self.human.tell()
                 self.human.tell("Additional help topics available with 'help <topic>':")
                 self.human.tell('\n'.join(name_lines))
+        # help_foo methods take priority over do_foo docstrings.
+        elif hasattr(self, 'help_' + topic):
+            help_method = getattr(self, 'help_' + topic)
+            help_method()
         # Method docstrings are given for recognized commands.
         elif hasattr(self, 'do_' + topic):
             help_text = getattr(self, 'do_' + topic).__doc__

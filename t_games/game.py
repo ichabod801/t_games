@@ -318,6 +318,19 @@ class Game(OtherCmd):
         """Handle game options and set the player list. (None)"""
         self.option_set.handle_settings(self.raw_options)
 
+    def help_xyzzy(self):
+        """Help for the xyzzy command. (None)"""
+        if random.random() < 0.2:
+            # Get the names of other help topics.
+            names = [name[3:] for name in dir(self.__class__) if name.startswith('do_')]
+            names.extend([name[5:] for name in dir(self.__class__) if name.startswith('help_')])
+            names.extend(self.help_text.keys())
+            # Clean up the names.
+            names = list(set(names) - set(('debug', 'help', 'text')))
+            self.do_help(random.choice(names))
+        else:
+            self.human.tell('\nNothing happens.')
+
     def play(self):
         """
         Play the game. (list of int)
