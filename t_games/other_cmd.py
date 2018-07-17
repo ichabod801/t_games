@@ -16,6 +16,7 @@ OtherCmd: An object for handing text commands. (object)
 """
 
 
+import textwrap
 import traceback
 
 
@@ -31,6 +32,7 @@ class OtherCmd(object):
     """
 
     aliases = {'&': 'debug'}
+    help_text = {'help': '\nResistance is futile.'}
 
     def __init__(self, human):
         """
@@ -69,6 +71,27 @@ class OtherCmd(object):
         else:
             self.human.tell(repr(result))
             self.human.tell()
+        return True
+
+    def do_help(self, arguments):
+        """
+        Handle help requests. (bool)
+
+        Parameters:
+        arguments: What to provide help for. (str)
+        """
+        topic = arguments.lower()
+        if topic in self.help_text:
+            self.human.tell(self.help_text[topic].rstrip())
+        elif not topic:
+            self.human.tell(self.help_text['help'].rstrip())
+        elif hasattr(self, 'do_' + topic):
+            help_text = getattr(self, 'do_' + topic).__doc__
+            help_text = textwrap.dedent(help_text).rstrip()
+            self.human.tell(help_text)
+        else:
+            self.human.tell("I can't help you with that.")
+        self.human.ask('\nPress Enter to continue: ')
         return True
 
     def do_set(self, arguments):

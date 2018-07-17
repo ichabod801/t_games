@@ -151,6 +151,7 @@ class Interface(other_cmd.OtherCmd):
     """
 
     aliases = {'?': 'help'}
+    help_text = {'help': HELP_TEXT, 'license': LICENSE}
     rules = RULES
     word_list = 'other_games/3of6game.txt'
 
@@ -229,21 +230,6 @@ class Interface(other_cmd.OtherCmd):
                 self.human.tell(game.name)
         self.human.ask('\nPress Enter to continue: ')
         self.human.tell()
-
-    def do_help(self, arguments):
-        """
-        Show the general help text for t_games. (bool)
-
-        Parameters:
-        arguments: This parameter is ignored. (str)
-        """
-        # Show help based on arguments.
-        if 'license' in arguments.lower():
-            self.human.tell(LICENSE)
-        else:
-            self.human.tell(HELP_TEXT)
-        self.human.ask('Press Enter to continue: ')
-        return True
 
     def do_home(self, arguments):
         """

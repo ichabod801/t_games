@@ -94,7 +94,7 @@ class Game(OtherCmd):
     # Interface categories for the game.
     categories = ['Test Games']
     credits = 'No credits have been specified for this game.'
-    help = {}
+    help_text = {}
     # A regular expression for catching floats.
     float_re = re.compile('-?\d*\.\d+')
     name = 'Null'
@@ -151,19 +151,6 @@ class Game(OtherCmd):
         """
         self.flags |= 2
         return super(Game, self).do_debug(arguments)
-
-    def do_help(self, arguments):
-        """
-        Show the help text for a given area. (bool)
-
-        Parameter:
-        arguments: The area to get help on. (str)
-        """
-        if arguments.lower() in self.help:
-            self.human.tell(self.help[arguments.lower()])
-        else:
-            self.human.tell("I can't help you with that.")
-        return True
 
     def do_quit(self, arguments):
         """
