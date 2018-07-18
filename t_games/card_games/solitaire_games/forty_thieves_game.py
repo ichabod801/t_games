@@ -60,10 +60,7 @@ class FortyThieves(solitaire.MultiSolitaire):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        I'm sorry, I quit gipfing for Lent.
         """
         game, losses = self.gipf_check(arguments, ('freecell',))
         # Freecell
