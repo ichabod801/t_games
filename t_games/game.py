@@ -116,9 +116,12 @@ class Game(OtherCmd):
         self.raw_options = raw_options.strip()
         self.flags = 0
         self.aliases = {}
+        self.help_text = {}
         for cls in reversed(self.__class__.__mro__):
             if hasattr(cls, 'aliases'):
                 self.aliases.update(cls.aliases)
+            if hasattr(cls, 'help_text'):
+                self.help_text.update(cls.help_text)
         self.option_set = options.OptionSet(self)
         self.set_options()
         self.handle_options()
