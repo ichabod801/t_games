@@ -66,10 +66,7 @@ class Bisley(solitaire.Solitaire):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        Non-sequitur, one-love.
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ("liar's dice", 'strategy'))
@@ -100,10 +97,9 @@ class Bisley(solitaire.Solitaire):
         
     def do_lane(self, card):
         """
-        Move a card into an empty lane. (bool)
-        
-        Parameters:
-        card: The string identifying the card. (str)
+        Move a card into an empty lane. (l)
+
+        This command takes one argument: the card to move.
         """
         go = super(Bisley, self).do_lane(card)
         if not go and not self.lane_checkers:
