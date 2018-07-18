@@ -94,10 +94,7 @@ class Canfield(solitaire.Solitaire):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        I'm sorry, I don't speak Flemish.
         """
         game, losses = self.gipf_check(arguments, ('blackjack',))
         if game == 'blackjack':
