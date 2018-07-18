@@ -76,10 +76,7 @@ class MonteCarlo(solitaire.Solitaire):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        But reality is just a simulation, so does gipfing really matter?
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('quadrille', 'craps'))
@@ -99,10 +96,9 @@ class MonteCarlo(solitaire.Solitaire):
 
     def do_match(self, cards):
         """
-        Match two cards and discard them.
+        Match two cards and discard them. (m)
 
-        Parameters:
-        cards: The cards being matched. (str)
+        The two cards specified by the arguments can be listed in any order.
         """
         # Unset non-adjacent matching on successful match.
         go = super(MonteCarlo, self).do_match(cards)
@@ -112,10 +108,11 @@ class MonteCarlo(solitaire.Solitaire):
 
     def do_turn(self, arguments):
         """
-        Turn cards from the stock into the waste. (bool)
+        Refill the tableau from the stock. (t)
 
-        Parameters:
-        arguments: The (ignored) arguments to the turn command. (str)
+        In Monte Carlo, the turn command first shifts all cards to the right, 
+        and up to the next level if there is space. Then any empty lanes are
+        filled from the stock.
         """
         self.tableau = [pile for pile in self.tableau if pile]
         while self.deck.cards and len(self.tableau) < self.options['num-tableau']:
