@@ -32,6 +32,7 @@ class OtherCmd(object):
     """
 
     aliases = {'&': 'debug'}
+    # Text for user help requests.
     help_text = {'help': '\nResistance is futile.'}
 
     def __init__(self, human):

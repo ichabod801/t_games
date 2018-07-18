@@ -10,7 +10,7 @@ Constants:
 CREDITS: Credits for FreeCell. (str)
 CREDITS_BAKER: Credits for Baker's Game. (str)
 RULES: Rules for FreeCell. (str)
-RULES_BAKER: Rules for Baker's Game. (str)
+STACK_HELP: Help on how many cards can be moved at one time. (str)
 
 Classes:
 FreeCell: A game of FreeCell. (Solitaire)
@@ -58,6 +58,28 @@ piles: The number of tableau piles. 4-10, defaults to 8.
 """
 
 
+# Help on how many cards can be moved at one time.
+STACK_HELP = """
+The number of cards you can move at one time depends on the number of empty
+free cells and the number of empty lanes. The formula for how many you can 
+move is (1 + C) * 2 ^ L, where C is the number of empty cells and L is the
+number of empty lanes*.
+
+For the mathphobic:
+
+          Cells   
+Lanes 0  1  2  3  4
+  0   1  2  3  4  5
+  1   2  4  6  8 10
+  2   4  8 12 16 20
+  3   8 16 24 32 40
+
+If you are moving the cards to a lane, don't count that lane.
+
+* The formula using the rpn command would be: 1 C + 2 L ^ * 
+"""
+
+
 class FreeCell(solitaire.Solitaire):
     """
     A game of FreeCell. (Solitaire)
@@ -77,16 +99,15 @@ class FreeCell(solitaire.Solitaire):
     # Interface categories for the game.
     categories = ['Card Games', 'Solitaire Games', 'Open Games']
     credits = CREDITS
+    # Text for user help requests.
+    help_text = {'moving-stacks': STACK_HELP}
     name = 'FreeCell'
     num_options = 8
     rules = RULES
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        There are no valid moves for the gipf of spades.
         """
         game, losses = self.gipf_check(arguments, ('hamurabi',))
         # Hamurabi

@@ -150,6 +150,7 @@ class Solitaire(game.Game):
 
     aliases = {'a': 'auto', 'b': 'build', 'f': 'free', 'l': 'lane', 'm': 'match', 'otto': 'auto', 
         's': 'sort', 'q': 'quit', 't': 'turn', 'u': 'undo'}
+    # Text for user help requests.
     help_text = {'help': HELP_TEXT, 'multi-deck': MULTI_DECK_HELP, 'scores': SCORE_HELP}
     name = 'Solitaire Base'
     

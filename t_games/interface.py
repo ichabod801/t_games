@@ -119,6 +119,7 @@ class Interface(other_cmd.OtherCmd):
     """
 
     aliases = {'?': 'help'}
+    # Text for user help requests.
     help_text = {'help': HELP_TEXT, 'license': LICENSE}
     rules = RULES
     word_list = 'other_games/3of6game.txt'

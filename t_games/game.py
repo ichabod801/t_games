@@ -94,6 +94,7 @@ class Game(OtherCmd):
     # Interface categories for the game.
     categories = ['Test Games']
     credits = 'No credits have been specified for this game.'
+    # Text for user help requests.
     help_text = {'help': '\nUse the rules command for instructions on how to play.'}
     # A regular expression for catching floats.
     float_re = re.compile('-?\d*\.\d+')
