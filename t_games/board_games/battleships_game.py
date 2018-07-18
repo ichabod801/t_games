@@ -119,10 +119,7 @@ class Battleships(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        Gesundheit.
         """
         game, losses = self.gipf_check(arguments, ('wumpus', 'pig', 'canfield'))
         go = True
