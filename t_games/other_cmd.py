@@ -92,7 +92,7 @@ class OtherCmd(object):
             names.extend([name[5:] for name in dir(self.__class__) if name.startswith('help_')])
             names.extend(self.help_text.keys())
             # Clean up the names.
-            names = list(set(names) - set(('debug', 'help', 'text')))
+            names = list(set(names) - set(('debug', 'gipf', 'help', 'text', 'xyzzy')))
             names.sort()
             # Convert the names to cleanly wrapped text and output.
             name_lines = textwrap.wrap(', '.join(names), width = 79)

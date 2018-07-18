@@ -695,10 +695,11 @@ class Backgammon(game.Game):
 
     def do_bear(self, argument):
         """
-        Bear a piece off of the board. (bool)
+        Bear a piece off of the board.
 
-        Parameters:
-        argument: The point or points to bear off from. (str)
+        The argument is the pieces to bear, a space delimited list of numbers. The
+        numbers should be the points of the pieces to bear, not the die rolls used to
+        bear them. The computer will figure out the numbers to use.
         """
         # Get the current player.
         player = self.players[self.player_index]
@@ -747,10 +748,10 @@ class Backgammon(game.Game):
 
     def do_enter(self, argument): 
         """
-        Bring a piece back into play from the bar. (bool)
+        Bring a piece back into play from the bar.
 
-        Parameters:
-        argument: The point to enter onto. (str)
+        The argument is a single integer, representing the die number used to enter
+        the piece into your opponent's home.
         """
         # Get the current player.
         player = self.players[self.player_index]
@@ -784,10 +785,7 @@ class Backgammon(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        I'm sorry, I didn't catch that.
         """
         game, losses = self.gipf_check(arguments, ('connect four',))
         # Hunt the Wumpus
@@ -815,10 +813,7 @@ class Backgammon(game.Game):
 
     def do_pips(self, argument):
         """
-        Show the pip counts for the two players. (True)
-
-        Parameters:
-        argument: The (ingored) argument to the command. (str)
+        Show the pip counts for the two players.
         """
         # Get the current player.
         player = self.players[self.player_index]
