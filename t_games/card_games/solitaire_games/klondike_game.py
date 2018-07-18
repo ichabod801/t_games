@@ -218,10 +218,7 @@ class Klondike(solitaire.Solitaire):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        My hovercraft is full of eels.
         """
         game, losses = self.gipf_check(arguments, ('battleships', 'hangman', 'solitaire dice'))
         go = True
@@ -290,10 +287,11 @@ class Klondike(solitaire.Solitaire):
 
     def do_switch(self, arguments):
         """
-        Switch from three cards at a time to one card at a time. (bool)
+        Switch from three cards at a time to one card at a time.
 
-        Parameters:
-        arguments. The (ignored) arguments to the command. (str)
+        This move is only available if the the switch-one option has been 
+        chosen. Making the switch leaves you with only one more pass through
+        the deck.
         """
         if self.switched:
             self.human.error('You may not switch to one card at a time.')
