@@ -487,10 +487,7 @@ class ConnectFour(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        Yeah, just go two blocks up and take a right. You can't miss it.
         """
         # Check/play the gipf game.
         game, losses = self.gipf_check(arguments, ('roulette', 'wumpus'))
