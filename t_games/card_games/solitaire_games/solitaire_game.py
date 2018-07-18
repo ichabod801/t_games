@@ -6,6 +6,11 @@ Base class for solitaire games.
 Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
 See the top level __init__.py file for details on the t_games license.
 
+Constants:
+HELP_TEXt: General help for solitaire games. (str)
+MULTI_DECK_HELP: Help for multi-deck solitaire games. (str)
+SCORE_HELP: An explanation of how solitaire game scores are calculated. (str)
+
 Classes:
 Solitaire: A generalized solitaire game. (game.game)
 MultiSolitaire: A game of solitaire that uses multiple decks. (Solitaire)
@@ -17,6 +22,62 @@ import itertools
 import t_games.cards as cards
 import t_games.game as game
 from t_games.card_games.solitaire_games.rule_checkers import *
+
+
+# General help for solitaire games.
+HELP_TEXT = """
+There are various commands for the standard moves in a solitaire game:
+
+    * build: Build stacks on the tableau.
+    * free: Move cards to free cells.
+    * lane: Move cards to empty tableau piles.
+    * match: Match pairs of cards together.
+    * sort: Move cards to the foundations.
+    * turn: Turn cards over from the stock.
+
+In addition, the undo command will take back moves and the auto command will
+sort multiple cards at a time. Help is available for all of these commands.
+
+You can also just enter one or two cards without a command. The game will try
+to look for a move and make one if it can find one. If two cards are given, it
+will first try a build move, and if that doesn't work it will try to match the
+cards. Otherwise the order of moves the system looks for is:
+
+    1. Try to sort the card to a foundation.
+    2. Try to build the card on another card.
+    3. Try to match the card with another card.
+    4. Try to move the card to a free cell.
+    5. Try to move the card to an empty lane.
+
+For games with multiple decks of cards, see also 'help multi-deck'. And be
+sure to check the rules for the specific game you are playing.
+"""
+
+
+# Help for multi-deck solitaire games.
+MULTI_DECK_HELP = """
+Solitaire games with multiple decks bring about extra issues for text-based
+games. If you want to build the Two of Spades onto the Three of Diamonds,
+there may be two Two of Spades available to move and/or two Three of Diamons
+to build them on.
+
+The first way to deal with this is to be specific when possible. If you just
+type '2S' to move the Two of Spades onto the Three of Diamonds, it might get
+moved on to the Three of Hearts. So be clear with '2S 3D'.
+
+If the move made is still not the one you intended, you can use the alternate
+command (alias alt) to pick an alternate version of the move. This does not
+penalize you in terms of the move count.
+"""
+
+
+# An explanation of how solitaire game scores are calculated.
+SCORE_HELP = """
+Scores are standardized for all solitaire games. The base score is 801 points.
+For each card you sort to the foundations, you gain two points. For each move
+you make, you lose one point. Undoing a move counts as a move, and the undone
+move still counts.
+"""
 
 
 class Solitaire(game.Game):
@@ -89,6 +150,7 @@ class Solitaire(game.Game):
 
     aliases = {'a': 'auto', 'b': 'build', 'f': 'free', 'l': 'lane', 'm': 'match', 'otto': 'auto', 
         's': 'sort', 'q': 'quit', 't': 'turn', 'u': 'undo'}
+    help_text = {'help': HELP_TEXT, 'multi-deck': MULTI_DECK_HELP, 'scores': SCORE_HELP}
     name = 'Solitaire Base'
     
     def __str__(self):
@@ -194,10 +256,11 @@ class Solitaire(game.Game):
         
     def do_auto(self, max_rank):
         """
-        Automatically play cards into the foundations. (bool)
-        
-        Parameters:
-        max_rank: The maximum rank to auto sort. (str)
+        Automatically play cards to the foundations. (a)
+
+        If no argument is given, auto will play cards as long as it can. If a card 
+        rank is given as an argument, auto will on play cards up to and including that
+        rank.
         """
         # convert max rank to int
         max_rank = max_rank.upper()
@@ -247,10 +310,11 @@ class Solitaire(game.Game):
     
     def do_build(self, arguments):
         """
-        Build card(s) into stacks on the tableau. (bool)
-        
-        Parameters:
-        arguments: The card to move and the card to move it onto. (str)
+        Build card(s) into stacks on the tableau. (b)
+
+        Two cards must be given to this command: the card to move and the card to
+        build it onto. If you are moving a stack of cards, specify the bottom card of
+        the stack as the card to move.
         """
         # parse the arguments
         card_arguments = self.deck.card_re.findall(arguments.upper())
@@ -271,10 +335,9 @@ class Solitaire(game.Game):
         
     def do_free(self, card):
         """
-        Move a card to one of the free cells. (bool)
-        
-        Parameters:
-        card: The card to be freed. (str)
+        Move a card to one of the free cells. (f)
+
+        This command takes one argument: the card to move.
         """
         # parse the arguments
         card_arguments = self.deck.card_re.findall(card.upper())
@@ -292,10 +355,9 @@ class Solitaire(game.Game):
         
     def do_lane(self, card):
         """
-        Move a card into an empty lane. (bool)
-        
-        Parameters:
-        card: The string identifying the card. (str)
+        Move a card into an empty lane. (l)
+
+        This command takes one argument: the card to move.
         """
         # get the card and the cards to be moved
         if not self.deck.card_re.match(card):
@@ -312,10 +374,9 @@ class Solitaire(game.Game):
 
     def do_match(self, cards):
         """
-        Match two cards and discard them.
+        Match two cards and discard them. (m)
 
-        Parameters:
-        cards: The cards being matched. (str)
+        The two cards specified by the arguments can be listed in any order.
         """
         cards = self.deck.card_re.findall(cards)
         if len(cards) != 2:
@@ -328,10 +389,9 @@ class Solitaire(game.Game):
     
     def do_sort(self, card):
         """
-        Move a card to the foundation. (bool)
-        
-        Parameters:
-        card: The card being moved. (str)
+        Move a card to the foundation. (s)
+
+        This command takes one argument: the card to move.
         """
         # get the card
         if not self.deck.card_re.match(card):
@@ -347,10 +407,10 @@ class Solitaire(game.Game):
     
     def do_turn(self, arguments):
         """
-        Turn cards from the stock into the waste. (bool)
+        Turn cards from the stock into the waste. (t)
 
-        Parameters:
-        arguments: The (ignored) arguments to the turn command. (str)
+        This command takes no arguments. The number of cards turned over depends on 
+        the rules of the game you are playing.
         """
         if self.stock_passes != self.max_passes and (self.stock or self.waste):
             # put the waste back in the stock if necessary
@@ -375,10 +435,10 @@ class Solitaire(game.Game):
     
     def do_undo(self, num_moves):
         """
-        Undo one or more previous moves. (bool)
-        
-        Parameters:
-        num_moves: The number of moves to undo. (str)
+        Undo one or more previous moves. (u)
+
+        If this command is called with no arguments, one move is undone. If an integer
+        argument is given, that many moves are undone. 
         """
         if not num_moves.strip():
             num_moves = 1
@@ -857,13 +917,10 @@ class MultiSolitaire(Solitaire):
     
     def do_alternate(self, argument):
         """
-        Redo the last command with different but matching cards. (bool)
+        Redo the last command with different but matching cards.
         
         This is for when there are two cards of the same rank and suit that 
         can make the same move, and the game makes the wrong one.
-
-        Parameters:
-        argument: The (ignored) argument to the command. (str)
         """
         if self.alt_moves:
             # find the last move from the user
@@ -883,10 +940,11 @@ class MultiSolitaire(Solitaire):
         
     def do_auto(self, max_rank):
         """
-        Automatically play cards into the foundations. (bool)
-        
-        Parameters:
-        max_rank: The maximum rank to auto sort. (str)
+        Automatically play cards to the foundations. (a)
+
+        If no argument is given, auto will play cards as long as it can. If a card 
+        rank is given as an argument, auto will on play cards up to and including that
+        rank.
         """
         # convert max rank to int
         max_rank = max_rank.upper()
@@ -940,10 +998,11 @@ class MultiSolitaire(Solitaire):
     
     def do_build(self, arguments):
         """
-        Build card(s) into stacks on the tableau. (bool)
-        
-        Parameters:
-        arguments: The card to move and the card to move it onto. (str)
+        Build card(s) into stacks on the tableau. (b)
+
+        Two cards must be given to this command: the card to move and the card to
+        build it onto. If you are moving a stack of cards, specify the bottom card of
+        the stack as the card to move.
         """
         # parse the arguments
         card_arguments = self.deck.card_re.findall(arguments.upper())
@@ -971,10 +1030,9 @@ class MultiSolitaire(Solitaire):
         
     def do_free(self, card):
         """
-        Move a card to one of the free cells. (bool)
-        
-        Parameters:
-        card: The card to be freed. (str)
+        Move a card to one of the free cells. (f)
+
+        This command takes one argument: the card to move.
         """
         # parse the arguments
         card_arguments = self.deck.card_re.findall(card.upper())
@@ -997,10 +1055,9 @@ class MultiSolitaire(Solitaire):
         
     def do_lane(self, card):
         """
-        Move a card into an empty lane. (bool)
-        
-        Parameters:
-        card: The string identifying the card. (str)
+        Move a card into an empty lane. (l)
+
+        This command takes one argument: the card to move.
         """
         # get the card and the cards to be moved
         if not self.deck.card_re.match(card):
@@ -1022,10 +1079,9 @@ class MultiSolitaire(Solitaire):
 
     def do_match(self, cards):
         """
-        Match two cards and discard them.
+        Match two cards and discard them. (m)
 
-        Parameters:
-        cards: The cards being matched. (str)
+        The two cards specified by the arguments can be listed in any order.
         """
         # Get the cards to match.
         cards = self.deck.card_re.findall(cards)
@@ -1053,10 +1109,9 @@ class MultiSolitaire(Solitaire):
     
     def do_sort(self, card):
         """
-        Move a card to the foundation. (bool)
-        
-        Parameters:
-        card: The card being moved. (str)
+        Move a card to the foundation. (s)
+
+        This command takes one argument: the card to move.
         """
         # get the card
         if not self.deck.card_re.match(card):
@@ -1078,20 +1133,20 @@ class MultiSolitaire(Solitaire):
     
     def do_turn(self, arguments):
         """
-        Turn cards from the stock into the waste. (bool)
+        Turn cards from the stock into the waste. (t)
 
-        Parameters:
-        arguments: The (ignored) arguments to the turn command. (str)
+        This command takes no arguments. The number of cards turned over depends on 
+        the rules of the game you are playing.
         """
         self.alt_moves = []
         return super(MultiSolitaire, self).do_turn(arguments)
     
     def do_undo(self, num_moves, clear_alt = True):
         """
-        Undo one or more previous moves. (bool)
-        
-        Parameters:
-        num_moves: The number of moves to undo. (str)
+        Undo one or more previous moves. (u)
+
+        If this command is called with no arguments, one move is undone. If an integer
+        argument is given, that many moves are undone. 
         """
         if clear_alt:
             self.alt_moves = []
