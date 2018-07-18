@@ -328,6 +328,7 @@ class Game(OtherCmd):
             # Clean up the names.
             names = list(set(names) - set(('debug', 'help', 'text')))
             self.do_help(random.choice(names))
+            return True
         else:
             self.human.tell('\nNothing happens.')
 

@@ -103,7 +103,9 @@ class OtherCmd(object):
         # help_foo methods take priority over do_foo docstrings.
         elif hasattr(self, 'help_' + topic):
             help_method = getattr(self, 'help_' + topic)
-            help_method()
+            # Exit without pausing if requested by the help_foo method.
+            if help_method():
+                return True
         # Method docstrings are given for recognized commands.
         elif hasattr(self, 'do_' + topic):
             help_text = getattr(self, 'do_' + topic).__doc__
