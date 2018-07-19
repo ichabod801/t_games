@@ -97,10 +97,7 @@ class Pyramid(solitaire.Solitaire):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        No, it's Giza. Gee-zah.
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('monte carlo', 'spider'))
@@ -134,10 +131,10 @@ class Pyramid(solitaire.Solitaire):
 
     def do_turn(self, arguments):
         """
-        Turn cards from the stock into the waste. (bool)
+        Turn cards from the stock into the waste. (t)
 
-        Parameters:
-        arguments: The (ignored) arguments to the turn command. (str)
+        In Pyramid, cards in the waste are sorted to the foundation before the next
+        card is turned over from the stock.
         """
         # Move the current waste card to the foundation.
         if self.waste:
