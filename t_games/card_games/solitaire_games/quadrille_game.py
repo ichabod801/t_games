@@ -79,10 +79,12 @@ class Quadrille(solitaire.Solitaire):
 
     def do_auto(self, arguments):
         """
-        Automatically play cards into the foundations. (bool)
-        
-        Parameters:
-        arguments: The arguments to the sort command. (str)
+        Automatically play cards into the foundations. (a)
+
+        If full (or f) is passed as the first argument to the auto command (in 
+        Quadrille), the game is played for you by the computer. If a number from zero
+        to ten is passed as a second argument, it controlls the speed at which the
+        computer plays from 0 (one move per second) to 10 (as fast as possible).
         """
         # Check for full auto.
         if arguments.lower().startswith('f'):
@@ -94,10 +96,7 @@ class Quadrille(solitaire.Solitaire):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        I don't know that dance.
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('yacht',))
