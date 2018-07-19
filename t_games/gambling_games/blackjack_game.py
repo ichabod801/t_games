@@ -201,10 +201,11 @@ class Blackjack(game.Game):
 
     def do_double(self, arguments):
         """
-        Double your bet for one last card. (bool)
+        Double your bet for one last card. (d)
 
-        Parameters:
-        arguments: The bet increase and the hand. (str)
+        If you have multiple hands, you should indicate which hand you are doubling
+        with an integer argument to the double command (1 for the first hand listed,
+        two for the second hand, and so on.)
         """
         # Check for proper timing.
         if self.phase != 'play':
@@ -248,10 +249,7 @@ class Blackjack(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        ValueError: gipf
         """
         game, losses = self.gipf_check(arguments, ('ninety-nine',)) # bacarat when it's done.
         if game == 'ninety-nine':
@@ -263,10 +261,11 @@ class Blackjack(game.Game):
 
     def do_hit(self, arguments):
         """
-        Deal a card to the player. (bool)
+        Get another card dealt to your hand. (h)
 
-        Parameters:
-        arguments: The number of the hand to hit. (str)
+        If you have multiple hands, you should indicate which hand you are hitting
+        with an integer argument to the hit command (1 for the first hand listed,
+        two for the second hand, and so on.)
         """
         # Check for proper timing.
         if self.phase != 'play':
@@ -296,10 +295,11 @@ class Blackjack(game.Game):
 
     def do_hint(self, arguments):
         """
-        Get a suggested play for your position. (bool)
+        Get a suggested play for your position.
 
-        Parameters:
-        arguments: The number of the hand to hit. (str)
+        If you have multiple hands, you should indicate which hand you are asking for
+        with an integer argument to the hint command (1 for the first hand listed,
+        two for the second hand, and so on.)
         """
         # Check for proper timing.
         if self.phase != 'play':
@@ -334,10 +334,7 @@ class Blackjack(game.Game):
 
     def do_quit(self, argument):
         """
-        Stop playing Blackjack. (bool)
-
-        Parameters:
-        argument: The (ignored) argument to the done command. (str)
+        Stop playing Blackjack. (!)
         """
         # Determine overall winnings or losses.
         self.scores[self.human.name] -= self.stake
@@ -354,10 +351,11 @@ class Blackjack(game.Game):
 
     def do_split(self, arguments):
         """
-        Split a pair into two hands. (bool)
+        Split a pair into two hands. (sp)
 
-        Parameters:
-        arguments: The number of the hand to hit. (str)
+        If you have multiple hands, you should indicate which hand you are splitting
+        with an integer argument to the split command (1 for the first hand listed,
+        two for the second hand, and so on.)
         """
         # Check timing.
         if self.phase != 'play':
@@ -396,10 +394,11 @@ class Blackjack(game.Game):
 
     def do_stand(self, arguments):
         """
-        Set a hand as done. (bool)
+        Set a hand as done. (s)
 
-        Parameters:
-        arguments: The number of the hand to hit. (str)
+        If you have multiple hands, you should indicate which hand you are doubling
+        with an integer argument to the double command (1 for the first hand listed,
+        two for the second hand, and so on.)
         """
         # Check timing.
         if self.phase != 'play':
@@ -420,10 +419,11 @@ class Blackjack(game.Game):
 
     def do_surrender(self, arguments):
         """
-        Concede the hand for half the bet back. (bool)
+        Concede the hand for half the bet back. (su)
 
-        Parameters:
-        arguments: The number of the hand to hit. (str)
+        If you have multiple hands, you should indicate which hand you are doubling
+        with an integer argument to the double command (1 for the first hand listed,
+        two for the second hand, and so on.)
         """
         # Check for proper timing.
         if not self.surrender:
