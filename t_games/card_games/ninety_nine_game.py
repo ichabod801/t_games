@@ -130,10 +130,7 @@ class NinetyNine(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        Girls in pillow fights? Come on, this is a family game.
         """
         game, losses = self.gipf_check(arguments, ('blackjack', 'crazy eights', 'yacht'))
         go = True
@@ -160,10 +157,7 @@ class NinetyNine(game.Game):
 
     def do_pass(self, arguments):
         """
-        Pass the turn and lose a token. (bool)
-
-        Parameters:
-        arguments: The ignored arguments to the command. (None)
+        Pass the turn and lose a token. (p)
         """
         if self.free_pass:
             self.free_pass = False
@@ -192,10 +186,7 @@ class NinetyNine(game.Game):
 
     def do_tokens(self, arguments):
         """
-        Show how many tokens are left. (bool)
-
-        Parameters:
-        arguments: The ignored arguments to the command. (None)
+        Show how many tokens each player has left.
         """
         self.human.tell()
         for player in self.players:
@@ -204,12 +195,10 @@ class NinetyNine(game.Game):
 
     def do_quit(self, arguments):
         """
-        Quit the game, which counts as a loss. (bool)
+        Quit the game, which counts as a loss. (!)
 
-        Overridden due to changing self.players over course of the game.
-
-        Parameters:
-        arguments: The modifiers to the quit. (str)
+        If you pass quit (or q or !) as an argument to the quit command, it quits the
+        game and the entire t_games interface.
         """
         self.flags |= 4
         self.force_end = 'loss'
@@ -250,6 +239,27 @@ class NinetyNine(game.Game):
             self.players.append(Bot99([player.name for player in self.players]))
         for bot in range(self.medium):
             self.players.append(Bot99Medium([player.name for player in self.players]))
+
+    def help_ranks(self):
+        """Show the current special ranks in the game. (None)"""
+        self.human.tell('\nThe current values of the ranks are:\n')
+        if self.deck.discards:
+            card_class = self.deck.discards[0].__class__
+        elif self.deck.cards:
+            card_class = self.deck.cards[0].__class__
+        else:
+            card_class = self.hands[self.human.name].cards[0]
+        for rank, rank_name in zip(card_class.ranks[1:], card_class.rank_names[1:]):
+            value_text = ' or '.join([str(value) for value in self.card_values[rank]])
+            self.human.tell('{}: {}'.format(rank_name, value_text))
+        if self.skip_rank or self.reverse_rank:
+            self.human.tell('\nRanks with special abilities include:\n')
+        if self.reverse_rank:
+            rank_name = card_class.rank_names[card_class.ranks.index(self.reverse_rank)]
+            self.human.tell('The rank to reverse the order of play is {}.'.format(rank_name))
+        if self.skip_rank:
+            rank_name = card_class.rank_names[card_class.ranks.index(self.skip_rank)]
+            self.human.tell('The rank to skip the next player is {}.'.format(rank_name))
 
     def player_action(self, player):
         """
