@@ -95,13 +95,10 @@ class Spider(solitaire.MultiSolitaire):
     
     def do_alternate(self, arguments):
         """
-        Redo the last command with different but matching cards. (bool)
+        Redo the last command with different but matching cards. (alt)
         
         This is for when there are two cards of the same rank and suit that 
         can make the same move, and the game makes the wrong one.
-
-        Parameters:
-        arguments: The (ignored) argument to the command. (str)
         """
         # Do the building
         go = super(Spider, self).do_alternate(arguments)
@@ -112,10 +109,11 @@ class Spider(solitaire.MultiSolitaire):
 
     def do_build(self, arguments):
         """
-        Build card(s) into stacks on the tableau. (bool)
-        
-        Parameters:
-        arguments: The card to move and the card to move it onto. (str)
+        Build card(s) into stacks on the tableau. (b)
+
+        Two cards must be given to this command: the card to move and the card to
+        build it onto. If you are moving a stack of cards, specify the bottom card of
+        the stack as the card to move.
         """
         # Do the building
         go = super(Spider, self).do_build(arguments)
@@ -130,10 +128,7 @@ class Spider(solitaire.MultiSolitaire):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        Only the spider crawls the web.
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('bisley', 'freecell'))
@@ -154,10 +149,10 @@ class Spider(solitaire.MultiSolitaire):
 
     def do_turn(self, arguments):
         """
-        Turn over cards from the stock. (bool)
+        Turn over cards from the stock. (t)
 
-        Parameters:
-        arguments: The (ignored) arguments to the turn command. (str)
+        In Spider there is no waste pile. Cards from the stock are dealt on top of the
+        tableau piles, one for each pile.
         """
         # Check for no stock.
         if not self.stock:

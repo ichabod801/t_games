@@ -26,6 +26,8 @@ from t_games.card_games.solitaire_games.rule_checkers import *
 
 # General help for solitaire games.
 HELP_TEXT = """
+Help for solitaire games. (?)
+
 There are various commands for the standard moves in a solitaire game:
 
     * build: Build stacks on the tableau.
@@ -918,7 +920,7 @@ class MultiSolitaire(Solitaire):
     
     def do_alternate(self, argument):
         """
-        Redo the last command with different but matching cards.
+        Redo the last command with different but matching cards. (alt)
         
         This is for when there are two cards of the same rank and suit that 
         can make the same move, and the game makes the wrong one.
