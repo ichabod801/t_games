@@ -340,10 +340,7 @@ class CrazyEights(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        I'm sorry, I quit gipfing for Lent.
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('strategy', 'spider'))
@@ -485,6 +482,28 @@ class CrazyEights(game.Game):
         # Set the winning score.
         if not self.goal:
             self.goal = 50 * len(self.players)
+
+    def help_ranks(self):
+        """Show the current special ranks in the game. (None)"""
+        self.human.tell('\nThe current special ranks are:\n')
+        if self.deck.discards:
+            card_class = self.deck.discards[0].__class__
+        elif self.deck.cards:
+            card_class = self.deck.cards[0].__class__
+        else:
+            card_class = self.hands[self.human.name].cards[0]
+        if self.change_rank:
+            rank_name = card_class.rank_names[card_class.ranks.index(self.change_rank)]
+            self.human.tell('The rank to change the suit is {}.'.format(rank_name))
+        if self.draw_rank:
+            rank_name = card_class.rank_names[card_class.ranks.index(self.draw_rank)]
+            self.human.tell('The rank to force drawing cards is {}.'.format(rank_name))
+        if self.reverse_rank:
+            rank_name = card_class.rank_names[card_class.ranks.index(self.reverse_rank)]
+            self.human.tell('The rank to reverse the order of play is {}.'.format(rank_name))
+        if self.skip_rank:
+            rank_name = card_class.rank_names[card_class.ranks.index(self.skip_rank)]
+            self.human.tell('The rank to skip the next player is {}.'.format(rank_name))
 
     def set_options(self):
         """Define the options for the game. (None)"""
