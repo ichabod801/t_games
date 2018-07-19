@@ -463,10 +463,7 @@ class LiarsDice(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        You believe that old wives' tale?
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('pyramid', 'backgammon'))
@@ -493,10 +490,7 @@ class LiarsDice(game.Game):
 
     def do_score(self, arguments):
         """
-        Show how many tokens players have left. (bool)
-
-        Parameters:
-        arguments: The (ignored) arguments to the score command. (str)
+        Show how many tokens each player has left. (scores)
         """
         # Get the sorted scores.
         scores = [(score, name) for name, score in self.scores.items() if score]
