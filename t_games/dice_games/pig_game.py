@@ -70,11 +70,11 @@ by specifying the bot type without an equals sign.
 
 The general bots are:
     base-pace-race=: This bot tries to score at least base, stay no more than
-        pace points behind the lead, and tries to win if anyone is over the
-        race parameter. (alias: bpr, defaults=19/14/31)
+        pace points behind the lead, and tries to win if anyone is within the
+        race parameter of winning. (alias: bpr, defaults=19/14/31)
     pace-race: This bot tries to score at least base, +/-1 for every modifer
-        it's behind/ahead, and tries to win if in anyone is over the race
-        parameter. (alias: pr, defaults=21/8/29)
+        it's behind/ahead, and tries to win if in anyone is within the race
+        parameter of winning. (alias: pr, defaults=21/8/29)
     rolls: This bot stops after a given number of rolls. (defaults=5)
     scoring-turns: This bot tries to win in t scoring turns. (alias: t,
         defaults=4)
@@ -455,10 +455,7 @@ class Pig(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        Say what?
         """
         game, losses = self.gipf_check(arguments, ('battleships', 'wumpus', 'solitaire dice'))
         go = True
@@ -504,10 +501,7 @@ class Pig(game.Game):
 
     def do_scores(self, arguments):
         """
-        Show the current scores. (None)
-
-        Parameters:
-        arguments: The (ignored) arguments to the score command. (str)
+        Show the current scores.
         """
         scores = sorted([(score, name) for name, score in self.scores.items()], reverse = True)
         self.human.tell()
