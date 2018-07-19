@@ -53,10 +53,7 @@ class Strategy(solitaire.Solitaire):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        That does not compute.
         """
         # Check and possibly play the game.
         game, losses = self.gipf_check(arguments, ('roulette','monte carlo'))
