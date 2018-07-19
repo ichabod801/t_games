@@ -714,10 +714,7 @@ class Yacht(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        No hablo Ingles.
         """
         # Check the game and play it if valid.
         game, losses = self.gipf_check(arguments, ('rock-paper-scissors',))
@@ -748,10 +745,14 @@ class Yacht(game.Game):
 
     def do_hold(self, arguments):
         """
-        Hold back dice for scoring. (bool)
+        Hold back dice for scoring. (h)
 
-        Parameters:
-        arguments: The dice (values) to hold. (str)
+        The dice are specified as space separated arguments to the hold command.
+        Dice a specified by the value they are showing. Once the dice are held, they 
+        will be shown with an * after the value in the listing of the current roll.
+
+        Held dice are not rerolled on the next roll. Held dice may not be unheld until
+        the next player's turn.
         """
         # Get the current player.
         player = self.players[self.player_index]
@@ -770,10 +771,7 @@ class Yacht(game.Game):
 
     def do_roll(self, arguments):
         """
-        Roll the dice (excluding any held back). (bool)
-
-        Parameters:
-        arguments: The dice (values) to hold. (str)
+        Roll the dice (excluding any held back). (r)
         """
         # Get the current player.
         player = self.players[self.player_index]
@@ -788,10 +786,26 @@ class Yacht(game.Game):
 
     def do_score(self, arguments):
         """
-        Score the current dice roll. (bool)
+        Score the current dice roll. (s)
 
-        Parameters:
-        arguments: The category to score the roll in. (str)
+        You must specify a score category as an argument. The score category can 
+        either be specified by name (see below) or by the character preceding the 
+        name in the score table. That character is 1-6 for the number categories and
+        A, B, C, and so on for the other categories.
+
+        The score categories are:
+            Yacht: Five of a kind (50)
+            Big Straight: 2-3-4-5-6 (30)
+            Little Straight: 1-2-3-4-5 (30)
+            Four of a Kind: Four of the same number. (Sum of the four of a kind)
+            Full House: Two of one number and three of another. (Sum of the dice)
+            Chance: Any roll. (Sum of the dice)
+            Sixes: As many sixes as possible. (Sum of the sixes)
+            Fives: As many fives as possible. (Sum of the fives)
+            Fours: As many fours as possible. (Sum of the fours)
+            Threes: As many threes as possible. (Sum of the threes)
+            Twos: As many twos as possible. (Sum of the twos)
+            Ones: As many ones as possible. (Sum of the ones)
         """
         # Get the current player.
         player = self.players[self.player_index]
