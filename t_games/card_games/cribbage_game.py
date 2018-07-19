@@ -253,10 +253,7 @@ class Cribbage(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        I'm sorry, sir, but that is simply not acceptable in this venue.
         """
         game, losses = self.gipf_check(arguments, ('backgammon', 'craps', 'crazy eights'))
         # Backgammon
