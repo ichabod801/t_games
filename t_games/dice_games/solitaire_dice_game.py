@@ -128,10 +128,7 @@ class SolitaireDice(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        I don't understand.
         """
         game, losses = self.gipf_check(arguments, ('freecell',))
         if game == 'freecell':
