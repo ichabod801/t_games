@@ -114,7 +114,7 @@ class OtherCmd(object):
             self.human.tell(help_text)
         # Display default text for unknown arguments.
         else:
-            self.human.tell("I can't help you with that.")
+            self.human.tell("\nI can't help you with that.")
         # Don't let the next menu interfere with reading the help text.
         self.human.ask('\nPress Enter to continue: ')
         return True
