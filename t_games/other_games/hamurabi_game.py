@@ -8,7 +8,9 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Hamurabi. (str)
+IMMIGRATION_HELP: Help text for factors driving immigration. (str)
 RULES: The basic rules of Hamurabi. (str)
+WINNING_HELP: Help text for how winning is calculated. (str)
 
 Classes:
 Hamurabi: A game of Humurabi. (game.Game)
@@ -26,6 +28,15 @@ CREDITS = """
 Game Design/Original Programming: Doug Dyment
 Python Implementation: Craig "Ichabod" O'Brien
 """
+
+
+# Help text for factors driving immigration.
+IMMIGRATION_HELP = """
+The more land you have and the more grain you have in storage, the higher your
+immigration will be. The more people you have, the lower your immigration will
+be.
+"""
+
 
 # The basic rules of Hamurabi.
 RULES = """
@@ -45,6 +56,22 @@ plague-chance (pc): The chance of plague. 0 to 100, defaults to 15.
 rat-chance (rc): The chance of rats eating grain. 0 to 100, defaults to 40.
 steady-grain (sg): Grain yields are more likely to be average.
 steady-land (sl): Land prices are more likely to be average.
+"""
+
+
+# Help text for how winning is calculated.
+WINNING_HELP = """
+To win the game, you need to starve less than 33% of your people per turn on
+average, and have at least seven acres of land per person at the end of the 
+game. Furthermore, if you ever starve 45% of your people in one turn, you get
+impeached, and you lose the game immediately. Any result that says you are
+impeached counts as a loss.
+
+If you starve more than 10% of your people on average or have less than nine
+acres of land at the end of the game, you get a one point win. If you starve
+more than 3% of your people on averge per turn or have less than ten acres of
+land per person at the end of the game, you get a two point win. Otherwise,
+you get a three point win.
 """
 
 
@@ -96,6 +123,8 @@ class Hamurabi(game.Game):
     credits = CREDITS
     # Interface categories for the game.
     categories = ['Other Games']
+    # Additional help text categories.
+    help_text = {'immigration': IMMIGRATION_HELP, 'winning': WINNING_HELP}
     name = 'Hamurabi'
     num_options = 4
     rules = RULES
@@ -104,10 +133,10 @@ class Hamurabi(game.Game):
 
     def do_buy(self, arguments):
         """
-        Buy land with grain. (bool)
+        Buy land with grain. (b)
 
-        Parameters:
-        arguments: The number of acres to buy. (str)
+        The argument is the number of acres to buy. The average cost of land is 22 
+        bushels of grain. Anything below that and you can buy low.
         """
         try:
             acres = int(arguments)
@@ -125,10 +154,10 @@ class Hamurabi(game.Game):
 
     def do_feed(self, arguments):
         """
-        Feed the people. (bool)
+        Feed the people. (f)
 
-        Parameters:
-        arguments: The number of bales of grain to release. (str)
+        The argument is the number of bushels of grain to release from storage. It
+        takes twenty (20) bushels of grain to feed one person.
         """
         try:
             bales = int(arguments)
@@ -146,10 +175,7 @@ class Hamurabi(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        The priests of Gipf reject your offering.
         """
         game, losses = self.gipf_check(arguments, ('cribbage', 'yacht'))
         go = True
@@ -170,10 +196,7 @@ class Hamurabi(game.Game):
 
     def do_next(self, arguments):
         """
-        Move on to the next turn. (bool)
-
-        Parameters:
-        arguments: The ingored arguments to the next command. (str)
+        Move on to the next turn. (n)
         """
         # Check for tasks done.
         if self.feed == 0:
@@ -225,10 +248,10 @@ class Hamurabi(game.Game):
 
     def do_plant(self, arguments):
         """
-        Seed the land for the next harvest. (bool)
+        Seed the land for the next harvest. (p)
 
-        Parameters:
-        arguments: The number of acres to buy. (str)
+        The argument is how many acres to plant. You need one bushel of grain to plant
+        two acres, and one person to plant ten acres.
         """
         try:
             acres = int(arguments)
@@ -250,10 +273,10 @@ class Hamurabi(game.Game):
 
     def do_sell(self, arguments):
         """
-        Sell land for grain. (bool)
+        Sell land for grain. (s)
 
-        Parameters:
-        arguments: The number of acres to sell. (str)
+        The argument is how many acres to sell. The average cost of land is 22 bushes
+        per acre. Anything above that and you can sell high.
         """
         try:
             sell = int(arguments)
