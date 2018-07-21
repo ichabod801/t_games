@@ -317,10 +317,7 @@ class Wumpus(game.Game):
 
     def do_gipf(self, argument):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        You're hunting a wumpus, not a gipf.
         """
         # Check the argument.
         game, losses = self.gipf_check(argument, ('battleships', 'hangman', 'pig'))
