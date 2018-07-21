@@ -124,10 +124,7 @@ class Hangman(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        Tamsk.
         """
         game, losses = self.gipf_check(arguments, ('craps',))
         go = True
@@ -146,10 +143,9 @@ class Hangman(game.Game):
 
     def do_guess(self, argument):
         """
-        Handle guessing what the word is. (bool)
+        Guess what the word is.
 
-        Parameters:
-        argument: The guess. (str)
+        An incorrect guess gets you another body part.
         """
         if self.word == argument.lower():
             self.guess = self.word
@@ -160,10 +156,10 @@ class Hangman(game.Game):
 
     def do_frequency(self, argument):
         """
-        Show the frequency list. (bool)
+        Show the frequency list. (freq)
 
-        Parameters:
-        argument: The (ignored) argument to the command. (str)
+        This is the order of the letter by their frequency in all of the words in the
+        full word list.
         """
         self.human.tell('\n{}\n'.format(self.frequency))
 
