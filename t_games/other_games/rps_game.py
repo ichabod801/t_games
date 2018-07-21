@@ -252,10 +252,7 @@ class RPS(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        No thank you.
         """
         game, losses = self.gipf_check(arguments, ('forty thieves',))
         go = True
