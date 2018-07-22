@@ -248,10 +248,9 @@ class Roulette(game.Game):
 
     def do_basket(self, arguments):
         """
-        Make a four number bet incluidng 0. (bool)
+        Make a four number bet incluidng 0.
 
-        Parameters:
-        arguments: The ammount to bet. (str)
+        The bet is on 0, 1, 2, and 3. French layout only.
         """
         # Handle aliases.
         words = arguments.split()
@@ -269,10 +268,7 @@ class Roulette(game.Game):
 
     def do_bets(self, arguments):
         """
-        Show a numbered list of the current bets. (bool)
-
-        Parameters:
-        arguments: The ignored arguments. (str)
+        Show a numbered list of the current bets.
         """
         text = '\n'
         for bet_index, bet in enumerate(self.bets):
@@ -282,10 +278,10 @@ class Roulette(game.Game):
 
     def do_black(self, arguments):
         """
-        Bet on black. (bool)
+        Bet on black. (noir)
 
-        Parameters:
-        arguments: The amount to bet. (str)
+        The bet is on 2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 
+        and 35.
         """
         # Check the bet.
         numbers, bet = self.check_bet('black {}'.format(arguments))
@@ -297,10 +293,16 @@ class Roulette(game.Game):
 
     def do_column(self, arguments):
         """
-        Bet on a column. (bool)
+        Bet on a column.
 
-        Parameters:
-        arguments: The column and the bet. (str)
+        The first column is specified by the argument 1, p, or f. That bet is on the 
+        numbers 1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, and 34.
+
+        The second column is specified by the argument 2, m, or s. That bet is on the
+        numbers 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, and 35.
+
+        The third column is specified by the argument 3, d, or t. That bet is on the
+        numbers 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, and 36.
         """
         # Check the bet
         column, bet = self.check_bet(arguments)
@@ -327,10 +329,14 @@ class Roulette(game.Game):
 
     def do_complete(self, arguments):
         """
-        Make all inside bets on a given number. (bool)
+        Make all inside bets on a given number.
 
-        Parameters:
-        arguments: The number to bet on and the bet. (str)
+        This includes the single bet on that number, and any split, street, trio, 
+        basket, top line, corner, or double street bets available for that number on
+        the current layout.
+
+        If you use the argument progressive, each bet will be one buck per number in
+        the bet. Otherwise each bet will be one buck.
         """
         # Check for progressive bets.
         words = arguments.split()
@@ -441,10 +447,11 @@ class Roulette(game.Game):
 
     def do_corner(self, arguments):
         """
-        Make a bet on a square of numbers. (bool)
+        Make a bet on a square of numbers. (square)
 
-        Parameters:
-        arguments: The number to bet on and the bet. (str)
+        The arguments must be the high and low number in a square of four numbers on
+        the layout. That is, the high number must be the low number plus four, and the
+        low number cannot be evenly divisible by three (in the third colum).
         """
         # Check the bet.
         numbers, bet = self.check_bet(arguments)
@@ -464,10 +471,12 @@ class Roulette(game.Game):
 
     def do_double(self, arguments):
         """
-        Make a bet on two consecutive rows of numbers. (bool)
+        Make a bet on two consecutive rows of numbers. (double street, double line,
+            six line)
 
-        Parameters:
-        arguments: The range to bet on and the bet. (str)
+        The arguments must the be the high and low number of six numbers in two rows 
+        on the layout. That is, the high must be the low plus six, and must be evenly
+        divisible by three (in the third column).
         """
         # Handle extra words and aliases.
         words = arguments.lower().split()
@@ -488,10 +497,16 @@ class Roulette(game.Game):
 
     def do_dozen(self, arguments):
         """
-        Bet on a consecutive dozen. (bool)
+        Bet on a consecutive dozen. (douzaine)
 
-        Parameters:
-        arguments: The dozen and the bet. (str)
+        The first dozen is specified by the argument 1, p, or f, and is a bet on the 
+        numbers 1-12.
+
+        The second dozen is specified by the argument 2, m, or s, and is a bet on the
+        numbers 13-24.
+
+        The third dozen is specified by the argument 3, d, or t, and is a bet on the
+        nubmers 25-36.
         """
         # Check the bet.
         dozen, bet = self.check_bet(arguments)
@@ -515,10 +530,10 @@ class Roulette(game.Game):
 
     def do_even(self, arguments):
         """
-        Bet on the the even numbers. (bool)
+        Bet on the the even numbers. (pair)
 
-        Parameters:
-        arguments: The amount to bet. (str)
+        this is a bet on the numbers 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26,
+        28, 30, 32, 34, and 36.
         """
         # Check the bet.
         numbers, bet = self.check_bet('even {}'.format(arguments))
@@ -530,10 +545,14 @@ class Roulette(game.Game):
 
     def do_final(self, arguments):
         """
-        Bet on numbers ending in a particular digit. (bool)
+        Bet on numbers ending in a particular digit. (finals, finale)
 
-        Parameters:
-        arguments: The final number and the amount to bet. (str)
+        The first argument should be the final digit to bet on. There are four numbers 
+        ending in each of the digits 0, 1, 2, 3, 4, 5, and 6. There are three numbers
+        ending in each of the digits 7, 8, and 9. Betting on final 0 does not include
+        0 or 00.
+
+        The second argument should be the amount to bet.
         """
         # Check the bet.
         number, bet = self.check_bet(arguments)
@@ -558,10 +577,7 @@ class Roulette(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        That bet is not available on this layout.
         """
         # Check/play the gipf game.
         game, losses = self.gipf_check(arguments, ('blackjack', 'connect four', 'klondike'))
