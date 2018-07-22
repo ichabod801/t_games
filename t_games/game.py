@@ -331,9 +331,11 @@ class Game(OtherCmd):
             names.extend(self.help_text.keys())
             # Clean up the names.
             names = list(set(names) - set(('debug', 'help', 'text')))
+            # Show one at random.
             self.do_help(random.choice(names))
             return True
         else:
+            # Usually, just show the classic nothing happens.
             self.human.tell('\nNothing happens.')
 
     def play(self):
