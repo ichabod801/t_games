@@ -9,6 +9,7 @@ See the top level __init__.py file for details on the t_games license.
 Constants:
 BUY_ODDS: The odds for buy bets. (dict of int: tuple of int)
 CREDITS: The credits for Craps. (str)
+HOUSE_HELP: Help text for the house edge. (str)
 PLACE_ODDS: The odds for place bets. (dict of int: tuple of int)
 RULES: The rules for Craps. (str)
 
@@ -52,6 +53,41 @@ CREDITS = """
 Game Design: Barnard Xavier Phillippe de Marigny de Mandeville
 Game Programming: Craig "Ichabod" O'Brien
 """
+
+
+# Help text for the house edge.
+HOUSE_HELP = """
+The house edge for each bet is:
+
+Pass or Come                         1.41%
+Don't Pass or Don't Come             1.36%
+Pass Odds or Come Odds               0.00%
+Don't Pass Odds or Don't Come Odds   0.00%
+Proposition 2 or 12                 13.89%
+Proposition 3 or 11 (Yo)            11.11%
+Proposition Hi-Lo (2 or 12)         11.11%
+Proposition Craps (2, 3, or 12)     11.11%
+Proposition Any 7                   16.67%
+Proposition Field                    5.56%
+Proposition Horn                    12.50%
+Proposition Whirl/World             13.33%
+Hard 4 or 10                        11.11%
+Hard 6 or 8                          9.09%
+Big 6/8                              9.09%
+Place 4 or 10                        6.67%
+Place 5 or 9                         4.00%
+Place 6 or 8                         1.52%
+Buy (Any Number)                     4.76%
+Lay 4 or 10                          2.44%
+Lay 5 or 9                           3.23%
+Lay 6 or 8                           4.00%
+
+tl;dr: Odds bets are the best, and proposition bets on 2, 7, or 12 are the
+worst. The best strategy is obviously to make Don't Pass bets with odds.
+However, Don't Pass bets are considered rude. Stick to don't come bets, or
+the bots will cry.
+"""
+
 
 # The odds for place bets.
 PLACE_ODDS = {4: (9, 5), 5: (7, 5), 6: (7, 6), 8: (7, 6), 9: (7, 5), 10: (9, 5)}
@@ -210,6 +246,8 @@ class Craps(game.Game):
     # Interface categories for the game.
     categories = ['Gambling Games']
     credits = CREDITS
+    # Game specific, non-command help text.
+    help_text = {'house-edge': HOUSE_HELP}
     name = 'Craps'
     num_options = 8
     odds_multiples = {4: 3, 5: 4, 6: 5, 8: 5, 9: 4, 10: 3}
@@ -298,10 +336,7 @@ class Craps(game.Game):
 
     def do_bets(self, argument):
         """
-        Show the player's bets. (bool)
-
-        Parameters:
-        argument: The (ignored) argument to the done command. (str)
+        Show the player's bets. (b)
         """
         player = self.players[self.player_index]
         player.tell('\n---Your Bets---\n')
@@ -312,10 +347,12 @@ class Craps(game.Game):
 
     def do_done(self, argument):
         """
-        Finish the player's turn. (bool)
+        Finish the player's turn. (d)
 
-        Parameters:
-        argument: The argument to the done command. (str)
+        If you finish your turn with the done command and you are the shooter, you 
+        will be asked to hit enter to roll. You can add the 'roll' or 'r' argument to
+        the done command to automatically roll if you are asked to. Or, you can just
+        use the roll command to do that.
         """
         player = self.players[self.player_index]
         # Check for shooter's turn.
@@ -340,10 +377,7 @@ class Craps(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Gipf
-
-        Parameters:
-        arguments: The name of the game to gipf to. (str)
+        Look, I only speak two languages: English and Bad English.
         """
         game, losses = self.gipf_check(arguments, ('crazy eights',))
         go = True
@@ -358,10 +392,7 @@ class Craps(game.Game):
 
     def do_quit(self, argument):
         """
-        Stop playing Craps. (bool)
-
-        Parameters:
-        argument: The (ignored) argument to the done command. (str)
+        Stop playing Craps. (!)
         """
         # Determine overall winnings or losses.
         self.scores[self.human.name] -= self.stake
@@ -378,10 +409,11 @@ class Craps(game.Game):
 
     def do_remove(self, argument):
         """
-        Remove bets. (bool)
+        Remove bets. (x)
 
-        Parameters;
-        argument: The argument to the remove command. (str)
+        You will be shown a list of removable bets, from which you may pick one to 
+        remove. To remove all of your removable bets, use 'all' or 'a' as an argument 
+        to the bet command.
         """
         player = self.players[self.player_index]
         # Get the removable bets.
@@ -414,10 +446,11 @@ class Craps(game.Game):
 
     def do_roll(self, argument):
         """
-        Finish the player's turn and roll. (bool)
+        Finish the player's turn and roll. (r)
 
-        Parameters:
-        argument: The argument to the done command. (str)
+        If you finish your turn with the done command and you are the shooter, you 
+        will be asked to hit enter to roll. Using the roll command skips that. If you
+        are not the shooter, the roll command. just ends your turn.
         """
         return self.do_done('r')
 
