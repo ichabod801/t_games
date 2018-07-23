@@ -8,8 +8,12 @@ See the top level __init__.py file for details on the t_games license.
 
 Classes:
 BoardCell: A square (or other shape) in a board that holds one piece. (object)
+MultiCell: A position on a board that holds multiple pieces. (object)
 Coordinate: A cartesian coordinate in an n-dimensional space. (tuple)
-GridBoard: A rectangular board of squares. (object)
+Board: A playing board for a game. (object)
+DimBoard: A board of squares in variable dimensions. (Board)
+LineBoard: A board of spaces in a line. (Board)
+MultiBoard: A board with multiple pieces per cell. (Board)
 """
 
 
@@ -25,13 +29,16 @@ class BoardCell(object):
     but it should be hashable and support addition.
 
     Attributes:
+    contents: The piece that is in the cell. (object)
     empty: How the cell looks when empty. (str)
     location: Where on the board the cell is. (object)
-    piece: The piece occupying the board. (object)
 
     Methods:
     add_piece: Add a piece to the cell. (object)
     clear: Remove any piece from the cell. (None)
+    count: Count the number of times a piece is in the cell. (int)
+    copy_piece: Copy the piece in the cell. (object)
+    get_piece: Get the cell's piece. (object)
     remove_piece: Remove a piece from the cell. (object)
 
     Overridden Methods:
@@ -40,6 +47,7 @@ class BoardCell(object):
     __eq__
     __hash__
     __iter__
+    __len__
     __repr__
     __str__
     """
@@ -95,7 +103,7 @@ class BoardCell(object):
 
     def __repr__(self):
         """
-        Computer readable text representation. (str)
+        Generate a computer readable text representation. (str)
         """
         # keyword parameters
         if self.contents:
@@ -111,7 +119,7 @@ class BoardCell(object):
 
     def __str__(self):
         """
-        Human readable text representation. (str)
+        Generate a human readable text representation. (str)
         """
         if self.contents:
             return str(self.contents)
@@ -178,15 +186,20 @@ class MultiCell(BoardCell):
     string that correctly displays it on the board. Likewise, the location can 
     be any object, but it should be hashable and support addition.
 
-    Attributes:
-    empty: How the cell looks when empty. (str)
-    location: Where on the board the cell is. (object)
-    contents: The pieces occupying the cell. (object)
+    Methods:
+    add_piece: Add a piece to the cell. (object)
+    clear: Remove any piece from the cell. (None)
+    copy_piece: Copy the piece in the cell. (object)
+    count: Count the number of times a piece is in the cell. (int)
+    remove_piece: Remove a piece from the cell. (object)
 
     Overridden Methods:
     __init__
-    __hash__
+    __contains__
+    __iter__
+    __len__
     __repr__
+    __str__
     """
 
     def __init__(self, location, pieces = None, empty = ' '):
@@ -223,7 +236,7 @@ class MultiCell(BoardCell):
 
     def __repr__(self):
         """
-        Computer readable text representation. (str)
+        Generate a computer readable text representation. (str)
         """
         # keyword parameters
         if self.contents:
@@ -239,7 +252,7 @@ class MultiCell(BoardCell):
 
     def __str__(self):
         """
-        Human readable text representation. (str)
+        Generate a human readable text representation. (str)
         """
         if self.contents:
             return ', '.join([str(piece) for piece in self.contents])
@@ -284,7 +297,7 @@ class MultiCell(BoardCell):
 
     def remove_piece(self, piece = None):
         """
-        Remove a piece to the cell. (object)
+        Remove a piece from the cell. (object)
 
         Parameters:
         piece: The piece to remove from the cell. (object)
@@ -398,11 +411,19 @@ class Board(object):
     """
     A playing board for a game. (object)
 
+    Attributes:
+    cells: The locations that make up the board. (dict of Coordinate: BoardCell)
+    extra_cells: A list of non-standard locations. (list of BoardCell)
+
     Methods:
     clear: Clear all pieces off the board. (None)
+    copy_pices: Copy all of the pieces from another board. (None)
+    displace: Move a piece from one cell to another w/ displace capture. (object)
     move: Move a piece from one cell to another. (object)
     offset: Return a cell offset from another cell (BoardCell)
     place: Place a piece in a cell. (None)
+    safe: Determine if a cell is safe from capture. (bool)
+    safe_displace: Move a piece with displace capture if target not safe. (object)
 
     Overriddent Methods:
     __init__
@@ -510,22 +531,26 @@ class Board(object):
 
     def safe_displace(self, start, end, piece = None):
         """
-        Move a piece from one cell to another with displace capture. (object)
+        Move a piece with displace capture if target not safe. (object)
 
         Parameters:
         start: The location containing the piece to move. (Coordinate)
         end: The location to move the piece to. (Coordinate)
         piece: The piece to move. (object)
         """
+        # Check for a safe move.
         mover = self.cells[start].remove_piece(piece)
         if self.safe(end, mover):
             self.cells[start].add_piece(mover)
             raise ValueError('Attempt to capture safe cell {!r}.'.format(end))
+        # Check the desitnation for capture situations.
         end_pieces = self.cells[end].contents
         if mover in end_pieces or not end_pieces or end in self.extra_cells:
+            # Do a simple move to an empty destination.
             self.cells[end].add_piece(mover)
             return []
         else:
+            # Move to a occupied location and return the occupants as the capture.
             capture = self.cells[end].get_piece()
             self.cells[end].clear()
             self.cells[end].add_piece(mover)
@@ -535,6 +560,10 @@ class Board(object):
 class DimBoard(Board):
     """
     A board of squares in variable dimensions. (Board)
+
+    Attributes:
+    cell_class: The class defining the individual cells. (type)
+    dimensions: The dimensions of the board, in cells. (tuple of int)
 
     Methods:
     copy: Create a copy of the board. (GridBoard)
@@ -551,13 +580,13 @@ class DimBoard(Board):
         dimensions: The dimensions of the board, in cells. (tuple of int)
         cell_class: The class for the cells on the board. (class)
         """
-        # store definition
+        # Store the definition.
         self.dimensions = dimensions
         self.cell_class = cell_class
-        # calculate locations
+        # Calculate the locations.
         locations = itertools.product(*[range(1, dimension + 1) for dimension in self.dimensions])
         locations = [Coordinate(location) for location in locations]
-        # set up cells
+        # Set up the cells.
         super(DimBoard, self).__init__(locations, cell_class)
 
     def copy(self, **kwargs):
@@ -569,9 +598,19 @@ class DimBoard(Board):
 
 class LineBoard(Board):
     """
-    A board of space in a line. (Board)
+    A board of spaces in a line. (Board)
 
     The line may be bent or looped.
+
+    Attributes:
+    cell_class: The class defining the individual cells. (type)
+    length: How many cells are in the board. (int)
+
+    Methods:
+    copy: Create a copy of the board. (GridBoard)
+
+    Overridden Methods:
+    __init__
     """
 
     def __init__(self, length, cell_class = MultiCell, extra_cells = []):
@@ -583,9 +622,11 @@ class LineBoard(Board):
         cell_class: The class for the cells on the board. (class)
         extra_cells: The keys for any cells outside the line. (list of hashable)
         """
+        # Set up the standard board cells.
         self.length = length
         self.cell_class = cell_class
         super(LineBoard, self).__init__(range(1, length + 1), cell_class)
+        # Set up any extra cells.
         self.extra_cells = extra_cells
         for location in self.extra_cells:
             self.cells[location] = cell_class(location)
@@ -616,10 +657,10 @@ class GridBoard(Board):
         columns: The number of columns on the board. (int)
         rows: The number of rows on the board. (int)
         """
-        # store dimensions
+        # Store the dimensions.
         self.columns = columns
         self.rows = rows
-        # create cells
+        # Create the cells.
         self.default_piece = default_piece
         self.cells = {}
         for column in range(columns):
@@ -629,9 +670,9 @@ class GridBoard(Board):
 
     def copy(self, **kwargs):
         """Create a copy of the board. (GridBoard)"""
-        # clone the cells
+        # Clone the cells.
         clone = self.__class__(self.columns, self.rows, **kwargs)
-        # clone the cell contents
+        # Clone the cell contents.
         for location in clone:
             clone.cells[location].piece = self.cells[location].piece
         return clone
@@ -640,6 +681,14 @@ class GridBoard(Board):
 class MultiBoard(DimBoard):
     """
     A board with multiple pieces per cell. (Board)
+
+    Methods:
+    copy: Create a copy of the board. (GridBoard)
+
+    Overridden Methods:
+    __init__
+    move
+    place
     """
 
     def __init__(self, dimensions):
