@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Classes:
 Card: A standard playing card, with a suit and a rank. (object)
+CRand: Implementation of C's rand function. (object)
 Deck: A standard deck of cards. (object)
 Hand: A hand of cards held by a player. (object)
 TrackingCard: A card that tracks it's location. (Card)
@@ -33,10 +34,10 @@ class Card(object):
 
     Class Attributes:
     card_re: A regular expression to match a card.
-    ranks: The rank characters. (str)
     rank_names: The names of the ranks. (list of str)
-    suits: The suit characters. (str)
+    ranks: The rank characters. (str)
     suit_names: The names of the suits. (list of str)
+    suits: The suit characters. (str)
 
     Attributes:
     color: The color of the card. ('R' or 'B')
@@ -52,6 +53,8 @@ class Card(object):
     Overridden Methods:
     __init__
     __eq__
+    __hash__
+    __lt__
     __repr__
     __str__
     """
@@ -85,13 +88,13 @@ class Card(object):
         self.name = '{} of {}'.format(rank_name, suit_name)
         # Default face down.
         self.up = False
-    
+
     def __eq__(self, other):
         """
         Equality comparison, by rank and suit. (bool)
-        
+
         Note that str(card) == card to match user input.
-        
+
         Parameters:
         other: The card to compare to.
         """
@@ -107,7 +110,7 @@ class Card(object):
     def __hash__(self):
         """The hash is the card text. (hash)"""
         return hash(self.rank + self.suit)
-        
+
     def __lt__(self, other):
         """For sorting by rank. (bool)"""
         if isinstance(other, Card):
@@ -126,11 +129,11 @@ class Card(object):
         else:
             text = '??'
         return text
-    
+
     def above(self, other, n = 1, wrap_ranks = False):
         """
         Check that this card is n ranks above another card. (bool)
-        
+
         Parameters:
         other: The card to compare with. (Card)
         wrap_ranks: A flag for K-A-2 wrapping. (bool)
@@ -139,11 +142,11 @@ class Card(object):
         if wrap_ranks and diff < 0:
             diff += len(self.ranks) - 1
         return diff == n
-    
+
     def below(self, other, n = 1, wrap_ranks = False):
         """
         Check that this card is n ranks below another card. (bool)
-        
+
         Parameters:
         other: The card to compare with. (Card)
         wrap_ranks: A flag for K-A-2 wrapping. (bool)
@@ -153,9 +156,13 @@ class Card(object):
             diff += len(self.ranks) - 1
         return diff == n
 
+
 class CRand(object):
     """
     Implementation of C's rand function. (object)
+
+    Attributes:
+    state: The current state of the PRNG. (int)
 
     Overridden Methods:
     __init__
@@ -163,13 +170,21 @@ class CRand(object):
     """
 
     def __init__(self, seed = None):
+        """
+        Set up the pseudo-random number generator. (None)
+
+        Parameters:
+        seed: The initial state of the PRNG. (int)
+        """
         if seed is None:
             seed = random.randint(0, 32767)
         self.state = seed
 
     def __call__(self):
+        """Get the next number from the PRNG. (int)"""
         self.state = (214013 * self.state + 2531011) % (2 ** 31)
         return self.state // (2 ** 16)
+
 
 class Deck(object):
     """
@@ -179,14 +194,20 @@ class Deck(object):
     card_re: A regular expression to match a card.
     cards: The cards in the deck. (list of card)
     discards: The cards in the discard pile. (list of card)
+    ranks: The possible ranks for cards in the deck. (str)
     shuffle_size: The number of cards left that triggers a shuffle. (int)
+    suits: The possible suits for cards in the deck. (str)
 
     Methods:
+    cut: Cut the deck. (None)
     deal: Deal a card from the deck. (Card)
     discard: Discard a card to the discard pile. (None)
     force: Remove a particular card from the deck. (Card)
     pick: Pick a card from the deck. (Card)
     shuffle: Shuffle the discards back into the deck. (None)
+
+    Overridden Methods:
+    __init__
     """
 
     def __init__(self, jokers = 0, decks = 1, shuffle_size = 0, card_class = Card):
@@ -196,6 +217,8 @@ class Deck(object):
         Parameters:
         jokers: The number of jokers in the deck. (int)
         decks: The number of idential decks shuffled together. (int)
+        shuffle_size: The number of cards left that triggers a shuffle. (int)
+        card_class: The type of cards that go into the deck. (type)
         """
         self.shuffle_size = shuffle_size
         # Add the standard cards.
@@ -247,11 +270,11 @@ class Deck(object):
         """
         self.discards.append(card)
         card.up = up
-    
+
     def force(self, card_text, up = True):
         """
         Remove a particular card from the deck. (Card)
-        
+
         Parameters:
         card_text: The string version of the card. (str)
         face_up = Flag for dealing the card face up. (bool)
@@ -271,11 +294,19 @@ class Deck(object):
         return self.cards.pop(n % len(self.cards))
 
     def shuffle(self, number = None):
-        """Shuffle the discards back into the deck. (None)"""
+        """
+        Shuffle the discards back into the deck. (None)
+
+        Parameters:
+        number: The number of the shuffle, the seed for the PRNG. (int)
+        """
+        # Gather the discards.
         self.cards.extend(self.discards)
         if number is None:
+            # Do a standard shuffle.
             random.shuffle(self.cards)
         else:
+            # Do a C-style shuffle.
             rand = CRand(number)
             self.cards.sort(key = lambda card: (card.ranks.index(card.rank), card.suit))
             while self.cards:
@@ -303,6 +334,7 @@ class Hand(object):
 
     Overridden Methods:
     __init__
+    __bool__
     __contains__
     __iter__
     __len__
@@ -311,7 +343,12 @@ class Hand(object):
     """
 
     def __init__(self, deck):
-        """Set up the link to the deck. (None)"""
+        """
+        Set up the link to the deck. (None)
+
+        Parameters:
+        deck: The deck the hand is dealt from. (Deck)
+        """
         self.deck = deck
         self.cards = []
 
@@ -357,6 +394,7 @@ class Hand(object):
         """
         Discard a card back to the deck. (None)
 
+        Parameters:
         card: The card to discard, or None to discard all cards. (Card or None)
         """
         # Discard all cards.
@@ -398,22 +436,24 @@ class TrackingCard(Card):
     deck: The deck the card is a part of. (Deck)
     deck_location: The location of the card in the deck. (list of Card)
     game_location: The location of the card in the game. (list of Card)
+    rank_num: The numeric rank of the card. (int)
 
     Methods:
     discard: Discard the card. (None)
 
     Overridden Methods:
     __init__
+    __eq__
     above
     below
     """
-    
+
     def __init__(self, rank, suit, deck):
         """
         Set up the card. (None)
-        
+
         Initialization converts the suit to a single uppercase character.
-        
+
         Parameters:
         rank: The rank of the card. (int)
         suit: The suit of the card. (str)
@@ -444,51 +484,43 @@ class TrackingCard(Card):
     def above(self, other, n = 1):
         """
         Check that this card is n ranks above another card. (bool)
-        
+
         Parameters:
         other: The card to compare with. (Card)
+        n: How many ranks above you are checking for. (int)
         """
         return super(TrackingCard, self).above(other, n, self.deck.game.wrap_ranks)
 
     def below(self, other, n = 1):
         """
         Check that this card is n ranks below another card. (bool)
-        
+
         Parameters:
         other: The card to compare with. (Card)
+        n: How many ranks below you are checking for. (int)
         """
         return super(TrackingCard, self).below(other, n, self.deck.game.wrap_ranks)
-        
+
     def discard(self):
-        """
-        Discard the card. (None)
-        """
+        """Discard the card. (None)"""
         self.deck.discard(self)
 
 
 class TrackOneSuit(TrackingCard):
     """A tracking card with only one suit. (TrackingCard)"""
 
-    # The card ranks.
     ranks = 'XA23456789TJQK'
-    # The card suits.
     suits = 'S'
-    # The names of the card suits.
     suit_names = ['Spades']
-    # A regular expression matching the card.
     card_re = re.compile('[{}][{}]'.format(ranks, suits), re.IGNORECASE)
 
 
 class TrackTwoSuit(TrackingCard):
     """A tracking card with only two suits. (TrackingCard)"""
 
-    # The card ranks.
     ranks = 'XA23456789TJQK'
-    # The card suits.
     suits = 'HS'
-    # The names of the card suits.
     suit_names = ['Hearts', 'Spades']
-    # A regular expression matching the card.
     card_re = re.compile('[{}][{}]'.format(ranks, suits), re.IGNORECASE)
 
 
@@ -503,13 +535,11 @@ class TrackingDeck(Deck):
     in_play: The cards currently in play. (list of Card)
     last_order: The order of the deck at the last shuffle. (list of int)
     max_rank: The highest rank in the deck. (int)
-    ranks: The ranks available to cards in the deck. (list of int)
-    suits: The suits available to cards in the deck. (list of str)
 
     Methods:
     find: Find a card in the deck. (Card)
-    force: Remove a particular card from the deck. (Card)
     gather: Gather cards back into the deck. (None)
+    stack: Put the stack in a specified order. (None)
 
     Overridden Methods:
     __init__
@@ -517,6 +547,7 @@ class TrackingDeck(Deck):
     __str__
     deal
     discard
+    force
     """
 
     def __init__(self, game, card_class = TrackingCard):
@@ -525,7 +556,6 @@ class TrackingDeck(Deck):
 
         Parameters:
         game: The game the card is a part of. (game.Game)
-        decks: The number of decks shuffled together. (int)
         card_class: The type of card in the deck. (TrackingCard)
         """
         # Set the general attributes.
@@ -562,11 +592,11 @@ class TrackingDeck(Deck):
         """Human readable text representation. (str)"""
         text = 'Deck of cards with {} cards, plus {} cards in play and {} cards discarded'
         return text.format(len(self.cards), len(self.in_play), len(self.discards))
-    
+
     def deal(self, game_location, face_up = True, card_ndx = -1):
         """
         Deal a card from the deck. (Card)
-        
+
         Parameters:
         game_location: The new location of card in the game. (list of Card)
         face_up = Flag for dealing the card face up. (bool)
@@ -582,11 +612,11 @@ class TrackingDeck(Deck):
         card.up = face_up
         # return the card
         return card
-        
+
     def discard(self, card):
         """
         Discard the game from play. (None)
-        
+
         Parameters:
         card: The card to discard. (Card)
         """
@@ -598,31 +628,31 @@ class TrackingDeck(Deck):
         # reset the card status
         card.game_location = self.game.deck.discards
         card.deck_location = self.discards
-    
+
     def find(self, card_text):
         """
         Find a card in the deck. (Card)
-        
+
         Paramters:
         card_text: The string version of the card. (str)
         """
         return self.card_map[card_text.upper()]
-    
+
     def force(self, card_text, game_location, face_up = True):
         """
         Remove a particular card from the deck. (Card)
-        
+
         Parameters:
         card_text: The string version of the card. (str)
         game_location: The new location of card in the game. (list of Card)
         face_up = Flag for dealing the card face up. (bool)
         """
         return self.deal(game_location, face_up = face_up, card_ndx = self.cards.index(card_text))
-    
+
     def gather(self, in_play = True):
         """
         Gather cards back into the deck. (None)
-        
+
         Parameters:
         in_play: A flag for gathering in play cards as well as discards. (bool)
         """
@@ -643,13 +673,13 @@ class TrackingDeck(Deck):
         for card in self.cards:
             card.deck_location = self.cards
             card.game_location = self.cards
-        
+
     def stack(self, order):
         """
         Put the stack in a specified order. (None)
-        
-        The order given must include all the Card.s currently in the deck.
-        
+
+        The order given must include all the Cards currently in the deck.
+
         Parameters:
         order: The order to put the deck into. (list of Card or str)
         """
@@ -672,19 +702,8 @@ class MultiTrackingDeck(TrackingDeck):
     A deck that keeps track of the location of multiple duplicate cards. (Deck)
 
     Attributes:
-    card_map: A map for finding cards in the deck. (dict of str: list of str}
-    card_re: A regular expression to match a card.
-    game: The game the deck is a part of. (Solitaire)
-    in_play: The cards currently in play. (list of Card)
-    last_order: The order of the deck at the last shuffle. (list of int)
+    decks: The number of decks shuffled together. (int)
     max_rank: The highest rank in the deck. (int)
-    ranks: The ranks available to cards in the deck. (list of int)
-    suits: The suits available to cards in the deck. (list of str)
-
-    Methods:
-    find: Find a card in the deck. (Card)
-    force: Remove a particular card from the deck. (Card)
-    gather: Gather cards back into the deck. (None)
 
     Overridden Methods:
     __init__
@@ -692,6 +711,9 @@ class MultiTrackingDeck(TrackingDeck):
     __str__
     deal
     discard
+    find
+    force
+    gather
     """
 
     def __init__(self, game, decks = 2, card_class = TrackingCard):
@@ -734,6 +756,7 @@ class MultiTrackingDeck(TrackingDeck):
         else:
             card = self.discards[0]
         return 'MultiTrackingDeck({}, {}, {})'.format(self.game, self.decks, type(card))
+
 
 if __name__ == '__main__':
     deck = Deck()
