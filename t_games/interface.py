@@ -588,6 +588,7 @@ def excel_column(n):
         n //= 27
     return column
 
+
 if __name__ == '__main__':
     interface = Interface(player.Tester())
     interface.menu()
