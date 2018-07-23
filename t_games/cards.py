@@ -74,7 +74,7 @@ class Card(object):
         rank: The rank of the card. (str)
         suit: The suit of the card. (str)
         """
-        # Set the pecified paramters.
+        # Set the specified paramters.
         self.rank = rank[0]
         self.suit = suit[0]
         # Calculated the color of the card.
@@ -101,9 +101,10 @@ class Card(object):
         # Compare cards by rank and suit.
         if isinstance(other, Card):
             return (self.rank, self.suit) == (other.rank, other.suit)
-        # Compare strings by str
+        # Compare strings by str.
         elif isinstance(other, str):
             return self.rank + self.suit == other.upper()
+        # The rest is not implementd.
         else:
             return NotImplemented
 
@@ -119,11 +120,11 @@ class Card(object):
             return self.rank < other  # ?? do I want this? from class where rank is int.
 
     def __repr__(self):
-        """Debugging text representation. (str)"""
+        """Generate computer readable text representation. (str)"""
         return 'Card({!r}, {!r})'.format(self.rank, self.suit)
 
     def __str__(self):
-        """Human readable text representation. (str)"""
+        """Generate human readable text representation. (str)"""
         if self.up:
             text = self.rank + self.suit
         else:
@@ -138,7 +139,9 @@ class Card(object):
         other: The card to compare with. (Card)
         wrap_ranks: A flag for K-A-2 wrapping. (bool)
         """
+        # Do the standard caculation
         diff = self.ranks.index(self.rank) - self.ranks.index(other.rank)
+        # Account for wrap ranks.
         if wrap_ranks and diff < 0:
             diff += len(self.ranks) - 1
         return diff == n
@@ -151,7 +154,9 @@ class Card(object):
         other: The card to compare with. (Card)
         wrap_ranks: A flag for K-A-2 wrapping. (bool)
         """
+        # Do the standard caculation
         diff = self.ranks.index(other.rank) - self.ranks.index(self.rank)
+        # Account for wrap ranks.
         if wrap_ranks and diff < 0:
             diff += len(self.ranks) - 1
         return diff == n
@@ -176,6 +181,7 @@ class CRand(object):
         Parameters:
         seed: The initial state of the PRNG. (int)
         """
+        # Use a random seed if none is given.
         if seed is None:
             seed = random.randint(0, 32767)
         self.state = seed
@@ -220,16 +226,18 @@ class Deck(object):
         shuffle_size: The number of cards left that triggers a shuffle. (int)
         card_class: The type of cards that go into the deck. (type)
         """
+        # Set the specified attribute.
         self.shuffle_size = shuffle_size
+        # Extract attributes from the card class.
+        self.card_re = card_class.card_re
+        self.ranks = card_class.ranks
+        self.suits = card_class.suits
         # Add the standard cards.
         self.cards = []
         for deck in range(decks):
             for rank in Card.ranks[1:]:
                 for suit in Card.suits:
                     self.cards.append(card_class(rank, suit))
-        self.card_re = card_class.card_re
-        self.ranks = card_class.ranks
-        self.suits = card_class.suits
         # Add any requested jokers.
         for deck in range(decks):
             for suit_index in range(jokers):
@@ -237,15 +245,15 @@ class Deck(object):
         # Start with an empty discard pile.
         self.discards = []
 
-    def cut(self, n):
+    def cut(self, card_index):
         """
         Cut the deck. (None)
 
         Parameters:
-        n: A number indicating where to cut the deck. (int)
+        card_index: A number indicating where to cut the deck. (int)
         """
-        n %= len(self.cards)
-        self.cards = self.cards[n:] + self.cards[:n]
+        card_index %= len(self.cards)
+        self.cards = self.cards[card_index:] + self.cards[:card_index]
 
     def deal(self, up = False):
         """
@@ -254,8 +262,10 @@ class Deck(object):
         Parameters:
         up: A flag for dealing the card face up. (bool)
         """
+        # Check for early reshuffle.
         if len(self.cards) <= self.shuffle_size:
             self.shuffle()
+        # Deal the card.
         card = self.cards.pop()
         card.up = up
         return card
@@ -283,15 +293,15 @@ class Deck(object):
         self.cards.remove(card)
         return card
 
-    def pick(self, n, up = True):
+    def pick(self, card_index, up = True):
         """
         Pick a card from the deck. (Card)
 
         Parameters:
-        n: A number to determine the card picked. (int)
+        card_index: A number to determine the card picked. (int)
         up: Flag for picking the card face up. (bool)
         """
-        return self.cards.pop(n % len(self.cards))
+        return self.cards.pop(card_index % len(self.cards))
 
     def shuffle(self, number = None):
         """
@@ -430,7 +440,7 @@ class Hand(object):
 
 class TrackingCard(Card):
     """
-    A card that tracks it's location. (Card)
+    A card that tracks its location. (Card)
 
     Attributes:
     deck: The deck the card is a part of. (Deck)
@@ -473,6 +483,9 @@ class TrackingCard(Card):
         """
         Check equality with another card. (bool)
 
+        Equality between tracking cards is by identity. Otherwise it's as a standard
+        Card.
+
         Parameters:
         other: The card to compare with. (Card or str)
         """
@@ -481,25 +494,25 @@ class TrackingCard(Card):
         else:
             return super(TrackingCard, self).__eq__(other)
 
-    def above(self, other, n = 1):
+    def above(self, other, card_index = 1):
         """
         Check that this card is n ranks above another card. (bool)
 
         Parameters:
         other: The card to compare with. (Card)
-        n: How many ranks above you are checking for. (int)
+        card_index: How many ranks above you are checking for. (int)
         """
-        return super(TrackingCard, self).above(other, n, self.deck.game.wrap_ranks)
+        return super(TrackingCard, self).above(other, card_index, self.deck.game.wrap_ranks)
 
-    def below(self, other, n = 1):
+    def below(self, other, card_index = 1):
         """
         Check that this card is n ranks below another card. (bool)
 
         Parameters:
         other: The card to compare with. (Card)
-        n: How many ranks below you are checking for. (int)
+        card_index: How many ranks below you are checking for. (int)
         """
-        return super(TrackingCard, self).below(other, n, self.deck.game.wrap_ranks)
+        return super(TrackingCard, self).below(other, card_index, self.deck.game.wrap_ranks)
 
     def discard(self):
         """Discard the card. (None)"""
@@ -529,7 +542,7 @@ class TrackingDeck(Deck):
     A deck that keeps track of the location of the cards in it. (Deck)
 
     Attributes:
-    card_map: A map for finding cards in the deck. (dict of str(card): card}
+    card_map: A map for finding cards in the deck. (dict of str: card}
     card_re: A regular expression to match a card.
     game: The game the deck is a part of. (Solitaire)
     in_play: The cards currently in play. (list of Card)
@@ -572,14 +585,15 @@ class TrackingDeck(Deck):
                 card = card_class(rank, suit, self)
                 self.cards.append(card)
                 self.card_map[card.rank + card.suit] = card
+        # Set hte calcuated attribute.
         self.max_rank = self.ranks[-1]
-        # set the default attributes
+        # Set the default attributes.
         self.in_play = []
         self.discards = []
         self.last_order = self.cards[:]
 
     def __repr__(self):
-        """Debugging text representation. (str)"""
+        """Generate a computer readable text representation. (str)"""
         if self.in_play:
             card = self.in_play[0]
         elif self.cards:
@@ -589,21 +603,21 @@ class TrackingDeck(Deck):
         return 'TrackingDeck({}, {})'.format(self.game, type(card))
 
     def __str__(self):
-        """Human readable text representation. (str)"""
+        """Generate a human readable text representation. (str)"""
         text = 'Deck of cards with {} cards, plus {} cards in play and {} cards discarded'
         return text.format(len(self.cards), len(self.in_play), len(self.discards))
 
-    def deal(self, game_location, face_up = True, card_ndx = -1):
+    def deal(self, game_location, face_up = True, card_index = -1):
         """
         Deal a card from the deck. (Card)
 
         Parameters:
         game_location: The new location of card in the game. (list of Card)
-        face_up = Flag for dealing the card face up. (bool)
-        card_ndx = The location of the card to deal. (int)
+        face_up: Flag for dealing the card face up. (bool)
+        card_index: The location of the card to deal. (int)
         """
         # move the card
-        card = self.cards.pop(card_ndx)
+        card = self.cards.pop(card_index)
         self.in_play.append(card)
         game_location.append(card)
         # change the cards attributes
@@ -647,7 +661,7 @@ class TrackingDeck(Deck):
         game_location: The new location of card in the game. (list of Card)
         face_up = Flag for dealing the card face up. (bool)
         """
-        return self.deal(game_location, face_up = face_up, card_ndx = self.cards.index(card_text))
+        return self.deal(game_location, face_up = face_up, card_index = self.cards.index(card_text))
 
     def gather(self, in_play = True):
         """
@@ -657,19 +671,24 @@ class TrackingDeck(Deck):
         in_play: A flag for gathering in play cards as well as discards. (bool)
         """
         for card in self.discards + self.in_play:
+            # Remove the card from it's locations.
             card.deck_location.remove(card)
             try:
                 card.game_location.remove(card)
             except IndexError:
                 pass
+            # Put the card in the discards.
             self.cards.append(card)
+            card.up = False
+            # Reset the card tracking.
             card.deck_location = self.cards
             card.game_location = self.cards
-            card.up = False
 
     def shuffle(self, number = None):
         """Shuffle the discards back into the deck. (None)"""
+        # Shuffle the cards.
         super(TrackingDeck, self).shuffle(number = number)
+        # Reset the card tracking.
         for card in self.cards:
             card.deck_location = self.cards
             card.game_location = self.cards
@@ -683,16 +702,16 @@ class TrackingDeck(Deck):
         Parameters:
         order: The order to put the deck into. (list of Card or str)
         """
-        # check for valid order
+        # Check for valid order.
         if sorted(self.last_order) != sorted(order):
             raise ValueError('Invalid deck order.')
-        # stack the deck
+        # Stack the deck.
         for card_ref in order:
             card = self.card_map[card_ref]
             self.cards.append(card)
             self.card.deck_location = self.cards
             self.card.game_location = self.cards
-        # clear the other piles
+        # Clear the other piles.
         self.discards = []
         self.in_play = []
 
@@ -725,12 +744,13 @@ class MultiTrackingDeck(TrackingDeck):
         decks: The number of decks shuffled together. (int)
         card_class: The type of card in the deck. (TrackingCard)
         """
-        # Set the general attributes.
+        # Set the specified attributes.
         self.game = game
+        self.decks = decks
+        # Extract attributes from the card class.
         self.ranks = card_class.ranks
         self.suits = card_class.suits
         self.card_re = card_class.card_re
-        self.decks = decks
         # Fill the deck.
         self.cards = []
         self.card_map = collections.defaultdict(list)
@@ -748,7 +768,7 @@ class MultiTrackingDeck(TrackingDeck):
         self.last_order = self.cards[:]
 
     def __repr__(self):
-        """Debugging text representation. (str)"""
+        """Generate a computer readable text representation. (str)"""
         if self.in_play:
             card = self.in_play[0]
         elif self.cards:
