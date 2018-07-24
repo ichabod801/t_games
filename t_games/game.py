@@ -41,21 +41,21 @@ class Game(OtherCmd):
 
     The flags attribute represents a bunch of binary flags:
         1: Options were set by the player.
-        2: The debug command was used by the player.
+        2: Internal command tracking.
         4: The game was lost via the quit command.
-        8: The gipf command was used in this game.
-        16: This game was started by the gipf command.
-        32: The xyzzy command was used in this game.
-        64: This game was started by the xyzzy command.
-        128: This game was won using the xyzzy command.
+        8: Internal command tracking.
+        16: Non-interface game play tracking.
+        32: Internal command tracking.
+        64: Non-interface game play tracking.
+        128: Abnormal game win.
         256: This game was played as a match.
         512: This game was played with a cyborg.
 
     Class Attributes:
     aka: Other names for the game. (list of str)
-    categories: The categories of the game. (list of str)
+    categories: The interface categories for the game. (list of str)
     credits: The design and programming credits for this game. (str)
-    float_re: A regular expression matching floats. (SRE_Pattern)
+    float_re: A regular expression matching decimal numbers. (SRE_Pattern)
     help_text: Extra help text for the game. (dict of str: str)
     name: The primary name of the game. (str)
     num_options: The number of settable options for the game. (str)
@@ -77,7 +77,7 @@ class Game(OtherCmd):
     clean_up: Handle any end of game tasks. (None)
     do_credits: Show the credits. (bool)
     do_quit: Quit the game, which counts as a loss. (bool)
-    do_quit_quit: Quit the game and the t_games interface. (!!)
+    do_quit_quit: Quit the game and the t_games interface. (bool)
     do_rpn: Process reverse Polish notation statements to do calculations. (None)
     do_rules: Show the rules text. (bool)
     game_over: Check for the end of the game. (bool)
@@ -111,11 +111,21 @@ class Game(OtherCmd):
     rules = 'No rules have been specified for this game.'
 
     def __init__(self, human, raw_options, interface = None):
-        """Set up the game. (None)"""
+        """
+        Set up the game. (None)
+        
+        human: The primary player of the game. (player.Player)
+        raw_options: The user's option choices as provided by the interface. (str)
+        interface: The interface that started the game playing. (interface.Interface)
+        """
+        # Set the specified attributes.
         self.human = human
         self.interface = interface
         self.raw_options = raw_options.strip()
+        # Set the default attributes.
         self.flags = 0
+        self.gipfed = []
+        # Inherit aliases and help text from parent classes.
         self.aliases = {}
         self.help_text = {}
         for cls in reversed(self.__class__.__mro__):
@@ -123,14 +133,15 @@ class Game(OtherCmd):
                 self.aliases.update(cls.aliases)
             if hasattr(cls, 'help_text'):
                 self.help_text.update(cls.help_text)
+        # Define and process the game options.
         self.option_set = options.OptionSet(self)
         self.set_options()
         self.handle_options()
+        # Set up the players
         if not hasattr(self, 'players'):
             self.players = [self.human]
         for player in self.players:
             player.game = self
-        self.gipfed = []
 
     def clean_up(self):
         """Handle any end of game tasks. (None)"""
@@ -200,8 +211,9 @@ class Game(OtherCmd):
             tan   tangent
             ab/c  a + b / c
 
-        For example, '= 1 1 ^ 2 2 ^ 3 3 ^ * *' returns 108. '= R 108 * 1 + 1 //'
-        returns a random number from 1 to 108. So does '1 1 R 108 * + //'.
+        For example, '= 1 1 +' returns 2. '= 1 1 ^ 2 2 ^ 3 3 ^ * *' returns 108. 
+        '= R 108 * 1 + 1 //' returns a random number from 1 to 108. So does 
+        '1 1 R 108 * + //'.
 
         Note that the full stack is displayed at the end of the calculation.
         """
@@ -247,30 +259,38 @@ class Game(OtherCmd):
         """
         Nothing happens.
         """
+        # Check to see if the planets are in the correct alignment.
         if self.interface.valve.blow(self):
+            # Begin the incantation.
             game_class = random.choice(list(self.interface.games.values()))
             game = game_class(self.human, 'none', self.interface)
             self.flags |= 32
             self.human.tell('\nPoof!')
             self.human.tell('You are now playing {}.\n'.format(game.name))
             results = game.play()
+            # Finsh the incantation.
             results[5] |= 64
             self.human.store_results(game.name, results)
+            # Check for a successful incantation.
             if (results[1] == 0 and results[0] > 0) or (self.flags & 256 and results[0] > results[1]):
+                # Bind the tongues and seal the sigils.
                 self.flags |= 128
                 self.force_end = 'win'
                 self.win_loss_draw = [max(len(self.players) - 1, 1), 0, 0]
                 self.human.tell('\nThe incantation is complete. You win at {}.\n'.format(self.name))
                 go = False
             else:
+                # Nothing to see here.
                 go = True
         else:
+            # Were you expecting something to happen?
             self.human.tell('Nothing happens.')
             go = True
         return go
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
+        # Dummy random determination of game end.
         roll = random.randint(1, 3)
         if roll == 1:
             self.human.tell('You lose.')
@@ -342,9 +362,14 @@ class Game(OtherCmd):
         """
         Play the game. (list of int)
 
-        The return value is the win, loss, draw, and score for the primary player.
-        The win/loss/draw is per player for one game. So if you tie for second
-        with five players, your win/loss/draw is 2, 1, 1.
+        The return value is a list of data about the game played. By index:
+            0: The number of players the human beat.
+            1: The number of players that beat the human.
+            2: The number of players tied with the human.
+            3: The human's score.
+            4: The number of turns played.
+            5: The flags for the game (see help(game) for details).
+            6: The options used for the game.
         """
         # Set up the game.
         self.win_loss_draw = [0, 0, 0]
@@ -382,7 +407,7 @@ class Game(OtherCmd):
         """
         Handle a player's turn or other player actions. (bool)
 
-        The return value is a flag for the player's turn being done.
+        The return value is a flag for the player's turn continuing.
 
         Parameters:
         player: The player whose turn it is. (Player)
