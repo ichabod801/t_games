@@ -7,6 +7,9 @@ Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Die: A single die. (object)
+ShuffleDie: A die that samples from the range without replacement. (Die)
+Pool: A set of dice. (object)
+DominoPool: A set of dice based on dominos. (Pool)
 """
 
 
@@ -33,6 +36,8 @@ class Die(object):
     __add__
     __eq__
     __hash__
+    __lt__
+    __radd__
     __repr__
     __str__
     """
@@ -131,6 +136,7 @@ class ShuffleDie(Die):
 
     Attributes:
     population: The set of future rolls. (list)
+    repeats: The number of times the sides are repeated. (int)
 
     Methods:
     reset: Reset the population of future rolls. (None)
@@ -150,7 +156,7 @@ class ShuffleDie(Die):
         repeats: The number of times the sides are repeated. (int)
         """
         # Set up the list of sides, 1 to n for integer input.
-        self.population = [0, 0] # for roll in Die.__init__
+        self.population = [0, 0]  # for roll in Die.__init__
         super(ShuffleDie, self).__init__(sides)
         # Set up the population to sample from.
         self.repeats = repeats
@@ -265,7 +271,7 @@ class Pool(object):
     def roll(self, index = None):
         """
         Roll the dice in the pool. (list)
-        
+
         Parameters:
         index: The specific die to roll, if any. (int or None)
         """
@@ -310,7 +316,6 @@ class DominoPool(Pool):
 
     Overridden Methods:
     __init__
-    __repr__
     replace
     roll
     sort
