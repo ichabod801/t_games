@@ -9,6 +9,7 @@ See the top level __init__.py file for details on the t_games license.
 Classes:
 Game: A game with a text interface. (OtherCmd)
 Flip: A test game of flipping coins. (Game)
+FlipBot: A bot to play Flip against. (Player)
 Sorter: A test game of sorting a sequence. (Game)
 
 Functions:
@@ -52,18 +53,21 @@ class Game(OtherCmd):
 
     Class Attributes:
     aka: Other names for the game. (list of str)
-    credits: The design and programming credits for this game. (str)
     categories: The categories of the game. (list of str)
+    credits: The design and programming credits for this game. (str)
     float_re: A regular expression matching floats. (SRE_Pattern)
-    help: The help text for the game. (dict of str: str)
+    help_text: Extra help text for the game. (dict of str: str)
     name: The primary name of the game. (str)
     num_options: The number of settable options for the game. (str)
-    rules_text: The rules of the game. (str)
+    operators: Operator definitions for the RPN command. (dict of str: callable)
+    rules: The rules of the game. (str)
 
     Attributes:
     flags: Flags for different game events tracked in the results. (int)
     force_end: How to force the end of the game. (str)
     human: The primary player of the game. (Player)
+    interface: The interface that started the game playing. (Interface)
+    option_set: The definitions of allowed options for the game (OptionSet)
     raw_options: The options as given by the play command. (str)
     scores: The players' scores in the game. (dict of str: int)
     turns: The number of turns played in the game. (int)
@@ -72,8 +76,8 @@ class Game(OtherCmd):
     Methods:
     clean_up: Handle any end of game tasks. (None)
     do_credits: Show the credits. (bool)
-    do_help: Show the help text for a given area. (bool)
     do_quit: Quit the game, which counts as a loss. (bool)
+    do_quit_quit: Quit the game and the t_games interface. (!!)
     do_rpn: Process reverse Polish notation statements to do calculations. (None)
     do_rules: Show the rules text. (bool)
     game_over: Check for the end of the game. (bool)
@@ -91,22 +95,18 @@ class Game(OtherCmd):
 
     aka = []
     aliases = {'!!': 'quit_quit', '&': 'debug', '=': 'rpn', '?': 'help', '!': 'quit'}
-    # Interface categories for the game.
     categories = ['Test Games']
     credits = 'No credits have been specified for this game.'
-    # Text for user help requests.
     help_text = {'help': '\nUse the rules command for instructions on how to play.'}
-    # A regular expression for catching floats.
     float_re = re.compile('-?\d*\.\d+')
     name = 'Null'
     num_options = 0
-    # The operators used by rpn.
-    operators = {'|': (abs, 1), '+': (operator.add, 2), 'C': (utility.choose, 2), '/%': (divmod, 2), 
-        '!': (math.factorial, 1), '//': (operator.floordiv, 2), '*': (operator.mul, 2), 
-        '%': (operator.mod, 2), '+-': (operator.neg, 1), 'P': (utility.permutations, 2), '^': (pow, 2), 
-        '1/': (lambda x: 1 / x, 1), '-': (operator.sub, 2), '/': (operator.truediv, 2), 
-        'ab/c': (lambda a, b, c: a + b / c, 3), 'cos': (math.cos, 1), 'ln': (math.log, 1), 
-        'log': (math.log10, 1), 'R': (random.random, 0), 'F': (utility.flip, 0), 'sin': (math.sin, 1), 
+    operators = {'|': (abs, 1), '+': (operator.add, 2), 'C': (utility.choose, 2), '/%': (divmod, 2),
+        '!': (math.factorial, 1), '//': (operator.floordiv, 2), '*': (operator.mul, 2),
+        '%': (operator.mod, 2), '+-': (operator.neg, 1), 'P': (utility.permutations, 2), '^': (pow, 2),
+        '1/': (lambda x: 1 / x, 1), '-': (operator.sub, 2), '/': (operator.truediv, 2),
+        'ab/c': (lambda a, b, c: a + b / c, 3), 'cos': (math.cos, 1), 'ln': (math.log, 1),
+        'log': (math.log10, 1), 'R': (random.random, 0), 'F': (utility.flip, 0), 'sin': (math.sin, 1),
         'V': (math.sqrt, 1), 'tan': (math.tan, 1)}
     rules = 'No rules have been specified for this game.'
 
@@ -316,7 +316,7 @@ class Game(OtherCmd):
             return game.name.lower(), losses
         # Return dummy results for incorrect games.
         else:
-            return 'invalid-game', 1 
+            return 'invalid-game', 1
 
     def handle_options(self):
         """Handle game options and set the player list. (None)"""
@@ -343,14 +343,14 @@ class Game(OtherCmd):
         Play the game. (list of int)
 
         The return value is the win, loss, draw, and score for the primary player.
-        The win/loss/draw is per player for one game. So if you tie for second 
+        The win/loss/draw is per player for one game. So if you tie for second
         with five players, your win/loss/draw is 2, 1, 1.
         """
         # Set up the game.
         self.win_loss_draw = [0, 0, 0]
         self.turns = 0
         self.force_end = ''
-        self.flags &= 257 # reset everything but the options and match play flags.
+        self.flags &= 257  # reset everything but the options and match play flags.
         self.scores = {}
         self.set_up()
         if not self.scores:
@@ -438,24 +438,13 @@ class Flip(Game):
 
     Overridden Methods:
     game_over
+    handle_options
     player_action
-    set_up
     """
 
     credits = 'Design and programming by Craig "Ichabod" O''Brien'
     name = 'Flip'
     rules = 'Whoever gets two more heads than their opponent wins.'
-
-    def handle_options(self):
-        """Handle game options and set the player list. (None)"""
-        # Make sure the bot has a unique name.
-        if self.human.name != 'Flip':
-            self.bot = FlipBot('Flip')
-        else:
-            self.bot = FlipBot('Tosser')
-        # Set up the players as the human and the bot.
-        self.players = [self.human, self.bot]
-        random.shuffle(self.players)
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
@@ -474,6 +463,17 @@ class Flip(Game):
                     self.win_loss_draw[1] = 1
                     message = 'You lost to {} win {} heads.'
                     self.human.tell(message.format(self.bot.name, winning_score - 2))
+
+    def handle_options(self):
+        """Handle game options and set the player list. (None)"""
+        # Make sure the bot has a unique name.
+        if self.human.name != 'Flip':
+            self.bot = FlipBot('Flip')
+        else:
+            self.bot = FlipBot('Tosser')
+        # Set up the players as the human and the bot.
+        self.players = [self.human, self.bot]
+        random.shuffle(self.players)
                 return True
 
     def player_action(self, player):
@@ -549,6 +549,7 @@ class Sorter(Game):
     sequence: The sequence to sort. (list of int)
 
     Overridden Methods:
+    game_over
     handle_options
     player_action
     set_up
