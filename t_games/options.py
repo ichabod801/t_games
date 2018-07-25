@@ -92,7 +92,7 @@ class OptionSet(object):
         """
         Add a new option group. (None)
 
-        An option group is an aliase for multiple option settings.
+        An option group is an alias for multiple option settings.
 
         Parameters:
         name: The option setting to convert. (str)
@@ -105,16 +105,20 @@ class OptionSet(object):
         """
         Add a new option definition. (None)
 
+        Generally only valid or check is given, althout the option must pass both. 
+        They are both checkeed after converter is applied. For more details, see
+        Programming Games in the wiki.
+
         Parameters:
         name: The name of the option. (str)
         aliases: Alternate names for the option. (list of str)
-        converter: The type to convert the option to. (callable)
+        converter: The function to convert the option from a string. (callable)
         default: The default value of the option. (object)
-        value: The value to assign if the option is chose. (object)
+        value: The value to assign if the option is chosen. (object)
         target: Where to store the value in, if different from name. (str)
         action: How to store the value. (str)
         question: How to ask for a setting from the user. (str)
-        valid: The range of allowed settings. (range or container)
+        valid: The allowed settings. (range or container)
         check: A function that validates a setting. (callable)
         error_text: Text to display when there is an invalid setting. (str)
         """
@@ -208,18 +212,20 @@ class OptionSet(object):
         """
         Ask a boolean question. (list)
 
+        The return value is for generating the settings text.
+
         Parameters:
         definition: The definition of the option to ask about. (dict)
         """
-        pairs = []
+        # Ask the question.
         yes_no = self.game.human.ask(definition['question']) in utility.YES
+        # Process the response.
         if yes_no:
-            setting = definition['value']
-            pairs = [(definition['name'], None)]
+            setting = self.take_action(definition, definition['value'])
+            return [(definition['name'], None)]
         else:
-            setting = definition['default']
-        self.take_action(definition, setting)
-        return pairs
+            setting = self.take_action(definition, definition['default'])
+            return []
 
     def ask_bot_count(self, definition):
         """
@@ -232,11 +238,11 @@ class OptionSet(object):
         query = 'How many {} bots would you like? '.format(definition['name'])
         bot_num = self.game.human.ask_int(query, valid = range(11), default = 0, cmd = 0)
         # Apply the count.
-        pairs = [(definition['name'], None)] * bot_num
         setting = definition['value']
         for bot in range(bot_num):
             self.take_action(definition, setting)
-        return pairs
+        # Return data for settings text.
+        return [(definition['name'], None)] * bot_num
 
     def ask_bot_param(self, definition):
         """
@@ -271,6 +277,7 @@ class OptionSet(object):
             # Apply the bot and the parameters.
             pairs.append((definition['name'], ''.join(raw_params.split())))
             self.take_action(definition, setting)
+        # Return data for settings text.
         return pairs
 
     def ask_parameter(self, definition):
@@ -301,15 +308,20 @@ class OptionSet(object):
         if raw_setting:
             pairs.append((definition['name'], raw_setting))
         self.take_action(definition, setting)
+        # Return data for settings text.
         return pairs
 
     def ask_settings(self):
         """Get the setttings by asking the user. (None)"""
+        # Ask if the user if they want to change the options.
         query = 'Would you like to change the options? '
         if self.definitions and self.game.human.ask(query) in utility.YES:
+            # Mark that options have been changed.
             self.game.flags |= 1
+            # Ask questions, retaining settings text information.
             pairs = []
             for definition in self.definitions:
+                # Ask the question based on the question type setting.
                 if definition['question_type'] == 'bool':
                     pairs.extend(self.ask_bool(definition))
                 elif definition['question_type'] == 'bot-param':
@@ -325,6 +337,7 @@ class OptionSet(object):
             text_pairs = [('='.join(pair) if pair[1] is not None else pair[0]) for pair in pairs]
             self.settings_text = ' '.join(text_pairs)
         else:
+            # Apply defaults if no options changed.
             self.apply_defaults()
 
     def handle_settings(self, raw_settings):
@@ -351,6 +364,7 @@ class OptionSet(object):
         # Transfer the settings to the game.
         for option, setting in self.settings.items():
             if option == 'bots':
+                # Use bots option to set up the players.
                 taken_names = [self.game.human.name]
                 bots = []
                 for bot_class, params in setting:
@@ -358,6 +372,7 @@ class OptionSet(object):
                     taken_names.append(bots[-1].name)
                 self.game.players = [self.game.human] + bots
             else:
+                # Set other options normally.
                 setattr(self.game, option, setting)
         # Warn of any errors.
         if self.errors:
@@ -425,20 +440,26 @@ class OptionSet(object):
         definition: An option definition. (dict of str: object)
         setting: The option setting. (object)
         """
+        # Get the action settings for the option.
         action = definition['action']
         target = definition['target']
         if action == 'assign':
+            # Assign to the target.
             self.settings[target] = setting
         elif action == 'append':
+            # Append to the target.
             if target not in self.settings:
                 self.settings[target] = []
             self.settings[target].append(setting)
         elif action.startswith('key='):
+            # Assign to the target using a key.
             word, key = action.split('=')
             target[key] = setting
         elif action == 'map':
+            # Assing to the target from a dictionary of values.
             self.settings[target] = definition['value'][setting]
         elif action == 'bot':
+            # Assing a new bot.
             bot_class = self.game.bot_classes[definition['target']]
             if setting is True:  # That is, there were no parameters given
                 self.settings['bots'].append((bot_class, []))
@@ -449,12 +470,22 @@ class OptionSet(object):
 
 
 def lower(text):
-    """Convert a string to lower case. (str)"""
+    """
+    Convert a string to lower case. (str)
+
+    Parameters:
+    text: The string to convert. (str)
+    """
     return text.lower()
 
 
 def upper(text):
-    """Convert a string to upper case. (str)"""
+    """
+    Convert a string to upper case. (str)
+
+    Parameters:
+    text: The string to convert. (str)
+    """
     return text.upper()
 
 
