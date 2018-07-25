@@ -499,7 +499,7 @@ class Flip(Game):
         # Set up the players as the human and the bot.
         self.players = [self.human, self.bot]
         random.shuffle(self.players)
-                return True
+        return True
 
     def player_action(self, player):
         """
