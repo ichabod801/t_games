@@ -14,11 +14,14 @@ YES: Synonyms for 'yes'. (set of str)
 
 Functions:
 choose: Combinations [n choose r]. (int)
+flip: Returns a random bit. (int)
+hundred_word: Give the word form of a number less than 100. (str)
 median: Calculate the median of a list of values. (float)
 mean: Calculate the mean of a list of values. (float)
-percentile: Calculate the percentile of a value in a list. (int)
+number_word: Give the word form of a number. (str)
 permutations: The number of permutations of n out r objects. (int)
 streaks: Calculates longest streaks for a sequence. (dict of float: int)
+thousand_word: Give the word form of a number less than 100. (str)
 """
 
 
@@ -28,30 +31,24 @@ import os
 import sys
 
 
-# tgames location.
 LOC = os.path.dirname(os.path.abspath(__file__))
 
-# maximum integer.
 try:
     MAX_INT = sys.maxint
 except AttributeError:
     MAX_INT = sys.maxsize
 
-# The first twenty number words.
-NINETEEN = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 
+NINETEEN = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
     'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen',
     'nineteen']
 
-# The words for the tens place.
 TENS = ['', '', 'twenty', 'thirty', 'fourty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety']
 
-# Words for one thousand and higher.
 THOUSAND_UP = ['', 'thousand', 'million', 'billion', 'trillion', 'quadrillion', 'quintillion',
     'sextillion', 'septillion', 'octillion', 'nonillion', 'decillion', 'undecillion', 'duodecillion',
     'tredecillion', 'quatturodecillion', 'quindecillion', 'sexdecillion', 'octodecillion',
     'novemdecillion', 'vigintillion']
 
-# Synonyms for 'yes'. 
 YES = set(['yes', 'y', '1', 'yup', 'sure', 'affirmative', 'yeah', 'indubitably', 'yep', 'aye', 'ok'])
 YES.update(['okay', 'darn tootin', 'roger', 'da', 'si'])
 
@@ -66,9 +63,11 @@ def choose(n, r):
     """
     return int(math.factorial(n) / (math.factorial(r) * math.factorial(n - r)))
 
+
 def flip():
     """Return a random bit. (int)"""
     return random.choice([1, 0])
+
 
 def hundred_word(n):
     """
@@ -78,13 +77,16 @@ def hundred_word(n):
     n: A number to give the word form of. (int)
     """
     n %= 100
+    # Numbers under nineteen are predefined.
     if n < 20:
         return NINETEEN[n]
+    # Number over nineteen must be combined with tens place numbers.
     else:
         word = TENS[n // 10]
         if n % 10:
             word = '{}-{}'.format(word, NINETEEN[n % 10])
         return word
+
 
 def median(values):
     """
@@ -95,6 +97,7 @@ def median(values):
     """
     return sorted(values)[len(values) // 2]
 
+
 def mean(values):
     """
     Calculate the mean of a list. (float)
@@ -104,6 +107,7 @@ def mean(values):
     """
     return sum(values) / float(len(values))
 
+
 def number_word(n):
     """
     Give the word form of a number. (str)
@@ -111,15 +115,19 @@ def number_word(n):
     Parameter:
     n: A number to give the word form of. (int)
     """
-    word = ''
+    # Handle zero.
     if not n:
         word = NINETEEN[n]
+    # Loop thruogh powers of one thousand.
+    word = ''
     level = 0
     while n:
+        # Add the thousand word with the word for the power of one thousand.
         word = '{} {} {}'.format(thousand_word(n), THOUSAND_UP[level], word).strip()
         n //= 1000
         level += 1
     return word
+
 
 def permutations(n, r):
     """
@@ -130,6 +138,7 @@ def permutations(n, r):
     r: The number of objects to permute. (int)
     """
     return math.factorial(n) / math.factorial(n - r)
+
 
 def streaks(values):
     """
@@ -157,18 +166,23 @@ def streaks(values):
     max_losing = min(min(lengths), 0)
     return length, value, lengths
 
+
 def thousand_word(n):
     """
-    Give the word form of a number less than 100. (str)
+    Give the word form of a number less than 1000. (str)
 
     Parameter:
     n: A number to give the word form of. (int)
     """
+    # Force the word to be less than one thousand.
     n %= 1000
+    # Handle less than one hunded.
     if n < 100:
         return hundred_word(n)
+    # Handle above and below one hundred.
     elif n % 100:
         return '{} hundred {}'.format(NINETEEN[n // 100], hundred_word(n))
+    # Handle no hundred words.
     else:
         return '{} hundred'.format(NINETEEN[n // 100])
 

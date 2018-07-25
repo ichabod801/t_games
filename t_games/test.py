@@ -13,6 +13,7 @@ Functions:
 test: Test some text games. (None)
 """
 
+
 from __future__ import print_function
 
 import t_games.interface as interface
@@ -33,13 +34,13 @@ class Test(object):
     """
 
     def __init__(self):
-        """Test some text games. (None)"""
+        """Set up the saved state attributes. (None)"""
         self.human = player.Tester()
         self.menu = interface.Interface(self.human)
 
     def __call__(self, held_inputs = []):
         """
-        Play the game when called. (None)
+        Test t_games when called. (None)
 
         Parameters:
         held_inputs: The commands for the player to start with. (list of str)
@@ -48,9 +49,9 @@ class Test(object):
         self.menu.menu()
 
 
+# Test some text games. (None)
 test = Test()
 
 
 if __name__ == '__main__':
     test()
-    #test(['roulette / none'])
