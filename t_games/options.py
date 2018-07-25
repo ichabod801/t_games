@@ -52,7 +52,7 @@ class OptionSet(object):
     settings: The option settings provided. (dict of str: object)
     settings_text: The standardized settings text. (str)
 
-    Methods: 
+    Methods:
     add_group: Add a new option group. (None)
     add_option: Add a new option definition. (None)
     apply_defaults: Apply the default settings. (None)
@@ -100,7 +100,7 @@ class OptionSet(object):
         """
         self.groups[name] = expansion
 
-    def add_option(self, name, aliases = [], converter = str, default = False, value = True, target = '', 
+    def add_option(self, name, aliases = [], converter = str, default = False, value = True, target = '',
         action = 'assign', question = '', valid = AllRange(), check = lambda x: True, error_text = ''):
         """
         Add a new option definition. (None)
@@ -138,8 +138,8 @@ class OptionSet(object):
         if target == '':   # instead of 'not target' b/c target could be empty dictionary.
             target = name.replace('-', '_')
         # Create and add the dictionary for the definition.
-        definition = {'name': name, 'converter': converter, 'default': default, 'value': value, 
-            'target': target, 'action': action, 'question': question, 'valid': valid, 'check': check, 
+        definition = {'name': name, 'converter': converter, 'default': default, 'value': value,
+            'target': target, 'action': action, 'question': question, 'valid': valid, 'check': check,
             'error_text': error_text, 'question_type': question_type}
         self.definitions.append(definition)
 
@@ -440,7 +440,7 @@ class OptionSet(object):
             self.settings[target] = definition['value'][setting]
         elif action == 'bot':
             bot_class = self.game.bot_classes[definition['target']]
-            if setting is True: # That is, there were no parameters given
+            if setting is True:  # That is, there were no parameters given
                 self.settings['bots'].append((bot_class, []))
             elif isinstance(setting, (list, tuple)):
                 self.settings['bots'].append((bot_class, setting))
@@ -452,72 +452,12 @@ def lower(text):
     """Convert a string to lower case. (str)"""
     return text.lower()
 
+
 def upper(text):
     """Convert a string to upper case. (str)"""
     return text.upper()
 
+
 if __name__ == '__main__':
-    import tgames.player as player
-    class Dummy(object):
-        pass
-    game = Dummy()
-    options = OptionSet(game)
-    options.add_option(name = 'yes', default = None)
-    options.add_option(name = 'no', value = False, default = True)
-    options.add_option(name = 'five', value = 5)
-    options.handle_settings('no five')
-    print(options.settings_text)
-    print(options.errors)
-    print(game.__dict__)
-    game2 = Dummy()
-    options2 = OptionSet(game2)
-    options2.add_option(name = 'lower', converter = lower)
-    game2.numbers = {}
-    options2.add_option(name = 'number', default = 0, action = 'key=five', target = game2.numbers)
-    options2.add_option(name = 'yes')
-    options2.add_option(name = 'no', value = False, default = True)
-    options2.add_group('maybe', 'yes no')
-    options2.handle_settings('lower = IMHO five maybe number = 108')
-    print()
-    print(options2.settings_text)
-    print(options2.errors)
-    print(game2.__dict__)
-    game3 = Dummy()
-    options3 = OptionSet(game3)
-    options3.add_option(name = 'yes', aliases = ['y', 'da'])
-    options3.add_option(name = 'rank', converter = upper, valid = 'XA23456789TJQK')
-    options3.add_option(name = 'multi', converter = upper, valid = 'XA23456789TJQK')
-    options3.add_option(name = 'many', value = [1, 2, 3], default = [4, 5, 6])
-    options3.handle_settings('da rank = 5 multi=j/a/ k many')
-    print()
-    print(options3.settings_text)
-    print(options3.errors)
-    print(game3.__dict__)
-    numbers = {'one': 1, 'two': 2, 'five': 5}
-    game4 = Dummy()
-    options4 = OptionSet(game4)
-    options4.add_option(name = 'number', action = 'map', value = numbers, default = 'one')
-    options4.add_option(name = 'source', value = numbers, default = {})
-    options4.add_option(name = 'text', valid = ['one', 'two', 'five'])
-    options4.add_option(name = 'key', valid = numbers.keys())
-    options4.handle_settings('number = five source text = two key = three')
-    print()
-    print(options4.settings_text)
-    print(options4.errors)
-    print(game4.__dict__)
-    game5 = Dummy()
-    options5 = OptionSet(game5)
-    options5.add_option(name = 'low', converter = int, valid = range(1, 19))
-    options5.add_option(name = 'high', converter = int, check = lambda x: x > 18)
-    options5.add_option(name = 'coordinate', converter = int, default = [0, 1])
-    options5.handle_settings('low=8 high=8 coordinate =8')
-    print()
-    print(options5.settings_text)
-    print(options5.errors)
-    print(game5.__dict__)
-    game6 = Dummy()
-    game6.human = player.Tester()
-    options6 = OptionSet(game6)
-    options6.add_option(name = 'number', default = 0, question = 'Please enter an odd integer < 100: ',
-        converter = int, valid = range(0, 100), check = lambda x: x % 2)
-    options6.handle_settings('')
+    import t_tests.options_test as options_test
+    options_test.unittest.main()
