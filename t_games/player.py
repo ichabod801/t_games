@@ -32,13 +32,13 @@ import string
 import t_games.utility as utility
 
 
+# Convert 2.7 input to raw_input
 try:
     input = raw_input
 except NameError:
     pass
 
 
-# Names for computer opponents.
 BOT_NAMES = {'a': 'Ash/Abby/Adam/Alan/Alice/Ada/Adele/Alonzo/Angus/Astro',
     'b': 'Bender/Barbara/Blue/Bella/Buckaroo/Beth/Bob/Bishop/Betty/Brooke',
     'c': 'Caitlyn/Calvin/Candice/Carl/Carol/Carsen/Cassandra/Cecilia/Chance/Craig',
@@ -76,9 +76,6 @@ class Player(object):
     """
     The base player class. (object)
 
-    Class Attribute:
-    int_re: A regex for detecting integers. (re. SRE_Expression)
-
     Attributes:
     game: The game the player is playing. (game.Game)
     held_inputs: Inputs awaiting a question. (list of str)
@@ -102,8 +99,6 @@ class Player(object):
     __str__
     """
 
-    int_re = re.compile('[, \t]?(-?\d+)')
-
     def __init__(self, name):
         """
         Save the player's name. (None)
@@ -111,17 +106,19 @@ class Player(object):
         Parameters:
         name: The name of the player. (str)
         """
+        # Save the name.
         self.name = name
+        # Set the default attributes.
         self.game = None
         self.held_inputs = []
         self.shortcuts = {}
 
     def __repr__(self):
-        """Debugging text representation. (str)"""
+        """Generate a debugging text representation. (str)"""
         return '<{} {}>'.format(self.__class__.__name__, self.name)
 
     def __str__(self):
-        """Human readable representation. (str)"""
+        """Generate a human readable representation. (str)"""
         return self.name
 
     def ask(self, prompt):
@@ -131,7 +128,7 @@ class Player(object):
         Parameters:
         prompt: The question being asked of the player. (str)
         """
-        raise BotError('Unexcpected question ask of {}: {!r}'.format(self.__class__.__name__, prompt))
+        raise BotError('Unexcpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
 
     def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
         """
@@ -145,7 +142,7 @@ class Player(object):
         default: The default choice. (int or None)
         cmd: A flag for returning commands for processing. (bool)
         """
-        raise BotError('Unexcpected question ask of {}: {!r}'.format(self.__class__.__name__, prompt))
+        raise BotError('Unexcpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
 
     def ask_int_list(self, prompt, low = None, high = None, valid = [], valid_lens = [], default = None,
         cmd = True):
@@ -161,7 +158,7 @@ class Player(object):
         default: The default choice. (list or None)
         cmd: A flag for returning commands for processing. (bool)
         """
-        raise BotError('Unexcpected question ask of {}: {!r}'.format(self.__class__.__name__, prompt))
+        raise BotError('Unexcpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
 
     def ask_valid(self, prompt, valid, default = '', lower = True):
         """
@@ -175,7 +172,7 @@ class Player(object):
         default: The default value for the response. (str)
         lower: A flag for case insensitive matching. (bool)
         """
-        raise BotError('Unexcpected question ask of {}: {!r}'.format(self.__class__.__name__, prompt))
+        raise BotError('Unexcpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
 
     def clean_up(self):
         """Do any necessary post-game processing. (None)"""
@@ -218,12 +215,17 @@ class Humanoid(Player):
     """
     A player that communicates using input and print. (Player)
 
+    Class Attributes:
+    int_re: A regex for detecting integers. (re. SRE_Expression)
+
     Overridden Methods:
     ask
     ask_int
     ask_int_list
     ask_valid
     """
+
+    int_re = re.compile('[, \t]?(-?\d+)')
 
     def ask(self, prompt):
         """
@@ -232,14 +234,20 @@ class Humanoid(Player):
         Parameters:
         prompt: The question being asked of the player. (str)
         """
+        # Check for held inputs.
         if not self.held_inputs:
+            # Get new inputs.
             answer = input(prompt).strip()
+            # Check for new held inputs.
             if ';' in answer:
                 self.held_inputs = [part.strip() for part in answer.split(';')]
         if self.held_inputs:
+            # Pull from the held inputs.
             answer = self.held_inputs.pop(0)
+        # Process shortcuts.
         first, space, rest = answer.partition(' ')
         first = self.shortcuts.get(first, first)
+        # Return the processed inputs.
         return '{} {}'.format(first, rest).strip()
 
     def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
@@ -254,20 +262,26 @@ class Humanoid(Player):
         default: The default choice. (int or None)
         cmd: A flag for returning commands for processing. (bool)
         """
+        # Give a dummy answer if the game is over.
         if cmd and self.game.force_end:
             return [x for x in valid + [low, high, default, 0] if x is not None][0]
+        # Ask until you get a valid answer.
         while True:
             response = self.ask(prompt).strip()
+            # Check for default.
             if not response and default is not None:
                 return default
+            # Convert to integer
             try:
                 response = int(response)
             except ValueError:
+                # Handle non-integers based on cmd parameter.
                 if cmd:
                     break
                 else:
                     self.error('Integers only please.')
             else:
+                # Check for valid input
                 if low is not None and response < low:
                     self.error('That number is too low. The lowest valid response is {}.'.format(low))
                 elif high is not None and response > high:
@@ -293,21 +307,30 @@ class Humanoid(Player):
         default: The default choice. (list or None)
         cmd: A flag for returning commands for processing. (bool)
         """
+        # Give a dummy answer if the game is over.
         if cmd and self.game.force_end:
             return [x for x in valid + [[low], [high], default, [0]] if x is not None][0]
+        # Ask until you get a valid answer.
         while True:
             response = self.ask(prompt).strip()
+            # Check for default
             if not response and default is not None:
                 return default
+            # Check for empty list as valid response.
             elif not response and not cmd and (0 in valid_lens or not valid_lens):
                 return []
+            # Check for valid response.
             if self.int_re.match(response):
+                # Extract integers.
                 response = [int(num) for num in self.int_re.findall(response)]
+                # Check low.
                 if low is not None and min(response) < low:
                     self.error('{} is too low. The lowest valid response is {}.'.format(min(response), low))
+                # Check high.
                 elif high is not None and max(response) > high:
                     highest = max(response)
                     self.error('{} is too high. The highest valid response is {}'.format(highest, high))
+                # Check valid values.
                 elif valid:
                     for number in set(response):
                         if response.count(number) > valid.count(number):
@@ -316,6 +339,7 @@ class Humanoid(Player):
                             break
                     else:
                         break
+                # Check valid lengths.
                 elif valid_lens and len(response) not in valid_lens:
                     self.error('That is an invalid number of integers.')
                     if len(valid_lens) == 1:
@@ -325,9 +349,11 @@ class Humanoid(Player):
                         message = 'Please enter {}, or {} integers.'
                         len_text = [str(x) for x in valid_lens[:-1]]
                         self.error(message.format(', '.join(len_text), valid_lens[-1]))
+                # Exit on valid input.
                 else:
                     break
             else:
+                # Handle non-integer input based on cmd parameter.
                 if cmd:
                     break
                 else:
@@ -396,6 +422,7 @@ class Human(Humanoid):
             base_name = '{}-{}-{}'.format(self.name, self.quest, self.color).lower()
             self.folder_name = os.path.join(utility.LOC, base_name)
             if not os.path.exists(self.folder_name):
+                # Check for adding new players.
                 new_player = input('I have not heard of you. Are you a new player? ')
                 if new_player.lower() in utility.YES:
                     os.mkdir(self.folder_name)
@@ -407,8 +434,10 @@ class Human(Humanoid):
                 print()
             else:
                 break
+        # Load player information.
         self.load_results()
         self.load_shortcuts()
+        # Set default attributes.
         self.held_inputs = []
 
     def load_results(self):
@@ -591,9 +620,9 @@ class AlphaBetaBot(Bot):
         taken_names: Names already used by a player. (list of str)
         initial: The first letter of the bot's name. (str)
         """
-        # parent initialization
+        # Do the standard initialization.
         super(AlphaBetaBot, self).__init__(taken_names, initial)
-        # attribute initialization
+        # Initialize the alpha-beta attributes.
         self.depth = depth
         self.fudge = fudge
 
@@ -611,11 +640,6 @@ class AlphaBetaBot(Bot):
         beta: The best score for the minimizing player. (int)
         max_player: Flag for evaluating the maximizing player. (int)
         """
-        # get the correct player index ?? not used
-        if max_player:
-            player_index = self.game.players.index(self)
-        else:
-            player_index = 1 - self.game.players.index(self)
         # Initialize loops
         best_move = None
         # check for terminal node
