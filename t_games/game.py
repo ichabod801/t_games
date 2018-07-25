@@ -90,6 +90,7 @@ class Game(OtherCmd):
 
     Overridden Methods:
     __init__
+    default
     do_debug
     """
 
@@ -146,6 +147,17 @@ class Game(OtherCmd):
     def clean_up(self):
         """Handle any end of game tasks. (None)"""
         pass
+
+    def default(self, text):
+        """
+        Handle unrecognized commands. (bool)
+
+        Parameters:
+        text: The raw text input by the user. (str)
+        """
+        player = self.players[self.player_index]
+        player.error('I do not recognize the command {!r}.'.format(text))
+        return True
 
     def do_credits(self, arguments):
         """

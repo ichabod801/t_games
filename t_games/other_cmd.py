@@ -24,15 +24,22 @@ class OtherCmd(object):
     """
     An object for handing text commands. (object)
 
+    Class Attributes:
+    aliases: Other names for commands. (dict of str: str)
+    help_text: Text for other help topics. (dict of str: str)
+
     Attributes:
     human: The user of the interface. (player.Player)
 
     Methods:
+    default: Handle unrecognized commands. (bool)
+    do_debug: Evaluate Python code. (bool)
+    do_help: Process help requests. (bool)
+    do_set: Set shortcuts. (bool)
     handle_cmd: Check text input for a valid command. (bool)
     """
 
     aliases = {'&': 'debug'}
-    # Text for user help requests.
     help_text = {'help': '\nResistance is futile.'}
 
     def __init__(self, human):
@@ -48,25 +55,24 @@ class OtherCmd(object):
         """
         Handle unrecognized commands. (bool)
 
-        The return value is a flag indicating a valid command. 
-
         Parameters:
         text: The raw text input by the user. (str)
         """
-        player = self.players[self.player_index]
-        player.error('I do not recognize the command {!r}.'.format(text))
-        return True
+        self.human.error('I do not recognize the command {!r}.'.format(text))
 
     def do_debug(self, arguments):
         """
         I can't help you with that.
         """
         try:
+            # Run the code.
             result = eval(arguments)
         except (Exception, AttributeError, ImportError, NameError, TypeError, ValueError):
+            # Catch most exceptions and inform the user.
             self.human.error('\nThere was an exception raised while processing that command:')
             self.human.error(traceback.format_exc(), end = '')
         else:
+            # Show the results of valid code.
             self.human.tell(repr(result))
             self.human.tell()
         return True
@@ -129,7 +135,7 @@ class OtherCmd(object):
         with the expanded text.
 
         For example, if you prefer playing freecell with three cells, you could type
-        'set fc play freecell / cells = 3'. Then any time you typed 'fc', it would 
+        'set fc play freecell / cells = 3'. Then any time you typed 'fc', it would
         play the game freecell with the option 'cells = 3'. You could even type 'fc
         challenge' to play with three cells and the challenge option.
         """
@@ -140,18 +146,21 @@ class OtherCmd(object):
         """
         Check text input for a valid command. (bool)
 
-        The return value is a flag indicating a valid command. 
+        The return value is a flag indicating a valid command.
 
         Parameters:
         text: The raw text input by the user. (str)
         """
+        # Parse the input into a command and arguments.
         command, space, arguments = text.strip().partition(' ')
         command = command.lower()
         command = self.aliases.get(command, command)
+        # Check for a method to handle the command.
         method = 'do_' + command
         if hasattr(self, method):
             return getattr(self, method)(arguments.strip())
         else:
+            # Use default if there is no available method.
             return self.default(text)
 
 
@@ -159,5 +168,5 @@ if __name__ == '__main__':
     import tgames.player
     other = OtherCmd(tgames.player.Player('Craig'))
     other.handle_cmd('debug self.aliases')
-    other.handle_cmd('! self.human.name')
+    other.handle_cmd('& self.human.name')
     print(other.handle_cmd('Python sucks.'))
