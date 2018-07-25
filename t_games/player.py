@@ -70,15 +70,20 @@ BOT_NAMES = {'a': 'Ash/Abby/Adam/Alan/Alice/Ada/Adele/Alonzo/Angus/Astro',
 class BotError(ValueError):
     """An invalid play by a bot. (ValueError)"""
     pass
-    
+
 
 class Player(object):
     """
     The base player class. (object)
 
+    Class Attribute:
+    int_re: A regex for detecting integers. (re. SRE_Expression)
+
     Attributes:
     game: The game the player is playing. (game.Game)
+    held_inputs: Inputs awaiting a question. (list of str)
     name: The name of the player. (str)
+    shortcuts: Short versions of commands. (dict of str: str)
 
     Methods:
     ask: Get information from the player. (str)
@@ -325,7 +330,7 @@ class Humanoid(Player):
             else:
                 if cmd:
                     break
-                else: 
+                else:
                     self.error('Please enter the requested integers.')
         return response
 
@@ -364,6 +369,7 @@ class Human(Humanoid):
     color: The player's favorite color. (str)
     folder_name: The local file with the player's data. (str)
     quest: The player's quest. (str)
+    results: The results of games played. (list of list)
 
     Methods:
     load_results: Load the player's history of play. (None)
@@ -373,7 +379,6 @@ class Human(Humanoid):
 
     Overridden Methods:
     __init__
-    store_results
     """
 
     def __init__(self):
@@ -451,6 +456,7 @@ class Human(Humanoid):
         with open(os.path.join(self.folder_name, 'shortcuts.txt'), 'a') as player_data:
             player_data.write('{}\t{}\n'.format(shortcut, text))
 
+
 class Tester(Human):
     """
     A preset test account. (Human)
@@ -526,9 +532,11 @@ class Bot(Nameless):
         Parameters:
         The parameters are the same as the built-in bot function.
         """
+        # Get the base text.
         kwargs['sep'] = kwargs.get('sep', ' ')
         kwargs['end'] = kwargs.get('end', '\n')
         text = kwargs['sep'].join([str(arg) for arg in args]) + kwargs['end']
+        # Raise an error.
         raise BotError(text.strip())
 
     def tell(self, *args, **kwargs):
@@ -544,19 +552,20 @@ class Bot(Nameless):
         text = kwargs['sep'].join([str(arg) for arg in args]) + kwargs['end']
         # Reframe as third person.
         possessive = self.name + "'s"
-        pairs = (('Your', possessive), ('your', possessive), ('You', self.name), ('you', self.name), 
+        pairs = (('Your', possessive), ('your', possessive), ('You', self.name), ('you', self.name),
             ('have', 'has'))
         for pronoun, name in pairs:
             text = text.replace(pronoun, name)
         # Print the modified text.
         print(text)
 
+
 class AlphaBetaBot(Bot):
     """
     A robot player using alpha-beta pruning. (Bot)
 
     The AlphaBetaBot assumes you have a board game, and the board has a get_moves
-    method which returns all legal moves, a copy method which returns an 
+    method which returns all legal moves, a copy method which returns an
     indepent copy of the board, and a check_win method that returns 'game on'
     until the game is over.
 
@@ -607,11 +616,10 @@ class AlphaBetaBot(Bot):
             player_index = self.game.players.index(self)
         else:
             player_index = 1 - self.game.players.index(self)
-        # initialize loops
+        # Initialize loops
         best_move = None
         # check for terminal node
         if depth == 0 or board.check_win() != 'game on':
-            #print()
             value = self.eval_board(board)
             fudge = self.fudge * (self.depth - depth)
             # ?? this is meant to prevent giving up in a forced win situation. Not sure it works.
