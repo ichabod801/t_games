@@ -632,8 +632,8 @@ class Sorter(Game):
             # Handle invalid moves.
             return self.handle_cmd(move)
         # Make the move.
-        ndxs = [self.sequence.index(x) for x in numbers]
-        self.sequence[ndxs[0]], self.sequence[ndxs[1]] = self.sequence[ndxs[1]], self.sequence[ndxs[0]]
+        spots = [self.sequence.index(x) for x in numbers]
+        self.sequence[spots[0]], self.sequence[spots[1]] = self.sequence[spots[1]], self.sequence[spots[0]]
 
     def set_up(self):
         """Set up the sequence and minimum swaps. (None)"""
@@ -685,10 +685,12 @@ def load_games():
         # Store game by category (except test games).
         category = categories
         if game_class.categories[0] != 'Test Games':
+            # Go down the category chain, making new caetgories as needed.
             for game_category in game_class.categories:
                 if game_category not in category['sub-categories']:
                     category['sub-categories'][game_category] = {'sub-categories': {}, 'games': []}
                 category = category['sub-categories'][game_category]
+            # Store the game in the terminal category.
             category['games'].append(game_class)
         # Search the full hierarchy of sub-classes.
         search.extend(game_class.__subclasses__())
