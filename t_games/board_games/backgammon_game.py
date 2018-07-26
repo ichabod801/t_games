@@ -13,22 +13,23 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 BAR: The index of the bar. (int)
+CONTACT_WEIGHTS: Weights for PubEvalBot while there's' contact. (list of float)
 CREDITS: The credits for the game. (str)
 FRAME_HIGH: The top of the frame for displaying the board. (list of str)
 FRAME_LOW: The bottom of the frame for displaying the board. (list of str)
 OUT: The index for pieces born off the board. (int)
+RACE_WEIGHTS: Weights for PubEvalBot while it's a race. (list of float)
 RULES: The rules of Backgammon. (str)
 START: The index for pieces not yet in the game. (int)
 
 Classes:
-BackgammonBot: A bot for a game of Backgammon(player.bot)
+BackgammonBot: A bot for a game of Backgammon. (player.bot)
+AdditiveBot: A genetic algorithm improvement of BackgammonBot. (BackgammonBot)
 BackGeneBot: A Backgammon bot for genetic engineering. (BackgammonBot)
 PubEvalBot: A bot based on Gerry Tesauro's pubeval algorithm. (BackgammonBot)
 Backgammon: A game of Backgammon. (game.Game)
 BackgammonBoard: A board for Backgammon. (board.LineBoard)
-
-Functions:
-move_key: Convert a move to a sortable key. (list of int)
+BackgammonPlay: A possible play (set of moves) in Backgammon. (object)
 """
 
 
@@ -44,51 +45,45 @@ import t_games.player as player
 import t_games.utility as utility
 
 
-# The index of the bar.
 BAR = -1
 
-CONTACT_WEIGHTS = [.25696, -.66937, -1.66135, -2.02487, -2.53398, -.16092, -1.11725, -1.06654, -.92830, 
-    -1.99558, -1.10388, -.80802, .09856, -.62086, -1.27999, -.59220, -.73667, .89032, -.38933, -1.59847, 
-    -1.50197, -.60966, 1.56166, -.47389, -1.80390, -.83425, -.97741, -1.41371, .24500, .10970, -1.36476, 
-    -1.05572, 1.15420, .11069, -.38319, -.74816, -.59244, .81116, -.39511, .11424, -.73169, -.56074, 
-    1.09792, .15977, .13786, -1.18435, -.43363, 1.06169, -.21329, .04798, -.94373, -.22982, 1.22737, 
-    -.13099, -.06295, -.75882, -.13658, 1.78389, .30416, .36797, -.69851, .13003, 1.23070, .40868, -.21081, 
-    -.64073, .31061, 1.59554, .65718, .25429, -.80789, .08240, 1.78964, .54304, .41174, -1.06161, .07851, 
-    2.01451, .49786, .91936, -.90750, .05941, 1.83120, .58722, 1.28777, -.83711, -.33248, 2.64983, .52698, 
-    .82132, -.58897, -1.18223, 3.35809, .62017, .57353, -.07276, -.36214, 4.37655, .45481, .21746, .10504, 
-    -.61977, 3.54001, .04612, -.18108, .63211, -.87046, 2.47673, -.48016, -1.27157, .86505, -1.11342, 
+CONTACT_WEIGHTS = [.25696, -.66937, -1.66135, -2.02487, -2.53398, -.16092, -1.11725, -1.06654, -.92830,
+    -1.99558, -1.10388, -.80802, .09856, -.62086, -1.27999, -.59220, -.73667, .89032, -.38933, -1.59847,
+    -1.50197, -.60966, 1.56166, -.47389, -1.80390, -.83425, -.97741, -1.41371, .24500, .10970, -1.36476,
+    -1.05572, 1.15420, .11069, -.38319, -.74816, -.59244, .81116, -.39511, .11424, -.73169, -.56074,
+    1.09792, .15977, .13786, -1.18435, -.43363, 1.06169, -.21329, .04798, -.94373, -.22982, 1.22737,
+    -.13099, -.06295, -.75882, -.13658, 1.78389, .30416, .36797, -.69851, .13003, 1.23070, .40868, -.21081,
+    -.64073, .31061, 1.59554, .65718, .25429, -.80789, .08240, 1.78964, .54304, .41174, -1.06161, .07851,
+    2.01451, .49786, .91936, -.90750, .05941, 1.83120, .58722, 1.28777, -.83711, -.33248, 2.64983, .52698,
+    .82132, -.58897, -1.18223, 3.35809, .62017, .57353, -.07276, -.36214, 4.37655, .45481, .21746, .10504,
+    -.61977, 3.54001, .04612, -.18108, .63211, -.87046, 2.47673, -.48016, -1.27157, .86505, -1.11342,
     1.24612, -.82385, -2.77082, 1.23606, -1.59529, .10438, -1.30206, -4.11520, 5.62596, -2.75800]
 
-# The credits for the game.
 CREDITS = """
 Game Design: Traditional
 Game Programming: Craig "Ichabod" O'Brien
 Bot Programming: Gerry Tesauro
 """
 
-# The top of the frame for displaying the board.
 FRAME_HIGH = ['  1 1 1 1 1 1   1 2 2 2 2 2  ', '  3 4 5 6 7 8   9 0 1 2 3 4  ', 
     '+-------------+-------------+']
 
-# The bottom of the frame for displaying the board.
-FRAME_LOW = ['+-------------+-------------+',  '  1 1 1                      ', 
+FRAME_LOW = ['+-------------+-------------+', '  1 1 1                      ', 
     '  2 1 0 9 8 7   6 5 4 3 2 1  ']
 
-# The index for pieces born off the board.
 OUT = -2
 
-RACE_WEIGHTS = [0, -.17160, .27010, .29906, -.08471, 0, -1.40375, -1.05121, .07217, -.01351, 0, -1.29506, 
-    -2.16183, .13246, -1.03508, 0, -2.29847, -2.34631, .17253, .08302, 0, -1.27266, -2.87401, -.07456, 
-    -.34240, 0, -1.34640, -2.46556, -.13022, -.01591, 0, .27448, .60015, .48302, .25236, 0, .39521, .68178, 
-    .05281, .09266, 0, .24855, -.06844, -.37646, .05685, 0, .17405, .00430, .74427, .00576, 0, .12392, 
-    .31202, -.91035, -.16270, 0, .01418, -.10839, -.02781, -.88035, 0, 1.07274, 2.00366, 1.16242, .22520, 
-    0, .85631, 1.06349, 1.49549, .18966, 0, .37183, -.50352, -.14818, .12039, 0, .13681, .13978, 1.11245, 
-    -.12707, 0, -.22082, .20178, -.06285, -.52728, 0, -.13597, -.19412, -.09308, -1.26062, 0, 3.05454, 
+RACE_WEIGHTS = [0, -.17160, .27010, .29906, -.08471, 0, -1.40375, -1.05121, .07217, -.01351, 0, -1.29506,
+    -2.16183, .13246, -1.03508, 0, -2.29847, -2.34631, .17253, .08302, 0, -1.27266, -2.87401, -.07456,
+    -.34240, 0, -1.34640, -2.46556, -.13022, -.01591, 0, .27448, .60015, .48302, .25236, 0, .39521, .68178,
+    .05281, .09266, 0, .24855, -.06844, -.37646, .05685, 0, .17405, .00430, .74427, .00576, 0, .12392,
+    .31202, -.91035, -.16270, 0, .01418, -.10839, -.02781, -.88035, 0, 1.07274, 2.00366, 1.16242, .22520,
+    0, .85631, 1.06349, 1.49549, .18966, 0, .37183, -.50352, -.14818, .12039, 0, .13681, .13978, 1.11245,
+    -.12707, 0, -.22082, .20178, -.06285, -.52728, 0, -.13597, -.19412, -.09308, -1.26062, 0, 3.05454,
     5.16874, 1.50680, 5.35000, 0, 2.19605, 3.85390, .88296, 2.30052, 0, .92321, 1.08744, -.11696, -.78560, 
-    0, -.09795, -.83050, -1.09167, -4.94251, 0, -1.00316, -3.66465, -2.56906, -9.67677, 0, -2.77982, 
+    0, -.09795, -.83050, -1.09167, -4.94251, 0, -1.00316, -3.66465, -2.56906, -9.67677, 0, -2.77982,
     -7.26713, -3.40177, -12.32252, 0, 3.42040]
 
-# The rules of Backgammon.
 RULES = """
 Each player starts the game rolling one die, and the higher roll moves using 
 the two numbers rolled. From then on turns alternate, each player rolling two
@@ -147,16 +142,16 @@ layout: Which layout to use: long, standard, or hyper. (l)
 match: The winning match score. Defaults to 1, or non-match play. (m)
 """
 
-# The index for pieces not yet in the game.
 START = -3
 
 
 class BackgammonBot(player.Bot):
     """
-    A bot for a game of Backgammon(player.Bot)
+    A bot for a game of Backgammon. (player.Bot)
 
     Attributes:
     held_moves: Moves planned but not yet made through ask. (BackgammonPlay)
+    piece: The symbol for the bot's pieces on the baord. (str)
 
     Methods:
     describe_board: Determine the features of the current board layout. (list)
@@ -263,7 +258,7 @@ class BackgammonBot(player.Bot):
         """
         Determine the features of the current board layout. (list of int)
 
-        The evaluation is a list of integers. This can be used on it's own or as 
+        The evaluation is a list of integers. This can be used on it's own or as
         input to another evaluation function.
 
         The items in the evaluation list are (in order):
@@ -381,11 +376,21 @@ class BackgammonBot(player.Bot):
 
 
 class AdditiveBot(BackgammonBot):
+    """
+    A genetic algorithm improvement of BackgammonBot. (BackgammonBot)
+
+    Attributes:
+    vectors: The weights for evaluating positions in different phases. (dict)
+
+    Overridden Methods:
+    __init__
+    eval_board
+    """
 
     def __init__(self, taken_names = []):
         """
         Set up the bot. (None)
-        
+
         Parameters:
         taken_names: The names already in use by other players. (list of str)
         """
@@ -404,6 +409,14 @@ class AdditiveBot(BackgammonBot):
 class BackGeneBot(BackgammonBot):
     """
     A Backgammon bot for genetic engineering. (BackgammonBot)
+
+    Class Attributes:
+    phases: The different phases of the game. (list of str)
+
+    Overridden Methods:
+    __init__
+    eval_board
+    tell
     """
 
     phases = ['mixed', 'split', 'stretch', 'double', 'accept']
@@ -453,6 +466,7 @@ class PubEvalBot(BackgammonBot):
 
     Overridden Methods:
     ask
+    ask_int_list
     eval_board
     """
 
@@ -623,8 +637,8 @@ class PubEvalBot(BackgammonBot):
                     if men == 3:
                         vector[5 * point - 2] = 1
                     elif men >= 4:
-                        vector[5 * point - 1] =  (men - 3) / 2
-        # Ecode foes on bar.
+                        vector[5 * point - 1] = (men - 3) / 2
+        # Encode foes on bar.
         vector[120] = position[0] / -2
         # Encode friends off.
         vector[121] = position[26] / 15
@@ -640,11 +654,23 @@ class Backgammon(game.Game):
     Class Attributes:
     layouts: Different possible starting layouts. (dict of str: tuple)
 
+    Attributes:
+    board: The board the game is played on. (board.DimBoard)
+    bot: The bot that the human is playing against. (player.Bot)
+    dice: The dice that are rolled to determine moves. (dice.Pool)
+    doubling_die: The die recording the match score for the game. (int)
+    doubling_status: Who can double the die. (str)
+    pieces: The symbols for the players' pieces. (dict of str: str)
+    rolls: The numbers that can be used to move. (list of int)
+
     Methods:
     check_win: Check to see if a given player has won. (int)
     do_bear: Bear a piece of the board. (bool)
     do_enter: Bring a piece back into play from the bar. (bool)
+    do_pips: Show the pip counts. (bool)
+    double: Double the doubling die. (bool)
     get_rolls: Determine the rolls you can move with from the dice roll. (None)
+    reset: Reset the game state during match play. (None)
 
     Overridden Methods:
     game_over
@@ -654,11 +680,10 @@ class Backgammon(game.Game):
     """
 
     aliases = {'b': 'bear', 'd': 'double', 'e': 'enter', 'p': 'pips', 's': 'start'}
-    # Interface categories for the game.
     categories = ['Board Games']
     credits = CREDITS
-    layouts = {'hyper': ((24, 1), (23, 1), (22, 1)), 'long': ((24, 15),), 
-        'nack': ((6, 4), (8, 3), (13, 4), (23, 2), (24, 2)), 
+    layouts = {'hyper': ((24, 1), (23, 1), (22, 1)), 'long': ((24, 15),),
+        'nack': ((6, 4), (8, 3), (13, 4), (23, 2), (24, 2)),
         'standard': ((6, 5), (8, 3), (13, 5), (24, 2))}
     name = 'Backgammon'
     num_options = 3
@@ -691,7 +716,7 @@ class Backgammon(game.Game):
                 else:
                     self.human.tell('Gammon!')
                     result *= 2
-        return result 
+        return result
 
     def do_bear(self, argument):
         """
@@ -746,7 +771,7 @@ class Backgammon(game.Game):
         # Continue the turn if there are still rolls to move.
         return self.rolls
 
-    def do_enter(self, argument): 
+    def do_enter(self, argument):
         """
         Bring a piece back into play from the bar.
 
@@ -921,7 +946,7 @@ class Backgammon(game.Game):
         move = player.ask_int_list('\nWhat is your move? ', low = 1, high = 24, valid_lens = [1, 2])
         if isinstance(move, str):
             return self.handle_cmd(move)
-        direction = {'X': -1 , 'O': 1}[player_piece]
+        direction = {'X': -1, 'O': 1}[player_piece]
         # Convert moves with just the end point.
         if len(move) == 1:
             possible = []
@@ -969,7 +994,7 @@ class Backgammon(game.Game):
         return self.rolls
 
     def reset(self):
-        """Reset the game state during match play."""
+        """Reset the game state during match play. (None)"""
         # Set up the board.
         self.board = BackgammonBoard(24, layout = self.layout)
         # Set up the dice.
@@ -993,9 +1018,8 @@ class Backgammon(game.Game):
             question = 'Would you like to play with the O piece? bool')
         self.option_set.add_option('match', ['m'], int, 1, check = lambda x: x > 0,
             question = 'What should be the winning match score (return for 1)? ')
-        self.option_set.add_option('layout', ['l'], options.lower, action = 'map', value = self.layouts, 
-            default = 'standard',
-            question = 'What layout would you like to use (return for standard)? ')
+        self.option_set.add_option('layout', ['l'], options.lower, action = 'map', value = self.layouts,
+            default = 'standard', question = 'What layout would you like to use (return for standard)? ')
 
     def set_up(self):
         """Set up the game. (None)"""
@@ -1017,12 +1041,19 @@ class BackgammonBoard(board.LineBoard):
     Methods:
     board_text: Generate a text lines for the pieces on the board. (list of str)
     get_plays: Get the legal plays for a given set of rolls. (list)
+    get_moves_enter: Get the legal moves when a piece is on the bar. (list)
     get_moves_help: Recurse get_plays using another board. (list of tuple)
+    get_moves_home: Get the legal moves when all pieces are home. (list)
+    get_moves_normal: Generate legal moves during normal play. (list of BackgammonPlay)
     get_pip_count: Get the pip count for a given player. (int)
+    get_plays: Get all the legal plays for a given set of rolls. (list of BackgammonPlay)
     get_text: Get the board text from a particular player's perspective. (str)
+    set_up: Put the starting pieces on the board. (None)
 
     Overridden Methods:
     __init__
+    move
+    safe
     """
 
     def __init__(self, length = 24, cell_class = 0, layout = ((6, 5), (8, 3), (13, 5), (24, 2))):
@@ -1082,7 +1113,7 @@ class BackgammonBoard(board.LineBoard):
         """
         Get the legal moves for a given set of rolls. (list)
 
-        This method is one level of recursion for get_plays, although the actual 
+        This method is one level of recursion for get_plays, although the actual
         recursion is done in get_moves_help after calls to one of the ohter
         get_moves methods.
 
@@ -1179,7 +1210,7 @@ class BackgammonBoard(board.LineBoard):
         direction = {'X': -1, 'O': 1}[piece]
         coord = home[roll - 1]
         # Check for pieces left to move.
-        piece_indexes = [ndx for ndx, pt in enumerate(home) if piece in self.cells[pt]]
+        piece_indexes = [index for index, point in enumerate(home) if piece in self.cells[point]]
         if piece_indexes:
             max_index = piece_indexes[-1]
         else:
@@ -1247,7 +1278,7 @@ class BackgammonBoard(board.LineBoard):
 
     def get_plays(self, piece, rolls):
         """
-        Get all the legal plays for a given set of rolls.
+        Get all the legal plays for a given set of rolls. (list of BackgammonPlay)
 
         The initial moves are obtained recursively through get_moves, and then cleaned
         up here.
@@ -1351,11 +1382,12 @@ class BackgammonPlay(object):
     the end point of the move, and the roll used.
 
     Attributes:
-    total_roll: The total roll used for the move. (int)
     moves: The moves that make up the play. (list of tuple)
+    total_roll: The total roll used for the move. (int)
 
     Methods:
     add_move: Add a move to the play. (None)
+    next_move: Return a move to make. (tuple)
 
     Overridden Methods:
     __init__
