@@ -176,12 +176,14 @@ class BackgammonBot(player.Bot):
         if prompt.startswith('You have no legal moves'):
             self.game.human.tell('{} has no legal moves.'.format(self.name))
             return ''
+        # Respond to opponent doubling.
         elif prompt.startswith('Your opponent wants to double'):
             features, points = self.describe_board(self.game.board)
             if self.eval_board(features, 'accept') < -25:
                 return '1'
             else:
                 return '0'
+        # Respond to be able to double.
         elif prompt.startswith('Would you like to double'):
             features, points = self.describe_board(self.game.board)
             if self.eval_board(features, 'double') > 25:
@@ -190,7 +192,7 @@ class BackgammonBot(player.Bot):
                 return '0'
         # Raise an error for any other question.
         else:
-            raise ValueError('Unexpected question to BackgammonBot: {}'.format(prompt))
+            raise player.BotError('Unexpected question to BackgammonBot: {}'.format(prompt))
 
     def ask_int_list(self, prompt, low = None, high = None, valid = [], valid_lens = [], default = None,
         cmd = True):
@@ -252,7 +254,41 @@ class BackgammonBot(player.Bot):
                 return move[:2]
         # Raise an error for any other question.
         else:
-            raise ValueError('Unexpected question to BackgammonBot: {}'.format(prompt))
+            raise player.BotError('Unexpected question to BackgammonBot: {}'.format(prompt))
+
+    def calculate_hits(self, board, blots):
+        """
+        Calculate the possible captures in the given position. (tuple of dict)
+
+        The return value is two dictionaries, one with the direct hits and one with the
+        indirect hits. Each is keyed by the piece symbol that would be captured.
+
+        Paramters:
+        board: The position being checked. (BackgammonBoard)
+        blots: The vulnerable positions for each piece. (dict of str: list)
+        """
+        direct_hits = {'X': 0, 'O': 0}
+        indirect_hits = {'X': 0, 'O': 0}
+        for piece in 'XO':
+            # Get info about your opponent's moves.
+            foe_direction = {'X': -1, 'O': 1}[piece]
+            foe_piece = {'X': 'O', 'O': 'X'}[piece]
+            # Go through all of your blots.
+            for blot in blots[piece]:
+                # Go through all possible capture starts.
+                for offset in range(1, 13):
+                    # Make sure start is on the board.
+                    try:
+                        offcell = board.offset(blot, offset * foe_direction)
+                    except KeyError:
+                        break
+                    # Classify possibles as direct or indirect.
+                    if foe_piece in offcell:
+                        if offset < 7:
+                            direct_hits[piece] += 1
+                        if offset > 1:
+                            indirect_hits[piece] += 1
+        return direct_hits, indirect_hits
 
     def describe_board(self, board):
         """
@@ -285,10 +321,13 @@ class BackgammonBot(player.Bot):
                 controlled[cell.contents[0]].append(cell.location)
             elif len(cell.contents) == 1:
                 blots[cell.contents[0]].append(cell.location)
+        # Get all the points for each player.
         points = {piece: controlled[piece] + blots[piece] for piece in 'XO'}
         points['O'] = [24 - point for point in points['O']]
+        # Count the off board pieces.
         captured = {piece: board.cells[BAR].contents.count(piece) for piece in 'XO'}
         off = {piece: board.cells[OUT].contents.count(piece) for piece in 'XO'}
+        # Get the pip counts and furthest piece from home.
         pip_count = {piece: board.get_pip_count(piece) for piece in 'XO'}
         max_pip = {}
         for piece in 'XO':
@@ -299,22 +338,7 @@ class BackgammonBot(player.Bot):
             else:
                 max_pip[piece] = 0
         # Calculate hits.
-        direct_hits = {'X': 0, 'O': 0}
-        indirect_hits = {'X': 0, 'O': 0}
-        for piece in 'XO':
-            foe_direction = {'X': -1, 'O': 1}[piece]
-            foe_piece = {'X': 'O', 'O': 'X'}[piece]
-            for blot in blots[piece]:
-                for offset in range(1, 13):
-                    try:
-                        offcell = board.offset(blot, offset * foe_direction)
-                    except KeyError:
-                        break
-                    if foe_piece in offcell:
-                        if offset < 7:
-                            direct_hits[piece] += 1
-                        if offset > 1:
-                            indirect_hits[piece] += 1
+        direct_hits, indirect_hits = calculate_hits(board, blots)
         # Get list of score factors.
         my_piece = self.game.pieces[self.name]
         foe_piece = {'X': 'O', 'O': 'X'}[my_piece]
@@ -335,26 +359,42 @@ class BackgammonBot(player.Bot):
         Parameters:
         The parameters are as the built-in print function.
         """
+        # Old print lining from development of the bot.
         board = self.game.board
         human = self.game.human
         human.tell('\nERROR INFO\n')
         human.tell(board.get_text(self.piece))
         human.tell(board.get_plays(self.piece, self.game.rolls))
+        # Raise the error.
         super(BackgammonBot, self).error(*args, **kwargs)
 
     def eval_board(self, board_features, phase):
+        """
+        Evauluate a board position based on phase of play. (int or list)
+
+        For doubling checks, an binary integer is returned (accept/double or not).
+        Otherwise, it returns the board_features.
+
+        Parameters:
+        board_features: The summary of the board position. (list of int)
+        phase: The current phase of play, or what is being asked of the bot. (str)
+        """
+        # Get the pip counts.
         my_pips = self.game.board.get_pip_count(self.piece)
         their_pips = self.game.board.get_pip_count({'X': 'O', 'O': 'X'}[self.piece])
+        # Check for doubling.
         if phase == 'double':
             if their_pips > 8 and my_pips / their_pips < 0.75:
                 return 1
             else:
                 return 0
+        # Check for accepting a double.
         elif phase == 'accept':
             if their_pips > 8 and my_pips / their_pips < 1.33:
                 return 1
             else:
                 return 0
+        # Check for normal play.
         else:
             return board_features
 
@@ -403,6 +443,13 @@ class AdditiveBot(BackgammonBot):
         self.vectors['accept'] = [-28, 46, 79, 37, 30, 17, -69, 32]
 
     def eval_board(self, board_features, phase):
+        """
+        Evauluate a board position based on phase of play. (int)
+
+        Parameters:
+        board_features: The summary of the board position. (list of int)
+        phase: The current phase of play, or what is being asked of the bot. (str)
+        """
         return sum([f * r for f, r in zip(self.vectors[phase], board_features)])
 
 
@@ -430,23 +477,41 @@ class BackGeneBot(BackgammonBot):
         mother: The bot's mother. (BackGeneBot or None)
         father: The bot's father. (BackGeneBot or None)
         """
+        # Do the base initialization.
         super(BackGeneBot, self).__init__(taken_names = taken_names)
+        # Set up the vectors of weights.
         self.vectors = {}
         if mother is None:
+            # No mother means a randomly generated bot.
             for phase in self.phases:
                 if phase in ('double', 'accept'):
                     self.vectors[phase] = [random.randint(-100, 100) for dummy in range(8)]
                 else:
                     self.vectors[phase] = [random.randint(0, 100) for dummy in range(8)]
         else:
+            # Otherwise, randomly select weights from the mother and father.
             for phase in self.phases:
                 pairs = zip(mother.vectors[phase], father.vectors[phase])
                 self.vectors[phase] = [random.choice(pair) for pair in pairs]
 
     def eval_board(self, board_features, phase):
+        """
+        Evauluate a board position based on phase of play. (int)
+
+        Parameters:
+        board_features: The summary of the board position. (list of int)
+        phase: The current phase of play, or what is being asked of the bot. (str)
+        """
         return sum([f * r for f, r in zip(self.vectors[phase], board_features)])
 
     def tell(self, *args, **kwargs):
+        """
+        Give information to the player. (None)
+
+        Parameters:
+        The parameters are as per the built-in print function.
+        """
+        # Shut up.
         pass
 
 
