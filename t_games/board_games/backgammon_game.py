@@ -620,11 +620,12 @@ class PubEvalBot(BackgammonBot):
         Parameters:
         board: The board to evaluate. (BackgammonBoard)
         """
+        # Get the board vector.
         position = self.get_position(board)
         left, right, = [], []
         for index, men in enumerate(position[1:25]):
             if men < 0:
-                left.append(men)
+                left.append(abs(men))
             elif men > 0:
                 right.append(men)
         race = max(left) > min(right)
@@ -646,17 +647,22 @@ class PubEvalBot(BackgammonBot):
         Parameters:
         board: The board to vectorize. (BackgammonBoard)
         """
+        # Set up the loop.
         foe_piece = {'X': 'O', 'O': 'X'}[self.piece]
         position = [board.cells[BAR].count(foe_piece) * -1]
         points = []
+        # Loop through the locations.
         for location in range(1, 24):
             pieces = board.cells[location]
             value = len(pieces)
+            # Your pieces are positive, theirs are negative.
             if self.piece not in pieces:
                 value *= -1
             points.append(value)
+        # Revers the board positions as necessary.
         if self.piece == 'O':
-            position.reverse()
+            points.reverse()
+        # Fill out the positions.
         position.extend(points)
         position.append(board.cells[BAR].count(self.piece))
         position.append(board.cells[OUT].count(self.piece))
@@ -674,12 +680,16 @@ class PubEvalBot(BackgammonBot):
         # Check for a win.
         if position[26] == 15:
             return utility.MAX_INT
+        # Get the vector.
         vector = self.set_vector(position)
+        # Get the weights.
         if race:
             weights = RACE_WEIGHTS
         else:
             weights = CONTACT_WEIGHTS
+        # apply the weights.
         score = [v * w for v, w in zip(vector, weights)]
+        return sum(score)
 
     def set_vector(self, position):
         """
@@ -735,7 +745,9 @@ class Backgammon(game.Game):
     do_pips: Show the pip counts. (bool)
     double: Double the doubling die. (bool)
     get_rolls: Determine the rolls you can move with from the dice roll. (None)
+    get_start: Get the start of a move only specified by the end. (int)
     reset: Reset the game state during match play. (None)
+    validate_move: Check for a valid move. (bool)
 
     Overridden Methods:
     game_over
@@ -808,17 +820,17 @@ class Backgammon(game.Game):
         # Check for all pieces in the player's home.
         if (piece == 'X' and max(points) > 6) or (piece == 'O' and min(points) < 19):
             player.error('You do not have all of your pieces in your home yet.')
-        # Check for captured piece
+        # Check for captured piece.
         elif piece in self.board.cells[BAR]:
             player.error('You still have a piece on the bar.')
         else:
-            # Play any legal moves
+            # Play any legal moves.
             for bear in bears:
-                # Get the correct point
+                # Get the correct point.
                 roll = bear
                 if piece == 'O':
                     bear = 25 - bear
-                # Check for a valid point
+                # Check for a valid point.
                 if piece not in self.board.cells[bear]:
                     player.error('You do not have a piece on the {} point.'.format(roll))
                     continue
@@ -878,24 +890,30 @@ class Backgammon(game.Game):
         I'm sorry, I didn't catch that.
         """
         game, losses = self.gipf_check(arguments, ('connect four',))
-        # Hunt the Wumpus
+        # Check for Connect Four edge.
         if game == 'connect four':
             if not losses:
+                # Get the player information.
                 player = self.players[self.player_index]
                 piece = self.pieces[player.name]
+                # Remind the player of the board state.
                 player.tell(self.board.get_text(piece))
                 while True:
+                    # Get a point.
                     query = '\nPick a point to move a piece verically from: '
                     point = player.ask_int(query, low = 1, high = 24)
                     target = 25 - point
+                    # Validate the point.
                     if piece not in self.board.cells[point]:
                         player.tell('You do not have a piece on that point.')
                     elif len(self.board.cells[target]) > 2 and piece not in self.board.cells[target]:
                         player.tell('You could not move a piece to that square normally.')
                     else:
                         break
+                # Make the move.
                 self.board.move(point, target, piece)
                 go = False
+        # I'm confused.
         else:
             player.tell("I'm sorry, I didn't catch that.")
             go = True
@@ -920,18 +938,21 @@ class Backgammon(game.Game):
         Parameters:
         player: The player doubling the stakes. (player.Player)
         """
-        # Get the player's piece.
+        # Check for valid doubling.
         piece = self.pieces[player.name]
         if self.doubling_status in ('', piece):
+            # See if the opponent accepts.
             opponent = self.players[1 - self.player_index]
             query = 'Your opponent wants to double the stakes to {}. Do you accept the new stakes? '
             accept = opponent.ask(query.format(self.doubling_die * 2))
             if accept.lower() in utility.YES:
+                # Process acceptance
                 self.doubling_die *= 2
                 self.doubling_status = {'X': 'O', 'O': 'X'}[piece]
                 message = 'Your opponent accepts the double, the doubling die is now at {}'
                 player.tell(message.format(self.doubling_die))
             else:
+                # Process rejection.
                 player.tell('Your opponent refuses the double, you win.')
                 if player == self.human:
                     self.win_loss_draw[1] += self.doubling_die
@@ -945,6 +966,7 @@ class Backgammon(game.Game):
                     self.reset()
                 return False
         else:
+            # Warn the player on an invalid doubling.
             player.error("The doubling die is in your opponent's control")
         return True
 
@@ -971,6 +993,30 @@ class Backgammon(game.Game):
         self.rolls = self.dice.values[:]
         if self.rolls[0] == self.rolls[1]:
             self.rolls.extend(self.rolls)
+
+    def get_start(self, end, direction, player, player_piece):
+        """
+        Get the start of a move only specified by the end. (int)
+
+        Parameters:
+        end: The end of the move (int)
+        direction: The direction of the move. (int)
+        player: The player moving. (player.Player)
+        player_piece: The symbol for the player moving. (str)
+        """
+        possible = []
+        for maybe in set(self.rolls):
+            start = end - maybe * direction
+            if start in self.board.cells and player_piece in self.board.cells[start]:
+                possible.append(start)
+        if len(possible) == 1:
+            return possible[0]
+        elif len(possible) > 1:
+            player.error('That move is ambiguous.')
+            return -99
+        else:
+            player.error('There is no legal single move to that point.')
+            return -99
 
     def player_action(self, player):
         """
@@ -1014,47 +1060,17 @@ class Backgammon(game.Game):
         direction = {'X': -1, 'O': 1}[player_piece]
         # Convert moves with just the end point.
         if len(move) == 1:
-            possible = []
-            for maybe in set(self.rolls):
-                start = move[0] - maybe * direction
-                if start in self.board.cells and player_piece in self.board.cells[start]:
-                    possible.append(start)
-            if len(possible) == 1:
-                start = possible[0]
-                end = move[0]
-            elif len(possible) > 1:
-                player.error('That move is ambiguous.')
-                return True
-            else:
-                player.error('There is no legal single move to that point.')
+            start, end = get_start(move[0], direction, player, player_piece), move[0]
+            if start == -99:
                 return True
         else:
             start, end = move
-        # Get the details of the move.
-        start_pieces = self.board.cells[start].contents
-        end_pieces = self.board.cells[end].contents
-        # Check for valid staring point.
-        if not (start_pieces and start_pieces[0] == player_piece):
-            player.error('You do not have a piece on that starting point.')
-            return True
-        # Check for valid die roll.
-        elif (end - start) * direction not in self.rolls:
-            player.error('You do not have a die roll matching that move.')
-            return True
-        # Check for valide end point
-        elif end_pieces and end_pieces[0] != player_piece and len(end_pieces) > 1:
-            player.error('That end point is blocked.')
-            return True
-        # Check for a piece on the bar.
-        elif player_piece in self.board.cells[BAR].contents and start != BAR:
-            player.error('You must re-enter your piece on the bar before making any other move.')
-            return True
-        elif (start, end) not in legal_moves:
-            player.error('That move would not allow for the maximum possible play.')
-        else:
-            # Make the valid move
+        # Check for valid move.
+        if validate_move(start, end, direction, player, player_piece):
             capture = self.board.move(start, end)
             self.rolls.remove(abs(start - end))
+        else:
+            return True
         # Continue if there are still rolls to handle.
         return self.rolls
 
@@ -1097,6 +1113,42 @@ class Backgammon(game.Game):
             self.pieces[self.bot.name] = 'X'
         # Set up the board and dice.
         self.reset()
+
+    def validate_move(self, start, end, direction, player, player_piece):
+        """
+        Check for a valid move. (bool)
+
+        Parameters:
+        start: The starting point for the move. (int)
+        end: The ending point for the move. (int)
+        direction: The direction of the move. (int)
+        player: The player moving. (player.Player)
+        player_piece: The symbol for the player moving. (str)
+        """
+        valid = True
+        # Get the details of the move.
+        start_pieces = self.board.cells[start].contents
+        end_pieces = self.board.cells[end].contents
+        # Check for a piece on the start.
+        if not (start_pieces and start_pieces[0] == player_piece):
+            player.error('You do not have a piece on that starting point.')
+            valid = False
+        # Check for valid die roll.
+        elif (end - start) * direction not in self.rolls:
+            player.error('You do not have a die roll matching that move.')
+            valid = False
+        # Check for valide end point
+        elif end_pieces and end_pieces[0] != player_piece and len(end_pieces) > 1:
+            player.error('That end point is blocked.')
+            valid = False
+        # Check for a piece on the bar.
+        elif player_piece in self.board.cells[BAR].contents and start != BAR:
+            player.error('You must re-enter your piece on the bar before making any other move.')
+            valid = False
+        elif (start, end) not in legal_moves:
+            player.error('That move would not allow for the maximum possible play.')
+            valid = False
+        return valid
 
 
 class BackgammonBoard(board.LineBoard):
@@ -1162,7 +1214,7 @@ class BackgammonBoard(board.LineBoard):
                     # Handle second row number.
                     elif row == 1 and pieces > 9:
                         row_text += '1 '
-                    # Handle piece symbols
+                    # Handle piece symbols.
                     else:
                         row_text += '{} '.format(self.cells[location].contents[0])
                 else:
@@ -1215,14 +1267,17 @@ class BackgammonBoard(board.LineBoard):
         sub_rolls: The rolls to get moves for. (list of int)
         roll: The current roll being moved. (int)
         """
+        # Get the bar piece at the end for popping.
         if piece != self.cells[BAR].contents[-1]:
             self.cells[BAR].remove_piece(piece)
             self.cells[BAR].add_piece(piece)
+        # Get the end point
         if piece == 'X':
             end_coord = 25 - roll
         else:
             end_coord = roll
         end_cell = self.cells[end_coord]
+        # Get the moves.
         if piece in end_cell or len(end_cell) < 2:
             full_plays = self.get_moves_help(piece, BAR, end_coord, moves, full_plays, sub_rolls, roll)
         return full_plays
@@ -1271,6 +1326,7 @@ class BackgammonBoard(board.LineBoard):
         roll: The current roll being moved. (int)
         from_cells: The points that pieces can move from. (list of int or str)
         """
+        # Get the game state information.
         home = {'X': tuple(range(1, 7)), 'O': tuple(range(24, 18, -1))}[piece]
         direction = {'X': -1, 'O': 1}[piece]
         coord = home[roll - 1]
@@ -1308,14 +1364,18 @@ class BackgammonBoard(board.LineBoard):
         roll: The current roll being moved. (int)
         from_cells: The points that pieces can move from. (list of int or str)
         """
+        # Loop through possible points.
         direction = {'X': -1, 'O': 1}[piece]
         for point in from_cells:
+            # Check the point.
             end_point = point + roll * direction
             if not (0 < point <= self.length and 0 < end_point <= self.length):
                 continue
+            # Check the cell.
             end_cell = self.cells[end_point]
             if piece not in end_cell and len(end_cell) > 1:
                 continue
+            # Find the moves.
             full_plays = self.get_moves_help(piece, point, end_point, moves, full_plays, sub_rolls, roll)
         return full_plays
 
@@ -1353,8 +1413,10 @@ class BackgammonBoard(board.LineBoard):
         rolls: The rolls available to move with. (list of int)
         """
         if not self.legal_plays:
+            # Get unique plays.
             plays = self.get_moves(piece, rolls, BackgammonPlay())
             plays = list(set(plays))
+            # Check for maximum use of the roll.
             max_roll = max(play.total_roll for play in plays) if plays else 0
             max_moves = max(len(play) for play in plays) if plays else 0
             self.legal_plays = []
@@ -1405,9 +1467,11 @@ class BackgammonBoard(board.LineBoard):
         start: The location containing the piece to move. (Coordinate)
         end: The location to move the piece to. (Coordinate)
         """
+        # Move and handle the capture
         capture = self.safe_displace(start, end, piece)
         for piece in capture:
             self.cells[BAR].add_piece(piece)
+        # Reset board tracking.
         self.legal_plays = []
         return capture
 
@@ -1494,12 +1558,14 @@ class BackgammonPlay(object):
         other: A move to add. (tuple of str or int)
         """
         if isinstance(other, tuple) and len(other) == 3:
+            # Add a tuple using add_move.
             new_play = BackgammonPlay()
             new_play.moves = self.moves[:]
             new_play.total_roll = self.total_roll
             new_play.add_move(*other)
             return new_play
         elif isinstance(other, BackgammonPlay):
+            # Add another BackgammonPlay by adding attributes.
             new_play = BackgammonPlay()
             new_play.moves = sorted(self.moves + other.moves)
             new_play.total_roll = self.total_roll + other.total_roll
@@ -1518,6 +1584,7 @@ class BackgammonPlay(object):
         Parameters:
         other: The play to compare against. (BackgammonPlay)
         """
+        # Equality is the same moves, regardless of order.
         if isinstance(other, BackgammonPlay):
             return sorted(self.moves) == sorted(other.moves)
         else:
@@ -1542,6 +1609,7 @@ class BackgammonPlay(object):
         Parameters:
         other: The play to compare against. (BackgammonPlay)
         """
+        # Order is by sorted moves.
         if isinstance(other, BackgammonPlay):
             return sorted(self.moves) < sorted(other.moves)
         else:
