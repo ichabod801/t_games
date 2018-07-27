@@ -1060,13 +1060,13 @@ class Backgammon(game.Game):
         direction = {'X': -1, 'O': 1}[player_piece]
         # Convert moves with just the end point.
         if len(move) == 1:
-            start, end = get_start(move[0], direction, player, player_piece), move[0]
+            start, end = self.get_start(move[0], direction, player, player_piece), move[0]
             if start == -99:
                 return True
         else:
             start, end = move
         # Check for valid move.
-        if validate_move(start, end, direction, player, player_piece):
+        if self.validate_move(start, end, direction, legal_moves, player, player_piece):
             capture = self.board.move(start, end)
             self.rolls.remove(abs(start - end))
         else:
@@ -1114,7 +1114,7 @@ class Backgammon(game.Game):
         # Set up the board and dice.
         self.reset()
 
-    def validate_move(self, start, end, direction, player, player_piece):
+    def validate_move(self, start, end, direction, legal_moves, player, player_piece):
         """
         Check for a valid move. (bool)
 
@@ -1122,6 +1122,7 @@ class Backgammon(game.Game):
         start: The starting point for the move. (int)
         end: The ending point for the move. (int)
         direction: The direction of the move. (int)
+        legal_moves: The moves that can possibly be made. (list of BackgammonPlay)
         player: The player moving. (player.Player)
         player_piece: The symbol for the player moving. (str)
         """
