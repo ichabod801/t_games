@@ -1620,7 +1620,7 @@ class BackgammonPlay(object):
             return NotImplemented
 
     def __repr__(self):
-        """Computer readable text representation. (str)"""
+        """Generate a debugging text representation. (str)"""
         return '<BackgammonPlay {!r}>'.format(self.moves)
 
     def add_move(self, start = 0, end = 0, roll = 0):
