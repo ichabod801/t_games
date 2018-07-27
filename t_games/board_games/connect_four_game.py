@@ -31,7 +31,6 @@ import t_games.player as player
 import t_games.utility as utility
 
 
-# The design and programming credits for Connect Four.
 CREDITS = """
 Game Design: Ned Strongin and Howard Wexler
 Game Programming: Craig "Ichabod" O'Brien
@@ -39,7 +38,6 @@ Game Programming: Craig "Ichabod" O'Brien
 Connect Four was originally published by Milton Bradley in 1974.
 """
 
-# The rules to Connect Four.
 RULES = """
 Connect Four is played on a grid six high and seven wide. Players alternate
 placing a piece of their color in one of the columns. The piece played becomes
@@ -126,21 +124,19 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
 
         Parameters:
         board: The board to evaluate. (Connect4Board)
-        player_index: The index of the player to evaluate the board for. (int)
         """
         status = board.check_win()
+        # Get the standard board evaluation during play.
         if status == 'game on':
             index = self.game.players.index(self)
             result = self.eval_player(board, index) - self.eval_player(board, 1 - index)
+        # Otherwise get the end of game evaluation based on the result.
         elif status == 'draw':
             result = 0
         elif status == self.symbol:
             result = 10000
         else:
             result = -10000
-        """print(board)
-        print(result)
-        print()"""
         return result
 
     def eval_player(self, board, player_index):
@@ -190,6 +186,8 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
         return twos, threes
 
     def set_up(self):
+        """Set up the bot for play. (None)"""
+        # Get the value of the first row of cells.
         base = list(range(3, 3 + self.game.columns // 2))
         if self.game.columns % 2:
             base = base + [base[-1] + 2] + base[::-1]
@@ -197,9 +195,11 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
             base[-1] += 1
             base = base + base[::-1]
         base = [0] + base
+        # Get the increase in value as rows get closer to the middle.
         mod = [3] * len(base)
         mod[:3] = [0, 1, 2]
         mod[-2:] = [2, 1]
+        # Build up the values for the whole board.
         board_strength = [base]
         while len(board_strength) <= self.game.rows / 2:
             board_strength.append([a + b for a, b in zip(board_strength[-1], mod)])
@@ -207,6 +207,7 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
             board_strength.append(board_strength[-1])
         while len(board_strength) <= self.game.rows:
             board_strength.append([a - b for a, b in zip(board_strength[-1], mod)])
+        # Rotate the values and add a blank column (there not being a 0 play).
         self.board_strength = list(zip(*board_strength))
         self.board_strength = [[], self.board_strength]
 
@@ -239,17 +240,22 @@ class C4BotGamma(C4BotAlphaBeta):
         Parameters:
         locations: The locations of one player's pieces. (list of tuple)
         """
+        # Get the short sequences of pieces.
         raw_twos, raw_threes = self.find_shorts(locations)
+        # Count the short sequences.
         bins = {'2-0': 0, '2-1': 0, '2-2': 0, '3-0': 0, '3-1': 0, '3-2': 0}
         for chain in raw_twos + raw_threes:
+            # Find the spots beyond the short sequences.
             offset = chain[1] - chain[0]
             forward = chain[-1] + offset
             backward = chain[0] - offset
+            # Use those to determine blocks.
             blocks = 0
             if forward not in self.game.board.cells or self.game.board.cells[forward].contents:
                 blocks += 1
             if backward not in self.game.board.cells or self.game.board.cells[backward].contents:
                 blocks += 1
+            # Update the count for that situation.
             bins['{}-{}'.format(len(chain), blocks)] += 1
         return bins
 
@@ -264,14 +270,14 @@ class C4BotGamma(C4BotAlphaBeta):
         board: The game board. (C4Board)
         player_index: The index (turn order) of the player to evaluate. (int)
         """
-        # get the player's piece symbol
+        # get the player's piece symbol.
         piece = self.game.symbols[player_index]
-        # check board value of pieces
+        # Check board value of pieces.
         locations = [location for location, cell in board.cells.items() if cell.contents == piece]
         score = 0
         for column, row in locations:
             score += self.board_strength[column][row]
-        # check for n-in-a-rows.
+        # Check for n-in-a-rows.
         bins = self.bin_shorts(locations)
         for bin in bins:
             score += bins[bin] * self.bin_values[bin]
@@ -311,45 +317,56 @@ class C4Board(board.DimBoard):
         dimensions: The columns and rows of the board, in cells. (tuple of int)
         pieces: The symbols for player pieces. (list of str)
         wins: The winning four in a row combinations (list of set of tuple)
+        poppable: A flag for being able to pop pieces. (bool)
         """
-        # basic set up
+        # Do the basic board set up.
         super(C4Board, self).__init__(dimensions)
+        # Set the specified attributes.
         self.pieces = pieces
         self.poppable = poppable
+        # Set the default attribute.
         self.pops = 0
         # set up winning positions
         self.wins = wins
         if not self.wins:
+            # Loop through all the spaces.
             for col in range(1, dimensions[0] + 1):
                 for row in range(1, dimensions[1] + 1):
+                    # Record any win to the right.
                     if col < dimensions[0] - 2:
                         win = ((col, row), (col + 1, row), (col + 2, row), (col + 3, row))
                         self.wins.append(set([board.Coordinate(xy) for xy in win]))
                     if row < dimensions[0] - 2:
+                        # Record any win up.
                         win = ((col, row), (col, row + 1), (col, row + 2), (col, row + 3))
                         self.wins.append(set(set([board.Coordinate(xy) for xy in win])))
                         if col < dimensions[0] - 2:
+                            # Record any win up to the right.
                             win = ((col, row), (col + 1, row + 1), (col + 2, row + 2), (col + 3, row + 3))
                             self.wins.append(set([board.Coordinate(xy) for xy in win]))
                         if col > 3:
+                            # Record any win up to the left.
                             win = ((col, row), (col - 1, row + 1), (col - 2, row + 2), (col - 3, row + 3))
                             self.wins.append(set([board.Coordinate(xy) for xy in win]))
 
     def __repr__(self):
-        """Debugging text representation."""
+        """Generate a debugging text representation."""
         return 'C4Board({})'.format(self.dimensions)
 
     def __str__(self):
-        """Human readable text representation. (str)"""
+        """Generate a human readable text representation. (str)"""
+        # Generate the column numbers.
         ones, tens = '+', '+'
         for column in range(1, self.dimensions[0] + 1):
             ones += str(column % 10)
             tens += str(column // 10)
+        # Retain the necessary column numbers.
         if self.dimensions[0] > 9:
             head_foot = '{}\n{}\n'.format(tens, ones)
         else:
             head_foot = ones + '+\n'
         text = head_foot
+        # Add the board positions.
         for row_index in range(self.dimensions[1], 0, -1):
             row_text = '|'
             for column_index in range(1, self.dimensions[0] + 1):
@@ -358,10 +375,8 @@ class C4Board(board.DimBoard):
         return text + head_foot
 
     def check_win(self):
-        """
-        See if the game has been won. (str)
-        """
-        # get the locations with those pieces
+        """See if the game has been won. (str)"""
+        # Get the locations with each player's pieces
         winners = []
         for piece in self.pieces:
             played = set([cell.location for cell in self.cells.values() if cell.contents == piece])
@@ -370,16 +385,17 @@ class C4Board(board.DimBoard):
                 if len(win.intersection(played)) == 4:
                     winners.append(piece)
                     break
-        # check for a draw
+        # Check for a draw.
         full = [cell for cell in self.cells.values() if cell.contents]
         filled = len(full) == self.dimensions[0] * self.dimensions[1]
         if filled or len(winners) == 2:
             result = 'draw'
+        # Check for a win.
         elif winners:
             result = winners[0]
+        # Default to game on.
         else:
             result = 'game on'
-        # default to game on
         return result
 
     def column_height(self, column):
@@ -389,16 +405,14 @@ class C4Board(board.DimBoard):
         Parameters:
         column: The column to check. (int)
         """
-        # check rows til you get an empty cell
+        # Check rows until you get an empty cell.
         for row in range(1, self.dimensions[1] + 1):
             if not self.cells[(column, row)].contents:
                 break
         return row - 1
 
     def copy(self):
-        """
-        Create a copy of the board for AI searches. (Connect4Board)
-        """
+        """Create a copy of the board for AI searches. (Connect4Board)"""
         clone = C4Board(self.dimensions, pieces = self.pieces, wins = self.wins, poppable = self.poppable)
         clone.copy_pieces(self)
         return clone
@@ -426,9 +440,7 @@ class C4Board(board.DimBoard):
         return [(column, current_piece) for column in columns]
 
     def last_piece(self):
-        """
-        Get the last piece played. (str)
-        """
+        """Get the last piece played. (str)"""
         pieces_played = len([cell for cell in self.cells.values() if cell.contents]) + self.pops
         return self.pieces[1 - pieces_played % 2]
 
@@ -441,11 +453,12 @@ class C4Board(board.DimBoard):
         """
         # get the details of the move
         column, piece = move
+        # Check for a pop move.
         if column < 0 and self.poppable:
             self.pop(column, piece)
         else:
+            # Check the validity of the move.
             height = self.column_height(column)
-            # attempt the move
             if height <= self.dimensions[1]:
                 self.place((column, height + 1), piece)
             else:
@@ -459,13 +472,18 @@ class C4Board(board.DimBoard):
         column: The negative (one indexed) column to pop. (int)
         piece: The piece to pop. (str)
         """
+        # Convert the column.
         column = abs(column)
+        # Check for a valid move.
         if self.cells[(column, 1)].contents == piece:
+            # Move the pieces down.
             for row in range(2, self.dimensions[1] + 1):
                 self.cells[(column, row - 1)].contents = self.cells[(column, row)].contents
             self.cells[(column, self.dimensions[1])].contents = None
+            # Record the pop.
             self.pops += 1
         else:
+            # Warn on invalid pops.
             raise ValueError('Invalid pop: column {} does not start with {!r}.'.format(column, piece))
 
 
@@ -504,7 +522,7 @@ class ConnectFour(game.Game):
     rules = RULES
 
     def __str__(self):
-        """Human readable text representation. (str)"""
+        """Generate a human readable text representation. (str)"""
         return str(self.board)
 
     def clean_up(self):
@@ -517,33 +535,40 @@ class ConnectFour(game.Game):
         """
         # Check/play the gipf game.
         game, losses = self.gipf_check(arguments, ('roulette', 'wumpus'))
+        # Handle Roulette edge.
         if game == 'roulette':
             if not losses:
                 self.bot_random = True
+        # Handle Hunt the Wumpus edge.
         elif game == 'wumpus':
             if not losses:
+                # Remind the human.
                 self.human.tell(self)
+                # Get the column to reverse.
                 query = 'Which column would you like to reverse? '
                 col = self.human.ask_int(query, low = 1, high = self.board.dimensions[0])
+                # Get the cell contents in reverse.
                 pieces = []
                 for row in range(self.board.dimensions[1], 0, -1):
                     pieces.append(self.board.cells[(col, row)].contents)
+                # Put any non-empty cells back on the board.
                 row = 1
                 for piece in pieces:
                     if piece is not None:
                         self.board.cells[(col, row)].contents = piece
                         row += 1
                 return False
+        # Handle invalid edge.
         else:
             self.human.tell("Yeah, just go two blocks up and take a right. You can't miss it.")
         return True
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
+        # Check for a win.
         win = self.board.check_win()
-        player = self.players[1 - self.turns % 2]
-        piece = self.symbols[1 - self.turns % 2]
         human_piece = self.symbols[self.players.index(self.human)]
+        # Categorize end of game.
         if win != 'game on':
             if win == 'draw':
                 self.win_loss_draw[2] = 1
@@ -552,6 +577,7 @@ class ConnectFour(game.Game):
             else:
                 self.win_loss_draw[1] = 1
             return True
+        # Or keep playing.
         else:
             return False
 
@@ -581,12 +607,15 @@ class ConnectFour(game.Game):
 
     def set_options(self):
         """Define the options for the game. (None)"""
+        # Set the board options.
         self.option_set.add_option('columns', ['c'], int, 7, valid = range(4, 36),
             question = 'How many columns should there be on the board (return for 7)? ')
         self.option_set.add_option('rows', ['r'], int, 6, valid = range(4, 20),
             question = 'How many rows should there be on the board (return for 6)? ')
+        # Set the play option.
         self.option_set.add_option('pop', ['p'], target = 'poppable',
             question = 'Should you be able to pop out the bottom piece in a row? bool')
+        # Set the bot option.
         self.option_set.add_option('bot-level', ['b'],
             valid = ['easy', 'medium', 'hard'], default = 'medium',
             question = 'How hard of a bot do you want to play against (return for medium)? ')
@@ -608,14 +637,14 @@ class ConnectFour(game.Game):
         else:
             prompt = 'Which column would you like to play in? '
             column_index = now_player.ask_int(prompt, valid = open_columns)
+        # Handle non-move commands.
         if isinstance(column_index, str):
             return self.handle_cmd(column_index)
+        # Ohterwise make the move.
         self.board.make_move((column_index, self.symbols[self.players.index(now_player)]))
 
     def set_up(self):
-        """
-        Set up the game. (None)
-        """
+        """Set up the game. (None)"""
         # shuffle players and symbols
         saved_players = self.players[:]
         random.shuffle(self.players)
@@ -630,6 +659,7 @@ class ConnectFour(game.Game):
 
 
 if __name__ == '__main__':
+    # Play the game without the interface.
     try:
         input = raw_input
     except NameError:
