@@ -1641,6 +1641,7 @@ class BackgammonPlay(object):
 
 
 if __name__ == '__main__':
+    # Play the game without the interface.
     try:
         input = raw_input
     except NameError:
