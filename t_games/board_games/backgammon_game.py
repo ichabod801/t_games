@@ -735,6 +735,9 @@ class Backgammon(game.Game):
     dice: The dice that are rolled to determine moves. (dice.Pool)
     doubling_die: The die recording the match score for the game. (int)
     doubling_status: Who can double the die. (str)
+    human_piece: The symbol for the human's pieces. (str)
+    layout: The name of the starting layout. (str)
+    match: The winning match score. (int)
     pieces: The symbols for the players' pieces. (dict of str: str)
     rolls: The numbers that can be used to move. (list of int)
 

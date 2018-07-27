@@ -39,7 +39,7 @@ Programming by Craig "Ichabod" O'Brien.
 """
 
 # Different inventories of ships to place.
-INVENTORIES = {'bradley': {'Carrier': (5, 1), 'Battleship': (4, 1), 'Cruiser': (3, 1), 
+INVENTORIES = {'bradley': {'Carrier': (5, 1), 'Battleship': (4, 1), 'Cruiser': (3, 1),
         'Destroyer': (2, 1), 'Submarine': (3, 1)},
     'bednar': {'Carrier': (5, 1), 'Battleship': (4, 1), 'Cruiser': (3, 1),
         'Destroyer': (2, 2), 'Submarine': (1, 2)},
@@ -51,7 +51,7 @@ INVENTORIES = {'bradley': {'Carrier': (5, 1), 'Battleship': (4, 1), 'Cruiser': (
 # The rules of the game.
 RULES = """
 You layout your ships on your board by specifying two squares using the board
-coordinates on the edges of the board. Only you can see where your ships are. 
+coordinates on the edges of the board. Only you can see where your ships are.
 Each ship takes up one or more squares on the board. Ships must be arranged
 orthogonally, and cannot be orthogonally adjacent to each other.
 
@@ -63,7 +63,7 @@ You are told if the shot is a hit or a miss. If all of the squares on a ship
 are hit, that ship is sunk, and the person who sunk it is informed. If all of
 your ships are sunk, you lose the game.
 
-You will be shown two grids, with the columns labelled 0-9 and the rows 
+You will be shown two grids, with the columns labelled 0-9 and the rows
 labelled A-J. You call shots (and place ships) by using letter-number
 coordinates, such as A8. The top grid represents your opponents board, and the
 bottom grid represents your board. Hits are marked 'X', misses are marked '/',
@@ -88,7 +88,7 @@ inventories give the following ships (name size x count):
         No Submarine.
 """
 
-#A regular expression matching coordinate.
+# A regular expression matching coordinate.
 SQUARE_RE = re.compile(r'[ABCDEFGHIJ]\d')
 
 
