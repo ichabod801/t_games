@@ -11,12 +11,12 @@ CREDITS: The design and programming credits for Connect Four. (str)
 RULES: The rules to Connect Four. (str)
 
 Classes:
-ConnectFour: A game of connect four. (game.Game)
-C4Board: A board for Connect Four type games. (board.GridBoard)
 C4BotAlphaBeta: A Connect Four bot with a tree search and alpha beta 
     pruning. (player.Bot)
 C4BotGamma: An alpha-beta Connect Four bot with a better eval 
     function. (C4BotAlphaBeta)
+C4Board: A board for Connect Four type games. (board.GridBoard)
+ConnectFour: A game of connect four. (game.Game)
 """
 
 
@@ -41,9 +41,9 @@ Connect Four was originally published by Milton Bradley in 1974.
 
 # The rules to Connect Four.
 RULES = """
-Connect Four is played on a grid six high and seven wide. Players alternate 
+Connect Four is played on a grid six high and seven wide. Players alternate
 placing a piece of their color in one of the columns. The piece played becomes
-the top piece in the column. The first player to get four pieces in a row, 
+the top piece in the column. The first player to get four pieces in a row,
 orthogonally or diagonally, is the winner. If all of the spaces on the board 
 are filled, the game is a draw.
 
@@ -62,6 +62,10 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
     """
     A Connect Four bot with a tree search and alpha beta pruning. (player.Bot)
 
+    Attributes:
+    board_strength: A strength rating for each cell on the board. (list of list)
+    symbol: The symbol representing the bot in the game. (str)
+
     Methods:
     eval_player: Evaluate one player's position. (int)
     find_shorts: Find all two or three pieces in a row. (tuple of list of tuple)
@@ -71,6 +75,7 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
     ask
     ask_int
     eval_board
+    set_up
     """
 
     def __init__(self, depth = 6, fudge = 1, taken_names = [], initial = ''):
@@ -142,7 +147,7 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
         """
         Evaluate one player's position. (int)
 
-        The value of the board is the board value of all the pieces, plus 10 
+        The value of the board is the board value of all the pieces, plus 10
         for each two-in-a-row and 100 for each three-in-a-row. A win is worth
         10,000, and a draw is worth 0.
 
@@ -203,7 +208,7 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
         while len(board_strength) <= self.game.rows:
             board_strength.append([a - b for a, b in zip(board_strength[-1], mod)])
         self.board_strength = list(zip(*board_strength))
-        self.board_strenght = [[], self.board_strength]
+        self.board_strength = [[], self.board_strength]
 
 
 class C4BotGamma(C4BotAlphaBeta):
@@ -212,6 +217,9 @@ class C4BotGamma(C4BotAlphaBeta):
 
     Eval based on two-way twos, one-way threes, and two-way threes; with modifications for those that are
     currently playable and eventually playable.
+
+    Class Attributes:
+    bin_values: The relative values of different lines of pieces. (dict)
 
     Methods:
     bin_shorts: Categorize n-in-a-rows by blockage. (dict of str: int)
@@ -276,17 +284,23 @@ class C4Board(board.DimBoard):
 
     Attributes:
     pieces: The pieces to be played. (str)
+    poppable: A flag for being able to pop pieces. (bool)
+    pops: How many pieces have been popped. (int)
     wins: Winning four in a row combinations. (list of set of tuple)
 
     Methods:
     check_win: See if the game has been won. (str)
     column_height: Get the number of pieces in a column. (int)
-    get_moves: Get all legal moves from the current position. (list of int)
+    last_piece: Get the last piece played. (str)
     make_move: Make a valid move. (None)
+    pop: Remove the bottom piece of a column. (None)
 
     Overridden Methods:
+    __init__
     __repr__
     __str__
+    copy
+    get_moves
     """
 
     def __init__(self, dimensions = (7, 6), pieces = [], wins = [], poppable = False):
@@ -342,7 +356,7 @@ class C4Board(board.DimBoard):
                 row_text += str(self.cells[(column_index, row_index)])
             text += row_text + '|\n'
         return text + head_foot
-                    
+
     def check_win(self):
         """
         See if the game has been won. (str)
@@ -352,10 +366,10 @@ class C4Board(board.DimBoard):
         for piece in self.pieces:
             played = set([cell.location for cell in self.cells.values() if cell.contents == piece])
             # check against the winning positions
-            for win in self.wins: 
+            for win in self.wins:
                 if len(win.intersection(played)) == 4:
-                     winners.append(piece)
-                     break
+                    winners.append(piece)
+                    break
         # check for a draw
         full = [cell for cell in self.cells.values() if cell.contents]
         filled = len(full) == self.dimensions[0] * self.dimensions[1]
@@ -397,7 +411,10 @@ class C4Board(board.DimBoard):
         pieces_played = len([cell for cell in self.cells.values() if cell.contents]) + self.pops
         current_piece = self.pieces[pieces_played % 2]
         # get the open columns
-        columns = [col for col in range(1, self.dimensions[0] + 1) if not self.cells[(col, self.dimensions[1])]]
+        columns = []
+        for column in range(1, self.dimensions[0] + 1):
+            if not self.cells[(column, self.dimensions[1])]:
+                columns.append(column)
         # add the poppable columns, if popping is allowed.
         if self.poppable:
             valid_pops = []
@@ -456,8 +473,17 @@ class ConnectFour(game.Game):
     """
     A game of Connect Four. (game.Game)
 
+    Class Attributes:
+    bot_classes: The classes for the available opponent bots. (dict of str: type)
+
     Attributes:
     board: The game board. (C4Board)
+    bot: The computer opponents. (player.Bot)
+    bot_level: The strength of the computer player. (str)
+    bot_random: A flag for the next computer move being random. (bool)
+    columns: The width of the board. (int)
+    poppable: A flag for being able to pop a piece from a column. (bool)
+    rows: The height of the board. (int)
     symbols: The symbols for the players pieces. (list of str)
 
     Overridden methods:
@@ -466,11 +492,11 @@ class ConnectFour(game.Game):
     game_over
     handle_options
     player_action
+    set_options
     set_up
     """
 
     bot_classes = {'alpha-beta': C4BotAlphaBeta, 'gamma': C4BotGamma}
-    # Interface categories for the game.
     categories = ['Board Games']
     credits = CREDITS
     name = 'Connect Four'
@@ -491,7 +517,6 @@ class ConnectFour(game.Game):
         """
         # Check/play the gipf game.
         game, losses = self.gipf_check(arguments, ('roulette', 'wumpus'))
-        #print(game, losses)
         if game == 'roulette':
             if not losses:
                 self.bot_random = True
@@ -562,10 +587,10 @@ class ConnectFour(game.Game):
             question = 'How many rows should there be on the board (return for 6)? ')
         self.option_set.add_option('pop', ['p'], target = 'poppable',
             question = 'Should you be able to pop out the bottom piece in a row? bool')
-        self.option_set.add_option('bot-level', ['b'], 
-            valid = ['easy', 'medium', 'hard'], default = 'medium', 
+        self.option_set.add_option('bot-level', ['b'],
+            valid = ['easy', 'medium', 'hard'], default = 'medium',
             question = 'How hard of a bot do you want to play against (return for medium)? ')
-        
+
     def player_action(self, now_player):
         """
         Play one turn for the given player. (None)
