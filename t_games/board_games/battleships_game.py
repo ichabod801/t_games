@@ -99,7 +99,6 @@ class Battleships(game.Game):
     Attributes:
     boards: The boards for each player. (dict of str: SeaBoard)
     bot: The bot opponent. (player.Bot)
-    do_gipf: Gipf. (boo)
     inventory_name: The name of the inventory of ships. (str)
 
     Overridden Methods:
@@ -110,7 +109,6 @@ class Battleships(game.Game):
     """
 
     aka = ['Battleship', 'Sea Battle', 'Broadsides']
-    # Interface categories for the game.
     categories = ['Board Games']
     credits = CREDITS
     name = 'Battleships'
@@ -261,7 +259,7 @@ class BattleBot(player.Bot):
     targets: Current targets based on recent hits. (list of str)
 
     Methods:
-    add_adjacent: Add adjacent squares of a ship to the don't shoot set. (None)
+    add_adjacents: Add adjacent squares of a ship to the don't shoot set. (None)
     fire: Decide where to fire the next shot. (str)
     retarget: Reset target list based on a recent hit. (None)
 
@@ -646,6 +644,7 @@ def test():
         board.fire(square, sarah)
     print(board.show(to = 'foe'))
     print(board.show())
+
 
 if __name__ == '__main__':
     try:
