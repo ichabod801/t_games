@@ -39,7 +39,7 @@ ENTER_TEXT = 'Please press enter to continue: '
 
 # The rules for Cribbage.
 RULES = """
-Each player is dealt six cards, five in a three or four player game. Each 
+Each player is dealt six cards, five in a three or four player game. Each
 player then discards down to four cards. Discarded cards go into the Crib,
 which is an extra hand that is scored by the dealer. In a three player game
 a fourth card is dealt to the crib from the deck.
@@ -105,7 +105,7 @@ skunk=: The score needed to avoid a skunk (defualt = 91, only in match play).
 solo: The players are teamed against the dealer, and the dealer can swap cards
     with the crib. The dealer scores first, along with the crib.
 target-score= (win=): The score needed to win (default = 121).
-three-solo (3-solo): Equivalent to one-go cards=5 discards=1 win=61 skunk=31 
+three-solo (3-solo): Equivalent to one-go cards=5 discards=1 win=61 skunk=31
     n-bots=2 solo
 """
 
@@ -117,15 +117,15 @@ class Cribbage(game.Game):
     Attributes:
     auto_go: Flag for not prompting players who must go. (bool)
     auto_score: Flag for not prompting when a player scores. (bool)
-    card_count: The total of the cards played this round. (int)
+    card_total: The running total of cards played this round. (int)
     cards: The number of cards dealt. (int)
-    cards_played: The cards played so far this round. (str)
     dealer_index: Index of self.players marking the dealer. (int)
     deck: The deck of cards used in the game. (cards.Deck)
     discards: The number of cards discarded. (int)
-    double-skunk: The score needed to avoid a double skunk. (int)
-    hands: The player's hands in the game. (dict of str: cards.Hand)
+    double_pairs: A flag for pairs counting double. (bool)
+    double_skunk: The score needed to avoid a double skunk. (int)
     go_count: The number of players who have passed consecutively. (int)
+    hands: The player's hands in the game. (dict of str: cards.Hand)
     in_play: The cards each player has played. (dict of str: cards.Hand)
     last: The intitial score of the last player to play. (int)
     match: The winning match score. (int)
@@ -136,10 +136,13 @@ class Cribbage(game.Game):
     phase: The phase of play, either deal, discard, or play. (str)
     one_go: A flag for there only being one round of play. (bool)
     partners: A flag for having teams of players. (bool)
+    skip_player: The player whose next discard is skipped. (player.Player)
     skunk: The score needed to avoid being skunked.
     skunk_scores: The match points earned for wins and skunks. (tuple of int)
+    solo: A flag for teaming everyone against the dealer. (bool)
     starter: The starter card. (CribCard)
     target_score: The score needed to win the game. (int)
+    teams: The people on each player's team. (dict of str: list)
 
     Methods:
     add_points: Add points to a player's score. (None)
@@ -328,7 +331,7 @@ class Cribbage(game.Game):
                 # Reset for the next game in the match.
                 self.scores = {player.name: 0 for player in self.players}
                 self.deal()
-                self.card_count = 0
+                self.card_total = 0
                 self.go_count = 0
                 self.in_play['Play Sequence'].cards = []
         else:
@@ -519,7 +522,7 @@ class Cribbage(game.Game):
         # Player names are used to get hands to avoid checking the crib for cards.
         if (not any(self.hands[player.name] for player in self.players)) or self.one_go:
             if not self.score_hands():
-                self.deal() # Only deal if no one wins.
+                self.deal()  # Only deal if no one wins.
 
     def score_fifteens(self, cards):
         """
@@ -621,7 +624,6 @@ class Cribbage(game.Game):
             self.human.tell('{} scored a total of {} points for this hand.'.format(name, hand_score))
             self.add_points(name, hand_score)
             if self.scores[name] >= self.target_score:
-                #self.human.tell('{} has won with {} points.'.format(name, self.scores[name]))
                 return True
             elif not self.auto_score:
                 self.human.ask(ENTER_TEXT)
@@ -734,7 +736,7 @@ class Cribbage(game.Game):
         self.option_set.add_option('discards', converter = int, default = 2, valid = (1, 2),
             question = 'How many cards should be discarded (return for 2)? ')
         # Set the play options.
-        self.option_set.add_option('one-go', 
+        self.option_set.add_option('one-go',
             question = 'Should there only be one round of play, or one go? bool')
         # Set the score options.
         self.option_set.add_option('target-score', ['win'], int, default = 121, check = lambda x: x > 0,
@@ -753,7 +755,7 @@ class Cribbage(game.Game):
         # Set the match options.
         self.option_set.add_option('match', converter = int, default = 1,
             question = 'How many games for match play (return for single game)? ')
-        self.option_set.add_option('skunk-scores', valid = ('acc', 'long', 'free', 'four'), 
+        self.option_set.add_option('skunk-scores', valid = ('acc', 'long', 'free', 'four'),
             default = 'acc', question = 'Should match scores be ACC, long, free, or triple? ')
         # Set the variant groups.
         five_card = 'one-go cards=5 discards=1 win=61 skunk=31 last=3'
@@ -770,13 +772,13 @@ class Cribbage(game.Game):
         self.option_set.add_group('3-solo', three_solo)
         # Interface options (do not count in num_options)
         self.option_set.add_group('fast', 'auto-go auto-score no-cut no-pick')
-        self.option_set.add_option('auto-go', 
+        self.option_set.add_option('auto-go',
             question = 'Should prompts be skipped when you must go? bool')
-        self.option_set.add_option('auto-score', 
+        self.option_set.add_option('auto-score',
             question = 'Should prompts be skipped when players score? bool')
-        self.option_set.add_option('no-cut', 
+        self.option_set.add_option('no-cut',
             question = 'Should cutting the deck be skipped? bool')
-        self.option_set.add_option('no-pick', 
+        self.option_set.add_option('no-pick',
             question = 'Should picking cards for first deal be skipped? bool')
 
     def set_up(self):
@@ -848,6 +850,7 @@ class CribBot(player.Bot):
 
     Overridden Methods:
     ask
+    ask_int
     tell
     """
 
@@ -918,18 +921,6 @@ class CribBot(player.Bot):
         else:
             raise player.BotError('Unexepected question to CribBot: {!r}'.format(prompt))
 
-    def tell(self, message):
-        """
-        The the bot some information. (None)
-
-        Parameters:
-        message: The information to tell the bot. (str)
-        """
-        if isinstance(message, Cribbage):
-            pass
-        else:
-            super(CribBot, self).tell(message)
-
     def score_discards(self, cards):
         """
         'Score' a potential set of descards. (float)
@@ -964,6 +955,18 @@ class CribBot(player.Bot):
         score = self.game.score_flush(cards) + self.game.score_fifteens(cards)
         score += sum([pair_score for rank, count, pair_score in self.game.score_pairs(cards)])
         score += sum([run_length * run_count for run_length, run_count in self.game.score_runs(cards)])
+
+    def tell(self, message):
+        """
+        The the bot some information. (None)
+
+        Parameters:
+        message: The information to tell the bot. (str)
+        """
+        if isinstance(message, Cribbage):
+            pass
+        else:
+            super(CribBot, self).tell(message)
         return score
 
 
@@ -978,6 +981,8 @@ class CribCard(cards.Card):
     __init__
     __add__
     __radd__
+    __rsub__
+    __sub__
     """
 
     def __init__(self, rank, suit):
