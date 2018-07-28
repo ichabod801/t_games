@@ -11,8 +11,8 @@ CREDITS: The credits for Crazy Eights. (str)
 RULES: The rules for Crazy Eights. (str)
 
 Classes:
-C8Bot: A basic Crazy Eights bot. (player.Bot)
-C8SmartBot: A smarter bot for Crazy Eights. (C8Bot)
+Crazy8Bot: A basic Crazy Eights bot. (player.Bot)
+C8SmartBot: A smarter bot for Crazy Eights. (Crazy8Bot)
 CrazyEights: A game of Crazy Eights (game.Game)
 """
 
@@ -39,17 +39,17 @@ RULES = """
 Each player is dealt 5 cards, 7 in a two player game. The top card of the deck
 is discarded face up. Each player in turn must discard a card face up that
 matches the suit or rank of the top card on the discard pile. Any 8 may always
-be played, and allows the player to pick a new suit to match. If a player 
-can't (or doesn't want to) play any cards, they may draw from the deck until 
+be played, and allows the player to pick a new suit to match. If a player
+can't (or doesn't want to) play any cards, they may draw from the deck until
 they can (or choose to) play a card.
 
-When a player runs out of cards, the cards in all the other hands are added up
-(face cards are 10, eights are 50, all other cards are face value), and the
+When a player runs out of cards, the cards in all the other hands are added up 
+(face cards are 10, eights are 50, all other cards are face value), and the 
 player who ran out of cards scores that many points. If the deck runs out of 
 cards, the player with the least points in their hand scores the difference 
 between their points and the points in each hand. In the case of ties, the 
 points are split between the tied players. After scoring, all cards are 
-shuffled into the deck and the game is started again. 
+shuffled into the deck and the game is started again.
 
 The first player to get 50 points times the number of players wins the game.
 
@@ -72,7 +72,8 @@ reverse=: The rank, typically A, that reverses the order of play.
 skip=: The rank, typically Q, that skips the next player.
 """
 
-class C8Bot(player.Bot):
+
+class Crazy8Bot(player.Bot):
     """
     A basic Crazy Eights bot. (player.Bot)
 
@@ -81,13 +82,15 @@ class C8Bot(player.Bot):
     eights: The eights that the bot has in hand. (list of cards.Card)
     hand: The bot's hand of cards. (cards.Hand)
     held_suit: The suit to switch to after playing an 8. (str)
+    plays: The last round of plays in the game. (list of cards.Card)
     rank_matches: The bot's cards that match the rank to play. (list of Card)
+    rank_suits: The suits of cards that match the current rank. (list of str)
     suit: The suit for the bot to match. (str)
-    suits: The suits in hand and their counts. (list of (int, str))
     suit_matches: The bot's cards that match the suit to play. (list of Card)
+    suits: The suits in hand and their counts. (list of (int, str))
 
     Methods:
-    get_status
+    get_status: Calculate the legal plays and statistics of the game. (None)
 
     Overridden Methods:
     ask
@@ -126,13 +129,12 @@ class C8Bot(player.Bot):
             else:
                 card = 'pass'
             if card in self.hand.cards:
-                #self.game.human.tell(self.discard, self.suit, self.hand)
                 self.game.human.tell('{} played the {}.'.format(self.name, card))
             return card
         # Choosing a suit.
         elif prompt == 'What suit do you choose? ':
             suit, self.held_suit = self.held_suit, None
-            self.game.human.tell('The new suit to match is {}.'.format(suit)) 
+            self.game.human.tell('The new suit to match is {}.'.format(suit))
             return suit
         # Avoid forced draw.
         elif prompt.endswith('(return to draw)? '):
@@ -141,10 +143,10 @@ class C8Bot(player.Bot):
             return str(card)
         # Raise an error if you weren't programmed to handle the question.
         else:
-            raise ValueError('Invalid prompt to C8Bot: {!r}'.format(prompt))
+            raise ValueError('Invalid prompt to Crazy8Bot: {!r}'.format(prompt))
 
     def get_status(self):
-        """Calculate the status of the game. (None)"""
+        """Calculate the legal plays and statistics of the game state. (None)"""
         # Get the relevant cards.
         self.discard = self.game.deck.discards[-1]
         self.hand = self.game.hands[self.name]
@@ -154,10 +156,10 @@ class C8Bot(player.Bot):
         else:
             self.suit = self.discard.suit
         # Calculate the legal plays.
-        self.suit_matches = [card for card in self.hand.cards if card.suit == self.suit 
-            and card.rank != self.game.change_rank]
-        self.rank_matches = [card for card in self.hand.cards if card.rank == self.discard.rank 
-            and card.rank != self.game.change_rank]
+        self.suit_matches = [card for card in self.hand.cards if card.suit == self.suit and
+            card.rank != self.game.change_rank]
+        self.rank_matches = [card for card in self.hand.cards if card.rank == self.discard.rank and
+            card.rank != self.game.change_rank]
         self.eights = [card for card in self.hand.cards if card.rank == self.game.change_rank]
         # Check for change card matching
         if self.game.change_match and self.discard.rank != self.game.change_rank:
@@ -178,9 +180,9 @@ class C8Bot(player.Bot):
         pass
 
 
-class C8SmartBot(C8Bot):
+class C8SmartBot(Crazy8Bot):
     """
-    A smarter bot for Crazy Eights. (C8Bot)
+    A smarter bot for Crazy Eights. (Crazy8Bot)
 
     Overridden Methods:
     ask
@@ -206,7 +208,7 @@ class C8SmartBot(C8Bot):
                 valid_ranks = (self.discard.rank, self.game.change_rank)
             maybes = [c for c in self.hand.cards if c.suit == self.suit or c.rank in valid_ranks]
             maybes = {card: 0 for card in maybes}
-            # Calculate the value of each card (cards left in that suit + 2 if switching after another switch)
+            # Calculate the value of each card (cards left in that suit + 2 if switching after a switch)
             final_card = None
             best_count = -5
             for card in maybes:
@@ -237,7 +239,7 @@ class C8SmartBot(C8Bot):
         # Choosing a suit.
         elif prompt == 'What suit do you choose? ':
             suit = self.suits[0][1]
-            self.game.human.tell('The new suit to match is {}.'.format(suit)) 
+            self.game.human.tell('The new suit to match is {}.'.format(suit))
             return suit
         # Avoid forced draw.
         elif prompt.endswith('(return to draw)? '):
@@ -256,17 +258,20 @@ class CrazyEights(game.Game):
     Attributes:
     any_card: A flag for being able to play any card. (bool)
     change_match: A flag for the change card having to match suit or rank. (bool)
+    change_rank: The rank that allows the current suit to be changed. (str)
     change_set: A flag for the change chard only changing to it's own suit. (bool)
     deck: The deck of cards used in the game. (cards.Deck)
     draw_one: A flag for only having to draw one card when unable to play. (bool)
     draw_rank: The rank that forces a player to draw. (str)
+    empty_deck: What to do when the deck is empty. (str)
     forced_draw: A flag for the next player being forced to draw cards. (bool)
     goal: The number of points needed to win the game. (int)
     hands: The player's hands. (dict of str: cards.Hand)
     history: The cards played so far. (list of cards.Card)
-    multi-score: A flag for almost everyone scoring each round. (bool)
+    multi_score: A flag for almost everyone scoring each round. (bool)
     num_players: The number of players requested. (int)
-    num_smart: The number of smart bots requested. (int)
+    num_easy: The number of easy bots requested. (int)
+    num_medium: The number of easy bots requested. (int)
     one_alert: A flag for alerts when a player has one card. (bool)
     pass_count: How many players have passed in a row. (bool)
     reverse_rank: The rank that reverses the order of play. (str)
@@ -274,12 +279,12 @@ class CrazyEights(game.Game):
     suit: The suit called with the last eight. (str)
 
     Methods:
-    ask_options: Get game options from the user. (None)
     deal: Deal the cards to the players. (None)
     draw: Draw a card. (bool)
     force_draw: Draw extra cards due to special rank of previous play. (bool)
-    parse_options: Parse the options passed from the interface. (None)
+    help_ranks: Show the current special ranks in the game. (None)
     pass_turn: Pass the turn. (bool)
+    play_card: Play a card. (bool)
     score: Score the round's winner. (None)
     validate_card: Validate a card to play. (bool)
 
@@ -287,11 +292,11 @@ class CrazyEights(game.Game):
     game_over
     handle_options
     player_action
+    set_options
     set_up
     """
 
     aka = ['Rockaway', 'Swedish Rummy']
-    # Interface categories for the game.
     categories = ['Card Games']
     credits = CREDITS
     name = 'Crazy Eights'
@@ -474,7 +479,7 @@ class CrazyEights(game.Game):
         if not self.num_easy + self.num_medium:
             self.num_medium = 7
         for bot in range(self.num_easy):
-            self.players.append(C8Bot(taken_names))
+            self.players.append(Crazy8Bot(taken_names))
             taken_names.append(self.players[-1].name)
         for bot in range(self.num_medium):
             self.players.append(C8SmartBot(taken_names))
@@ -507,7 +512,7 @@ class CrazyEights(game.Game):
 
     def set_options(self):
         """Define the options for the game. (None)"""
-        self.option_set.add_option('one-alert', 
+        self.option_set.add_option('one-alert',
             question = 'Should there be an alert when a player has only one card left? bool')
         self.option_set.add_option('empty-deck', [], options.lower, default = 'score',
             valid = ('pass', 'reshuffle', 'score'),
@@ -529,7 +534,7 @@ class CrazyEights(game.Game):
             question = 'How many medium bots should there be (return for 2)? ')
         rank_error = 'The valid card ranks are {}.'.format(', '.join(cards.Card.ranks))
         self.option_set.add_option('change', [], options.upper, '8', valid = cards.Card.ranks,
-            question = 'What rank should change the suit? ', error_text = rank_error, 
+            question = 'What rank should change the suit? ', error_text = rank_error,
             target = 'change_rank')
         self.option_set.add_option('draw', [], options.upper, '', valid = cards.Card.ranks,
             question = 'What rank should force the next player to draw? ', error_text = rank_error,
@@ -748,6 +753,7 @@ class CrazyEights(game.Game):
             player.error('That is not a valid play.')
             return True
         return False
+
 
 if __name__ == '__main__':
     try:
