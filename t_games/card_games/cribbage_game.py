@@ -994,6 +994,7 @@ class CribBot(player.Bot):
         score = self.game.score_flush(cards) + self.game.score_fifteens(cards)
         score += sum([pair_score for rank, count, pair_score in self.game.score_pairs(cards)])
         score += sum([run_length * run_count for run_length, run_count in self.game.score_runs(cards)])
+        return score
 
     def tell(self, message):
         """
@@ -1006,7 +1007,6 @@ class CribBot(player.Bot):
             pass
         else:
             super(CribBot, self).tell(message)
-        return score
 
 
 class CribCard(cards.Card):
