@@ -78,12 +78,15 @@ class NinetyNine(game.Game):
     A game of Ninety-Nine. (game.Game)
 
     Class Attributes:
-    nn_re: A regular expression for Ninety-Nine moves. (re.SRE_Expression)
+    ninety_nine_re: A regular expression for Ninety-Nine moves. (SRE_Expression)
 
     Attributes:
     card_values: The possible values for each rank. (dict of str: tuple)
     deck: The deck of cards for the game. (cards.Deck)
+    eight_nine: A flag for reversing eights and nines. (bool)
+    free_pass: A flag for passing without a token. (bool)
     hands: The players hands of cards, keyed by name. (dict of str:cards.Hand)
+    out_of_the_game: Players who have dropeed out of the game. (list of player)
     reverse_rank: The rank that reverses the order of play. (str)
     skip_rank: The rank that skips over a player. (str)
     total: The current total rank count. (int)
@@ -92,6 +95,7 @@ class NinetyNine(game.Game):
     deal: Deal a new hand of cards. (None)
     do_pass: Pass the turn, lose a token. (bool)
     do_tokens: Show how many tokens are left. (bool)
+    help_ranks: 
 
     Overridden Methods:
     clean_up
@@ -99,16 +103,16 @@ class NinetyNine(game.Game):
     game_over
     handle_options
     player_action
+    set_options
     set_up
     """
 
     aka = ['99']
     aliases = {'p': 'pass'}
-    # Interface categories for the game.
     categories = ['Card Games']
     credits = CREDITS
     name = 'Ninety-Nine'
-    nn_re = re.compile('([1-9atjqkx][cdhs]).*?(-?\d\d?)', re.I)
+    ninety_nine_re = re.compile('([1-9atjqkx][cdhs]).*?(-?\d\d?)', re.I)
     num_options = 7
     rules = RULES
 
@@ -276,7 +280,7 @@ class NinetyNine(game.Game):
         player.tell('Your hand is: {}'.format(hand))
         # Get the players move.
         move = player.ask('What is your move? ')
-        parsed = self.nn_re.search(move)
+        parsed = self.ninety_nine_re.search(move)
         if parsed:
             # Handle standard moves
             card, new_total = parsed.groups()
@@ -293,7 +297,7 @@ class NinetyNine(game.Game):
                 # Check for a valid total
                 values = self.card_values[rank]
                 valid_add = (new_total < 100) and (new_total - self.total in values)
-                if valid_add or (new_total == 99 and 99 in values): 
+                if valid_add or (new_total == 99 and 99 in values):
                     # Play the card.
                     hand.discard(card)
                     self.total = new_total
@@ -329,29 +333,30 @@ class NinetyNine(game.Game):
         self.card_values = {rank: (min(10, index),) for index, rank in enumerate(cards.Card.ranks)}
         self.card_values['A'] = (1, 11)
         self.free_pass = False
-        is_rank_list = lambda ranks: all(rank in cards.Card.ranks for rank in ranks)
+        def is_rank_list(ranks):
+            return all(rank in cards.Card.ranks for rank in ranks)
         self.option_set.add_group('joker-rules', 'zero=9/k reverse=k jokers=2 99=x skip=')
         self.option_set.add_group('chicago', 'zero=4/9 skip=9 99=K minus=10 plus-minus=')
         self.option_set.add_option('jokers', converter = int, default = 0, valid = range(5),
             question = 'How many jokers should there be in the deck (return for 0)? ')
-        self.option_set.add_option('easy', converter = int, default = 2, valid = range(1, 11), 
+        self.option_set.add_option('easy', converter = int, default = 2, valid = range(1, 11),
             question = 'How many easy bots do you want to play against (return for 2)? ')
-        self.option_set.add_option('medium', converter = int, default = 2, valid = range(1, 11), 
+        self.option_set.add_option('medium', converter = int, default = 2, valid = range(1, 11),
             question = 'How many medium bots do you want to play against (return for 2)? ')
         self.option_set.add_option('99', target = 'rank99', default = ['9', 'X'],
-            check = is_rank_list, converter = options.upper, 
+            check = is_rank_list, converter = options.upper,
             question = 'What ranks should be worth 99 points (slash separated, return for 9 and joker)? ')
-        self.option_set.add_option('minus', default = [], check = is_rank_list, 
-            converter = options.upper, 
+        self.option_set.add_option('minus', default = [], check = is_rank_list,
+            converter = options.upper,
             question = 'What ranks should be worth minus face value (slash separated, return for none)? ')
         self.option_set.add_option('plus-minus', default = ['T'], check = is_rank_list,
-            converter = options.upper, 
+            converter = options.upper,
             question = 'What ranks should be worth +/- face value (slash separated, return for tens)? ')
         self.option_set.add_option('zero', default = ['4', 'K'], check = is_rank_list,
             converter = options.upper,
             question = 'What ranks should be worth zero (slash separated, return for 4 and king)? ')
         self.option_set.add_option('reverse', target = 'reverse_rank', valid = cards.Card.ranks,
-            default = '4', converter = options.upper, 
+            default = '4', converter = options.upper,
             question = 'What rank should reverse the order of play? ')
         self.option_set.add_option('skip', target = 'skip_rank', valid = cards.Card.ranks,
             default = '3', converter = options.upper, question = 'What rank should skip the next player? ')
@@ -472,5 +477,5 @@ if __name__ == '__main__':
     except NameError:
         pass
     name = input('What is your name? ')
-    nn = NinetyNine(player.Humanoid(name), '')
-    nn.play()
+    ninety_nine = NinetyNine(player.Humanoid(name), '')
+    ninety_nine.play()
