@@ -855,6 +855,8 @@ class CribBot(player.Bot):
     A bot for playing Cribbage. (player.Bot)
 
     Methods:
+    get_discard: Determine which card to discard to the crib. (str)
+    get_play: Get a card to play. (str)
     score_discards: 'Score' a potential set of descards. (float)
     score_four: Score a potential set of kept cards. (int)
 
@@ -875,51 +877,14 @@ class CribBot(player.Bot):
         hand = self.game.hands[self.name]
         # Discard a card.
         if 'discard' in query:
-            # Check if you're the dealer.
-            dealer = (self == self.game.players[self.game.dealer_index])
-            # Get the possible discard.
-            possibles = []
-            for keepers in itertools.combinations(hand, len(hand) - self.game.discards):
-                discards = [card for card in hand if card not in keepers]
-                # Rate discard based on being the dealer and optional rules.
-                if dealer and self.game.solo:
-                    score = self.score_four(keepers) + self.score_four(discards)
-                elif dealer:
-                    score = self.score_four(keepers) + self.score_discards(discards)
-                else:
-                    score = self.score_four(keepers) - self.score_discards(discards)
-                possibles.append((score, discards))
-            # Discard the highest rated batch.
-            possibles.sort(reverse = True)
-            return ' '.join([str(card) for card in possibles[0][1]])
+            return self.get_discard()
         # Pass when you can't play.
         elif 'no playable' in query:
             self.game.human.tell('\n{} calls "go."'.format(self.name))
             return ''
         # Play a card for pegging.
         elif 'play' in query:
-            # Get the playable cards.
-            playable = [card for card in hand if 31 - card >= self.game.card_total]
-            # Check for sums to fifteen.
-            sums = [card for card in playable if card + self.game.card_total in (1, 2, 3, 4, 15, 31)]
-            if sums:
-                play = sums[0]
-            playable.sort()
-            if self.game.card_total:
-                # Check for pairs.
-                last_card = self.game.in_play['Play Sequence'].cards[-1]
-                pairs = [card for card in playable if card.rank == last_card.rank]
-                if pairs:
-                    play = pairs[0]
-                else:
-                    # If no pairs, play the largest playable card.
-                    play = playable[-1]
-            else:
-                # On no total, play the smallest playable card.
-                play = playable[0]
-            # Make the play.
-            self.game.human.tell('\n{} played the {}.'.format(self.name, play.name.lower()))
-            return str(play)
+            return self.get_play()
         # Press enter.
         elif query.startswith('Please press enter'):
             return ''
@@ -946,6 +911,53 @@ class CribBot(player.Bot):
         else:
             raise player.BotError('Unexepected question to CribBot: {!r}'.format(prompt))
 
+    def get_discard(self):
+        """Determine which card to discard to the crib. (str)"""
+        # Check current game information.
+        hand = self.game.hands[self.name]
+        dealer = (self == self.game.players[self.game.dealer_index])
+        # Get the possible discard.
+        possibles = []
+        for keepers in itertools.combinations(hand, len(hand) - self.game.discards):
+            discards = [card for card in hand if card not in keepers]
+            # Rate discard based on being the dealer and optional rules.
+            if dealer and self.game.solo:
+                score = self.score_four(keepers) + self.score_four(discards)
+            elif dealer:
+                score = self.score_four(keepers) + self.score_discards(discards)
+            else:
+                score = self.score_four(keepers) - self.score_discards(discards)
+            possibles.append((score, discards))
+        # Discard the highest rated batch.
+        possibles.sort(reverse = True)
+        return ' '.join([str(card) for card in possibles[0][1]])
+
+    def get_play(self):
+        """Get a card to play. (str)"""
+        # Get the playable cards.
+        hand = self.game.hands[self.name]
+        playable = [card for card in hand if 31 - card >= self.game.card_total]
+        # Check for sums to fifteen.
+        sums = [card for card in playable if card + self.game.card_total in (1, 2, 3, 4, 15, 31)]
+        if sums:
+            play = sums[0]
+        playable.sort()
+        if self.game.card_total:
+            # Check for pairs.
+            last_card = self.game.in_play['Play Sequence'].cards[-1]
+            pairs = [card for card in playable if card.rank == last_card.rank]
+            if pairs:
+                play = pairs[0]
+            else:
+                # If no pairs, play the largest playable card.
+                play = playable[-1]
+        else:
+            # On no total, play the smallest playable card.
+            play = playable[0]
+        # Make the play.
+        self.game.human.tell('\n{} played the {}.'.format(self.name, play.name.lower()))
+        return str(play)
+
     def score_discards(self, cards):
         """
         'Score' a potential set of descards. (float)
@@ -957,6 +969,7 @@ class CribBot(player.Bot):
         cards: The cards to score. (list of CribCard)
         """
         score = 0
+        # Account for scoring cards.
         if len(cards) == 2:
             if sum(cards) == 15 or cards[0].rank == cards[1].rank:
                 score += 2
@@ -964,6 +977,7 @@ class CribBot(player.Bot):
                 score += 0.75
             if cards[0].suit == cards[1].suit:
                 score += 0.25
+        # Account for potentially scoring cards.
         ranks = sorted([card.rank for card in cards])
         score += (ranks.count('5') + ranks.count('J')) / 2.0
         if ranks in (['4', 'A'], ['6', '8'], ['6', '9'], ['7', '9']):
@@ -1059,6 +1073,7 @@ class CribCard(cards.Card):
 
 
 if __name__ == '__main__':
+    # Play the game without the interface.
     try:
         input = raw_input
     except NameError:
