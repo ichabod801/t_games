@@ -1,5 +1,5 @@
 """
-solitaire.py
+solitaire_game.py
 
 Base class for solitaire games.
 
@@ -12,7 +12,7 @@ MULTI_DECK_HELP: Help for multi-deck solitaire games. (str)
 SCORE_HELP: An explanation of how solitaire game scores are calculated. (str)
 
 Classes:
-Solitaire: A generalized solitaire game. (game.game)
+Solitaire: A generalized solitaire game. (game.Game)
 MultiSolitaire: A game of solitaire that uses multiple decks. (Solitaire)
 """
 
@@ -24,7 +24,6 @@ import t_games.game as game
 from t_games.card_games.solitaire_games.rule_checkers import *
 
 
-# General help for solitaire games.
 HELP_TEXT = """
 Help for solitaire games. (?)
 
@@ -55,8 +54,6 @@ For games with multiple decks of cards, see also 'help multi-deck'. And be
 sure to check the rules for the specific game you are playing.
 """
 
-
-# Help for multi-deck solitaire games.
 MULTI_DECK_HELP = """
 Solitaire games with multiple decks bring about extra issues for text-based
 games. If you want to build the Two of Spades onto the Three of Diamonds,
@@ -72,8 +69,6 @@ command (alias alt) to pick an alternate version of the move. This does not
 penalize you in terms of the move count.
 """
 
-
-# An explanation of how solitaire game scores are calculated.
 SCORE_HELP = """
 Scores are standardized for all solitaire games. The base score is 801 points.
 For each card you sort to the foundations, you gain two points. For each move
@@ -157,26 +152,19 @@ class Solitaire(game.Game):
 
     aliases = {'a': 'auto', 'b': 'build', 'f': 'free', 'l': 'lane', 'm': 'match', 'otto': 'auto',
         's': 'sort', 'q': 'quit', 't': 'turn', 'u': 'undo'}
-    # Text for user help requests.
     help_text = {'help': HELP_TEXT, 'multi-deck': MULTI_DECK_HELP, 'scores': SCORE_HELP}
     name = 'Solitaire Base'
 
     def __str__(self):
-        """
-        Human readable text representation. (str)
-        """
+        """Generate a huuman readable text representation. (str)"""
+        # Assume there are foundations and a tableau, add other text as needed.
         lines = ['']
-        # foundations
         lines.append(self.foundation_text())
-        # cells
         if self.num_cells:
             lines.append(self.cell_text())
-        # tableau
         lines.append(self.tableau_text())
-        # reserve
         if self.reserve:
             lines.append(self.reserve_text())
-        # stock and waste
         if self.stock or self.waste:
             lines.append(self.stock_text())
         return '\n\n'.join(lines) + '\n'
@@ -270,7 +258,7 @@ class Solitaire(game.Game):
         rank is given as an argument, auto will on play cards up to and including that
         rank.
         """
-        # convert max rank to int
+        # Convert max rank to int.
         max_rank = max_rank.upper()
         if max_rank.strip() == '':
             max_rank = len(self.deck.ranks) - 1
@@ -279,17 +267,16 @@ class Solitaire(game.Game):
         else:
             self.human.error('There was an error: the rank specified is not in the deck.')
             return True
-        # loop until there are no sortable cards
+        # Loop until there are no sortable cards.
         while True:
-            # reset loop
             sorts = 0
-            # check free cells
+            # Check free cells.
             for card in self.cells:
                 card_foundation = self.find_foundation(card)
                 if card.rank_num <= max_rank and self.sort_check(card, card_foundation, False):
                     self.do_sort(str(card))
                     sorts += 1
-            # check tableau
+            # Check tableau.
             for pile in self.tableau:
                 if pile:
                     card = pile[-1]
@@ -297,14 +284,14 @@ class Solitaire(game.Game):
                     if card.rank_num <= max_rank and self.sort_check(card, card_foundation, False):
                         self.do_sort(str(card))
                         sorts += 1
-            # check the waste
+            # Check the waste.
             if self.waste:
                 card = self.waste[-1]
                 card_foundation = self.find_foundation(card)
                 if card.rank_num <= max_rank and self.sort_check(card, card_foundation, False):
                     self.do_sort(str(card))
                     sorts += 1
-            # check the reserve
+            # Check the reserve.
             for pile in self.reserve:
                 if pile:
                     card = pile[-1]
@@ -324,17 +311,17 @@ class Solitaire(game.Game):
         build it onto. If you are moving a stack of cards, specify the bottom card of
         the stack as the card to move.
         """
-        # parse the arguments
+        # Parse the arguments.
         card_arguments = self.deck.card_re.findall(arguments.upper())
         if len(card_arguments) != 2:
             self.human.error('Invalid arguments to build command: {!r}.'.format(arguments))
             return True
         mover, target = card_arguments
-        # get the details on all the cards
+        # Get the details on all the cards.
         mover = self.deck.find(mover)
         target = self.deck.find(target)
         moving_stack = self.super_stack(mover)
-        # check for a valid move
+        # Check for a valid move.
         if self.build_check(mover, target, moving_stack):
             self.transfer(moving_stack, target.game_location)
             return False
@@ -347,14 +334,14 @@ class Solitaire(game.Game):
 
         This command takes one argument: the card to move.
         """
-        # parse the arguments
+        # Parse the arguments.
         card_arguments = self.deck.card_re.findall(card.upper())
         if len(card_arguments) != 1:
             self.human.error('Invalid arguments to build command: {!r}.'.format(arguments))
             return True
-        # get the details on the card to be freed.
+        # Get the details on the card to be freed.
         card = self.deck.find(card_arguments[0])
-        # free the card
+        # Free the card.
         if self.free_check(card):
             self.transfer([card], self.cells)
             return False
@@ -367,13 +354,13 @@ class Solitaire(game.Game):
 
         This command takes one argument: the card to move.
         """
-        # get the card and the cards to be moved
+        # Get the card and the cards to be moved.
         if not self.deck.card_re.match(card):
             self.human.error('Invalid card passed to lane command: {!r}.'.format(card))
             return True
         card = self.deck.find(card)
         moving_stack = self.super_stack(card)
-        # check for validity and move
+        # Check for validity and move.
         if self.lane_check(card, moving_stack):
             self.transfer(moving_stack, self.tableau[self.tableau.index([])])
             return False
@@ -386,10 +373,12 @@ class Solitaire(game.Game):
 
         The two cards specified by the arguments can be listed in any order.
         """
+        # Get the card and the card to be matched.
         cards = self.deck.card_re.findall(cards)
         if len(cards) != 2:
             self.human.error('You must provide two valid cards to the match command.')
             return True
+        # Check for validity and match.
         cards = [self.deck.find(card) for card in cards]
         if self.match_check(*cards):
             self.transfer([cards[0]], self.foundations[0])
@@ -401,11 +390,12 @@ class Solitaire(game.Game):
 
         This command takes one argument: the card to move.
         """
-        # get the card
+        # Get the card to sort.
         if not self.deck.card_re.match(card):
             self.human.error('Invalid card passed to sort command: {!r}.'.format(card))
             return True
         card = self.deck.find(card)
+        # Check for validity and sort.
         foundation = self.find_foundation(card)
         if self.sort_check(card, foundation):
             self.transfer([card], foundation)
@@ -420,25 +410,27 @@ class Solitaire(game.Game):
         This command takes no arguments. The number of cards turned over depends on 
         the rules of the game you are playing.
         """
+        # Check for being able to turn cards.
         if self.stock_passes != self.max_passes and (self.stock or self.waste):
-            # put the waste back in the stock if necessary
+            # Put the waste back in the stock if necessary.
             if not self.stock:
                 self.transfer(self.waste[:], self.stock, face_up = False)
                 self.stock.reverse()
-            # flip over cards turn count cards
+            # Flip over turn count cards.
             for card_index in range(self.turn_count):
                 self.transfer(self.stock[-1:], self.waste, undo_ndx = card_index)
-                # stop when the stock runs out
+                # Stop when the stock runs out.
                 if not self.stock:
                     break
             if not self.stock:
                 self.stock_passes += 1
             return False
+        # Warn on invalid turn attempts.
         elif self.stock or self.waste:
             self.human.error('You may not make any more passes through the stock.')
             return True
         else:
-            self.human.error('There are no cards to turn.')
+            self.human.error('There are no more cards to turn.')
             return True
 
     def do_undo(self, num_moves):
@@ -448,15 +440,17 @@ class Solitaire(game.Game):
         If this command is called with no arguments, one move is undone. If an integer
         argument is given, that many moves are undone.
         """
+        # Get the number of moves to undo.
         if not num_moves.strip():
             num_moves = 1
         num_moves = int(num_moves)
+        # Loop through that many undos.
         moves_undone = False
         for move_index in range(num_moves):
-            # check for there being a move to undo.
+            # Check for there being a move to undo.
             if self.moves:
-                # update move tracking
-                move_stack, old_location, new_location, undo_ndx, flip = self.moves.pop()
+                # Update the move tracking.
+                move_stack, old_location, new_location, undo_index, flip = self.moves.pop()
                 self.undo_count += 1
                 moves_undone = True
                 # Check for flipping the undone card(s) back down.
@@ -475,13 +469,14 @@ class Solitaire(game.Game):
                     for card in move_stack:
                         card.up = False
                 # Handle multiple-transfer moves recursively.
-                if undo_ndx:
+                if undo_index:
                     self.undo_count -= 1
                     self.do_undo('')
-            # no move to undo
+            # Stop if there's nothing to undo.
             else:
                 self.human.error('There are no moves to undo.')
                 break
+        # End the turn if a move was undone.
         return not moves_undone
 
     def find_foundation(self, card):
@@ -506,25 +501,25 @@ class Solitaire(game.Game):
         show_error: A flag for showing why the card can't be freed. (bool)
         """
         error = ''
-        # check for open cells
+        # Check for open cells.
         if len(self.cells) == self.num_cells:
             error = 'There are no free cells to place the {} into.'.format(card.name.lower())
-        # check for foundation card
+        # Check for foundation card.
         elif card.game_location in self.foundations:
             error = 'Cards cannot be freed from the foundation.'
-        # check for blocked card
+        # Check for blocked card.
         elif card.game_location[-1] != card:
             error = 'The {} is not available to be freed.'.format(card.name)
         # Check for a face down card.
         elif not card.up:
             error = 'The {} is face down and cannot be freed.'.format(card.name)
-        # check game specific rules
+        # Check game specific rules.
         else:
             for checker in self.free_checkers:
                 error = checker(self, card)
                 if error:
                     break
-        # handle determination
+        # Handle determination.
         if error and show_error:
             print(error)
         return not error
