@@ -95,14 +95,17 @@ class Solitaire(game.Game):
     Attributes:
     build_checkers: Functions for determining valid builds. (list of callable)
     cells: Holding spaces for manuevering cards. (list of Card)
-    deck: The deck of cards for the game. (cards.TrackingDeck)
     dealers: The deal functions for setting up the tableau. (list of callable)
+    deck: The deck of cards for the game. (cards.TrackingDeck)
     foundations: The piles to fill to win the game. (list of list of Card)
     free_checkers: Functions for determining valid cell moves. (list of callable)
+    lane_checkers: Functions for determining valid lane mvoes. (list of callable)
     match_checkers: Functions for determining valid matches. (list of callable)
     max_passes: The number of allowed passes through the stock. (int)
     moves: The moves taken in the game. (list of list)
     num_cells: The number of cells in the game. (int)
+    options: The standard solitaire options for this game. (dict of str: object)
+    pair_checkers: Functions for validating pairs in tableau stacks. (list)
     reserve: Piles where building is not permitted. (list of list of Card)
     sort_checkers: Functions for validating foundation moves. (list of callable)
     stock: A face down pile of cards for later play. (list of Card)
@@ -115,6 +118,7 @@ class Solitaire(game.Game):
 
     Methods:
     build_check: Check for a valid build. (bool)
+    build_pair: Check for a valid pair of building cards. (str)
     cell_text: Generate the text for the cards in cells. (str)
     deal: Deal the initial set up for the game. (None)
     do_auto: Automatically play cards into the foundations. (bool)
@@ -134,8 +138,8 @@ class Solitaire(game.Game):
     lane_check: Check for a valid move into a lane. (bool)
     match_check: Check for a valid match of two cards. (bool)
     reserve_text: Generate text for the reserve piles. (str)
+    set_checkers: Set the game specific rules. (None)
     set_solitaire: Special initialization for solitaire games. (None)
-    set_up: Set up the game. (None)
     sort_check: Check for a valid sort. (bool)
     stack_check: Check for a valid stack to move. (bool)
     stock_text: Generate text for the stock and waste. (str)
@@ -146,16 +150,17 @@ class Solitaire(game.Game):
     Overridden Methods:
     __str__
     default
+    player_action
     set_options
     set_up
     """
 
-    aliases = {'a': 'auto', 'b': 'build', 'f': 'free', 'l': 'lane', 'm': 'match', 'otto': 'auto', 
+    aliases = {'a': 'auto', 'b': 'build', 'f': 'free', 'l': 'lane', 'm': 'match', 'otto': 'auto',
         's': 'sort', 'q': 'quit', 't': 'turn', 'u': 'undo'}
     # Text for user help requests.
     help_text = {'help': HELP_TEXT, 'multi-deck': MULTI_DECK_HELP, 'scores': SCORE_HELP}
     name = 'Solitaire Base'
-    
+
     def __str__(self):
         """
         Human readable text representation. (str)
@@ -175,11 +180,11 @@ class Solitaire(game.Game):
         if self.stock or self.waste:
             lines.append(self.stock_text())
         return '\n\n'.join(lines) + '\n'
-    
+
     def build_check(self, mover, target, moving_stack, show_error = True):
         """
         Check for a valid build. (bool)
-        
+
         Parameters:
         mover: The card to move. (Card)
         target: The destination card. (Card)
@@ -211,13 +216,13 @@ class Solitaire(game.Game):
         if error and show_error:
             self.human.error(error)
         return not error
-        
+
     def build_pair(self, mover, target):
         """
         Check for a valid pair of building cards. (str)
-        
+
         Returns any error resulting from the build.
-        
+
         Parameters:
         mover: The card to move. (Card)
         target: The destination card. (Card)
@@ -228,7 +233,7 @@ class Solitaire(game.Game):
             if error:
                 break
         return error
-    
+
     def cell_text(self):
         """Generate the text for the cards in cells. (str)"""
         return ' '.join([str(card) for card in self.cells])
@@ -256,12 +261,12 @@ class Solitaire(game.Game):
         # More than two cards is someone being silly.
         else:
             self.human.error("\nI don't know what to do with that many cards.")
-        
+
     def do_auto(self, max_rank):
         """
         Automatically play cards to the foundations. (a)
 
-        If no argument is given, auto will play cards as long as it can. If a card 
+        If no argument is given, auto will play cards as long as it can. If a card
         rank is given as an argument, auto will on play cards up to and including that
         rank.
         """
@@ -310,7 +315,7 @@ class Solitaire(game.Game):
             if not sorts:
                 break
         return False
-    
+
     def do_build(self, arguments):
         """
         Build card(s) into stacks on the tableau. (b)
@@ -335,7 +340,7 @@ class Solitaire(game.Game):
             return False
         else:
             return True
-        
+
     def do_free(self, card):
         """
         Move a card to one of the free cells. (f)
@@ -355,7 +360,7 @@ class Solitaire(game.Game):
             return False
         else:
             return True
-        
+
     def do_lane(self, card):
         """
         Move a card into an empty lane. (l)
@@ -389,7 +394,7 @@ class Solitaire(game.Game):
         if self.match_check(*cards):
             self.transfer([cards[0]], self.foundations[0])
             self.transfer([cards[1]], self.foundations[0], undo_ndx = 1)
-    
+
     def do_sort(self, card):
         """
         Move a card to the foundation. (s)
@@ -407,7 +412,7 @@ class Solitaire(game.Game):
             return False
         else:
             return True
-    
+
     def do_turn(self, arguments):
         """
         Turn cards from the stock into the waste. (t)
@@ -421,8 +426,8 @@ class Solitaire(game.Game):
                 self.transfer(self.waste[:], self.stock, face_up = False)
                 self.stock.reverse()
             # flip over cards turn count cards
-            for card_ndx in range(self.turn_count):
-                self.transfer(self.stock[-1:], self.waste, undo_ndx = card_ndx)
+            for card_index in range(self.turn_count):
+                self.transfer(self.stock[-1:], self.waste, undo_ndx = card_index)
                 # stop when the stock runs out
                 if not self.stock:
                     break
@@ -435,19 +440,19 @@ class Solitaire(game.Game):
         else:
             self.human.error('There are no cards to turn.')
             return True
-    
+
     def do_undo(self, num_moves):
         """
         Undo one or more previous moves. (u)
 
         If this command is called with no arguments, one move is undone. If an integer
-        argument is given, that many moves are undone. 
+        argument is given, that many moves are undone.
         """
         if not num_moves.strip():
             num_moves = 1
         num_moves = int(num_moves)
         moves_undone = False
-        for move_ndx in range(num_moves):
+        for move_index in range(num_moves):
             # check for there being a move to undo.
             if self.moves:
                 # update move tracking
@@ -478,19 +483,24 @@ class Solitaire(game.Game):
                 self.human.error('There are no moves to undo.')
                 break
         return not moves_undone
-            
+
     def find_foundation(self, card):
-        """Determine which foundation a card should sort to. (list of Card)"""
+        """
+        Determine which foundation a card should sort to. (list of Card)
+
+        Parameters:
+        card: The card to be sorted. (cards.TrackingCard)
+        """
         return self.foundations[self.deck.suits.index(card.suit)]
-    
+
     def foundation_text(self):
         """Generate the text for the foundation piles. (str)"""
         return ' '.join([str(pile[-1]) for pile in self.foundations if pile])
-    
+
     def free_check(self, card, show_error = True):
         """
         Check that a card can be moved to a free cell. (bool)
-        
+
         Parameters:
         card: The card to be freed. (Card)
         show_error: A flag for showing why the card can't be freed. (bool)
@@ -540,11 +550,11 @@ class Solitaire(game.Game):
         else:
             # Carry on.
             return False
-    
+
     def guess(self, card):
         """
         Guess what move to make for a particular card. (bool)
-        
+
         Parameters:
         card: The card to move. (str)
         """
@@ -610,11 +620,11 @@ class Solitaire(game.Game):
             error = '\nThere are no valid moves for a {}{} and a {}{}.'
             player.error(error.format(card.rank, card.suit, target.rank, target.suit))
         return go
-    
+
     def lane_check(self, card, moving_stack, show_error = True):
         """
         Check for a valid move into a lane. (bool)
-        
+
         Parameters:
         card: The card to move into the lane. (Card)
         moving_stack: The cards on top of the card moving. (list of Card)
@@ -690,7 +700,7 @@ class Solitaire(game.Game):
         move_count = len(self.moves) + 2 * self.undo_count
         sorted_count = sum([len(foundation) for foundation in self.foundations])
         self.scores[self.human.name] = 801 - move_count + sorted_count * 2
-    
+
     def reserve_text(self):
         """Generate text for the reserve piles. (str)"""
         reserve_text = []
@@ -720,7 +730,7 @@ class Solitaire(game.Game):
     def set_solitaire(self):
         """
         Special initialization for solitaire games. (None)
-        
+
         For an ulimited number of passes through the stock, set max_passes to -1.
         """
         options = {'deck-specs': [], 'num-tableau': 7, 'num-foundations': 4, 'num-reserve': 0,
@@ -745,9 +755,9 @@ class Solitaire(game.Game):
         else:
             self.option_set.settings_text += ' deal-num={}'.format(deal_num)
         self.deck.shuffle(number = deal_num)
-        self.tableau = [[] for ndx in range(options['num-tableau'])]
-        self.foundations = [[] for ndx in range(options['num-foundations'])]
-        self.reserve = [[] for ndx in range(options['num-reserve'])]
+        self.tableau = [[] for pile in range(options['num-tableau'])]
+        self.foundations = [[] for foundation in range(options['num-foundations'])]
+        self.reserve = [[] for pile in range(options['num-reserve'])]
         # initialize default attributes
         # piles
         self.cells = []
@@ -757,7 +767,6 @@ class Solitaire(game.Game):
         # undo history
         self.moves = []
         self.undo_count = 0
-        self.commands = []
         # game specific rules
         self.set_checkers()
 
@@ -765,11 +774,11 @@ class Solitaire(game.Game):
         """Set up the game. (None)"""
         self.set_solitaire()
         self.deal()
-    
+
     def sort_check(self, card, foundation, show_error = True):
         """
         Check for a valid sort. (bool)
-        
+
         Parameters:
         card: The card to be sorted. (Card)
         foundation: The target foundation. (list of Card)
@@ -783,8 +792,8 @@ class Solitaire(game.Game):
         elif not card.up:
             error = 'The {} is face down and cannot be sorted.'.format(card.name)
         # check for blocked cards
-        elif (card.game_location in self.tableau + self.reserve + [self.waste] 
-            and card.game_location[-1] != card):
+        elif (card.game_location in self.tableau + self.reserve + [self.waste] and
+            card.game_location[-1] != card):
             error = 'The {} is blocked and cannot be sorted.'.format(card.name)
         # check game specific rules
         else:
@@ -796,23 +805,23 @@ class Solitaire(game.Game):
         if error and show_error:
             print(error)
         return not error
-    
+
     def stack_check(self, stack):
         """
         Check for a valid stack to move. (bool)
-        
+
         Parameters:
         stack: The stack of cards to check. (list of Card)
         """
         valid = True
         if len(stack) > 1:
-            for card_ndx, card in enumerate(stack[:-1]):
-                next_card = stack[card_ndx + 1]
-                if self.build_pair(next_card, card): # note that build_pair returns an error str if invalid
+            for card_index, card in enumerate(stack[:-1]):
+                next_card = stack[card_index + 1]
+                if self.build_pair(next_card, card):  # note that build_pair returns error str if invalid
                     valid = False
                     break
         return valid
-    
+
     def stock_text(self):
         """Generate text for the stock and waste. (str)"""
         # stock
@@ -825,13 +834,13 @@ class Solitaire(game.Game):
             stock_text += ' ' + str(card)
         stock_text += ' ' * (3 * self.turn_count + 2 - len(stock_text))
         return stock_text
-    
+
     def super_stack(self, card):
         """
         Find and validate any stack being moved. (list of Card)
-        
+
         If the stack is invalid, an empty list is returned.
-        
+
         Parameters:
         card: The card at the base of the stack to be moved.
         """
@@ -851,27 +860,28 @@ class Solitaire(game.Game):
             if not self.stack_check(stack):
                 stack = []
         return stack
-    
+
     def tableau_text(self):
         """Generate text for the tableau piles. (str)"""
         max_tableau = max([len(pile) for pile in self.tableau])
-        tableau_lines = [['  ' for pile in self.tableau] for ndx in range(max_tableau)]
-        for pile_ndx, pile in enumerate(self.tableau):
-            for card_ndx, card in enumerate(pile):
-                tableau_lines[card_ndx][pile_ndx] = str(card)
+        tableau_lines = [['  ' for pile in self.tableau] for pile_index in range(max_tableau)]
+        for pile_index, pile in enumerate(self.tableau):
+            for card_index, card in enumerate(pile):
+                tableau_lines[card_index][pile_index] = str(card)
         return '\n'.join([' '.join(line) for line in tableau_lines])
-    
+
     def transfer(self, move_stack, new_location, track = True, face_up = True, undo_ndx = 0):
         """
         Move a stack of cards from one game location to another. (None)
-        
+
         This handles the card's knowledge of where it is and tracking game moves.
-        
+
         Parameters:
         move_stack: The stack of cards to move. (list of Card)
         new_location: The new game location for the cards. (list of Card)
         track: A flag for tracking the move. (bool)
         face_up: A flag for the cards being face up. (bool)
+        undo_ndx: Nominally how many undos there are to do. (int)
         """
         # record the move
         old_location = move_stack[0].game_location
@@ -909,28 +919,36 @@ class MultiSolitaire(Solitaire):
     do_alternate: Redo the last command with different but matching cards. (bool)
 
     Overridden Methods:
+    do_auto
+    do_build
+    do_free
+    do_lane
     do_match
+    do_sort
+    do_turn
+    do_undo
     find_foundation
     guess
     guess_two
+    set_solitaire
     """
 
     aliases = {'alt': 'alternate'}
     name = 'MultiSolitaire Base'
-    
+
     def do_alternate(self, argument):
         """
         Redo the last command with different but matching cards. (alt)
-        
+
         This is for when there are two cards of the same rank and suit that 
         can make the same move, and the game makes the wrong one.
         """
         if self.alt_moves:
             # find the last move from the user
-            move_ndx = -1
-            while self.moves[move_ndx][3]:
-                move_ndx -= 1
-            base_move = self.moves[move_ndx]
+            move_index = -1
+            while self.moves[move_index][3]:
+                move_index -= 1
+            base_move = self.moves[move_index]
             # undo the last move without penalty
             self.do_undo('1', clear_alt = False)
             self.undo_count -= 1
@@ -940,12 +958,12 @@ class MultiSolitaire(Solitaire):
         else:
             self.human.error('The last move is not alternatable.')
             return True
-        
+
     def do_auto(self, max_rank):
         """
         Automatically play cards to the foundations. (a)
 
-        If no argument is given, auto will play cards as long as it can. If a card 
+        If no argument is given, auto will play cards as long as it can. If a card
         rank is given as an argument, auto will on play cards up to and including that
         rank.
         """
@@ -998,7 +1016,7 @@ class MultiSolitaire(Solitaire):
             if not sorts:
                 break
         return False
-    
+
     def do_build(self, arguments):
         """
         Build card(s) into stacks on the tableau. (b)
@@ -1030,7 +1048,7 @@ class MultiSolitaire(Solitaire):
             message = 'There are no valid moves for building a {} onto a {}.'
             self.human.error(message.format(*card_arguments))
             return True
-        
+
     def do_free(self, card):
         """
         Move a card to one of the free cells. (f)
@@ -1055,7 +1073,7 @@ class MultiSolitaire(Solitaire):
         else:
             self.human.error('There are no valid moves for freeing a {}.'.format(card.name))
             return True
-        
+
     def do_lane(self, card):
         """
         Move a card into an empty lane. (l)
@@ -1109,7 +1127,7 @@ class MultiSolitaire(Solitaire):
             # If there are no valid moves, warn the user.
             self.human.error('There are not valid moves for matching a {} and a {}.'.format(*cards))
             return True
-    
+
     def do_sort(self, card):
         """
         Move a card to the foundation. (s)
@@ -1133,7 +1151,7 @@ class MultiSolitaire(Solitaire):
         else:
             self.human.error('There are no valid moves for sorting a {}.'.format(card.name))
             return True
-    
+
     def do_turn(self, arguments):
         """
         Turn cards from the stock into the waste. (t)
@@ -1143,13 +1161,13 @@ class MultiSolitaire(Solitaire):
         """
         self.alt_moves = []
         return super(MultiSolitaire, self).do_turn(arguments)
-    
+
     def do_undo(self, num_moves, clear_alt = True):
         """
         Undo one or more previous moves. (u)
 
         If this command is called with no arguments, one move is undone. If an integer
-        argument is given, that many moves are undone. 
+        argument is given, that many moves are undone.
         """
         if clear_alt:
             self.alt_moves = []
@@ -1167,11 +1185,11 @@ class MultiSolitaire(Solitaire):
         for deck_index in range(self.deck.decks):
             foundations.append(self.foundations[first_index + len(self.deck.suits) * deck_index])
         return foundations
-    
+
     def guess(self, card_arg):
         """
         Guess what move to make for a particular card. (None)
-        
+
         Parameters:
         card_arg: The card to move. (str)
         """
@@ -1251,7 +1269,7 @@ class MultiSolitaire(Solitaire):
     def set_solitaire(self):
         """
         Special initialization for solitaire games. (None)
-        
+
         For an ulimited number of passes through the stock, set max_passes to -1.
         """
         options = {'deck-specs': [], 'num-tableau': 7, 'num-foundations': 4, 'num-reserve': 0,
@@ -1276,9 +1294,9 @@ class MultiSolitaire(Solitaire):
         else:
             self.option_set.settings_text += ' deal-num={}'.format(deal_num)
         self.deck.shuffle(number = deal_num)
-        self.tableau = [[] for ndx in range(options['num-tableau'])]
-        self.foundations = [[] for ndx in range(options['num-foundations'])]
-        self.reserve = [[] for ndx in range(options['num-reserve'])]
+        self.tableau = [[] for pile in range(options['num-tableau'])]
+        self.foundations = [[] for foundation in range(options['num-foundations'])]
+        self.reserve = [[] for pile in range(options['num-reserve'])]
         # initialize default attributes
         # piles
         self.cells = []
@@ -1288,7 +1306,6 @@ class MultiSolitaire(Solitaire):
         # undo history
         self.moves = []
         self.undo_count = 0
-        self.commands = []
         # game specific rules
         self.set_checkers()
 
