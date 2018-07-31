@@ -11,11 +11,11 @@ CREDITS: Credits for Klondike. (str)
 RULES: Rules for Klondike. (str)
 
 Classes:
-Klonbot: A bot to play Klondike stupidly. (Bot)
-Klondike: A game of Klondike. (Solitaire)
+Klonbot: A bot to play Klondike stupidly. (player.Bot)
+Klondike: A game of Klondike. (solitaire.Solitaire)
 
 Functions:
-deal_klondike: Deal deal a triangle in the tableau. (None)
+sim_test: Run a simulation with the Klonbot. (Klonbot, Klondike)
 """
 
 
@@ -47,10 +47,10 @@ turn-one: Cards from the stock are turned over one at a time.
 
 class Klonbot(player.Bot):
     """
-    A bot to play Klondike stupidly. (Bot)
+    A bot to play Klondike stupidly. (player.Bot)
 
     In college I knew people who played Klondike by playing every card they could
-    as soon as they could. But you can have better outcomes by delaying some 
+    as soon as they could. But you can have better outcomes by delaying some
     moves, especially when managing the stock. So I used to say, "I could not only
     write a program to play Solitaire, I could write a program to play Solitaire
     for you." Here it is.
@@ -123,7 +123,6 @@ class Klonbot(player.Bot):
         # Raise error on unrecognized prompt.
         else:
             raise RuntimeError('Unrecognized prompt to Klonbot: {}'.format(prompt))
-        #print('Klonbot:', response)
         return response
 
     def move_check(self, card, targets, foundations):
@@ -189,11 +188,10 @@ class Klonbot(player.Bot):
 
     def tell(self, *args, **kwargs):
         """Echo the game output to the user. (None)"""
-        #super(Klonbot, self).tell(*args, **kwargs)
         text = str(args[0])
         # Watch for mistakes.
         if 'is not' in text or 'cannot' in text:
-            raise RuntimeError('Apparentl illegal move by Klonbot.')
+            raise RuntimeError('Apparently illegal move by Klonbot.')
         # Record winning games.
         elif 'You won' in text:
             self.wins.append(self.next_num - 1)
@@ -204,12 +202,14 @@ class Klondike(solitaire.Solitaire):
     """
     A game of Klondike. (Solitaire)
 
+    Methods:
+    do_switch: Switch from three cards at a time to one card at a time. (bool)
+
     Overridden Methods:
     set_checkers
     """
 
     aka = ['Seven Up', 'Sevens']
-    # Interface categories for the game.
     categories = ['Card Games', 'Solitaire Games', 'Closed Games']
     credits = CREDITS
     name = 'Klondike'
@@ -223,7 +223,7 @@ class Klondike(solitaire.Solitaire):
         game, losses = self.gipf_check(arguments, ('battleships', 'hangman', 'solitaire dice'))
         go = True
         card = None
-        # Battleships
+        # Battleships lets you see one down card.
         if game == 'battleships':
             if not losses:
                 # Remind the human.
@@ -247,7 +247,7 @@ class Klondike(solitaire.Solitaire):
                 card = down[card_index]
                 # Reveal the card.
                 self.human.tell('\nThe card you chose is the {}.'.format(card.name))
-        # Hangman
+        # Hangman lets you move one jack to the top of the waste.
         elif game == 'hangman':
             if not losses:
                 # Remind the human.
@@ -260,24 +260,24 @@ class Klondike(solitaire.Solitaire):
                     else:
                         break
                 card = self.deck.find('J' + suit)
-        # Solitaire moves any waste card to the top of the waste.
+        # Solitaire lets you move any waste card to the top of the waste.
         elif game == 'solitaire dice':
             if not losses:
                 # Remind the human.
                 self.human.tell(self)
                 # Get the card.
                 while True:
-                    card_text = self.human.ask('\nSelect a card in the waste to move to the top of the waste: ')
+                    card_text = self.human.ask('\nSelect a card in the waste to move to the top: ')
                     if card_text not in self.waste:
                         self.human.tell('That card is not in the waste.')
                     else:
                         break
                 card = self.deck.find(card_text)
-        # No matching game.
+        # Otherwise I'm confused.
         else:
             self.human.tell('My hovercraft is full of eels.')
+        # Move any selected card to the end of the waste.
         if card is not None:
-            # Move the card to the end of the waste.
             card.game_location.remove(card)
             self.waste.append(card)
             card.up = True
@@ -290,10 +290,11 @@ class Klondike(solitaire.Solitaire):
         Switch from three cards at a time to one card at a time.
 
         This move is only available if the the switch-one option has been 
-        chosen. Making the switch leaves you with only one more pass through
+        chosen. Making the switch leaves you with only one more pass through 
         the deck.
         """
         if self.switched:
+            # Warn the user if switching is not allowed.
             self.human.error('You may not switch to one card at a time.')
         else:
             # Reset the options
@@ -320,8 +321,10 @@ class Klondike(solitaire.Solitaire):
     def set_options(self):
         """Define the options for the game. (None)"""
         self.options = {}
+        # Set the deal option.
         self.option_set.add_option('piles', action = 'key=num-tableau', target = self.options,
             default = 7, converter = int, question = 'How many tableau piles should their be?')
+        # Set the play options.
         self.option_set.add_option('switch-one', target = 'switched', value = False, default = True,
             question = 'Should you be able to switch to one card at a time for one last pass? bool')
         self.option_set.add_option('turn-one', action = 'key=turn-count', target = self.options,
@@ -330,25 +333,37 @@ class Klondike(solitaire.Solitaire):
 
 
 def sim_test(start = 1, end = 10):
+    """
+    Run a simulation with the Klonbot. (Klonbot, Klondike)
+
+    Parameters:
+    start: The first deal to play. (int)
+    last: The last deal to play. (int)
+    """
+    # Set up the bot and the game.
     bot = Klonbot()
     sim = Klondike(bot, 'none')
+    # Play through the games.
     for game_num in range(1, end + 1):
         bot.next_num = game_num
         results = sim.play()
         print(results)
-    #print([card.rank + card.suit for card in sim.waste + sim.stock[::-1]])
+    # Return the bot and the game.
     return bot, sim
 
 
 if __name__ == '__main__':
+    # Play the game without the full interface.
     import t_games.player as player
     try:
         input = raw_input
     except NameError:
         pass
     name = input('What is your name? ')
+    # Check for Klonbot play.
     if name.lower() == 'sim':
         bot, sim = sim_test()
     else:
+        # Otherwise let the human play.
         klondike = Klondike(player.Humanoid(name), '')
         klondike.play()
