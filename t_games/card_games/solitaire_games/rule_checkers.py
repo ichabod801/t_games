@@ -104,11 +104,14 @@ def _move_one_size(game, to_lane = False):
     game: The game being played. (Solitaire)
     to_lane: A flag for the moving going to an open lane. (str)
     """
+    # Get the free cell count.
     free = game.num_cells - len(game.cells)
+    # Get the lane count, account for lane king.
     if lane_king in game.lane_checkers:
         lanes = 0
     else:
         lanes = game.tableau.count([]) - to_lane
+    # Return the number movable.
     return (1 + free) * 2 ** lanes
 
 # Define build checkers.
@@ -125,7 +128,7 @@ def build_down(game, mover, target, moving_stack):
     moving_stack: The stack the mover is the base of. (list of TrackingCard)
     """
     error = ''
-    suit = mover.suit
+    # Check that each pair is descending.
     for card, next_card in zip(moving_stack, moving_stack[1:]):
         if not next_card.below(card):
             error = 'Only stacks of descending rank may be moved together.'
@@ -191,6 +194,7 @@ def build_suit(game, mover, target, moving_stack):
     moving_stack: The stack the mover is the base of. (list of TrackingCard)
     """
     error = ''
+    # Check that all cards match the first card's suit.
     suit = mover.suit
     for card in moving_stack[1:]:
         if card.suit != suit:
@@ -210,7 +214,9 @@ def build_whole(game, mover, target, moving_stack):
     moving_stack: The stack the mover is the base of. (list of TrackingCard)
     """
     error = ''
+    # If it's in the tableau and not at the bottom of a pile ...
     if mover.game_location in game.tableau and mover != mover.game_location[0]:
+        # ... make sure the card below it is face down.
         mover_index = mover.game_location.index(mover)
         if mover.game_location[mover_index - 1].up:
             error = 'Only complete stacks may be moved on the tableau.'
@@ -243,7 +249,9 @@ def deal_aces_multi(game):
     Parameters:
     game: A multi-deck game of solitaire. (MultiSolitaire)
     """
+    # Loop through the suits.
     for suit in game.deck.suits:
+        # Loop through the aces.
         ace_text = 'A' + suit
         ace = game.deck.find(ace_text)[0]
         for foundation in game.find_foundation(ace):
@@ -257,7 +265,6 @@ def deal_aces_up(game):
     Parameters:
     game: The game to deal the cards for. (Solitaire)
     """
-    # Deal the aces.
     for suit in game.deck.suits:
         card = game.deck.find('A{}'.format(suit))
         foundation = game.find_foundation(card)
@@ -325,7 +332,6 @@ def deal_klondike(game):
     Parameters:
     game: The game to deal the cards for. (Solitaire)
     """
-    # Deal out the triangle of cards.
     for card_index in range(len(game.tableau)):
         for tableau_index in range(card_index, len(game.tableau)):
             game.deck.deal(game.tableau[tableau_index], face_up = card_index == tableau_index)
@@ -342,8 +348,10 @@ def deal_n(n, up = True):
     up: A flag for dealing the cards face up. (str)
     """
     def dealer(game):
+        # Deal the cards.
         for card_index in range(n):
             game.deck.deal(game.tableau[card_index % len(game.tableau)], face_up = up)
+        # Turn the top cards face up.
         for pile in game.tableau:
             pile[-1].up = True
     return dealer
