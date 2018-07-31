@@ -17,17 +17,15 @@ import random
 import t_games.card_games.solitaire_games.solitaire_game as solitaire
 
 
-# The credits for Bisley.
 CREDITS = """
 Game Design: Traditional
 Game Programming: Craig "Ichabod" O'Brien
 """
 
-# The rules for Bisley.
 RULES = """
 Four aces are dealt as four of the eight foundations. Thirteen columns of
 cards are dealt as the tableau: four columns of three cards under the ace
-foundations, and nine columns of four card to the right of the ace 
+foundations, and nine columns of four card to the right of the ace
 foundations.
 
 Cards may be built on the tableau one at time by suit, in either ascending or
@@ -43,6 +41,7 @@ class Bisley(solitaire.Solitaire):
 
     Overridden Methods:
     __str__
+    do_lane
     find_foundation
     foundation_text
     set_checkers
@@ -50,13 +49,9 @@ class Bisley(solitaire.Solitaire):
     tableau_text
     """
 
-    # The menu categories for the game.
     categories = ['Card Games', 'Solitaire Games', 'Open Games']
-    # The credits for Bisley.
     credits = CREDITS
-    # The name of the game.
     name = 'Bisley'
-    # The rules for Bisley.
     rules = RULES
 
     def __str__(self):
@@ -94,14 +89,16 @@ class Bisley(solitaire.Solitaire):
         else:
             self.human.tell('Non-sequitur, one-love.')
         return True
-        
+
     def do_lane(self, card):
         """
         Move a card into an empty lane. (l)
 
         This command takes one argument: the card to move.
         """
+        # Lane the card.
         go = super(Bisley, self).do_lane(card)
+        # Reset the lane checkers.
         if not go and not self.lane_checkers:
             self.lane_checkers = [solitaire.lane_none]
         return go
@@ -109,7 +106,7 @@ class Bisley(solitaire.Solitaire):
     def find_foundation(self, card):
         """
         Determine which foundation a card should sort to. (list of TrackingCard)
-        
+
         Parameters:
         card: The card to sort to a foundation. (cards.TrackingCard)
         """
@@ -192,4 +189,3 @@ if __name__ == '__main__':
     name = input('What is your name? ')
     bisley = Bisley(player.Humanoid(name), '')
     bisley.play()
-
