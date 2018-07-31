@@ -91,7 +91,7 @@ import itertools
 import random
 
 
-# Define helper functions for the dealers and checkers.
+################## Define helper functions for the dealers and checkers. ##################
 
 
 def _move_one_size(game, to_lane = False):
@@ -114,7 +114,8 @@ def _move_one_size(game, to_lane = False):
     # Return the number movable.
     return (1 + free) * 2 ** lanes
 
-# Define build checkers.
+
+################## Define build checkers. ##################
 
 
 def build_down(game, mover, target, moving_stack):
@@ -222,7 +223,8 @@ def build_whole(game, mover, target, moving_stack):
             error = 'Only complete stacks may be moved on the tableau.'
     return error
 
-# Define dealers.
+
+################## Define dealers. ##################
 
 
 def deal_aces(game):
@@ -390,13 +392,14 @@ def deal_queens_out(game):
     """
     for reserve_index, suit in enumerate(game.deck.suits):
         queen = game.deck.find('Q' + suit)
+        # Put the queen in play so it can be discarded.
         game.deck.force(queen, game.reserve[reserve_index])
-        game.deck.discard(queen)  # discard assumes the card is in play.
+        game.deck.discard(queen)
 
 
 def deal_rank_foundations(rank):
     """
-    Deal a specific rank to the foundations. (None)
+    Create a dealer to deal a specific rank to the foundations. (None)
 
     Parameters:
     rank: The rank to deal to the foundations. (str)
@@ -511,7 +514,8 @@ def flip_random(game):
     for pile in game.tableau:
         random.choice(pile[:-1]).up = False
 
-# Define free checkers.
+
+################## Define free checkers. ##################
 
 
 def free_pyramid(game, card):
@@ -543,6 +547,7 @@ def lane_down(game, card, moving_stack):
     """
     error = ''
     suit = card.suit
+    # Check that each card is below the previous one in rank.
     for this_card, next_card in zip(moving_stack, moving_stack[1:]):
         if not next_card.below(this_card):
             error = 'Only stacks of descending rank may be moved into an empty lane.'
@@ -560,7 +565,7 @@ def lane_king(game, card, moving_stack):
     moving_stack: The cards on top of the card moving. (list of TrackingCard)
     """
     error = ''
-    # check for the moving card being a king.
+    # Check for the moving card being a king.
     if card.rank != 'K':
         error = 'You can only move kings into an empty lane.'
     return error
@@ -588,7 +593,7 @@ def lane_one(game, card, moving_stack):
     moving_stack: The cards on top of the card moving. (list of TrackingCard)
     """
     error = ''
-    # check for open space to move the stack
+    # Check for open space to move the stack.
     max_lane = _move_one_size(game, to_lane = True)
     if len(moving_stack) > max_lane:
         error = 'You can only move {} cards to a lane at the moment.'.format(max_lane)
@@ -607,7 +612,7 @@ def lane_reserve(game, card, moving_stack):
     moving_stack: The cards on top of the card moving. (list of TrackingCard)
     """
     error = ''
-    # check for the moving card being in the reserve.
+    # Check for the moving card being in the reserve.
     if (not game.reserve[0]) or card != game.reserve[0][-1]:
         error = 'You can only lane the top card from the reserve.'
     return error
@@ -625,9 +630,10 @@ def lane_reserve_waste(game, card, moving_stack):
     moving_stack: The cards on top of the card moving. (list of TrackingCard)
     """
     error = ''
-    # check for the moving card being on top of a reserve pile.
+    # Check for an emmpty reserve.
     if not any(game.reserve) and card != game.waste[-1]:
         error = 'If the reserve is empty, you can only lane cards from the waste.'
+    # Check for the moving card being on top of a reserve pile.
     elif any(game.reserve) and card not in [stack[-1] for stack in game.reserve]:
         error = 'You can only move cards from the reserve into an empty lane.'
     return error
@@ -643,6 +649,7 @@ def lane_suit(game, card, moving_stack):
     moving_stack: The stack the mover is the base of. (list of TrackingCard)
     """
     error = ''
+    # Check that all cards are the same suit.
     suit = card.suit
     for other_card in moving_stack[1:]:
         if other_card.suit != suit:
@@ -650,7 +657,8 @@ def lane_suit(game, card, moving_stack):
             break
     return error
 
-# Define match checkers.
+
+################## Define match checkers. ##################
 
 
 def match_adjacent(game, card, match):
@@ -710,7 +718,7 @@ def match_pairs(game, card, match):
     match: The card to match it to. (TrackingCard)
     """
     error = ''
-    # Check for the same rank.
+    # Check for cards of the same rank.
     if card.rank != match.rank:
         error = '{} and {} are not the same rank.'.format(card, match)
     return error
@@ -726,6 +734,7 @@ def match_pyramid(game, target, match):
     match: The card to match it to. (TrackingCard)
     """
     error = ''
+    # Check that each card is free.
     for card in (target, match):
         if card.game_location in game.tableau:
             pile_index = game.tableau.index(card.game_location)
@@ -746,10 +755,12 @@ def match_pyramid_relax(game, target, match):
     match: The card to match it to. (TrackingCard)
     """
     error = ''
+    # Check that each card is free.
     for card in (target, match):
         if card.game_location in game.tableau:
             pile_index = game.tableau.index(card.game_location)
             if pile_index < 6 and len(card.game_location) <= len(game.tableau[pile_index + 1]):
+                # Allow the match if the cards block each other.
                 if game.tableau[pile_index + 1][-1] not in (target, match):
                     error = '{} is blocked by the {}.'.format(card, game.tableau[pile_index + 1][-1])
         if error:
@@ -802,6 +813,7 @@ def match_top(game, target, match):
     match: The card to match it to. (TrackingCard)
     """
     error = ''
+    # Check that the cards are both on top of piles.
     for card in (target, match):
         if card != card.game_location[-1] and card.game_location != game.cells:
             error = '{} is not on the top of a pile.'.format(card)
@@ -820,8 +832,10 @@ def match_top_two(game, target, match):
     match: The card to match it to. (TrackingCard)
     """
     error = ''
+    # Check for both cards on top of a pile.
     if target.game_location[-2:] in [[target, match], [match, target]]:
         return error
+    # Check that the cards are both on top of piles.
     for card in (target, match):
         if card != card.game_location[-1] and card.game_location != game.cells:
             error = '{} is not on the top of a pile.'.format(card)
@@ -829,7 +843,8 @@ def match_top_two(game, target, match):
             break
     return error
 
-# Define pair checkers.
+
+################## Define pair checkers. ##################
 
 
 def pair_alt_color(self, mover, target):
@@ -916,7 +931,8 @@ def pair_up_down(self, mover, target):
         error = error.format(mover.name, target.name)
     return error
 
-# Define sort checkers.
+
+################## Define sort checkers. ##################
 
 
 def sort_ace(game, card, foundation):
@@ -977,7 +993,7 @@ def sort_no_reserve(game, card, foundation):
     foundation: The target foundation. (list of TrackingCard)
     """
     error = ''
-    # Check for match to foundation pile.
+    # Check for an empty reserve or foundation.
     if game.reserve[0] and foundation:
         error = 'Only base cards can be sorted before the reserve is emptied.'
     return error
@@ -1005,6 +1021,7 @@ def sort_pyramid(game, card, foundation):
     foundation: The foundation to sort to. (list of cards.TrackingCard)
     """
     error = ''
+    # Check that the card is open on both sides.
     if card.game_location in game.tableau:
         pile_index = game.tableau.index(card.game_location)
         if pile_index < 6 and len(card.game_location) <= len(game.tableau[pile_index + 1]):
@@ -1055,6 +1072,7 @@ def sort_up_down(game, card, foundation):
     foundation: The foundation to sort it to. (list of card.TrackingCard)
     """
     error = ''
+    # Check for the card being abover or below, based on the foundation.
     if game.foundations.index(foundation) < 4:
         if foundation and not card.below(foundation[-1]):
             error = 'The {} is not one rank below the {}.'.format(card, foundation[-1])
