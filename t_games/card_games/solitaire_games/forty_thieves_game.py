@@ -6,6 +6,10 @@ A game of Forty Thieves.
 Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
 See the top level __init__.py file for details on the t_games license.
 
+Constants:
+CREDITS: Credits for Forty Thieves. (str)
+RULES: Rules for Forty Thieves. (str)
+
 Classes:
 FortyThieves: A game of Forty Thieves. (solitaire.Solitaire)
 """
@@ -20,10 +24,10 @@ Game Programming: Craig "Ichabod" O'Brien
 """
 
 RULES = """
-This is a two deck solitaire game. Ten columns of four cards each are dealt 
+This is a two deck solitaire game. Ten columns of four cards each are dealt
 for the tableau. There are eight foundations to be built up, ace to king in
 suit. You may only move one card at a time. Building on the tableau is down
-in rank by suit. You may turn over one card from the stock at a time, and 
+in rank by suit. You may turn over one card from the stock at a time, and
 place it in a waste pile. The top card of the waste pile is available for
 building or sorting. You may only go through the stock once.
 
@@ -48,10 +52,23 @@ rows (r): The number of tableau rows (cards per stack) dealt.
 class FortyThieves(solitaire.MultiSolitaire):
     """
     A game of Forty Thieves. (solitaire.Solitaire)
+
+    Attributes:
+    down_rows: How many tableau rows should be face down. (int)
+    found_aces: A flag for dealing the aces to the foundations. (bool)
+    move_seq: A flag for being able to move any built stack on the tableau. (bool)
+    not_suit: A flag for building by different suits. (bool)
+    rows: How many tableau rows should be dealt. (int)
+    streets: A flag for building by alternating colors. (bool)
+
+    Overridden Methods:
+    handle_options
+    set_checkers
+    set_options
+    stock_text
     """
 
     aka = ['Big Forty', 'Le Cadran', 'Napoleon at St Helena', 'Roosevelt at San Juan']
-    # Interface categories for the game.
     categories = ['Card Games', 'Solitaire Games', 'Closed Games']
     credits = CREDITS
     name = 'Forty Thieves'
@@ -63,10 +80,12 @@ class FortyThieves(solitaire.MultiSolitaire):
         I'm sorry, I quit gipfing for Lent.
         """
         game, losses = self.gipf_check(arguments, ('freecell',))
-        # Freecell
+        # Freecell allows building the top waste card on any tableau pile.
         if game == 'freecell':
             if not losses:
+                # Remind the human.
                 self.human.tell(self)
+                # Get the card to build.
                 tableau_check = [stack[-1] for stack in self.tableau if stack]
                 while True:
                     cards_raw = self.human.ask('Enter a waste card and a card to build it on: ')
@@ -77,18 +96,19 @@ class FortyThieves(solitaire.MultiSolitaire):
                         self.human.error('You must build to the top of a tableau pile.')
                     else:
                         break
+                # Make the move.
                 waste_ndx = self.waste.index(cards[0])
                 waste_card = self.waste[waste_ndx]
                 tableau_stack = [stack for stack in self.tableau if stack[-1] == cards[1]][0]
                 self.transfer([waste_card], tableau_stack)
             pass
+        # Otherwise I'm confused.
         else:
             self.human.tell("I'm sorry, I quit gipfing for Lent.")
 
     def handle_options(self):
         """Handle the game options. (None)"""
         super(FortyThieves, self).handle_options()
-        self.options['num-tableau'] = self.columns
 
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
@@ -114,7 +134,10 @@ class FortyThieves(solitaire.MultiSolitaire):
         self.dealers.append(solitaire.deal_stock_all)
 
     def set_options(self):
+        """Define the options for the game. (None)"""
+        # Set the standard solitaire options.
         self.options = {'max-passes': 1, 'num-foundations': 8, 'num-tableau': 10, 'turn-count': 1}
+        # Define the option groups.
         self.option_set.add_group('emperor', 'streets down-rows=3')
         self.option_set.add_group('deauville', 'streets down-rows=3')
         self.option_set.add_group('dress-parade', 'streets down-rows=3 move-seq')
@@ -124,34 +147,38 @@ class FortyThieves(solitaire.MultiSolitaire):
         self.option_set.add_group('limited', 'c=12 r=3')
         self.option_set.add_group('indian', 'down-rows=1 c=10 r=3 not-suit')
         self.option_set.add_group('number-ten', 'down-rows=2 c=10 r=4 alt-color move-seq')
+        # Define the build options.
         self.option_set.add_option('streets', ['alt-color'],
             question = 'Should tableau building be down by alternating color (return for by suit)? bool')
         self.option_set.add_option('not-suit',
             question = 'Should tableau building be down by anything but suit? bool')
-        self.option_set.add_option('columns', ['c'], int, default = 10, 
+        self.option_set.add_option('move-seq', ['josephine'], question = 'Should you be able to move any '
+            'stack on the tableau (return for one card at a time)? bool')
+        # Define the deal options.
+        self.option_set.add_option('columns', ['c'], int, default = 10, action = 'key=num-tableau',
+            target = self.options,
             question = 'How many tableau columns (stacks) should be dealt (return for 10)? ')
-        self.option_set.add_option('rows', ['r'], int, default = 4, 
+        self.option_set.add_option('rows', ['r'], int, default = 4,
             question = 'How many tableau rows should be dealt (return for 4)? ')
         self.option_set.add_option('down-rows', ['d'], int, default = 0,
             question = 'How many rows of the tableau should be dealt face down (return for none)? ')
         self.option_set.add_option('found-aces',
             question = 'Should the aces be dealt to start the foundations? bool')
-        self.option_set.add_option('move-seq', ['josephine'],
-            question = 'Should you be able to move any sequence on the tableau (return for one card at a time)? bool')
-    
+
     def stock_text(self):
         """Generate text for the stock and waste. (str)"""
-        # stock
+        # Generate the stock text.
         if self.stock:
             stock_text = '?? '
         else:
             stock_text = '   '
-        # waste
+        # Generate the waste text.
         stock_text += ' '.join(str(card) for card in self.waste)
         return stock_text
 
 
 if __name__ == '__main__':
+    # Play the game without the full interface.
     import tgames.player as player
     try:
         input = raw_input
