@@ -129,8 +129,8 @@ class FortyThieves(solitaire.MultiSolitaire):
             self.dealers.append(solitaire.deal_aces_multi)
         if self.down_rows:
             self.down_rows = min(self.down_rows, self.rows - 1)
-            self.dealers.append(solitaire.deal_n(self.columns * self.down_rows, False))
-        self.dealers.append(solitaire.deal_n(self.columns * (self.rows - self.down_rows)))
+            self.dealers.append(solitaire.deal_n(self.options['num-tableau'] * self.down_rows, False))
+        self.dealers.append(solitaire.deal_n(self.options['num-tableau'] * (self.rows - self.down_rows)))
         self.dealers.append(solitaire.deal_stock_all)
 
     def set_options(self):
