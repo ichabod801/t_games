@@ -1198,18 +1198,18 @@ class MultiSolitaire(Solitaire):
             foundations.append(self.foundations[first_index + len(self.deck.suits) * deck_index])
         return foundations
 
-    def guess(self, card_arg):
+    def guess(self, card_text):
         """
         Guess what move to make for a particular card. (None)
 
         Parameters:
-        card_arg: The card to move. (str)
+        card_text: The card to move. (str)
         """
         # Loop through the possible cards.
-        cards = self.deck.find(card_arg)
+        cards = self.deck.find(card_text)
         moves = []
         for card in cards:
-            # check sorting
+            # Check sorting the card.
             if self.foundations:
                 for foundation in self.find_foundation(card):
                     if self.sort_check(card, foundation, False):
@@ -1246,7 +1246,7 @@ class MultiSolitaire(Solitaire):
             return self.handle_cmd(moves.pop())
         # If no moves were found, errror out.
         else:
-            self.human.error('\nThere is no valid move for a {}.'.format(card_arg))
+            self.human.error('\nThere is no valid move for a {}.'.format(card_text))
 
     def guess_two(self, card, target):
         """
@@ -1287,12 +1287,13 @@ class MultiSolitaire(Solitaire):
         options = {'deck-specs': [], 'num-tableau': 7, 'num-foundations': 4, 'num-reserve': 0,
             'num-cells': 0, 'turn-count': 3, 'max-passes': -1, 'wrap-ranks': False}
         options.update(self.options)
-        # initialize specified attributes
+        # Initialize the specified attributes.
         self.num_cells = options['num-cells']
         self.wrap_ranks = options['wrap-ranks']
         self.turn_count = options['turn-count']
         self.max_passes = options['max-passes']
-        # initialize derived attributes
+        # Initialize the derived attributes.
+        # Initialze the deck.
         self.deck = cards.MultiTrackingDeck(self, *options['deck-specs'])
         deal_num = -1
         deal_text_index = self.option_set.settings_text.find('deal-num')
@@ -1306,23 +1307,25 @@ class MultiSolitaire(Solitaire):
         else:
             self.option_set.settings_text += ' deal-num={}'.format(deal_num)
         self.deck.shuffle(number = deal_num)
+        # Initialize the piles of piles.
         self.tableau = [[] for pile in range(options['num-tableau'])]
         self.foundations = [[] for foundation in range(options['num-foundations'])]
         self.reserve = [[] for pile in range(options['num-reserve'])]
-        # initialize default attributes
-        # piles
+        # Initialize default attributes.
+        # Intialize the simple piles.
         self.cells = []
         self.stock = []
         self.stock_passes = 0
         self.waste = []
-        # undo history
+        # Initialize the undo history.
         self.moves = []
         self.undo_count = 0
-        # game specific rules
+        # Set the game specific rules.
         self.set_checkers()
 
 
 if __name__ == '__main__':
+    # Play the game without the interface.
     import t_games.player as player
     try:
         input = raw_input
