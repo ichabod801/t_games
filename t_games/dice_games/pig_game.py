@@ -1,7 +1,7 @@
 """
 pig_game.py
 
-Pig.
+A game of Pig.
 
 If you write a new kind of bot, it will not be usable unless you:
     1. Put it before the Pig class definition.
@@ -42,14 +42,14 @@ import t_games.utility as utility
 CREDITS = """
 Game Design: Traditional
 Game/Bot Programming: Craig "Ichabod" O'Brien
-Bot Design: Roger Johnson, Reiner Knizia, Todd Neller, Craig O'Brien, 
+Bot Design: Roger Johnson, Reiner Knizia, Todd Neller, Craig O'Brien,
     Clifton Presser
 """
 
 # The rules of Pig.
 RULES = """
 On your turn, you roll one die. If you roll a one your turn is over and you
-score nothing. Otherwise, you can choose to score what your rolled (ending 
+score nothing. Otherwise, you can choose to score what your rolled (ending
 your turn) or to continue rolling. If you continue to roll, any roll of a one
 ends your turn without scoring. On any other roll you can stop and score the
 total of all your rolls that turn.
@@ -321,9 +321,9 @@ class PigBotScoringTurns(PigBot):
     """
     A Pig bot that tries to win in t scoring turns. (PigBot)
 
-    For example, with scoring_turns = 4. To start, they will try to score 
+    For example, with scoring_turns = 4. To start, they will try to score
     100 / 4 = 25 points. Say that the first time they score they score 28
-    points. The next time they will try to score (100 - 28) / (4 - 1) = 24 
+    points. The next time they will try to score (100 - 28) / (4 - 1) = 24
     points. If they then score 26 points, they will try to score
     (100 - 28 - 26) / (4 - 2) = 23 points.
 
@@ -444,7 +444,7 @@ class Pig(game.Game):
     # Interface categories for the game.
     categories = ['Dice Games']
     credits = CREDITS
-    bot_classes = {'value': PigBotValue, 'base-pace-race': PigBotBasePaceRace, 
+    bot_classes = {'value': PigBotValue, 'base-pace-race': PigBotBasePaceRace,
         'scoring-turns': PigBotScoringTurns, 'pace-race': PigBotPaceRace, 'rolls': PigBotRolls}
     num_options = 3
     rules = RULES
@@ -490,7 +490,7 @@ class Pig(game.Game):
                 prompt = 'Do you want to roll a {} or a {}? '.format(first, second)
                 choice = self.human.ask_int(prompt, valid = [first, second], cmd = False)
                 if choice == self.bad:
-                    go == False
+                    go = False
                 else:
                     self.turn_score += choice
                     message = 'You rolled a {}. Your turn score is now {}.'
@@ -578,10 +578,10 @@ class Pig(game.Game):
         self.option_set.add_option(name = 'shuffle', converter = int, default = 0,
             question = 'How many repeats should the shuffle die have (return or 0 for normal die)? ')
         # Parameterized bots.
-        self.option_set.add_option(name = 'value', action = 'bot', default = None, converter = int, 
+        self.option_set.add_option(name = 'value', action = 'bot', default = None, converter = int,
             check = lambda params: len(params) <= 1 and max(params) <= 100)
-        self.option_set.add_option(name = 'base-pace-race', aliases = ['bpr'], action = 'bot', 
-            default = None, check = lambda params: len(params) <= 3 and max(params) <= 100, 
+        self.option_set.add_option(name = 'base-pace-race', aliases = ['bpr'], action = 'bot',
+            default = None, check = lambda params: len(params) <= 3 and max(params) <= 100,
             converter = int)
         self.option_set.add_option(name = 'scoring-turns', aliases = ['t'], action = 'bot', default = None,
             check = lambda params: len(params) <= 1 and max(params) <= 100, converter = int)
@@ -590,19 +590,19 @@ class Pig(game.Game):
         self.option_set.add_option(name = 'rolls', action = 'bot', default = None,
             check = lambda params: len(params) <= 1 and max(params) <= 100, converter = int)
         # Pre-set bots.
-        self.option_set.add_option(name = 'stupid', action = 'bot', target = 'value', value = (), 
+        self.option_set.add_option(name = 'stupid', action = 'bot', target = 'value', value = (),
             default = None)
-        self.option_set.add_option(name = 'easy', action = 'bot', target = 'scoring-turns', value = (), 
+        self.option_set.add_option(name = 'easy', action = 'bot', target = 'scoring-turns', value = (),
             default = None)
-        self.option_set.add_option(name = 'medium', action = 'bot', target = 'base-pace-race', value = (), 
+        self.option_set.add_option(name = 'medium', action = 'bot', target = 'base-pace-race', value = (),
             default = None)
-        self.option_set.add_option(name = 'hard', action = 'bot', target = 'pace-race', value = (), 
+        self.option_set.add_option(name = 'hard', action = 'bot', target = 'pace-race', value = (),
             default = None)
-        self.option_set.add_option(name = 'knizia', action = 'bot', target = 'value', value = (20,), 
+        self.option_set.add_option(name = 'knizia', action = 'bot', target = 'value', value = (20,),
             default = None)
-        self.option_set.add_option(name = 'satan', action = 'bot', target = 'base-pace-race', 
+        self.option_set.add_option(name = 'satan', action = 'bot', target = 'base-pace-race',
             value = (6, 6, 6), default = None)
-        self.option_set.add_option(name = 'x', action = 'bot', target = 'rolls', value = (3,), 
+        self.option_set.add_option(name = 'x', action = 'bot', target = 'rolls', value = (3,),
             default = None)
         # Default bots.
         self.option_set.default_bots = [(PigBotBasePaceRace, ())]

@@ -888,7 +888,7 @@ class LiarsDice(game.Game):
 
 
 if __name__ == '__main__':
-    # Play Liar's Dice.
+    # Play Liar's Dice without the full interface.
     try:
         input = raw_input
     except NameError:
