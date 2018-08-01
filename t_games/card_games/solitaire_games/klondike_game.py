@@ -103,14 +103,6 @@ class Klonbot(player.Bot):
         # Do not set options.
         if 'options' in prompt:
             response = 'nope'
-        # Provide the next deal number unless set for random game.
-        elif 'deal number' in prompt:
-            if self.next_num == -1:
-                response = ''
-            else:
-                response = str(self.next_num)
-                self.next_num += 1
-                self.made_moves = set()
         # Check that all specified deals have been played.
         elif 'play again' in prompt:
             if self.next_num > self.last_num or self.next_num == -1:
@@ -123,6 +115,31 @@ class Klonbot(player.Bot):
         # Raise error on unrecognized prompt.
         else:
             raise RuntimeError('Unrecognized prompt to Klonbot: {}'.format(prompt))
+        return response
+
+    def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
+        """
+        Get an integer response from the human. (int)
+
+        Parameters:
+        prompt: The question asking for the interger. (str)
+        low: The lowest acceptable value for the integer. (int or None)
+        high: The highest acceptable value for the integer. (int or None)
+        valid: The valid values for the integer. (container of int)
+        default: The default choice. (int or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        # Provide the next deal number unless set for random game.
+        if 'deal number' in prompt:
+            if self.next_num == -1:
+                response = ''
+            else:
+                response = self.next_num
+                self.next_num += 1
+                self.made_moves = set()
+                self.turn_count = 0
+        else:
+            return super(Klonbot, self).ask_int(prompt, low, high, valid, default, cmd)
         return response
 
     def move_check(self, card, targets, foundations):
@@ -167,7 +184,7 @@ class Klonbot(player.Bot):
                     if card.up and not (card.rank == 'K' and stack[0] == card):
                         movers.append(card)
                         break
-        possibles = movers + targets
+        possibles = movers + [card for card in targets if card not in movers]
         if self.game.waste:
             possibles.append(self.game.waste[-1])
         # Check each card for possible moves.
@@ -180,7 +197,6 @@ class Klonbot(player.Bot):
                 return full_move
         # If you can't move turn the stock, but give up if you've done it too much.
         if self.turn_count > 8:
-            print('Lost')
             return 'quit'
         else:
             self.turn_count += 1
@@ -195,7 +211,7 @@ class Klonbot(player.Bot):
         # Record winning games.
         elif 'You won' in text:
             self.wins.append(self.next_num - 1)
-            print(text)
+            print('Won, deal number =', self.next_num - 1)
 
 
 class Klondike(solitaire.Solitaire):
@@ -332,7 +348,7 @@ class Klondike(solitaire.Solitaire):
             question = 'Would you like to go through the stock one card at a time? bool')
 
 
-def sim_test(start = 1, end = 10):
+def sim_test(start = 1, end = 100):
     """
     Run a simulation with the Klonbot. (Klonbot, Klondike)
 
@@ -342,12 +358,11 @@ def sim_test(start = 1, end = 10):
     """
     # Set up the bot and the game.
     bot = Klonbot()
-    sim = Klondike(bot, 'none')
+    sim = Klondike(bot, '')
     # Play through the games.
     for game_num in range(1, end + 1):
         bot.next_num = game_num
         results = sim.play()
-        print(results)
     # Return the bot and the game.
     return bot, sim
 
