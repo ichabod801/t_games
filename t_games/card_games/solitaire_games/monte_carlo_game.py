@@ -4,17 +4,11 @@ monte_carlo_game.py
 A game of Monte Carlo.
 
 Constants:
-CREDITS: The credits for Monte Carlo. (str_)
+CREDITS: The credits for Monte Carlo. (str)
 RULES: The rules for Monte Carlo. (str)
 
 Classes:
 MonteCarlo: A game of Monte Carlo. (solitaire.Solitaire)
-
-Functions
-no_build: No building is allowed. (str)
-no_lane: Cards may not be moved to empty lanes. (str)
-no_sort: No sorting is allowed. (str)
-sort_kings: Allow sorting kings. (str)
 """
 
 
@@ -31,8 +25,8 @@ Game Programming: Craig "Ichabod" O'Brien
 
 # The rules for Monte Carlo.
 RULES = """
-The tableau is a layout of five cards by five cards. Any pair of the same rank
-that is adjacent orthogonally or diagonally may be removed to the single
+The tableau is a layout of five cards by five cards. Any pair of the same rank 
+that is adjacent orthogonally or diagonally may be removed to the single 
 foundation pile. At any time (using the turn command), you can consolidate 
 cards to the right and up, so that all empty spots are on the bottom right. 
 Then cards will be added from the stock to fill in the blanks.
@@ -54,6 +48,7 @@ class MonteCarlo(solitaire.Solitaire):
     thirteen: A flag for matching pairs that add to thirteen. (bool)
 
     Overridden Methods:
+    do_match
     do_turn
     find_foundation
     set_checkers
@@ -61,17 +56,11 @@ class MonteCarlo(solitaire.Solitaire):
     tableau_text
     """
 
-    # Aliases for the game.
     aka = ['Weddings']
-    # The categories the game is in.
     categories = ['Card Games', 'Solitaire Games', 'Closed Games']
-    # The credits for the game.
     credits = CREDITS
-    # The name of the game.
     name = 'Monte Carlo'
-    # The number of settable options.
     num_options = 2
-    # The rules of the game.
     rules = RULES
 
     def do_gipf(self, arguments):
@@ -110,15 +99,16 @@ class MonteCarlo(solitaire.Solitaire):
         """
         Refill the tableau from the stock. (t)
 
-        In Monte Carlo, the turn command first shifts all cards to the right, 
-        and up to the next level if there is space. Then any empty lanes are
+        In Monte Carlo, the turn command first shifts all cards to the right,
+        and up to the next level if there is space. Then any empty spots are
         filled from the stock.
         """
+        # Shift everything over.
         self.tableau = [pile for pile in self.tableau if pile]
+        # Refill the tableau.
         while self.deck.cards and len(self.tableau) < self.options['num-tableau']:
             self.tableau.append([])
-            if self.deck.cards:
-                self.deck.deal(self.tableau[-1])
+            self.deck.deal(self.tableau[-1])
 
     def find_foundation(self, card):
         """
@@ -131,11 +121,15 @@ class MonteCarlo(solitaire.Solitaire):
 
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
+        # Set the default checkers.
         super(MonteCarlo, self).set_checkers()
+        # Set the dealers.
         self.dealers = [solitaire.deal_n(self.options['num-tableau'])]
+        # Set the rules checkers.
         self.build_checkers = [solitaire.build_none]
         self.lane_checkers = [solitaire.lane_none]
         self.match_checkers = [solitaire.match_tableau, solitaire.match_adjacent, solitaire.match_pairs]
+        # Account for the thirteen option.
         if self.thirteen:
             self.match_checkers[-1] = solitaire.match_thirteen
             self.sort_checkers = [solitaire.sort_kings]
@@ -146,7 +140,7 @@ class MonteCarlo(solitaire.Solitaire):
         """Set the options for the game. (None)"""
         self.options = {'num-foundations': 1}
         self.option_set.add_option('thirteen', ['13'], question = 'Do you want to match sums of 13? bool')
-        self.option_set.add_option('rows', ['r'], action = "key=num-tableau", 
+        self.option_set.add_option('rows', ['r'], action = "key=num-tableau",
             converter = lambda x: int(x) * 5, default = 25, valid = (20, 25, 30), target = self.options,
             question = 'How many rows should be dealt (4-6, return for 5)? ')
 
@@ -154,8 +148,10 @@ class MonteCarlo(solitaire.Solitaire):
         """Generate the text representation of the tableau piles. (str)"""
         lines = []
         for pile_index, pile in enumerate(self.tableau):
+            # Add a new line every five piles.
             if not pile_index % 5:
                 lines.append('')
+            # Show the card or a blank spot for each pile.
             if pile:
                 lines[-1] += str(pile[0]) + ' '
             else:
@@ -164,6 +160,7 @@ class MonteCarlo(solitaire.Solitaire):
 
 
 if __name__ == '__main__':
+    # Play the game without the full interface.
     import t_games.player as player
     try:
         input = raw_input
