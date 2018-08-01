@@ -27,14 +27,14 @@ RULES = """
 Spider is two deck game, with ten tableau piles. Four of the tableau piles
 start with six cards, the rest start with five cards.
 
-Cards on the tableau can be built down in rank regardless of suit. However, 
-only stacks of a single suit can be moved as a unit. Otherwise cards must be 
+Cards on the tableau can be built down in rank regardless of suit. However,
+only stacks of a single suit can be moved as a unit. Otherwise cards must be
 built one at a time.
 
 If you ever build a stack that goes from king to ace in the same suit, the
 whole stack will automatically be sorted.
 
-Turning cards over from the stock deals one face up card to the top of each 
+Turning cards over from the stock deals one face up card to the top of each
 tableau pile. You may not turn over cards from the stock if you have any empty
 tableau piles.
 
@@ -66,15 +66,10 @@ class Spider(solitaire.MultiSolitaire):
     set_options
     """
 
-    # The menu categories for the game.
     categories = ['Card Games', 'Solitaire Games', 'Hybrid Games']
-    # The credits for Spider.
     credits = CREDITS
-    # The name of the game.
     name = 'Spider'
-    # The number of game options.
     num_options = 4
-    # The rules of Spider.
     rules = RULES
 
     def auto_sort_check(self):
@@ -92,12 +87,12 @@ class Spider(solitaire.MultiSolitaire):
                 foundations = self.find_foundation(stack[0])
                 foundation = [foundation for foundation in foundations if not foundation][0]
                 self.transfer(stack, foundation, undo_ndx = 1)
-    
+
     def do_alternate(self, arguments):
         """
         Redo the last command with different but matching cards. (alt)
-        
-        This is for when there are two cards of the same rank and suit that 
+
+        This is for when there are two cards of the same rank and suit that
         can make the same move, and the game makes the wrong one.
         """
         # Do the building
@@ -120,7 +115,7 @@ class Spider(solitaire.MultiSolitaire):
         # If there was building, check for a sortable stack.
         if not go:
             self.auto_sort_check()
-            # Reset changes from gipf.
+            # Reset changes to the rule checkers.
             self.pair_checkers = [solitaire.pair_down]
             if len(self.build_checkers) == 1:
                 self.build_checkers.append(solitaire.build_suit)
@@ -130,7 +125,6 @@ class Spider(solitaire.MultiSolitaire):
         """
         Only the spider crawls the web.
         """
-        # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('bisley', 'freecell'))
         # Winning Bisley gets you an up or down build.
         if game == 'bisley':
