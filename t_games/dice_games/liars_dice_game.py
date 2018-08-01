@@ -37,14 +37,14 @@ Game Programming: Craig "Ichabod" O'Brien
 # The rules for Liar's Dice.
 RULES = """
 There are five dice. The first player rolls them secretly, and announces what
-they rolled. They can lie about what they rolled if they want. If the next 
+they rolled. They can lie about what they rolled if they want. If the next
 player thinks they are lying, they can challenge the current player. If the
-current player is lying, they lose a token. If they are telling the truth, 
+current player is lying, they lose a token. If they are telling the truth,
 the person who challenged loses a token.
 
 If the next player accepts the current player's claim, the dice pass to the
 next player. They can reroll any of the dice passed to them and then they must
-make a new claim (they must also announce how many dice they rolled). The new 
+make a new claim (they must also announce how many dice they rolled). The new
 claim must be higher than the previous player's claim. Then the next player in
 order gets a chance to challenge.
 
@@ -58,10 +58,10 @@ to lowest, is:
     * Two pair
     * Pair
     * High card
-All five dice are announced and count toward claims being "better" than the 
+All five dice are announced and count toward claims being "better" than the
 previous claim. So four fives and a three is better than four fives and a two.
 
-Each player starts with three tokens. The last person with tokens left wins 
+Each player starts with three tokens. The last person with tokens left wins
 the game.
 
 Options:
@@ -96,12 +96,12 @@ class ABBot(player.Bot):
 
     Overridden Methods:
     ask
-    ask_int
+    ask_int_list
     tell
     """
 
     # Score changes that will not be challenged.
-    believable = {7: [], 6: [6], 5: [5, 6], 4: [], 3: [3, 5], 2: [2, 3, 5], 1: [1, 2, 3], 
+    believable = {7: [], 6: [6], 5: [5, 6], 4: [], 3: [3, 5], 2: [2, 3, 5], 1: [1, 2, 3],
         0: [0, 1, 2, 3]}
     # Score changes that will not be challenged with one token left.
     conservative = {7: [], 6: [6, 7], 5: [5, 6], 4: [4], 3: [3, 5, 6], 2: [2, 3, 5], 1: [1, 2, 3],
@@ -111,6 +111,7 @@ class ABBot(player.Bot):
         """
         Ask the bot a question.
 
+        Parameters:
         query: The question asked of the bot. (str)
         """
         if 'liar' in query:
@@ -229,7 +230,7 @@ class ABBot(player.Bot):
     def reroll_check(self, roll):
         """
         Decide which dice to reroll. (list of int)
-        
+
         Parameters:
         roll: The dice that were rolled.
         """
@@ -371,16 +372,17 @@ class LiarsDice(game.Game):
     Attributes:
     base_rolls: The default number of rolls a player gets. (int)
     betting: A flag for passing tokens instead of losing them. (bool)
-    tokens: The number of tokens each player starts with. (int)
     claim: The claim made by the last player. (list of int)
     dice: The dice used in the game. (dice.Pool)
     history: The claims made since the last challenge. (list of list)
+    last_roller: The last player to roll the dice. (player.Player)
     one_six: A flag for ones counting as sixes. (bool)
     one_wild: A flag for ones being wild. (bool)
     phase: The current action the player needs to take. (str)
     rerolls: How many dice the last player rerolled. (int)
     rolls_left: How many rolls the player can make. (int)
     thirteen: A flag for getting a token with a sum of 13. (bool)
+    tokens: The number of tokens each player starts with. (int)
 
     Methods:
     challenge: Handle someone making a claim. (None)
@@ -413,8 +415,8 @@ class LiarsDice(game.Game):
     # The credits for the game.
     credits = CREDITS
     # The name templates for the poker hand versions of the dice.
-    hand_names = ['a six-high missing a {}', 'a pair of {}s with {}', 'two pair {}s over {}s with a {}', 
-        'three {}s with a {} and a {}', 'a {}-high straight', 'a full house {}s over {}s', 
+    hand_names = ['a six-high missing a {}', 'a pair of {}s with {}', 'two pair {}s over {}s with a {}',
+        'three {}s with a {} and a {}', 'a {}-high straight', 'a full house {}s over {}s',
         'four {}s and a {}', 'five {}s']
     # The name of the game.
     name = "Liar's Dice"
@@ -511,8 +513,8 @@ class LiarsDice(game.Game):
             # Announce the loss.
             self.human.tell('\nYou have no more tokens, you lose the game.')
             before_text = number_word(before).capitalize()
-            s = ['s', ''][before == 1]
-            self.human.tell('{} player{} left the game before you did.'.format(before_text, s))
+            plural = ['s', ''][before == 1]
+            self.human.tell('{} player{} left the game before you did.'.format(before_text, plural))
         # Check for the human being the only one left.
         elif len([player for player in self.players if self.scores[player.name]]) == 1:
             # Announce and record the win.
@@ -620,7 +622,7 @@ class LiarsDice(game.Game):
         if self.phase == 'claim':
             # Get the claimed value.
             query = 'Enter five numbers for your claim, or return to be honest: '
-            claim = player.ask_int_list(query, low = 1, high = 6, valid_lens = [5], 
+            claim = player.ask_int_list(query, low = 1, high = 6, valid_lens = [5],
                 default = self.dice.values[:])
             # Handle other commands.
             if isinstance(claim, str):
@@ -632,7 +634,7 @@ class LiarsDice(game.Game):
         elif self.phase == 'reroll':
             # Get the dice to reroll.
             query = 'Enter the numbers you would like to reroll: '
-            rerolls = player.ask_int_list(query, valid = self.dice.values, valid_lens = range(6), 
+            rerolls = player.ask_int_list(query, valid = self.dice.values, valid_lens = range(6),
                 default = [])
             # Handle other commands.
             if isinstance(rerolls, str):
@@ -797,8 +799,8 @@ class LiarsDice(game.Game):
         self.scores[loser.name] -= 1
         loser_score = self.scores[loser.name]
         if loser_score:
-            s = ['s', ''][loser_score == 1]
-            self.human.tell('{} now has {} token{}.'.format(loser.name, loser_score, s))
+            plural = ['s', ''][loser_score == 1]
+            self.human.tell('{} now has {} token{}.'.format(loser.name, loser_score, plural))
         if self.betting:
             self.scores[winner.name] += 1
             self.human.tell('{} now has {} tokens.'.format(winner.name, self.scores[winner.name]))
