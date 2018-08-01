@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: Credits for Klondike. (str)
+EASY_FREE: Easy FreeCell deals for testing Klonbot. (list of it)
 RULES: Rules for Klondike. (str)
 
 Classes:
@@ -29,6 +30,7 @@ Game Design: Traditional (maybe prospectors in the Klondike)
 Game Programming: Craig "Ichabod" O'Brien
 """
 
+# From http://freecellgamesolutions.com/stats.html.
 EASY_FREE = [164, 892, 1012, 1081, 1150, 1529, 2508, 2514, 3178, 3225, 3250, 4929, 5055, 5152, 5213, 5300,
     5814, 5877, 5907, 6749, 6893, 7018, 7058, 7167, 7807, 8355, 8471, 8961, 9998, 10772, 11863, 11987,
     12392, 12411, 12676, 13214, 13464, 13532, 14014, 14624, 14826, 15140, 15196, 17772, 17871, 18026,
