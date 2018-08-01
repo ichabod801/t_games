@@ -29,6 +29,16 @@ Game Design: Traditional (maybe prospectors in the Klondike)
 Game Programming: Craig "Ichabod" O'Brien
 """
 
+EASY_FREE = [164, 892, 1012, 1081, 1150, 1529, 2508, 2514, 3178, 3225, 3250, 4929, 5055, 5152, 5213, 5300,
+    5814, 5877, 5907, 6749, 6893, 7018, 7058, 7167, 7807, 8355, 8471, 8961, 9998, 10772, 11863, 11987,
+    12392, 12411, 12676, 13214, 13464, 13532, 14014, 14624, 14826, 15140, 15196, 17772, 17871, 18026,
+    18150, 18427, 19951, 20533, 21657, 21900, 22663, 23328, 24176, 24919, 25001, 25904, 26719, 27121,
+    27853, 28856, 30329, 30418, 30584, 30755, 30849, 31185, 31316, 32016, 33624, 33710, 33949, 34898,
+    37509, 37913, 38066, 38168, 38770, 40041, 40441, 40616, 41293, 41426, 41747, 41993, 42094, 43073,
+    43196, 43306, 45580, 46561, 47774, 47824, 47917, 48675, 48689, 48800, 48995, 49487, 49676, 49923,
+    50203, 50534, 51232, 52255, 52331, 52573, 53488, 54477, 56070, 57035, 57355, 57435, 58441, 58573,
+    59641, 59974, 60306, 61047, 61206, 61556, 62090, 62487, 62799, 63249, 63675, 63880]
+
 RULES = """
 Cards on the tableau are built down in rank and alternating in color. Cards
 are sorted to the foundations up in suit from the ace. Empty tableau piles may
@@ -196,11 +206,12 @@ class Klonbot(player.Bot):
                 self.turn_count = 0
                 return full_move
         # If you can't move turn the stock, but give up if you've done it too much.
-        if self.turn_count > 8:
-            return 'quit'
-        else:
+        turnable_cards = len(self.game.stock) + len(self.game.waste)
+        if self.turn_count < (turnable_cards / 3.0):
             self.turn_count += 1
             return 'turn'
+        else:
+            return 'quit'
 
     def tell(self, *args, **kwargs):
         """Echo the game output to the user. (None)"""
@@ -360,7 +371,8 @@ def sim_test(start = 1, end = 100):
     bot = Klonbot()
     sim = Klondike(bot, '')
     # Play through the games.
-    for game_num in range(1, end + 1):
+    for game_num in EASY_FREE:
+        print('Playing game #{}.'.format(game_num))
         bot.next_num = game_num
         results = sim.play()
     # Return the bot and the game.
