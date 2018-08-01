@@ -33,22 +33,22 @@ the card under that card have been removed. For example, in this layout:
 5S
 
 The five of spades and the king of diamonds are available for play, but the
-jack of diamonds is blocked by the five of spades, and the ace of clubs is 
+jack of diamonds is blocked by the five of spades, and the ace of clubs is
 blocked by the jack and king of diamonds.
 
 Any pair that totals thirteen may be matched to the foundation. Jacks count as
-11, queens as 12, and kings as 13 (kings may just be sorted to the 
+11, queens as 12, and kings as 13 (kings may just be sorted to the
 foundation). The stock may be turned over one at a time to be matched with
-cards on the tableau. However, any unused waste cards are sorted to the 
+cards on the tableau. However, any unused waste cards are sorted to the
 foundation.
 
 Options:
 cells= (c): The number of free cells available. 0 to 10, defaults to 0.
 giza: Fully open game with 8 reserve piles. Equivalent to 'reserve=8
     reserve-rows=3'.
-klondike: Klondike style stock and waste. Equivalent to 'passes=-1 
+klondike: Klondike style stock and waste. Equivalent to 'passes=-1
     turn-count=3'.
-passes= (p): The number of passes through the stock you get. -1 gives 
+passes= (p): The number of passes through the stock you get. -1 gives
     unlimited passes. If this is not one, the standard-turn option is in
     effect. Defaults to 1.
 relaxed-match (rm): You may match cards even if one is blocking the other.
@@ -84,15 +84,10 @@ class Pyramid(solitaire.Solitaire):
     tableau_text
     """
 
-    # The categories the game is in.
     categories = ['Card Games', 'Solitaire Games', 'Closed Games']
-    # The credits for the game.
     credits = CREDITS
-    # The name of the game.
     name = 'Pyramid'
-    # The number of settable options.
     num_options = 8
-    # The rules of the game.
     rules = RULES
 
     def do_gipf(self, arguments):
@@ -172,17 +167,20 @@ class Pyramid(solitaire.Solitaire):
         # Multiple passes through the stock requires standard turn rules.
         if self.options['max-passes'] > 1 or self.options['max-passes'] == -1:
             self.standard_turn = True
-        # Apply standard turn rules.
+        # Apply the standard turn rules.
         if self.standard_turn:
             self.do_turn = super(Pyramid, self).do_turn
 
     def reserve_text(self):
         """Generate text for the reserve piles. (str)"""
+        # Set up a blank reserve.
         max_reserve = max([len(pile) for pile in self.reserve])
         reserve_lines = [['  ' for pile in self.reserve] for row in range(max_reserve)]
+        # Fill in the cards.
         for pile_index, pile in enumerate(self.reserve):
             for card_index, card in enumerate(pile):
                 reserve_lines[card_index][pile_index] = str(card)
+        # Format and return as a string.
         padding = '  ' * (7 - self.options['num-reserve'])
         return '\n'.join(['{}{}'.format(padding, '  '.join(line)) for line in reserve_lines])
 
@@ -217,12 +215,12 @@ class Pyramid(solitaire.Solitaire):
         self.option_set.add_group('klondike', 'passes=-1 turn-count=3')
         # Set the game options.
         # Set the stock and waste options.
-        self.option_set.add_option('passes', ['p'], int, action = "key=max-passes", default = 1, 
+        self.option_set.add_option('passes', ['p'], int, action = "key=max-passes", default = 1,
             check = lambda passes: passes > 1 or passes == -1, target = self.options,
             question = 'How many passes through the stock (-1 for infinite, return for 1)? ')
         self.option_set.add_option('standard-turn', ['st'],
             question = 'Should cards stay in the waste when new ones are turned from the stock? bool')
-        self.option_set.add_option('turn-count', ['tc'], int, action = "key=turn-count", default = 1, 
+        self.option_set.add_option('turn-count', ['tc'], int, action = "key=turn-count", default = 1,
             valid = (1, 2, 3), target = self.options,
             question = 'How many cards turned from the stock at a time (1-3, return for 1)? ')
         # Set the relaxed rules options.
@@ -231,10 +229,10 @@ class Pyramid(solitaire.Solitaire):
         self.option_set.add_option('relaxed-win', ['rw'],
             question = 'Should you be able to win just by clearing the pyramid? bool')
         # Set options for additional piles.
-        self.option_set.add_option('cells', ['c'], int, action = "key=num-cells", default = 0, 
+        self.option_set.add_option('cells', ['c'], int, action = "key=num-cells", default = 0,
             valid = range(11), target = self.options,
             question = 'How many free cells should be available (0-10, return for 0)? ')
-        self.option_set.add_option('reserve', ['r'], int, action = "key=num-reserve", default = 0, 
+        self.option_set.add_option('reserve', ['r'], int, action = "key=num-reserve", default = 0,
             valid = range(9), target = self.options,
             question = 'How reserve piles should there be (0-8, return for 0)? ')
         self.option_set.add_option('reserve-rows', ['rr'], int, default = 1, valid = range(4),
