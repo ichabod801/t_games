@@ -1,7 +1,7 @@
 """
 yacht_game.py
 
-Games similar to Yacht.
+Yacht and other similar games.
 
 Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
 See the top level __init__.py file for details on the t_games license.
@@ -46,7 +46,6 @@ import t_games.player as player
 CREDITS = """
 Game Design: Traditional
 Game Programming: Craig "Ichabod" O'Brien
-Bot Programming: Craig "Ichabod" O'Brien
 """
 
 # The rules and options for Yacht.
@@ -292,7 +291,7 @@ class Bacht(player.Bot):
     """
     A bacht to play Yacht. (player.Bot)
 
-    This is just a dummy bot to test the game functionality.
+    A basic bot for playing Yacht.
 
     Attributes:
     next: The bacht's next move, if known. (str)
@@ -410,7 +409,7 @@ class Bacht(player.Bot):
         # Holding one value means go for a run.
         if unique_held == 1:
             hold = [held[0]] * pending.count(held[0])
-        # Holding two values means go for a pair.
+        # Holding two values means go for a full house.
         elif unique_held == 2:
             if pending[0] in held:
                 hold = pending[:1]
@@ -432,7 +431,12 @@ class Bacht(player.Bot):
 
 class Bachter(Bacht):
     """
-    A Bachter Bacht.
+    A Bachter Bacht. (Bacht)
+
+    The Bachter takes into account how good his dice are and what the expected
+    scores are before going for a category, and the expected scores when choosing
+    a category to score in. It also more explicitly indicates to itself what it
+    going for based on the first roll.
 
     Attributes:
     category_data: Target number of dice and score for each category. (dict)
@@ -457,7 +461,8 @@ class Bachter(Bacht):
                 # Rank by difference from target score.
                 score = category.score(self.game.dice, self.game.roll_count)
                 score -= self.category_data[category.name][2]
-                if category.name == 'low Chance' and 'Chance' in my_scores:
+                # Handle chance category options.
+                if category.name == 'Low Chance' and 'Chance' in my_scores:
                     chance = my_scores['Chance']
                     if chance is not None and chance <= score:
                         score = 0
