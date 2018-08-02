@@ -123,6 +123,27 @@ yam: Equivalent to five-name=Yam five-kind=total+40 big-straight=total+30
     n-bonus=30/60
 """
 
+SCORE_HELP = """
+Score the current dice roll. (s)
+
+You must specify a score category as an argument. The score category can
+either be specified by name (see below) or by the character preceding the
+name in the score table. That character is 1-6 for the number categories and
+A, B, C, and so on for the other categories.
+
+The score categories are:
+
+{}
+
+A number in parentheses after a score category means the category scores that
+many points. If there are two numbers with a slash, the second number is how
+many points you score if you get that on your first roll of the turn. 'Total'
+means that category scores the total of the dice. 'Sub-total' means that
+category scores the total of the dice specified in the description. If there
+is a '+' and a number, that many points are scored in addition to any dice
+total.
+"""
+
 
 def five_kind(dice):
     """
@@ -687,6 +708,8 @@ class Yacht(game.Game):
     do_hold: Hold back dice for scoring. (bool)
     do_roll: Roll the dice (excluding any held back). (bool)
     do_score: Score the current dice roll. (bool)
+    get_category: Get the score category matching the user input. (ScoreCategory)
+    help_score: Provide dynamic help for the score topic. (str)
     score: Score the current roll in the given category. (int)
     set_wld: Set the win/loss/draw record for the human. (None)
 
@@ -700,7 +723,6 @@ class Yacht(game.Game):
     """
 
     aliases = {'h': 'hold', 'r': 'roll', 's': 'score'}
-    # Interface categories for the game.
     categories = ['Dice Games']
     credits = CREDITS
     letters = '123456ABCDEFGH'
@@ -831,37 +853,13 @@ class Yacht(game.Game):
         either be specified by name (see below) or by the character preceding the
         name in the score table. That character is 1-6 for the number categories and
         A, B, C, and so on for the other categories.
-
-        The score categories are:
-            Yacht: Five of a kind (50)
-            Big Straight: 2-3-4-5-6 (30)
-            Little Straight: 1-2-3-4-5 (30)
-            Four of a Kind: Four of the same number. (Sum of the four of a kind)
-            Full House: Two of one number and three of another. (Sum of the dice)
-            Chance: Any roll. (Sum of the dice)
-            Sixes: As many sixes as possible. (Sum of the sixes)
-            Fives: As many fives as possible. (Sum of the fives)
-            Fours: As many fours as possible. (Sum of the fours)
-            Threes: As many threes as possible. (Sum of the threes)
-            Twos: As many twos as possible. (Sum of the twos)
-            Ones: As many ones as possible. (Sum of the ones)
         """
         # Get the current player.
         player = self.players[self.player_index]
         # Find the correct category.
-        for category in self.score_cats:
-            if arguments.lower() == category.name.lower():
-                break
-        else:
-            # Check for single character category reference.
-            if arguments.upper() in self.letters:
-                category = self.score_cats[self.letters.index(arguments.upper())]
-            else:
-                # Handle unknown categories.
-                player.error('I do not recognize that category.')
-                known = [category.name for category in self.score_cats]
-                player.error('The categories I know are: {}.'.format(', '.join(known)))
-                return True
+        category = self.get_category(arguments, player)
+        if not category:
+            return True
         # Score the roll in that category.
         score = self.score(category, player)
         # Apply the score to the player.
@@ -935,6 +933,29 @@ class Yacht(game.Game):
         else:
             return False
 
+    def get_category(self, specifier):
+        """
+        Get the score category matching the user's input. (ScoreCategory)
+
+        Paramters:
+        specifier: How the user specified the score category. (str)
+        """
+        # Look for a name match.
+        for category in self.score_cats:
+            if specifier.lower() == category.name.lower():
+                break
+        else:
+            # Check for single character category reference.
+            if specifier.upper() in self.letters:
+                category = self.score_cats[self.letters.index(specifier.upper())]
+            else:
+                # Handle unknown categories.
+                player.error('I do not recognize that category.')
+                known = [category.name for category in self.score_cats]
+                player.error('The categories I know are: {}.'.format(', '.join(known)))
+                return None
+        return category
+
     def handle_options(self):
         """Handle the game options. (None)"""
         super(Yacht, self).handle_options()
@@ -986,6 +1007,15 @@ class Yacht(game.Game):
             self.players.append(Bachter(taken_names))
             taken_names.append(self.players[-1].name)
         random.shuffle(self.players)
+
+    def help_score(self):
+        """Provide dynamic help for the score topic. (str)"""
+        # Get the text for the current score categories.
+        category_lines = []
+        for letter, category in zip(self.letters, self.score_cats):
+            category_lines.append('    {}: {}'.format(letter, category))
+        # Combine it with the general score help.
+        return SCORE_HELP.format('\n'.join(category_lines))
 
     def player_action(self, player):
         """
