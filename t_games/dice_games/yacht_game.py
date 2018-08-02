@@ -623,6 +623,16 @@ class ScoreCategory(object):
             self.bonus = int(score_type.split('+')[1])
             self.score_type = 'total'
 
+    def __str__(self):
+        """Generate a human readable text representation. (str)"""
+        # Get the score type text.
+        type_text = self.score_type.capitalize()
+        if isdigit(type_text) and self.first:
+            type_text = '{}/{}'.format(type_text, self.first)
+        if self.bonus:
+            type_text = '{} + {}'.format(type_text, self.bonus)
+        return '{}: {} ({})'.format()
+
     def copy(self):
         """Create an independent copy of the category. (ScoreCategory)"""
         # Create the new category.
@@ -713,7 +723,7 @@ class Yacht(game.Game):
         ScoreCategory('Yacht', 'Five of the same number', five_kind, '50')]
 
     def __str__(self):
-        """Human readable text representation (str)"""
+        """Generate a human readable text representation (str)"""
         # Detrmine the width of the columns.
         cat_names = [category.name for category in self.score_cats]
         max_len = max(len(name) for name in cat_names) + 3
@@ -767,7 +777,7 @@ class Yacht(game.Game):
                     self.dice.dice[die_index].value = 3
                 else:
                     self.dice.held[die_index].value = 3
-        # Handle games without edges.
+        # Otherwise I'm confused.
         else:
             self.human.tell('No hablo Ingles.')
         return go
