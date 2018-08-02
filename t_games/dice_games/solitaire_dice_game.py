@@ -17,6 +17,7 @@ SolitaireDice: A game of Solitaire Dice. (game.Game)
 """
 
 
+import collections
 import re
 
 import t_games.dice as dice
@@ -68,7 +69,7 @@ class SolitaireDice(game.Game):
     two_numbers_re: A regular expression for two dice. (re.SRE_Expression)
 
     Attributes:
-    die: The die that is rolled. (dice.Die)
+    dice: The dice that are rolled. (dice.Pool)
     discards: The numbers discarded and how many times. (dict of int: int)
     free_free: A flag for a 'free' free ride. (bool)
     message: A message to show the user in show_status. (str)
@@ -122,7 +123,7 @@ class SolitaireDice(game.Game):
         if isinstance(discard, int):
             # Process valid discards (don't store free rides).
             if len(self.discards) < 3 or discard in self.discards:
-                self.discards[discard] = self.discards.get(discard, 0) + 1
+                self.discards[discard] += 1
             self.roll.remove(discard)
             self.free_free = False
             self.mode = 'split'
@@ -187,7 +188,8 @@ class SolitaireDice(game.Game):
         player: The player whose turn it is. (Player)
         """
         # Roll the dice.
-        self.roll = [self.die.roll() for die in range(5)]
+        self.dice.roll()
+        self.roll = self.dice.values
         self.roll.sort()
         # Set tracking variables.
         self.mode = 'discard'
@@ -195,9 +197,9 @@ class SolitaireDice(game.Game):
 
     def set_up(self):
         """Set up the game. (None)"""
-        self.die = dice.Die()
+        self.dice = dice.Pool([6] * 5)
         self.totals = [0] * 13
-        self.discards = {}
+        self.discards = collections.defaultdict(int)
         self.free_free = False
         self.mode = 'roll'
 
