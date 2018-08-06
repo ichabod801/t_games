@@ -23,23 +23,19 @@ import t_games.game as game
 import t_games.utility as utility
 
 
-# Credits for Blackjack.
 CREDITS = """
 Game Design: Traditional (U.S. Casinos)
 Game Programming: Craig "Ichabod" O'Brien
 The hints were taken from a table on Wikipedia.
 """
 
-# The meanings of the entries in the hint tables.
 HINT_KEYS = {'Dh': 'Double (else Hit)', 'Ds': 'Double (else Stand)', 'H': 'Hit', 'S': 'Stand',
     'Sp': 'Split', 'Su': 'Surrender (else Hit)'}
 
-# Condensed tables of hints.
 HINTS = """S45H2Su3S5H3Su1H1S5H5S5H7S3H5Dh18H3Dh4H45
 S14Ds1S5Ds5S2H4Dh4H7Dh3H7Dh3H8Dh2H8Dh2H5
 Sp10S10Sp5S1Sp2S2Sp16H4Sp5H5Dh8H5Sp2H5Sp6H4Sp6H4"""
 
-# Rules for Blackjack.
 RULES = """
 The goal is to get a higher total than the dealer, without going over 21. Face
 cards count as 10, aces can be 1 or 11, and all other cards are face value. A
@@ -162,10 +158,12 @@ class Blackjack(game.Game):
             hand.was_split = False
         # Check for insurance.
         if self.dealer_hand.cards[-1].rank == 'A':
+            # Update the user on the situation.
             self.human.tell('The dealer is showing an ace.')
             self.human.tell('Your hand is {}.'.format(self.player_hands[0]))
             for hand_index, hand in enumerate(self.player_hands[1:]):
                 self.human.tell('Your {} hand is {}.'.format(self.ordinals[hand_index + 1], hand))
+            # Ask until you get a valid insurance amount.
             while True:
                 prompt = 'How much insurance would you like? '
                 insure = self.human.ask_int(prompt, low = 0, high = min(self.bets) / 2, default = 0)
@@ -184,6 +182,7 @@ class Blackjack(game.Game):
             if self.insurance:
                 self.human.tell('You won {} bucks from your insurance.'.format(self.insurance * 2))
                 self.scores[self.human.name] += self.insurance * 2
+            # Resolve the hand.
             for hand in self.player_hands:
                 hand.status = 'standing'
             self.showdown()
@@ -251,9 +250,11 @@ class Blackjack(game.Game):
         ValueError: gipf
         """
         game, losses = self.gipf_check(arguments, ('ninety-nine',))
+        # A Ninety-Nine win stops the dealer from drawing this round.
         if game == 'ninety-nine':
             if not losses:
                 self.dealer_skip = True
+        # Otherwise, I'm confused.
         else:
             self.human.tell('ValueError: gipf')
         return True
@@ -445,6 +446,7 @@ class Blackjack(game.Game):
         elif len(hand.cards) > 2:
             self.human.error('You cannot surrender a hand that has been hit.')
         else:
+            # Surrender the hand.
             hand.status = 'surrendered'
             self.scores[self.human.name] += int(self.bets[hand_index] / 2)
 
@@ -506,6 +508,7 @@ class Blackjack(game.Game):
 
         Parameters:
         text: The table condensed to a string. (str)
+        columns: The expected number of columns in the table. (int)
         """
         # Set up the parsing loop.
         table = [[]]
@@ -524,7 +527,7 @@ class Blackjack(game.Game):
                         table.append([])
                 key = char
                 count = 0
-            # Pull out the keys
+            # Pull out the keys.
             else:
                 key += char
         # Trim empty rows.
@@ -562,7 +565,7 @@ class Blackjack(game.Game):
         if int_args[-1] > len(self.player_hands):
             self.human.error('Invalid hand index ({}).'.format(int_args[-1]))
             return []
-        # Adjust hand index to 0 indexing
+        # Adjust hand index to 0 indexing.
         int_args[-1] -= 1
         # Return integer arguments.
         return int_args
@@ -611,29 +614,29 @@ class Blackjack(game.Game):
 
     def set_options(self):
         """Define the game options. (None)"""
-        # Betting options.
+        # Set the betting options.
         self.option_set.add_option('stake', [], int, 100, check = lambda bucks: bucks > 0,
             question = 'How much money would you like to start with (return for 100)? ')
         self.option_set.add_option('limit', [], int, 8, check = lambda bucks: 0 < bucks,
             question = 'What should the maximum bet be (return for 8)? ')
-        # Deal options.
+        # Set the deal options.
         self.option_set.add_option('decks', [], int, 4, valid = (1, 2, 4, 6, 8),
             question = 'How many decks should be in the shoe (return for 4)? ')
         self.option_set.add_option('hands', [], int, 1, check = lambda hands: 0 < hands < 4,
             question = 'How hands would you like to play (return for 1)? ', target = 'hand_count')
-        # Doubling options
+        # Set the doubling options
         self.option_set.add_option('true-double',
             question = 'Should a double have to be a true double? bool')
         self.option_set.add_option('no-double-split', value = False, default = True,
             target = 'double_split', question = 'Should doubling a split hand be banned? bool')
-        # Splitting options.
+        # Set the splitting options.
         self.option_set.add_option('split-rank',
             question = 'Should you only be able to split hands of equal rank? bool')
         self.option_set.add_option('no-resplit', value = False, default = True, target = 'resplit',
             question = 'Should you be blocked from splitting a split hand? bool')
         self.option_set.add_option('hit-split-ace',
             question = 'Should you be able to hit split aces? bool')
-        # Showdown options.
+        # Set the showdown options.
         self.option_set.add_option('surrender',
             question = 'Should you be able to surrender hands? bool')
         self.option_set.add_option('s17', value = False, default = True, target = 'hit_soft_17',
@@ -653,7 +656,7 @@ class Blackjack(game.Game):
         # Set up default hands.
         self.dealer_hand = BlackjackHand(self.deck)
         self.player_hands = [BlackjackHand(self.deck)]
-        # Load hints.
+        # Load the hints.
         self.load_hints()
 
     def show_status(self):
@@ -711,10 +714,10 @@ class Blackjack(game.Game):
         Parameters:
         hand: The hand to check for a win. (BlackjackHand)
         """
-        # Get the hand value
+        # Get the hand value.
         hand_value = hand.score()
         hand_bj = hand.blackjack()
-        # Get the dealer's value
+        # Get the dealer's value.
         dealer_value = self.dealer_hand.score()
         dealer_bj = self.dealer_hand.blackjack()
         # Check for a win.
@@ -723,18 +726,18 @@ class Blackjack(game.Game):
                 payout = 2.5
             else:
                 payout = 2
-        # Check for a push
+        # Check for a push.
         elif hand_value == dealer_value:
             if hand_bj and dealer_bj:
                 payout = 1
-            # Blackjack beats 21
+            # Blackjack beats 21.
             elif hand_bj:
                 payout = 2.5
             elif dealer_bj:
                 payout = 0
             else:
                 payout = 1
-        # Otherwise it's a loss
+        # Otherwise it's a loss.
         else:
             payout = 0
         return payout
@@ -753,10 +756,10 @@ class BlackjackHand(cards.Hand):
     was_split: A flag indicating the hand comes from a split. (bool)
 
     Overridden Methods:
+    __init__
     score
     """
 
-    # A mapping of card ranks to score values.
     card_values = dict(zip('23456789TAJQK', list(range(2, 12)) + [10] * 3))
 
     def __init__(self, deck):
@@ -788,15 +791,19 @@ class BlackjackHand(cards.Hand):
 
     def split(self):
         """Split the hand. (int)"""
+        # Create the new hand.
         new_hand = BlackjackHand(self.deck)
         new_hand.cards.append(self.cards.pop())
+        new_hand.status = 'open'
+        # Mark both hands as having been split.
         self.was_split = True
         new_hand.was_split = True
-        new_hand.status = 'open'
+        # Return the new hand.
         return new_hand
 
 
 if __name__ == '__main__':
+    # Play Blackjack without the full interface.
     import t_games.player as player
     try:
         input = raw_input
