@@ -1152,17 +1152,17 @@ def valid_score_spec(score_spec):
     """
     valid = False
     if score_spec in ('sub-total', 'total'):
-        # Sums of dice.
+        # Basic totals are valid.
         valid = True
     elif isinstance(score_spec, list):
-        # Bonus for scoring on the first roll.
+        # Two integers are valid.
         if len(score_spec) == 2 and score_spec[0].isdigit() and score_spec[1].isdigit():
             valid = True
     elif score_spec.isdigit():
-        # Set scores
+        # Single integers are valid.
         valid = True
     elif score_spec.startswith('total+'):
-        # Totals with bonuses
+        # Totals plus an integer are valid.
         score_spec = score_spec.split('+')
         if len(score_spec) == 2 and score_spec[1].isdigit():
             valid = True
@@ -1170,6 +1170,7 @@ def valid_score_spec(score_spec):
 
 
 if __name__ == '__main__':
+    # Play Yacht without the full interface.
     try:
         input = raw_input
     except NameError:
