@@ -621,6 +621,13 @@ class Craps(game.Game):
 
     def set_up(self):
         """Set up the game. (None)"""
+        # Set up the bots.
+        self.bot_classes = []
+        classes = [CrapsBot]
+        while classes:
+            cls = classes.pop()
+            self.bot_classes.append(cls)
+            classes.extend(cls.__subclasses__())
         # Set up the players.
         self.players = []
         taken_names = [self.human.name]
@@ -1127,10 +1134,12 @@ class PlaceBet(CrapsBet):
         roll: The dice roll this turn. (Pool)
         """
         result = 0
+        # Check for the number before a seven.
         if sum(roll) == self.number:
             result = self.payout
         elif sum(roll) == 7:
             result = -1 * self.payout
+        # Reverse payouts for lay bets.
         if self.match_text == 'lay':
             result *= -1
         return result
@@ -1143,11 +1152,13 @@ class PlaceBet(CrapsBet):
         wager: The amount of money bet. (int)
         """
         self.wager = wager
+        # Get odds based on bet type.
         if self.match_text == 'place':
             odds = PLACE_ODDS
         else:
             odds = BUY_ODDS
         multiplier, divisor = odds[self.number]
+        # Reverse odds for lay bets.
         if self.match_text == 'lay':
             multiplier, divisor = divisor, multiplier
         self.payout = int(wager * multiplier / divisor)
@@ -1204,14 +1215,12 @@ class PropositionBet(CrapsBet):
     validate
     """
 
-    # Different names for the various proposition bets.
     prop_aliases = {'2': '2', '2 or 12': 'hi-lo', '3': '3', '6': '6', '7': '7', '8': '8', '11': 'yo',
         '12': '12', 'ace-duece': '3', 'aces': '2', 'any 7': '7', 'any craps': 'craps', 'boxcars': '12',
         'c&e': 'c & e', 'c & e': 'c & e', 'cornrows': '12', 'craps': 'craps', 'field': 'field',
         'hi-lo': 'hi-lo', 'hi-low': 'hi-lo', 'high-lo': 'hi-lo', 'high-low': 'hi-lo', 'horn': 'horn',
         'midnight': '12', 'snake-eyes': '2', 'three-way': 'craps', 'whirl': 'whirl', 'world': 'whirl',
         'yo': 'yo'}
-    # Data defining the various proposition bets.
     prop_bets = {'2': ((2,), 30, 1), '3': ((3,), 15, 1), '6': ((6,), 1, 1), '7': ((7,), 4, 1),
         '8': ((8,), 1, 1), 'yo': ((11,), 15, 1), '12': ((12,), 30, 1), 'hi-lo': ((2, 12), 15, 1),
         'craps': ((2, 3, 12), 7, 1), 'c & e': ((2, 3, 11, 12), 3, 1, {11: (7, 1)}),
@@ -1261,9 +1270,11 @@ class PropositionBet(CrapsBet):
         Parameters:
         roll: The dice roll this turn. (Pool)
         """
+        # Check for special odds.
         if sum(roll) in self.special_odds:
             multiplier, divisor = self.special_odds[sum(roll)]
             result = int(self.wager * multiplier / divisor)
+        # Otherwise check targets.
         elif sum(roll) in self.targets:
             result = self.payout
         else:
@@ -1307,9 +1318,7 @@ class CrapsBot(player.Bot):
     tell
     """
 
-    # The main type of bet to make.
     bet_type = "don't pass"
-    # A regex for getting the max bet from a question.
     max_re = re.compile('\d+')
 
     def ask(self, prompt):
@@ -1349,10 +1358,13 @@ class CrapsBot(player.Bot):
         Parameters:
         the parameters are ingored.
         """
+        # Find the maximum possible bet.
         max_bet = int(self.max_re.search(args[0]).group())
         wager = min(max_bet, self.game.scores[self.name])
+        # Make that bet.
         message = "{} made a {} bet for {} bucks."
         self.game.human.tell(message.format(self.name, self.last_act, wager))
+        # Track making a bet.
         self.last_act = 'wager'
         return wager
 
@@ -1371,6 +1383,7 @@ class CrapsBot(player.Bot):
         elif message.startswith('You have already'):
             self.last_act = 'must done'
         else:
+            # Raise error on unrecognized errors.
             super(CrapsBot, self).error(message)
 
     def set_up(self):
@@ -1556,13 +1569,16 @@ class Randy(CrapsBot):
         # Make a random bet.
         max_bet = min(int(self.max_re.search(args[0]).group()), self.game.scores[self.name])
         wager = random.randint(1, max_bet)
+        # Inform the human.
         message = "{} made a {} bet for {} bucks."
         self.game.human.tell(message.format(self.name, self.last_act, wager))
+        # Track making the bet.
         self.last_act = 'wager'
         return wager
 
 
 if __name__ == '__main__':
+    # Play Craps without the full interface.
     import t_games.player as player
     try:
         input = raw_input
