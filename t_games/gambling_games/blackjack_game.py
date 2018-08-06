@@ -7,10 +7,10 @@ Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
-CREDITS: Credits for Blackjack. (str)
+CREDITS: The credits for Blackjack. (str)
 HINT_KEYS: The meanings of the entries in the hint tables. (dict of str:str)
-HINTS: Condensed tables of hints. (str)
-RULES: Rules for Blackjack. (str)
+HINTS: A condensed tables of hints. (str)
+RULES: The rules for Blackjack. (str)
 
 Classes:
 Blackjack: A game of Blackjack. (game.Game)
@@ -31,7 +31,7 @@ The hints were taken from a table on Wikipedia.
 """
 
 # The meanings of the entries in the hint tables.
-HINT_KEYS = {'Dh': 'Double (else Hit)', 'Ds': 'Double (else Stand)', 'H': 'Hit', 'S': 'Stand', 
+HINT_KEYS = {'Dh': 'Double (else Hit)', 'Ds': 'Double (else Stand)', 'H': 'Hit', 'S': 'Stand',
     'Sp': 'Split', 'Su': 'Surrender (else Hit)'}
 
 # Condensed tables of hints.
@@ -43,10 +43,10 @@ Sp10S10Sp5S1Sp2S2Sp16H4Sp5H5Dh8H5Sp2H5Sp6H4Sp6H4"""
 RULES = """
 The goal is to get a higher total than the dealer, without going over 21. Face
 cards count as 10, aces can be 1 or 11, and all other cards are face value. A
-two card hand worth 21 is called "blackjack," and beats all other hands. 
+two card hand worth 21 is called "blackjack," and beats all other hands.
 Winning with blackjack pays out at 3:2.
 
-After you bet, you get two cards up, and the dealer gets one card up and one 
+After you bet, you get two cards up, and the dealer gets one card up and one
 card down. If either you or the dealer has blackjack, that is dealt with right
 away. Otherwise you can continue to get hit (get another card) until you are
 ready to stand (stay with the cards you have). If you go over 21 you lose.
@@ -55,7 +55,7 @@ If you are betting on multiple hands (send the hands= option), you can enter
 one bet and it will be applied to all of the hands.
 
 You may increase your bet up to double at any point, on the condition that you
-get one and only more card. If you have a pair, you may split it into two 
+get one and only more card. If you have a pair, you may split it into two
 hands, and get another card for each hand (you must bet the same amount for
 the second hand). As the first action of your hand, you may surrender to get
 half of your bet back.
@@ -70,10 +70,10 @@ or losses by multiplying you average score times the number of games you have
 played.
 
 COMMANDS:
-Double (d): Increse your bet up to double and get one more card. If you are 
+Double (d): Increse your bet up to double and get one more card. If you are
     not doubling the bet, specify the bet after the command.
 Hit (h): Get annother card.
-Split (sp): Split a pair to create two hands. 
+Split (sp): Split a pair to create two hands.
 Stand (s): Stick with the cards you have.
 Surrender (su): Give up your hand in exchange for half your bet back.
 
@@ -103,14 +103,20 @@ class Blackjack(game.Game):
     ordinals: Ordinal words for displaying multiple hands. (tuple of str)
 
     Attributes:
+    bets: The bets for each hand. (list of int)
     dealer_hand: The dealer's cards. (BlackjackHand)
+    dealer_skip: A flag for not allowing the dealer to draw. (bool)
+    deck: The deck of cards used in the game. (cards.Deck)
+    hints: The best play for various hand totals. (dict of str: list of list)
+    insurance: The amount of insurace on the current deal. (int)
     phase: The current point in the game turn, betting or getting cards. (str)
     player_hands: The player's cards, in one more hands. (list of BlackjackHand)
 
     Methods:
     deal: Deal the hands. (None)
-    do_hit: Deal a card to the player. (bool)
+    do_double: Double your bet for one last card. (bool)
     do_hint: Get a suggested play for your position. (bool)
+    do_hit: Deal a card to the player. (bool)
     do_split: Split a pair into two hands. (bool)
     do_stand: Set a hand as done. (bool)
     do_surrender: Concede the hand for half the bet back. (bool)
@@ -131,22 +137,14 @@ class Blackjack(game.Game):
     set_up
     """
 
-    # Alternate names for the game.
     aka = ['Twenty-One', '21']
-    # Alternate words for commands
     aliases = {'b': 'bet', 'd': 'double', 'h': 'hit', 'q': 'quit', 's': 'stand', 'sp': 'split',
         'su': 'surrender'}
-    # Interface categories for the game.
     categories = ['Gambling Games']
-    # Credits for the game.
     credits = CREDITS
-    # The name of the game.
     name = 'Blackjack'
-    # The number of settable options.
     num_options = 11
-    # Ordinal words for displaying multiple hands.
     ordinals = ('first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth')
-    # The rules of the game.
     rules = RULES
 
     def deal(self):
@@ -226,7 +224,8 @@ class Blackjack(game.Game):
         elif self.true_double and bet != self.bets[hand_index]:
             self.human.tell('You can only double the original bet ({})'.format(self.bets[hand_index]))
         elif bet > self.bets[hand_index]:
-            self.human.error('You can only double up to your original bet ({}).'.format(self.bets[hand_index]))
+            error_text = 'You can only double up to your original bet ({}).'
+            self.human.error(error_text.format(self.bets[hand_index]))
         # Make sure the hand can receive cards.
         elif hand.status != 'open':
             self.human.error('That hand is {}, you cannot double it.'.format(hand.status))
@@ -251,47 +250,13 @@ class Blackjack(game.Game):
         """
         ValueError: gipf
         """
-        game, losses = self.gipf_check(arguments, ('ninety-nine',)) # bacarat when it's done.
+        game, losses = self.gipf_check(arguments, ('ninety-nine',))
         if game == 'ninety-nine':
             if not losses:
                 self.dealer_skip = True
         else:
             self.human.tell('ValueError: gipf')
         return True
-
-    def do_hit(self, arguments):
-        """
-        Get another card dealt to your hand. (h)
-
-        If you have multiple hands, you should indicate which hand you are hitting
-        with an integer argument to the hit command (1 for the first hand listed,
-        two for the second hand, and so on.)
-        """
-        # Check for proper timing.
-        if self.phase != 'play':
-            self.human.error('No hands have been dealt yet.')
-            return False
-        # Parse the arguments.
-        int_args = self.parse_arguments('hit', arguments)
-        if not int_args:
-            return False
-        hand_index = int_args[0]
-        # Make sure hand can receive cards.
-        hand = self.player_hands[hand_index]
-        if hand.status != 'open':
-            self.human.error('That hand is {}, you cannot hit it.'.format(hand.status))
-        else:
-            # Draw the card.
-            hand.draw()
-            score = hand.score()
-            # Check for busted hand.
-            if score > 21:
-                self.human.tell('You busted with {} ({}).'.format(score, hand))
-                hand.status = 'busted'
-            # Check for forced stand.
-            elif score == 21:
-                hand.status = 'standing'
-                self.human.tell('You now have 21 with {}.'.format(hand))
 
     def do_hint(self, arguments):
         """
@@ -331,6 +296,40 @@ class Blackjack(game.Game):
         self.human.tell(HINT_KEYS[table[row][column]])
         if self.flags & 1:
             self.human.tell('Hints may not be valid with the current options.')
+
+    def do_hit(self, arguments):
+        """
+        Get another card dealt to your hand. (h)
+
+        If you have multiple hands, you should indicate which hand you are hitting
+        with an integer argument to the hit command (1 for the first hand listed,
+        two for the second hand, and so on.)
+        """
+        # Check for proper timing.
+        if self.phase != 'play':
+            self.human.error('No hands have been dealt yet.')
+            return False
+        # Parse the arguments.
+        int_args = self.parse_arguments('hit', arguments)
+        if not int_args:
+            return False
+        hand_index = int_args[0]
+        # Make sure hand can receive cards.
+        hand = self.player_hands[hand_index]
+        if hand.status != 'open':
+            self.human.error('That hand is {}, you cannot hit it.'.format(hand.status))
+        else:
+            # Draw the card.
+            hand.draw()
+            score = hand.score()
+            # Check for busted hand.
+            if score > 21:
+                self.human.tell('You busted with {} ({}).'.format(score, hand))
+                hand.status = 'busted'
+            # Check for forced stand.
+            elif score == 21:
+                hand.status = 'standing'
+                self.human.tell('You now have 21 with {}.'.format(hand))
 
     def do_quit(self, argument):
         """
@@ -485,7 +484,7 @@ class Blackjack(game.Game):
                 self.bets = bets
                 self.scores[self.human.name] -= sum(bets)
                 # Continue the game.
-                self.status = 'play'
+                self.phase = 'play'
                 return True
             else:
                 # Handle other commands, looping unless they call for end of turn.
@@ -623,9 +622,9 @@ class Blackjack(game.Game):
         self.option_set.add_option('hands', [], int, 1, check = lambda hands: 0 < hands < 4,
             question = 'How hands would you like to play (return for 1)? ', target = 'hand_count')
         # Doubling options
-        self.option_set.add_option('true-double', 
+        self.option_set.add_option('true-double',
             question = 'Should a double have to be a true double? bool')
-        self.option_set.add_option('no-double-split', value = False, default = True, 
+        self.option_set.add_option('no-double-split', value = False, default = True,
             target = 'double_split', question = 'Should doubling a split hand be banned? bool')
         # Splitting options.
         self.option_set.add_option('split-rank',
