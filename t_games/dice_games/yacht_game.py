@@ -647,12 +647,12 @@ class ScoreCategory(object):
     def __str__(self):
         """Generate a human readable text representation. (str)"""
         # Get the score type text.
-        type_text = self.score_type.capitalize()
-        if isdigit(type_text) and self.first:
+        type_text = str(self.score_type).capitalize()
+        if type_text.isdigit() and self.first:
             type_text = '{}/{}'.format(type_text, self.first)
         if self.bonus:
             type_text = '{} + {}'.format(type_text, self.bonus)
-        return '{}: {} ({})'.format()
+        return '{}: {} ({})'.format(self.name, self.description, type_text)
 
     def copy(self):
         """Create an independent copy of the category. (ScoreCategory)"""
@@ -933,12 +933,13 @@ class Yacht(game.Game):
         else:
             return False
 
-    def get_category(self, specifier):
+    def get_category(self, specifier, player):
         """
         Get the score category matching the user's input. (ScoreCategory)
 
         Paramters:
         specifier: How the user specified the score category. (str)
+        player: The player providing the input. (player.Player)
         """
         # Look for a name match.
         for category in self.score_cats:
@@ -1015,7 +1016,7 @@ class Yacht(game.Game):
         for letter, category in zip(self.letters, self.score_cats):
             category_lines.append('    {}: {}'.format(letter, category))
         # Combine it with the general score help.
-        return SCORE_HELP.format('\n'.join(category_lines))
+        self.human.tell(SCORE_HELP.format('\n'.join(category_lines)))
 
     def player_action(self, player):
         """
