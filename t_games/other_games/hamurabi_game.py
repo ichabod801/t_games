@@ -1,7 +1,7 @@
 """
 hamurabi_game.py
 
-The computer classic Hamurabi.
+The computer classic Hamurabi. No, it is not misspelled.
 
 Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
 See the top level __init__.py file for details on the t_games license.
@@ -23,22 +23,17 @@ import t_games.game as game
 import t_games.utility as utility
 
 
-# The credits for Hamurabi.
 CREDITS = """
 Game Design/Original Programming: Doug Dyment
 Python Implementation: Craig "Ichabod" O'Brien
 """
 
-
-# Help text for factors driving immigration.
 IMMIGRATION_HELP = """
 The more land you have and the more grain you have in storage, the higher your
 immigration will be. The more people you have, the lower your immigration will
 be.
 """
 
-
-# The basic rules of Hamurabi.
 RULES = """
 You have ten turns to run ancient Sumeria. Each turn you can buy or sell land,
 buy or sell grain, how much to feed your people, and how much grain to plant.
@@ -58,11 +53,9 @@ steady-grain (sg): Grain yields are more likely to be average.
 steady-land (sl): Land prices are more likely to be average.
 """
 
-
-# Help text for how winning is calculated.
 WINNING_HELP = """
 To win the game, you need to starve less than 33% of your people per turn on
-average, and have at least seven acres of land per person at the end of the 
+average, and have at least seven acres of land per person at the end of the
 game. Furthermore, if you ever starve 45% of your people in one turn, you get
 impeached, and you lose the game immediately. Any result that says you are
 impeached counts as a loss.
@@ -79,13 +72,19 @@ class Hamurabi(game.Game):
     """
     A game of Hamurabi. (game.Game)
 
+    Class Attributes:
+    year_intro: The text for the game status shown at the start of each turn. (str)
+
     Attributes:
+    acre_cost: The current cost of new land in bushels. (int)
     acres: The current size of the city. (int)
     average_starved: The number of people starved per year. (int)
     bushels_per_acre: How much grain can grow in an acre. (int)
     feed: How many bushels were given to the people this year. (int)
     game_length: The number of turns in the game. (int)
-    grain_yields: The distribution of grain yields (tuple of int)
+    grain_mod: How many extra bushels will be product per acre next year. (int)
+    grain_yields: The distribution of grain yields. (tuple of int)
+    immigrants: The number of new immigrants this year. (int)
     immigration: The immigration modifier. (int)
     impeachment: The impeachment modifier. (int)
     land_costs: The distribution of land prices. (tuple of int)
@@ -114,6 +113,7 @@ class Hamurabi(game.Game):
     Overridden Methods:
     game_over
     handle_options
+    player_action
     set_options
     set_up
     """
@@ -121,9 +121,7 @@ class Hamurabi(game.Game):
     aka = ['The Sumer Game']
     aliases = {'b': 'buy', 'f': 'feed', 'n': 'next', 'p': 'plant', 's': 'sell'}
     credits = CREDITS
-    # Interface categories for the game.
     categories = ['Other Games']
-    # Additional help text categories.
     help_text = {'immigration': IMMIGRATION_HELP, 'winning': WINNING_HELP}
     name = 'Hamurabi'
     num_options = 4
@@ -135,19 +133,22 @@ class Hamurabi(game.Game):
         """
         Buy land with grain. (b)
 
-        The argument is the number of acres to buy. The average cost of land is 22 
+        The argument is the number of acres to buy. The average cost of land is 22
         bushels of grain. Anything below that and you can buy low.
         """
+        # Check for an integer argument.
         try:
             acres = int(arguments)
         except ValueError:
             self.human.error('Invalid argument to buy: {!r}.'.format(arguments))
             return False
+        # Check for a valid argument
         if acres < 0:
             self.human.error("You can't buy negative acres.")
         elif acres > self.storage / self.acre_cost:
             self.human.error("You don't have enough grain to buy that many acres.")
         else:
+            # Buy the land.
             self.storage -= acres * self.acre_cost
             self.acres += acres
         return True
@@ -159,16 +160,19 @@ class Hamurabi(game.Game):
         The argument is the number of bushels of grain to release from storage. It
         takes twenty (20) bushels of grain to feed one person.
         """
+        # Check for an integer argument.
         try:
             bales = int(arguments)
         except ValueError:
             self.human.error('Invalid argument to feed: {!r}.'.format(arguments))
             return False
+        # Check for a valid argument.
         if bales < 0:
             self.human.error("People vomitting on you is not supported in this version.")
         elif bales > self.storage:
             self.human.error("You don't have that many bales to release.")
         else:
+            # Feed the people.
             self.feed += bales
             self.storage -= bales
         return True
@@ -189,7 +193,7 @@ class Hamurabi(game.Game):
             if not losses:
                 self.human.tell('\nYour offering to the fertility gods has been accepted.')
                 self.grain_mod = 1
-        # Any other game gets an error.
+        # Otherwise I'm confused.
         else:
             self.human.tell('\nThe priests of Gipf reject your offering.')
         return go
@@ -206,7 +210,7 @@ class Hamurabi(game.Game):
         if self.seed == 0:
             seed_check = self.human.ask("No seed has been planted. Are you sure you want to continue? ")
             if seed_check.lower() not in utility.YES:
-                return False    
+                return False
         # Determine values for next turn.
         # Update grain values and reset the grain bonus.
         self.bushels_per_acre = random.choice(self.grain_yields) + self.grain_mod
@@ -253,11 +257,13 @@ class Hamurabi(game.Game):
         The argument is how many acres to plant. You need one bushel of grain to plant
         two acres, and one person to plant ten acres.
         """
+        # Check for an integer argument.
         try:
             acres = int(arguments)
         except ValueError:
             self.human.error('Invalid argument to plant: {!r}.'.format(arguments))
             return False
+        # Check for a valid argument.
         if acres < 0:
             self.human.error("You can't plant negative acres.")
         elif acres > self.acres - self.seed:
@@ -267,6 +273,7 @@ class Hamurabi(game.Game):
         elif acres > self.population * 10:
             self.human.error("You don't have enough people to plant that much seed.")
         else:
+            # Sow your seed upon the dusty earth.
             self.seed += acres
             self.storage -= acres // 2
         return True
@@ -278,16 +285,19 @@ class Hamurabi(game.Game):
         The argument is how many acres to sell. The average cost of land is 22 bushes
         per acre. Anything above that and you can sell high.
         """
+        # Check for an integer argument.
         try:
             sell = int(arguments)
         except ValueError:
             self.human.error('Invalid argument to sell: {!r}.'.format(arguments))
             return False
+        # Check for a valid argument.
         if sell < 0:
             self.human.error("You can't sell negative acres.")
         elif sell > self.acres:
             self.human.error("You don't have that many acres to sell.")
         else:
+            # Get back in there and sell! Sell! Sell!
             self.acres -= sell
             self.storage += sell * self.acre_cost
         return True
@@ -340,23 +350,17 @@ class Hamurabi(game.Game):
         """Handle the game options. (None)"""
         # Process the user's choices.
         super(Hamurabi, self).handle_options()
-        # Handle the user's choices.
+        # Set the land cost distribution.
         if self.steady_land:
-            self.land_costs = (17, 18, 19, 19, 20, 20, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 25, 
-                25, 26, 27)
+            self.land_costs = (17, 18, 19, 19, 20, 20, 21, 21, 21, 22, 22, 22, 22, 23, 23, 23, 24, 24, 25)
+            self.land_costs += (25, 26, 27)
         else:
             self.land_costs = tuple(range(17, 28))
+        # Set the grain yield distributions.
         if self.steady_grain:
             self.grain_yields = (1, 2, 2, 3, 3, 3, 4, 4, 5)
         else:
             self.grain_yields = (1, 2, 3, 4, 5)
-        # Set default options.
-        self.game_length = 10
-        self.immigration = 20
-        self.impeachment = 45
-        self.start_acres = 1000
-        self.start_population = 100
-        self.start_rats = 200
 
     def player_action(self, player):
         """
@@ -386,12 +390,19 @@ class Hamurabi(game.Game):
         """Set up the game. (None)"""
         # Set non-optional parameters
         self.bushels_per_acre = 3
-        self.acre_cost = random.randint(17,26)
+        self.acre_cost = random.randint(17, 26)
         # Set tracking based on optional parameters
         self.population = self.start_population
         self.acres = self.start_acres
         self.rats = self.start_rats
         self.game_length = self.game_length
+        # Set the game parameters.
+        self.game_length = 10
+        self.immigration = 20
+        self.impeachment = 45
+        self.start_acres = 1000
+        self.start_population = 100
+        self.start_rats = 200
         # Set other tracking variables
         self.starved = 0
         self.total_starved = 0
@@ -409,7 +420,7 @@ class Hamurabi(game.Game):
         self.human.tell(self.year_intro.format(*format_params))
 
     def show_status(self):
-        """Show the current game status. (int)"""
+        """Show the current game status. (None)"""
         # Display general stats.
         if self.feed:
             starving = int(self.population - self.feed // 20.0)
@@ -424,6 +435,7 @@ class Hamurabi(game.Game):
 
 
 if __name__ == '__main__':
+    # Play Hamurabi without the full interface.
     try:
         input = raw_input
     except NameError:
