@@ -359,6 +359,7 @@ class Roulette(game.Game):
         if number < 34:
             targets = [str(n) for n in range(end - 2, end + 4)]
             bets.append((text.format(end - 2, end + 3), targets, wager))
+        return bets
 
     def complete_zero(self, number, wager):
         """
@@ -591,9 +592,9 @@ class Roulette(game.Game):
             targets = []
             if dozen.lower() in ('1', 'p', 'f'):
                 targets = [str(number) for number in range(1, 13)]
-            elif dozen.lower in ('2', 'm', 's'):
+            elif dozen.lower() in ('2', 'm', 's'):
                 targets = [str(number) for number in range(12, 25)]
-            elif dozen.lower in ('3', 'd', 't'):
+            elif dozen.lower() in ('3', 'd', 't'):
                 targets = [str(number) for number in range(24, 37)]
             if targets:
                 # Make the bet.
@@ -867,12 +868,13 @@ class Roulette(game.Game):
         The first two arguments to the prime command should be two prime numbers less
         than 36 (separated by a dash). Those two prime numbers are excluded, and the
         bet is on the remaining nine numbers. The primes less than 36 are 2, 3, 5, 7,
-        11, 13, 17, 19, 23, 29, and 31.
+        11, 13, 17, 19, 23, 29, and 31. Instead of entering two prime numbers, you may
+        enter 'twins' to exclude 2 and 23, making the bet on the twin prims under 36.
 
         The second argument to the prime command should be the amount to bet.
         """
         # Check for betting on twin primes.
-        if arguments.lower() == 'twins':
+        if arguments.lower().startswith('twins'):
             arguments = '2-23'
         # Check the bet and two numbers.
         numbers, bet = self.check_bet(arguments)
