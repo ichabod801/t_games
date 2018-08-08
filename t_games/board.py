@@ -638,46 +638,6 @@ class LineBoard(Board):
         return clone
 
 
-class GridBoard(Board):
-    """
-    A rectangular board of squares. (Board)
-
-    Methods:
-    copy: Create a copy of the board. (GridBoard)
-
-    Overridden Methods:
-    __init__
-    """
-
-    def __init__(self, columns, rows, default_piece = None):
-        """
-        Set up the grid of cells. (None)
-
-        Paramters:
-        columns: The number of columns on the board. (int)
-        rows: The number of rows on the board. (int)
-        """
-        # Store the dimensions.
-        self.columns = columns
-        self.rows = rows
-        # Create the cells.
-        self.default_piece = default_piece
-        self.cells = {}
-        for column in range(columns):
-            for row in range(rows):
-                location = Coordinate((column, row))
-                self.cells[location] = BoardCell(location, default_piece)
-
-    def copy(self, **kwargs):
-        """Create a copy of the board. (GridBoard)"""
-        # Clone the cells.
-        clone = self.__class__(self.columns, self.rows, **kwargs)
-        # Clone the cell contents.
-        for location in clone:
-            clone.cells[location].piece = self.cells[location].piece
-        return clone
-
-
 class MultiBoard(DimBoard):
     """
     A board with multiple pieces per cell. (Board)

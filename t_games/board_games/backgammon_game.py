@@ -65,10 +65,10 @@ Game Programming: Craig "Ichabod" O'Brien
 Bot Programming: Gerry Tesauro
 """
 
-FRAME_HIGH = ['  1 1 1 1 1 1   1 2 2 2 2 2  ', '  3 4 5 6 7 8   9 0 1 2 3 4  ', 
+FRAME_HIGH = ['  1 1 1 1 1 1   1 2 2 2 2 2  ', '  3 4 5 6 7 8   9 0 1 2 3 4  ',
     '+-------------+-------------+']
 
-FRAME_LOW = ['+-------------+-------------+', '  1 1 1                      ', 
+FRAME_LOW = ['+-------------+-------------+', '  1 1 1                      ',
     '  2 1 0 9 8 7   6 5 4 3 2 1  ']
 
 OUT = -2
@@ -80,12 +80,12 @@ RACE_WEIGHTS = [0, -.17160, .27010, .29906, -.08471, 0, -1.40375, -1.05121, .072
     .31202, -.91035, -.16270, 0, .01418, -.10839, -.02781, -.88035, 0, 1.07274, 2.00366, 1.16242, .22520,
     0, .85631, 1.06349, 1.49549, .18966, 0, .37183, -.50352, -.14818, .12039, 0, .13681, .13978, 1.11245,
     -.12707, 0, -.22082, .20178, -.06285, -.52728, 0, -.13597, -.19412, -.09308, -1.26062, 0, 3.05454,
-    5.16874, 1.50680, 5.35000, 0, 2.19605, 3.85390, .88296, 2.30052, 0, .92321, 1.08744, -.11696, -.78560, 
+    5.16874, 1.50680, 5.35000, 0, 2.19605, 3.85390, .88296, 2.30052, 0, .92321, 1.08744, -.11696, -.78560,
     0, -.09795, -.83050, -1.09167, -4.94251, 0, -1.00316, -3.66465, -2.56906, -9.67677, 0, -2.77982,
     -7.26713, -3.40177, -12.32252, 0, 3.42040]
 
 RULES = """
-Each player starts the game rolling one die, and the higher roll moves using 
+Each player starts the game rolling one die, and the higher roll moves using
 the two numbers rolled. From then on turns alternate, each player rolling two
 dice on their turn. If doubles are rolled, they count double (as four of the
 rolled number having been rolled). Doubles rolled at the beginning of the game
@@ -98,8 +98,8 @@ from the top right, and O moving clockwise from the bottom right. The last six
 points in a player's moving direction (the bottom right for X, the top right
 for O) is called the player's home board or home.
 
-Pieces may not be moved to points containing two or more of the opponent's 
-pieces. If a piece is moved to a point with only one opponent's piece on it, 
+Pieces may not be moved to points containing two or more of the opponent's
+pieces. If a piece is moved to a point with only one opponent's piece on it,
 the opponent's piece is captured and placed on the bar. If you have piece on
 the bar, you must re-enter the piece into your opponent's home before you can
 make any other move. A 1 moves it to the furthest point from your own home, a
@@ -107,7 +107,7 @@ make any other move. A 1 moves it to the furthest point from your own home, a
 entering lands on a single opponent's piece, the opponent's piece is captured
 and put on the bar.
 
-Once all of your pieces are in your home board, you may bear them off, 
+Once all of your pieces are in your home board, you may bear them off,
 removing them from the board. This is done similarly to entering from the bar,
 with a roll of one removing a piece farthest into your home board, and two
 removing a piece next farthest into your home board, and so on. If your roll
@@ -127,7 +127,7 @@ or 'b') and the point your want to bear off from (NOT the roll).
 Backgammon is often played in match play, to even out the luck of the dice.
 When using match play, a game won when the opponent has not born any pieces
 off the board counts double, and a game won when the opponent still has a
-piece on the bar counts triple. Furthermore, there is a doubling die that 
+piece on the bar counts triple. Furthermore, there is a doubling die that
 can be used to double the stakes. At the beginning of the game, either
 player may double the stakes using the double command. The other player must
 accept the doubled stakes or concede the game. After the initial doubling of
@@ -338,7 +338,7 @@ class BackgammonBot(player.Bot):
             else:
                 max_pip[piece] = 0
         # Calculate hits.
-        direct_hits, indirect_hits = calculate_hits(board, blots)
+        direct_hits, indirect_hits = self.calculate_hits(board, blots)
         # Get list of score factors.
         my_piece = self.game.pieces[self.name]
         foe_piece = {'X': 'O', 'O': 'X'}[my_piece]
@@ -1181,8 +1181,8 @@ class BackgammonBoard(board.LineBoard):
         """
         Set up the grid of cells. (None)
 
-        The layout parameter is a tuple of two-integer tuples. Each pair of integers 
-        indicate a point and the number of piece on that point. This is only provided 
+        The layout parameter is a tuple of two-integer tuples. Each pair of integers
+        indicate a point and the number of piece on that point. This is only provided
         for one player, and then done symetrically for the other player.
 
         Paramters:

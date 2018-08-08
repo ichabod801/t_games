@@ -209,7 +209,7 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
             board_strength.append([a - b for a, b in zip(board_strength[-1], mod)])
         # Rotate the values and add a blank column (there not being a 0 play).
         self.board_strength = list(zip(*board_strength))
-        self.board_strength = [[], self.board_strength]
+        self.board_strength = [[]] + self.board_strength
 
 
 class C4BotGamma(C4BotAlphaBeta):
