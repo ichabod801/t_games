@@ -11,11 +11,11 @@ CREDITS: The design and programming credits for Connect Four. (str)
 RULES: The rules to Connect Four. (str)
 
 Classes:
-C4BotAlphaBeta: A Connect Four bot with a tree search and alpha beta 
+C4BotAlphaBeta: A Connect Four bot with a tree search and alpha beta
     pruning. (player.Bot)
-C4BotGamma: An alpha-beta Connect Four bot with a better eval 
+C4BotGamma: An alpha-beta Connect Four bot with a better eval
     function. (C4BotAlphaBeta)
-C4Board: A board for Connect Four type games. (board.GridBoard)
+C4Board: A board for Connect Four type games. (board.DimBoard)
 ConnectFour: A game of connect four. (game.Game)
 """
 
@@ -42,7 +42,7 @@ RULES = """
 Connect Four is played on a grid six high and seven wide. Players alternate
 placing a piece of their color in one of the columns. The piece played becomes
 the top piece in the column. The first player to get four pieces in a row,
-orthogonally or diagonally, is the winner. If all of the spaces on the board 
+orthogonally or diagonally, is the winner. If all of the spaces on the board
 are filled, the game is a draw.
 
 Options:
@@ -263,7 +263,7 @@ class C4BotGamma(C4BotAlphaBeta):
         """
         Evaluate one player's position. (int)
 
-        The value of the board is based on piece location and two or threes in  a row, 
+        The value of the board is based on piece location and two or threes in  a row,
         considering how blocked they are.
 
         Parameters:

@@ -689,7 +689,7 @@ class AlphaBetaBot(Bot):
         Evaluate the board. (int)
 
         Parameters:
-        board: The board to evaluate. (board.GridBoard)
+        board: The board to evaluate. (board.Board)
         """
         return NotImplemented
 
