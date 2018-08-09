@@ -172,6 +172,7 @@ class CRand(object):
     Overridden Methods:
     __init__
     __call__
+    __repr__
     """
 
     def __init__(self, seed = None):
@@ -190,6 +191,10 @@ class CRand(object):
         """Get the next number from the PRNG. (int)"""
         self.state = (214013 * self.state + 2531011) % (2 ** 31)
         return self.state // (2 ** 16)
+
+    def __repr__(self):
+        """Computer readable text representation. (str)"""
+        return 'CRand({})'.format(self.state)
 
 
 class Deck(object):
@@ -214,6 +219,7 @@ class Deck(object):
 
     Overridden Methods:
     __init__
+    __repr__
     """
 
     def __init__(self, jokers = 0, decks = 1, shuffle_size = 0, card_class = Card):
@@ -235,15 +241,21 @@ class Deck(object):
         # Add the standard cards.
         self.cards = []
         for deck in range(decks):
-            for rank in Card.ranks[1:]:
-                for suit in Card.suits:
+            for rank in card_class.ranks[1:]:
+                for suit in card_class.suits:
                     self.cards.append(card_class(rank, suit))
         # Add any requested jokers.
+        joker_rank = card_class.ranks[0]
         for deck in range(decks):
             for suit_index in range(jokers):
-                self.cards.append(Card('X', card_class.suits[suit_index % len(card_class.suits)]))
+                suit = card_class.suits[suit_index % len(card_class.suits)]
+                self.cards.append(card_class(joker_rank, suit))
         # Start with an empty discard pile.
         self.discards = []
+
+    def __repr__(self):
+        """Create a debugging text representation. (str)"""
+        return '<{} with {} cards remaining>'.format(self.__class__.__name__, len(self.cards))
 
     def cut(self, card_index):
         """
