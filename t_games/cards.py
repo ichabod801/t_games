@@ -397,7 +397,11 @@ class Hand(object):
 
     def __repr__(self):
         """Debugging text representation. (str)"""
-        return '<Hand: {}>'.format(self)
+        text = '<Hand: {}>'.format(self)
+        if text.endswith(': >'):
+            return '<Hand: (empty)>'
+        else:
+            return text
 
     def __str__(self):
         """Human readable text representation. (str)"""
@@ -506,6 +510,10 @@ class TrackingCard(Card):
         else:
             return super(TrackingCard, self).__eq__(other)
 
+    def __repr__(self):
+        """Create a debugging text representation."""
+        return '<TrackingCard {}{}>'.format(self.rank, self.suit)
+
     def above(self, other, card_index = 1):
         """
         Check that this card is n ranks above another card. (bool)
@@ -606,13 +614,17 @@ class TrackingDeck(Deck):
 
     def __repr__(self):
         """Generate a computer readable text representation. (str)"""
+        # Get a card.
         if self.in_play:
             card = self.in_play[0]
         elif self.cards:
             card = self.cards[0]
         else:
             card = self.discards[0]
-        return 'TrackingDeck({}, {})'.format(self.game, type(card))
+        # Get the class names.
+        class_name = self.__class__.__name__
+        card_class_name = card.__class__.__name__
+        return '<{} of {}s for {!r}>'.format(class_name, card_class_name, self.game)
 
     def __str__(self):
         """Generate a human readable text representation. (str)"""
@@ -778,16 +790,6 @@ class MultiTrackingDeck(TrackingDeck):
         self.in_play = []
         self.discards = []
         self.last_order = self.cards[:]
-
-    def __repr__(self):
-        """Generate a computer readable text representation. (str)"""
-        if self.in_play:
-            card = self.in_play[0]
-        elif self.cards:
-            card = self.cards[0]
-        else:
-            card = self.discards[0]
-        return 'MultiTrackingDeck({}, {}, {})'.format(self.game, self.decks, type(card))
 
 
 if __name__ == '__main__':
