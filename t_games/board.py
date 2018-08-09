@@ -453,7 +453,7 @@ class Board(object):
     def __repr__(self):
         """Generate a debugging text representation. (str)"""
         cell_count = len(self.cells) + len(self.extra_cells)
-        cell_class_name = next(iter(self.cells.items())).__class__.__name__
+        cell_class_name = next(iter(self.cells.values())).__class__.__name__
         return '<{} with {} {}s>'.format(self.__class__.__name__, cell_count, cell_class_name)
 
     def clear(self):
@@ -599,7 +599,7 @@ class DimBoard(Board):
 
     def __repr__(self):
         """Create a debugging text representation. (str)"""
-        dimension_text = 'x'.join([string(dimension) for dimension in self.dimensions])
+        dimension_text = 'x'.join([str(dimension) for dimension in self.dimensions])
         my_class_name = self.__class__.__name__
         return '<{} with {} {}s>'.format(my_class_name, dimension_text, self.cell_class.__name__)
 
