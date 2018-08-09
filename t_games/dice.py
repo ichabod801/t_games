@@ -14,6 +14,7 @@ DominoPool: A set of dice based on dominos. (Pool)
 
 
 import functools
+import itertools
 import random
 
 
@@ -116,7 +117,7 @@ class Die(object):
 
     def __repr__(self):
         """Generate a debugging text representation. (str)"""
-        return '<Die {}>'.format(self.value)
+        return '<{} {}>'.format(self.__class__.__name__, self.value)
 
     def __str__(self):
         """Generate a human readable text representation. (str)"""
@@ -166,10 +167,6 @@ class ShuffleDie(Die):
         # Get an initial value for the die.
         self.roll()
 
-    def __repr__(self):
-        """Generate a computer readable text representation. (str)"""
-        return '<ShuffleDie {}>'.format(self.value)
-
     def reset(self):
         """Reset the population of future rolls. (None)"""
         self.population = self.sides * self.repeats
@@ -195,7 +192,7 @@ class Pool(object):
 
     Attributes:
     dice: The dice in the pool. (list of Die)
-    held: Dice put asside and not rolled. (list of Die)
+    held: Dice put aside and not rolled. (list of Die)
     values: The current values of the dice in the pool. (list)
 
     Methods:
@@ -240,11 +237,11 @@ class Pool(object):
 
     def __repr__(self):
         """Generate debugging text representation. (str)"""
-        return '<Pool {}>'.format(self)
+        return '<{} {}>'.format(self.__class__.__name__, self)
 
     def __str__(self):
         """Generate human readable text representation. (str)"""
-        dice_text = [str(die.value) + '*' for die in self.held] + [str(die.value) for die in self.dice]
+        dice_text = [str(die) + '*' for die in self.held] + [str(die) for die in self.dice]
         text = '{}, and {}'.format(', '.join(dice_text[:-1]), dice_text[-1])
         return text
 
@@ -314,12 +311,13 @@ class DominoPool(Pool):
     """
     A set of dice based on dominoes. (Pool)
 
-    A domino pool uses dominoes instead of dice. If one of the values on the 
+    A domino pool uses dominoes instead of dice. If one of the values on the
     domino is blank, a normal die is used to replace the blank value. This gives
     a shallower but more staggered distribution of rolls, with more certainty in
     the distribution.
 
     Attributes:
+    filler: The die used to replace blanks. (Die)
     population: The set of future values for the pool. (list of tuple of int)
     possible: The possible values for the pool. (list of tuple of int)
 
@@ -342,10 +340,14 @@ class DominoPool(Pool):
         filler: The die to use to fill blanks. (Die)
         """
         ranges = [range(x + 1) for x in sorted(dice)]
-        self.possible = [prod for prod in itertools.product(*ranges) if sorted(prod) == prod]
+        self.possible = [prod for prod in itertools.product(*ranges) if sorted(prod) == list(prod)]
         self.population = self.possible[:]
         self.filler = filler
         self.roll()
+
+    def __str__(self):
+        """Generate a human readable text representation. (str)"""
+        return ', '.join([str(value) for value in self.values])
 
     def replace(self, value):
         """
