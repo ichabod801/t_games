@@ -35,9 +35,9 @@ import t_games.utility as utility
 HELP_TEXT = """
 General interface help (?).
 
-The games are organized into categories. You can use the menu to browse 
-through the categories to find the game you want. Just type in the letter or 
-letters to the left of the colon to make a selection. You can type home at any 
+The games are organized into categories. You can use the menu to browse
+through the categories to find the game you want. Just type in the letter or
+letters to the left of the colon to make a selection. You can type home at any
 point to get back to the top of the menu.
 
 When the game is over you will be shown your overall statistics for that game.
@@ -56,14 +56,14 @@ You can get this help text by typing help or ?
 LICENSE = """
 Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
 
-This program is free software: you can redistribute it and/or modify it under 
-the terms of the GNU General Public License as published by the Free Software 
-Foundation, either version 3 of the License, or (at your option) any later 
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
 version.
 
-This program is distributed in the hope that it will be useful, but WITHOUT 
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
-FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more 
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
 details.
 
 See <http://www.gnu.org/licenses/> for details on this license (GPLv3).
@@ -127,7 +127,7 @@ class Interface(other_cmd.OtherCmd):
     def __init__(self, human):
         """
         Set up the interface. (None)
-        
+
         Parameters:
         human: The user making menu choices/entering commands. (str)
         """
@@ -220,9 +220,9 @@ class Interface(other_cmd.OtherCmd):
         taken as the name of the game or an alias for a game. Anything after the first
         forward slash is given as option settings to the game.
 
-        Note that if the game has options and you don't specify any, it will 
-        immediately ask you if you want to change the options. To avoid this you can 
-        either specify the 'none' option (play game-name / none) or follow the game 
+        Note that if the game has options and you don't specify any, it will
+        immediately ask you if you want to change the options. To avoid this you can
+        either specify the 'none' option (play game-name / none) or follow the game
         name with a semi-colon.
 
         Also note that the play command is the default. If you just type in a game
@@ -284,8 +284,8 @@ class Interface(other_cmd.OtherCmd):
         Show game statistics.
 
         If no arguments are given to the stats command, it will display the stats for
-        all of the games in the current menu category. If the argument given to the 
-        stats command is a game name or an alias for a game, stats will be given for 
+        all of the games in the current menu category. If the argument given to the
+        stats command is a game name or an alias for a game, stats will be given for
         that game. If 'all' is given as the argument to the stats command, stats will
         be shown for all games.
         """
@@ -325,8 +325,8 @@ class Interface(other_cmd.OtherCmd):
         """
         Determine win/loss/draw numbers and streaks. (tuple)
 
-        The return value is the game record, the per player record, the current 
-        streak, the type of the current streak, and the longest streaks for each 
+        The return value is the game record, the per player record, the current
+        streak, the type of the current streak, and the longest streaks for each
         type.
 
         Parameters:
@@ -573,7 +573,7 @@ class RandomValve(object):
 
     The valve starts out with a set probabiliy (its parameter). Each time it is
     checked and the response is false, the chance of a true value increases. The
-    increase is random, but proportional to the current probability of a true 
+    increase is random, but proportional to the current probability of a true
     value. When the response is true, the valve is reset to it's original set
     probability.
 
@@ -590,7 +590,8 @@ class RandomValve(object):
     blow: Check the valve for a blow (true value). (bool)
 
     Overridden Methods:
-    __init_
+    __init__
+    __repr__
     """
 
     def __init__(self, p = 0.05):
@@ -603,6 +604,10 @@ class RandomValve(object):
         self.p = p
         self.q = p
         self.last = None
+
+    def __repr__(self):
+        """Return a debugging text representation. (str)"""
+        return '<RandomValve {:.4f}/{:.4f}>'.format(self.p, self.q)
 
     def blow(self, trigger):
         """
@@ -642,5 +647,6 @@ def excel_column(n):
 
 
 if __name__ == '__main__':
-    interface = Interface(player.Tester())
-    interface.menu()
+    # Run the unit testing.
+    from t_tests.interface_test import *
+    unittest.main()
