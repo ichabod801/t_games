@@ -2,6 +2,11 @@
 options_test.py
 
 Unit testing of options.py
+
+Classes:
+AllRangeTest: Tests of the all inclusive range. (unittest.TestCase)
+OptionTextTest: Tests of text representations of OptionSet. (unittest.TestCase)
+ParseTest: Tests of OptionSet.parse_settings changing settings_text (TestCase)
 """
 
 
@@ -9,10 +14,45 @@ import unittest
 
 from t_games import game
 from t_games import options
+from t_games import player
 
 
-class ParseTestTest(unittest.TestCase):
-	"""Tests of OptionSet.parse_settings changing OptionSet.settings_text"""
+class AllRangeTest(unittest.TestCase):
+	"""Tests of the all inclusive range. (unittest.TestCase)"""
+
+	def setUp(self):
+		self.all_range = options.AllRange()
+
+	def testRepr(self):
+		"""Test the computer readable text representation of AllRange."""
+		self.assertEqual('AllRange()', repr(self.all_range))
+
+	def testReprSimilar(self):
+		"""Test evaluating the computer readable text representation of AllRange."""
+		AllRange = options.AllRange
+		self.assertTrue('everything' in eval(repr(self.all_range)))
+
+
+class OptionTextTest(unittest.TestCase):
+	"""Tests of text representations of OptionSet. (unittest.TestCase)"""
+
+	def setUp(self):
+		self.game = game.Game(player.Bot(), 'floats')
+		self.option_set = self.game.option_set
+		self.option_set.add_option('floats')
+
+	def testRepr(self):
+		"""Test the debugging text representation of an option set."""
+		self.assertEqual('<OptionSet for Null with 1 option>', repr(self.option_set))
+
+	def testReprMultiple(self):
+		"""Test the repr of an option set with multiple options."""
+		self.option_set.add_option('weight', converter = options.lower, default = 'duck')
+		self.assertEqual('<OptionSet for Null with 2 options>', repr(self.option_set))
+
+
+class ParseTest(unittest.TestCase):
+	"""Tests of OptionSet.parse_settings changing OptionSet.settings_text (TestCase)"""
 
 	def setUp(self):
 		self.option_set = options.OptionSet(object())

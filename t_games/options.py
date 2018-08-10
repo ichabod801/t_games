@@ -26,6 +26,7 @@ class AllRange(object):
 
     Overridden Methods:
     __contains__
+    __repr__
     """
 
     def __contains__(self, item):
@@ -36,6 +37,10 @@ class AllRange(object):
         item: The item to check for existence in the range. (object)
         """
         return True
+
+    def __repr__(self):
+        """Generate a computer readable text representation. (str)"""
+        return 'AllRange()'
 
 
 class OptionSet(object):
@@ -68,6 +73,7 @@ class OptionSet(object):
 
     Overridden Methods:
     __init__
+    __repr__
     """
 
     def __init__(self, game):
@@ -87,6 +93,12 @@ class OptionSet(object):
         self.settings = {'bots': []}
         self.settings_text = ''
         self.default_bots = []
+
+    def __repr__(self):
+        """Generate a debugging text representation. (str)"""
+        option_count = len(self.definitions)
+        plural = ['s', ''][option_count == 1]
+        return '<OptionSet for {} with {} option{}>'.format(self.game.name, option_count, plural)
 
     def add_group(self, name, expansion):
         """
