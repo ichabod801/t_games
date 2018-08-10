@@ -90,6 +90,7 @@ class Game(OtherCmd):
 
     Overridden Methods:
     __init__
+    __repr__
     default
     do_debug
     """
@@ -114,7 +115,7 @@ class Game(OtherCmd):
     def __init__(self, human, raw_options, interface = None):
         """
         Set up the game. (None)
-        
+
         human: The primary player of the game. (player.Player)
         raw_options: The user's option choices as provided by the interface. (str)
         interface: The interface that started the game playing. (interface.Interface)
@@ -138,11 +139,16 @@ class Game(OtherCmd):
         self.option_set = options.OptionSet(self)
         self.set_options()
         self.handle_options()
-        # Set up the players
+        # Set up the players.
         if not hasattr(self, 'players'):
             self.players = [self.human]
         for player in self.players:
             player.game = self
+
+    def __repr__(self):
+        """Generate a debugging text representation. (str)"""
+        plural = ['s', ''][len(self.players) == 1]
+        return '<Game of {} with {} player{}>'.format(self.name, len(self.players), plural)
 
     def clean_up(self):
         """Handle any end of game tasks. (None)"""
@@ -223,8 +229,8 @@ class Game(OtherCmd):
             tan   tangent
             ab/c  a + b / c
 
-        For example, '= 1 1 +' returns 2. '= 1 1 ^ 2 2 ^ 3 3 ^ * *' returns 108. 
-        '= R 108 * 1 + 1 //' returns a random number from 1 to 108. So does 
+        For example, '= 1 1 +' returns 2. '= 1 1 ^ 2 2 ^ 3 3 ^ * *' returns 108.
+        '= R 108 * 1 + 1 //' returns a random number from 1 to 108. So does
         '1 1 R 108 * + //'.
 
         Note that the full stack is displayed at the end of the calculation.
@@ -710,11 +716,5 @@ def load_games():
 
 
 if __name__ == '__main__':
-    craig = Player('Craig')
-    game = Game(craig, '')
-    result = game.play()
-    print(result)
-    flip = Flip(Player('Ref'), '')
-    bots = [FlipBot('Flip'), FlipBot('Tosser')]
-    t_result = flip.tournament(bots, 10)
-    print(t_result)
+    from t_tests.game_test import *
+    unittest.main()
