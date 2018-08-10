@@ -37,6 +37,10 @@ class OtherCmd(object):
     do_help: Process help requests. (bool)
     do_set: Set shortcuts. (bool)
     handle_cmd: Check text input for a valid command. (bool)
+
+    Overridden Methods:
+    __init__
+    __repr__
     """
 
     aliases = {'&': 'debug'}
@@ -50,6 +54,10 @@ class OtherCmd(object):
         human: The (ostensibly) human user of the interface. (player.Player)
         """
         self.human = human
+
+    def __repr__(self):
+        """Generate a debugging text representation. (str)"""
+        return '<{} for {!r}>'.format(self.__class__.__name__, self.human)
 
     def default(self, text):
         """
