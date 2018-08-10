@@ -374,8 +374,6 @@ class DominoPool(Pool):
 
 
 if __name__ == '__main__':
-    die = Die('die')
-    rolls = [die.roll() for roll in range(3)]
-    while rolls[-3:] != ['d', 'i', 'e']:
-        rolls.append(die.roll())
-    print(rolls)
+    # Run the unit testing.
+    from t_tests.dice_test import *
+    unittest.main()

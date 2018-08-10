@@ -716,5 +716,6 @@ def load_games():
 
 
 if __name__ == '__main__':
+    # Run the unit testing.
     from t_tests.game_test import *
     unittest.main()

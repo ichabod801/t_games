@@ -793,9 +793,6 @@ class MultiTrackingDeck(TrackingDeck):
 
 
 if __name__ == '__main__':
-    deck = Deck()
-    deck.shuffle(617)
-    for card in deck.cards:
-        card.up = True
-        print(card, end = ' ')
-    print()
+    # Run the unit testing.
+    from t_tests.cards_test import *
+    unittest.main()

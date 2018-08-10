@@ -105,7 +105,7 @@ class OptionSet(object):
         """
         Add a new option definition. (None)
 
-        Generally only valid or check is given, althout the option must pass both. 
+        Generally only valid or check is given, althout the option must pass both.
         They are both checkeed after converter is applied. For more details, see
         Programming Games in the wiki.
 
@@ -490,5 +490,6 @@ def upper(text):
 
 
 if __name__ == '__main__':
-    import t_tests.options_test as options_test
-    options_test.unittest.main()
+    # Run the unit testing.
+    from t_tests.options_test import *
+    unittest.main()

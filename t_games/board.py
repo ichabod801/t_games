@@ -716,3 +716,9 @@ class MultiBoard(DimBoard):
         cell: The location to place the piece in. (Coordinate)
         """
         self.cells[cell].piece.append(piece)
+
+
+if __name__ == '__main__':
+    # Run the unit testing.
+    from t_tests.board_test import *
+    unittest.main()
