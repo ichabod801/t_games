@@ -697,3 +697,9 @@ class AlphaBetaBot(Bot):
 class Cyborg(Nameless, Humanoid):
     """A computer player that is run by a person. (Nameless, Humanoid)"""
     pass
+
+
+if __name__ == '__main__':
+    # Run the unit testing.
+    from t_tests.player_test import *
+    unittest.main()

@@ -173,8 +173,6 @@ class OtherCmd(object):
 
 
 if __name__ == '__main__':
-    import tgames.player
-    other = OtherCmd(tgames.player.Player('Craig'))
-    other.handle_cmd('debug self.aliases')
-    other.handle_cmd('& self.human.name')
-    print(other.handle_cmd('Python sucks.'))
+    # Run the unit testing.
+    from t_tests.other_cmd_test import *
+    unittest.main()
