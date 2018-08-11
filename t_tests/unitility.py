@@ -22,7 +22,7 @@ class AutoBot(player.Bot):
 
     Attributes:
     info: Things the bot has been told. (list of str)
-    replies: The answers to question the bot will be asked. (list)
+    replies: The answers to questions the bot will be asked. (list)
 
     Overridden Methods:
     __init__
@@ -30,10 +30,17 @@ class AutoBot(player.Bot):
     ask_int
     ask_int_list
     ask_valid
+    tell
     """
 
     def __init__(self, name = 'Buckaroo', replies = []):
-        """Set up the bot."""
+        """
+        Set up the bot. (None)
+
+        Parameters:
+        name: The name of the bot. (str)
+        replies: The answers to questions the bot will be asked. (list)
+        """
         super(AutoBot, self).__init__(name)
         self.replies = replies
         self.info = []
@@ -100,7 +107,7 @@ class AutoBot(player.Bot):
         The parameters are as per the built-in print function.
         """
         sep = kwargs.get('sep', ' ')
-        end = kawrgs.get('end', '\n')
+        end = kwargs.get('end', '\n')
         self.info.append('{}{}'.format(sep.join(args), end))
 
 
