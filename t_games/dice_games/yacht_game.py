@@ -644,6 +644,15 @@ class ScoreCategory(object):
             self.bonus = int(score_type.split('+')[1])
             self.score_type = 'total'
 
+    def __repr__(self):
+        """Generate a debugging text representation. (str)"""
+        type_text = str(self.score_type).capitalize()
+        if type_text.isdigit() and self.first:
+            type_text = '{}/{}'.format(type_text, self.first)
+        if self.bonus:
+            type_text = '{} + {}'.format(type_text, self.bonus)
+        return '<ScoreCategory {} ({})>'.format(self.name, type_text)
+
     def __str__(self):
         """Generate a human readable text representation. (str)"""
         # Get the score type text.
