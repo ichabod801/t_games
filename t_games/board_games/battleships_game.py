@@ -284,7 +284,7 @@ class BattleBot(player.Bot):
     tell
     """
 
-    def __init__(self, taken_names):
+    def __init__(self, taken_names = []):
         """
         Initialize the bot. (None)
 
@@ -417,7 +417,7 @@ class SeaBoard(object):
     letters = 'ABCDEFGHIJ'
     numbers = '0123456789'
 
-    def __init__(self, player, inventory_name = 'Bradley'):
+    def __init__(self, player, inventory_name = 'bradley'):
         """
         Set up the board. (None)
 
@@ -433,6 +433,12 @@ class SeaBoard(object):
         self.misses = set()
         # Get the ships placed.
         self.place_ships()
+
+    def __repr__(self):
+        """Create a debugging text representation. (str)"""
+        fleet_squares = sum([squares for ship, squares in self.fleet], [])
+        text = '<SeaBoard for {!r} with {} of {} hits>'
+        return text.format(self.player, len(self.hits), len(self.hits) + len(fleet_squares))
 
     def adjacent_squares(self, square):
         """
@@ -542,7 +548,7 @@ class SeaBoard(object):
                 if square in invalid_squares:
                     break
             else:
-                # return the first valid placement found.
+                # Return the first valid placement found.
                 return start, end
 
     def place_ships(self):
