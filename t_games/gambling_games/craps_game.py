@@ -1254,6 +1254,10 @@ class PropositionBet(CrapsBet):
         self.odds_bet = None
         self.wager = 0
 
+    def __repr__(self):
+        """Generate a computer readable text representation. (str)"""
+        return '<PropositionBet ({}) for {} bucks>'.format(self.match_text.capitalize(), self.wager)
+
     def max_bet(self, limit, max_payout):
         """
         Calculate the maximum odds wager. (int)
