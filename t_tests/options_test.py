@@ -37,7 +37,7 @@ class OptionTextTest(unittest.TestCase):
 	"""Tests of text representations of OptionSet. (unittest.TestCase)"""
 
 	def setUp(self):
-		self.game = game.Game(player.Bot(), 'floats')
+		self.game = game.Game(player.Bot(), 'none')
 		self.option_set = self.game.option_set
 		self.option_set.add_option('floats')
 
