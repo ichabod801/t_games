@@ -1141,7 +1141,7 @@ class Backgammon(game.Game):
         elif (end - start) * direction not in self.rolls:
             player.error('You do not have a die roll matching that move.')
             valid = False
-        # Check for valide end point
+        # Check for valid end point
         elif end_pieces and end_pieces[0] != player_piece and len(end_pieces) > 1:
             player.error('That end point is blocked.')
             valid = False
