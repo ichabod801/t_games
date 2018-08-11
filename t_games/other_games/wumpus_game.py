@@ -100,6 +100,16 @@ class Cave(object):
         self.bats = False
         self.wumpus = False
 
+    def __repr__(self):
+        """Generate a debugging text representation."""
+        # Get the base text.
+        text = '<Cave {}'.format(self.id)
+        # Add text for any flags that are on.
+        for flag in ('bats', 'pit', 'wumpus'):
+            if getattr(self, flag):
+                text = '{} {}'.format(text, flag.capitalize())
+        return '{}>'.format(text)
+
     def __eq__(self, other):
         """
         Compare caves by id. (bool)
@@ -158,6 +168,17 @@ class Dodecahedron(object):
         self.start = self.current
         # the initial previous cave is arbitrary
         self.previous = self.current.adjacent[0]
+
+    def __repr__(self):
+        """Generate a debugging text representation. (str)"""
+        # Get the base text.
+        text = '<Dodecahedron Current: {}; Bats: {}; Pits: {}; Wumpus: {}>'
+        # Get the flag data.
+        bat_text = ', '.join([str(cave.id) for cave in self.caves if cave.bats])
+        pit_text = ', '.join([str(cave.id) for cave in self.caves if cave.pit])
+        wumpus_id = [cave.id for cave in self.caves if cave.wumpus][0]
+        # Return the base text with the flag data.
+        return text.format(self.current, bat_text, pit_text, wumpus_id)
 
     def bats(self):
         """Move the player to a random cave. (None)"""
