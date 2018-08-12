@@ -931,7 +931,7 @@ class Backgammon(game.Game):
         player = self.players[self.player_index]
         # Show the pip counts.
         player.tell('\nX:', self.board.get_pip_count('X'))
-        player.tell('O:', self.board.get_pip_count('O'), '\n')
+        player.tell('O:', self.board.get_pip_count('O'))
         # Keep playing
         return True
 
@@ -1437,6 +1437,8 @@ class BackgammonBoard(board.LineBoard):
         Parameters:
         piece: The piece for the player to display. (str)
         """
+        # Start with a blank line.
+        lines = ['']
         # Get the details (for X).
         frame_high = FRAME_HIGH
         frame_low = FRAME_LOW
@@ -1449,7 +1451,7 @@ class BackgammonBoard(board.LineBoard):
             order_high = list(range(1, 13))
             order_low = list(range(24, 12, -1))
         # Get the top half of the board.
-        lines = frame_high[:]
+        lines.extend(frame_high[:])
         lines.extend(self.board_text(order_high))
         # Get the middle and bottom half of the board.
         lines.append('|             |             |')

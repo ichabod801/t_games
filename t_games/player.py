@@ -578,7 +578,7 @@ class Bot(Nameless):
         # Get the base text.
         kwargs['sep'] = kwargs.get('sep', ' ')
         kwargs['end'] = kwargs.get('end', '\n')
-        text = kwargs['sep'].join([str(arg) for arg in args]) + kwargs['end']
+        text = kwargs['sep'].join([str(arg) for arg in args])
         # Reframe as third person.
         possessive = self.name + "'s"
         pairs = (('Your', possessive), ('your', possessive), ('You', self.name), ('you', self.name),
@@ -586,7 +586,7 @@ class Bot(Nameless):
         for pronoun, name in pairs:
             text = text.replace(pronoun, name)
         # Print the modified text.
-        print(text)
+        print(text, end = kwargs['end'])
 
 
 class AlphaBetaBot(Bot):
