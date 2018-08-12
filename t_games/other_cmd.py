@@ -66,7 +66,7 @@ class OtherCmd(object):
         Parameters:
         text: The raw text input by the user. (str)
         """
-        self.human.error('I do not recognize the command {!r}.'.format(text))
+        self.human.error('\nI do not recognize the command {!r}.'.format(text))
 
     def do_debug(self, arguments):
         """

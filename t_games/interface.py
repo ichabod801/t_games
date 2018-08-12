@@ -169,7 +169,7 @@ class Interface(other_cmd.OtherCmd):
         if game_name.lower() in self.games:
             self.do_play(line)
         else:
-            self.human.error('That is an invalid selection.')
+            self.human.error('\nThat is an invalid selection.')
 
     def do_credits(self, arguments):
         """
@@ -196,13 +196,13 @@ class Interface(other_cmd.OtherCmd):
         # Sort the games alphabetically.
         games.sort(key = lambda game: game.name)
         # Print the game list with aliases.
+        self.human.tell()
         for game in games:
             if game.aka:
                 self.human.tell('{} ({})'.format(game.name, ', '.join(game.aka)))
             else:
                 self.human.tell(game.name)
         self.human.ask('\nPress Enter to continue: ')
-        self.human.tell()
 
     def do_home(self, arguments):
         """
@@ -237,8 +237,8 @@ class Interface(other_cmd.OtherCmd):
         game_name = game_name.lower().strip()
         if game_name in self.games:
             # Play the game if known.
-            self.play_game(self.games[game_name], options)
             self.human.tell()
+            self.play_game(self.games[game_name], options)
         else:
             # Warn about unknown games.
             self.human.error("\nI don't know how to play that game.")
@@ -323,7 +323,7 @@ class Interface(other_cmd.OtherCmd):
 
     def figure_win_loss_draw(self, results):
         """
-        Determine win/loss/draw numbers and streaks. (tuple)
+        Determine win/loss/draw numbers and streaks for statistics. (tuple)
 
         The return value is the game record, the per player record, the current
         streak, the type of the current streak, and the longest streaks for each
@@ -404,10 +404,9 @@ class Interface(other_cmd.OtherCmd):
         while True:
             # Show the menu and get the possible choices.
             menu_map = self.show_menu(self.focus)
-            response = self.human.ask('What is your selection? ').strip()
+            response = self.human.ask('\nWhat is your selection? ').strip()
             letter, slash, options = response.partition('/')
             letter = letter.strip().upper()
-            self.human.tell()
             # Check for menu choices.
             if letter in menu_map:
                 choice = menu_map[letter]
@@ -494,7 +493,6 @@ class Interface(other_cmd.OtherCmd):
         self.human.tell()
         for letter, choice in pairs:
             self.human.tell('{}: {}'.format(letter, choice))
-        self.human.tell()
         # Return the meaning of the menu letters.
         menu_map = dict(pairs)
         return dict(pairs)
