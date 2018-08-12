@@ -43,12 +43,12 @@ be played, and allows the player to pick a new suit to match. If a player
 can't (or doesn't want to) play any cards, they may draw from the deck until
 they can (or choose to) play a card.
 
-When a player runs out of cards, the cards in all the other hands are added up 
-(face cards are 10, eights are 50, all other cards are face value), and the 
-player who ran out of cards scores that many points. If the deck runs out of 
-cards, the player with the least points in their hand scores the difference 
-between their points and the points in each hand. In the case of ties, the 
-points are split between the tied players. After scoring, all cards are 
+When a player runs out of cards, the cards in all the other hands are added up
+(face cards are 10, eights are 50, all other cards are face value), and the
+player who ran out of cards scores that many points. If the deck runs out of
+cards, the player with the least points in their hand scores the difference
+between their points and the points in each hand. In the case of ties, the
+points are split between the tied players. After scoring, all cards are
 shuffled into the deck and the game is started again.
 
 The first player to get 50 points times the number of players wins the game.
@@ -57,7 +57,7 @@ Options:
 change=: The rank that allows you to change suits. (default = 8)
 change-match: The change suit card must match the discard's suit or rank.
 change-set: The change suit card only changes to it's own suit.
-draw=: The rank, typically 2, that forces the next player to draw that many 
+draw=: The rank, typically 2, that forces the next player to draw that many
     cards without playing any.
 draw-one: A player who can't play only has to draw one card.
 easy=: The number of easy bots in the game. (default = 2)
@@ -313,7 +313,7 @@ class CrazyEights(game.Game):
     set_up
     """
 
-    aka = ['Rockaway', 'Swedish Rummy']
+    aka = ['Rockaway', 'Swedish Rummy', 'CrEi']
     categories = ['Card Games']
     credits = CREDITS
     name = 'Crazy Eights'

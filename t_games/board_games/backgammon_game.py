@@ -759,6 +759,7 @@ class Backgammon(game.Game):
     set_up
     """
 
+    aka = ['Back']
     aliases = {'b': 'bear', 'd': 'double', 'e': 'enter', 'p': 'pips', 's': 'start'}
     categories = ['Board Games']
     credits = CREDITS

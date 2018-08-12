@@ -25,23 +25,23 @@ Game Programming: Craig "Ichabod" O'Brien
 """
 
 RULES = """
-The deal is four cards to four tableau piles, one card to start one of the 
-foundations, thirteen cards to a reserve, and the rest of the cards to the 
+The deal is four cards to four tableau piles, one card to start one of the
+foundations, thirteen cards to a reserve, and the rest of the cards to the
 stock.
 
-Foundation piles are built up in rank by suit from whatever rank was put in 
-the first foundation pile, going from king to ace if necessary. Tableau piles 
-are built down in rank by alternating color. The top card of the reserve is 
-available for building, and you may turn over the stock to the waste three 
-cards at a time and use the top card of the waste. Empty piles on the 
-tableau may only be filled from the reserve. If the reserve is empty, cards 
+Foundation piles are built up in rank by suit from whatever rank was put in
+the first foundation pile, going from king to ace if necessary. Tableau piles
+are built down in rank by alternating color. The top card of the reserve is
+available for building, and you may turn over the stock to the waste three
+cards at a time and use the top card of the waste. Empty piles on the
+tableau may only be filled from the reserve. If the reserve is empty, cards
 from the waste may be used to fill empty spots on the tableau.
 
 Stacks on the tableau may be moved, but only if the whole stack is moved.
 
 Options:
 build= (b): How tableau piles are built by suit. (alt-color, suit, or any)
-chameleon: Equivalent to 'build=any max-passes=1 parial-move reserve=12 
+chameleon: Equivalent to 'build=any max-passes=1 parial-move reserve=12
     tableau=3 turn-count=1'
 foundation= (f): The rank to start the foundations with.
 free-lane (fl): Empty tableau piles may be filled by any card.
@@ -82,7 +82,7 @@ class Canfield(solitaire.Solitaire):
     set_options
     """
 
-    aka = ['Demon']
+    aka = ['Demon', 'Canf']
     categories = ['Card Games', 'Solitaire Games', 'Closed Games']
     credits = CREDITS
     name = 'Canfield'

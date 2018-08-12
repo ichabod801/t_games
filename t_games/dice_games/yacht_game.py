@@ -731,6 +731,7 @@ class Yacht(game.Game):
     set_up
     """
 
+    aka = ['Yach']
     aliases = {'h': 'hold', 'r': 'roll', 's': 'score'}
     categories = ['Dice Games']
     credits = CREDITS

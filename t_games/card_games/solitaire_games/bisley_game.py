@@ -49,6 +49,7 @@ class Bisley(solitaire.Solitaire):
     tableau_text
     """
 
+    aka = ['Bisl']
     categories = ['Card Games', 'Solitaire Games', 'Open Games']
     credits = CREDITS
     name = 'Bisley'

@@ -43,8 +43,8 @@ class Strategy(solitaire.Solitaire):
     set_options
     """
 
+    aka = ['Stra']
     credits = CREDITS
-    # Interface categories for the game.
     categories = ['Card Games', 'Solitaire Games', 'Hybrid Games']
     name = 'Strategy'
     num_options = 1

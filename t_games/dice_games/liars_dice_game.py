@@ -405,7 +405,7 @@ class LiarsDice(game.Game):
     """
 
     # Other names for the game.
-    aka = ['Doubting Dice', 'Schummeln', 'Liars Dice']
+    aka = ['Doubting Dice', 'Schummeln', 'Liars Dice', 'LiDi']
     # Command aliases
     aliases = {'scores': 'score'}
     # The bot classes available for the game.

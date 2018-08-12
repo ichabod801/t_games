@@ -104,7 +104,7 @@ class Battleships(game.Game):
     set_up
     """
 
-    aka = ['Battleship', 'Sea Battle', 'Broadsides']
+    aka = ['Battleship', 'Sea Battle', 'Broadsides', 'Batt']
     categories = ['Board Games']
     credits = CREDITS
     name = 'Battleships'

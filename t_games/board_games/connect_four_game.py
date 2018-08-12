@@ -514,6 +514,7 @@ class ConnectFour(game.Game):
     set_up
     """
 
+    aka = ['CoFo']
     bot_classes = {'alpha-beta': C4BotAlphaBeta, 'gamma': C4BotGamma}
     categories = ['Board Games']
     credits = CREDITS

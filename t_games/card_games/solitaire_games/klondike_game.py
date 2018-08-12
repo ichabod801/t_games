@@ -67,7 +67,7 @@ class Klonbot(player.Bot):
     write a program to play Solitaire, I could write a program to play Solitaire
     for you." Here it is.
 
-    The bot is designed to run several games by deal number and record the wins. 
+    The bot is designed to run several games by deal number and record the wins.
     To play one random game, set the start parameter to -1.
 
     Attributes:
@@ -238,7 +238,7 @@ class Klondike(solitaire.Solitaire):
     set_checkers
     """
 
-    aka = ['Seven Up', 'Sevens']
+    aka = ['Seven Up', 'Sevens', 'Klon']
     categories = ['Card Games', 'Solitaire Games', 'Closed Games']
     credits = CREDITS
     name = 'Klondike'
@@ -318,8 +318,8 @@ class Klondike(solitaire.Solitaire):
         """
         Switch from three cards at a time to one card at a time.
 
-        This move is only available if the the switch-one option has been 
-        chosen. Making the switch leaves you with only one more pass through 
+        This move is only available if the the switch-one option has been
+        chosen. Making the switch leaves you with only one more pass through
         the deck.
         """
         if self.switched:

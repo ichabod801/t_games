@@ -68,7 +68,7 @@ class FortyThieves(solitaire.MultiSolitaire):
     stock_text
     """
 
-    aka = ['Big Forty', 'Le Cadran', 'Napoleon at St Helena', 'Roosevelt at San Juan']
+    aka = ['Big Forty', 'Le Cadran', 'Napoleon at St Helena', 'Roosevelt at San Juan', 'FoTh']
     categories = ['Card Games', 'Solitaire Games', 'Closed Games']
     credits = CREDITS
     name = 'Forty Thieves'

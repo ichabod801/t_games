@@ -70,7 +70,7 @@ Lanes 0  1  2  3  4
 
 If you are moving the cards to a lane, don't count that lane.
 
-* The formula using the rpn command would be: 1 C + 2 L ^ * 
+* The formula using the rpn command would be: 1 C + 2 L ^ *
 """
 
 
@@ -91,6 +91,7 @@ class FreeCell(solitaire.Solitaire):
     set_options
     """
 
+    aka = ['Free']
     categories = ['Card Games', 'Solitaire Games', 'Open Games']
     credits = CREDITS
     help_text = {'moving-stacks': STACK_HELP}

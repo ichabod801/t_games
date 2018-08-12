@@ -187,6 +187,7 @@ class Roulette(game.Game):
     set_up
     """
 
+    aka = ['Roul']
     aliases = {'1-18': 'low', '19-36': 'high', 'double-street': 'double', 'douzaine': 'dozen',
         'finale': 'final', 'finals': 'final', 'first': 'basket', 'impair': 'odd', 'jeu': 'zero',
         'le': 'third', 'manque': 'low', 'noir': 'black', 'orphelins': 'orphans', 'pair': 'even',

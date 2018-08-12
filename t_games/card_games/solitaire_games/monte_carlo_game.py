@@ -25,10 +25,10 @@ Game Programming: Craig "Ichabod" O'Brien
 
 # The rules for Monte Carlo.
 RULES = """
-The tableau is a layout of five cards by five cards. Any pair of the same rank 
-that is adjacent orthogonally or diagonally may be removed to the single 
-foundation pile. At any time (using the turn command), you can consolidate 
-cards to the right and up, so that all empty spots are on the bottom right. 
+The tableau is a layout of five cards by five cards. Any pair of the same rank
+that is adjacent orthogonally or diagonally may be removed to the single
+foundation pile. At any time (using the turn command), you can consolidate
+cards to the right and up, so that all empty spots are on the bottom right.
 Then cards will be added from the stock to fill in the blanks.
 
 Use the match command to pair two cards and sort them to the foundation.
@@ -56,7 +56,7 @@ class MonteCarlo(solitaire.Solitaire):
     tableau_text
     """
 
-    aka = ['Weddings']
+    aka = ['Weddings', 'MoCa']
     categories = ['Card Games', 'Solitaire Games', 'Closed Games']
     credits = CREDITS
     name = 'Monte Carlo'

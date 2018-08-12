@@ -84,6 +84,7 @@ class Pyramid(solitaire.Solitaire):
     tableau_text
     """
 
+    aka = ['Pyra']
     categories = ['Card Games', 'Solitaire Games', 'Closed Games']
     credits = CREDITS
     name = 'Pyramid'

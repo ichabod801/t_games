@@ -118,7 +118,7 @@ class Hamurabi(game.Game):
     set_up
     """
 
-    aka = ['The Sumer Game']
+    aka = ['The Sumer Game', 'Hamu']
     aliases = {'b': 'buy', 'f': 'feed', 'n': 'next', 'p': 'plant', 's': 'sell'}
     credits = CREDITS
     categories = ['Other Games']

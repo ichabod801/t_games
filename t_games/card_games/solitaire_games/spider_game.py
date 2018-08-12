@@ -66,6 +66,7 @@ class Spider(solitaire.MultiSolitaire):
     set_options
     """
 
+    aka = ['Spid']
     categories = ['Card Games', 'Solitaire Games', 'Hybrid Games']
     credits = CREDITS
     name = 'Spider'

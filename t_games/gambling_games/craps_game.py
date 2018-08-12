@@ -239,6 +239,7 @@ class Craps(game.Game):
     set_up
     """
 
+    aka = ['Crap']
     aliases = {'b': 'bets', 'd': 'done', 'r': 'roll', 'x': 'remove'}
     categories = ['Gambling Games']
     credits = CREDITS

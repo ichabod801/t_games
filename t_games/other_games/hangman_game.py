@@ -103,6 +103,7 @@ class Hangman(game.Game):
     set_up
     """
 
+    aka = ['Hang']
     aliases = {'freq': 'frequency'}
     categories = ['Other Games']
     credits = CREDITS

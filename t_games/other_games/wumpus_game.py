@@ -316,7 +316,7 @@ class Wumpus(game.Game):
     set_up
     """
 
-    aka = ['Wumpus']
+    aka = ['Wumpus', 'HuTW']
     categories = ['Other Games']
     credits = CREDITS
     name = 'Hunt the Wumpus'
