@@ -285,6 +285,7 @@ class CrazyEights(game.Game):
     goal: The number of points needed to win the game. (int)
     hands: The player's hands. (dict of str: cards.Hand)
     history: The cards played so far. (list of cards.Card)
+    last_player: The player to take the last action. (player.Player)
     multi_score: A flag for almost everyone scoring each round. (bool)
     num_players: The number of players requested. (int)
     num_easy: The number of easy bots requested. (int)
@@ -395,7 +396,8 @@ class CrazyEights(game.Game):
             self.pass_count += 1
             if self.pass_count >= len(self.players):
                 self.score()
-                self.deal()
+                if max(self.scores.values()) < self.goal:
+                    self.deal()
             return False
         # Draw the card.
         hand = self.hands[player.name]
@@ -411,7 +413,8 @@ class CrazyEights(game.Game):
             if self.empty_deck == 'score':
                 self.score()
             if self.empty_deck != 'pass':
-                self.deal(self.empty_deck == 'reshuffle')
+                if max(self.scores.values()) < self.goal:
+                    self.deal(self.empty_deck == 'reshuffle')
             return self.empty_deck != 'score'
         else:
             return not self.draw_one
@@ -458,7 +461,8 @@ class CrazyEights(game.Game):
                     if self.empty_deck == 'score':
                         self.score()
                     if self.empty_deck != 'pass':
-                        self.deal(self.empty_deck == 'reshuffle')
+                        if max(self.scores.values()) < self.goal:
+                            self.deal(self.empty_deck == 'reshuffle')
                     if self.empty_deck != 'reshuffle':
                         return False
         # Sort the human's cards.
@@ -542,7 +546,8 @@ class CrazyEights(game.Game):
             self.pass_count += 1
             if self.pass_count >= len(self.players):
                 self.score()
-                self.deal()
+                if max(self.scores.values()) < self.goal:
+                    self.deal()
             return False
         # Give appropriate error for invalid pass.
         elif self.empty_deck == 'pass':
@@ -595,7 +600,8 @@ class CrazyEights(game.Game):
         if not hand.cards:
             self.human.tell('{} played their last card.'.format(player.name))
             self.score()
-            self.deal()
+            if max(self.scores.values()) < self.goal:
+                self.deal()
             self.forced_draw = 0
         # Check for one card warning.
         elif self.one_alert and len(hand.cards) == 1:
@@ -608,7 +614,9 @@ class CrazyEights(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        self.human.tell()
+        if self.last_player != player or player == self.human:
+            self.human.tell()
+        self.last_player = player
         # Get the relevant cards.
         hand = self.hands[player.name]
         discard = self.deck.discards[-1]
@@ -738,6 +746,7 @@ class CrazyEights(game.Game):
         self.forced_draw = 0
         self.any_card = False
         self.fuzzy_ranks = False
+        self.last_player = None
         # Deal the hands.
         self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
         self.deal()
