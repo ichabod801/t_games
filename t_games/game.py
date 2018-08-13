@@ -162,14 +162,14 @@ class Game(OtherCmd):
         text: The raw text input by the user. (str)
         """
         player = self.players[self.player_index]
-        player.error('I do not recognize the command {!r}.'.format(text))
+        player.error('\nI do not recognize the command {!r}.'.format(text))
         return True
 
     def do_credits(self, arguments):
         """
         Show the credits for the game.
         """
-        self.human.tell(self.credits)
+        self.human.tell(self.credits.rstrip())
         return True
 
     def do_debug(self, arguments):
@@ -261,8 +261,9 @@ class Game(OtherCmd):
                 stack.append(float(word))
             # handle garbage
             else:
-                self.human.error('Invalid RPN expression.')
+                self.human.error('\nInvalid RPN expression.')
         # Display the stack.
+        self.human.tell()
         self.human.tell(' '.join([str(x) for x in stack]))
         return True
 
@@ -270,7 +271,7 @@ class Game(OtherCmd):
         """
         Show the rules for the game.
         """
-        self.human.tell(self.rules)
+        self.human.tell(self.rules.rstrip())
         return True
 
     def do_xyzzy(self, arguments):

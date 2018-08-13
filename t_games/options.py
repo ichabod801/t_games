@@ -326,12 +326,13 @@ class OptionSet(object):
     def ask_settings(self):
         """Get the setttings by asking the user. (None)"""
         # Ask if the user if they want to change the options.
-        query = 'Would you like to change the options? '
+        query = '\nWould you like to change the options? '
         if self.definitions and self.game.human.ask(query) in utility.YES:
             # Mark that options have been changed.
             self.game.flags |= 1
             # Ask questions, retaining settings text information.
             pairs = []
+            self.game.human.tell()
             for definition in self.definitions:
                 # Ask the question based on the question type setting.
                 if definition['question_type'] == 'bool':

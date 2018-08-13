@@ -237,7 +237,6 @@ class Interface(other_cmd.OtherCmd):
         game_name = game_name.lower().strip()
         if game_name in self.games:
             # Play the game if known.
-            self.human.tell()
             self.play_game(self.games[game_name], options)
         else:
             # Warn about unknown games.
@@ -398,7 +397,7 @@ class Interface(other_cmd.OtherCmd):
         num_options = sum(game.num_options for game in unique_games)
         count_text = 'Currently hosting {} different games with {} settable options.\n'
         self.human.tell(count_text.format(len(unique_games), num_options))
-        self.human.tell("Copyright (C) 2018 by Craig O'Brien and the tgame contributors.")
+        self.human.tell("Copyright (C) 2018 by Craig O'Brien and the t_game contributors.")
         self.human.tell("For more details type 'help' or 'help license'.")
         # Loop through player choices.
         while True:
@@ -456,7 +455,7 @@ class Interface(other_cmd.OtherCmd):
             if stats_options:
                 print('\nStatistics were calculated with the folloing options: {}.'.format(stats_options))
             # See if they want to play again.
-            again = self.human.ask('Would you like to play again? ').strip().lower()
+            again = self.human.ask('\nWould you like to play again? ').strip().lower()
             if again in ('!', '!!'):
                 self.human.held_inputs = ['!']
                 break
