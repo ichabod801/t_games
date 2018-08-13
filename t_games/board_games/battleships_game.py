@@ -32,8 +32,7 @@ import t_games.player as player
 
 CREDITS = """
 Although Milton-Bradley did make a version of this game, it is a traditional
-game dating back to the First World War.
-
+    game dating back to the First World War.
 Programming by Craig "Ichabod" O'Brien.
 """
 
