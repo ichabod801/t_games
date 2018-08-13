@@ -365,14 +365,14 @@ class C4Board(board.DimBoard):
             head_foot = '{}\n{}\n'.format(tens, ones)
         else:
             head_foot = ones + '+\n'
-        text = head_foot
+        text = '\n{}'.format(head_foot)
         # Add the board positions.
         for row_index in range(self.dimensions[1], 0, -1):
             row_text = '|'
             for column_index in range(1, self.dimensions[0] + 1):
                 row_text += str(self.cells[(column_index, row_index)])
             text += row_text + '|\n'
-        return text + head_foot
+        return text + head_foot.rstrip()
 
     def check_win(self):
         """See if the game has been won. (str)"""
@@ -599,7 +599,7 @@ class ConnectFour(game.Game):
             for player in self.players:
                 invalid = ''.join(self.symbols)
                 while True:
-                    symbol = player.ask('What symbol would you like to use? ')
+                    symbol = player.ask('\nWhat symbol would you like to use? ')
                     if symbol in invalid:
                         player.tell('That symbols is already being used by another player.')
                     else:
@@ -636,7 +636,7 @@ class ConnectFour(game.Game):
             column_index = random.choice(open_columns)
             self.bot_random = False
         else:
-            prompt = 'Which column would you like to play in? '
+            prompt = '\nWhich column would you like to play in? '
             column_index = now_player.ask_int(prompt, valid = open_columns)
         # Handle non-move commands.
         if isinstance(column_index, str):
