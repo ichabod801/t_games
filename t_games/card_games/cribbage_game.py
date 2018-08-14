@@ -42,17 +42,17 @@ which is an extra hand that is scored by the dealer. In a three player game
 a fourth card is dealt to the crib from the deck.
 
 After discarding, a starter card is revealed. If it is a jack, the dealer
-gets two points (for his heels). Then players play cards starting with the 
-player to the left of the dealer. The sequence of played cards can be used to 
-score points. If the total reaches 15 (aces count one, face cards count 10), 
-the player scores 2 points. If a pair is made with the previous card, 2 
-points are scored. Note that pairs are counted separately, so three of the 
-same rank in a row counts as three pairs, and four of the same rank in a row 
-counts as six pairs. If a straight of n cards is made with the last n cards, 
+gets two points (for his heels). Then players play cards starting with the
+player to the left of the dealer. The sequence of played cards can be used to
+score points. If the total reaches 15 (aces count one, face cards count 10),
+the player scores 2 points. If a pair is made with the previous card, 2
+points are scored. Note that pairs are counted separately, so three of the
+same rank in a row counts as three pairs, and four of the same rank in a row
+counts as six pairs. If a straight of n cards is made with the last n cards,
 n points are scored.
 
 The total of the cards played cannot go over 31. If a player can't play a card
-that keeps the total 31 or under, they pass by saying 'go.' If everyone 
+that keeps the total 31 or under, they pass by saying 'go.' If everyone
 passes, the last player to play a card scores a point. If the total reaches
 31, the last player to play a card scores 2 points. Once play is done the
 sequence starts over again with a total of 0.
@@ -185,7 +185,7 @@ class Cribbage(game.Game):
         if self.phase != 'discard':
             lines.append('\nStarter Card: {}.'.format(self.starter))
             lines.append('\nCards played: {}'.format(self.in_play['Play Sequence']))
-        lines.append('\nRunning Total: {}\n'.format(self.card_total))
+        lines.append('\nRunning Total: {}'.format(self.card_total))
         return '\n'.join(lines)
 
     def add_points(self, scorer, points):
@@ -296,7 +296,7 @@ class Cribbage(game.Game):
             scores.sort(reverse = True)
             names = ' and '.join(self.teams[scores[0][1]])
             s = ('s', '')[' and ' in names]
-            self.human.tell('{} win{} with {} points.'.format(names, s, scores[0][0]))
+            self.human.tell('\n{} win{} with {} points.'.format(names, s, scores[0][0]))
             # Check for skunk.
             game_score = self.skunk_scores[0]
             if scores[1][0] < self.skunk:
@@ -420,7 +420,7 @@ class Cribbage(game.Game):
         # Get and parse the discards.
         plural = ('', 's')[self.discards != 1]
         discard_word = utility.number_word(self.discards)
-        query = 'Which {} card{} would you like to discard to the crib, {}? '
+        query = '\nWhich {} card{} would you like to discard to the crib, {}? '
         answer = player.ask(query.format(discard_word, plural, player.name))
         discards = cards.Card.card_re.findall(answer)
         if not discards:
@@ -471,7 +471,7 @@ class Cribbage(game.Game):
         playable = [card for card in hand if card + self.card_total <= 31]
         if not playable:
             # Warn player of no playable cards.
-            player.tell('You have no playable cards and must go.')
+            player.tell('\nYou have no playable cards and must go.')
             if not self.auto_score:
                 player.ask(ENTER_TEXT)
             # Update and check go count
@@ -485,7 +485,7 @@ class Cribbage(game.Game):
                 self.reset()
             return False
         # Get card to play.
-        answer = player.ask('Which card would you like to play, {}? '.format(player.name))
+        answer = player.ask('\nWhich card would you like to play, {}? '.format(player.name))
         card = CribCard.card_re.match(answer)
         if card:
             card = CribCard(*answer[:2].upper())
@@ -817,7 +817,7 @@ class Cribbage(game.Game):
                 # Have every player pick a card.
                 cards_picked = []
                 for player in players:
-                    query = 'Enter a number to pick a card: '
+                    query = '\nEnter a number to pick a card: '
                     card_index = player.ask_int(query, cmd = False, default = 0)
                     card = self.deck.pick(card_index)
                     self.human.tell('{} picked the {}.'.format(player, card.name))
