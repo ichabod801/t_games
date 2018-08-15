@@ -264,7 +264,7 @@ class Craps(game.Game):
         message = 'You have {} bet{} in play totalling {} dollars.'
         lines.append(message.format(len(self.bets[player.name]), plural, bet_total))
         # Display remaining money.
-        lines.append('You have {} dollars remaining to bet.\n'.format(self.scores[player.name]))
+        lines.append('You have {} dollars remaining to bet.'.format(self.scores[player.name]))
         return '\n'.join(lines)
 
     def default(self, line):
@@ -532,6 +532,9 @@ class Craps(game.Game):
         Parameters:
         player: The current player. (player.Player)
         """
+        # Check for no output yet.
+        if not self.turns and not sum(self.bets.values(), []):
+            self.human.tell()
         # Check for removing a player.
         if not (self.scores[player.name] or self.bets[player.name]):
             self.players.remove(player)
@@ -551,7 +554,7 @@ class Craps(game.Game):
         # Display the game status.
         player.tell(str(self))
         # Get the bet or other command.
-        raw_bet = player.ask('What kind of bet would you like to make? ')
+        raw_bet = player.ask('\nWhat kind of bet would you like to make? ')
         if not raw_bet.strip():
             raw_bet = 'done'
         return self.handle_cmd(raw_bet)
@@ -1333,7 +1336,7 @@ class CrapsBot(player.Bot):
         Parameters:
         prompt: The queston to ask. (str)
         """
-        if prompt.startswith('What kind of bet'):
+        if prompt.startswith('\nWhat kind of bet'):
             # Make pass or don't pass bets, and then odds bets on them.
             my_bets = self.game.bets[self.name]
             # Mandatory actions based on errors.
@@ -1423,7 +1426,7 @@ class OverBot(CrapsBot):
         Parameters:
         prompt: The queston to ask. (str)
         """
-        if prompt.startswith('What kind of bet'):
+        if prompt.startswith('\nWhat kind of bet'):
             # Get bet data for making a decision.
             my_bets = self.game.bets[self.name]
             oddsable = []
@@ -1511,7 +1514,7 @@ class Randy(CrapsBot):
         Parameters:
         prompt: The queston to ask. (str)
         """
-        if prompt.startswith('What kind of bet'):
+        if prompt.startswith('\nWhat kind of bet'):
             # Get data for making a decision.
             my_bets = self.game.bets[self.name]
             oddsable = []
