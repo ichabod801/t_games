@@ -391,11 +391,6 @@ class Hamurabi(game.Game):
         # Set non-optional parameters
         self.bushels_per_acre = 3
         self.acre_cost = random.randint(17, 26)
-        # Set tracking based on optional parameters
-        self.population = self.start_population
-        self.acres = self.start_acres
-        self.rats = self.start_rats
-        self.game_length = self.game_length
         # Set the game parameters.
         self.game_length = 10
         self.immigration = 20
@@ -403,6 +398,11 @@ class Hamurabi(game.Game):
         self.start_acres = 1000
         self.start_population = 100
         self.start_rats = 200
+        # Set tracking based on other parameters
+        self.population = self.start_population
+        self.acres = self.start_acres
+        self.rats = self.start_rats
+        self.game_length = self.game_length
         # Set other tracking variables
         self.starved = 0
         self.total_starved = 0
