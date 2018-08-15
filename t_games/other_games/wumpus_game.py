@@ -434,6 +434,7 @@ class Wumpus(game.Game):
         """Set up the caves and the tracking variables. (None)"""
         self.dodec = Dodecahedron()
         self.arrows_left = self.arrows
+        self.human.tell()
         self.status_check()
 
     def shoot(self, arg):
