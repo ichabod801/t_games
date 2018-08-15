@@ -287,7 +287,7 @@ class PigBotRolls(player.Bot):
         else:
             return 'roll'
 
-    def tell(self, text):
+    def tell(self, text = ''):
         """
         Give information to the player. (None)
 
@@ -542,6 +542,7 @@ class Pig(game.Game):
         if self.turn_score:
             move = player.ask('Would you like to roll or stop? ')
         else:
+            player.tell()
             move = 'roll'
         if move.lower() in ('s', 'stop', 'whoa'):
             # End the turn and score.
@@ -564,7 +565,7 @@ class Pig(game.Game):
             go = self.handle_cmd(move)
         if not go:
             # Inform the player of their current total score.
-            player.tell("{}'s score is now {}.\n".format(player.name, self.scores[player.name]))
+            player.tell("{}'s score is now {}.".format(player.name, self.scores[player.name]))
             self.turn_score = 0
         return go
 
