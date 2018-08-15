@@ -252,6 +252,7 @@ class Pyramid(solitaire.Solitaire):
                 else:
                     card_text = '  '
                 lines[-1] = '{}{}  '.format(lines[-1], card_text)
+        lines = filter(lambda text: text.strip(), lines)
         return '\n'.join(lines)
 
 
