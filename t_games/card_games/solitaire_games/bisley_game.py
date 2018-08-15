@@ -128,7 +128,7 @@ class Bisley(solitaire.Solitaire):
             if foundation:
                 words.append(str(foundation[-1]))
             else:
-                words.append('  ')
+                words.append('--')
             # Get the text between the foundation cards.
             if index == 3:
                 words.append('\n')
@@ -174,6 +174,8 @@ class Bisley(solitaire.Solitaire):
                 # Add a card or a blank spot to the row as neccessary.
                 if card_index < len(self.tableau[column_index]):
                     rows[-1].append(str(self.tableau[column_index][card_index]))
+                elif not row_index or (row_index == 1 and column_index < 4):
+                    rows[-1].append('--')
                 else:
                     rows[-1].append('  ')
         # Return the text generated from the rows.

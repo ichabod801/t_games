@@ -27,6 +27,12 @@ from t_games.card_games.solitaire_games.rule_checkers import *
 HELP_TEXT = """
 Help for solitaire games. (?)
 
+Cards are represented by a two character string. The first is the number of
+their rank (for 2-9) for the first character of their rank (jokers are rank
+X). The second character is the first letter of their suit. So the Two of
+Hearts is 2H and Jack of Clubs is JC. ?? representes a face down card, and
+-- represents an empty space where a card was or could be.
+
 There are various commands for the standard moves in a solitaire game:
 
     * build: Build stacks on the tableau.
@@ -158,7 +164,7 @@ class Solitaire(game.Game):
     def __str__(self):
         """Generate a huuman readable text representation. (str)"""
         # Assume there are foundations and a tableau, add other text as needed.
-        lines = ['']
+        lines = []
         lines.append(self.foundation_text())
         if self.num_cells:
             lines.append(self.cell_text())
@@ -167,7 +173,7 @@ class Solitaire(game.Game):
             lines.append(self.reserve_text())
         if self.stock or self.waste:
             lines.append(self.stock_text())
-        return '\n\n'.join(lines) + '\n'
+        return '\n' + '\n\n'.join(lines)
 
     def build_check(self, mover, target, moving_stack, show_error = True):
         """
@@ -224,7 +230,8 @@ class Solitaire(game.Game):
 
     def cell_text(self):
         """Generate the text for the cards in cells. (str)"""
-        return ' '.join([str(card) for card in self.cells])
+        extras = ['--' for cell in range(self.options['num-cells'] - len(self.cells))]
+        return ' '.join([str(card) for card in self.cells] + extras)
 
     def deal(self):
         """Deal the initial set up for the game. (None)"""
@@ -407,7 +414,7 @@ class Solitaire(game.Game):
         """
         Turn cards from the stock into the waste. (t)
 
-        This command takes no arguments. The number of cards turned over depends on 
+        This command takes no arguments. The number of cards turned over depends on
         the rules of the game you are playing.
         """
         # Check for being able to turn cards.
@@ -490,7 +497,7 @@ class Solitaire(game.Game):
 
     def foundation_text(self):
         """Generate the text for the foundation piles. (str)"""
-        return ' '.join([str(pile[-1]) for pile in self.foundations if pile])
+        return ' '.join([str(pile[-1]) if pile else '--' for pile in self.foundations])
 
     def free_check(self, card, show_error = True):
         """
@@ -691,7 +698,7 @@ class Solitaire(game.Game):
         """
         # Get the move.
         player.tell(self)
-        move = player.ask('What is your move? ')
+        move = player.ask('\nWhat is your move? ')
         # Make the move.
         keep_playing = self.handle_cmd(move)
         # Track the move.
@@ -706,7 +713,7 @@ class Solitaire(game.Game):
             if pile:
                 reserve_text.append(str(pile[-1]))
             else:
-                reserve_text.append('  ')
+                reserve_text.append('--')
         return ' '.join(reserve_text)
 
     def set_checkers(self):
@@ -829,7 +836,7 @@ class Solitaire(game.Game):
         if self.stock:
             stock_text = '??'
         else:
-            stock_text = '  '
+            stock_text = '--'
         # Generate the waste text.
         for card in self.waste[-self.turn_count:]:
             stock_text += ' ' + str(card)
@@ -865,7 +872,8 @@ class Solitaire(game.Game):
     def tableau_text(self):
         """Generate text for the tableau piles. (str)"""
         max_tableau = max([len(pile) for pile in self.tableau])
-        tableau_lines = [['  ' for pile in self.tableau] for pile_index in range(max_tableau)]
+        tableau_lines = [['--' for pile in self.tableau]]
+        tableau_lines += [['  ' for pile in self.tableau] for pile_index in range(max_tableau - 1)]
         for pile_index, pile in enumerate(self.tableau):
             for card_index, card in enumerate(pile):
                 tableau_lines[card_index][pile_index] = str(card)
@@ -941,7 +949,7 @@ class MultiSolitaire(Solitaire):
         """
         Redo the last command with different but matching cards. (alt)
 
-        This is for when there are two cards of the same rank and suit that 
+        This is for when there are two cards of the same rank and suit that
         can make the same move, and the game makes the wrong one.
         """
         if self.alt_moves:
@@ -1166,7 +1174,7 @@ class MultiSolitaire(Solitaire):
         """
         Turn cards from the stock into the waste. (t)
 
-        This command takes no arguments. The number of cards turned over depends on 
+        This command takes no arguments. The number of cards turned over depends on
         the rules of the game you are playing.
         """
         # Remove the previous alternative moves.
