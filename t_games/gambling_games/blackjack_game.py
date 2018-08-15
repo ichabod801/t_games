@@ -589,8 +589,7 @@ class Blackjack(game.Game):
             # Show the current game state.
             self.show_status()
             # Get and handle the user input.
-            move = self.human.ask("What's your play? ")
-            self.human.tell()
+            move = self.human.ask("\nWhat's your play? ")
             return self.handle_cmd(move)
         # Check for showdown
         elif 'standing' in statuses:
