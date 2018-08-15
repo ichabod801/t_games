@@ -465,7 +465,7 @@ class Wumpus(game.Game):
                 self.win_loss_draw[1] = 1
             else:
                 # shooting the wumpus is a win
-                self.human.tell('You hear the horrible scream of a dieing wumpus!')
+                self.human.tell('You hear the horrible scream of a dying wumpus!')
                 self.win_loss_draw[0] = 1
         else:
             self.human.tell("You don't have any arrows left to shoot.")
