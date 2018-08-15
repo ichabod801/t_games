@@ -335,7 +335,7 @@ class Bacht(player.Bot):
         Parameters:
         query: The question to ask of the bacht. (str)
         """
-        if query == 'What is your move? ':
+        if query == '\nWhat is your move? ':
             # Check for preset roll.
             if self.next == 'roll':
                 self.next = ''
@@ -930,6 +930,7 @@ class Yacht(game.Game):
             best = max(self.scores.values())
             winners = [name for name, score in self.scores.items() if score == best]
             # Show the final scores.
+            self.human.tell()
             self.human.tell(self)
             # Announce the winner(s).
             if len(winners) == 1:
@@ -1036,11 +1037,12 @@ class Yacht(game.Game):
         player: The player whose turn it is. (player.Player)
         """
         # Show the game status.
+        player.tell()
         player.tell(self)
         player.tell('\nThe roll to you is {}.'.format(self.dice))
-        player.tell('You have {} rerolls left.\n'.format(self.max_rolls - self.roll_count))
+        player.tell('You have {} rerolls left.'.format(self.max_rolls - self.roll_count))
         # Get the player's move.
-        move = player.ask('What is your move? ')
+        move = player.ask('\nWhat is your move? ')
         return self.handle_cmd(move)
 
     def score(self, category, player):

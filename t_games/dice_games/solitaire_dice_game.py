@@ -168,7 +168,6 @@ class SolitaireDice(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        player.tell()
         # Roll five dice.
         if self.mode == 'roll':
             self.roll_mode(player)
