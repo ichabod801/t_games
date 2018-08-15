@@ -69,7 +69,7 @@ class Quadrille(solitaire.Solitaire):
         lines.append('      QC')
         lines.append('  {}      {}'.format(piles[4][-1], piles[7][-1]))
         lines.append('      {}'.format(piles[0][-1]))
-        lines.extend(('', self.stock_text(), ''))
+        lines.extend(('', self.stock_text()))
         return '\n'.join(lines)
 
     def do_auto(self, arguments):
