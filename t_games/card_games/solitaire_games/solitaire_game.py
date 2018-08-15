@@ -1308,7 +1308,7 @@ class MultiSolitaire(Solitaire):
         if deal_text_index != -1:
             self.option_set.settings_text = self.option_set.settings_text[:(deal_text_index - 1)]
         if self.raw_options.lower() != 'none':
-            prompt = 'Enter the deal number, or return for a random deal: '
+            prompt = '\nEnter the deal number, or return for a random deal: '
             deal_num = self.human.ask_int(prompt, low = 1, default = -1, cmd = False)
         if deal_num == -1:
             deal_num = None
