@@ -171,7 +171,7 @@ class FortyThieves(solitaire.MultiSolitaire):
         if self.stock:
             stock_text = '?? '
         else:
-            stock_text = '   '
+            stock_text = '-- '
         # Generate the waste text.
         stock_text += ' '.join(str(card) for card in self.waste)
         return stock_text
