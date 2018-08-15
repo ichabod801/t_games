@@ -1000,6 +1000,7 @@ class Roulette(game.Game):
         out all winning bets (and removes all losing bets).
         """
         # Pretend a wheel is spinning.
+        self.human.tell()
         for spin in range(random.randint(3, 5)):
             self.human.tell('Spinning...')
             time.sleep(1)
