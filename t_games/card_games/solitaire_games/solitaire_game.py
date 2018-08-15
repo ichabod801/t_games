@@ -543,7 +543,7 @@ class Solitaire(game.Game):
         # Check for the win.
         if check == target:
             # Give a contrats message.
-            message = 'Congratulations! You won in {} moves (with {} undos), for a score of {}.'
+            message = '\nCongratulations! You won in {} moves (with {} undos), for a score of {}.'
             moves = len(self.moves) + 2 * self.undo_count
             self.human.tell(message.format(moves, self.undo_count, self.scores[self.human.name]))
             # Update the score.
