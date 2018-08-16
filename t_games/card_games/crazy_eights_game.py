@@ -54,22 +54,22 @@ shuffled into the deck and the game is started again.
 The first player to get 50 points times the number of players wins the game.
 
 Options:
-change=: The rank that allows you to change suits. (default = 8)
-change-match: The change suit card must match the discard's suit or rank.
-change-set: The change suit card only changes to it's own suit.
-draw=: The rank, typically 2, that forces the next player to draw that many
+change= (c): The rank that allows you to change suits. (default = 8)
+change-match (cm): The change suit card must match the discard's suit or rank.
+change-set (cs): The change suit card only changes to it's own suit.
+draw= (d): The rank, typically 2, that forces the next player to draw that many
     cards without playing any.
-draw-one: A player who can't play only has to draw one card.
-easy=: The number of easy bots in the game. (default = 2)
-empty-deck: What to do when the deck is empty: pass (players can pass instead
-    of drawing), reshuffle, or score. (default = score)
-medium=: The number of medium bots in the game. (default = 2)
-multi-score: Each players scores the points in the largest hand minus the
+draw-one (d1): A player who can't play only has to draw one card.
+easy= (e): The number of easy bots in the game. (default = 2)
+empty-deck (ed): What to do when the deck is empty: pass (players can pass
+    instead of drawing), reshuffle, or score. (default = score)
+medium= (m): The number of medium bots in the game. (default = 2)
+multi-score (ms): Each players scores the points in the largest hand minus the
     points in their own hand.
-one-alert: A warning is given when a player has one card.
-one-round: Only play one round.
-reverse=: The rank, typically A, that reverses the order of play.
-skip=: The rank, typically Q, that skips the next player.
+one-alert (1a): A warning is given when a player has one card.
+one-round (1r): Only play one round.
+reverse= (r): The rank, typically A, that reverses the order of play.
+skip= (s): The rank, typically Q, that skips the next player.
 """
 
 
@@ -696,40 +696,40 @@ class CrazyEights(game.Game):
     def set_options(self):
         """Define the options for the game. (None)"""
         # Set the card options.
-        self.option_set.add_option('change-match',
+        self.option_set.add_option('change-match', ['cm'],
             question = 'Should the suit change card have to match the last card played? bool')
-        self.option_set.add_option('change-set',
+        self.option_set.add_option('change-set', ['cs'],
             question = 'Should the suit change card just change to its own suit? bool')
         rank_error = 'The valid card ranks are {}.'.format(', '.join(cards.Card.ranks))
-        self.option_set.add_option('change', [], options.upper, '8', valid = cards.Card.ranks,
+        self.option_set.add_option('change', ['c'], options.upper, '8', valid = cards.Card.ranks,
             question = 'What rank should change the suit? ', error_text = rank_error,
             target = 'change_rank')
-        self.option_set.add_option('draw', [], options.upper, '', valid = cards.Card.ranks,
+        self.option_set.add_option('draw', ['d'], options.upper, '', valid = cards.Card.ranks,
             question = 'What rank should force the next player to draw? ', error_text = rank_error,
             target = 'draw_rank')
-        self.option_set.add_option('reverse', [], options.upper, '', valid = cards.Card.ranks,
+        self.option_set.add_option('reverse', ['r'], options.upper, '', valid = cards.Card.ranks,
             question = 'What rank should reverse the order of play? ', error_text = rank_error,
             target = 'reverse_rank')
-        self.option_set.add_option('skip', [], options.upper, '', valid = cards.Card.ranks,
+        self.option_set.add_option('skip', ['s'], options.upper, '', valid = cards.Card.ranks,
             question = 'What rank should skip the next player? ', error_text = rank_error,
             target = 'skip_rank')
         # Set the bot options.
-        self.option_set.add_option('easy', [], int, 2, valid = range(10), target = 'num_easy',
+        self.option_set.add_option('easy', ['e'], int, 2, valid = range(10), target = 'num_easy',
             question = 'How many easy bots should there be (return for 2)? ')
-        self.option_set.add_option('medium', [], int, 2, valid = range(10), target = 'num_medium',
+        self.option_set.add_option('medium', ['m'], int, 2, valid = range(10), target = 'num_medium',
             question = 'How many medium bots should there be (return for 2)? ')
         # Set the play options.
-        self.option_set.add_option('one-alert',
+        self.option_set.add_option('one-alert', ['1a'],
             question = 'Should there be an alert when a player has only one card left? bool')
-        self.option_set.add_option('empty-deck', [], options.lower, default = 'score',
+        self.option_set.add_option('empty-deck', ['ed'], options.lower, default = 'score',
             valid = ('pass', 'reshuffle', 'score'),
             question = 'What should be done when the deck is empty (return for score)? ',
             error_text = 'Valid responses are pass, reshuffle, or score.')
-        self.option_set.add_option('one-round', target = 'goal', value = 1, default = 0,
+        self.option_set.add_option('one-round', ['1r'], target = 'goal', value = 1, default = 0,
             question = 'Should the game end after one round? bool')
-        self.option_set.add_option('multi-score',
+        self.option_set.add_option('multi-score', ['ms'],
             question = 'Should everyone but the player with the highest hand score each time? bool')
-        self.option_set.add_option('draw-one',
+        self.option_set.add_option('draw-one', ['d1'],
             question = 'Should you only have to draw one card if you cannot play a card? ')
 
     def set_up(self):
