@@ -73,34 +73,34 @@ dealt. This continues until someone reaches 121 points. Note that the dealer's
 hand is scored last, to offset the advantage of the crib in tight games.
 
 Options:
-auto-go: Don't prompt players who must go.
-auto-score: Don't prompt the user after a player scores.
-cards=: The number of cards dealt (defaults = 6).
-discards=: The number of cards discarded (defaults = 2).
-double-skunk=: The score needed to avoid a double skunk (default = 0).
+auto-go (ag): Don't prompt players who must go.
+auto-score (as): Don't prompt the user after a player scores.
+cards= (c=): The number of cards dealt (default = 6).
+discards= (d=): The number of cards discarded (default = 2).
+double-skunk= (ds=): The score needed to avoid a double skunk (default = 0).
 fast: Equivalent to auto-go auto-score no-cut no-pick.
 five-card (5-card): equivalent to one-go cards=5 discards=1 target-score=61
     skunk=31 last=3
 four-partners (4-partners): equivalent to n-bots=3 partners cards=5 discards=1
-last=: The initial score of the last player to play (default = 0).
-match=: The number of games to play in a match. (default = 1).
+last= (l=): The initial score of the last player to play (default = 0).
+match= (m=): The number of games to play in a match. (default = 1).
     Match results only make sense for two player games.
-skunk-scores=: How to score wins/skunks/double skunks
+n-bots= (nb=): The number of bots to play against. (default = 1)
+no-cut (!c): Skip cutting the deck before the deal.
+no-pick (!p): Skip picking a card to see who deals first.
+one-go (1g): There is only one round of play, that is, only one go.
+partners (p): Pair players off into teams.
+seven-card (7-card): equivalent to cards=7 target-score=181 skunk=151
+skunk= (s=): The score to avoid a skunk (defualt = 91, only in match play).
+skunk-scores= (ss=): How to score wins/skunks/double skunks
     acc: 2/3/3
     long: 3/4/4
     free: 1/2/3
     four: 1/2/4
     or you can enter three numbers separated by slashes.
     defaults to acc (American Cribbage Congress).
-n-bots: The number of bots to play against.
-no-cut: Skip cutting the deck before the deal.
-no-pick: Skip picking a card to see who deals first.
-one-go: There is only one round of play, that is, only one go.
-partners: Pair players off into teams.
-seven-card (7-card): equivalent to cards=7 target-score=181 skunk=151
-skunk=: The score needed to avoid a skunk (defualt = 91, only in match play).
-solo: The players are teamed against the dealer, and the dealer can swap cards
-    with the crib. The dealer scores first, along with the crib.
+solo (1): The players are teamed against the dealer, and the dealer can swap
+    cards with the crib. The dealer scores first, along with the crib.
 target-score= (win=): The score needed to win (default = 121).
 three-solo (3-solo): Equivalent to one-go cards=5 discards=1 win=61 skunk=31
     n-bots=2 solo
@@ -737,32 +737,34 @@ class Cribbage(game.Game):
 
     def set_options(self):
         """Set the game options. (None)"""
-        # Set the hand options
-        self.option_set.add_option('cards', converter = int, default = 6, valid = (5, 6, 7),
+        # Set the hand options.
+        self.option_set.add_option('cards', ['c'], converter = int, default = 6, valid = (5, 6, 7),
             question = 'How many cards should be dealt? (return for 6)? ')
-        self.option_set.add_option('discards', converter = int, default = 2, valid = (1, 2),
+        self.option_set.add_option('discards', ['d'], converter = int, default = 2, valid = (1, 2),
             question = 'How many cards should be discarded (return for 2)? ')
         # Set the play options.
-        self.option_set.add_option('one-go',
+        self.option_set.add_option('one-go', ['1g'],
             question = 'Should there only be one round of play, or one go? bool')
         # Set the score options.
         self.option_set.add_option('target-score', ['win'], int, default = 121, check = lambda x: x > 0,
             question = 'How many points should it take to win (return for 121)? ')
-        self.option_set.add_option('skunk', [], int, default = 91, check = lambda x: x > 0,
+        self.option_set.add_option('skunk', ['s'], int, default = 91, check = lambda x: x > 0,
             question = 'How many points should it take to avoid a skunk (return for 91)? ')
-        self.option_set.add_option('double-skunk', [], int, default = 0, check = lambda x: x > -1,
+        self.option_set.add_option('double-skunk', ['ds'], int, default = 0, check = lambda x: x > -1,
             question = 'How many points should it take to avoid a double skunk (return for 0)? ')
-        self.option_set.add_option('last', [], int, default = 0, check = lambda x: x > -1,
+        self.option_set.add_option('last', ['l'], int, default = 0, check = lambda x: x > -1,
             question = 'How many points should the last player get for being last (return for 0)? ')
-        self.option_set.add_option('partners', question = 'Should players be paired off into teams? bool')
-        self.option_set.add_option('solo', question = 'Should players be teamed against the dealer? bool')
+        self.option_set.add_option('partners', ['p'],
+            question = 'Should players be paired off into teams? bool')
+        self.option_set.add_option('solo', ['1'],
+            question = 'Should players be teamed against the dealer? bool')
         # Set the number of opponents.
-        self.option_set.add_option('n-bots', converter = int, default = 1, valid = (1, 2, 3),
+        self.option_set.add_option('n-bots', ['nb'], converter = int, default = 1, valid = (1, 2, 3),
             question = 'How many bots would you like to play against (return for 1)? ')
         # Set the match options.
-        self.option_set.add_option('match', converter = int, default = 1,
+        self.option_set.add_option('match', ['m'], converter = int, default = 1,
             question = 'How many games for match play (return for single game)? ')
-        self.option_set.add_option('skunk-scores', valid = ('acc', 'long', 'free', 'four'),
+        self.option_set.add_option('skunk-scores', ['ss'], valid = ('acc', 'long', 'free', 'four'),
             default = 'acc', question = 'Should match scores be ACC, long, free, or triple? ')
         # Set the variant groups.
         five_card = 'one-go cards=5 discards=1 win=61 skunk=31 last=3'
@@ -779,13 +781,13 @@ class Cribbage(game.Game):
         self.option_set.add_group('3-solo', three_solo)
         # Interface options (do not count in num_options)
         self.option_set.add_group('fast', 'auto-go auto-score no-cut no-pick')
-        self.option_set.add_option('auto-go',
+        self.option_set.add_option('auto-go', ['ag'],
             question = 'Should prompts be skipped when you must go? bool')
-        self.option_set.add_option('auto-score',
+        self.option_set.add_option('auto-score', ['as'],
             question = 'Should prompts be skipped when players score? bool')
-        self.option_set.add_option('no-cut',
+        self.option_set.add_option('no-cut', ['!c'],
             question = 'Should cutting the deck be skipped? bool')
-        self.option_set.add_option('no-pick',
+        self.option_set.add_option('no-pick', ['!p'],
             question = 'Should picking cards for first deal be skipped? bool')
 
     def set_up(self):
