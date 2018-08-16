@@ -233,6 +233,18 @@ class Solitaire(game.Game):
         extras = ['--' for cell in range(self.options['num-cells'] - len(self.cells))]
         return ' '.join([str(card) for card in self.cells] + extras)
 
+    def clean_up(self):
+        """Handle end of game tasks. (None)"""
+        # Give congrats or condolonces.
+        if self.win_loss_draw[0]:
+            self.human.tell('\nCongratulation! You won!')
+        else:
+            self.human.tell('\nYou lost. Better luck next time.')
+        # Give a contrats message.
+        message = 'You made {} moves (with {} undos), for a score of {}.'
+        moves = len(self.moves) + 2 * self.undo_count
+        self.human.tell(message.format(moves, self.undo_count, self.scores[self.human.name]))
+
     def deal(self):
         """Deal the initial set up for the game. (None)"""
         for dealer in self.dealers:
@@ -542,10 +554,6 @@ class Solitaire(game.Game):
         target = len(self.deck.cards) + len(self.deck.in_play)
         # Check for the win.
         if check == target:
-            # Give a contrats message.
-            message = '\nCongratulations! You won in {} moves (with {} undos), for a score of {}.'
-            moves = len(self.moves) + 2 * self.undo_count
-            self.human.tell(message.format(moves, self.undo_count, self.scores[self.human.name]))
             # Update the score.
             self.win_loss_draw[0] = 1
             return True

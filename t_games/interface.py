@@ -529,6 +529,8 @@ class Interface(other_cmd.OtherCmd):
         # Process the parameters.
         if not title:
             title = '\n{} Statistics'.format(results[0][0])
+        elif not title.startswith('\n'):
+            title = '\n{}'.format(title)
         # Process the filters.
         results = self.filter_results(results, options)
         # Check for no valid results.
