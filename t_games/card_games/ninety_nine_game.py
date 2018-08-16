@@ -33,12 +33,12 @@ Game Programming: Craig "Ichabod" O'Brien
 """
 
 RULES = """
-Each turn you play a card, adding it's value to the running total. You must 
-correctly state the new total when you play a card. For example, if the total 
-to you is 81, and you wanted to play the five of diamonds, you would enter 
-'5d 86' If you can't play a card without taking the total over 99, you must 
-pass, and lose one of your three tokens. At that point the hands are redealt 
-and the total is reset to zero. If you lose all of your tokens, you are out 
+Each turn you play a card, adding it's value to the running total. You must
+correctly state the new total when you play a card. For example, if the total
+to you is 81, and you wanted to play the five of diamonds, you would enter
+'5d 86' If you can't play a card without taking the total over 99, you must
+pass, and lose one of your three tokens. At that point the hands are redealt
+and the total is reset to zero. If you lose all of your tokens, you are out
 of the game. The last player with tokens wins.
 
 Cards are face value with face cards being 10, with the following exceptions:
@@ -47,7 +47,7 @@ Cards are face value with face cards being 10, with the following exceptions:
     10: -10 or 10
     K: 0
 
-In addition, a 4 reverses the order of play and a 3 skips the next player's 
+In addition, a 4 reverses the order of play and a 3 skips the next player's
 turn. Nines take the total to 99, no matter what the previous total was.
 
 The tokens command will show you how many tokens each player has left.
@@ -56,19 +56,19 @@ Options:
 99=: The ranks that take the total to 99. It can be one rank or multiple ranks
     separated by slashes. (default is 9)
 chicago: Equivalent to zero=4/9 skip=9 99=K minus=10 plus-minus=.
-easy=: How many easy bots you will play against. (default = 2)
+easy= (e=): How many easy bots you will play against. (default = 2)
 face=: The ranks that have their face value. This is used to reset default
     non-face values. Face cards will have a value of 10.
-jokers=: The number of jokers added to the deck. Their default value is 99.
+jokers= (j=): The number of jokers in the deck. Their default value is 99.
 joker-rules: Equivalent to zero=9/k reverse=k jokers=2 99=x skip=.
-medium=: How many medium bots you will play against. (default = 2)
-minus=: The ranks that have their value negated. It can be one rank or 
+medium= (m=): How many medium bots you will play against. (default = 2)
+minus= (-=): The ranks that have their value negated. It can be one rank or
     multiple ranks separated by slashes.
-plus-minus=: The ranks that can be positive or negative. It can be one rank or
-    multiple ranks separated by slashes.
-reverse=: The rank that reverses the order of play.
-skip=: The rank that skips the next player.
-zero=: The ranks valued at 0. It can be one rank or multiple ranks separated 
+plus-minus= (+-=): The ranks that can be positive or negative. It can be one
+    rank or multiple ranks separated by slashes.
+reverse= (r=): The rank that reverses the order of play.
+skip= (s=): The rank that skips the next player.
+zero= (0=): The ranks valued at 0. It can be one rank or multiple ranks separated
     by slashes.
 """
 
@@ -83,13 +83,19 @@ class NinetyNine(game.Game):
     Attributes:
     card_values: The possible values for each rank. (dict of str: tuple)
     deck: The deck of cards for the game. (cards.Deck)
+    easy: The number of easy bots in the game. (int)
     eight_nine: A flag for reversing eights and nines. (bool)
+    face: The ranks that score face value rather than a special value. (list)
     free_pass: A flag for passing without a token. (bool)
     hands: The players hands of cards, keyed by name. (dict of str:cards.Hand)
+    minus: The ranks that have their value negated. (list of str)
     out_of_the_game: Players who have dropeed out of the game. (list of Player)
+    plus_minus: The ranks of cards with face and negative face value. (list)
+    rank99: The ranks that set the value to 99. (list of str)
     reverse_rank: The rank that reverses the order of play. (str)
     skip_rank: The rank that skips over a player. (str)
     total: The current total rank count. (int)
+    zero: The ranks valued at zero. (list of str)
 
     Methods:
     deal: Deal a new hand of cards. (None)
@@ -350,30 +356,30 @@ class NinetyNine(game.Game):
         self.option_set.add_group('joker-rules', 'zero=9/k reverse=k jokers=2 99=x skip=')
         self.option_set.add_group('chicago', 'zero=4/9 skip=9 99=K minus=10 plus-minus=')
         # Set the bot options.
-        self.option_set.add_option('easy', converter = int, default = 2, valid = range(1, 11),
+        self.option_set.add_option('easy', ['e'], converter = int, default = 2, valid = range(1, 11),
             question = 'How many easy bots do you want to play against (return for 2)? ')
-        self.option_set.add_option('medium', converter = int, default = 2, valid = range(1, 11),
+        self.option_set.add_option('medium', ['m'], converter = int, default = 2, valid = range(1, 11),
             question = 'How many medium bots do you want to play against (return for 2)? ')
         # Set the rank value options.
         self.option_set.add_option('99', target = 'rank99', default = ['9', 'X'],
             check = is_rank_list, converter = options.upper,
             question = 'What ranks should be worth 99 points (slash separated, return for 9 and joker)? ')
-        self.option_set.add_option('minus', default = [], check = is_rank_list,
+        self.option_set.add_option('minus', ['-'], default = [''], check = is_rank_list,
             converter = options.upper,
             question = 'What ranks should be worth minus face value (slash separated, return for none)? ')
-        self.option_set.add_option('plus-minus', default = ['T'], check = is_rank_list,
+        self.option_set.add_option('plus-minus', ['+-'], default = ['T'], check = is_rank_list,
             converter = options.upper,
             question = 'What ranks should be worth +/- face value (slash separated, return for tens)? ')
-        self.option_set.add_option('zero', default = ['4', 'K'], check = is_rank_list,
+        self.option_set.add_option('zero', ['0'], default = ['4', 'K'], check = is_rank_list,
             converter = options.upper,
             question = 'What ranks should be worth zero (slash separated, return for 4 and king)? ')
         # Set the special rank options.
-        self.option_set.add_option('jokers', converter = int, default = 0, valid = range(5),
+        self.option_set.add_option('jokers', ['j'], converter = int, default = 0, valid = range(5),
             question = 'How many jokers should there be in the deck (return for 0)? ')
-        self.option_set.add_option('reverse', target = 'reverse_rank', valid = cards.Card.ranks,
+        self.option_set.add_option('reverse', ['r'], target = 'reverse_rank', valid = cards.Card.ranks,
             default = '4', converter = options.upper,
             question = 'What rank should reverse the order of play? ')
-        self.option_set.add_option('skip', target = 'skip_rank', valid = cards.Card.ranks,
+        self.option_set.add_option('skip', ['s'], target = 'skip_rank', valid = cards.Card.ranks,
             default = '3', converter = options.upper, question = 'What rank should skip the next player? ')
 
     def set_up(self):
