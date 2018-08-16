@@ -95,9 +95,6 @@ class Blackjack(game.Game):
     """
     A game of Blackjack. (game.Game)
 
-    Class Attributes:
-    ordinals: Ordinal words for displaying multiple hands. (tuple of str)
-
     Attributes:
     bets: The bets for each hand. (list of int)
     dealer_hand: The dealer's cards. (BlackjackHand)
@@ -140,7 +137,6 @@ class Blackjack(game.Game):
     credits = CREDITS
     name = 'Blackjack'
     num_options = 11
-    ordinals = ('first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth')
     rules = RULES
 
     def deal(self):
@@ -162,7 +158,8 @@ class Blackjack(game.Game):
             self.human.tell('The dealer is showing an ace.')
             self.human.tell('Your hand is {}.'.format(self.player_hands[0]))
             for hand_index, hand in enumerate(self.player_hands[1:]):
-                self.human.tell('Your {} hand is {}.'.format(self.ordinals[hand_index + 1], hand))
+                hand_ordinal = utlity.number_word(hand_index + 2, ordinal = True)
+                self.human.tell('Your {} hand is {}.'.format(hand_ordinal, hand))
             # Ask until you get a valid insurance amount.
             while True:
                 prompt = 'How much insurance would you like? '
@@ -667,7 +664,7 @@ class Blackjack(game.Game):
         text += '\nYour hand is {} ({}).'.format(self.player_hands[0], self.player_hands[0].score())
         hand_text = '\nYour {} hand is {} ({}).'
         for hand_index, hand in enumerate(self.player_hands[1:]):
-            text += hand_text.format(self.ordinals[hand_index + 1], hand, hand.score())
+            text += hand_text.format(utility.number_word(hand_index + 2, True), hand, hand.score())
         # Send the information to the human.
         self.human.tell(text)
 
