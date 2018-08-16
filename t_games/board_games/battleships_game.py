@@ -69,18 +69,18 @@ The winner's score is the number of un-hit squares that they had left.
 
 Options:
 
-inventory=: This determines the number and size of ships played with. The
+inventory= (i): This determines the number and size of ships played with. The
 value can be Bradley (the Milton Bradley version), Bednar (an open source
 version by Samuel Bednar), Ichabod (the version I remember), and Wikipedia
 (the inventory shown in a picture in the Wikipedia article on the game.) the
 inventories give the following ships (name size x count):
-    Bradley: Carrier 5x1, Battleship 4x1, Cruiser 3x1, Destroyer 2x1,
+    Bradley/Br: Carrier 5x1, Battleship 4x1, Cruiser 3x1, Destroyer 2x1,
         Submarine 3x1.
-    Bednar: Carrier 5x1, Battleship 4x1, Cruiser 3x1, Destroyer 2x2,
+    Bednar/Bd: Carrier 5x1, Battleship 4x1, Cruiser 3x1, Destroyer 2x2,
         Submarine 1x2.
-    Ichabod: Carrier 5x1, Battleship 4x2, Cruiser 3x3, Destroyer 2x4,
+    Ichabod/Ik: Carrier 5x1, Battleship 4x2, Cruiser 3x3, Destroyer 2x4,
         Submarine 1x1.
-    Wikipedia: Carrier 6x1, Battleship 4x2, Cruiser 3x3, Destroyer 2x4,
+    Wikipedia/Wk: Carrier 6x1, Battleship 4x2, Cruiser 3x3, Destroyer 2x4,
         No Submarine.
 """
 
@@ -91,6 +91,9 @@ class Battleships(game.Game):
     """
     A game of Battleships. (object)
 
+    Class Attributes:
+    inventory_aliases: Aliases for the inventory_name.
+
     Attributes:
     boards: The boards for each player. (dict of str: SeaBoard)
     bot: The bot opponent. (player.Bot)
@@ -98,6 +101,7 @@ class Battleships(game.Game):
 
     Overridden Methods:
     game_over
+    handle_options
     player_action
     set_options
     set_up
@@ -106,6 +110,7 @@ class Battleships(game.Game):
     aka = ['Battleship', 'Sea Battle', 'Broadsides', 'Batt']
     categories = ['Board Games']
     credits = CREDITS
+    inventory_aliases = {'br': 'bradley', 'bd': 'bednar', 'ik': 'ichabod', 'wk': 'wikipedia'}
     name = 'Battleships'
     num_options = 1
     rules = RULES
@@ -160,6 +165,11 @@ class Battleships(game.Game):
             return False
         # Report the end of the game.
         return True
+
+    def handle_options(self):
+        """Handle the current option settings. (None)"""
+        super(Battleships, self).handle_options()
+        self.inventory_name = self.inventory_aliases.get(self.inventory_name, self.inventory_name)
 
     def gipf_canfield(self):
         """Handle the Canfield edge. (None)"""
@@ -249,8 +259,9 @@ class Battleships(game.Game):
     def set_options(self):
         """Define the options for the game. (None)"""
         self.option_set.default_bots = [(BattleBot, ())]
-        self.option_set.add_option(name = 'inventory', converter = options.lower, default = 'bradley',
-            target = 'inventory_name', valid = ['bradley', 'bednar', 'ichabod', 'wikipedia'],
+        self.option_set.add_option('inventory', ['i'], converter = options.lower, default = 'bradley',
+            target = 'inventory_name',
+            valid = ['bradley', 'br', 'bednar', 'bd', 'ichabod', 'ik', 'wikipedia', 'wk'],
             question = 'Which inventory would you like to use (return for Bradley)? ',
             error_text = 'The available inventories are Bradley, Bednar, Ichabod, and Wikipedia')
 
