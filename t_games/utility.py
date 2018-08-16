@@ -8,6 +8,7 @@ Constants:
 LOC: tgames location. (str)
 MAX_INT: The largest allowed integer. (int)
 NINETEEN: English words for 1-19. (list of str)
+ORDINALS: Conversion of cardinal numbers to ordinal numbers. (dict of str: str)
 TENS: English words for multiples of 10. (list of str)
 THOUSAND_UP: English words for powers of one thousand. (list of str)
 YES: Synonyms for 'yes'. (set of str)
@@ -42,7 +43,22 @@ NINETEEN = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eigh
     'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen',
     'nineteen']
 
-TENS = ['', '', 'twenty', 'thirty', 'fourty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety']
+ORDINALS = {'zero': 'zeroth', 'one': 'first', 'two': 'second', 'three': 'third', 'four': 'fourth',
+    'five': 'fifth', 'six': 'sixth', 'seven': 'seventh', 'eight': 'eighth', 'nine': 'ninth', 'ten': 'tenth',
+    'eleven': 'eleventh', 'twelve': 'twelfth', 'thirteen': 'thirteenth', 'fourteen': 'fourteenth',
+    'fifteen': 'fifteenth', 'sixteen': 'sixteenth', 'seventeen': 'seventeenth', 'eighteen': 'eighteenth',
+    'nineteen': 'nineteenth', 'twenty': 'twentieth', 'thirty': 'thirtieth', 'forty': 'fortieth',
+    'fifty': 'fiftieth', 'sixty': 'sixtieth', 'seventy': 'seventieth', 'eighty': 'eightieth',
+    'ninety': 'ninetieth', 'hundred': 'hundredth', 'thousand': 'thousandth', 'million': 'millionth',
+    'billion': 'billionth', 'trillion': 'trillionth', 'quadrillion': 'quadrillionth',
+    'quintillion': 'quintillionth', 'sextillion': 'sextillionth', 'septillion': 'septillionth',
+    'octillion': 'octillionth', 'nonillion': 'nonillionth', 'decillion': 'decillionth',
+    'undecillion': 'undecillionth', 'duodecillion': 'duodecillionth', 'tredecillion': 'tredecillionth',
+    'quatturodecillion': 'quatturodecillionth', 'quindecillion': 'quindecillionth',
+    'sexdecillion': 'sexdecillionth', 'octodecillion': 'octodecillionth', 'novemdecillion':
+    'novemdecillionth', 'vigintillion': 'vigintillionth'}
+
+TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety']
 
 THOUSAND_UP = ['', 'thousand', 'million', 'billion', 'trillion', 'quadrillion', 'quintillion',
     'sextillion', 'septillion', 'octillion', 'nonillion', 'decillion', 'undecillion', 'duodecillion',
@@ -77,8 +93,11 @@ def hundred_word(n):
     n: A number to give the word form of. (int)
     """
     n %= 100
+    # Don't use zero for compound words.
+    if not n:
+        return ''
     # Numbers under nineteen are predefined.
-    if n < 20:
+    elif n < 20:
         return NINETEEN[n]
     # Number over nineteen must be combined with tens place numbers.
     else:
@@ -108,24 +127,36 @@ def mean(values):
     return sum(values) / float(len(values))
 
 
-def number_word(n):
+def number_word(n, ordinal = False):
     """
     Give the word form of a number. (str)
 
     Parameter:
     n: A number to give the word form of. (int)
+    ordinal: A flag for returning an ordinal number. (bool)
     """
     # Handle zero.
     if not n:
         word = NINETEEN[n]
-    # Loop thruogh powers of one thousand.
-    word = ''
-    level = 0
-    while n:
-        # Add the thousand word with the word for the power of one thousand.
-        word = '{} {} {}'.format(thousand_word(n), THOUSAND_UP[level], word).strip()
-        n //= 1000
-        level += 1
+    else:
+        # Loop thruogh powers of one thousand.
+        word = ''
+        level = 0
+        while n:
+            # Add the thousand word with the word for the power of one thousand.
+            word = '{} {} {}'.format(thousand_word(n), THOUSAND_UP[level], word).strip()
+            n //= 1000
+            level += 1
+    # Convert to an ordinal number if requested.
+    if ordinal:
+        words = word.split()
+        if '-' in words[-1]:
+            parts = words[-1].split('-')
+            parts[-1] = ORDINALS[parts[-1]]
+            words[-1] = '-'.join(parts)
+        else:
+            words[-1] = ORDINALS[words[-1]]
+        word = ' '.join(words)
     return word
 
 
