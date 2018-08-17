@@ -159,25 +159,25 @@ class FreeCell(solitaire.Solitaire):
         """Set the game options. (None)"""
         self.options = {}
         # Set the tableau dimensions.
-        self.option_set.add_option(name = 'cells', ['c'] action = 'key=num-cells', converter = int,
+        self.option_set.add_option('cells', ['c'], action = 'key=num-cells', converter = int,
             default = 4, valid = range(1, 15), target = self.options,
             question = 'How many free cells (1-10, return for 4)? ')
-        self.option_set.add_option(name = 'piles', ['p'], action = 'key=num-tableau', converter = int,
+        self.option_set.add_option('piles', ['p'], action = 'key=num-tableau', converter = int,
             default = 8, valid = range(4, 14), target = self.options,
             question = 'How many tableau piles (4-10, return for 8)? ')
         # Set the deal options.
-        self.option_set.add_option(name = 'challenge', ['ch'],
+        self.option_set.add_option('challenge', ['ch'],
             question = 'Should the twos and aces be dealt first? bool')
-        self.option_set.add_option(name = 'egnellahc', ['eg'],
+        self.option_set.add_option('egnellahc', ['eg'],
             question = 'Should the aces and twos be dealt first? bool')
-        self.option_set.add_option(name = 'supercell', ['sc'],
+        self.option_set.add_option('supercell', ['sc'],
             question = 'Should random cards be flipped face down? bool')
-        self.option_set.add_option(name = 'fill-free', ['ff']
+        self.option_set.add_option('fill-free', ['ff'],
             question = 'Should the free cells be filled with the last four cards dealt? bool')
         # Set the play options.
-        self.option_set.add_option(name = 'kings-only', ['ko'],
+        self.option_set.add_option('kings-only', ['ko'],
             question = 'Should the kings be the only card playable to empty lanes? bool')
-        self.option_set.add_option(name = 'baker', ['b'],
+        self.option_set.add_option('baker', ['b'],
             question = "Should tableau cards be built by suit (Baker's Game)? bool")
 
 

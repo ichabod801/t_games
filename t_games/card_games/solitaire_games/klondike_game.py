@@ -50,10 +50,10 @@ Cards from the stock are turned over three at a time. The stock may be gone
 through as many times as you wish.
 
 Options:
-piles=: How many tableau piles there should be.
-switch-one: You can switch to turning over one card at a time, but only for
+piles= (p=): How many tableau piles there should be.
+switch-one (s1): You can switch to turning over one card at a time, but only for
     one last pass through the deck. (use the switch command)
-turn-one: Cards from the stock are turned over one at a time.
+turn-one (t1): Cards from the stock are turned over one at a time.
 """
 
 
@@ -231,6 +231,9 @@ class Klondike(solitaire.Solitaire):
     """
     A game of Klondike. (Solitaire)
 
+    Attributes:
+    switched: A flag for switching to one card at a time. (bool)
+
     Methods:
     do_switch: Switch from three cards at a time to one card at a time. (bool)
 
@@ -351,12 +354,12 @@ class Klondike(solitaire.Solitaire):
         """Define the options for the game. (None)"""
         self.options = {}
         # Set the deal option.
-        self.option_set.add_option('piles', action = 'key=num-tableau', target = self.options,
+        self.option_set.add_option('piles', ['p'], action = 'key=num-tableau', target = self.options,
             default = 7, converter = int, question = 'How many tableau piles should their be?')
         # Set the play options.
-        self.option_set.add_option('switch-one', target = 'switched', value = False, default = True,
+        self.option_set.add_option('switch-one', ['s1'], target = 'switched', value = False, default = True,
             question = 'Should you be able to switch to one card at a time for one last pass? bool')
-        self.option_set.add_option('turn-one', action = 'key=turn-count', target = self.options,
+        self.option_set.add_option('turn-one', ['t1'], action = 'key=turn-count', target = self.options,
             value = 1, default = 3,
             question = 'Would you like to go through the stock one card at a time? bool')
 
