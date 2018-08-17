@@ -61,7 +61,8 @@ frequency (freq): Get a frequency list of letters in dictionary words.
 guess: Guess the whole word. An incorrect word earns a body part.
 
 OPTIONS:
-status: See the status of the computer's thinking.
+difficulty= (d=): The difficulty of the game, from 1 to 10 (default = 5).
+status (s): See the status of the computer's thinking.
 """
 
 
@@ -336,9 +337,9 @@ class Hangman(game.Game):
 
     def set_options(self):
         """Set the available game options. (None)"""
-        self.option_set.add_option('status',
+        self.option_set.add_option('status', ['s'],
             question = "Would you like updates on the computer's thinking? bool")
-        self.option_set.add_option('difficulty', ['diff'], int, valid = range(1, 11), default = 5,
+        self.option_set.add_option('difficulty', ['diff', 'd'], int, valid = range(1, 11), default = 5,
             question = "What difficulty level from 1 to 10 would you like to play at (return for 5)? ")
 
     def set_up(self):
