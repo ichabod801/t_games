@@ -54,9 +54,9 @@ total of all your rolls that turn.
 The first player to score 100 or more wins.
 
 OPTIONS:
-even-turns: Everyone gets the same number of turns.
-shuffle=: Use a shuffle die with the specified number of repeats.
-six-bad: Turns end with no score on a six instead of a one.
+even-turns (et): Everyone gets the same number of turns.
+shuffle= (sh=): Use a shuffle die with the specified number of repeats.
+six-bad (6b): Turns end with no score on a six instead of a one.
 
 BOT OPTIONS:
 Bots can be preset bots or general bots that you must define parameters for.
@@ -66,24 +66,24 @@ defaults will be used for later parameters. The default values can be selected
 by specifying the bot type without an equals sign.
 
 The general bots are:
-    base-pace-race=: This bot tries to score at least base, stay no more than
+    base-pace-race: This bot tries to score at least base, stay no more than
         pace points behind the lead, and tries to win if anyone is within the
         race parameter of winning. (alias: bpr, defaults=19/14/31)
     pace-race: This bot tries to score at least base, +/-1 for every modifer
         it's behind/ahead, and tries to win if in anyone is within the race
         parameter of winning. (alias: pr, defaults=21/8/29)
-    rolls: This bot stops after a given number of rolls. (defaults=5)
-    scoring-turns: This bot tries to win in t scoring turns. (alias: t,
+    rolls: This bot stops after a given number of rolls. (alias: r, defaults=5)
+    scoring-turns: This bot tries to win in t scoring turns. (alias: st,
         defaults=4)
-    value: This bot stops after reaching a given value. (defaults=25)
+    value: This bot stops after reaching a given value. (alias: v, defaults=25)
 
 The preset bots are:
-    stupid: A default value bot.
-    easy: A default scoring-turns bot.
-    medium: A default base-pace-race bot.
-    hard: A default pace-race bot.
-    knizia: A value bot with a value of 20.
-    satan: A base-pace-race bot with parameters 6/6/6
+    stupid (st): A default value bot.
+    easy (e): A default scoring-turns bot.
+    medium (m): A default base-pace-race bot.
+    hard (h): A default pace-race bot.
+    knizia (k): A value bot with a value of 20.
+    satan (666): A base-pace-race bot with parameters 6/6/6
     x: A rolls bot with 3 rolls.
 
 The overall default is to have one medium bot.
@@ -417,7 +417,10 @@ class Pig(game.Game):
     A game of pig. (Game)
 
     Attributes:
+    bad: The number that ends the player's turn. (int)
     die: The die that is rolled. (dice.Die)
+    even_turns: A flag for each player getting the same number of turns. (bool)
+    shuffle: The number of repeats on the shuffle die, if any. (int)
     turn_score: The current player's turn score. (int)
 
     Methods:
@@ -572,36 +575,36 @@ class Pig(game.Game):
     def set_options(self):
         """Set up the game options. (None)"""
         # Game rule options.
-        self.option_set.add_option(name = 'six-bad', target = 'bad', value = 6, default = 1,
+        self.option_set.add_option('six-bad', ['6b'], target = 'bad', value = 6, default = 1,
             question = 'Should six be the number that ends the turn? bool')
-        self.option_set.add_option(name = 'even-turns', target = 'even_turns',
+        self.option_set.add_option('even-turns', ['et'], target = 'even_turns',
             question = 'Should each player get the same number of turns? bool')
-        self.option_set.add_option(name = 'shuffle', converter = int, default = 0,
+        self.option_set.add_option('shuffle', ['sh'], converter = int, default = 0,
             question = 'How many repeats should the shuffle die have (return or 0 for normal die)? ')
         # Parameterized bots.
-        self.option_set.add_option(name = 'value', action = 'bot', default = None, converter = int,
+        self.option_set.add_option('value', ['v'], action = 'bot', default = None, converter = int,
             check = lambda params: len(params) <= 1 and max(params) <= 100)
-        self.option_set.add_option(name = 'base-pace-race', aliases = ['bpr'], action = 'bot',
+        self.option_set.add_option('base-pace-race', aliases = ['bpr'], action = 'bot',
             default = None, check = lambda params: len(params) <= 3 and max(params) <= 100,
             converter = int)
         self.option_set.add_option(name = 'scoring-turns', aliases = ['t'], action = 'bot', default = None,
             check = lambda params: len(params) <= 1 and max(params) <= 100, converter = int)
         self.option_set.add_option(name = 'pace-race', aliases = ['pr'], action = 'bot', default = None,
             check = lambda params: len(params) <= 2 and max(params) <= 100, converter = int)
-        self.option_set.add_option(name = 'rolls', action = 'bot', default = None,
+        self.option_set.add_option(name = 'rolls', aliases = ['r'], action = 'bot', default = None,
             check = lambda params: len(params) <= 1 and max(params) <= 100, converter = int)
         # Pre-set bots.
-        self.option_set.add_option(name = 'stupid', action = 'bot', target = 'value', value = (),
+        self.option_set.add_option('stupid', ['st'], action = 'bot', target = 'value', value = (),
             default = None)
-        self.option_set.add_option(name = 'easy', action = 'bot', target = 'scoring-turns', value = (),
+        self.option_set.add_option('easy', ['e'], action = 'bot', target = 'scoring-turns', value = (),
             default = None)
-        self.option_set.add_option(name = 'medium', action = 'bot', target = 'base-pace-race', value = (),
+        self.option_set.add_option('medium', ['m'], action = 'bot', target = 'base-pace-race', value = (),
             default = None)
-        self.option_set.add_option(name = 'hard', action = 'bot', target = 'pace-race', value = (),
+        self.option_set.add_option('hard', ['h'], action = 'bot', target = 'pace-race', value = (),
             default = None)
-        self.option_set.add_option(name = 'knizia', action = 'bot', target = 'value', value = (20,),
+        self.option_set.add_option('knizia', ['k'], action = 'bot', target = 'value', value = (20,),
             default = None)
-        self.option_set.add_option(name = 'satan', action = 'bot', target = 'base-pace-race',
+        self.option_set.add_option('satan', ['666'], action = 'bot', target = 'base-pace-race',
             value = (6, 6, 6), default = None)
         self.option_set.add_option(name = 'x', action = 'bot', target = 'rolls', value = (3,),
             default = None)
