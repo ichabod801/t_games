@@ -219,7 +219,6 @@ def thousand_word(n):
 
 
 if __name__ == '__main__':
-    test = [1, 0, 1, 1, 1, 0, 1, 1, 0, 0]
-    print(test)
-    print(streaks(test))
-    print(number_word(1023405600070890))
+    # Run the unit testing.
+    from t_tests.utility_test import *
+    unittest.main()
