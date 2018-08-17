@@ -32,18 +32,19 @@ place it in a waste pile. The top card of the waste pile is available for
 building or sorting. You may only go through the stock once.
 
 OPTIONS:
-alt-color (streets): The tableau is built down in rank by alternating color.
-columns (c): The number of tableau columns (stacks) dealt.
-down-rows: The number of tabelau rows that are dealt face down.
+alt-color (streets, ac): The tableau is built down in rank by alternating
+    color.
+columns= (c=): The number of tableau columns (stacks) dealt.
+down-rows= (dr=): The number of tabelau rows that are dealt face down.
 dress-parade (rank-and-file) Equivalent to 'alt-color down-rows=3 move-seq'.
 emperor (deauville): Equivalent to 'alt-color down-rows=3'.
-found-aces: Start the game with the aces on the foundations.
+found-aces (fa): Start the game with the aces on the foundations.
 indian: Equivalent to 'down-rows=1 c=10 r=3 not-suit'.
 limited: Equivalent to 'c=12 r=3'.
 lucas: Equivalent to 'found-aces c=13 r=3'.
 maria: Equivalent to 'alt-color c=9 r=4'.
-move-seq: Move any built sequence on the tableau.
-not-suit: The tableau is built down in rank by anything but suit.
+move-seq (ms): Move any built sequence on the tableau.
+not-suit (ns): The tableau is built down in rank by anything but suit.
 number-ten: Equivalent to 'down-rows=2 c=10 r=4 alt-color move-seq'.
 rows (r): The number of tableau rows (cards per stack) dealt.
 """
@@ -148,12 +149,12 @@ class FortyThieves(solitaire.MultiSolitaire):
         self.option_set.add_group('indian', 'down-rows=1 c=10 r=3 not-suit')
         self.option_set.add_group('number-ten', 'down-rows=2 c=10 r=4 alt-color move-seq')
         # Define the build options.
-        self.option_set.add_option('streets', ['alt-color'],
+        self.option_set.add_option('streets', ['alt-color', 'ac'],
             question = 'Should tableau building be down by alternating color (return for by suit)? bool')
-        self.option_set.add_option('not-suit',
+        self.option_set.add_option('not-suit', ['ns'],
             question = 'Should tableau building be down by anything but suit? bool')
-        self.option_set.add_option('move-seq', ['josephine'], question = 'Should you be able to move any '
-            'stack on the tableau (return for one card at a time)? bool')
+        query = 'Should you be able to move any stack on the tableau (return for one card at a time)? bool'
+        self.option_set.add_option('move-seq', ['josephine', 'ms'], question = query)
         # Define the deal options.
         self.option_set.add_option('columns', ['c'], int, default = 10, action = 'key=num-tableau',
             target = self.options,
@@ -162,7 +163,7 @@ class FortyThieves(solitaire.MultiSolitaire):
             question = 'How many tableau rows should be dealt (return for 4)? ')
         self.option_set.add_option('down-rows', ['d'], int, default = 0,
             question = 'How many rows of the tableau should be dealt face down (return for none)? ')
-        self.option_set.add_option('found-aces',
+        self.option_set.add_option('found-aces', ['fa'],
             question = 'Should the aces be dealt to start the foundations? bool')
 
     def stock_text(self):
