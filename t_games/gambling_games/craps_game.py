@@ -175,18 +175,17 @@ Remove (x): Some bets can be taken back after being made. This command will
 Roll (r): Finish betting and roll the dice.
 
 OPTIONS:
-cars-pay-3: Make 12 (boxcars) pay 3:1 on a field bet.
-lazy-hard: Turns hard way bets on during the come out roll.
-limit: The maximum ammount that can be bet (20).
-max-payout: The multiple of the limit that is the maximum payout (3).
-max-players: The maximum number of players at the table (7).
-odds-max: The multiple of the limit for odds bets. If odds-max = 345, the
-    maximum is 3x the limit for 4 or 10, 4x the limit for 5 or 9, and 5x the
-    limit for 6 or 10. (345)
-stake: The ammount of money the player starts with (250).
-yo-pays-2: Makes 11 (yo) pay 2:1 on a field bet.
+cars-pay-3 (c3): Make 12 (boxcars) pay 3:1 on a field bet.
+lazy-hard (lh): Turns hard way bets on during the come out roll.
+limit= (l=): The maximum ammount that can be bet (20).
+max-payout= (m$=): The multiple of the limit that is the maximum payout (3).
+max-players= (mp=): The maximum number of players at the table (7).
+odds-max= (om=): The multiple of the limit for odds bets. If odds-max = 345,
+    the maximum is 3x the limit for 4 or 10, 4x the limit for 5 or 9, and 5x
+    the limit for 6 or 10. (345)
+stake= (s=): The ammount of money the player starts with (250).
+yo-pays-2 (y2): Makes 11 (yo) pay 2:1 on a field bet.
 """
-
 
 class Craps(game.Game):
     """
@@ -210,7 +209,7 @@ class Craps(game.Game):
     lazy_hard: A flag for hard ways bets to be off on come out rolls. (bool)
     limit: The maximum bet that can be made. (int)
     max_payout: The multiple of the limit that can be paid out on one bet. (int)
-    max_player: The limit on the size of self.players. (int)
+    max_players: The limit on the size of self.players. (int)
     odds_max: The multiple of the max bet for odds bets. (int)
     point: The point to be made, or zero if no point yet. (int)
     shooter_index: Index of the current shooter in self.players. (int)
@@ -605,22 +604,23 @@ class Craps(game.Game):
     def set_options(self):
         """Set the game options. (None)"""
         # Set the money options.
-        self.option_set.add_option('stake', [], int, 100, check = lambda bucks: bucks > 0,
+        self.option_set.add_option('stake', ['s'], int, 100, check = lambda bucks: bucks > 0,
             question = 'How much money would you like to start with (return for 100)? ')
-        self.option_set.add_option('limit', [], int, 8, check = lambda bucks: 0 < bucks,
+        self.option_set.add_option('limit', ['l'], int, 8, check = lambda bucks: 0 < bucks,
             question = 'What should the maximum bet be (return for 8)? ')
         # Set the wager options
-        self.option_set.add_option('max-payout', [], int, 3, check = lambda times: 1 <= times,
+        self.option_set.add_option('max-payout', ['m$'], int, 3, check = lambda times: 1 <= times,
             question = 'What multiple of the maximum bet should the maximum payout be (return for 3)? ')
-        self.option_set.add_option('odds-max', [], int, 345, check = lambda times: 1 <= times,
+        self.option_set.add_option('odds-max', ['om'], int, 345, check = lambda times: 1 <= times,
             question = 'What multiple of the max bet should be the max for odds bets (return for 3-4-5)? ')
         # Set the payout options.
-        self.option_set.add_option('lazy-hard',
+        self.option_set.add_option('lazy-hard', ['lh'],
             question = 'Should hard ways bets be off on the come out roll? bool')
-        self.option_set.add_option('cars-pay-3', question = 'Should 12 pay 3:1 on field bets? bool')
-        self.option_set.add_option('yo-pays-2', question = 'Should 11 pay 2:1 on field bets? bool')
+        self.option_set.add_option('cars-pay-3', ['c3'],
+            question = 'Should 12 pay 3:1 on field bets? bool')
+        self.option_set.add_option('yo-pays-2', ['y2'], question = 'Should 11 pay 2:1 on field bets? bool')
         # Set the bot options.
-        self.option_set.add_option('max-players', [], int, 7, valid = range(1, 21),
+        self.option_set.add_option('max-players', ['mp'], int, 7, valid = range(1, 21),
             question = 'How many players should be able to play (return for 7)? ')
 
     def set_up(self):
@@ -1554,7 +1554,7 @@ class Randy(CrapsBot):
             # Pick a random number when necessary.
             if self.last_act.endswith('x'):
                 if self.last_act.startswith('prop'):
-                    prop_bet = random.choice(PropositionBet.prop_bets.keys())
+                    prop_bet = random.choice(list(PropositionBet.prop_bets.keys()))
                     self.last_act = self.last_act.replace('x', prop_bet)
                 elif self.last_act.startswith('hard'):
                     self.last_act = self.last_act.replace('x', random.choice(('4', '6', '8', '10')))
