@@ -77,17 +77,17 @@ Any command may take a hand number from 1 to n, for times when you have more
 than one hand. If no hand number is given, the first hand is assumed.
 
 OPTIONS:
-decks=: The number of decks shuffled together. (defaults to 4)
-hands=: The number hands simultaneously played. (defaults to 1, can be 2 or 3)
-hit-split-ace: You can hit a split ace.
-limit=: The maximum bet. (defaults to 8)
-no-double-split: You cannot double split hands.
-no-resplit: You cannot split hands that were already split.
+decks= (d=): The number of decks in the shoe. (1, 2, 4 (default), 6 or 8)
+hands= (h=): The number hands simultaneously played. (1 (default), 2, or 3)
+hit-split-ace (hsa): You can hit a split ace.
+limit= (l=): The maximum bet. (defaults to 8)
+no-double-split (nds): You cannot double split hands.
+no-resplit (nr): You cannot split hands that were already split.
 s17: The dealer stands on a soft 17.
-split-rank: You can only split cards of the same rank.
-stake=: The number of bucks the player starts with. (defaults to 100)
-surrender: You may surrender (as first action, get back half bet).
-true-double: You cannot double less than the original bet.
+split-rank (sr): You can only split cards of the same rank.
+stake= (s=): The number of bucks the player starts with. (defaults to 100)
+surrender (su): You may surrender (as first action, get back half bet).
+true-double (td): You cannot double less than the original bet.
 """
 
 
@@ -100,10 +100,22 @@ class Blackjack(game.Game):
     dealer_hand: The dealer's cards. (BlackjackHand)
     dealer_skip: A flag for not allowing the dealer to draw. (bool)
     deck: The deck of cards used in the game. (cards.Deck)
+    decks: How many decks are in the shoe/self.deck. (int)
+    double_split: A flag for being able to double after a split. (bool)
+    hands: The hands currently being played. (list of Hand)
+    hand_count: The number of starting hands the player is dealt. (int)
     hints: The best play for various hand totals. (dict of str: list of list)
+    hit_soft_17: A flag for the dealer having to hit a soft 17. (bool)
+    hit_split_ace: A flag for being able to hit a split ace. (bool)
     insurance: The amount of insurace on the current deal. (int)
+    limit: The maximum allowed bet. (int)
     phase: The current point in the game turn, betting or getting cards. (str)
     player_hands: The player's cards, in one more hands. (list of BlackjackHand)
+    resplit: A flag for being able to resplit a split hand. (bool)
+    split_rank: A flag for only being able to split the same rank. (bool)
+    stake: The number of bucks the player starts with. (bool)
+    surrender: A flag for surrender being allowed. (su)
+    true_double: A flag for doubles having to be at least the original bet. (bool)
 
     Methods:
     deal: Deal the hands. (None)
@@ -611,29 +623,29 @@ class Blackjack(game.Game):
     def set_options(self):
         """Define the game options. (None)"""
         # Set the betting options.
-        self.option_set.add_option('stake', [], int, 100, check = lambda bucks: bucks > 0,
+        self.option_set.add_option('stake', ['s'], int, 100, check = lambda bucks: bucks > 0,
             question = 'How much money would you like to start with (return for 100)? ')
-        self.option_set.add_option('limit', [], int, 8, check = lambda bucks: 0 < bucks,
+        self.option_set.add_option('limit', ['l'], int, 8, check = lambda bucks: 0 < bucks,
             question = 'What should the maximum bet be (return for 8)? ')
         # Set the deal options.
-        self.option_set.add_option('decks', [], int, 4, valid = (1, 2, 4, 6, 8),
+        self.option_set.add_option('decks', ['d'], int, 4, valid = (1, 2, 4, 6, 8),
             question = 'How many decks should be in the shoe (return for 4)? ')
-        self.option_set.add_option('hands', [], int, 1, check = lambda hands: 0 < hands < 4,
+        self.option_set.add_option('hands', ['h'], int, 1, check = lambda hands: 0 < hands < 4,
             question = 'How hands would you like to play (return for 1)? ', target = 'hand_count')
         # Set the doubling options
-        self.option_set.add_option('true-double',
+        self.option_set.add_option('true-double', ['td'],
             question = 'Should a double have to be a true double? bool')
-        self.option_set.add_option('no-double-split', value = False, default = True,
+        self.option_set.add_option('no-double-split', ['nds'], value = False, default = True,
             target = 'double_split', question = 'Should doubling a split hand be banned? bool')
         # Set the splitting options.
-        self.option_set.add_option('split-rank',
+        self.option_set.add_option('split-rank', ['sr'],
             question = 'Should you only be able to split hands of equal rank? bool')
-        self.option_set.add_option('no-resplit', value = False, default = True, target = 'resplit',
+        self.option_set.add_option('no-resplit', ['nr'], value = False, default = True, target = 'resplit',
             question = 'Should you be blocked from splitting a split hand? bool')
-        self.option_set.add_option('hit-split-ace',
+        self.option_set.add_option('hit-split-ace', ['hsa'],
             question = 'Should you be able to hit split aces? bool')
         # Set the showdown options.
-        self.option_set.add_option('surrender',
+        self.option_set.add_option('surrender', ['su'],
             question = 'Should you be able to surrender hands? bool')
         self.option_set.add_option('s17', value = False, default = True, target = 'hit_soft_17',
             question = 'Should the dealer be able to stand on a soft 17? bool')
