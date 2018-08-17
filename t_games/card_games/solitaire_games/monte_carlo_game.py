@@ -34,9 +34,9 @@ Then cards will be added from the stock to fill in the blanks.
 Use the match command to pair two cards and sort them to the foundation.
 
 Options:
-thirteen: Pairs adding to thirteen can be matched, kings can be sorted to the
+thirteen (13): Pairs adding to thirteen can be matched, kings can be sorted to the
     foundation.
-rows=: The number of rows dealt (defaults to 5).
+rows= (r=): The number of rows dealt (defaults to 5).
 """
 
 
