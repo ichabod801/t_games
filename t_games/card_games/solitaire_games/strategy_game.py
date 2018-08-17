@@ -119,7 +119,7 @@ class Strategy(solitaire.Solitaire):
     def set_options(self):
         """Set the game options. (None)"""
         self.options = {'num-tableau': 8, 'num-reserve': 1}
-        self.option_set.add_option(name = 'piles', action = 'key=num-tableau', converter = int,
+        self.option_set.add_option('piles', ['p'], action = 'key=num-tableau', converter = int,
             default = 8, valid = range(1, 9), target = self.options,
             question = 'How many tableau piles (1-8, return for 8)? ')
 
