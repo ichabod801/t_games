@@ -79,20 +79,21 @@ Twos: As many twos as possible. (Sum of the twos)
 Ones: As many ones as possible. (Sum of the ones)
 
 Options:
-easy=: How many easy bots you want to play against.
-extra-five=: Each player's second and later five of a kinds score bonus points
-    equal to this option.
-five-name=: Change the name of the five of a kind category. Underscores are
-    converted to spaces.
-max-rolls: The maximum number of rolls you can make.
-medium=: How many medium bots you want to play against.
-n-bonus=: A bonus for getting enough points in ones through sixes. The value
-    of this options should be two numbers separated by a slash (the score
+easy= (e=): How many easy bots you want to play against.
+extra-five= (e5=): Each player's second and later five of a kinds score bonus
+    points equal to this option.
+five-name= (5n=): Change the name of the five of a kind category. Underscores
+    are converted to spaces.
+max-rolls= (mr=): The maximum number of rolls you can make.
+medium= (m=): How many medium bots you want to play against.
+n-bonus= (nb=): A bonus for getting enough points in ones through sixes. The
+    value of this options should be two numbers separated by a slash (the score
     needed/the bonus points).
-strict-four: Four of a kind cannot be scored with five of a kind.
-strict-full: Full house cannot be scored with five of a kind.
-super-five: If you get five of a kind without rerolling, you win isntantly.
-wild-straight: Ones can be used as 2 or 6 in straights.
+strict-four (s4): Four of a kind cannot be scored with five of a kind.
+strict-full (sf): Full house cannot be scored with five of a kind.
+super-five (s5): If you get five of a kind on your first roll of the turn, you
+    win instantly.
+wild-straight (ws): Ones can be used as 2 or 6 in straights.
 
 Score Options:
 The score options allow changing the scores of the categories. They are done
@@ -101,12 +102,12 @@ total (sum of the dice), sub-total (sum of the qualifying dice), a number for
 a straight score, two numbers separated by a slash (the score if done without
 rerolling/the normal score), or total+ a number (sum of the dice plus the
 bonus to give). If the score is set to 0, that category is removed from the
-game. The category options are: five-kind, big-straight, low-straight,
-four-kind, full-house, three-kind, chance, and low-chance. Note that
-three-kind and low-chance are not in the normal game. Assigning them a score
-specification will add them to the game. The low-chance category must be
-lower than the normal chance category. If it is not, the second one scored
-counts as 0.
+game. The category options are: five-kind (5k), big-straight (bs), low-
+straight (ls), four-kind (4k), full-house (fh), three-kind (3k), chance (ch),
+and low-chance (lc). Note that three-kind and low-chance are not in the normal
+game. Assigning them a score specification will add them to the game. The low-
+chance category must be lower than the normal chance category. If it is not,
+the second one scored counts as 0.
 
 Variant Options:
 cheerio: Equivalent to five-name=Cheerio big-straight=25 low-straight=20
@@ -710,8 +711,18 @@ class Yacht(game.Game):
     Attributes:
     category_scores: The player's scores in each category. (dict of str: dict)
     dice: The pool of dice for the game. (dice.Pool)
+    easy: The number of easy bots in the game. (int)
+    extra_five: The bonus for scoring an extra five of a kind. (int)
+    five_name: The name of a five of a kind. (str)
+    max-rolls: How many rolls each player gets each turn. (int)
+    medium: The number of medium bots in the game. (int)
+    n_bonus: The points to score for a bonus, and the bonus score. (list of int)
     roll_count: The number of rolls taken this turn. (int)
     score_options: The score category option settings for this game. (dict)
+    strict_four: A flag for only counting strict four of a kinds. (bool)
+    strict_full: A flag for only counting strict full houses. (bool)
+    super_five: A flag for a natural five of a kind winning immediately. (bool)
+    wild_straight: A flag for 2's counting as 1's or 6's in straights. (bool)
 
     Methods:
     do_hold: Hold back dice for scoring. (bool)
@@ -1084,55 +1095,55 @@ class Yacht(game.Game):
             'low-chance=total low-straight=0 four-kind=0 n-bonus=60/30')
         # Set the score category options.
         self.score_options = {}
-        self.option_set.add_option('low-chance', action = 'key=Low Chance', target = self.score_options,
-            default = None, check = valid_score_spec, converter = options.lower,
+        self.option_set.add_option('low-chance', ['lc'], action = 'key=Low Chance', default = None,
+            target = self.score_options, check = valid_score_spec, converter = options.lower,
             question = 'What is the score for low chance (return for not used)? ')
-        self.option_set.add_option('chance', action = 'key=Chance', target = self.score_options,
+        self.option_set.add_option('chance', ['ch'], action = 'key=Chance', target = self.score_options,
             default = None, check = valid_score_spec, converter = options.lower,
             question = 'What is the score for chance (return for total)? ')
-        self.option_set.add_option('three-kind', action = 'key=Three of a Kind',
+        self.option_set.add_option('three-kind', ['3k'], action = 'key=Three of a Kind',
             target = self.score_options, default = None, check = valid_score_spec,
             converter = options.lower,
             question = 'What is the score for three of a kind (return for not used)? ')
-        self.option_set.add_option('full-house', action = 'key=Full House', target = self.score_options,
-            default = None, check = valid_score_spec, converter = options.lower,
+        self.option_set.add_option('full-house', ['fh'], action = 'key=Full House', default = None,
+            target = self.score_options, check = valid_score_spec, converter = options.lower,
             question = 'What is the score for full house (return for total)? ')
-        self.option_set.add_option('four-kind', action = 'key=Four of a Kind', target = self.score_options,
-            default = None, check = valid_score_spec, converter = options.lower,
+        self.option_set.add_option('four-kind', ['4k'], action = 'key=Four of a Kind', default = None,
+            target = self.score_options, check = valid_score_spec, converter = options.lower,
             question = 'What is the score for four of a kind (return for total)? ')
-        self.option_set.add_option('low-straight', action = 'key=Little Straight',
+        self.option_set.add_option('low-straight', ['ls'], action = 'key=Little Straight',
             target = self.score_options, default = None, check = valid_score_spec,
             converter = options.lower,
             question = 'What is the score for little straights (return for 30)? ')
-        self.option_set.add_option('big-straight', action = 'key=Big Straight',
+        self.option_set.add_option('big-straight', ['bs'], action = 'key=Big Straight',
             target = self.score_options, default = None, check = valid_score_spec,
             converter = options.lower,
             question = 'What is the score for big straights (return for 30)? ')
-        self.option_set.add_option('five-kind', action = 'key=Yacht', target = self.score_options,
+        self.option_set.add_option('five-kind', ['5k'], action = 'key=Yacht', target = self.score_options,
             default = None, check = valid_score_spec, converter = options.lower,
             question = 'What is the score for five of a kind (return for 50)? ')
         # Set the bot options.
-        self.option_set.add_option('easy', default = 1, converter = int,
+        self.option_set.add_option('easy', ['e'], default = 1, converter = int,
             question = 'How many easy bots would you like to play against (return for 1)? ')
-        self.option_set.add_option('medium', default = 2, converter = int,
+        self.option_set.add_option('medium', ['m'], default = 2, converter = int,
             question = 'How many medium bots would you like to play against (return for 2)? ')
         # Set the other options.
-        self.option_set.add_option('extra-five', default = 0, converter = int,
+        self.option_set.add_option('extra-five', ['e5'], default = 0, converter = int,
             question = 'What should the bonus be for extra five of a kinds (return for none)? ')
-        self.option_set.add_option('five-name', default = 'Yacht',
+        self.option_set.add_option('five-name', ['5n'], default = 'Yacht',
             question = 'What should the name of a five of a kind be (return for Yacht)? ')
-        self.option_set.add_option('max-rolls', converter = int, default = 3,
+        self.option_set.add_option('max-rolls', ['mr'], converter = int, default = 3,
             question = 'How many rolls should you get each turn (return for 3)? ')
-        self.option_set.add_option('n-bonus', default = [0, 0], converter = int,
+        self.option_set.add_option('n-bonus', ['nb'], default = [0, 0], converter = int,
             check = lambda x: len(x) == 2,
             question = 'What should the number bonus be (total needed/bonus points, return for none)? ')
-        self.option_set.add_option('strict-four',
+        self.option_set.add_option('strict-four', ['s4'],
             question = 'Should five of a kind be invalid for the four of a kind category? bool')
-        self.option_set.add_option('strict-full',
+        self.option_set.add_option('strict-full', ['sf'],
             question = 'Should five of a kind be invalid for the full house category? bool')
-        self.option_set.add_option('super-five',
+        self.option_set.add_option('super-five', ['s5'],
             question = 'Should a five of a kind without rerolling win the game? bool')
-        self.option_set.add_option('wild-straight',
+        self.option_set.add_option('wild-straight', ['ws'],
             question = 'Should 2s be able to count as 1 or 6 in straights? bool')
 
     def set_up(self):
