@@ -65,16 +65,16 @@ Each player starts with three tokens. The last person with tokens left wins
 the game.
 
 Options:
-betting: Instead of tokens going out of the game, they go to the winner of the
-    challenge.
+betting (b): Instead of tokens going out of the game, they go to the winner of
+    the challenge.
 challenge (chal): Add a bot with different challenge heuristics to the game.
 double (dbl): Add a double trouble (challenger + liar) bot to the game.
 honest (abe): Add an honest (mostly) bot to the game.
 liar (lr): Add a dishonest (sometimes) bot to the game.
-tokens=: Change the number of tokens each player has. (default = 3)
-one-six: Ones count as sixes.
-one-wild: Ones are wild.
-two-rerolls: Each player can roll the dice twice before stating their claim.
+tokens= (t=): Change the number of tokens each player has. (default = 3)
+one-six (16): Ones count as sixes.
+one-wild (1w): Ones are wild.
+two-rerolls (2r): Each player can roll the dice twice before stating their claim.
 """
 
 
@@ -404,25 +404,16 @@ class LiarsDice(game.Game):
     set_up
     """
 
-    # Other names for the game.
     aka = ['Doubting Dice', 'Schummeln', 'Liars Dice', 'LiDi']
-    # Command aliases
     aliases = {'scores': 'score'}
-    # The bot classes available for the game.
     bot_classes = {'challenger': Challenger, 'double': DoubleTrouble, 'honest': ABBot, 'liar': Liar}
-    # The menu categories for the game.
     categories = ['Dice Games']
-    # The credits for the game.
     credits = CREDITS
-    # The name templates for the poker hand versions of the dice.
     hand_names = ['a six-high missing a {}', 'a pair of {}s with {}', 'two pair {}s over {}s with a {}',
         'three {}s with a {} and a {}', 'a {}-high straight', 'a full house {}s over {}s',
         'four {}s and a {}', 'five {}s']
-    # The name of the game.
     name = "Liar's Dice"
-    # The number of game options.
     num_options = 5
-    # The rules of the game.
     rules = RULES
 
     def challenge(self):
@@ -812,14 +803,14 @@ class LiarsDice(game.Game):
     def set_options(self):
         """Set the game specific options. (None)"""
         # Set up the game options.
-        self.option_set.add_option('betting',
+        self.option_set.add_option('betting', ['b'],
             question = 'Should lost tokens be given to the winner of the challenge? bool')
-        self.option_set.add_option('two-rerolls', [], int, valid = (1, 2), target = 'base_rolls',
+        self.option_set.add_option('two-rerolls', ['2r'], int, valid = (1, 2), target = 'base_rolls',
             default = 1, value = 2, question = 'How many rolls should you get (1 or 2, return for 1)? ')
-        self.option_set.add_option('tokens', [], int, check = lambda x: x > 0, default = 3,
+        self.option_set.add_option('tokens', ['t'], int, check = lambda x: x > 0, default = 3,
             question = 'How many tokens should each player start with (return for 3)? ')
-        self.option_set.add_option('one-six', question = 'Should ones count as sixes? bool')
-        self.option_set.add_option('one-wild', question = 'Should ones be wild? bool')
+        self.option_set.add_option('one-six', ['16'], question = 'Should ones count as sixes? bool')
+        self.option_set.add_option('one-wild', ['1w'], question = 'Should ones be wild? bool')
         # Set up the bot options.
         self.option_set.add_option('honest', ['abe'], action = 'bot', value = (), default = None)
         self.option_set.add_option('liar', ['lr'], action = 'bot', value = (), default = None)
