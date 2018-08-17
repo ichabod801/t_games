@@ -111,10 +111,11 @@ Layout: Show the current layout, with colors marked.
 Remove: Remove a bet, using the number from the bets command.
 
 OPTIONS:
-layout=: Whether the French or American layout is used, defaults to Amercian.
-max-bet=: The maximum bet for any single bet, defaults to 10.
-stake=: How much money you start with, defaults to 100.
-uk-rule: Outside bets on half the numbers only lose half the bet.
+american (a): Use the American layout (the default).
+french (f): Use the French layout.
+limit= (l=): The maximum bet for any single bet, defaults to 10.
+stake= (s=): How much money you start with, defaults to 100.
+uk-rule (uk): Outside bets on half the numbers only lose half the bet.
 """
 
 
@@ -1320,16 +1321,17 @@ class Roulette(game.Game):
     def set_options(self):
         """Define the game options. (None)"""
         # Set the wheel options.
-        self.option_set.add_option('french', target = 'layout', value = 'french', default = 'american',
+        self.option_set.add_option('french', ['f'], target = 'layout', value = 'french',
+            default = 'american',
             question = 'Do you want to play with the Frech (single zero) layout? bool')
-        self.option_set.add_option('american', target = 'layout', value = 'american', default = None)
+        self.option_set.add_option('american', ['a'], target = 'layout', value = 'american', default = None)
         # Set the money options.
-        self.option_set.add_option('stake', [], int, 100, check = lambda bucks: bucks > 0,
+        self.option_set.add_option('stake', ['s'], int, 100, check = lambda bucks: bucks > 0,
             question = 'How much money would you like to start with (return for 100)? ')
-        self.option_set.add_option('limit', [], int, 10, target = 'max_bet',
+        self.option_set.add_option('limit', ['l'], int, 10, target = 'max_bet',
             check = lambda bucks: bucks > 0, question = 'What should the maximum bet be (return for 10)? ')
         # Set the payout options.
-        self.option_set.add_option('uk-rule',
+        self.option_set.add_option('uk-rule', ['uk'],
             question = 'Should the UK rule (1/2 back on lost 1:1 bets) be in effect? bool')
 
     def set_up(self):
