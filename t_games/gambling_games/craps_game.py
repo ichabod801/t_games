@@ -44,6 +44,7 @@ import re
 import t_games.dice as dice
 import t_games.game as game
 import t_games.player as player
+import t_games.utility as utility
 
 
 BUY_ODDS = {4: (2, 1), 5: (3, 2), 6: (6, 5), 8: (6, 5), 9: (3, 2), 10: (2, 1)}
@@ -258,12 +259,13 @@ class Craps(game.Game):
             point_text = 'off'
         lines = ['\nThe shooter is {} ({}).'.format(self.players[self.shooter_index].name, point_text)]
         # Display outstanding bets.
-        plural = ['s', ''][len(self.bets[player.name]) == 1]
-        bet_total = sum(bet.wager for bet in self.bets[player.name])
-        message = 'You have {} bet{} in play totalling {} dollars.'
-        lines.append(message.format(len(self.bets[player.name]), plural, bet_total))
+        bet_text = utility.number_plural(len(self.bets[player.name]), 'bet')
+        total_bet = sum(bet.wager for bet in self.bets[player.name])
+        buck_text = utility.plural(total_bet, 'buck')
+        lines.append('You have {} in play totalling {} {}.'.format(bet_text, total_bet, buck_text))
         # Display remaining money.
-        lines.append('You have {} dollars remaining to bet.'.format(self.scores[player.name]))
+        plural = utility.plural(self.scores[player.name], 'buck')
+        lines.append('You have {} {} remaining to bet.'.format(self.scores[player.name], buck_text))
         return '\n'.join(lines)
 
     def default(self, line):
@@ -336,7 +338,8 @@ class Craps(game.Game):
         player = self.players[self.player_index]
         player.tell('\n---Your Bets---\n')
         for bet in self.bets[player.name]:
-            player.tell('{} for {} dollars.'.format(bet, bet.wager).capitalize())
+            plural = utility.plural(bet.wager, 'buck')
+            player.tell('{} for {} {}.'.format(bet, bet.wager, plural).capitalize())
         player.tell()
         return True
 
@@ -421,14 +424,16 @@ class Craps(game.Game):
         # Check for remove all.
         elif argument.lower() in ('a', 'all'):
             for bet in removable:
-                player.tell('Removing your {} bet for {} dollars.'.format(bet, bet.wager))
+                plural = utility.plural(bet.wager, 'buck')
+                player.tell('Removing your {} bet for {} {}.'.format(bet, bet.wager, plural))
                 self.remove_bet(bet)
         else:
             # Show the bets.
             player.tell('\n---Removable Bets---\n')
-            row_text = '{}: {} bet for {} dollars.'
+            row_text = '{}: {} bet for {} {}.'
             for bet_index, bet in enumerate(removable):
-                player.tell(row_text.format(bet_index, bet, bet.wager))
+                plural = utility.plural(bet.wager, 'buck')
+                player.tell(row_text.format(bet_index, bet, bet.wager, plural))
             # Get the bet to remove.
             query = '\nWhich bet would you like to remove (-1 for none)? '
             choice = player.ask_int(query, low = -1, high = len(removable) - 1)
@@ -437,7 +442,8 @@ class Craps(game.Game):
                 pass
             else:
                 bet = removable[choice]
-                player.tell('Removing your {} bet for {} dollars.'.format(bet, bet.wager))
+                plural = utility.plural(bet.wager, 'buck')
+                player.tell('Removing your {} bet for {} {}.'.format(bet, bet.wager, plural))
                 self.remove_bet(bet)
         return True
 
@@ -583,13 +589,15 @@ class Craps(game.Game):
             for bet in self.bets[player.name][:]:  # loop through copy to allow changes.
                 payout = bet.resolve(self.dice)
                 if payout > 0:
-                    message = '{} won {} dollars on their {}.'
-                    self.human.tell(message.format(player.name, payout, bet))
+                    message = '{} won {} {} on their {}.'
+                    plural = utility.plural(payout, 'buck')
+                    self.human.tell(message.format(player.name, payout, plural, bet))
                     self.scores[player.name] += payout + bet.wager
                     self.bets[player.name].remove(bet)
                 elif payout < 0:
-                    message = '{} lost {} dollars on their {}.'
-                    self.human.tell(message.format(player.name, bet.wager, bet))
+                    message = '{} lost {} {} on their {}.'
+                    plural = utility.plural(bet.wager, 'buck')
+                    self.human.tell(message.format(player.name, bet.wager, plural, bet))
                     self.bets[player.name].remove(bet)
         # Set the point and shooter.
         if self.point:
