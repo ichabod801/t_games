@@ -418,17 +418,16 @@ class Cribbage(game.Game):
             # Reset the crib.
             self.hands['The Crib'] = cards.Hand(self.deck)
         # Get and parse the discards.
-        plural = ('', 's')[self.discards != 1]
-        discard_word = utility.number_word(self.discards)
-        query = '\nWhich {} card{} would you like to discard to the crib, {}? '
-        answer = player.ask(query.format(discard_word, plural, player.name))
+        discard_plural = utility.number_plural(self.discards, 'card')
+        query = '\nWhich {} would you like to discard to the crib, {}? '
+        answer = player.ask(query.format(discard_plural, player.name))
         discards = cards.Card.card_re.findall(answer)
         if not discards:
             # If no discards, assume it's another command.
             return self.handle_cmd(answer)
         elif len(discards) != self.discards:
             # Warn on the wrong number of discards.
-            player.error('You must discard {} card{}.'.format(utility.number_word(self.discards), plural))
+            player.error('You must discard {}.'.format(discard_plural))
             return True
         elif not all(card in self.hands[player.name] for card in discards):
             # Block discarding cards you don't have.
@@ -605,9 +604,9 @@ class Cribbage(game.Game):
             if fifteens:
                 hand_score += 2 * fifteens
                 # Update the user.
-                plural = ['', 's'][fifteens > 1]
-                message = '{} scores {} for {} combination{} adding to 15.'
-                self.human.tell(message.format(name, 2 * fifteens, utility.number_word(fifteens), plural))
+                plural_15 = utility.number_plural(fifteens, 'combination')
+                message = '{} scores {} for {} adding to 15.'
+                self.human.tell(message.format(name, 2 * fifteens, plural_15))
             # Check for pairs.
             rank_data = self.score_pairs(cards)
             for rank, count, pair_score in rank_data:
@@ -907,7 +906,7 @@ class CribBot(player.Bot):
         cmd: A flag for returning commands for processing. (bool)
         """
         # Handle picking cards and cutting the deck.
-        if prompt.startswith('Enter a number'):
+        if prompt.strip().startswith('Enter a number'):
             return random.randint(1, 121)
         # Raise an error for anything else.
         else:
