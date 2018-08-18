@@ -25,7 +25,7 @@ import random
 import t_games.dice as dice
 import t_games.game as game
 import t_games.player as player
-from t_games.utility import number_word, YES
+from t_games.utility import number_word, number_plural, YES
 
 
 # The credits for Liar's Dice.
@@ -789,7 +789,7 @@ class LiarsDice(game.Game):
         self.scores[loser.name] -= 1
         loser_score = self.scores[loser.name]
         if loser_score:
-            plural = utility.number_plural(loser_score, 'token')
+            plural = number_plural(loser_score, 'token')
             self.human.tell('{} now has {}.'.format(loser.name, plural))
         if self.betting:
             self.scores[winner.name] += 1
