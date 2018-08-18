@@ -65,7 +65,7 @@ The commands are:
    RULES: Read these fascinating, well written instructions again.
 
 Options:
-arrows: How many arrows you get. (1 to 5, defaults to 5)
+arrows= (a=): How many arrows you get. (1 to 5, defaults to 5)
 """
 
 
