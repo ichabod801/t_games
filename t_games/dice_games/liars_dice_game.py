@@ -503,9 +503,8 @@ class LiarsDice(game.Game):
             self.win_loss_draw = [before, len(self.players) - before - 1, 0]
             # Announce the loss.
             self.human.tell('\nYou have no more tokens, you lose the game.')
-            before_text = number_word(before).capitalize()
-            plural = ['s', ''][before == 1]
-            self.human.tell('{} player{} left the game before you did.'.format(before_text, plural))
+            before_text = number_plural(before, 'player').capitalize()
+            self.human.tell('{} left the game before you did.'.format(before_text))
         # Check for the human being the only one left.
         elif len([player for player in self.players if self.scores[player.name]]) == 1:
             # Announce and record the win.
@@ -790,8 +789,8 @@ class LiarsDice(game.Game):
         self.scores[loser.name] -= 1
         loser_score = self.scores[loser.name]
         if loser_score:
-            plural = ['s', ''][loser_score == 1]
-            self.human.tell('{} now has {} token{}.'.format(loser.name, loser_score, plural))
+            plural = utility.number_plural(loser_score, 'token')
+            self.human.tell('{} now has {}.'.format(loser.name, plural))
         if self.betting:
             self.scores[winner.name] += 1
             self.human.tell('{} now has {} tokens.'.format(winner.name, self.scores[winner.name]))
