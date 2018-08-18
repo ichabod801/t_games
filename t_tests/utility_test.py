@@ -4,13 +4,43 @@ utility_test.py
 Tests of t_games/utility.py.
 
 Classes:
+NumberPluralTests: Tests of number word & singular/plural. (unittest.TestCase)
 NumberWordTests: Tests of converting numbers to words. (unittest.TestCase)
+PluralTest: Tests of getting the singular/plural form. (unittest.TestCase)
 """
 
 
 import unittest
 
 import t_games.utility as utility
+
+
+class NumberPluralTest(unittest.TestCase):
+    """Tests of getting the number word and singular/plural. (unittest.TestCase)"""
+
+    def testPlural(self):
+        """Test getting a plural form of a word."""
+        self.assertEqual('seven cards', utility.number_plural(7, 'card'))
+
+    def testPluralNoS(self):
+        """Test getting a plural form of a word without adding s."""
+        self.assertEqual('five dice', utility.number_plural(5, 'die', 'dice'))
+
+    def testSingular(self):
+        """Test getting a plural form of a word."""
+        self.assertEqual('one card', utility.number_plural(1, 'card'))
+
+    def testSingularNoS(self):
+        """Test getting a plural form of a word wihtout adding s."""
+        self.assertEqual('one die', utility.number_plural(1, 'die', 'dice'))
+
+    def testZero(self):
+        """Test getting a plural with zero."""
+        self.assertEqual('zero cards', utility.number_plural(0, 'card'))
+
+    def testZeroNoS(self):
+        """Test getting a plural with zero and not adding s."""
+        self.assertEqual('zero dice', utility.number_plural(0, 'die', 'dice'))
 
 
 class NumberWordTests(unittest.TestCase):
@@ -69,6 +99,34 @@ class NumberWordTests(unittest.TestCase):
     def testZero(self):
         """Test wording zero."""
         self.assertEqual('zero', utility.number_word(0))
+
+
+class PluralTest(unittest.TestCase):
+    """Tests of getting the singular/plural form. (unittest.TestCase)"""
+
+    def testPlural(self):
+        """Test getting a plural form of a word."""
+        self.assertEqual('cards', utility.plural(7, 'card'))
+
+    def testPluralNoS(self):
+        """Test getting a plural form of a word without adding s."""
+        self.assertEqual('dice', utility.plural(5, 'die', 'dice'))
+
+    def testSingular(self):
+        """Test getting a plural form of a word."""
+        self.assertEqual('card', utility.plural(1, 'card'))
+
+    def testSingularNoS(self):
+        """Test getting a plural form of a word wihtout adding s."""
+        self.assertEqual('die', utility.plural(1, 'die', 'dice'))
+
+    def testZero(self):
+        """Test getting a plural with zero."""
+        self.assertEqual('cards', utility.plural(0, 'card'))
+
+    def testZeroNoS(self):
+        """Test getting a plural with zero and not adding s."""
+        self.assertEqual('dice', utility.plural(0, 'die', 'dice'))
 
 
 if __name__ == '__main__':

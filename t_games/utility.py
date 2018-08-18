@@ -127,6 +127,18 @@ def mean(values):
     return sum(values) / float(len(values))
 
 
+def number_plural(number, singular, many = ''):
+    """
+    Convert the number to a word and get the right form of the associated word.
+
+    Parameters:
+    number: The number determining plural or singular. (int)
+    single: The singular form of the word. (str)
+    many: The plural form of the word, if not a simple + 's'. (str)
+    """
+    return '{} {}'.format(number_word(number), plural(number, singular, many))
+
+
 def number_word(n, ordinal = False):
     """
     Give the word form of a number. (str)
@@ -169,6 +181,23 @@ def permutations(n, r):
     r: The number of objects to permute. (int)
     """
     return math.factorial(n) / math.factorial(n - r)
+
+
+def plural(number, singular, many = ''):
+    """
+    Match the plural/singular form of the word to the number.
+
+    Parameters:
+    number: The number determining plural or singular. (int)
+    single: The singular form of the word. (str)
+    many: The plural form of the word, if not a simple + 's'. (str)
+    """
+    if number == 1:
+        return singular
+    elif many:
+        return many
+    else:
+        return '{}s'.format(singular)
 
 
 def streaks(values):
