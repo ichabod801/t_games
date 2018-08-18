@@ -44,13 +44,15 @@ If the lizard-spock option is chosen, players may also choose lizard or
 Spock. Lizard beats paper and Spock and loses to rock and scissors. Spock
 beats scissors and rock and loses to paper and lizard.
 
+The bots you can play against are Bart ('Good old rock, nothing beats rock.'),
+Lisa ('Poor Bart, always plays rock'), Memor (he remembers what you've played),
+and Randy (he's a bit unpredictable).
+
 Options:
-bart: Play against the Bart bot.
-lisa: Play against the Lisa bot.
-lizard-spock: Add the lizard and Spock moves.
-match=: The number of rounds played. Defaults to 1.
-memor: Play against the Memor bot (the default)
-randy: Play against the Randy bot.
+bot= (b=): The bot you will play against. The valid bots are bart (b), lisa
+    (l), memor (m), and Randy (r). Defaults to Memor.
+lizard-spock (ls): Add the lizard and Spock moves.
+match= (m=): The number of rounds played. Defaults to 3.
 """
 
 
@@ -295,6 +297,7 @@ class RPS(game.Game):
     Attributes:
     bot: The non-human player. (player.Bot)
     bot_cls: The name of the bot class. (str)
+    lizard_spock: A flag for including the lizard and Spock moves. (bool)
     loss_draw: A flag for the next loss counting as a draw. (bool)
     match: The number of games in a match. (int)
     moves: The moves made keyed to the player's names. (dict of str: str)
@@ -308,7 +311,8 @@ class RPS(game.Game):
     """
 
     aka = ['RPS', 'Rock Paper Scissors', 'Roshambo']
-    bot_classes = {'bart': Bart, 'lisa': Lisa, 'memor': Memor, 'randy': Randy}
+    bot_classes = {'b': Bart, 'bart': Bart, 'l': Lisa, 'lisa': Lisa, 'm': Memor, 'memor': Memor,
+        'r': Randy, 'randy': Randy}
     categories = ['Other Games']
     credits = CREDITS
     lizard_spock = {'rock': ['scissors', 'lizard'], 'scissors': ['paper', 'lizard'],
@@ -391,14 +395,14 @@ class RPS(game.Game):
         """Define the options for the game. (None)"""
         # Set the bot options.
         self.option_set.default_bots = [(Memor, ())]
-        self.option_set.add_option('bot', valid = ('bart', 'lisa', 'memor', 'randy'),
-            converter = options.lower, default = 'memor', target = 'bot_cls',
+        self.option_set.add_option('bot', ['b'], converter = options.lower, default = 'memor',
+            target = 'bot_cls', valid = ('b', 'bart', 'l', 'lisa', 'm', 'memor', 'r', 'randy'),
             question = 'Which bot would you like to play against? ',
             error_text = 'The valid bots are Bart, Lisa, Memor, and Randy.')
         # Set the play options.
-        self.option_set.add_option('lizard-spock', target = 'wins', value = self.lizard_spock,
+        self.option_set.add_option('lizard-spock', ['ls'], target = 'wins', value = self.lizard_spock,
             default = None, question = 'Would you like to play with lizard and Spock? bool')
-        self.option_set.add_option('match', [], int, default = 3, check = lambda x: x > 0,
+        self.option_set.add_option('match', ['m'], int, default = 3, check = lambda x: x > 0,
             question = 'How many games should there be in the match? (return for 3)? ')
 
     def set_up(self):
