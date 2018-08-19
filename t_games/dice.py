@@ -17,6 +17,8 @@ import functools
 import itertools
 import random
 
+import t_games.utility as utility
+
 
 @functools.total_ordering
 class Die(object):
@@ -241,9 +243,7 @@ class Pool(object):
 
     def __str__(self):
         """Generate human readable text representation. (str)"""
-        dice_text = [str(die) + '*' for die in self.held] + [str(die) for die in self.dice]
-        text = '{}, and {}'.format(', '.join(dice_text[:-1]), dice_text[-1])
-        return text
+        return utility.oxford(['{}*'.format(die) for die in self.held] + self.dice)
 
     def count(self, object):
         """

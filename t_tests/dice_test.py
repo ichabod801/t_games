@@ -61,6 +61,11 @@ class PoolTest(unittest.TestCase):
         # Check for a match.
         self.assertEqual('<Pool {}, and {}>'.format(base_text, text_bits[4]), repr(self.pool))
 
+    def testReprSmall(self):
+        """Test a computer readable text representation of a pool of dice."""
+        pool = dice.Pool()
+        self.assertEqual('<Pool {} and {}>'.format(*pool.values), repr(pool))
+
 
 class ShuffleDieTest(unittest.TestCase):
     """Tests of a sampling die. (unittest.TestCase)"""
