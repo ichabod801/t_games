@@ -343,8 +343,8 @@ class Humanoid(Player):
                 elif valid_lens and len(response) not in valid_lens:
                     self.error('That is an invalid number of integers.')
                     if len(valid_lens) == 1:
-                        plural = 's' if valid_lens[0] > 1 else ''
-                        self.error('Please enter {} integer{}.'.format(str(valid_lens[0]), plural))
+                        plural = utility.number_plural(valid_lens[0], 'integer')
+                        self.error('Please enter {}.'.format(plural))
                     else:
                         message = 'Please enter {}, or {} integers.'
                         len_text = [str(x) for x in valid_lens[:-1]]
