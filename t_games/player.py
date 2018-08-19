@@ -346,9 +346,7 @@ class Humanoid(Player):
                         plural = utility.number_plural(valid_lens[0], 'integer')
                         self.error('Please enter {}.'.format(plural))
                     else:
-                        message = 'Please enter {}, or {} integers.'
-                        len_text = [str(x) for x in valid_lens[:-1]]
-                        self.error(message.format(', '.join(len_text), valid_lens[-1]))
+                        self.error('Please enter {} integers.'.format(utility.oxford(valid_lens, 'or')))
                 # Exit on valid input.
                 else:
                     break
