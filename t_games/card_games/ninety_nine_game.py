@@ -176,8 +176,9 @@ class NinetyNine(game.Game):
             # Remove a token.
             player = self.players[self.player_index]
             self.scores[player.name] -= 1
-            message = '{} loses a token. They now have {} tokens.'
-            self.human.tell(message.format(player.name, self.scores[player.name]))
+            plural = utility.plural(self.scores[player.name], 'token')
+            message = '{} loses a token. They now have {} {}.'
+            self.human.tell(message.format(player.name, self.scores[player.name], plural))
             # Check for removing the player from the game..
             if not self.scores[player.name]:
                 # Adjust scoring (last player out should score higher).
@@ -295,20 +296,17 @@ class NinetyNine(game.Game):
         player.tell('Your hand is: {}'.format(hand))
         # Get the players move.
         move = player.ask('What is your move? ')
-        parsed = self.ninety_nine_re.search(move)
+        parsed = self.ninety_nine_re.search(move.upper())
         if parsed:
             # Handle standard moves
             card, new_total = parsed.groups()
-            card = card.upper()
             new_total = int(new_total)
             # Check for a valid card.
             if card in hand.cards:
                 # Get the rank of the card.
+                rank = card[0]
                 if self.eight_nine and card[0] in '89':
-                    # Handle swapping eights and nines.
-                    rank = {'8': '9', '9': '8'}[card[0]]
-                else:
-                    rank = card[0]
+                    rank = {'8': '9', '9': '8'}[rank]
                 # Check for a valid total
                 values = self.card_values[rank]
                 valid_add = (new_total < 100) and (new_total - self.total in values)
@@ -338,6 +336,9 @@ class NinetyNine(game.Game):
             else:
                 # Warn if the player doesn't have the card.
                 player.error('You do not have that card.')
+        elif self.deck.card_re.match(move.strip()):
+            # Handle no total.
+            player.error('You must provide a total when you play a card.')
         else:
             # Handle other commands.
             return self.handle_cmd(move)
