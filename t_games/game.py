@@ -135,6 +135,8 @@ class Game(OtherCmd):
                 self.aliases.update(cls.aliases)
             if hasattr(cls, 'help_text'):
                 self.help_text.update(cls.help_text)
+        # Introduce yourself.
+        self.human.tell('\nWelcome to a game of {}, {}.'.format(self.name, self.human.name))
         # Define and process the game options.
         self.option_set = options.OptionSet(self)
         self.set_options()
@@ -281,11 +283,10 @@ class Game(OtherCmd):
         # Check to see if the planets are in the correct alignment.
         if self.interface.valve.blow(self):
             # Begin the incantation.
+            self.human.tell('\nPoof!')
             game_class = random.choice(list(self.interface.games.values()))
             game = game_class(self.human, 'none', self.interface)
             self.flags |= 32
-            self.human.tell('\nPoof!')
-            self.human.tell('You are now playing {}.\n'.format(game.name))
             results = game.play()
             # Finsh the incantation.
             results[5] |= 64
