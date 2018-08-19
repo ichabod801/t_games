@@ -97,8 +97,8 @@ class OptionSet(object):
     def __repr__(self):
         """Generate a debugging text representation. (str)"""
         option_count = len(self.definitions)
-        plural = ['s', ''][option_count == 1]
-        return '<OptionSet for {} with {} option{}>'.format(self.game.name, option_count, plural)
+        plural = utility.plural(option_count, 'option')
+        return '<OptionSet for {} with {} {}>'.format(self.game.name, option_count, plural)
 
     def add_group(self, name, expansion):
         """
