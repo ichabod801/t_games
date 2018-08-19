@@ -11,7 +11,7 @@ import t_games
 t_games.play()
 ```
 
-Alternatively, you can go to the folder you downloaded them into and run `python __init__.py`.
+Alternatively, you can go to the folder you downloaded them into and run `python play.py`.
 
 The system will ask you three questions to uniquely identify you, and then it will set up a player profile so you can play games. It's a standard, old-fashioned menu system, but you can type `help` for ways to get around that.
 
