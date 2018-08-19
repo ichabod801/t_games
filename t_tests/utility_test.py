@@ -6,6 +6,7 @@ Tests of t_games/utility.py.
 Classes:
 NumberPluralTests: Tests of number word & singular/plural. (unittest.TestCase)
 NumberWordTests: Tests of converting numbers to words. (unittest.TestCase)
+OxfordTest: Tests of converting Python lists to English lists. (TestCase)
 PluralTest: Tests of getting the singular/plural form. (unittest.TestCase)
 """
 
@@ -99,6 +100,54 @@ class NumberWordTests(unittest.TestCase):
     def testZero(self):
         """Test wording zero."""
         self.assertEqual('zero', utility.number_word(0))
+
+
+class OxfordTest(unittest.TestCase):
+    """Tests of converting Python lists to English lists. (unittest.TestCase)"""
+
+    def testAndEmpty(self):
+        """Test converting an empty list to an English list."""
+        self.assertEqual('', utility.oxford([]))
+
+    def testAndMultiple(self):
+        """Test converting multiple items to an English list."""
+        self.assertEqual('spam, spam, spam, spam, spam, and eggs', utility.oxford(['spam'] * 5 + ['eggs']))
+
+    def tesAndOne(self):
+        """Test converting a single item list to an English list."""
+        self.assertEqual('801', utility.oxford([801]))
+
+    def testAndTwo(self):
+        """Test converting two items to an English list."""
+        self.assertEqual('yin and yang', utility.oxford(['yin', 'yang']))
+
+    def testConvertedMulitiple(self):
+        """Test making multiple item English lists with word conversions."""
+        fractions = [1 / float(n) for n in range(1, 7)]
+        check = '1.0000, 0.5000, 0.3333, 0.2500, 0.2000, and 0.1667'
+        self.assertEqual(check, utility.oxford(fractions, word_format = '{:.4f}'))
+
+    def testConvertedOne(self):
+        """Test making single item English lists with word conversions."""
+        self.assertEqual('3.1416', utility.oxford([utility.math.pi], word_format = '{:.4f}'))
+
+    def testConvertedTwo(self):
+        """Test making two item English lists with word conversions."""
+        constants = [utility.math.pi, utility.math.e]
+        self.assertEqual('3.1416 and 2.7183', utility.oxford(constants, word_format = '{:.4f}'))
+
+    def testEverything(self):
+        """Test conversion to an English list with all parameters."""
+        check = "'False', 0, [], or False"
+        self.assertEqual(check, utility.oxford(['False', 0, [], False], 'or', '{!r}'))
+
+    def testOrMultiple(self):
+        """Test converting multiple items to an English list."""
+        self.assertEqual('(1, 2), (3, 4), or (5, 6)', utility.oxford([(1, 2), (3, 4), (5, 6)], 'or'))
+
+    def testOrTwo(self):
+        """Test converting two items to an English or list."""
+        self.assertEqual('6 or 9', utility.oxford([6, 9], 'or'))
 
 
 class PluralTest(unittest.TestCase):

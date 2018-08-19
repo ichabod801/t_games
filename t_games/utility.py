@@ -19,8 +19,11 @@ flip: Returns a random bit. (int)
 hundred_word: Give the word form of a number less than 100. (str)
 median: Calculate the median of a list of values. (float)
 mean: Calculate the mean of a list of values. (float)
+number_plural: Convert a number and word to two words with the plural. (str)
 number_word: Give the word form of a number. (str)
+oxford: Convert a sequence to a word list with an Oxford comma. (str)
 permutations: The number of permutations of n out r objects. (int)
+plural: Match the plural/singular form of the word to the number. (str)
 streaks: Calculates longest streaks for a sequence. (dict of float: int)
 thousand_word: Give the word form of a number less than 100. (str)
 """
@@ -129,7 +132,7 @@ def mean(values):
 
 def number_plural(number, singular, many = ''):
     """
-    Convert the number to a word and get the right form of the associated word.
+    Convert the number to a word and get the right form of the word counted. (str)
 
     Parameters:
     number: The number determining plural or singular. (int)
@@ -172,6 +175,26 @@ def number_word(n, ordinal = False):
     return word
 
 
+def oxford(sequence, conjunction = 'and', word_format = '{}'):
+    """
+    Convert a sequence to a word list with an Oxford comma. (str)
+
+    Parameters:
+    sequence: The items to convert to words. (list)
+    conjunction: The conjunction at the end of the list. (str)
+    word_format: The format string syntax for each item. (str)
+    """
+    words = [word_format.format(item) for item in sequence]
+    if not words:
+        return ''
+    elif len(words) == 1:
+        return words[0]
+    elif len(words) == 2:
+        return '{1} {0} {2}'.format(conjunction, *words)
+    else:
+        return '{}, {} {}'.format(', '.join(words[:-1]), conjunction, words[-1])
+
+
 def permutations(n, r):
     """
     The number of permutations of r out of n objects. (int)
@@ -185,7 +208,7 @@ def permutations(n, r):
 
 def plural(number, singular, many = ''):
     """
-    Match the plural/singular form of the word to the number.
+    Match the plural/singular form of the word to the number. (str)
 
     Parameters:
     number: The number determining plural or singular. (int)
