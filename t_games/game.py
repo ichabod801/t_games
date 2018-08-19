@@ -147,8 +147,8 @@ class Game(OtherCmd):
 
     def __repr__(self):
         """Generate a debugging text representation. (str)"""
-        plural = ['s', ''][len(self.players) == 1]
-        return '<Game of {} with {} player{}>'.format(self.name, len(self.players), plural)
+        plural = utility.plural(len(self.players), 'player')
+        return '<Game of {} with {} {}>'.format(self.name, len(self.players), plural)
 
     def clean_up(self):
         """Handle any end of game tasks. (None)"""
