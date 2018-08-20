@@ -371,7 +371,6 @@ class Craps(game.Game):
             self.human.tell('\n{} rolled {}.'.format(player.name, self.dice))
             self.resolve_bets()
             self.human.ask('Press enter to continue: ')
-            self.human.tell()
         return False
 
     def do_gipf(self, arguments):
@@ -526,7 +525,7 @@ class Craps(game.Game):
             self.players.append(newbie)
             self.scores[newbie.name] = self.stake
             self.bets[newbie.name] = []
-            self.human.tell('\n{} has joined the game.\n'.format(newbie.name))
+            self.human.tell('\n{} has joined the game.'.format(newbie.name))
         # Go to the next player who has money to bet.
         while True:
             self.shooter_index = (self.shooter_index + 1) % len(self.players)
@@ -543,8 +542,8 @@ class Craps(game.Game):
         player: The current player. (player.Player)
         """
         # Check for no output yet.
-        if not self.turns and not sum(self.bets.values(), []):
-            self.human.tell()
+        '''if not self.turns and not sum(self.bets.values(), []):
+            self.human.tell()'''
         # Check for removing a player.
         if not (self.scores[player.name] or self.bets[player.name]):
             self.players.remove(player)
@@ -1383,7 +1382,7 @@ class CrapsBot(player.Bot):
         max_bet = int(self.max_re.search(args[0]).group())
         wager = min(max_bet, self.game.scores[self.name])
         # Make that bet.
-        message = "{} made a {} bet for {} bucks."
+        message = "\n{} made a {} bet for {} bucks."
         self.game.human.tell(message.format(self.name, self.last_act, wager))
         # Track making a bet.
         self.last_act = 'wager'
@@ -1591,7 +1590,7 @@ class Randy(CrapsBot):
         max_bet = min(int(self.max_re.search(args[0]).group()), self.game.scores[self.name])
         wager = random.randint(1, max_bet)
         # Inform the human.
-        message = "{} made a {} bet for {} bucks."
+        message = "\n{} made a {} bet for {} bucks."
         self.game.human.tell(message.format(self.name, self.last_act, wager))
         # Track making the bet.
         self.last_act = 'wager'
