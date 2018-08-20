@@ -11,30 +11,32 @@ CREDITS: The credits for the game and the programming. (str)
 RULES: The rules of Solitaire Dice. (str)
 SUM_LEADS: Text used in displaying the scores. (list of str)
 SUM_VALUES: The scoring for each possible sum. (list of int)
+
+Classes:
+SolitaireDice: A game of Solitaire Dice. (game.Game)
 """
 
 
+import collections
 import re
 
 import t_games.dice as dice
 import t_games.game as game
 
 
-# The credits for the game and the programming.
 CREDITS = """
 Game Design: Sid Sackson
 Game Programming: Craig O'Brien
 """
 
-# The rules of Solitaire Dice.
 RULES = """
 Each turn you roll five dice. You discard one die, and split the other four
-into two pairs. You sum the two pairs, and keep a record of how many times 
+into two pairs. You sum the two pairs, and keep a record of how many times
 each total is rolled.
 
 You can only discard three different numbers. Once you discard three different
 numbers, you cannot discard any other numbers unless you didn't roll any of
-the three numbers you had already discarded. Once you have discarded any 
+the three numbers you had already discarded. Once you have discarded any
 single number eight times, the game is over.
 
 If a total has been rolled zero OR five times, it scores nothing. If it has
@@ -51,12 +53,10 @@ of one. The second and third numbers are assumed to be your split. This allows
 you to enter your discard and your split at the same time.
 """
 
-# Text used in displaying the scores.
 SUM_LEADS = ['Pts   Sum Count', '---   --- -----', '(100)  2:', ' (70)  3:',
     ' (60)  4:', ' (50)  5:', ' (40)  6:', ' (30)  7:', ' (40)  8:',
     ' (50)  9:', ' (60) 10:', ' (70) 11:', '(100) 12:']
 
-# The scoring for each possible sum.
 SUM_VALUES = [0, 0, 100, 70, 60, 50, 40, 30, 40, 50, 60, 70, 100]
 
 
@@ -64,8 +64,12 @@ class SolitaireDice(game.Game):
     """
     A game of Solitaire Dice. (game.Game)
 
+    Class Attributes:
+    three_numbers_re: A regular expression for three dice. (re.SRE_Expression)
+    two_numbers_re: A regular expression for two dice. (re.SRE_Expression)
+
     Attributes:
-    die: The die that is rolled. (dice.Die)
+    dice: The dice that are rolled. (dice.Pool)
     discards: The numbers discarded and how many times. (dict of int: int)
     free_free: A flag for a 'free' free ride. (bool)
     message: A message to show the user in show_status. (str)
@@ -77,22 +81,22 @@ class SolitaireDice(game.Game):
     discard_mode: Discard a die. (bool)
     roll_mode: Roll the dice. (bool)
     show_status: Show the current game state. (None)
+    split_mode: Choose a pair of dice. (bool)
     update_score: Update the game score. (None)
 
     Overridden Methods:
-    set_up
     game_over
     player_action
+    set_up
     """
 
     aka = ['SoDi']
-    # Interface categories for the game.
     categories = ['Dice Games']
     credits = CREDITS
     name = 'Solitaire Dice'
     rules = RULES
-    two_numbers_re = re.compile('([123456]).*?([123456])')
     three_numbers_re = re.compile('([123456]).*?([123456]).*?([123456])')
+    two_numbers_re = re.compile('([123456]).*?([123456])')
 
     def discard_mode(self, player):
         """
@@ -119,7 +123,7 @@ class SolitaireDice(game.Game):
         if isinstance(discard, int):
             # Process valid discards (don't store free rides).
             if len(self.discards) < 3 or discard in self.discards:
-                self.discards[discard] = self.discards.get(discard, 0) + 1
+                self.discards[discard] += 1
             self.roll.remove(discard)
             self.free_free = False
             self.mode = 'split'
@@ -131,9 +135,11 @@ class SolitaireDice(game.Game):
         I don't understand.
         """
         game, losses = self.gipf_check(arguments, ('freecell',))
+        # Freecell gives you a free ride no matter what the roll is.
         if game == 'freecell':
             if not losses:
                 self.free_free = True
+        # Otherwise I'm confused.
         else:
             self.human.tell("I don't understand.")
 
@@ -162,7 +168,6 @@ class SolitaireDice(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        player.tell()
         # Roll five dice.
         if self.mode == 'roll':
             self.roll_mode(player)
@@ -182,7 +187,8 @@ class SolitaireDice(game.Game):
         player: The player whose turn it is. (Player)
         """
         # Roll the dice.
-        self.roll = [self.die.roll() for die in range(5)]
+        self.dice.roll()
+        self.roll = self.dice.values
         self.roll.sort()
         # Set tracking variables.
         self.mode = 'discard'
@@ -190,9 +196,9 @@ class SolitaireDice(game.Game):
 
     def set_up(self):
         """Set up the game. (None)"""
-        self.die = dice.Die()
+        self.dice = dice.Pool([6] * 5)
         self.totals = [0] * 13
-        self.discards = {}
+        self.discards = collections.defaultdict(int)
         self.free_free = False
         self.mode = 'roll'
 
@@ -257,6 +263,7 @@ class SolitaireDice(game.Game):
         player: The player whose turn it is. (Player)
         split: One pair from the recent split. (list of int)
         """
+        # Update the whole score from scratch, total by total.
         score = 0
         for total, value in zip(self.totals, SUM_VALUES):
             if 0 < total < 5:
@@ -267,6 +274,7 @@ class SolitaireDice(game.Game):
 
 
 if __name__ == '__main__':
+    # Play the game without the full interface.
     import t_games.player as player
     try:
         input = raw_input

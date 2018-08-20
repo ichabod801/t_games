@@ -25,7 +25,7 @@ import random
 import t_games.dice as dice
 import t_games.game as game
 import t_games.player as player
-from t_games.utility import number_word, YES
+from t_games.utility import number_word, number_plural, YES
 
 
 # The credits for Liar's Dice.
@@ -37,14 +37,14 @@ Game Programming: Craig "Ichabod" O'Brien
 # The rules for Liar's Dice.
 RULES = """
 There are five dice. The first player rolls them secretly, and announces what
-they rolled. They can lie about what they rolled if they want. If the next 
+they rolled. They can lie about what they rolled if they want. If the next
 player thinks they are lying, they can challenge the current player. If the
-current player is lying, they lose a token. If they are telling the truth, 
+current player is lying, they lose a token. If they are telling the truth,
 the person who challenged loses a token.
 
 If the next player accepts the current player's claim, the dice pass to the
 next player. They can reroll any of the dice passed to them and then they must
-make a new claim (they must also announce how many dice they rolled). The new 
+make a new claim (they must also announce how many dice they rolled). The new
 claim must be higher than the previous player's claim. Then the next player in
 order gets a chance to challenge.
 
@@ -58,23 +58,23 @@ to lowest, is:
     * Two pair
     * Pair
     * High card
-All five dice are announced and count toward claims being "better" than the 
+All five dice are announced and count toward claims being "better" than the
 previous claim. So four fives and a three is better than four fives and a two.
 
-Each player starts with three tokens. The last person with tokens left wins 
+Each player starts with three tokens. The last person with tokens left wins
 the game.
 
 Options:
-betting: Instead of tokens going out of the game, they go to the winner of the
-    challenge.
+betting (b): Instead of tokens going out of the game, they go to the winner of
+    the challenge.
 challenge (chal): Add a bot with different challenge heuristics to the game.
 double (dbl): Add a double trouble (challenger + liar) bot to the game.
 honest (abe): Add an honest (mostly) bot to the game.
 liar (lr): Add a dishonest (sometimes) bot to the game.
-tokens=: Change the number of tokens each player has. (default = 3)
-one-six: Ones count as sixes.
-one-wild: Ones are wild.
-two-rerolls: Each player can roll the dice twice before stating their claim.
+tokens= (t=): Change the number of tokens each player has. (default = 3)
+one-six (16): Ones count as sixes.
+one-wild (1w): Ones are wild.
+two-rerolls (2r): Each player can roll the dice twice before stating their claim.
 """
 
 
@@ -96,12 +96,12 @@ class ABBot(player.Bot):
 
     Overridden Methods:
     ask
-    ask_int
+    ask_int_list
     tell
     """
 
     # Score changes that will not be challenged.
-    believable = {7: [], 6: [6], 5: [5, 6], 4: [], 3: [3, 5], 2: [2, 3, 5], 1: [1, 2, 3], 
+    believable = {7: [], 6: [6], 5: [5, 6], 4: [], 3: [3, 5], 2: [2, 3, 5], 1: [1, 2, 3],
         0: [0, 1, 2, 3]}
     # Score changes that will not be challenged with one token left.
     conservative = {7: [], 6: [6, 7], 5: [5, 6], 4: [4], 3: [3, 5, 6], 2: [2, 3, 5], 1: [1, 2, 3],
@@ -111,6 +111,7 @@ class ABBot(player.Bot):
         """
         Ask the bot a question.
 
+        Parameters:
         query: The question asked of the bot. (str)
         """
         if 'liar' in query:
@@ -229,7 +230,7 @@ class ABBot(player.Bot):
     def reroll_check(self, roll):
         """
         Decide which dice to reroll. (list of int)
-        
+
         Parameters:
         roll: The dice that were rolled.
         """
@@ -371,16 +372,17 @@ class LiarsDice(game.Game):
     Attributes:
     base_rolls: The default number of rolls a player gets. (int)
     betting: A flag for passing tokens instead of losing them. (bool)
-    tokens: The number of tokens each player starts with. (int)
     claim: The claim made by the last player. (list of int)
     dice: The dice used in the game. (dice.Pool)
     history: The claims made since the last challenge. (list of list)
+    last_roller: The last player to roll the dice. (player.Player)
     one_six: A flag for ones counting as sixes. (bool)
     one_wild: A flag for ones being wild. (bool)
     phase: The current action the player needs to take. (str)
     rerolls: How many dice the last player rerolled. (int)
     rolls_left: How many rolls the player can make. (int)
     thirteen: A flag for getting a token with a sum of 13. (bool)
+    tokens: The number of tokens each player starts with. (int)
 
     Methods:
     challenge: Handle someone making a claim. (None)
@@ -402,25 +404,16 @@ class LiarsDice(game.Game):
     set_up
     """
 
-    # Other names for the game.
-    aka = ['Doubting Dice', 'Schummeln', 'Liars Dice']
-    # Command aliases
+    aka = ['Doubting Dice', 'Schummeln', 'Liars Dice', 'LiDi']
     aliases = {'scores': 'score'}
-    # The bot classes available for the game.
     bot_classes = {'challenger': Challenger, 'double': DoubleTrouble, 'honest': ABBot, 'liar': Liar}
-    # The menu categories for the game.
     categories = ['Dice Games']
-    # The credits for the game.
     credits = CREDITS
-    # The name templates for the poker hand versions of the dice.
-    hand_names = ['a six-high missing a {}', 'a pair of {}s with {}', 'two pair {}s over {}s with a {}', 
-        'three {}s with a {} and a {}', 'a {}-high straight', 'a full house {}s over {}s', 
+    hand_names = ['a six-high missing a {}', 'a pair of {}s with {}', 'two pair {}s over {}s with a {}',
+        'three {}s with a {} and a {}', 'a {}-high straight', 'a full house {}s over {}s',
         'four {}s and a {}', 'five {}s']
-    # The name of the game.
     name = "Liar's Dice"
-    # The number of game options.
     num_options = 5
-    # The rules of the game.
     rules = RULES
 
     def challenge(self):
@@ -510,9 +503,8 @@ class LiarsDice(game.Game):
             self.win_loss_draw = [before, len(self.players) - before - 1, 0]
             # Announce the loss.
             self.human.tell('\nYou have no more tokens, you lose the game.')
-            before_text = number_word(before).capitalize()
-            s = ['s', ''][before == 1]
-            self.human.tell('{} player{} left the game before you did.'.format(before_text, s))
+            before_text = number_plural(before, 'player').capitalize()
+            self.human.tell('{} left the game before you did.'.format(before_text))
         # Check for the human being the only one left.
         elif len([player for player in self.players if self.scores[player.name]]) == 1:
             # Announce and record the win.
@@ -620,7 +612,7 @@ class LiarsDice(game.Game):
         if self.phase == 'claim':
             # Get the claimed value.
             query = 'Enter five numbers for your claim, or return to be honest: '
-            claim = player.ask_int_list(query, low = 1, high = 6, valid_lens = [5], 
+            claim = player.ask_int_list(query, low = 1, high = 6, valid_lens = [5],
                 default = self.dice.values[:])
             # Handle other commands.
             if isinstance(claim, str):
@@ -632,7 +624,7 @@ class LiarsDice(game.Game):
         elif self.phase == 'reroll':
             # Get the dice to reroll.
             query = 'Enter the numbers you would like to reroll: '
-            rerolls = player.ask_int_list(query, valid = self.dice.values, valid_lens = range(6), 
+            rerolls = player.ask_int_list(query, valid = self.dice.values, valid_lens = range(6),
                 default = [])
             # Handle other commands.
             if isinstance(rerolls, str):
@@ -797,8 +789,8 @@ class LiarsDice(game.Game):
         self.scores[loser.name] -= 1
         loser_score = self.scores[loser.name]
         if loser_score:
-            s = ['s', ''][loser_score == 1]
-            self.human.tell('{} now has {} token{}.'.format(loser.name, loser_score, s))
+            plural = number_plural(loser_score, 'token')
+            self.human.tell('{} now has {}.'.format(loser.name, plural))
         if self.betting:
             self.scores[winner.name] += 1
             self.human.tell('{} now has {} tokens.'.format(winner.name, self.scores[winner.name]))
@@ -810,14 +802,14 @@ class LiarsDice(game.Game):
     def set_options(self):
         """Set the game specific options. (None)"""
         # Set up the game options.
-        self.option_set.add_option('betting',
+        self.option_set.add_option('betting', ['b'],
             question = 'Should lost tokens be given to the winner of the challenge? bool')
-        self.option_set.add_option('two-rerolls', [], int, valid = (1, 2), target = 'base_rolls',
+        self.option_set.add_option('two-rerolls', ['2r'], int, valid = (1, 2), target = 'base_rolls',
             default = 1, value = 2, question = 'How many rolls should you get (1 or 2, return for 1)? ')
-        self.option_set.add_option('tokens', [], int, check = lambda x: x > 0, default = 3,
+        self.option_set.add_option('tokens', ['t'], int, check = lambda x: x > 0, default = 3,
             question = 'How many tokens should each player start with (return for 3)? ')
-        self.option_set.add_option('one-six', question = 'Should ones count as sixes? bool')
-        self.option_set.add_option('one-wild', question = 'Should ones be wild? bool')
+        self.option_set.add_option('one-six', ['16'], question = 'Should ones count as sixes? bool')
+        self.option_set.add_option('one-wild', ['1w'], question = 'Should ones be wild? bool')
         # Set up the bot options.
         self.option_set.add_option('honest', ['abe'], action = 'bot', value = (), default = None)
         self.option_set.add_option('liar', ['lr'], action = 'bot', value = (), default = None)
@@ -886,7 +878,7 @@ class LiarsDice(game.Game):
 
 
 if __name__ == '__main__':
-    # Play Liar's Dice.
+    # Play Liar's Dice without the full interface.
     try:
         input = raw_input
     except NameError:

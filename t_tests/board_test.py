@@ -94,6 +94,20 @@ class BoardTest(unittest.TestCase):
         self.board.place(2, '?')
         self.assertEqual('?', self.board.cells[2].contents)
 
+    def testRepr(self):
+        """Test debugging text representation."""
+        self.assertEqual('<Board with 5 BoardCells>', repr(self.board))
+
+    def testReprMultiCell(self):
+        """Test debugging text representation with MultiCells."""
+        test_board = board.Board(range(5), board.MultiCell)
+        self.assertEqual('<Board with 5 MultiCells>', repr(test_board))
+
+    def testReprStringLocations(self):
+        """Test debugging text representation with string locations."""
+        test_board = board.Board(['a', 'B', '3'])
+        self.assertEqual('<Board with 3 BoardCells>', repr(test_board))
+
 
 class BoardCellTest(unittest.TestCase):
     """Tests of the board cell class. (TestCase)"""
@@ -207,15 +221,21 @@ class BoardCellTest(unittest.TestCase):
         """Test the repr of a BoardCell."""
         self.assertEqual("BoardCell('here', piece = '@')", repr(self.cell))
 
-    def testReprEmpty(self):
-        """Test the repr of an empty BoardCell."""
-        self.cell.contents = None
-        self.assertEqual("BoardCell('here')", repr(self.cell))
-
     def testReprDesign(self):
         """Test the repr of a BoardCell with a board design."""
         self.cell.empty = '+'
         self.assertEqual("BoardCell('here', piece = '@', empty = '+')", repr(self.cell))
+
+    def testReprNoPiece(self):
+        """Test the repr of an empty BoardCell."""
+        self.cell.contents = None
+        self.assertEqual("BoardCell('here')", repr(self.cell))
+
+    def testReprNoPieceDesign(self):
+        """Test the repr of an empty BoardCell."""
+        self.cell.contents = None
+        self.cell.empty = '+'
+        self.assertEqual("BoardCell('here', empty = '+')", repr(self.cell))
 
     def testPlace(self):
         """Test adding a piece to a Board cell."""
@@ -334,6 +354,20 @@ class DimBoardTest(unittest.TestCase):
         center = board.Coordinate((2, 2))
         self.assertEqual((1, 3), self.board.offset(center, (-1, 1)).location)
 
+    def testRepr(self):
+        """Test the debugging text representation."""
+        self.assertEqual('<DimBoard with 3x3 BoardCells>', repr(self.board))
+
+    def testRepr3D(self):
+        """Test the three-dimensional debugging text representation."""
+        test_board = board.DimBoard((2, 3, 4))
+        self.assertEqual('<DimBoard with 2x3x4 BoardCells>', repr(test_board))
+
+    def testReprMultiCell(self):
+        """Test the debugging text representation with MultiCells."""
+        test_board = board.DimBoard((3, 3), board.MultiCell)
+        self.assertEqual('<DimBoard with 3x3 MultiCells>', repr(test_board))
+
 
 class LineBoardTest(unittest.TestCase):
     """Tests of a one dimensional board. (TestCase)"""
@@ -418,6 +452,10 @@ class LineBoardTest(unittest.TestCase):
         """Test placing a piece on a non-empty spot."""
         self.board.place(2, ['?'])
         self.assertEqual(['?'], self.board.cells[2].contents)
+
+    def testRepr(self):
+        """Test the debugging text representation."""
+        self.assertEqual('<LineBoard with 5 MultiCells>', repr(self.board))
 
     def testSafeDisplaceCapture(self):
         """Test capture during a safe displace."""
@@ -583,15 +621,21 @@ class MultiCellTest(unittest.TestCase):
         """Test the repr of a MultiCell."""
         self.assertEqual("MultiCell('here', pieces = ['@', '@'])", repr(self.cell))
 
-    def testReprEmpty(self):
-        """Test the repr of an empty MultiCell."""
-        self.cell.contents = []
-        self.assertEqual("MultiCell('here')", repr(self.cell))
-
     def testReprDesign(self):
         """Test the repr of a MultiCell with a board design."""
         self.cell.empty = '+'
         self.assertEqual("MultiCell('here', pieces = ['@', '@'], empty = '+')", repr(self.cell))
+
+    def testReprNoPiece(self):
+        """Test the repr of an empty MultiCell."""
+        self.cell.contents = []
+        self.assertEqual("MultiCell('here')", repr(self.cell))
+
+    def testReprNoPieceDesign(self):
+        """Test the repr of an empty MultiCell."""
+        self.cell.contents = []
+        self.cell.empty = '+'
+        self.assertEqual("MultiCell('here', empty = '+')", repr(self.cell))
 
     def testPlace(self):
         """Test adding a piece to a MultiCell."""

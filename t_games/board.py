@@ -182,8 +182,8 @@ class MultiCell(BoardCell):
     """
     A position on a board that holds multiple pieces. (object)
 
-    The pieces attribute is a list of objects. Each object should convert to a 
-    string that correctly displays it on the board. Likewise, the location can 
+    The pieces attribute is a list of objects. Each object should convert to a
+    string that correctly displays it on the board. Likewise, the location can
     be any object, but it should be hashable and support addition.
 
     Methods:
@@ -428,6 +428,7 @@ class Board(object):
     Overriddent Methods:
     __init__
     __iter__
+    __repr__
     """
 
     def __init__(self, locations = [], cell_class = BoardCell):
@@ -448,6 +449,12 @@ class Board(object):
         the iterator for a board iterates over the cell locations (keys).
         """
         return iter(self.cells)
+
+    def __repr__(self):
+        """Generate a debugging text representation. (str)"""
+        cell_count = len(self.cells) + len(self.extra_cells)
+        cell_class_name = next(iter(self.cells.values())).__class__.__name__
+        return '<{} with {} {}s>'.format(self.__class__.__name__, cell_count, cell_class_name)
 
     def clear(self):
         """Clear all pieces off the board. (None)"""
@@ -566,10 +573,11 @@ class DimBoard(Board):
     dimensions: The dimensions of the board, in cells. (tuple of int)
 
     Methods:
-    copy: Create a copy of the board. (GridBoard)
+    copy: Create a copy of the board. (DimBoard)
 
     Overridden Methods:
     __init__
+    __repr__
     """
 
     def __init__(self, dimensions, cell_class = BoardCell):
@@ -589,8 +597,14 @@ class DimBoard(Board):
         # Set up the cells.
         super(DimBoard, self).__init__(locations, cell_class)
 
+    def __repr__(self):
+        """Create a debugging text representation. (str)"""
+        dimension_text = 'x'.join([str(dimension) for dimension in self.dimensions])
+        my_class_name = self.__class__.__name__
+        return '<{} with {} {}s>'.format(my_class_name, dimension_text, self.cell_class.__name__)
+
     def copy(self, **kwargs):
-        """Create a copy of the board. (GridBoard)"""
+        """Create a copy of the board. (DimBoard)"""
         clone = self.__class__(self.dimensions, self.cell_class, **kwargs)
         clone.copy_pieces(self)
         return clone
@@ -607,7 +621,7 @@ class LineBoard(Board):
     length: How many cells are in the board. (int)
 
     Methods:
-    copy: Create a copy of the board. (GridBoard)
+    copy: Create a copy of the board. (LineBoard)
 
     Overridden Methods:
     __init__
@@ -632,49 +646,9 @@ class LineBoard(Board):
             self.cells[location] = cell_class(location)
 
     def copy(self, **kwargs):
-        """Create a copy of the board. (GridBoard)"""
+        """Create a copy of the board. (LineBoard)"""
         clone = self.__class__(self.length, self.cell_class, **kwargs)
         clone.copy_pieces(self)
-        return clone
-
-
-class GridBoard(Board):
-    """
-    A rectangular board of squares. (Board)
-
-    Methods:
-    copy: Create a copy of the board. (GridBoard)
-
-    Overridden Methods:
-    __init__
-    """
-
-    def __init__(self, columns, rows, default_piece = None):
-        """
-        Set up the grid of cells. (None)
-
-        Paramters:
-        columns: The number of columns on the board. (int)
-        rows: The number of rows on the board. (int)
-        """
-        # Store the dimensions.
-        self.columns = columns
-        self.rows = rows
-        # Create the cells.
-        self.default_piece = default_piece
-        self.cells = {}
-        for column in range(columns):
-            for row in range(rows):
-                location = Coordinate((column, row))
-                self.cells[location] = BoardCell(location, default_piece)
-
-    def copy(self, **kwargs):
-        """Create a copy of the board. (GridBoard)"""
-        # Clone the cells.
-        clone = self.__class__(self.columns, self.rows, **kwargs)
-        # Clone the cell contents.
-        for location in clone:
-            clone.cells[location].piece = self.cells[location].piece
         return clone
 
 
@@ -683,7 +657,7 @@ class MultiBoard(DimBoard):
     A board with multiple pieces per cell. (Board)
 
     Methods:
-    copy: Create a copy of the board. (GridBoard)
+    copy: Create a copy of the board. (MultiBoard)
 
     Overridden Methods:
     __init__
@@ -701,7 +675,7 @@ class MultiBoard(DimBoard):
         super(MultiBoard, self).__init__(dimensions, list)
 
     def copy(self, **kwargs):
-        """Create a copy of the board. (GridBoard)"""
+        """Create a copy of the board. (MultiBoard)"""
         # clone the cells
         clone = self.__class__(self.dimensions, **kwargs)
         # clone the cell contents
@@ -742,3 +716,9 @@ class MultiBoard(DimBoard):
         cell: The location to place the piece in. (Coordinate)
         """
         self.cells[cell].piece.append(piece)
+
+
+if __name__ == '__main__':
+    # Run the unit testing.
+    from t_tests.board_test import *
+    unittest.main()

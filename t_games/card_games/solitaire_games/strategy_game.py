@@ -1,16 +1,15 @@
 """
 strategy_game.py
 
-Classes:
-Strategy: A game of Strategy. (solitaire.Solitaire)
-
 Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
 See the top level __init__.py file for details on the t_games license.
 
-Functions:
-build_reserve: Build only from the reserve. (bool)
-lane_reserve: Lane only from the reserve (bool)
-sort_no_reserve: Sort non-aces only when the reserve is empty. (bool)
+Constants:
+CREDITS: The credits for Strategy. (str)
+RULES: The rules for Strategy. (str)
+
+Classes:
+Strategy: A game of Strategy. (solitaire.Solitaire)
 """
 
 
@@ -23,8 +22,8 @@ Game Programming: Craig "Ichabod" O'Brien
 """
 
 RULES = """
-All of the cards are dealt to the reserve. You may move the top card of the 
-reserve onto any of the eight tableau piles. Aces may be sorted as they 
+All of the cards are dealt to the reserve. You may move the top card of the
+reserve onto any of the eight tableau piles. Aces may be sorted as they
 appear, but no other card may be sorted until the reserve is empty.
 
 Parlett suggests that each time you win, play again with one less tableau
@@ -44,8 +43,8 @@ class Strategy(solitaire.Solitaire):
     set_options
     """
 
+    aka = ['Stra']
     credits = CREDITS
-    # Interface categories for the game.
     categories = ['Card Games', 'Solitaire Games', 'Hybrid Games']
     name = 'Strategy'
     num_options = 1
@@ -55,8 +54,7 @@ class Strategy(solitaire.Solitaire):
         """
         That does not compute.
         """
-        # Check and possibly play the game.
-        game, losses = self.gipf_check(arguments, ('roulette','monte carlo'))
+        game, losses = self.gipf_check(arguments, ('monte carlo', 'roulette'))
         go = True
         # A Monte Carlo win lets you reverse one pile.
         if game == 'monte carlo':
@@ -102,7 +100,7 @@ class Strategy(solitaire.Solitaire):
                         else:
                             self.human.tell('Those cards are not next to each other.')
                 go = False
-        # Handle other games or arguments.
+        # Otherwise I'm confused.
         else:
             self.human.tell('That does not compute.')
         return go
@@ -110,25 +108,24 @@ class Strategy(solitaire.Solitaire):
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
         super(Strategy, self).set_checkers()
-        # Cards only move from the reserve (at first).
+        # Set the rule checkers.
         self.build_checkers = [solitaire.build_reserve]
         self.lane_checkers = [solitaire.lane_reserve]
-        # There are no stacks of cards to move.
         self.pair_checkers = []
-        # Sort aces. Up from aces after the reserve is empty.
         self.sort_checkers = [solitaire.sort_ace, solitaire.sort_up, solitaire.sort_no_reserve]
-        # All cards start in the reserve.
+        # Set the dealer.
         self.dealers = [solitaire.deal_reserve_n(52)]
 
     def set_options(self):
         """Set the game options. (None)"""
         self.options = {'num-tableau': 8, 'num-reserve': 1}
-        self.option_set.add_option(name = 'piles', action = 'key=num-tableau', converter = int, 
+        self.option_set.add_option('piles', ['p'], action = 'key=num-tableau', converter = int,
             default = 8, valid = range(1, 9), target = self.options,
             question = 'How many tableau piles (1-8, return for 8)? ')
 
 
 if __name__ == '__main__':
+    # Play the game without the full interface.
     import t_games.player as player
     try:
         input = raw_input

@@ -32,7 +32,7 @@ to the jacks.
 You can flip cards from the stock one at a time into the waste, and sort the
 top card of the waste. You get three passes through the deck.
 
-You may use the command 'auto full' (or just 'auto f') to have the computer 
+You may use the command 'auto full' (or just 'auto f') to have the computer
 play the game for you. You can add a number from 0 to 10 to adjust the speed
 at which it plays.
 """
@@ -53,19 +53,14 @@ class Quadrille(solitaire.Solitaire):
     set_options
     """
 
-    # Aliases for the game.
-    aka = ['Captive Queens', 'La Francaise', 'Partners']
-    # The menu categories for the game.
+    aka = ['Captive Queens', 'La Francaise', 'Partners', 'Quad']
     categories = ['Card Games', 'Solitaire Games', 'Closed Games']
-    # The credits for Quadrille.
     credits = CREDITS
-    # The name of the game.
     name = 'Quadrille'
-    # The rules to Quadrille.
     rules = RULES
 
     def __str__(self):
-        """Human readable text representation. (str)"""
+        """Generate a human readable text representation. (str)"""
         piles = self.foundations
         lines = ['', '      {}'.format(piles[2][-1])]
         lines.append('  {}      {}'.format(piles[5][-1], piles[6][-1]))
@@ -74,20 +69,20 @@ class Quadrille(solitaire.Solitaire):
         lines.append('      QC')
         lines.append('  {}      {}'.format(piles[4][-1], piles[7][-1]))
         lines.append('      {}'.format(piles[0][-1]))
-        lines.extend(('', self.stock_text(), ''))
+        lines.extend(('', self.stock_text()))
         return '\n'.join(lines)
 
     def do_auto(self, arguments):
         """
         Automatically play cards into the foundations. (a)
 
-        If full (or f) is passed as the first argument to the auto command (in 
+        If full (or f) is passed as the first argument to the auto command (in
         Quadrille), the game is played for you by the computer. If a number from zero
-        to ten is passed as a second argument, it controlls the speed at which the
+        to ten is passed as a second argument, it controls the speed at which the
         computer plays from 0 (one move per second) to 10 (as fast as possible).
         """
         # Check for full auto.
-        if arguments.lower().startswith('f'):
+        if arguments.lower() in ('f', 'full'):
             self.full_auto(arguments)
             return False
         # Otherwise handle normally.
@@ -127,7 +122,7 @@ class Quadrille(solitaire.Solitaire):
     def full_auto(self, arguments):
         """
         Automatically play the game for the user. (bool)
-        
+
         Parameters:
         arguments: The arguments to the sort command. (str)
         """
@@ -171,7 +166,7 @@ class Quadrille(solitaire.Solitaire):
         self.build_checkers = [solitaire.build_none]
         self.lane_checkers = [solitaire.lane_none]
         self.sort_checkers = [solitaire.sort_up_down]
-        # Set the dealers
+        # Set the dealers.
         self.dealers = [solitaire.deal_queens_out, solitaire.deal_five_six, solitaire.deal_stock_all]
 
     def set_options(self):

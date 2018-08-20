@@ -7,13 +7,13 @@ Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Contants:
-CREDITS: Programming credits and play testers. (str)
 HELP_TEXT: General help for the interface. (str)
 LICENSE: Info on the GPLv3 license that t_games uses. (str)
 RULES: Some basic guidelines for life. (str)
 
 Classes:
 Interface: A menu interface for playing games. (OtherCmd)
+RandomValve: A random variable that gets more likely to be true. (object)
 
 Functions:
 excel_column: Convert a number into a Excel style column header. (str)
@@ -35,9 +35,9 @@ import t_games.utility as utility
 HELP_TEXT = """
 General interface help (?).
 
-The games are organized into categories. You can use the menu to browse 
-through the categories to find the game you want. Just type in the letter or 
-letters to the left of the colon to make a selection. You can type home at any 
+The games are organized into categories. You can use the menu to browse
+through the categories to find the game you want. Just type in the letter or
+letters to the left of the colon to make a selection. You can type home at any
 point to get back to the top of the menu.
 
 When the game is over you will be shown your overall statistics for that game.
@@ -56,14 +56,14 @@ You can get this help text by typing help or ?
 LICENSE = """
 Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
 
-This program is free software: you can redistribute it and/or modify it under 
-the terms of the GNU General Public License as published by the Free Software 
-Foundation, either version 3 of the License, or (at your option) any later 
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
 version.
 
-This program is distributed in the hope that it will be useful, but WITHOUT 
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
-FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more 
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
 details.
 
 See <http://www.gnu.org/licenses/> for details on this license (GPLv3).
@@ -93,18 +93,19 @@ class Interface(other_cmd.OtherCmd):
     titles: The titles of the previous categories visited. (list)
 
     Class Attributes:
-    aliases: Alternate command words. (dict of str: str)
     rules: The rules. (str)
     word_list: The relative location of a word list for word games. (str)
 
     Methods:
+    category_games: Get the games in the current category. (list of game.Game)
     do_credits: Show the programming credits for the interface. (bool)
-    do_help: Show the general help text for t_games. (bool)
+    do_games: List the available games. (bool)
+    do_home: Go to the top of the menu tree. (bool)
     do_play: Play a game with the specified options, if any. (bool)
     do_random: Play a random game. (bool)
     do_rules: Show the rules for the specified game. (bool)
     do_stats: Show game statistics. (bool)
-    figure_win_loss_draw: Determine win/loss/draw numbers and streaks. (tuple) 
+    figure_win_loss_draw: Determine win/loss/draw numbers and streaks. (tuple)
     filter_results: Filter game results based on user's input. (list of lists)
     load_games: Load all of the games defined locally. (None)
     menu: Run the game selection menu. (None)
@@ -119,24 +120,30 @@ class Interface(other_cmd.OtherCmd):
     """
 
     aliases = {'?': 'help'}
-    # Text for user help requests.
     help_text = {'help': HELP_TEXT, 'license': LICENSE}
     rules = RULES
     word_list = 'other_games/3of6game.txt'
 
     def __init__(self, human):
-        """Set up the interface. (None)"""
+        """
+        Set up the interface. (None)
+
+        Parameters:
+        human: The user making menu choices/entering commands. (str)
+        """
         # Set the attributes.
         self.human = human
         self.games, self.categories = game.load_games()
         self.valve = RandomValve()
+        # Inherit aliases from parent classes.
         self.aliases = {}
         for cls in reversed(self.__class__.__mro__):
             if hasattr(cls, 'aliases'):
                 self.aliases.update(cls.aliases)
 
     def category_games(self):
-        """Get all of the games in the current category. (list of game.Game)"""
+        """Get the games in the current category. (list of game.Game)"""
+        # Breadth first search of the game category tree.
         search = [self.focus]
         games = []
         while search:
@@ -162,7 +169,7 @@ class Interface(other_cmd.OtherCmd):
         if game_name.lower() in self.games:
             self.do_play(line)
         else:
-            self.human.error('That is an invalid selection.')
+            self.human.error('\nThat is an invalid selection.')
 
     def do_credits(self, arguments):
         """
@@ -179,7 +186,7 @@ class Interface(other_cmd.OtherCmd):
         The games listed are aware of your location in the menu, so only games in the
         current category are listed.
         """
-        # Get the games in the current context.
+        # Get the games in the current context (breadth first search).
         games = self.focus['games'][:]
         search = list(self.focus['sub-categories'].values())
         while search:
@@ -189,13 +196,13 @@ class Interface(other_cmd.OtherCmd):
         # Sort the games alphabetically.
         games.sort(key = lambda game: game.name)
         # Print the game list with aliases.
+        self.human.tell()
         for game in games:
             if game.aka:
                 self.human.tell('{} ({})'.format(game.name, ', '.join(game.aka)))
             else:
                 self.human.tell(game.name)
         self.human.ask('\nPress Enter to continue: ')
-        self.human.tell()
 
     def do_home(self, arguments):
         """
@@ -213,9 +220,9 @@ class Interface(other_cmd.OtherCmd):
         taken as the name of the game or an alias for a game. Anything after the first
         forward slash is given as option settings to the game.
 
-        Note that if the game has options and you don't specify any, it will 
-        immediately ask you if you want to change the options. To avoid this you can 
-        either specify the 'none' option (play game-name / none) or follow the game 
+        Note that if the game has options and you don't specify any, it will
+        immediately ask you if you want to change the options. To avoid this you can
+        either specify the 'none' option (play game-name / none) or follow the game
         name with a semi-colon.
 
         Also note that the play command is the default. If you just type in a game
@@ -231,7 +238,6 @@ class Interface(other_cmd.OtherCmd):
         if game_name in self.games:
             # Play the game if known.
             self.play_game(self.games[game_name], options)
-            self.human.tell()
         else:
             # Warn about unknown games.
             self.human.error("\nI don't know how to play that game.")
@@ -261,11 +267,14 @@ class Interface(other_cmd.OtherCmd):
         """
         arguments = arguments.lower()
         if not arguments:
+            # Show the general rules.
             print(self.rules)
         elif arguments in self.games:
+            # Show rules for a specific game.
             self.human.tell(self.games[arguments].rules)
             self.human.ask('Press Enter to continue: ')
         else:
+            # Show an error.
             self.human.error("\nI do not know the rules to that game.")
         return True
 
@@ -274,8 +283,8 @@ class Interface(other_cmd.OtherCmd):
         Show game statistics.
 
         If no arguments are given to the stats command, it will display the stats for
-        all of the games in the current menu category. If the argument given to the 
-        stats command is a game name or an alias for a game, stats will be given for 
+        all of the games in the current menu category. If the argument given to the
+        stats command is a game name or an alias for a game, stats will be given for
         that game. If 'all' is given as the argument to the stats command, stats will
         be shown for all games.
         """
@@ -283,12 +292,12 @@ class Interface(other_cmd.OtherCmd):
         arguments, slash, options = arguments.partition('/')
         arguments = arguments.strip()
         options = options.strip().lower()
-        # Handle overall stats.
+        # Handle category stats.
         if not arguments:
             # Find the relevant games.
             names = [game.name for game in self.category_games()]
             relevant = [result for result in self.human.results if result[0] in names]
-            # Show the over and individual game stats.
+            # Show the category and individual game stats.
             self.show_stats(relevant, 'Category Statistics', options)
             games = sorted(set([result[0] for result in relevant]))
             for game in games:
@@ -299,7 +308,7 @@ class Interface(other_cmd.OtherCmd):
             game_class = self.games[arguments.lower()]
             relevant = [result for result in self.human.results if result[0] == game_class.name]
             self.show_stats(relevant, options = options)
-        # Handle category stats.
+        # Handle overall stats.
         elif arguments.lower() == 'all':
             self.show_stats(self.human.results, 'Overall Statistics', options)
             games = sorted(set([result[0] for result in self.human.results]))
@@ -307,15 +316,16 @@ class Interface(other_cmd.OtherCmd):
             for game in games:
                 relevant = [result for result in self.human.results if result[0] == game]
                 self.show_stats(relevant, options = options)
+        # Show an error if there are no results.
         else:
             self.human.tell('You have never played that game.')
 
     def figure_win_loss_draw(self, results):
         """
-        Determine win/loss/draw numbers and streaks. (tuple)
+        Determine win/loss/draw numbers and streaks for statistics. (tuple)
 
-        The return value is the game record, the per player record, the current 
-        streak, the type of the current streak, and the longest streaks for each 
+        The return value is the game record, the per player record, the current
+        streak, the type of the current streak, and the longest streaks for each
         type.
 
         Parameters:
@@ -387,16 +397,15 @@ class Interface(other_cmd.OtherCmd):
         num_options = sum(game.num_options for game in unique_games)
         count_text = 'Currently hosting {} different games with {} settable options.\n'
         self.human.tell(count_text.format(len(unique_games), num_options))
-        self.human.tell("Copyright (C) 2018 by Craig O'Brien and the tgame contributors.")
-        self.human.tell('For more details type help license.')
+        self.human.tell("Copyright (C) 2018 by Craig O'Brien and the t_game contributors.")
+        self.human.tell("For more details type 'help' or 'help license'.")
         # Loop through player choices.
         while True:
             # Show the menu and get the possible choices.
             menu_map = self.show_menu(self.focus)
-            response = self.human.ask('What is your selection? ').strip()
+            response = self.human.ask('\nWhat is your selection? ').strip()
             letter, slash, options = response.partition('/')
             letter = letter.strip().upper()
-            self.human.tell()
             # Check for menu choices.
             if letter in menu_map:
                 choice = menu_map[letter]
@@ -430,8 +439,10 @@ class Interface(other_cmd.OtherCmd):
         self.game = game_class(self.human, options, self)
         # Play the game until the player wants to stop.
         while True:
+            # Play the game.
             results = self.game.play()
             self.human.store_results(self.game.name, results)
+            # Show the statics, including the game just played.
             stats_options = []
             if results[5] & 2:
                 stats_options.append('cheat')
@@ -443,7 +454,8 @@ class Interface(other_cmd.OtherCmd):
             self.do_stats('{} / {}'.format(self.game.name, stats_options))
             if stats_options:
                 print('\nStatistics were calculated with the folloing options: {}.'.format(stats_options))
-            again = self.human.ask('Would you like to play again? ').strip().lower()
+            # See if they want to play again.
+            again = self.human.ask('\nWould you like to play again? ').strip().lower()
             if again in ('!', '!!'):
                 self.human.held_inputs = ['!']
                 break
@@ -480,11 +492,8 @@ class Interface(other_cmd.OtherCmd):
         self.human.tell()
         for letter, choice in pairs:
             self.human.tell('{}: {}'.format(letter, choice))
-        self.human.tell()
         # Return the meaning of the menu letters.
         menu_map = dict(pairs)
-        if 'Q' not in menu_map:
-            menu_map['Q'] = 'Quit'
         return dict(pairs)
 
     def show_scores(self, scores, score_type, options):
@@ -520,6 +529,8 @@ class Interface(other_cmd.OtherCmd):
         # Process the parameters.
         if not title:
             title = '\n{} Statistics'.format(results[0][0])
+        elif not title.startswith('\n'):
+            title = '\n{}'.format(title)
         # Process the filters.
         results = self.filter_results(results, options)
         # Check for no valid results.
@@ -556,24 +567,69 @@ class Interface(other_cmd.OtherCmd):
 
 
 class RandomValve(object):
+    """
+    A binary random variable that gets more likely to be true. (object)
+
+    The valve starts out with a set probabiliy (its parameter). Each time it is
+    checked and the response is false, the chance of a true value increases. The
+    increase is random, but proportional to the current probability of a true
+    value. When the response is true, the valve is reset to it's original set
+    probability.
+
+    This is a special random valve, that automatically returns false with no changes
+    to the probability of a true value if it is triggered by the same game as it's
+    last check.
+
+    Attributes:
+    last: The last game to call the valve. (game.Game)
+    p: The base probability. (float)
+    q: The current probability. (float)
+
+    Methods:
+    blow: Check the valve for a blow (true value). (bool)
+
+    Overridden Methods:
+    __init__
+    __repr__
+    """
 
     def __init__(self, p = 0.05):
+        """
+        Set up the attributes. (None)
+
+        Parameters:
+        p: The initial probability of true. (float)
+        """
         self.p = p
         self.q = p
         self.last = None
 
-    def blow(self, last):
-        check = random.random()
-        if last is self.last:
+    def __repr__(self):
+        """Return a debugging text representation. (str)"""
+        return '<RandomValve {:.4f}/{:.4f}>'.format(self.p, self.q)
+
+    def blow(self, trigger):
+        """
+        Check for a true value.
+
+        Parameters:
+        trigger: The game triggering the check. (game.Game)
+        """
+        # Check for repeated triggers.
+        if trigger is self.last:
             return False
-        self.last = last
+        self.last = trigger
+        # Check for true response.
+        check = random.random()
         if check < self.q:
+            # Reset probability.
             self.q = self.p
             return True
         else:
+            # Increase probability.
             self.q += self.q * check
             return False
-            
+
 
 def excel_column(n):
     """
@@ -590,7 +646,6 @@ def excel_column(n):
 
 
 if __name__ == '__main__':
-    interface = Interface(player.Tester())
-    interface.menu()
-
-
+    # Run the unit testing.
+    from t_tests.interface_test import *
+    unittest.main()

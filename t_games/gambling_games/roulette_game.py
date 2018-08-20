@@ -6,6 +6,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for roulette. (str)
+HOUSE_HELP: Help text for the house edge. (str)
 RULES: The rules of roulette. (str)
 
 Classes:
@@ -22,22 +23,19 @@ import t_games.utility as utility
 
 
 CREDITS = """
-Game Design: Traditional (French)
+Game Design: Traditional (French monks)
 Game Programming: Craig "Ichabod" O'Brien
 """
 
-
-# Help text for the house edge.
 HOUSE_HELP = """
 The house edge for all bets is 5.26% for the American layout and 2.70% for the
 French layout. The one exception is the top line bet on the American layout,
 which has a house edge of 7.89%.
 """
 
-
 RULES = """
-You may make one or more bets on the numbers 0-36 (and 00 depending on the 
-layout). One of the numbers is chosen at random, and bets including that 
+You may make one or more bets on the numbers 0-36 (and 00 depending on the
+layout). One of the numbers is chosen at random, and bets including that
 number are paid out. Traditionally the number is chosen by spinning a small
 wheel (the literal translation of roulette) with a pocket for each number, and
 rolling a ball into a bowl with the wheel at the bottom.
@@ -46,13 +44,13 @@ Bets are typically made with a command, a number or set of numbers separated
 by dashes, and the ammount bet. Payouts are made based on the number of
 numbers bet on, assuming the zeroes do not exist (the zeros give the house
 its edge). There are inside bets on individual numbers or groups of numbers
-based on a layout of the numbers in three columns. There are outside bets 
+based on a layout of the numbers in three columns. There are outside bets
 based on the features of the number, including high/low, even/odd and red/
-black (each number has a color, with the zeroes being green). There are also 
+black (each number has a color, with the zeroes being green). There are also
 called bets that are groups of other bets. Once all of your bets are placed,
 use the spin command to spin the wheel to detrmine the winning number.
 
-The bets are listed below. The number in brackets is the number of numbers 
+The bets are listed below. The number in brackets is the number of numbers
 that must be specified for the bet. Bets with a capital F in the brackets may
 only be made on the French layout, and bets with a capital A may only be made
 on the American layout (see options).
@@ -83,7 +81,7 @@ Even/Pair: Bet on the even numbers. [0]
 High/19-36: Bet on the high numbers (over 18). [0]
 Low/1-18: Bet on the low numbers (18 and under). [0]
 Odd/Impair: Bet on the odd numbers. [0]
-Prime: Bet on all of the primes except 2. Twins can be used insted of 
+Prime: Bet on all of the primes except 2. Twins can be used insted of
     excluding two (it excludes 2 and 23). [2]
 Red/Rouge: Bet on the red numbers. [0]
 
@@ -113,10 +111,11 @@ Layout: Show the current layout, with colors marked.
 Remove: Remove a bet, using the number from the bets command.
 
 OPTIONS:
-layout=: Whether the French or American layout is used, defaults to Amercian.
-max-bet=: The maximum bet for any single bet, defaults to 10.
-stake=: How much money you start with, defaults to 100.
-uk-rule: Outside bets on half the numbers only lose half the bet.
+american (a): Use the American layout (the default).
+french (f): Use the French layout.
+limit= (l=): The maximum bet for any single bet, defaults to 10.
+stake= (s=): How much money you start with, defaults to 100.
+uk-rule (uk): Outside bets on half the numbers only lose half the bet.
 """
 
 
@@ -133,13 +132,20 @@ class Roulette(game.Game):
 
     Attributes
     bets: Bets made this round. (list of tuple)
+    forced_spin: The numbers the next spin must come from. (list of str)
     layout: American or French layout. (str)
+    max_bet: The maximum allowed bet. (int)
     numbers: The numbers on the wheel. (list of str)
     stake: The starting money the player gets. (int)
+    uk_rule: A flag for getting half back on losing 1:1 bets. (bool)
 
     Methods:
     check_bet: Do common checking for valid bets. (str, int)
     check_two_numbers: Check for two numbers in the layout. (bool)
+    complete_corners: Get all corner bets for a complete bet. (list of tuple)
+    complete_splits: Get all split bets for a complete bet. (list of tuple)
+    complete_streets: Get all street and double street bets for a complete bet. (list)
+    complete_zero: Get all 0 and 00 related bets for a complete bet. (list of tuple)
     do_basket: Make a four number bet incluidng 0. (bool)
     do_bets: Show a numbered list of the current bets. (bool)
     do_black: Bet on black. (bool)
@@ -174,37 +180,34 @@ class Roulette(game.Game):
     pay_out: Pay the winning bets. (None)
 
     Overridden Methods:
+    do_quit
+    game_over
     handle_options
     player_action
     set_options
     set_up
     """
 
-    aliases = {'1-18': 'low', '19-36': 'high', 'double-street': 'double', 'douzaine': 'dozen', 
-        'finale': 'final', 'finals': 'final', 'first': 'basket', 'impair': 'odd', 'jeu': 'zero', 
-        'le': 'third', 'manque': 'low', 'noir': 'black', 'orphelins': 'orphans', 'pair': 'even', 
-        'passe': 'high', 'rouge': 'red', 'single': 'straight', 'six': 'double', 'six-line': 'double', 
+    aka = ['Roul']
+    aliases = {'1-18': 'low', '19-36': 'high', 'double-street': 'double', 'douzaine': 'dozen',
+        'finale': 'final', 'finals': 'final', 'first': 'basket', 'impair': 'odd', 'jeu': 'zero',
+        'le': 'third', 'manque': 'low', 'noir': 'black', 'orphelins': 'orphans', 'pair': 'even',
+        'passe': 'high', 'rouge': 'red', 'single': 'straight', 'six': 'double', 'six-line': 'double',
         'square': 'corner', 'tiers': 'third', 'voisins': 'neighbors'}
-    # The order of the wheel in the American layout.
-    american = ['0', '28', '9', '26', '30', '11', '7', '20', '32', '17', '5', '22', '34', '15', '3', '24', 
-        '36', '13', '1', '00', '27', '10', '25', '29', '12', '8', '19', '31', '18', '6', '21', '33', '16', 
+    american = ['0', '28', '9', '26', '30', '11', '7', '20', '32', '17', '5', '22', '34', '15', '3', '24',
+        '36', '13', '1', '00', '27', '10', '25', '29', '12', '8', '19', '31', '18', '6', '21', '33', '16',
         '4', '23', '35', '14', '2']
-    # The black numbers.
     black = ['2', '4', '6', '8', '10', '11', '13', '15', '17', '20', '22', '24', '26', '28', '29', '31',
         '33', '35']
-    # Interface categories for the game.
     categories = ['Gambling Games']
-    # The order of the wheel in the French layout.
-    french = ['0', '32', '15', '19', '4', '21', '2', '25', '17', '34', '6', '27', '13', '36', '11', '30', 
-        '8', '23', '10', '5', '24', '16', '33', '1', '20', '14', '31', '9', '22', '18', '29', '7', '28', 
+    french = ['0', '32', '15', '19', '4', '21', '2', '25', '17', '34', '6', '27', '13', '36', '11', '30',
+        '8', '23', '10', '5', '24', '16', '33', '1', '20', '14', '31', '9', '22', '18', '29', '7', '28',
         '12', '35', '3', '26']
-    # Help text for non-command topics.
     help_text = {'house-edge': HOUSE_HELP}
-    # A regular expression to capture numbers.
     int_re = re.compile('\d+')
     name = 'Roulette'
     num_options = 4
-    red = ['1', '3', '5', '7', '9', '12', '14', '16', '18', '19', '21', '23', '25', '27', '30', '32', '34', 
+    red = ['1', '3', '5', '7', '9', '12', '14', '16', '18', '19', '21', '23', '25', '27', '30', '32', '34',
         '36']
 
     def check_bet(self, arguments):
@@ -227,8 +230,12 @@ class Roulette(game.Game):
             if bet.isdigit():
                 bet = int(bet)
                 max_bet = min(self.max_bet, self.scores[self.human.name])
+                # Return valid bet information.
                 if 1 <= bet <= max_bet:
                     return target, bet
+                # Warn the user about invalid bets.
+                elif bet < 1:
+                    self.human.error('That bet is too small. You must bet at least 1 buck.')
                 else:
                     self.human.error('That bet is too large. You may only bet {} bucks.'.format(max_bet))
             else:
@@ -256,6 +263,123 @@ class Roulette(game.Game):
         else:
             return True
         return False
+
+    def complete_corners(self, bets, number, wager):
+        """
+        Get all corner bets for a complete bet. (list of tuple)
+
+        Parameters:
+        bets: The bets so far. (list of tuple)
+        number: The number bet on. (int)
+        wager: The ammount bet. (int)
+        """
+        # Add the up left corner bet.
+        text = 'corner bet on {}-{}'
+        if number > 3 and number % 3 != 1:
+            targets = [str(n) for n in (number - 4, number - 3, number - 1, number)]
+            bets.append((text.format(number - 4, number), targets, wager))
+        # Add the up right corner bet.
+        if number > 3 and number % 3:
+            targets = [str(n) for n in (number - 3, number - 2, number, number + 1)]
+            bets.append((text.format(number - 3, number + 1), targets, wager))
+        # Add the down right corner bet.
+        if number < 34 and number % 3:
+            targets = [str(n) for n in (number, number + 1, number + 3, number + 4)]
+            bets.append((text.format(number, number + 4), targets, wager))
+        # Add the down left corner bet.
+        if number < 34 and number % 3 != 1:
+            targets = [str(n) for n in (number - 1, number, number + 2, number + 3)]
+            bets.append((text.format(number - 1, number + 3), targets, wager))
+        return bets
+
+    def complete_splits(self, bets, number, wager):
+        """
+        Get all split bets for a complete bet. (list of tuple)
+
+        Parameters:
+        bets: The bets so far. (list of tuple)
+        number: The number bet on. (int)
+        wager: The ammount bet. (int)
+        """
+        text = 'split bet on {}-{}'
+        number_text = str(number)
+        # Add the up split bet.
+        if number > 3:
+            bets.append((text.format(number, number - 3), [number_text, str(number - 3)], wager))
+        elif self.layout == 'french':
+            if number:
+                bets.append(('split bet on 0-{}'.format(number), ['0', number_text], wager))
+        elif number:
+            if number != 1:
+                bets.append(('split bet on 00-{}'.format(number), ['00', number_text], wager))
+            if number != 3:
+                bets.append(('split bet on 0-{}'.format(number), ['0', number_text], wager))
+        # Add the down split bet.
+        if number < 34:
+            if number:
+                bets.append((text.format(number, number + 3), [number_text, str(number + 3)], wager))
+            elif self.layout == 'french':
+                for down in range(1, 3):
+                    bets.append(('split bet on 0-{}'.format(number), ['0', number_text], wager))
+            elif number_text == '0':
+                bets.append(('split bet on 0-1', ['0', '1'], wager))
+                bets.append(('split bet on 0-2', ['0', '2'], wager))
+            elif number_text == '00':
+                bets.append(('split bet on 00-2', ['00', '2'], wager))
+                bets.append(('split bet on 00-3', ['00', '3'], wager))
+        # Add the right split bet.
+        if number % 3:
+            bets.append((text.format(number, number + 1), [number_text, str(number + 1)], wager))
+        # Add the left split bet.
+        if number % 3 != 1:
+            bets.append((text.format(number - 1, number), [number_text, str(number - 1)], wager))
+        return bets
+
+    def complete_streets(self, bets, number, wager):
+        """
+        Get all street and double street bets for a complete bet. (list of tuple)
+
+        Parameters:
+        bets: The bets so far. (list of tuple)
+        number: The number bet on. (int)
+        wager: The ammount bet. (int)
+        """
+        # Add the street bet.
+        if number % 3:
+            end = number + 3 - (number % 3)
+        else:
+            end = number
+        if number:
+            targets = [str(n) for n in range(end - 2, end + 1)]
+            bets.append(('street bet on {}-{}-{}'.format(*targets), targets, wager))
+        text = 'double street bet on {}-{}'
+        # Add the up double street bet.
+        if number > 3:
+            targets = [str(n) for n in range(end - 5, end + 1)]
+            bets.append((text.format(end - 5, end), targets, wager))
+        # Add the down double street bet.
+        if number < 34:
+            targets = [str(n) for n in range(end - 2, end + 4)]
+            bets.append((text.format(end - 2, end + 3), targets, wager))
+        return bets
+
+    def complete_zero(self, number, wager):
+        """
+        Get all 0 and 00 related bets for a complete bet. (list of tuple)
+
+        Parameters:
+        number: The number bet on. (int)
+        wager: The ammount bet. (int)
+        """
+        sub_bets = [('trio bet on 0-1-2', ['0', '1', '2'], wager)]
+        if self.layout == 'french':
+            sub_bets.append(('trio bet on 0-2-3', ['0', '2', '3'], wager))
+            sub_bets.append(('basket bet', ['0', '1', '2', '3'], wager))
+        if self.layout == 'american':
+            sub_bets.append(('trio bet on 00-2-3', ['00', '2', '3'], wager))
+            sub_bets.append(('trio bet on 0-00-2', ['0', '00', '2'], wager))
+            sub_bets.append(('top line bet', ['0', '00', '1', '2', '3'], wager))
+        return [bet for bet in sub_bets if str(number) in bet[1]]
 
     def do_basket(self, arguments):
         """
@@ -293,7 +417,7 @@ class Roulette(game.Game):
         """
         Bet on black. (noir)
 
-        The bet is on 2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 
+        The bet is on 2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33,
         and 35.
 
         The argument to the black command should be the amount bet.
@@ -310,7 +434,7 @@ class Roulette(game.Game):
         """
         Bet on a column.
 
-        The first column is specified by the argument 1, p, or f. That bet is on the 
+        The first column is specified by the argument 1, p, or f. That bet is on the
         numbers 1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, and 34.
 
         The second column is specified by the argument 2, m, or s. That bet is on the
@@ -348,12 +472,12 @@ class Roulette(game.Game):
         """
         Make all inside bets on a given number.
 
-        This includes the single bet on that number, and any split, street, trio, 
+        This includes the single bet on that number, and any split, street, trio,
         basket, top line, corner, or double street bets available for that number on
         the current layout.
 
         If you use the argument progressive, each bet has the amount bet multiplied by
-        the number of numbers in the bet. 
+        the number of numbers in the bet.
 
         The second argument to the complete command should be the amount bet.
         """
@@ -362,105 +486,34 @@ class Roulette(game.Game):
         progressive = 'progressive' in words
         if progressive:
             words.remove('progressive')
-        # Check the bet
-        number, bet = self.check_bet(' '.join(words))
-        if number:
-            if number in self.numbers:
-                num = int(number)
-                # single bet
-                bets = [('single bet on {}'.format(num), [number], bet)]
-                text = 'split bet on {}-{}'
-                # up split
-                if num > 3:
-                    bets.append((text.format(num, num - 3), [number, str(num - 3)], bet))
-                elif self.layout == 'french':
-                    if num:
-                        bets.append(('split bet on 0-{}'.format(num), ['0', number], bet))
-                elif num:
-                    if num != 1:
-                        bets.append(('split bet on 00-{}'.format(num), ['00', number], bet))
-                    if num != 3:
-                        bets.append(('split bet on 0-{}'.format(num), ['0', number], bet))
-                # down splits
-                if num < 34:
-                    if num:
-                        bets.append((text.format(num, num + 3), [number, str(num + 3)], bet))
-                    elif self.layout == 'french':
-                        for down in range(1, 3):
-                            bets.append(('split bet on 0-{}'.format(num), ['0', number], bet))
-                    elif number == '0':
-                        bets.append(('split bet on 0-1', ['0', '1'], bet))
-                        bets.append(('split bet on 0-2', ['0', '2'], bet))
-                    elif number == '00':
-                        bets.append(('split bet on 00-2', ['00', '2'], bet))
-                        bets.append(('split bet on 00-3', ['00', '3'], bet))
-                # right splits
-                if num % 3:
-                    bets.append((text.format(num, num + 1), [number, str(num + 1)], bet))
-                # left splits
-                if num % 3 != 1:
-                    bets.append((text.format(num - 1, num), [number, str(num - 1)], bet))
-                # street
-                if num % 3:
-                    end = num + 3 - (num % 3)
-                else:
-                    end = num
-                if num:
-                    targets = [str(n) for n in range(end - 2, end + 1)]
-                    bets.append(('street bet on {}-{}-{}'.format(*targets), targets, bet))
-                # trio / basket / top line
-                if num < 4:
-                    sub_bets = [('trio bet on 0-1-2', ['0', '1', '2'], bet)]
-                    if self.layout == 'french':
-                        sub_bets.append(('trio bet on 0-2-3', ['0', '2', '3'], bet))
-                        sub_bets.append(('basket bet', ['0', '1', '2', '3'], bet))
-                    if self.layout == 'american':
-                        sub_bets.append(('trio bet on 00-2-3', ['00', '2', '3'], bet))
-                        sub_bets.append(('trio bet on 0-00-2', ['0', '00', '2'], bet))
-                        sub_bets.append(('top line bet', ['0', '00', '1', '2', '3'], bet))
-                    bets.extend([bet for bet in sub_bets if number in bet[1]])
-                # up left corner
-                text = 'corner bet on {}-{}'
-                if num > 3 and num % 3 != 1:
-                    targets = [str(n) for n in (num - 4, num - 3, num - 1, num)]
-                    bets.append((text.format(num - 4, num), targets, bet))
-                # up right corner
-                if num > 3 and num % 3:
-                    targets = [str(n) for n in (num - 3, num - 2, num, num + 1)]
-                    bets.append((text.format(num - 3, num + 1), targets, bet))
-                # down right corner
-                if num < 34 and num % 3:
-                    targets = [str(n) for n in (num, num + 1, num + 3, num + 4)]
-                    bets.append((text.format(num, num + 4), targets, bet))
-                # down left corner
-                if num < 34 and num % 3 != 1:
-                    targets = [str(n) for n in (num - 1, num, num + 2, num + 3)]
-                    bets.append((text.format(num - 1, num + 3), targets, bet))
-                text = 'double street bet on {}-{}'
-                # up double street
-                if num > 3:
-                    targets = [str(n) for n in range(end - 5, end + 1)]
-                    bets.append((text.format(end - 5, end), targets, bet))
-                # down double street
-                if num < 34:
-                    targets = [str(n) for n in range(end - 2, end + 4)]
-                    bets.append((text.format(end - 2, end + 3), targets, bet))
-                # progressive betting
+        # Check the wager
+        number_text, wager = self.check_bet(' '.join(words))
+        if number_text:
+            if number_text in self.numbers:
+                number = int(number_text)
+                # Add the single wager.
+                bets = [('single bet on {}'.format(number), [number_text], wager)]
+                # Add the multi-number bets bets.
+                bets = self.complete_splits(bets, number, wager)
+                bets = self.complete_streets(bets, number, wager)
+                bets.extend(self.complete_zero(number, wager))
+                bets = self.complete_corners(bets, number, wager)
+                # Convert to progressive betting if required.
                 if progressive:
                     prog_bets = []
-                    for text, targets, bet in bets:
-                        prog_bets.append((text, targets, bet * len(targets)))
+                    for text, targets, wager in bets:
+                        prog_bets.append((text, targets, wager * len(targets)))
                     bets = prog_bets
-                # check bet against what player has
-                total_bet = sum([bet for text, targets, bet in bets])
+                # Check wager against what player has.
+                total_bet = sum([wager for text, targets, wager in bets])
                 if total_bet > self.scores[self.human.name]:
-                    self.human.error('You do not have enough bucks for the total bet.')
+                    self.human.error('You do not have enough bucks for the total wager.')
                 else:
                     # Maket the bets.
                     self.bets.extend(bets)
                     self.scores[self.human.name] -= total_bet
             else:
-                # Warning for an invalid number.
+                # Warning for an invalid number_text.
                 self.human.error('That number is not in the current layout.')
         return True
 
@@ -468,9 +521,9 @@ class Roulette(game.Game):
         """
         Make a bet on a square of numbers. (square)
 
-        The first argument must be the high and low number in a square of four numbers 
-        on the layout, separated by a dash. That is, the high number must be the low 
-        number plus four, and the low number cannot be evenly divisible by three (in 
+        The first argument must be the high and low number in a square of four numbers
+        on the layout, separated by a dash. That is, the high number must be the low
+        number plus four, and the low number cannot be evenly divisible by three (in
         the third colum).
 
         The second argument to the corner command should be the amount bet.
@@ -480,7 +533,7 @@ class Roulette(game.Game):
         # Check for two numbers.
         if numbers and self.check_two_numbers(numbers, 'corner'):
             # Check for a valid corner.
-            low, high = sorted([int(x) for x in numbers.split('-')])
+            low, high = sorted([int(corner) for corner in numbers.split('-')])
             if high - low == 4 and low % 3:
                 # Make the bet.
                 self.scores[self.human.name] -= bet
@@ -497,7 +550,7 @@ class Roulette(game.Game):
             six line)
 
         The first argument must the be the high and low number of six numbers in two
-        rows on the layout, separated by a dash. That is, the high must be the low 
+        rows on the layout, separated by a dash. That is, the high must be the low
         plus six, and must be evenly divisible by three (in the third column).
 
         The second argument to the double command should be the amount bet.
@@ -523,7 +576,7 @@ class Roulette(game.Game):
         """
         Bet on a consecutive dozen. (douzaine)
 
-        The first dozen is specified by the argument 1, p, or f, and is a bet on the 
+        The first dozen is specified by the argument 1, p, or f, and is a bet on the
         numbers 1-12.
 
         The second dozen is specified by the argument 2, m, or s, and is a bet on the
@@ -541,9 +594,9 @@ class Roulette(game.Game):
             targets = []
             if dozen.lower() in ('1', 'p', 'f'):
                 targets = [str(number) for number in range(1, 13)]
-            elif dozen.lower in ('2', 'm', 's'):
+            elif dozen.lower() in ('2', 'm', 's'):
                 targets = [str(number) for number in range(12, 25)]
-            elif dozen.lower in ('3', 'd', 't'):
+            elif dozen.lower() in ('3', 'd', 't'):
                 targets = [str(number) for number in range(24, 37)]
             if targets:
                 # Make the bet.
@@ -575,7 +628,7 @@ class Roulette(game.Game):
         """
         Bet on numbers ending in a particular digit. (finals, finale)
 
-        The first argument should be the final digit to bet on. There are four numbers 
+        The first argument should be the final digit to bet on. There are four numbers
         ending in each of the digits 0, 1, 2, 3, 4, 5, and 6. There are three numbers
         ending in each of the digits 7, 8, and 9. Betting on final 0 does not include
         0 or 00.
@@ -583,12 +636,12 @@ class Roulette(game.Game):
         The second argument should be the amount to bet on each number.
         """
         # Check the bet.
-        number, bet = self.check_bet(arguments)
-        if number:
+        digit, bet = self.check_bet(arguments)
+        if digit:
             # Check the digit.
-            if number in '1234567890':
+            if digit in '1234567890':
                 # Get the numbers to bet on.
-                numbers = [n for n in self.numbers if n.endswith(number) and n not in '00']
+                numbers = [number for number in self.numbers if number[-1] == digit and number not in '00']
                 # Check the full bet.
                 full_bet = bet * len(numbers)
                 if full_bet > self.scores[self.human.name]:
@@ -598,7 +651,7 @@ class Roulette(game.Game):
                     # Make the bets.
                     for number in numbers:
                         self.bets.append(('single bet on {}'.format(number), [number], bet))
-                    self.scores[self.human.name] -= self.bet
+                    self.scores[self.human.name] -= full_bet
             else:
                 self.human.error('That is not a valid final digit.')
         return True
@@ -640,7 +693,7 @@ class Roulette(game.Game):
             if not losses:
                 self.forced_spin = ['7', '14', '21', '28', '35']
                 self.human.tell('\nThe next spin will be a multiple of 7.')
-        # Handle any other arguments.
+        # Otherwise I'm confused.
         else:
             self.human.error("That bet is not available on this layout.")
 
@@ -671,7 +724,7 @@ class Roulette(game.Game):
             text = '\n      0     \n'
         # Display the number is columns.
         for number in range(1, 37):
-            # Use parens to signify blank numbers.
+            # Use parens to signify black numbers.
             if str(number) in self.red:
                 text += ' {:2} '.format(number)
             else:
@@ -702,25 +755,25 @@ class Roulette(game.Game):
         Make a neighbors of zero bet or a 'and the neighbors' bet. (voisons)
 
         If two arguments are given, the first argument is taken as the number to bet
-        on. In addition, four more bets are made are made on the two numbers on 
+        on. In addition, four more bets are made are made on the two numbers on
         either side of that number on the roulette wheel. The order of the numbers on
-        the American wheel is 0, 28, 9, 26, 30, 11, 7, 20, 32, 17, 5, 22, 34, 15, 3, 
-        24, 36, 13, 1, 00, 27, 10, 25, 29, 12, 8, 19, 31, 18, 6, 21, 33, 16, 4, 23, 
-        35, 14, 2. The order of numbers on the French wheel is 0, 32, 15, 19, 4, 21, 
-        2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 
+        the American wheel is 0, 28, 9, 26, 30, 11, 7, 20, 32, 17, 5, 22, 34, 15, 3,
+        24, 36, 13, 1, 00, 27, 10, 25, 29, 12, 8, 19, 31, 18, 6, 21, 33, 16, 4, 23,
+        35, 14, 2. The order of numbers on the French wheel is 0, 32, 15, 19, 4, 21,
+        2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31,
         9, 22, 18, 29, 7, 28, 12, 35, 3, 26. So a neighbors bet on 18 would be on the
-        numbers 6, 18, 19, 21, and 31 on an American wheel, and on the numbers 7, 9, 
+        numbers 6, 18, 19, 21, and 31 on an American wheel, and on the numbers 7, 9,
         18, 22, and 29 on the French wheel.
 
         If only one argument is given, the bet is taken as a neighbors of zero bet, a
-        special bet available only on the French layout. It includes the following 
+        special bet available only on the French layout. It includes the following
         bets:
             * A trio bet on 0-2-3.
             * Split bets on 4-7, 12-15, 18-21, 19-22, and 32-35.
             * A corner bet on 25-29.
 
         The last argument to the neighbors command should be how much to bet on each
-        indivdual bet. 
+        indivdual bet.
         """
         # Pull out the integer arguments.
         int_args = self.int_re.findall(arguments)
@@ -758,7 +811,7 @@ class Roulette(game.Game):
         This bet is the same as a neighbors bet on a specific number, but with eight
         neighbors instead of four. See the help for the neighbors bet for details.
 
-        The second argument to the niner command should be the amount bet on the 
+        The second argument to the niner command should be the amount bet on the
         number specified, and on each neighbor.
         """
         # Check the bet.
@@ -772,7 +825,7 @@ class Roulette(game.Game):
         """
         Bet on the the odd numbers. (impair)
 
-        This bet is on the numbers 1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 
+        This bet is on the numbers 1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27,
         29, 31, 33, and 35.
 
         The argument to the odd command should be the amount to bet.
@@ -814,15 +867,16 @@ class Roulette(game.Game):
         """
         Make a bet on all but two prime numbers.
 
-        The first two arguments to the prime command should be two prime numbers less 
-        than 36 (separated by a dash). Those two prime numbers are excluded, and the 
-        bet is on the remaining nine numbers. The primes less than 36 are 2, 3, 5, 7, 
-        11, 13, 17, 19, 23, 29, and 31.
+        The first two arguments to the prime command should be two prime numbers less
+        than 36 (separated by a dash). Those two prime numbers are excluded, and the
+        bet is on the remaining nine numbers. The primes less than 36 are 2, 3, 5, 7,
+        11, 13, 17, 19, 23, 29, and 31. Instead of entering two prime numbers, you may
+        enter 'twins' to exclude 2 and 23, making the bet on the twin prims under 36.
 
         The second argument to the prime command should be the amount to bet.
         """
         # Check for betting on twin primes.
-        if arguments.lower() == 'twins':
+        if arguments.lower().startswith('twins'):
             arguments = '2-23'
         # Check the bet and two numbers.
         numbers, bet = self.check_bet(arguments)
@@ -854,12 +908,17 @@ class Roulette(game.Game):
         # Determine overall winnings or losses.
         self.scores[self.human.name] -= self.stake
         # Determine if the game is a win or a loss.
+        result = 'won'
         if self.scores[self.human.name] > 0:
             self.win_loss_draw[0] = 1
         elif self.scores[self.human.name] < 0:
+            result = 'lost'
             self.win_loss_draw[1] = 1
         else:
             self.win_loss_draw[2] = 1
+        # Inform the user.
+        plural = utility.plural(abs(self.scores[self.human.name]), 'buck')
+        self.human.tell('\nYou {} {} {}.'.format(result, abs(self.scores[self.human.name]), plural))
         # Quit the game.
         self.flags |= 4
         self.force_end = True
@@ -868,7 +927,7 @@ class Roulette(game.Game):
         """
         Bet on red. (rouge)
 
-        This bet is on the numbers 1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 
+        This bet is on the numbers 1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27,
         30, 32, 34, and 36.
 
         The argument to the red command should be the amount to bet.
@@ -912,11 +971,11 @@ class Roulette(game.Game):
         Make a bet on a neighborhood of seven.
 
         This bet is on the number seven and three numbers on either side of it on the
-        wheel, making seven numbers in all. On an American wheel this bet is on the 
-        numbers 7, 11, 17, 20, 26, 30, and 32. On a French wheel this bet is on the 
+        wheel, making seven numbers in all. On an American wheel this bet is on the
+        numbers 7, 11, 17, 20, 26, 30, and 32. On a French wheel this bet is on the
         numbers 7, 12, 18, 22, 28, 29, and 35.
 
-        The argument to the sevens bet is the amount to bet on each of the seven 
+        The argument to the sevens bet is the amount to bet on each of the seven
         numbers.
         """
         number, bet = self.check_bet(arguments)
@@ -947,6 +1006,7 @@ class Roulette(game.Game):
         out all winning bets (and removes all losing bets).
         """
         # Pretend a wheel is spinning.
+        self.human.tell()
         for spin in range(random.randint(3, 5)):
             self.human.tell('Spinning...')
             time.sleep(1)
@@ -966,11 +1026,11 @@ class Roulette(game.Game):
         """
         Make a bet on a two adjacent numbers.
 
-        The first argument should be the two numbers to bet on, separated by a dash, 
-        which must be next to each other on the layout. That means one must be one 
-        higher than the other (with the lower one not a multiple of three), or one 
-        must be three higher than the other one. The exception is bets including 0 or 
-        00. On the French layout 0-1, 0-2, and 0-3 are all allowed split bets. On the 
+        The first argument should be the two numbers to bet on, separated by a dash,
+        which must be next to each other on the layout. That means one must be one
+        higher than the other (with the lower one not a multiple of three), or one
+        must be three higher than the other one. The exception is bets including 0 or
+        00. On the French layout 0-1, 0-2, and 0-3 are all allowed split bets. On the
         American layout 0-1, 0-2, 00-2, and 00-3 are all allowed split bets.
 
         The second argument to the split command should be the amount bet.
@@ -1016,7 +1076,7 @@ class Roulette(game.Game):
         """
         Make a bet on a three number row.
 
-        The first argument to the street command should be three dash-separated numbers 
+        The first argument to the street command should be three dash-separated numbers
         forming a row on the layout. The bet is on those three numbers.
 
         The second argument to the street command should be the amount bet.
@@ -1028,7 +1088,7 @@ class Roulette(game.Game):
             numbers = number.split('-')
             end = int(numbers[-1])
             if end % 3:
-                # Warn on invalid input.
+                # Warn the user on invalid input.
                 self.human.error('A valid street must end in a multiple of three.')
             else:
                 # Make the bet.
@@ -1041,7 +1101,7 @@ class Roulette(game.Game):
         """
         Make a third of the wheel bet. (le tiers, tiers)
 
-        This is a set of bets covering the third of the wheel (12 numbetr) opposite 
+        This is a set of bets covering the third of the wheel (12 numbetr) opposite
         the zero on the French layout. These bets include the following split bets:
         5-8, 10-11, 13-16, 23-24, 27-30, and 33-36.
 
@@ -1049,15 +1109,15 @@ class Roulette(game.Game):
         of those numbers as well. If 'gioco Ferrari' or just 'Ferrari' is included as
         an argument, invidual bets are placed on 8, 11, 23, and 30 as well.
 
-        The last argument to the third is the amount to bet on each of the six (or 
+        The last argument to the third bet is the amount to bet on each of the six (or
         ten) bets.
         """
         # Get the integer arguments
         int_args = self.int_re.findall(arguments)
         if int_args:
-            # Check the bet
+            # Check the bet.
             numbers, bet = self.check_bet('third {}'.format(int_args[-1]))
-            # Check the full bet.
+            # Check the full wager.
             full_bet = bet * 6
             if '5-8-10-11' in arguments or 'ferrari' in arguments.lower():
                 full_bet = bet * 10
@@ -1071,7 +1131,7 @@ class Roulette(game.Game):
                 self.bets.append(('split bet on 23-24', ['23', '24'], bet))
                 self.bets.append(('split bet on 27-30', ['27', '30'], bet))
                 self.bets.append(('split bet on 33-36', ['33', '36'], bet))
-                # Add special bets.
+                # Add any special bets.
                 if '5-8-10-11' in arguments:
                     self.bets.append(('single bet on 5', ['5'], bet))
                     self.bets.append(('single bet on 8', ['8'], bet))
@@ -1115,8 +1175,8 @@ class Roulette(game.Game):
         Make a three number bet with one or more zeroes.
 
         The first argument should be the three numbers to bet on separated by dashes.
-        On the American layout, the valid numbers are 0-1-2, 0-00-2, and 00-2-3. On 
-        French layout, the valid numbers are 0-1-2 or 0-2-3. 
+        On the American layout, the valid numbers are 0-1-2, 0-00-2, and 00-2-3. On
+        French layout, the valid numbers are 0-1-2 or 0-2-3.
 
         The second argument to the trio command is how much to bet.
         """
@@ -1142,11 +1202,11 @@ class Roulette(game.Game):
         Make a zero game bet. (jeu, jeu zero)
 
         This is a variant of the cousins bet, which bets on 0 and eight neighbors. The
-        exact bets made are a straight bet on 26 and three split bets on 0-3, 12-15, 
+        exact bets made are a straight bet on 26 and three split bets on 0-3, 12-15,
         and 32-35. If 'naca' is included as an argument, a straight bet on 19 is
         added.
 
-        The last argument to the zero command is the amount to bet on each of the 
+        The last argument to the zero command is the amount to bet on each of the
         individual bets.
         """
         # Get the integer arguments.
@@ -1154,14 +1214,14 @@ class Roulette(game.Game):
         if self.layout == 'french' and int_args:
             # Check the bet.
             numbers, bet = self.check_bet('zero {}'.format(int_args[-1]))
-            # Check the full bet
+            # Check the full bet.
             full_bet = bet * 4
             if 'naca' in arguments.lower():
                 full_bet = bet * 5
             if full_bet > self.scores[self.human.name]:
                 self.human.error('You do not have enough money for the full bet.')
             elif numbers:
-                # Make the bet
+                # Make the bet.
                 self.bets.append(('split bet on 0-3', ['0', '3'], bet))
                 self.bets.append(('split bet on 12-15', ['12', '15'], bet))
                 self.bets.append(('single bet on 26', ['26'], bet))
@@ -1183,6 +1243,7 @@ class Roulette(game.Game):
             # Set the results.
             self.win_loss_draw[1] = 1
             self.scores[self.human.name] -= self.stake
+            self.human.tell('\nYou lost all of your money.')
             return True
         else:
             return False
@@ -1265,14 +1326,18 @@ class Roulette(game.Game):
 
     def set_options(self):
         """Define the game options. (None)"""
-        self.option_set.add_option('french', target = 'layout', value = 'french', default = 'american',
+        # Set the wheel options.
+        self.option_set.add_option('french', ['f'], target = 'layout', value = 'french',
+            default = 'american',
             question = 'Do you want to play with the Frech (single zero) layout? bool')
-        self.option_set.add_option('american', target = 'layout', value = 'american', default = None)
-        self.option_set.add_option('stake', [], int, 100, check = lambda bucks: bucks > 0,
+        self.option_set.add_option('american', ['a'], target = 'layout', value = 'american', default = None)
+        # Set the money options.
+        self.option_set.add_option('stake', ['s'], int, 100, check = lambda bucks: bucks > 0,
             question = 'How much money would you like to start with (return for 100)? ')
-        self.option_set.add_option('limit', [], int, 10, target = 'max_bet',
+        self.option_set.add_option('limit', ['l'], int, 10, target = 'max_bet',
             check = lambda bucks: bucks > 0, question = 'What should the maximum bet be (return for 10)? ')
-        self.option_set.add_option('uk-rule', 
+        # Set the payout options.
+        self.option_set.add_option('uk-rule', ['uk'],
             question = 'Should the UK rule (1/2 back on lost 1:1 bets) be in effect? bool')
 
     def set_up(self):
@@ -1283,6 +1348,7 @@ class Roulette(game.Game):
 
 
 if __name__ == '__main__':
+    # Play Roulette without the full interface.
     import t_games.player as player
     try:
         input = raw_input
@@ -1291,4 +1357,3 @@ if __name__ == '__main__':
     name = input('What is your name? ')
     roulette = Roulette(player.Humanoid(name), '')
     roulette.play()
-

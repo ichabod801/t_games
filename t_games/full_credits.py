@@ -15,7 +15,6 @@ data_to_text: Convert CREDITS_DATA to formatted text. (str)
 """
 
 
-# The sections and people who worked on those sections.
 CREDITS_DATA = [('Interface Programming', """Craig "Ichabod" O'Brien"""),
     ('Game Design', """Humans; Paul Alfille, Richard A. Canfield, Doug Dyment, Michael Keller, 
         Bernard X. de Marigny, Albert Morehead, Geoffrey Mott-Smith, Ned Strongin, Sid Sackson, 
@@ -32,15 +31,22 @@ CREDITS_DATA = [('Interface Programming', """Craig "Ichabod" O'Brien"""),
 def data_to_text():
     """Convert CREDITS_DATA to formatted text. (str)"""
     credits_text = ''
+    # Loop through the sections.
     for section, people in CREDITS_DATA:
+        # Show the section title.
         credits_text += '\n{:^79}\n{:^79}\n'.format(section, '-' * len(section))
         for line in people.split(';'):
+            # Loop through the names.
             names = line.strip().split(',')
             while names:
+                # Display the names four at a time.
                 quad, names = names[:4], names[4:]
                 quad_text = ''.join(['{:^20}'.format(name.strip()) for name in quad])
                 credits_text += '{:^79}\n'.format(quad_text)
     return credits_text
+
+
+# The formatted text of CREDITS_DATA.
 FULL_CREDITS = data_to_text()
 
 

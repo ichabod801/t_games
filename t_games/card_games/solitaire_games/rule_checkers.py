@@ -47,7 +47,6 @@ deal_selective: Deal tableau cards with selection of foundation rank. (None)
 deal_start_foundation: Deal an initial foundation card. (None)
 deal_stock_all: Move the rest of the deck into the stock. (None)
 deal_twos: Deal the twos onto the tableau. (None)
-deal_twos_foundation: Deal the twos to the foundations. (None)
 flip_random: Flip random tableau cards face down. (None)
 --------------------------------------------------------
 free_pyramid: Allow freeing cards open below and to the right. (str)
@@ -92,26 +91,32 @@ import itertools
 import random
 
 
-# Define helper functions for the dealers and checkers.
+################## Define helper functions for the dealers and checkers. ##################
+
 
 def _move_one_size(game, to_lane = False):
     """
     Calculate maximum stack under "move one" rules. (int)
 
     In other words, how big a stack could you move by moving one card at a time.
-    
+
     Parameters:
     game: The game being played. (Solitaire)
     to_lane: A flag for the moving going to an open lane. (str)
     """
+    # Get the free cell count.
     free = game.num_cells - len(game.cells)
+    # Get the lane count, account for lane king.
     if lane_king in game.lane_checkers:
         lanes = 0
     else:
         lanes = game.tableau.count([]) - to_lane
+    # Return the number movable.
     return (1 + free) * 2 ** lanes
 
-# Define build checkers.
+
+################## Define build checkers. ##################
+
 
 def build_down(game, mover, target, moving_stack):
     """
@@ -124,17 +129,18 @@ def build_down(game, mover, target, moving_stack):
     moving_stack: The stack the mover is the base of. (list of TrackingCard)
     """
     error = ''
-    suit = mover.suit
+    # Check that each pair is descending.
     for card, next_card in zip(moving_stack, moving_stack[1:]):
         if not next_card.below(card):
             error = 'Only stacks of descending rank may be moved together.'
             break
     return error
 
+
 def build_none(game, mover, target, moving_stack):
     """
     No building is allowed. (str)
-    
+
     Parameters:
     game: The game being played. (Solitaire)
     mover: The card to move. (TrackingCard)
@@ -143,11 +149,11 @@ def build_none(game, mover, target, moving_stack):
     """
     return 'Building is not allowed in this game.'
 
-    
+
 def build_one(game, mover, target, moving_stack):
     """
     Build moving one card at a time. (str)
-    
+
     Parameters:
     game: The game being played. (Solitaire)
     mover: The card to move. (TrackingCard)
@@ -164,7 +170,7 @@ def build_one(game, mover, target, moving_stack):
 def build_reserve(game, mover, target, moving_stack):
     """
     Build only from the reserve. (str)
-    
+
     Parameters:
     game: The game being played. (Solitaire)
     mover: The card to move. (TrackingCard)
@@ -189,6 +195,7 @@ def build_suit(game, mover, target, moving_stack):
     moving_stack: The stack the mover is the base of. (list of TrackingCard)
     """
     error = ''
+    # Check that all cards match the first card's suit.
     suit = mover.suit
     for card in moving_stack[1:]:
         if card.suit != suit:
@@ -208,13 +215,17 @@ def build_whole(game, mover, target, moving_stack):
     moving_stack: The stack the mover is the base of. (list of TrackingCard)
     """
     error = ''
+    # If it's in the tableau and not at the bottom of a pile ...
     if mover.game_location in game.tableau and mover != mover.game_location[0]:
+        # ... make sure the card below it is face down.
         mover_index = mover.game_location.index(mover)
         if mover.game_location[mover_index - 1].up:
             error = 'Only complete stacks may be moved on the tableau.'
     return error
 
-# Define dealers.
+
+################## Define dealers. ##################
+
 
 def deal_aces(game):
     """
@@ -232,6 +243,7 @@ def deal_aces(game):
             game.deck.force(card, game.tableau[next_index])
             next_index = (next_index + 1) % len(game.tableau)
 
+
 def deal_aces_multi(game):
     """
     Deal the aces to the foundations in a multi-deck game.
@@ -239,11 +251,14 @@ def deal_aces_multi(game):
     Parameters:
     game: A multi-deck game of solitaire. (MultiSolitaire)
     """
+    # Loop through the suits.
     for suit in game.deck.suits:
+        # Loop through the aces.
         ace_text = 'A' + suit
         ace = game.deck.find(ace_text)[0]
         for foundation in game.find_foundation(ace):
             game.deck.force(ace_text, foundation)
+
 
 def deal_aces_up(game):
     """
@@ -252,7 +267,6 @@ def deal_aces_up(game):
     Parameters:
     game: The game to deal the cards for. (Solitaire)
     """
-    # Deal the aces.
     for suit in game.deck.suits:
         card = game.deck.find('A{}'.format(suit))
         foundation = game.find_foundation(card)
@@ -266,8 +280,8 @@ def deal_all(game):
     Parameters:
     game: The game to deal the cards for. (Solitaire)
     """
-    for card_ndx in range(len(game.deck.cards)):
-        game.deck.deal(game.tableau[card_ndx % len(game.tableau)])
+    for card_index in range(len(game.deck.cards)):
+        game.deck.deal(game.tableau[card_index % len(game.tableau)])
 
 
 def deal_bisley(game):
@@ -277,8 +291,8 @@ def deal_bisley(game):
     Parameters:
     game: The game to deal the cards for. (Solitaire)
     """
-    for card_ndx in range(len(game.deck.cards)):
-        game.deck.deal(game.tableau[(card_ndx + 4) % len(game.tableau)])
+    for card_index in range(len(game.deck.cards)):
+        game.deck.deal(game.tableau[(card_index + 4) % len(game.tableau)])
 
 
 def deal_five_six(game):
@@ -320,10 +334,9 @@ def deal_klondike(game):
     Parameters:
     game: The game to deal the cards for. (Solitaire)
     """
-    # Deal out the triangle of cards.
-    for card_ndx in range(len(game.tableau)):
-        for tableau_ndx in range(card_ndx, len(game.tableau)):
-            game.deck.deal(game.tableau[tableau_ndx], face_up = card_ndx == tableau_ndx)
+    for card_index in range(len(game.tableau)):
+        for tableau_index in range(card_index, len(game.tableau)):
+            game.deck.deal(game.tableau[tableau_index], face_up = card_index == tableau_index)
 
 
 def deal_n(n, up = True):
@@ -337,8 +350,10 @@ def deal_n(n, up = True):
     up: A flag for dealing the cards face up. (str)
     """
     def dealer(game):
+        # Deal the cards.
         for card_index in range(n):
             game.deck.deal(game.tableau[card_index % len(game.tableau)], face_up = up)
+        # Turn the top cards face up.
         for pile in game.tableau:
             pile[-1].up = True
     return dealer
@@ -377,13 +392,14 @@ def deal_queens_out(game):
     """
     for reserve_index, suit in enumerate(game.deck.suits):
         queen = game.deck.find('Q' + suit)
+        # Put the queen in play so it can be discarded.
         game.deck.force(queen, game.reserve[reserve_index])
-        game.deck.discard(queen) # discard assumes the card is in play.
+        game.deck.discard(queen)
 
 
 def deal_rank_foundations(rank):
     """
-    Deal a specific rank to the foundations. (None)
+    Create a dealer to deal a specific rank to the foundations. (None)
 
     Parameters:
     rank: The rank to deal to the foundations. (str)
@@ -498,7 +514,9 @@ def flip_random(game):
     for pile in game.tableau:
         random.choice(pile[:-1]).up = False
 
-# Define free checkers.
+
+################## Define free checkers. ##################
+
 
 def free_pyramid(game, card):
     """
@@ -517,6 +535,7 @@ def free_pyramid(game, card):
 
 # Define lane checkers.
 
+
 def lane_down(game, card, moving_stack):
     """
     Check moving only stacks of descending ranks into a lane. (str)
@@ -528,32 +547,34 @@ def lane_down(game, card, moving_stack):
     """
     error = ''
     suit = card.suit
+    # Check that each card is below the previous one in rank.
     for this_card, next_card in zip(moving_stack, moving_stack[1:]):
         if not next_card.below(this_card):
             error = 'Only stacks of descending rank may be moved into an empty lane.'
             break
     return error
 
+
 def lane_king(game, card, moving_stack):
     """
     Check moving only kings into a lane. (str)
-    
+
     Parameters:
     game: The game being played. (Solitaire)
     card: The card to move into the lane. (TrackingCard)
     moving_stack: The cards on top of the card moving. (list of TrackingCard)
     """
     error = ''
-    # check for the moving card being a king.
+    # Check for the moving card being a king.
     if card.rank != 'K':
         error = 'You can only move kings into an empty lane.'
     return error
 
-        
+
 def lane_none(game, card, moving_stack):
     """
     Cards may not be moved to empty lanes. (str)
-    
+
     Parameters:
     game: The game being played. (Solitaire)
     card: The card to move into the lane. (TrackingCard)
@@ -561,18 +582,18 @@ def lane_none(game, card, moving_stack):
     """
     return 'Cards may not be moved to empty lanes.'
 
-        
+
 def lane_one(game, card, moving_stack):
     """
     Check moving one card at a time into a lane. (str)
-    
+
     Parameters:
     game: The game being played. (Solitaire)
     card: The card to move into the lane. (TrackingCard)
     moving_stack: The cards on top of the card moving. (list of TrackingCard)
     """
     error = ''
-    # check for open space to move the stack
+    # Check for open space to move the stack.
     max_lane = _move_one_size(game, to_lane = True)
     if len(moving_stack) > max_lane:
         error = 'You can only move {} cards to a lane at the moment.'.format(max_lane)
@@ -584,15 +605,15 @@ def lane_reserve(game, card, moving_stack):
     Lane only from the reserve (str)
 
     This function assumes one and only one reserve pile.
-    
+
     Parameters:
     game: The game being played. (Solitaire)
     card: The card to move into the lane. (TrackingCard)
     moving_stack: The cards on top of the card moving. (list of TrackingCard)
     """
     error = ''
-    # check for the moving card being in the reserve.
-    if (not game.reserve[0]) or card !=  game.reserve[0][-1]:
+    # Check for the moving card being in the reserve.
+    if (not game.reserve[0]) or card != game.reserve[0][-1]:
         error = 'You can only lane the top card from the reserve.'
     return error
 
@@ -602,16 +623,17 @@ def lane_reserve_waste(game, card, moving_stack):
     Check only laning cards from the reserve. (str)
 
     If nothing is in the reserve, the waste pile may be used.
-    
+
     Parameters:
     game: The game being played. (Solitaire)
     card: The card to move into the lane. (TrackingCard)
     moving_stack: The cards on top of the card moving. (list of TrackingCard)
     """
     error = ''
-    # check for the moving card being on top of a reserve pile.
+    # Check for an emmpty reserve.
     if not any(game.reserve) and card != game.waste[-1]:
         error = 'If the reserve is empty, you can only lane cards from the waste.'
+    # Check for the moving card being on top of a reserve pile.
     elif any(game.reserve) and card not in [stack[-1] for stack in game.reserve]:
         error = 'You can only move cards from the reserve into an empty lane.'
     return error
@@ -627,6 +649,7 @@ def lane_suit(game, card, moving_stack):
     moving_stack: The stack the mover is the base of. (list of TrackingCard)
     """
     error = ''
+    # Check that all cards are the same suit.
     suit = card.suit
     for other_card in moving_stack[1:]:
         if other_card.suit != suit:
@@ -634,7 +657,9 @@ def lane_suit(game, card, moving_stack):
             break
     return error
 
-# Define match checkers.
+
+################## Define match checkers. ##################
+
 
 def match_adjacent(game, card, match):
     """
@@ -693,7 +718,7 @@ def match_pairs(game, card, match):
     match: The card to match it to. (TrackingCard)
     """
     error = ''
-    # Check for the same rank.
+    # Check for cards of the same rank.
     if card.rank != match.rank:
         error = '{} and {} are not the same rank.'.format(card, match)
     return error
@@ -709,6 +734,7 @@ def match_pyramid(game, target, match):
     match: The card to match it to. (TrackingCard)
     """
     error = ''
+    # Check that each card is free.
     for card in (target, match):
         if card.game_location in game.tableau:
             pile_index = game.tableau.index(card.game_location)
@@ -729,10 +755,12 @@ def match_pyramid_relax(game, target, match):
     match: The card to match it to. (TrackingCard)
     """
     error = ''
+    # Check that each card is free.
     for card in (target, match):
         if card.game_location in game.tableau:
             pile_index = game.tableau.index(card.game_location)
             if pile_index < 6 and len(card.game_location) <= len(game.tableau[pile_index + 1]):
+                # Allow the match if the cards block each other.
                 if game.tableau[pile_index + 1][-1] not in (target, match):
                     error = '{} is blocked by the {}.'.format(card, game.tableau[pile_index + 1][-1])
         if error:
@@ -785,6 +813,7 @@ def match_top(game, target, match):
     match: The card to match it to. (TrackingCard)
     """
     error = ''
+    # Check that the cards are both on top of piles.
     for card in (target, match):
         if card != card.game_location[-1] and card.game_location != game.cells:
             error = '{} is not on the top of a pile.'.format(card)
@@ -803,8 +832,10 @@ def match_top_two(game, target, match):
     match: The card to match it to. (TrackingCard)
     """
     error = ''
+    # Check for both cards on top of a pile.
     if target.game_location[-2:] in [[target, match], [match, target]]:
         return error
+    # Check that the cards are both on top of piles.
     for card in (target, match):
         if card != card.game_location[-1] and card.game_location != game.cells:
             error = '{} is not on the top of a pile.'.format(card)
@@ -812,12 +843,14 @@ def match_top_two(game, target, match):
             break
     return error
 
-# Define pair checkers.
-    
+
+################## Define pair checkers. ##################
+
+
 def pair_alt_color(self, mover, target):
     """
     Build in alternating colors. (str)
-    
+
     Parameters:
     game: The game buing played. (Solitaire)
     mover: The card to move. (TrackingCard)
@@ -829,12 +862,12 @@ def pair_alt_color(self, mover, target):
         error = 'The {} is not the opposite color of the {}'
         error = error.format(mover.name, target.name)
     return error
-    
+
 
 def pair_down(self, mover, target):
     """
     Build sequentially down in rank. (str)
-    
+
     Parameters:
     game: The game being played. (Solitaire)
     mover: The card to move. (TrackingCard)
@@ -851,7 +884,7 @@ def pair_down(self, mover, target):
 def pair_not_suit(game, mover, target):
     """
     Build in anything but suits. (str)
-    
+
     Parameters:
     game: The game buing played. (Solitaire)
     mover: The card to move. (TrackingCard)
@@ -863,12 +896,12 @@ def pair_not_suit(game, mover, target):
         error = 'The {} is the same suit as the {}'
         error = error.format(mover.name, target.name)
     return error
-    
+
 
 def pair_suit(self, mover, target):
     """
     Build in suits. (str)
-    
+
     Parameters:
     game: The game buing played. (Solitaire)
     mover: The card to move. (TrackingCard)
@@ -880,12 +913,12 @@ def pair_suit(self, mover, target):
         error = 'The {} is not the same suit as the {}'
         error = error.format(mover.name, target.name)
     return error
-    
+
 
 def pair_up_down(self, mover, target):
     """
     Build sequentially up or down in rank. (str)
-    
+
     Parameters:
     game: The game being played. (Solitaire)
     mover: The card to move. (TrackingCard)
@@ -898,12 +931,14 @@ def pair_up_down(self, mover, target):
         error = error.format(mover.name, target.name)
     return error
 
-# Define sort checkers.
+
+################## Define sort checkers. ##################
+
 
 def sort_ace(game, card, foundation):
     """
     Sort starting with the ace. (str)
-    
+
     Parameters:
     game: The game being played. (Solitiaire)
     card: The card to be sorted. (TrackingCard)
@@ -915,10 +950,11 @@ def sort_ace(game, card, foundation):
         error = 'Only aces can be sorted to empty foundations.'
     return error
 
+
 def sort_kings(game, card, foundation):
     """
     Sort starting with the king. (str)
-    
+
     Parameters:
     game: The game being played. (Solitiaire)
     card: The card to be sorted. (TrackingCard)
@@ -950,14 +986,14 @@ def sort_kings_only(game, card, foundation):
 def sort_no_reserve(game, card, foundation):
     """
     Sort non-starters only when the reserve is empty. (str)
-    
+
     Parameters:
     game: The game being played. (Solitiaire)
     card: The card to be sorted. (TrackingCard)
     foundation: The target foundation. (list of TrackingCard)
     """
     error = ''
-    # Check for match to foundation pile.
+    # Check for an empty reserve or foundation.
     if game.reserve[0] and foundation:
         error = 'Only base cards can be sorted before the reserve is emptied.'
     return error
@@ -985,6 +1021,7 @@ def sort_pyramid(game, card, foundation):
     foundation: The foundation to sort to. (list of cards.TrackingCard)
     """
     error = ''
+    # Check that the card is open on both sides.
     if card.game_location in game.tableau:
         pile_index = game.tableau.index(card.game_location)
         if pile_index < 6 and len(card.game_location) <= len(game.tableau[pile_index + 1]):
@@ -995,7 +1032,7 @@ def sort_pyramid(game, card, foundation):
 def sort_rank(game, card, foundation):
     """
     Sort starting with a specific rank. (str)
-    
+
     Parameters:
     game: The game being played. (Solitiaire)
     card: The card to be sorted. (TrackingCard)
@@ -1012,7 +1049,7 @@ def sort_rank(game, card, foundation):
 def sort_up(game, card, foundation):
     """
     Sort sequentially up in rank. (str)
-    
+
     Parameters:
     game: The game being played. (Solitiaire)
     card: The card to be sorted. (TrackingCard)
@@ -1035,6 +1072,7 @@ def sort_up_down(game, card, foundation):
     foundation: The foundation to sort it to. (list of card.TrackingCard)
     """
     error = ''
+    # Check for the card being abover or below, based on the foundation.
     if game.foundations.index(foundation) < 4:
         if foundation and not card.below(foundation[-1]):
             error = 'The {} is not one rank below the {}.'.format(card, foundation[-1])

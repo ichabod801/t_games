@@ -33,12 +33,12 @@ Game Programming: Craig "Ichabod" O'Brien
 """
 
 RULES = """
-Each turn you play a card, adding it's value to the running total. You must 
-correctly state the new total when you play a card. For example, if the total 
-to you is 81, and you wanted to play the five of diamonds, you would enter 
-'5d 86' If you can't play a card without taking the total over 99, you must 
-pass, and lose one of your three tokens. At that point the hands are redealt 
-and the total is reset to zero. If you lose all of your tokens, you are out 
+Each turn you play a card, adding it's value to the running total. You must
+correctly state the new total when you play a card. For example, if the total
+to you is 81, and you wanted to play the five of diamonds, you would enter
+'5d 86' If you can't play a card without taking the total over 99, you must
+pass, and lose one of your three tokens. At that point the hands are redealt
+and the total is reset to zero. If you lose all of your tokens, you are out
 of the game. The last player with tokens wins.
 
 Cards are face value with face cards being 10, with the following exceptions:
@@ -47,7 +47,7 @@ Cards are face value with face cards being 10, with the following exceptions:
     10: -10 or 10
     K: 0
 
-In addition, a 4 reverses the order of play and a 3 skips the next player's 
+In addition, a 4 reverses the order of play and a 3 skips the next player's
 turn. Nines take the total to 99, no matter what the previous total was.
 
 The tokens command will show you how many tokens each player has left.
@@ -56,19 +56,19 @@ Options:
 99=: The ranks that take the total to 99. It can be one rank or multiple ranks
     separated by slashes. (default is 9)
 chicago: Equivalent to zero=4/9 skip=9 99=K minus=10 plus-minus=.
-easy=: How many easy bots you will play against. (default = 2)
+easy= (e=): How many easy bots you will play against. (default = 2)
 face=: The ranks that have their face value. This is used to reset default
     non-face values. Face cards will have a value of 10.
-jokers=: The number of jokers added to the deck. Their default value is 99.
+jokers= (j=): The number of jokers in the deck. Their default value is 99.
 joker-rules: Equivalent to zero=9/k reverse=k jokers=2 99=x skip=.
-medium=: How many medium bots you will play against. (default = 2)
-minus=: The ranks that have their value negated. It can be one rank or 
+medium= (m=): How many medium bots you will play against. (default = 2)
+minus= (-=): The ranks that have their value negated. It can be one rank or
     multiple ranks separated by slashes.
-plus-minus=: The ranks that can be positive or negative. It can be one rank or
-    multiple ranks separated by slashes.
-reverse=: The rank that reverses the order of play.
-skip=: The rank that skips the next player.
-zero=: The ranks valued at 0. It can be one rank or multiple ranks separated 
+plus-minus= (+-=): The ranks that can be positive or negative. It can be one
+    rank or multiple ranks separated by slashes.
+reverse= (r=): The rank that reverses the order of play.
+skip= (s=): The rank that skips the next player.
+zero= (0=): The ranks valued at 0. It can be one rank or multiple ranks separated
     by slashes.
 """
 
@@ -78,20 +78,30 @@ class NinetyNine(game.Game):
     A game of Ninety-Nine. (game.Game)
 
     Class Attributes:
-    nn_re: A regular expression for Ninety-Nine moves. (re.SRE_Expression)
+    ninety_nine_re: A regular expression for Ninety-Nine moves. (SRE_Expression)
 
     Attributes:
     card_values: The possible values for each rank. (dict of str: tuple)
     deck: The deck of cards for the game. (cards.Deck)
+    easy: The number of easy bots in the game. (int)
+    eight_nine: A flag for reversing eights and nines. (bool)
+    face: The ranks that score face value rather than a special value. (list)
+    free_pass: A flag for passing without a token. (bool)
     hands: The players hands of cards, keyed by name. (dict of str:cards.Hand)
+    minus: The ranks that have their value negated. (list of str)
+    out_of_the_game: Players who have dropeed out of the game. (list of Player)
+    plus_minus: The ranks of cards with face and negative face value. (list)
+    rank99: The ranks that set the value to 99. (list of str)
     reverse_rank: The rank that reverses the order of play. (str)
     skip_rank: The rank that skips over a player. (str)
     total: The current total rank count. (int)
+    zero: The ranks valued at zero. (list of str)
 
     Methods:
     deal: Deal a new hand of cards. (None)
     do_pass: Pass the turn, lose a token. (bool)
     do_tokens: Show how many tokens are left. (bool)
+    help_ranks: Show the current special ranks in the game. (None)
 
     Overridden Methods:
     clean_up
@@ -99,21 +109,21 @@ class NinetyNine(game.Game):
     game_over
     handle_options
     player_action
+    set_options
     set_up
     """
 
     aka = ['99']
     aliases = {'p': 'pass'}
-    # Interface categories for the game.
     categories = ['Card Games']
     credits = CREDITS
     name = 'Ninety-Nine'
-    nn_re = re.compile('([1-9atjqkx][cdhs]).*?(-?\d\d?)', re.I)
+    ninety_nine_re = re.compile('([1-9atjqkx][cdhs]).*?(-?\d\d?)', re.I)
     num_options = 7
     rules = RULES
 
     def clean_up(self):
-        """Clean up the game. (None)"""
+        """Clean up the game for the next game. (None)"""
         self.players.extend(self.out_of_the_game)
         self.out_of_the_game = []
 
@@ -134,23 +144,23 @@ class NinetyNine(game.Game):
         """
         game, losses = self.gipf_check(arguments, ('blackjack', 'crazy eights', 'yacht'))
         go = True
-        # Blackjack.
+        # Blackjack allows passing without losing a token.
         if game == 'blackjack':
             if not losses:
                 self.human.tell('\nYou can pass without losing a token.')
                 self.free_pass = True
-        # Crazy eights.
+        # Crazy Eights reverses eights and nines for one play.
         elif game == 'crazy eights':
             if not losses:
                 self.human.tell('\nEights and nines are reversed for this play.')
                 self.eight_nine = True
-        # Yacht.
+        # Yacht gives you a free token..
         elif game == 'yacht':
             if not losses:
                 self.scores[self.human.name] += 1
                 message = 'You got a free token. You now have {} tokens.'
                 self.human.tell(message.format(self.scores[self.human.name]))
-        # Games with no edges.
+        # Otherwise, I'm confused.
         else:
             self.human.tell('Girls in pillow fights? Come on, this is a family game.')
         return go
@@ -159,14 +169,16 @@ class NinetyNine(game.Game):
         """
         Pass the turn and lose a token. (p)
         """
+        # Handel free passes.
         if self.free_pass:
             self.free_pass = False
         else:
             # Remove a token.
             player = self.players[self.player_index]
             self.scores[player.name] -= 1
-            message = '{} loses a token. They now have {} tokens.'
-            self.human.tell(message.format(player.name, self.scores[player.name]))
+            plural = utility.plural(self.scores[player.name], 'token')
+            message = '{} loses a token. They now have {} {}.'
+            self.human.tell(message.format(player.name, self.scores[player.name], plural))
             # Check for removing the player from the game..
             if not self.scores[player.name]:
                 # Adjust scoring (last player out should score higher).
@@ -218,6 +230,12 @@ class NinetyNine(game.Game):
                     self.win_loss_draw[0] += 1
                 elif score > human_score:
                     self.win_loss_draw[1] += 1
+                else:
+                    self.win_loss_draw[2] += 1
+            self.win_loss_draw[2] -= 1
+            place = utility.number_word(self.win_loss_draw[1] + 1, ordinal = True)
+            out_of = utility.number_word(len(self.scores))
+            self.human.tell('\nYou finished in {} place out of {} players.'.format(place, out_of))
             return True
         else:
             return False
@@ -225,6 +243,7 @@ class NinetyNine(game.Game):
     def handle_options(self):
         """Handle the game options(None)"""
         super(NinetyNine, self).handle_options()
+        # Set the special rank values.
         for rank in cards.Card.ranks:
             if rank in self.rank99:
                 self.card_values[rank] = (99,)
@@ -234,6 +253,7 @@ class NinetyNine(game.Game):
                 self.card_values[rank] += (-cards.Card.ranks.index(rank),)
             elif rank in self.zero:
                 self.card_values[rank] = (0,)
+        # Set the paleyrs.
         self.players = [self.human]
         for bot in range(self.easy):
             self.players.append(Bot99([player.name for player in self.players]))
@@ -243,15 +263,18 @@ class NinetyNine(game.Game):
     def help_ranks(self):
         """Show the current special ranks in the game. (None)"""
         self.human.tell('\nThe current values of the ranks are:\n')
+        # Get the card class.
         if self.deck.discards:
             card_class = self.deck.discards[0].__class__
         elif self.deck.cards:
             card_class = self.deck.cards[0].__class__
         else:
             card_class = self.hands[self.human.name].cards[0]
+        # Show the rank values.
         for rank, rank_name in zip(card_class.ranks[1:], card_class.rank_names[1:]):
             value_text = ' or '.join([str(value) for value in self.card_values[rank]])
             self.human.tell('{}: {}'.format(rank_name, value_text))
+        # Show the special ranks.
         if self.skip_rank or self.reverse_rank:
             self.human.tell('\nRanks with special abilities include:\n')
         if self.reverse_rank:
@@ -276,24 +299,21 @@ class NinetyNine(game.Game):
         player.tell('Your hand is: {}'.format(hand))
         # Get the players move.
         move = player.ask('What is your move? ')
-        parsed = self.nn_re.search(move)
+        parsed = self.ninety_nine_re.search(move.upper())
         if parsed:
             # Handle standard moves
             card, new_total = parsed.groups()
-            card = card.upper()
             new_total = int(new_total)
             # Check for a valid card.
             if card in hand.cards:
                 # Get the rank of the card.
+                rank = card[0]
                 if self.eight_nine and card[0] in '89':
-                    # Handle swapping eights and nines.
-                    rank = {'8': '9', '9': '8'}[card[0]]
-                else:
-                    rank = card[0]
+                    rank = {'8': '9', '9': '8'}[rank]
                 # Check for a valid total
                 values = self.card_values[rank]
                 valid_add = (new_total < 100) and (new_total - self.total in values)
-                if valid_add or (new_total == 99 and 99 in values): 
+                if valid_add or (new_total == 99 and 99 in values):
                     # Play the card.
                     hand.discard(card)
                     self.total = new_total
@@ -319,6 +339,9 @@ class NinetyNine(game.Game):
             else:
                 # Warn if the player doesn't have the card.
                 player.error('You do not have that card.')
+        elif self.deck.card_re.match(move.strip()):
+            # Handle no total.
+            player.error('You must provide a total when you play a card.')
         else:
             # Handle other commands.
             return self.handle_cmd(move)
@@ -326,34 +349,41 @@ class NinetyNine(game.Game):
 
     def set_options(self):
         """Define the options for the game. (None)"""
+        # Set the standard card values.
         self.card_values = {rank: (min(10, index),) for index, rank in enumerate(cards.Card.ranks)}
         self.card_values['A'] = (1, 11)
         self.free_pass = False
-        is_rank_list = lambda ranks: all(rank in cards.Card.ranks for rank in ranks)
+        # Get check function for rank lists.
+        def is_rank_list(ranks):
+            return all(rank in cards.Card.ranks for rank in ranks)
+        # Set the groups.
         self.option_set.add_group('joker-rules', 'zero=9/k reverse=k jokers=2 99=x skip=')
         self.option_set.add_group('chicago', 'zero=4/9 skip=9 99=K minus=10 plus-minus=')
-        self.option_set.add_option('jokers', converter = int, default = 0, valid = range(5),
-            question = 'How many jokers should there be in the deck (return for 0)? ')
-        self.option_set.add_option('easy', converter = int, default = 2, valid = range(1, 11), 
+        # Set the bot options.
+        self.option_set.add_option('easy', ['e'], converter = int, default = 2, valid = range(1, 11),
             question = 'How many easy bots do you want to play against (return for 2)? ')
-        self.option_set.add_option('medium', converter = int, default = 2, valid = range(1, 11), 
+        self.option_set.add_option('medium', ['m'], converter = int, default = 2, valid = range(1, 11),
             question = 'How many medium bots do you want to play against (return for 2)? ')
+        # Set the rank value options.
         self.option_set.add_option('99', target = 'rank99', default = ['9', 'X'],
-            check = is_rank_list, converter = options.upper, 
+            check = is_rank_list, converter = options.upper,
             question = 'What ranks should be worth 99 points (slash separated, return for 9 and joker)? ')
-        self.option_set.add_option('minus', default = [], check = is_rank_list, 
-            converter = options.upper, 
+        self.option_set.add_option('minus', ['-'], default = [''], check = is_rank_list,
+            converter = options.upper,
             question = 'What ranks should be worth minus face value (slash separated, return for none)? ')
-        self.option_set.add_option('plus-minus', default = ['T'], check = is_rank_list,
-            converter = options.upper, 
+        self.option_set.add_option('plus-minus', ['+-'], default = ['T'], check = is_rank_list,
+            converter = options.upper,
             question = 'What ranks should be worth +/- face value (slash separated, return for tens)? ')
-        self.option_set.add_option('zero', default = ['4', 'K'], check = is_rank_list,
+        self.option_set.add_option('zero', ['0'], default = ['4', 'K'], check = is_rank_list,
             converter = options.upper,
             question = 'What ranks should be worth zero (slash separated, return for 4 and king)? ')
-        self.option_set.add_option('reverse', target = 'reverse_rank', valid = cards.Card.ranks,
-            default = '4', converter = options.upper, 
+        # Set the special rank options.
+        self.option_set.add_option('jokers', ['j'], converter = int, default = 0, valid = range(5),
+            question = 'How many jokers should there be in the deck (return for 0)? ')
+        self.option_set.add_option('reverse', ['r'], target = 'reverse_rank', valid = cards.Card.ranks,
+            default = '4', converter = options.upper,
             question = 'What rank should reverse the order of play? ')
-        self.option_set.add_option('skip', target = 'skip_rank', valid = cards.Card.ranks,
+        self.option_set.add_option('skip', ['s'], target = 'skip_rank', valid = cards.Card.ranks,
             default = '3', converter = options.upper, question = 'What rank should skip the next player? ')
 
     def set_up(self):
@@ -454,23 +484,25 @@ class Bot99Medium(Bot99):
                 keepers.append((value, card))
             else:
                 players.append((value, card))
-        # Play the highest possible total, if you can play.
+        # Play the highest possible total, excluding keepers, if you can play.
         if players:
             players.sort()
             return '{1} {0}'.format(*players[-1])
+        # Otherwise, play the highest keept you can.
         elif keepers:
             keepers.sort()
             return '{1} {0}'.format(*keepers[-1])
+        # Pass if you can't play.
         else:
-            # Pass if you can't play.
             return 'pass'
 
 
 if __name__ == '__main__':
+    # Play the game without the interface.
     try:
         input = raw_input
     except NameError:
         pass
     name = input('What is your name? ')
-    nn = NinetyNine(player.Humanoid(name), '')
-    nn.play()
+    ninety_nine = NinetyNine(player.Humanoid(name), '')
+    ninety_nine.play()

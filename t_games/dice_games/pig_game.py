@@ -1,7 +1,7 @@
 """
 pig_game.py
 
-Pig.
+A game of Pig.
 
 If you write a new kind of bot, it will not be usable unless you:
     1. Put it before the Pig class definition.
@@ -18,12 +18,11 @@ RULES: The rules of Pig. (str)
 SATAN_NAMES: Some names for Satan from the Bible. (str)
 
 Classes:
-PigBot: A bot for playing the game of Pig. (player.Bot)
-PigBotBasePaceRace: A bot w/ min score, max behind, + when to go nuts. (PigBot)
-PigBotPaceRace: A bot with  min score, modifier, and when to go nuts. (PigBot)
-PigBotRolls: A Pig bot that stops after a set number of rolls. (PigBot)
-PigBotScoringTurns: A Pig bot that tries to win in t scoring turns. (PigBot)
-PigBotValue: A Pig bot that rolls until it exceeds a certain value. (PigBot)
+PigBotBasePaceRace: A bot w/ min score, max behind, + when to go nuts. (Bot)
+PigBotPaceRace: A bot with  min score, modifier, and when to go nuts. (Bot)
+PigBotRolls: A Pig bot that stops after a set number of rolls. (Bot)
+PigBotScoringTurns: A Pig bot that tries to win in t scoring turns. (Bot)
+PigBotValue: A Pig bot that rolls until it exceeds a certain value. (Bot)
 Pig: A game of Pig. (game.Game)
 """
 
@@ -38,18 +37,16 @@ import t_games.player as player
 import t_games.utility as utility
 
 
-# The credits for the game, progamming, and bots.
 CREDITS = """
 Game Design: Traditional
 Game/Bot Programming: Craig "Ichabod" O'Brien
-Bot Design: Roger Johnson, Reiner Knizia, Todd Neller, Craig O'Brien, 
+Bot Design: Roger Johnson, Reiner Knizia, Todd Neller, Craig O'Brien,
     Clifton Presser
 """
 
-# The rules of Pig.
 RULES = """
 On your turn, you roll one die. If you roll a one your turn is over and you
-score nothing. Otherwise, you can choose to score what your rolled (ending 
+score nothing. Otherwise, you can choose to score what your rolled (ending
 your turn) or to continue rolling. If you continue to roll, any roll of a one
 ends your turn without scoring. On any other roll you can stop and score the
 total of all your rolls that turn.
@@ -57,9 +54,9 @@ total of all your rolls that turn.
 The first player to score 100 or more wins.
 
 OPTIONS:
-even-turns: Everyone gets the same number of turns.
-shuffle=: Use a shuffle die with the specified number of repeats.
-six-bad: Turns end with no score on a six instead of a one.
+even-turns (et): Everyone gets the same number of turns.
+shuffle= (sh=): Use a shuffle die with the specified number of repeats.
+six-bad (6b): Turns end with no score on a six instead of a one.
 
 BOT OPTIONS:
 Bots can be preset bots or general bots that you must define parameters for.
@@ -69,83 +66,47 @@ defaults will be used for later parameters. The default values can be selected
 by specifying the bot type without an equals sign.
 
 The general bots are:
-    base-pace-race=: This bot tries to score at least base, stay no more than
+    base-pace-race: This bot tries to score at least base, stay no more than
         pace points behind the lead, and tries to win if anyone is within the
         race parameter of winning. (alias: bpr, defaults=19/14/31)
     pace-race: This bot tries to score at least base, +/-1 for every modifer
         it's behind/ahead, and tries to win if in anyone is within the race
         parameter of winning. (alias: pr, defaults=21/8/29)
-    rolls: This bot stops after a given number of rolls. (defaults=5)
-    scoring-turns: This bot tries to win in t scoring turns. (alias: t,
+    rolls: This bot stops after a given number of rolls. (alias: r, defaults=5)
+    scoring-turns: This bot tries to win in t scoring turns. (alias: st,
         defaults=4)
-    value: This bot stops after reaching a given value. (defaults=25)
+    value: This bot stops after reaching a given value. (alias: v, defaults=25)
 
 The preset bots are:
-    stupid: A default value bot.
-    easy: A default scoring-turns bot.
-    medium: A default base-pace-race bot.
-    hard: A default pace-race bot.
-    knizia: A value bot with a value of 20.
-    satan: A base-pace-race bot with parameters 6/6/6
+    stupid (st): A default value bot.
+    easy (e): A default scoring-turns bot.
+    medium (m): A default base-pace-race bot.
+    hard (h): A default pace-race bot.
+    knizia (k): A value bot with a value of 20.
+    satan (666): A base-pace-race bot with parameters 6/6/6
     x: A rolls bot with 3 rolls.
 
 The overall default is to have one medium bot.
 """
 
-# Some names for Satan from the Bible.
 SATAN_NAMES = ['Abbadon', 'Apollyon', 'Beast', 'Beelzebub', 'Belial', 'Devil', 'Lucifer', 'Satan']
 
 
-class PigBot(player.Bot):
+class PigBotBasePaceRace(player.Bot):
     """
-    A bot for playing the game of Pig. (player.Bot)
+    A Pig bot with values for min score, max behind, and when to go nuts. (Bot)
 
-    Overridden Methods:
-    __init__
-    __ask__
-    __tell__
-    """
-
-    def __init__(self, taken_names = [], initial = ''):
-        """
-        Set the bot's name. (None)
-
-        Parameters:
-        taken_names: Names already used by a player. (list of str)
-        initial: The first letter of the bot's name. (str)
-        """
-        super(PigBot, self).__init__(taken_names, initial)
-        self.scores = {}
-        self.turn_score = 0
-
-    def ask(self, prompt):
-        """
-        Get information from the player. (str)
-
-        Parameters:
-        prompt: The question being asked of the player. (str)
-        """
-        return random.choice(('roll', 'stop'))
-
-    def tell(self, text):
-        """
-        Give information to the player. (None)
-
-        Parameters:
-        The parameters are as per the built-in print function.
-        """
-        out = text.replace('your', 'their').replace('You', self.name)
-        print(out)
-
-
-class PigBotBasePaceRace(PigBot):
-    """
-    A Pig bot with values for min score, max behind, and when to go nuts. (PigBot)
+    Class Attributes:
+    parameters: The names of the parameters for the bot. (list of str)
 
     Attributes:
     base: The the minimum turn score this bot will stop rolling on. (int)
     pace: The maximum score the bot wants to be behind the leader. (int)
     race: How close the leader can be before it tries to win. (int)
+
+    Overridden Methods:
+    __init__
+    ask
     """
 
     parameters = ['minimum score', 'maximum behind', 'when to go for it']
@@ -160,13 +121,16 @@ class PigBotBasePaceRace(PigBot):
         race: How close the leader can be before it tries to win. (int)
         taken_names: Names already used by a player. (list of str)
         """
+        # Do the standard initialization.
         super(PigBotBasePaceRace, self).__init__(taken_names, 'b')
+        # Certain parameters require a Satan name.
         if (base, pace, race) == (6, 6, 6):
             while True:
                 name = random.choice(SATAN_NAMES)
                 if name not in taken_names:
                     self.name = name
                     break
+        # Set the specified parameters.
         self.base = base
         self.pace = pace
         self.race = race
@@ -178,11 +142,11 @@ class PigBotBasePaceRace(PigBot):
         Parameters:
         prompt: The question being asked of the player. (str)
         """
-        # Calcuate values.
+        # Calcuate the values the values that inform the decision.
         turn_score = self.game.turn_score
         max_score = max(self.game.scores.values())
         my_score = self.game.scores[self.name]
-        # Last chance:
+        # Keep going if it's your last chance.
         if max_score > 99 and my_score + turn_score <= max_score:
             return 'roll'
         # Stop if you've won.
@@ -201,14 +165,21 @@ class PigBotBasePaceRace(PigBot):
             return 'stop'
 
 
-class PigBotPaceRace(PigBot):
+class PigBotPaceRace(player.Bot):
     """
-    A Pig bot with values for min score, modifier, and when to go nuts. (PigBot)
+    A Pig bot with values for min score, modifier, and when to go nuts. (Bot)
+
+    Class Attributes:
+    parameters: The names of the parameters for the bot. (list of str)
 
     Attributes:
     pace: The the minimum turn score this bot will stop rolling on. (int)
-    modifier: A modifier to pace based how far behind the bot is (int)
+    modifier: A modifier to pace based how far ahead/behind the bot is (int)
     race: How close the leader can be before it tries to win. (int)
+
+    Overridden Methods:
+    __init__
+    ask
     """
 
     parameters = ['minimum score', 'score modifier', 'when to go for it']
@@ -219,11 +190,13 @@ class PigBotPaceRace(PigBot):
 
         Parameters:
         pace: The the minimum turn score this bot will stop rolling on. (int)
-        modifier: A modifier to pace based how far behind the bot is (int)
+        modifier: A modifier to pace based how far ahead/behind the bot is (int)
         race: How close the leader can be before it tries to win. (int)
         taken_names: Names already used by a player. (list of str)
         """
+        # Do the standard initialization.
         super(PigBotPaceRace, self).__init__(taken_names, 'p')
+        # Set the specified attributes.
         self.pace = pace
         self.modifier = modifier
         self.race = race
@@ -235,12 +208,12 @@ class PigBotPaceRace(PigBot):
         Parameters:
         prompt: The question being asked of the player. (str)
         """
-        # Calcuate values.
+        # Calcuate the values the values that inform the decision.
         turn_score = self.game.turn_score
         max_other = max([score for name, score in self.game.scores.items() if name != self.name])
         my_score = self.game.scores[self.name]
         hold_value = round(self.pace + (max_other - my_score) / self.modifier, 0)
-        # Last chance:
+        # Keep going if it's your last chance.
         if max_other > 99 and my_score + turn_score <= max_other:
             return 'roll'
         # Stop if you've won.
@@ -256,12 +229,21 @@ class PigBotPaceRace(PigBot):
             return 'stop'
 
 
-class PigBotRolls(PigBot):
+class PigBotRolls(player.Bot):
     """
-    A Pig bot that stops after a set number of rolls. (PigBot)
+    A Pig bot that stops after a set number of rolls. (player.Bot)
+
+    Class Attributes:
+    parameters: The names of the parameters for the bot. (list of str)
 
     Attributes:
-    rolls: The the number of rolls to make. (int)
+    max_rolls: The the number of rolls to make. (int)
+    rolls: The number of rolls made so far. (int)
+
+    Overridden Methods:
+    __init__
+    ask
+    tell
     """
 
     parameters = ['rolls']
@@ -274,7 +256,9 @@ class PigBotRolls(PigBot):
         rolls: The the number of rolls to make. (int)
         taken_names: Names already used by a player. (list of str)
         """
+        # Do the standard initialization.
         super(PigBotRolls, self).__init__(taken_names, 'r')
+        # Set the specified attributes.
         self.max_rolls = rolls
         self.rolls = 0
 
@@ -285,13 +269,12 @@ class PigBotRolls(PigBot):
         Parameters:
         prompt: The question being asked of the player. (str)
         """
-        # Track rolls.
+        # Calcuate the values the values that inform the decision.
         self.rolls += 1
-        # Calcuate values.
         turn_score = self.game.turn_score
         my_score = self.game.scores[self.name]
         max_score = max(self.game.scores.values())
-        # Last chance:
+        # Keep going if it's your last chance.
         if max_score > 99 and my_score + turn_score <= max_score:
             return 'roll'
         # Stop if you've won.
@@ -304,7 +287,7 @@ class PigBotRolls(PigBot):
         else:
             return 'roll'
 
-    def tell(self, text):
+    def tell(self, text = ''):
         """
         Give information to the player. (None)
 
@@ -317,18 +300,25 @@ class PigBotRolls(PigBot):
             self.rolls = 0
 
 
-class PigBotScoringTurns(PigBot):
+class PigBotScoringTurns(player.Bot):
     """
-    A Pig bot that tries to win in t scoring turns. (PigBot)
+    A Pig bot that tries to win in t scoring turns. (player.Bot)
 
-    For example, with scoring_turns = 4. To start, they will try to score 
+    For example, with scoring_turns = 4. To start, they will try to score
     100 / 4 = 25 points. Say that the first time they score they score 28
-    points. The next time they will try to score (100 - 28) / (4 - 1) = 24 
+    points. The next time they will try to score (100 - 28) / (4 - 1) = 24
     points. If they then score 26 points, they will try to score
     (100 - 28 - 26) / (4 - 2) = 23 points.
 
+    Class Attributes:
+    parameters: The names of the parameters for the bot. (list of str)
+
     Attributes:
     scoring_turns: The number of scoring turns to try to win in. (int)
+
+    Overridden Methods:
+    __init__
+    ask
     """
 
     parameters = ['scoring turns']
@@ -351,12 +341,12 @@ class PigBotScoringTurns(PigBot):
         Parameters:
         prompt: The question being asked of the player. (str)
         """
-        # Calculate values.
+        # Calcuate the values the values that inform the decision.
         my_score = self.game.scores[self.name]
         turn_score = self.game.turn_score
         max_score = max(self.game.scores.values())
         hold_at = (100 - my_score) // self.scoring_turns
-        # Last chance:
+        # Keep going if it's your last chance.
         if max_score > 99 and my_score + turn_score <= max_score:
             return 'roll'
         # Stop if you've won.
@@ -370,12 +360,19 @@ class PigBotScoringTurns(PigBot):
             return 'stop'
 
 
-class PigBotValue(PigBot):
+class PigBotValue(player.Bot):
     """
-    A Pig bot that rolls until it exceeds a certain value. (PigBot)
+    A Pig bot that rolls until it exceeds a certain value. (player.Bot)
+
+    Class Attributes:
+    parameters: The names of the parameters for the bot. (list of str)
 
     Attributes:
     value: The the minimum turn score this bot will stop rolling on. (int)
+
+    Overridden Methods:
+    __init__
+    ask
     """
 
     parameters = ['value']
@@ -398,11 +395,11 @@ class PigBotValue(PigBot):
         Parameters:
         prompt: The question being asked of the player. (str)
         """
-        # Calcuate values.
+        # Calcuate the values the values that inform the decision.
         turn_score = self.game.turn_score
         my_score = self.game.scores[self.name]
         max_score = max(self.game.scores.values())
-        # Last chance:
+        # Keep going if it's your last chance.
         if max_score > 99 and my_score + turn_score <= max_score:
             return 'roll'
         # Stop if you've won.
@@ -419,32 +416,29 @@ class Pig(game.Game):
     """
     A game of pig. (Game)
 
-    Class Attributes:
-    general_bots: The bot classes, for options with =. (dict of str: PigBot)
-    present_bots: The bots with preset parameters. (dict of str: tuple)
-
     Attributes:
+    bad: The number that ends the player's turn. (int)
     die: The die that is rolled. (dice.Die)
+    even_turns: A flag for each player getting the same number of turns. (bool)
+    shuffle: The number of repeats on the shuffle die, if any. (int)
     turn_score: The current player's turn score. (int)
 
     Methods:
-    ask_options: Get options from the user. (None)
     do_scores: Show the current scores. (None)
-    parse_options: Parse options from the play command. (None)
 
     Overridden Methods:
     clean_up
     game_over
     handle_options
-    set_up
     player_action
+    set_options
+    set_up
     """
 
     name = 'Pig'
-    # Interface categories for the game.
     categories = ['Dice Games']
     credits = CREDITS
-    bot_classes = {'value': PigBotValue, 'base-pace-race': PigBotBasePaceRace, 
+    bot_classes = {'value': PigBotValue, 'base-pace-race': PigBotBasePaceRace,
         'scoring-turns': PigBotScoringTurns, 'pace-race': PigBotPaceRace, 'rolls': PigBotRolls}
     num_options = 3
     rules = RULES
@@ -459,12 +453,12 @@ class Pig(game.Game):
         """
         game, losses = self.gipf_check(arguments, ('battleships', 'wumpus', 'solitaire dice'))
         go = True
-        # Battleships.
+        # Battleships gives you a roll of two.
         if game == 'battleships':
             if not losses:
                 self.turn_score += 2
                 self.human.tell('You rolled a 2. Your turn score is now {}.'.format(self.turn_score))
-        # Hunt the Wumpus
+        # Hunt the Wumpus let's you know what your next roll will be.
         elif game == 'wumpus':
             if not losses:
                 roll = self.die.roll()
@@ -480,6 +474,7 @@ class Pig(game.Game):
                     else:
                         self.turn_score += roll
                         self.human.tell('Your turn score is {}.'.format(self.turn_score))
+        # Solitiare dice gives you the choice of two rolls.
         elif game == 'solitaire dice':
             if not losses:
                 first = self.die.roll()
@@ -490,11 +485,12 @@ class Pig(game.Game):
                 prompt = 'Do you want to roll a {} or a {}? '.format(first, second)
                 choice = self.human.ask_int(prompt, valid = [first, second], cmd = False)
                 if choice == self.bad:
-                    go == False
+                    go = False
                 else:
                     self.turn_score += choice
                     message = 'You rolled a {}. Your turn score is now {}.'
                     self.human.tell(message.format(choice, self.turn_score))
+        # Otherwise I'm confused.
         else:
             self.human.error('Say what?')
         return go
@@ -513,7 +509,7 @@ class Pig(game.Game):
     def game_over(self):
         """Check a score being over 100. (bool)"""
         # Check for win.
-        if max(self.scores.values()) > 99:
+        if max(self.scores.values()) >= 100:
             # Check for even turns option.
             if self.even_turns and self.turns % len(self.players):
                 return False
@@ -530,7 +526,13 @@ class Pig(game.Game):
                         self.win_loss_draw[2] += 1
                 # Declare the winner when found.
                 if score == winning_score:
-                    self.human.tell('{} won with {} points.'.format(name, score))
+                    self.human.tell('\n{} won with {} points.'.format(name, score))
+            # Tell human their place, if they didn't win.
+            if self.win_loss_draw[1]:
+                place = utility.number_word(self.win_loss_draw[1] + 1, ordinal = True)
+                if not self.win_loss_draw[0]:
+                    place = 'last'
+                self.human.tell('You came in {} place with {} points.'.format(place, human_score))
             return True
 
     def handle_options(self):
@@ -545,78 +547,89 @@ class Pig(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
+        # Get the player's move (they must roll to start the turn).
         if self.turn_score:
             move = player.ask('Would you like to roll or stop? ')
         else:
+            player.tell()
             move = 'roll'
         if move.lower() in ('s', 'stop', 'whoa'):
+            # End the turn and score.
             self.scores[player.name] += self.turn_score
             go = False
         elif move.lower() in ('r', 'roll', 'go'):
+            # Roll and risk scoring nothing.
             roll = self.die.roll()
             if roll == self.bad:
+                # Handle ending the turn.
                 player.tell('You rolled a {}, your turn is over.'.format(self.bad))
                 go = False
             else:
+                # Handle scoring.
                 self.turn_score += roll
                 player.tell('You rolled a {}, your turn score is {}'.format(roll, self.turn_score))
                 go = True
         else:
+            # Handle other commands.
             go = self.handle_cmd(move)
         if not go:
-            player.tell("{}'s score is now {}.\n".format(player.name, self.scores[player.name]))
+            # Inform the player of their current total score.
+            player.tell("{}'s score is now {}.".format(player.name, self.scores[player.name]))
             self.turn_score = 0
         return go
 
     def set_options(self):
         """Set up the game options. (None)"""
         # Game rule options.
-        self.option_set.add_option(name = 'six-bad', target = 'bad', value = 6, default = 1,
+        self.option_set.add_option('six-bad', ['6b'], target = 'bad', value = 6, default = 1,
             question = 'Should six be the number that ends the turn? bool')
-        self.option_set.add_option(name = 'even-turns', target = 'even_turns',
+        self.option_set.add_option('even-turns', ['et'], target = 'even_turns',
             question = 'Should each player get the same number of turns? bool')
-        self.option_set.add_option(name = 'shuffle', converter = int, default = 0,
+        self.option_set.add_option('shuffle', ['sh'], converter = int, default = 0,
             question = 'How many repeats should the shuffle die have (return or 0 for normal die)? ')
         # Parameterized bots.
-        self.option_set.add_option(name = 'value', action = 'bot', default = None, converter = int, 
+        self.option_set.add_option('value', ['v'], action = 'bot', default = None, converter = int,
             check = lambda params: len(params) <= 1 and max(params) <= 100)
-        self.option_set.add_option(name = 'base-pace-race', aliases = ['bpr'], action = 'bot', 
-            default = None, check = lambda params: len(params) <= 3 and max(params) <= 100, 
+        self.option_set.add_option('base-pace-race', aliases = ['bpr'], action = 'bot',
+            default = None, check = lambda params: len(params) <= 3 and max(params) <= 100,
             converter = int)
         self.option_set.add_option(name = 'scoring-turns', aliases = ['t'], action = 'bot', default = None,
             check = lambda params: len(params) <= 1 and max(params) <= 100, converter = int)
         self.option_set.add_option(name = 'pace-race', aliases = ['pr'], action = 'bot', default = None,
             check = lambda params: len(params) <= 2 and max(params) <= 100, converter = int)
-        self.option_set.add_option(name = 'rolls', action = 'bot', default = None,
+        self.option_set.add_option(name = 'rolls', aliases = ['r'], action = 'bot', default = None,
             check = lambda params: len(params) <= 1 and max(params) <= 100, converter = int)
         # Pre-set bots.
-        self.option_set.add_option(name = 'stupid', action = 'bot', target = 'value', value = (), 
+        self.option_set.add_option('stupid', ['st'], action = 'bot', target = 'value', value = (),
             default = None)
-        self.option_set.add_option(name = 'easy', action = 'bot', target = 'scoring-turns', value = (), 
+        self.option_set.add_option('easy', ['e'], action = 'bot', target = 'scoring-turns', value = (),
             default = None)
-        self.option_set.add_option(name = 'medium', action = 'bot', target = 'base-pace-race', value = (), 
+        self.option_set.add_option('medium', ['m'], action = 'bot', target = 'base-pace-race', value = (),
             default = None)
-        self.option_set.add_option(name = 'hard', action = 'bot', target = 'pace-race', value = (), 
+        self.option_set.add_option('hard', ['h'], action = 'bot', target = 'pace-race', value = (),
             default = None)
-        self.option_set.add_option(name = 'knizia', action = 'bot', target = 'value', value = (20,), 
+        self.option_set.add_option('knizia', ['k'], action = 'bot', target = 'value', value = (20,),
             default = None)
-        self.option_set.add_option(name = 'satan', action = 'bot', target = 'base-pace-race', 
+        self.option_set.add_option('satan', ['666'], action = 'bot', target = 'base-pace-race',
             value = (6, 6, 6), default = None)
-        self.option_set.add_option(name = 'x', action = 'bot', target = 'rolls', value = (3,), 
+        self.option_set.add_option(name = 'x', action = 'bot', target = 'rolls', value = (3,),
             default = None)
         # Default bots.
         self.option_set.default_bots = [(PigBotBasePaceRace, ())]
 
     def set_up(self):
         """Set up the game. (None)"""
+        # Set up the die.
         if self.shuffle:
             self.die = dice.ShuffleDie(6, self.shuffle)
         else:
             self.die = dice.Die()
+        # Set up the tracking variable.
         self.turn_score = 0
 
 
 if __name__ == '__main__':
+    # Play Pig without the full interface.
     try:
         input = raw_input
     except NameError:

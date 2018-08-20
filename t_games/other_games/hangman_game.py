@@ -27,16 +27,13 @@ import t_games.game as game
 import t_games.utility as utility
 
 
-# The symbols for the parts of the hanging body, in order.
 BODY_PARTS = 'O|/\\/\\'
 
-# The credits for Hangman.
 CREDITS = """
 Game Design: Traditional
 Game Programming: Craig "Ichabod" O'Brien
 """
 
-# The format method ready diagram of the hanging body.
 DIAGRAM = """
  +---+
  |   |
@@ -47,18 +44,16 @@ DIAGRAM = """
 +----+
 """
 
-# Digits for the guess.
 NUMBERS = '1234567890' * 3
 
-# The rules to Hangman.
 RULES = """
 Hangman is a word guessing game. Each player takes a turn thinking of a secret
 word that the other player must guess letter by letter. To start with, you only
 know how many letters are in the word. For each correct guess, you learn how
-many times the letter is in the word, and where exactly in the word it is. For 
-each incorrect letter guessed, another body part is added to the hanging man: 
-head, torso, arm, arm, leg, leg. If all six body part are added, you fail. If 
-one player can guess their word with fewer errors than the other, they win the 
+many times the letter is in the word, and where exactly in the word it is. For
+each incorrect letter guessed, another body part is added to the hanging man:
+head, torso, arm, arm, leg, leg. If all six body part are added, you fail. If
+one player can guess their word with fewer errors than the other, they win the
 game. Otherwise, the game is a draw.
 
 COMMANDS:
@@ -66,7 +61,8 @@ frequency (freq): Get a frequency list of letters in dictionary words.
 guess: Guess the whole word. An incorrect word earns a body part.
 
 OPTIONS:
-status: See the status of the computer's thinking.
+difficulty= (d=): The difficulty of the game, from 1 to 10 (default = 5).
+status (s): See the status of the computer's thinking.
 """
 
 
@@ -81,13 +77,20 @@ class Hangman(game.Game):
     guess: The current guess, with blanks. (str)
     guessed_letters: The letters guessed so far. (str)
     incorrect: The number of incorrect guesses so far. (int)
+    my_score: The computer's score/the number of incorrect human guesses. (int)
     phase: Is the player answering guesses or guessing? (str)
+    possibles: Words that match information given by the human. (list of str)
+    rank_dict: The frequency rank for letters in the dictionary words. (dict)
+    scored_words: The words for each difficulty level. (dict of int: list)
+    status: A flag for showing the computer's thinking. (bool)
     vowels: The frequency order of vowels in the words. (str)
     word: The word the player is trying to guess. (str)
     word_length: The length of the word being guessed. (int)
     words: The known words. (list of str)
 
     Methods:
+    do_frequency: Show the frequency list. (bool)
+    do_guess: Guess what the word is. (bool)
     get_word: Get a word for the human to guess. (None)
     player_answer: Handle the player answering if letters are correct. (bool)
     player_guess: Handle the player guessing if letters are correct. (bool)
@@ -97,11 +100,12 @@ class Hangman(game.Game):
     __str__
     game_over
     player_action
+    set_options
     set_up
     """
 
+    aka = ['Hang']
     aliases = {'freq': 'frequency'}
-    # Interface categories for the game.
     categories = ['Other Games']
     credits = CREDITS
     name = 'Hangman'
@@ -109,7 +113,7 @@ class Hangman(game.Game):
     rules = RULES
 
     def __str__(self):
-        """Human readable text representation. (str)"""
+        """Generate a human readable text representation. (str)"""
         # Generate the hanging man diagram.
         body_parts = BODY_PARTS[:self.incorrect] + ' ' * (6 - self.incorrect)
         text = DIAGRAM.format(*tuple(body_parts))
@@ -121,6 +125,16 @@ class Hangman(game.Game):
         if self.guessed_letters:
             text += '\nGuessed: {}\n'.format(self.guessed_letters)
         return text
+
+    def do_frequency(self, argument):
+        """
+        Show the frequency list. (freq)
+
+        This is the order of the letter by their frequency in all of the words in the
+        full word list.
+        """
+        self.human.tell('\n{}\n'.format(self.frequency))
+        return True
 
     def do_gipf(self, arguments):
         """
@@ -148,20 +162,13 @@ class Hangman(game.Game):
         An incorrect guess gets you another body part.
         """
         if self.word == argument.lower():
+            # Record a correct guess.
             self.guess = self.word
             self.human.tell('You guessed wisely!')
         else:
+            # Give a body part for an incorrect guess.
             self.incorrect += 1
             self.human.tell('You guessed poorly.')
-
-    def do_frequency(self, argument):
-        """
-        Show the frequency list. (freq)
-
-        This is the order of the letter by their frequency in all of the words in the
-        full word list.
-        """
-        self.human.tell('\n{}\n'.format(self.frequency))
 
     def game_over(self):
         """Check for end of game. (bool)"""
@@ -174,7 +181,7 @@ class Hangman(game.Game):
                 self.guessed_letters = ''
                 self.incorrect = 0
                 self.word_length = 0
-            # If the human is done, figure out who did bets.
+            # If the human is done, figure out who did best.
             else:
                 # Tell the human the word if they failed.
                 if self.incorrect == 6:
@@ -184,6 +191,7 @@ class Hangman(game.Game):
                 self.human.tell('\nYou had {} errors, I had {}.'.format(self.incorrect, self.my_score))
                 # Calculate the winner.
                 if self.incorrect < self.my_score:
+                    # Account for the human using unknown words.
                     if self.foul:
                         self.human.tell("It's a draw because you cheated.")
                         self.win_loss_draw[1] = 1
@@ -248,21 +256,20 @@ class Hangman(game.Game):
         # Update the human on the computer's status.
         if self.status:
             count = len(self.possibles)
-            if count > 1:
+            if count:
                 self.human.tell('I have narrowed it down to {} words.'.format(count))
-            elif count == 1:
-                # Guess the only possible word.
-                correct = self.human.ask('Is the word {!r}? '.format(self.possibles[0])).lower()
-                if correct in utility.YES:
-                    self.guess = self.possibles[0]
-                else:
-                    self.incorrect += 1
-                    self.possibles = []
-                return False
             else:
                 self.human.tell('I think you are cheating.')
-                self.foul = True
-        if self.possibles:
+        if len(self.possibles) == 1:
+            # Guess the only possible word.
+            correct = self.human.ask('Is the word {!r}? '.format(self.possibles[0])).lower()
+            if correct in utility.YES:
+                self.guess = self.possibles[0]
+            else:
+                self.incorrect += 1
+                self.possibles = []
+            return False
+        elif self.possibles:
             # Get the frequency of unknown letters in possible words.
             sub_freq = collections.Counter()
             valid = []
@@ -274,6 +281,7 @@ class Hangman(game.Game):
             guess = sub_freq.most_common(1)[0][0]
         else:
             # If the word isn't in the dictionary, guess by overall frequency.
+            self.foul = True
             for guess in self.frequency:
                 if guess not in self.guessed_letters:
                     break
@@ -319,7 +327,7 @@ class Hangman(game.Game):
     def score_word(self, word):
         """
         Estimate the difficulty of a word. (int)
-    
+
         Parameters:
         word: The word to get a difficulty score for. (str)
         """
@@ -329,9 +337,9 @@ class Hangman(game.Game):
 
     def set_options(self):
         """Set the available game options. (None)"""
-        self.option_set.add_option('status', 
+        self.option_set.add_option('status', ['s'],
             question = "Would you like updates on the computer's thinking? bool")
-        self.option_set.add_option('difficulty', ['diff'], int, valid = range(1, 11), default = 5,
+        self.option_set.add_option('difficulty', ['diff', 'd'], int, valid = range(1, 11), default = 5,
             question = "What difficulty level from 1 to 10 would you like to play at (return for 5)? ")
 
     def set_up(self):
@@ -349,7 +357,7 @@ class Hangman(game.Game):
             self.frequency = ''.join([letter for letter, count in letter_count.most_common()])
             self.vowels = ''.join([letter for letter in self.frequency if letter in 'aeiou']) + 'y'
             # Score the words.
-            self.rank_dict = {letter: letter_index + 1 for letter_index, letter in enumerate(self.frequency)}
+            self.rank_dict = {letter: letter_rank + 1 for letter_rank, letter in enumerate(self.frequency)}
             self.scored_words = collections.defaultdict(list)
             for word in self.words:
                 self.scored_words[self.score_word(word)].append(word)
@@ -364,6 +372,7 @@ class Hangman(game.Game):
 
 
 if __name__ == '__main__':
+    # Play Hangman without the full interface.
     try:
         input = raw_input
     except NameError:

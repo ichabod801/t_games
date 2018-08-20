@@ -30,16 +30,13 @@ import t_games.options as options
 import t_games.player as player
 
 
-# The design and programming credits.
 CREDITS = """
 Although Milton-Bradley did make a version of this game, it is a traditional
-game dating back to the First World War.
-
+    game dating back to the First World War.
 Programming by Craig "Ichabod" O'Brien.
 """
 
-# Different inventories of ships to place.
-INVENTORIES = {'bradley': {'Carrier': (5, 1), 'Battleship': (4, 1), 'Cruiser': (3, 1), 
+INVENTORIES = {'bradley': {'Carrier': (5, 1), 'Battleship': (4, 1), 'Cruiser': (3, 1),
         'Destroyer': (2, 1), 'Submarine': (3, 1)},
     'bednar': {'Carrier': (5, 1), 'Battleship': (4, 1), 'Cruiser': (3, 1),
         'Destroyer': (2, 2), 'Submarine': (1, 2)},
@@ -48,10 +45,9 @@ INVENTORIES = {'bradley': {'Carrier': (5, 1), 'Battleship': (4, 1), 'Cruiser': (
     'wikipedia': {'Carrier': (6, 1), 'Battleship': (4, 2), 'Cruiser': (3, 3),
         'Destroyer': (2, 4), 'Submarine': (1, 0)}}
 
-# The rules of the game.
 RULES = """
 You layout your ships on your board by specifying two squares using the board
-coordinates on the edges of the board. Only you can see where your ships are. 
+coordinates on the edges of the board. Only you can see where your ships are.
 Each ship takes up one or more squares on the board. Ships must be arranged
 orthogonally, and cannot be orthogonally adjacent to each other.
 
@@ -63,7 +59,7 @@ You are told if the shot is a hit or a miss. If all of the squares on a ship
 are hit, that ship is sunk, and the person who sunk it is informed. If all of
 your ships are sunk, you lose the game.
 
-You will be shown two grids, with the columns labelled 0-9 and the rows 
+You will be shown two grids, with the columns labelled 0-9 and the rows
 labelled A-J. You call shots (and place ships) by using letter-number
 coordinates, such as A8. The top grid represents your opponents board, and the
 bottom grid represents your board. Hits are marked 'X', misses are marked '/',
@@ -73,22 +69,21 @@ The winner's score is the number of un-hit squares that they had left.
 
 Options:
 
-inventory=: This determines the number and size of ships played with. The
+inventory= (i): This determines the number and size of ships played with. The
 value can be Bradley (the Milton Bradley version), Bednar (an open source
 version by Samuel Bednar), Ichabod (the version I remember), and Wikipedia
 (the inventory shown in a picture in the Wikipedia article on the game.) the
 inventories give the following ships (name size x count):
-    Bradley: Carrier 5x1, Battleship 4x1, Cruiser 3x1, Destroyer 2x1,
+    Bradley/Br: Carrier 5x1, Battleship 4x1, Cruiser 3x1, Destroyer 2x1,
         Submarine 3x1.
-    Bednar: Carrier 5x1, Battleship 4x1, Cruiser 3x1, Destroyer 2x2,
+    Bednar/Bd: Carrier 5x1, Battleship 4x1, Cruiser 3x1, Destroyer 2x2,
         Submarine 1x2.
-    Ichabod: Carrier 5x1, Battleship 4x2, Cruiser 3x3, Destroyer 2x4,
+    Ichabod/Ik: Carrier 5x1, Battleship 4x2, Cruiser 3x3, Destroyer 2x4,
         Submarine 1x1.
-    Wikipedia: Carrier 6x1, Battleship 4x2, Cruiser 3x3, Destroyer 2x4,
+    Wikipedia/Wk: Carrier 6x1, Battleship 4x2, Cruiser 3x3, Destroyer 2x4,
         No Submarine.
 """
 
-#A regular expression matching coordinate.
 SQUARE_RE = re.compile(r'[ABCDEFGHIJ]\d')
 
 
@@ -96,23 +91,26 @@ class Battleships(game.Game):
     """
     A game of Battleships. (object)
 
+    Class Attributes:
+    inventory_aliases: Aliases for the inventory_name.
+
     Attributes:
     boards: The boards for each player. (dict of str: SeaBoard)
     bot: The bot opponent. (player.Bot)
-    do_gipf: Gipf. (boo)
     inventory_name: The name of the inventory of ships. (str)
 
     Overridden Methods:
     game_over
+    handle_options
     player_action
     set_options
     set_up
     """
 
-    aka = ['Battleship', 'Sea Battle', 'Broadsides']
-    # Interface categories for the game.
+    aka = ['Battleship', 'Sea Battle', 'Broadsides', 'Batt']
     categories = ['Board Games']
     credits = CREDITS
+    inventory_aliases = {'br': 'bradley', 'bd': 'bednar', 'ik': 'ichabod', 'wk': 'wikipedia'}
     name = 'Battleships'
     num_options = 1
     rules = RULES
@@ -126,64 +124,16 @@ class Battleships(game.Game):
         # Hunt the Wumpus
         if game == 'wumpus':
             if not losses:
-                # Remind the human.
-                self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
-                self.human.tell(self.boards[self.human.name].show())
-                while True:
-                    ship = self.human.ask('\nEnter a ship type: ')
-                    if ship in INVENTORIES['bradley']:
-                        break
-                    self.human.error('I do not recognize that ship type.')
-                board = self.boards[self.bot.name]
-                ships = [(name, squares) for name, squares in board.fleet if name == ship and squares]
-                if not ships:
-                    self.human.error('There are no more {}s.'.format(ship.lower()))
-                else:
-                    name, squares = random.choice(ships)
-                    square = random.choice(squares)
-                    self.human.tell(square)
+                self.gipf_wumpus()
+                go = False
         # Pig
         elif game == 'pig':
             if not losses:
-                # Remind the human.
-                self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
-                self.human.tell(self.boards[self.human.name].show())
-                # Get the first shot.
-                while True:
-                    human_shot = self.human.ask('\nWhere do you want to shoot? ').upper().strip()
-                    if SQUARE_RE.match(human_shot):
-                        break
-                bot_shot = self.bot.ask('Where do you want to shoot? ')
-                # Fire the shots.
-                self.boards[self.bot.name].fire(human_shot, self.human)
-                self.boards[self.human.name].fire(bot_shot, self.bot)
-                # Check for second shot.
-                if human_shot in self.boards[self.bot.name].hits:
-                    self.human.tell('You hit, so you get a bonus shot.')
-                    while True:
-                        human_shot = self.human.ask('Where do you want to shoot? ').upper().strip()
-                        if SQUARE_RE.match(human_shot):
-                            break
-                    self.boards[self.bot.name].fire(human_shot, self.human)
-                # Update the human. (Bots don't need updates.)
-                self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
-                self.human.tell(self.boards[self.human.name].show())
-                go = False
+                self.gipf_pig()
         # Canfield
         elif game == 'canfield':
             if not losses:
-                not_hit = []
-                for ship, ship_squares in self.boards[self.bot.name].fleet:
-                    not_hit.extend(set(ship_squares) - self.boards[self.bot.name].hits)
-                human_shot = random.choice(not_hit)
-                self.human.tell('You fired on {}.'.format(human_shot))
-                bot_shot = self.bot.ask('\nWhere do you want to shoot? ')
-                # Fire the shots.
-                self.boards[self.bot.name].fire(human_shot.upper(), self.human)
-                self.boards[self.human.name].fire(bot_shot, self.bot)
-                # Update the human. (Bots don't need updates.)
-                self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
-                self.human.tell(self.boards[self.human.name].show())
+                self.gipf_canfield()
                 go = False
         # Game with no gipf link
         else:
@@ -216,6 +166,77 @@ class Battleships(game.Game):
         # Report the end of the game.
         return True
 
+    def handle_options(self):
+        """Handle the current option settings. (None)"""
+        super(Battleships, self).handle_options()
+        self.inventory_name = self.inventory_aliases.get(self.inventory_name, self.inventory_name)
+
+    def gipf_canfield(self):
+        """Handle the Canfield edge. (None)"""
+        # Get a random hit for the human.
+        not_hit = []
+        for ship, ship_squares in self.boards[self.bot.name].fleet:
+            not_hit.extend(set(ship_squares) - self.boards[self.bot.name].hits)
+        human_shot = random.choice(not_hit)
+        self.human.tell('You fired on {}.'.format(human_shot))
+        # Get the bot's shot.
+        bot_shot = self.bot.ask('\nWhere do you want to shoot? ')
+        # Fire the shots.
+        self.boards[self.bot.name].fire(human_shot.upper(), self.human)
+        self.boards[self.human.name].fire(bot_shot, self.bot)
+        # Update the human. (Bots don't need updates.)
+        self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
+        self.human.tell(self.boards[self.human.name].show())
+
+    def gipf_pig(self):
+        """Handle the Pig edge. (None)"""
+        # Remind the human.
+        self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
+        self.human.tell(self.boards[self.human.name].show())
+        # Get the first shot.
+        while True:
+            human_shot = self.human.ask('\nWhere do you want to shoot? ').upper().strip()
+            if SQUARE_RE.match(human_shot):
+                break
+        bot_shot = self.bot.ask('Where do you want to shoot? ')
+        # Fire the shots.
+        self.boards[self.bot.name].fire(human_shot, self.human)
+        self.boards[self.human.name].fire(bot_shot, self.bot)
+        # Check for second shot.
+        if human_shot in self.boards[self.bot.name].hits:
+            self.human.tell('You hit, so you get a bonus shot.')
+            while True:
+                human_shot = self.human.ask('Where do you want to shoot? ').upper().strip()
+                if SQUARE_RE.match(human_shot):
+                    break
+            self.boards[self.bot.name].fire(human_shot, self.human)
+        # Update the human. (Bots don't need updates.)
+        self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
+        self.human.tell(self.boards[self.human.name].show())
+
+    def gipf_wumpus(self):
+        """Handle the Hunt the Wumpus edge. (None)"""
+        # Remind the human.
+        self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
+        self.human.tell(self.boards[self.human.name].show())
+        # Get a ship type.
+        while True:
+            ship = self.human.ask('\nEnter a ship type: ')
+            if ship in INVENTORIES[self.inventory_name]:
+                break
+            self.human.error('I do not recognize that ship type.')
+        # Get that ship type.
+        board = self.boards[self.bot.name]
+        ships = [(name, squares) for name, squares in board.fleet if name == ship and squares]
+        if not ships:
+            # Warn the player if there are no more of that ship.
+            self.human.error('There are no more {}s.'.format(ship.lower()))
+        else:
+            # Get a random square from one of those ships.
+            name, squares = random.choice(ships)
+            square = random.choice(squares)
+            self.human.tell('There is a {} at {}.'.format(ship, square))
+
     def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
@@ -238,8 +259,9 @@ class Battleships(game.Game):
     def set_options(self):
         """Define the options for the game. (None)"""
         self.option_set.default_bots = [(BattleBot, ())]
-        self.option_set.add_option(name = 'inventory', converter = options.lower, default = 'bradley',
-            target = 'inventory_name', valid = ['bradley', 'bednar', 'ichabod', 'wikipedia'],
+        self.option_set.add_option('inventory', ['i'], converter = options.lower, default = 'bradley',
+            target = 'inventory_name',
+            valid = ['bradley', 'br', 'bednar', 'bd', 'ichabod', 'ik', 'wikipedia', 'wk'],
             question = 'Which inventory would you like to use (return for Bradley)? ',
             error_text = 'The available inventories are Bradley, Bednar, Ichabod, and Wikipedia')
 
@@ -261,7 +283,7 @@ class BattleBot(player.Bot):
     targets: Current targets based on recent hits. (list of str)
 
     Methods:
-    add_adjacent: Add adjacent squares of a ship to the don't shoot set. (None)
+    add_adjacents: Add adjacent squares of a ship to the don't shoot set. (None)
     fire: Decide where to fire the next shot. (str)
     retarget: Reset target list based on a recent hit. (None)
 
@@ -272,16 +294,16 @@ class BattleBot(player.Bot):
     tell
     """
 
-    def __init__(self, taken_names):
+    def __init__(self, taken_names = []):
         """
         Initialize the bot. (None)
 
         Parameters:
         taken_names: Names already in use in the game. (list of str)
         """
-        # Do basic bot initialization.
+        # Do the basic bot initialization.
         super(BattleBot, self).__init__(taken_names)
-        # Set up tracking variables.
+        # Set up the tracking variables.
         self.dont_shoot = set()
         self.targets = []
         self.target_ship = []
@@ -328,7 +350,7 @@ class BattleBot(player.Bot):
                 self.last_shot = random.choice(SeaBoard.letters) + random.choice(SeaBoard.numbers)
                 if self.last_shot not in self.dont_shoot:
                     break
-        # Shoot a random targetted square.
+        # Shoot a randomly targetted square.
         else:
             self.last_shot = random.choice(self.targets)
             self.targets.remove(self.last_shot)
@@ -405,7 +427,7 @@ class SeaBoard(object):
     letters = 'ABCDEFGHIJ'
     numbers = '0123456789'
 
-    def __init__(self, player, inventory_name = 'Bradley'):
+    def __init__(self, player, inventory_name = 'bradley'):
         """
         Set up the board. (None)
 
@@ -421,6 +443,12 @@ class SeaBoard(object):
         self.misses = set()
         # Get the ships placed.
         self.place_ships()
+
+    def __repr__(self):
+        """Create a debugging text representation. (str)"""
+        fleet_squares = sum([squares for ship, squares in self.fleet], [])
+        text = '<SeaBoard for {!r} with {} of {} hits>'
+        return text.format(self.player, len(self.hits), len(self.hits) + len(fleet_squares))
 
     def adjacent_squares(self, square):
         """
@@ -530,7 +558,7 @@ class SeaBoard(object):
                 if square in invalid_squares:
                     break
             else:
-                # return the first valid placement found.
+                # Return the first valid placement found.
                 return start, end
 
     def place_ships(self):
@@ -647,7 +675,9 @@ def test():
     print(board.show(to = 'foe'))
     print(board.show())
 
+
 if __name__ == '__main__':
+    # Play the game without the interface.
     try:
         input = raw_input
     except NameError:

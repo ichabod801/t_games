@@ -16,31 +16,20 @@ import io
 import unittest
 import sys
 
-from t_games.board_games import backgammon_game as bg
-from t_games import player as player
+import t_games.board_games.backgammon_game as backgammon
+import t_games.player as player
 
 
 BAR = -1
 
 OUT = -2
 
-PRINT_START = """  1 1 1 1 1 1   1 2 2 2 2 2  
-  3 4 5 6 7 8   9 0 1 2 3 4  
-+-------------+-------------+
-| X : . : O : | O : . : . X |
-| X : . : O : | O : . : . X |
-| X : . : O : | O : . : . : |
-| X : . : . : | O : . : . : |
-| X : . : . : | O : . : . : |
-|             |             |
-| O . : . : . | X . : . : . |
-| O . : . : . | X . : . : . |
-| O . : . X . | X . : . : . |
-| O . : . X . | X . : . : O |
-| O . : . X . | X . : . : O |
-+-------------+-------------+
-  1 1 1                      
-  2 1 0 9 8 7   6 5 4 3 2 1  """
+PRINT_START = '\n'.join(['', '  1 1 1 1 1 1   1 2 2 2 2 2  ', '  3 4 5 6 7 8   9 0 1 2 3 4  ',
+    '+-------------+-------------+', '| X : . : O : | O : . : . X |', '| X : . : O : | O : . : . X |',
+    '| X : . : O : | O : . : . : |', '| X : . : . : | O : . : . : |', '| X : . : . : | O : . : . : |',
+    '|             |             |', '| O . : . : . | X . : . : . |', '| O . : . : . | X . : . : . |',
+    '| O . : . X . | X . : . : . |', '| O . : . X . | X . : . : O |', '| O . : . X . | X . : . : O |',
+    '+-------------+-------------+', '  1 1 1                      ', '  2 1 0 9 8 7   6 5 4 3 2 1  '])
 
 
 class MoveTest(unittest.TestCase):
@@ -49,7 +38,7 @@ class MoveTest(unittest.TestCase):
 
     def setUp(self):
         """Set up with a standard board. (None)"""
-        self.board = bg.BackgammonBoard()
+        self.board = backgammon.BackgammonBoard()
 
     def testBasic(self):
         """Test a basic move."""
@@ -85,16 +74,21 @@ class MoveTest(unittest.TestCase):
 class PlayTest(unittest.TestCase):
     """Test play generation. (TestCase)"""
 
-    def setBoard(self, layout = ((6, 5), (8, 3), (13, 5), (24, 2)), moves = [], piece = 'O', 
+    def setBoard(self, layout = ((6, 5), (8, 3), (13, 5), (24, 2)), moves = [], piece = 'O',
         rolls = [6, 5], bar = []):
         """Set up the board for a test. (None)"""
-        self.board = bg.BackgammonBoard(layout = layout)
+        self.board = backgammon.BackgammonBoard(layout = layout)
         for captured in bar:
             self.board.cells[BAR].add_piece(captured)
         for start, end in moves:
             self.board.move(start, end)
         raw_moves = self.board.get_plays(piece, rolls)
         self.legal_moves = set(tuple(move) for move in raw_moves)
+
+    def testBasicRepr(self):
+        """Test debugging text representation of a standard move."""
+        play = backgammon.BackgammonPlay(13, 7, 6)
+        self.assertEqual('<BackgammonPlay [(13, 7, 6)]>', repr(play))
 
     def testBear(self):
         """Test bearing off moves."""
@@ -114,15 +108,20 @@ class PlayTest(unittest.TestCase):
         check = [((19, 24), (19, OUT))]
         self.assertEqual(set(check), self.legal_moves)
 
+    def testBearRepr(self):
+        """Test debugging text representation of a bearing off move."""
+        play = backgammon.BackgammonPlay(21, OUT, 5)
+        self.assertEqual('<BackgammonPlay [(21, -2, 5)]>', repr(play))
+
     def testDoubles(self):
         """Test moves with doubles."""
         self.setBoard(layout = ((24, 1), (23, 1), (22, 1)), rolls = [1, 1, 1, 1])
-        check = [((1, 2), (2, 3), (2, 3), (3, 4)), 
-            ((1, 2), (2, 3), (3, 4), (3, 4)), 
-            ((1, 2), (2, 3), (3, 4), (4, 5)), 
-            ((1, 2), (3, 4), (4, 5), (5, 6)), 
-            ((2, 3), (3, 4), (3, 4), (4, 5)), 
-            ((2, 3), (3, 4), (4, 5), (5, 6)), 
+        check = [((1, 2), (2, 3), (2, 3), (3, 4)),
+            ((1, 2), (2, 3), (3, 4), (3, 4)),
+            ((1, 2), (2, 3), (3, 4), (4, 5)),
+            ((1, 2), (3, 4), (4, 5), (5, 6)),
+            ((2, 3), (3, 4), (3, 4), (4, 5)),
+            ((2, 3), (3, 4), (4, 5), (5, 6)),
             ((3, 4), (4, 5), (5, 6), (6, 7))]
         self.legal_moves = set([tuple(sorted(move)) for move in self.legal_moves])
         check = set(check)
@@ -143,9 +142,14 @@ class PlayTest(unittest.TestCase):
 
     def testEnterNone(self):
         """Test moves from the bar when none are legal."""
-        self.setBoard(layout = ((18, 2), (6, 2), (5, 2), (4, 2), (3, 2), (2, 2), (1, 2)), rolls = [6, 6], 
+        self.setBoard(layout = ((18, 2), (6, 2), (5, 2), (4, 2), (3, 2), (2, 2), (1, 2)), rolls = [6, 6],
             bar = ['X', 'O'])
         self.assertEqual(set(), self.legal_moves)
+
+    def testEnterRepr(self):
+        """Test debugging text representation of an entering move."""
+        play = backgammon.BackgammonPlay(BAR, 2, 2)
+        self.assertEqual('<BackgammonPlay [(-1, 2, 2)]>', repr(play))
 
     def testNone(self):
         """Test a situation with no legal moves."""
@@ -161,9 +165,9 @@ class PlayTest(unittest.TestCase):
     def testStart(self):
         """Test the moves at the start of the game."""
         self.setBoard()
-        check = [((12, 17), (1, 7)), ((12, 17), (12, 18)), 
-            ((12, 17), (17, 23)), ((17, 22), (1, 7)), 
-            ((17, 22), (12, 18)), ((17, 22), (17, 23)), 
+        check = [((12, 17), (1, 7)), ((12, 17), (12, 18)),
+            ((12, 17), (17, 23)), ((17, 22), (1, 7)),
+            ((17, 22), (12, 18)), ((17, 22), (17, 23)),
             ((1, 7), (7, 12)), ((12, 18), (18, 23))]
         check = set(check)
         self.assertEqual(check, self.legal_moves)
@@ -171,8 +175,8 @@ class PlayTest(unittest.TestCase):
     def testStartBlock(self):
         """Test the starting moves with a simple block."""
         self.setBoard(moves = [(13, 7), (8, 7)])
-        check = [((12, 17), (12, 18)), ((12, 17), (17, 23)), 
-            ((17, 22), (12, 18)), ((17, 22), (17, 23)), 
+        check = [((12, 17), (12, 18)), ((12, 17), (17, 23)),
+            ((17, 22), (12, 18)), ((17, 22), (17, 23)),
             ((12, 18), (18, 23))]
         check = set(check)
         self.assertEqual(check, self.legal_moves)
@@ -195,7 +199,7 @@ class PrintTest(unittest.TestCase):
 
     def setUp(self):
         """Set up the test case. (None)"""
-        self.board = bg.BackgammonBoard()
+        self.board = backgammon.BackgammonBoard()
 
     def testStart(self):
         """Test printing the starting board."""
@@ -215,7 +219,7 @@ def make_play(moves):
     Parameters:
     moves: A list of Backgammon moves as tuples. (tu)
     """
-    play = bg.BackgammonPlay()
+    play = backgammon.BackgammonPlay()
     for move in moves:
         play.add_move(*move)
     return play
