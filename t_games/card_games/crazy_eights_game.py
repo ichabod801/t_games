@@ -451,6 +451,8 @@ class CrazyEights(game.Game):
                     player.error(message.format(self.draw_rank))
         # Draw the cards.
         if self.deck.cards:
+            plural = utility.plural(self.forced_draw, 'card')
+            self.human.tell('{} must draw {} {}.'.format(player.name, self.forced_draw, plural))
             for card in range(self.forced_draw):
                 hand.draw()
                 self.forced_draw = 0
@@ -591,11 +593,13 @@ class CrazyEights(game.Game):
             self.forced_draw += cards.Card.ranks.index(card_text[0].upper())
         # Check for reversing the order of play.
         if card_text[0].upper() == self.reverse_rank:
+            self.human.tell('The order of play is reversed.')
             self.players.reverse()
             self.player_index = self.players.index(player)
         # Check for skipping players.
         if card_text[0].upper() == self.skip_rank:
             self.player_index = (self.player_index + 1) % len(self.players)
+            self.human.tell("{}'s turn is skipped.".format(self.players[self.player_index].name))
         # Check for playing their last card.
         if not hand.cards:
             self.human.tell('{} played their last card.'.format(player.name))
