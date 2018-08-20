@@ -295,8 +295,8 @@ class Cribbage(game.Game):
             scores = [(score, name) for name, score in self.scores.items()]
             scores.sort(reverse = True)
             names = ' and '.join(self.teams[scores[0][1]])
-            s = ('s', '')[' and ' in names]
-            self.human.tell('\n{} win{} with {} points.'.format(names, s, scores[0][0]))
+            plural = ('s', '')[' and ' in names]
+            self.human.tell('\n{} win{} with {} points.'.format(names, plural, scores[0][0]))
             # Check for skunk.
             game_score = self.skunk_scores[0]
             if scores[1][0] < self.skunk:
@@ -320,6 +320,12 @@ class Cribbage(game.Game):
                     self.win_loss_draw[1] += game_score
                 elif score == human_score:
                     self.win_loss_draw[2] += game_score
+            # Tell human their place, if they didn't win.
+            if self.win_loss_draw[1]:
+                place = utility.number_word(self.win_loss_draw[1] + 1, ordinal = True)
+                if not self.win_loss_draw[0]:
+                    place = 'last'
+                self.human.tell('You came in {} place with {} points.'.format(place, human_score))
             # Halve win/loss/draw for team games, so it's per team not per preson.
             if self.partners:
                 self.win_loss_draw = [x // 2 for x in self.win_loss_draw]
