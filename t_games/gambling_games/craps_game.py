@@ -340,7 +340,6 @@ class Craps(game.Game):
         for bet in self.bets[player.name]:
             plural = utility.plural(bet.wager, 'buck')
             player.tell('{} for {} {}.'.format(bet, bet.wager, plural).capitalize())
-        player.tell()
         return True
 
     def do_done(self, argument):
@@ -549,7 +548,7 @@ class Craps(game.Game):
         # Check for removing a player.
         if not (self.scores[player.name] or self.bets[player.name]):
             self.players.remove(player)
-            self.human.tell('\n{} dropped out due to lack of funds.\n'.format(player.name))
+            self.human.tell('{} dropped out due to lack of funds.'.format(player.name))
             self.player_index -= 1
             if self.shooter_index > self.player_index:
                 self.shooter_index -= 1
