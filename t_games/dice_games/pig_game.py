@@ -526,7 +526,13 @@ class Pig(game.Game):
                         self.win_loss_draw[2] += 1
                 # Declare the winner when found.
                 if score == winning_score:
-                    self.human.tell('{} won with {} points.'.format(name, score))
+                    self.human.tell('\n{} won with {} points.'.format(name, score))
+            # Tell human their place, if they didn't win.
+            if self.win_loss_draw[1]:
+                place = utility.number_word(self.win_loss_draw[1] + 1, ordinal = True)
+                if not self.win_loss_draw[0]:
+                    place = 'last'
+                self.human.tell('You came in {} place with {} points.'.format(place, human_score))
             return True
 
     def handle_options(self):
