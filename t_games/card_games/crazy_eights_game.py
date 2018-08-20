@@ -643,6 +643,10 @@ class CrazyEights(game.Game):
         # Play cards.
         elif move in hand.cards:
             return self.validate_card(player, move)
+        # Handle playing cards they don't have.
+        elif self.deck.card_re.match(move.strip()):
+            player.error('You do not have that card in your hand.')
+            return True
         # Handle other commands.
         else:
             return self.handle_cmd(move)
