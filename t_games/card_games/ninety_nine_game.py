@@ -233,6 +233,9 @@ class NinetyNine(game.Game):
                 else:
                     self.win_loss_draw[2] += 1
             self.win_loss_draw[2] -= 1
+            place = utility.number_word(self.win_loss_draw[1] + 1, ordinal = True)
+            out_of = utility.number_word(len(self.scores))
+            self.human.tell('\nYou finished in {} place out of {} players.'.format(place, out_of))
             return True
         else:
             return False
