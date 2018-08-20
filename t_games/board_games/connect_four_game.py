@@ -95,9 +95,11 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
         Parameters:
         prompt: The information needed from the player. (str)
         """
-        if prompt == 'What symbol would you like to use? ':
+        if prompt == '\nWhat symbol would you like to use? ':
             self.symbol = random.choice('@#XO')
             return self.symbol
+        else:
+            super(C4BotAlphaBeta, self).ask(prompt)
 
     def ask_int(self, prompt, valid = [], low = 0, high = 0):
         """
@@ -572,10 +574,13 @@ class ConnectFour(game.Game):
         # Categorize end of game.
         if win != 'game on':
             if win == 'draw':
+                self.human.tell('\nThe game was a draw. :|')
                 self.win_loss_draw[2] = 1
             elif win == human_piece:
+                self.human.tell('\nYou won! :)')
                 self.win_loss_draw[0] = 1
             else:
+                self.human.tell('\nYou lost. :(')
                 self.win_loss_draw[1] = 1
             return True
         # Or keep playing.
