@@ -908,12 +908,17 @@ class Roulette(game.Game):
         # Determine overall winnings or losses.
         self.scores[self.human.name] -= self.stake
         # Determine if the game is a win or a loss.
+        result = 'won'
         if self.scores[self.human.name] > 0:
             self.win_loss_draw[0] = 1
         elif self.scores[self.human.name] < 0:
+            result = 'lost'
             self.win_loss_draw[1] = 1
         else:
             self.win_loss_draw[2] = 1
+        # Inform the user.
+        plural = utility.plural(abs(self.scores[self.human.name]), 'buck')
+        self.human.tell('\nYou {} {} {}.'.format(result, abs(self.scores[self.human.name]), plural))
         # Quit the game.
         self.flags |= 4
         self.force_end = True
@@ -1238,6 +1243,7 @@ class Roulette(game.Game):
             # Set the results.
             self.win_loss_draw[1] = 1
             self.scores[self.human.name] -= self.stake
+            self.human.tell('\nYou lost all of your money.')
             return True
         else:
             return False

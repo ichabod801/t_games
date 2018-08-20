@@ -358,7 +358,7 @@ class Blackjack(game.Game):
             self.win_loss_draw[2] = 1
         # Inform the user.
         plural = utility.plural(abs(self.scores[self.human.name]), 'buck')
-        self.human.tell('\nYou {} {} {}'.format(result, abs(self.scores[self.human.name]), plural))
+        self.human.tell('\nYou {} {} {}.'.format(result, abs(self.scores[self.human.name]), plural))
         # Quit the game.
         self.flags |= 4
         self.force_end = True
