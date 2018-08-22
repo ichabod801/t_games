@@ -353,7 +353,7 @@ class Game(OtherCmd):
                 losses = 0
             elif not results[0]:
                 losses = 1
-            return game.name.lower(), losses
+            return argument, losses
         # Return dummy results for incorrect games.
         else:
             return 'invalid-game', 1
