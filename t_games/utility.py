@@ -32,6 +32,7 @@ thousand_word: Give the word form of a number less than 100. (str)
 import collections
 import math
 import os
+import random
 import sys
 
 
