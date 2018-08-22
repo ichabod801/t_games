@@ -6,7 +6,7 @@ The first person in this document refers to Craig "Ichabod" O'Brien.
 
 ## Don't Be a Jerk
 
-Really. That's what it boils down to. 
+Really. That's what it boils down to. That is the spirit this document tries to clarify, and I hope we can work together in that spirit.
 
 If it's not true or if it doesn't help the project, does it need to be said? If it is true and it will help the project, how should it be said?
 
@@ -27,6 +27,8 @@ If it's not true or if it doesn't help the project, does it need to be said? If 
 * Publishing others' private information, such as a physical or electronic address, without explicit permission.
 * Bigotry, including bigotry based on race, sex, gender, sexual orientation, religion, nationality/citizenship, age, child birth, or other tribalism.
 * Escalation or retaliation. `wrong + wrong != right`
+* Interrupting people.
+* Correcting grammar outside of code, output, and documentation.
 * Other conduct which could reasonably be considered inappropriate in a professional setting.
 
 ## My Responsibilities
@@ -40,19 +42,6 @@ I have the right and responsibility to edit, remove, or reject any part of the p
 Incidents of violating this code of conduct may be reported by contacting me by email a t_admin at xenomind dot com. All complaints will be reviewed and investigated. All incident reports will be treated confidentially, and will receive a response.
 
 Those responsible for violating this code of conduct do not have an expectation of confidentiality. Those responsible for violating this code of conduct should not expect leniency due to high performance.
-
-## Pet Peeves
-
-Things that will really set me off:
-
-* Saying black people are criminals.
-* Saying women can't program or deal with other technical issues.
-* Interrupting people.
-* Grammar Nazis.
-
-## No Bullshit
-
-I'm not taking any bullshit on this. Don't try to weasel word this document. Instead, try to live up to the spirit of this document. Don't try to weasel word your behavior. Instead, try to treat the team members and users with respect and acceptance.
 
 ## Credits
 
