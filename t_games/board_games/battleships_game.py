@@ -247,7 +247,7 @@ class Battleships(game.Game):
         # Get the players' moves.
         human_shot = self.human.ask('\nWhere do you want to shoot? ').strip()
         if not SQUARE_RE.match(human_shot.upper()):
-            self.player_index = 0
+            self.player_index = 0  # Make sure output goes to the human.
             return self.handle_cmd(human_shot)
         bot_shot = self.bot.ask('\nWhere do you want to shoot? ')
         # Fire the shots.
