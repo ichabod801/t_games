@@ -457,11 +457,12 @@ class Pig(game.Game):
         if game == 'battleships':
             if not losses:
                 self.turn_score += 2
-                self.human.tell('You rolled a 2. Your turn score is now {}.'.format(self.turn_score))
+                self.human.tell('\nYou rolled a 2. Your turn score is now {}.'.format(self.turn_score))
         # Hunt the Wumpus let's you know what your next roll will be.
         elif game == 'wumpus':
             if not losses:
                 roll = self.die.roll()
+                self.human.tell('\nYour turn score is {}.'.format(self.turn_score))
                 question = 'Your next roll will be a {}. Would you like to roll or stop? '
                 move = self.human.ask(question.format(roll))
                 move = move.strip().lower()
@@ -482,6 +483,7 @@ class Pig(game.Game):
                     second = self.die.roll()
                     if second != first:
                         break
+                self.human.tell('\nYour turn score is {}.'.format(self.turn_score))
                 prompt = 'Do you want to roll a {} or a {}? '.format(first, second)
                 choice = self.human.ask_int(prompt, valid = [first, second], cmd = False)
                 if choice == self.bad:
@@ -493,6 +495,9 @@ class Pig(game.Game):
         # Otherwise I'm confused.
         else:
             self.human.error('Say what?')
+        # Update after loss.
+        if game:
+            self.human.tell('\nYour turn score is {}.'.format(self.turn_score))
         return go
 
     def do_scores(self, arguments):
