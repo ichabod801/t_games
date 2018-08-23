@@ -264,6 +264,7 @@ class Game(OtherCmd):
             # handle garbage
             else:
                 self.human.error('\nInvalid RPN expression.')
+                return True
         # Display the stack.
         self.human.tell()
         self.human.tell(' '.join([str(x) for x in stack]))
