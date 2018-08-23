@@ -170,7 +170,7 @@ class Blackjack(game.Game):
             self.human.tell('The dealer is showing an ace.')
             self.human.tell('Your hand is {}.'.format(self.player_hands[0]))
             for hand_index, hand in enumerate(self.player_hands[1:]):
-                hand_ordinal = utlity.number_word(hand_index + 2, ordinal = True)
+                hand_ordinal = utility.number_word(hand_index + 2, ordinal = True)
                 self.human.tell('Your {} hand is {}.'.format(hand_ordinal, hand))
             # Ask until you get a valid insurance amount.
             while True:
@@ -224,7 +224,7 @@ class Blackjack(game.Game):
             int_args = self.parse_arguments('double', arguments, max_args = 2)
             if not int_args:
                 return False
-        bet, hand_index = int_args
+        hand_index, bet = int_args
         hand = self.player_hands[hand_index]
         # Check for valid bet amount.
         if bet > self.scores[self.human.name]:
@@ -555,7 +555,7 @@ class Blackjack(game.Game):
         """
         Parse integer arguments to command. (list of int)
 
-        This function assumes that the last argument is an optional hand indicator.
+        This function assumes that the first argument is an optional hand indicator.
 
         Parameters:
         command: The command used. (str)
@@ -571,17 +571,21 @@ class Blackjack(game.Game):
             return []
         # Check for correct number of arguments.
         if max_args - len(int_args) == 1:
+            # Add the bet if necessary.
+            if len(self.player_hands) > 1 and command == 'double':
+                int_args.append(self.bets[int_args[0] - 1])
             # Add default hand index if necessary.
-            int_args.append(1)
+            else:
+                int_args.append(1)
         if len(int_args) != max_args:
             self.human.error('Need more arguments to the {0} command. See help {0}.'.format(command))
             return []
         # Check for a valid hand index.
-        if int_args[-1] > len(self.player_hands):
+        if int_args[0] > len(self.player_hands):
             self.human.error('Invalid hand index ({}).'.format(int_args[-1]))
             return []
         # Adjust hand index to 0 indexing.
-        int_args[-1] -= 1
+        int_args[0] -= 1
         # Return integer arguments.
         return int_args
 
