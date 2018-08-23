@@ -212,6 +212,10 @@ class Blackjack(game.Game):
         If you have multiple hands, you should indicate which hand you are doubling
         with an integer argument to the double command (1 for the first hand listed,
         two for the second hand, and so on.)
+
+        If the true-double option has not been selected, you can also enter a bet up
+        to the ammount bet on the original hand. If you don't enter a bet, the bet is
+        set to the amount bet on the original hand.
         """
         # Check for proper timing.
         if self.phase != 'play':
