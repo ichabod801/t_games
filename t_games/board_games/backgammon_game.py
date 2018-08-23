@@ -1083,7 +1083,6 @@ class Backgammon(game.Game):
         """Reset the game state during match play. (None)"""
         # Set up the board.
         self.board = BackgammonBoard(24, layout = self.layout)
-        self.win_count = sum(count for point, count in self.layout)
         # Set up the dice.
         self.doubling_die = 1
         self.doubling_status = ''
@@ -1097,6 +1096,7 @@ class Backgammon(game.Game):
         if self.match > 1:
             self.flags |= 256
         self.turns = 0
+        self.win_count = sum(count for point, count in self.layout)
 
     def set_options(self):
         """Define the options for the game. (None)"""
