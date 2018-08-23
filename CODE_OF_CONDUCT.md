@@ -45,4 +45,4 @@ Those responsible for violating this code of conduct do not have an expectation 
 
 ## Credits
 
-Some of this is taken from the Contributor Covenant (v1.4). Some of this is taken from the teachings of the Buddha.
+Some of this is taken from the Contributor Covenant (v1.4). Some of this is taken from the teachings of the Buddha and Brad Warner.

@@ -16,15 +16,16 @@ data_to_text: Convert CREDITS_DATA to formatted text. (str)
 
 
 CREDITS_DATA = [('Interface Programming', """Craig "Ichabod" O'Brien"""),
-    ('Game Design', """Humans; Paul Alfille, Richard A. Canfield, Doug Dyment, Michael Keller, 
-        Bernard X. de Marigny, Albert Morehead, Geoffrey Mott-Smith, Ned Strongin, Sid Sackson, 
+    ('Game Design', """Humans; Paul Alfille, Richard A. Canfield, Doug Dyment, Michael Keller,
+        Bernard X. de Marigny, Albert Morehead, Geoffrey Mott-Smith, Ned Strongin, Sid Sackson,
         John Suckling, Howard Wexler, Gregory Yob"""),
     ('Game Programming', """Craig "Ichabod" O'Brien"""),
     ('Bot Design', """Roger Johnson, Reiner Knizia, Todd Neller, Craig O'Brien, Clifton Presser,
         Gerry Tesauro"""),
     ('Bot Programming', """Craig "Ichabod" O'Brien"""),
+    ('Documentation', """wma, Craig O'Brien"""),
     ('Play Testing', """Craig "Ichabod" O'Brien"""),
-    ('Special Thanks', """Guido van Rossum; python-forum.io, github.com, Wikipedia, pagat.com; 
+    ('Special Thanks', """Guido van Rossum; python-forum.io, github.com, Wikipedia, pagat.com;
         Alan Beale, Kris Burm, Matt Groening, David Parlett""")]
 
 
