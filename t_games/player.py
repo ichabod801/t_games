@@ -453,6 +453,9 @@ class Human(Humanoid):
             for line in player_data:
                 shortcut, text = line.strip().split('\t')
                 self.shortcuts[shortcut] = text
+        if not line.endswith('\n'):
+            with open(os.path.join(self.folder_name, 'shortcuts.txt'), 'a') as player_data:
+                player_data.write('\n')
 
     def store_results(self, game_name, results):
         """
