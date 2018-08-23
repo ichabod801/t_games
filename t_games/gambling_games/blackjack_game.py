@@ -219,7 +219,7 @@ class Blackjack(game.Game):
             return False
         # Parse the arguments.
         if not arguments.strip():
-            int_args = [self.bets[0], 0]
+            int_args = [0, self.bets[0]]
         else:
             int_args = self.parse_arguments('double', arguments, max_args = 2)
             if not int_args:
@@ -573,7 +573,12 @@ class Blackjack(game.Game):
         if max_args - len(int_args) == 1:
             # Add the bet if necessary.
             if len(self.player_hands) > 1 and command == 'double':
-                int_args.append(self.bets[int_args[0] - 1])
+                # Make sure the hand index is valid.
+                if int_args[0] <= len(self.player_hands):
+                    int_args.append(self.bets[int_args[0] - 1])
+                else:
+                    self.human.error('Invalid hand index ({}).'.format(int_args[-1]))
+                    return []
             # Add default hand index if necessary.
             else:
                 int_args.append(1)
