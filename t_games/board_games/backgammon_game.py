@@ -138,8 +138,8 @@ You may get both players' pip counts at any time with the pips command.
 
 Options:
 o: The human player plays with the red (O) pieces.
-layout: Which layout to use: long, standard, or hyper. (l)
-match: The winning match score. Defaults to 1, or non-match play. (m)
+layout (l): Which layout to use: long, standard, nack, or hyper.
+match (m): The winning match score. Defaults to 1, or non-match play.
 """
 
 START = -3
@@ -751,6 +751,7 @@ class Backgammon(game.Game):
     get_start: Get the start of a move only specified by the end. (int)
     reset: Reset the game state during match play. (None)
     validate_move: Check for a valid move. (bool)
+    win_count: The number of pieces needed to bear off for a win. (int)
 
     Overridden Methods:
     game_over
@@ -782,7 +783,7 @@ class Backgammon(game.Game):
         other_piece = 'XO'['OX'.index(piece)]
         result = 0
         # Check for win.
-        if self.board.cells[OUT].count(piece) == 15:
+        if self.board.cells[OUT].count(piece) == self.win_count:
             result = self.doubling_die
             # Check for gammon/backgammon.
             if other_piece not in self.board.cells[OUT]:
@@ -1082,6 +1083,7 @@ class Backgammon(game.Game):
         """Reset the game state during match play. (None)"""
         # Set up the board.
         self.board = BackgammonBoard(24, layout = self.layout)
+        self.win_count = sum(count for point, count in self.layout)
         # Set up the dice.
         self.doubling_die = 1
         self.doubling_status = ''
