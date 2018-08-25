@@ -448,11 +448,13 @@ class Human(Humanoid):
 
     def load_shortcuts(self):
         """Load the player's interface shortcuts. (None)"""
+        # Load the shortcuts.
         self.shortcuts = {}
         with open(os.path.join(self.folder_name, 'shortcuts.txt')) as player_data:
             for line in player_data:
                 shortcut, text = line.strip().split('\t')
                 self.shortcuts[shortcut] = text
+        # Make sure the file is ready for appending new shortcuts.
         if not line.endswith('\n'):
             with open(os.path.join(self.folder_name, 'shortcuts.txt'), 'a') as player_data:
                 player_data.write('\n')
