@@ -239,7 +239,7 @@ class Dodecahedron(object):
         """
         # randomly choose from current and adjacent
         old_wumpus = [cave for cave in self.caves if cave.wumpus][0]
-        new_wumpus = random.choice([self.current] + self.current.adjacent)
+        new_wumpus = random.choice([old_wumpus] + old_wumpus.adjacent)
         # reset wumpus indicators
         old_wumpus.wumpus = False
         new_wumpus.wumpus = True
