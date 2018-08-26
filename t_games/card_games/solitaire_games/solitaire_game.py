@@ -556,6 +556,14 @@ class Solitaire(game.Game):
         if check == target:
             # Update the score.
             self.win_loss_draw[0] = 1
+            self.turns = len([move for move in self.moves if not move[-2]]) + 2 * self.undo_count
+            self.scores[self.human.name] += sum([len(foundation) for foundation in self.foundations]) * 5
+            if not self.undo_count:
+                last_sorts = 0
+                for move in reversed(self.moves):
+                    if move[2] in self.foundations:
+                        last_sorts += 1
+                self.scores[self.human.name] += last_sorts * 5
             return True
         else:
             # Carry on.
@@ -709,10 +717,12 @@ class Solitaire(game.Game):
         move = player.ask('\nWhat is your move? ')
         # Make the move.
         keep_playing = self.handle_cmd(move)
-        # Track the move.
-        move_count = len(self.moves) + 2 * self.undo_count
+        # Score the move.
         sorted_count = sum([len(foundation) for foundation in self.foundations])
-        self.scores[self.human.name] = 801 - move_count + sorted_count * 2
+        move_count = len([move for move in self.moves if not move[-2]]) + 2 * self.undo_count
+        deck_size = len(self.deck.cards) + len(self.deck.in_play)
+        self.scores[self.human.name] = sorted_count * 5 - move_count - deck_size
+        return keep_playing
 
     def reserve_text(self):
         """Generate text for the reserve piles. (str)"""
