@@ -424,7 +424,7 @@ class C4Board(board.DimBoard):
         Get all legal moves from the current position. (list of (int, string))
         """
         # get the current piece
-        pieces_played = len([cell for cell in self.cells.values() if cell.contents]) + self.pops
+        pieces_played = len([cell for cell in self.cells.values() if cell.contents])
         current_piece = self.pieces[pieces_played % 2]
         # get the open columns
         columns = []
@@ -443,7 +443,7 @@ class C4Board(board.DimBoard):
 
     def last_piece(self):
         """Get the last piece played. (str)"""
-        pieces_played = len([cell for cell in self.cells.values() if cell.contents]) + self.pops
+        pieces_played = len([cell for cell in self.cells.values() if cell.contents])
         return self.pieces[1 - pieces_played % 2]
 
     def make_move(self, move):
