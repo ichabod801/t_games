@@ -793,10 +793,10 @@ class Backgammon(game.Game):
                     home = range(19, 25)
                 home_pieces = sum([self.board.cells[point].contents for point in home], [])
                 if other_piece in self.board.cells[BAR] or other_piece in home_pieces:
-                    self.human.tell('Backgammon!')
+                    self.human.tell('\nBackgammon!')
                     result *= 3
                 else:
-                    self.human.tell('Gammon!')
+                    self.human.tell('\nGammon!')
                     result *= 2
         return result
 
@@ -1051,7 +1051,8 @@ class Backgammon(game.Game):
         # Check for no legal moves
         legal_plays = self.board.get_plays(player_piece, self.rolls)
         if not legal_plays:
-            player.ask('You have no legal moves. Press enter to continue: ')
+            if self.board.cells[OUT].count(player_piece) != self.win_count:
+                player.ask('You have no legal moves. Press enter to continue: ')
             self.rolls = []
             return False
         legal_moves = set()
