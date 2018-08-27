@@ -76,10 +76,17 @@ penalize you in terms of the move count.
 """
 
 SCORE_HELP = """
-Scores are standardized for all solitaire games. The base score is 801 points.
-For each card you sort to the foundations, you gain two points. For each move
-you make, you lose one point. Undoing a move counts as a move, and the undone
-move still counts.
+Scores are standardized for all solitaire games. You start with zero points,
+and lose one point for each card in the deck (not counting decorative cards,
+like the Queens in Quadrille). You then lose a further point for every move,
+including undos (and when you undo, you don't get the point back for the move
+you are undoing). You gain five points every time you sort a card. If you win,
+you get a bonus five points for every card that has been sorted. If you win
+without undoing you get a further bonus of five points for every card that was
+sorted at the end of the game. That is, for every card sorted since the last
+move that didn't sort a card to the foundations. For scoring purposes, every
+card moved to the foundation counts as sorted, whether it was moved there with
+a sort move or a match move.
 """
 
 
