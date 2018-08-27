@@ -76,10 +76,17 @@ penalize you in terms of the move count.
 """
 
 SCORE_HELP = """
-Scores are standardized for all solitaire games. The base score is 801 points.
-For each card you sort to the foundations, you gain two points. For each move
-you make, you lose one point. Undoing a move counts as a move, and the undone
-move still counts.
+Scores are standardized for all solitaire games. You start with zero points,
+and lose one point for each card in the deck (not counting decorative cards,
+like the Queens in Quadrille). You then lose a further point for every move,
+including undos (and when you undo, you don't get the point back for the move
+you are undoing). You gain five points every time you sort a card. If you win,
+you get a bonus five points for every card that has been sorted. If you win
+without undoing you get a further bonus of five points for every card that was
+sorted at the end of the game. That is, for every card sorted since the last
+move that didn't sort a card to the foundations. For scoring purposes, every
+card moved to the foundation counts as sorted, whether it was moved there with
+a sort move or a match move.
 """
 
 
@@ -235,15 +242,20 @@ class Solitaire(game.Game):
 
     def clean_up(self):
         """Handle end of game tasks. (None)"""
+        # Set the turn count.
+        self.turns = self.move_count + 2 * self.undo_count
         # Give congrats or condolonces.
         if self.win_loss_draw[0]:
             self.human.tell('\nCongratulation! You won!')
+            # Add win bonuses to the score.
+            self.scores[self.human.name] += sum([len(foundation) for foundation in self.foundations]) * 5
+            if not self.undo_count:
+                self.scores[self.human.name] += self.last_sort * 5
         else:
             self.human.tell('\nYou lost. Better luck next time.')
         # Give a contrats message.
         message = 'You made {} moves (with {} undos), for a score of {}.'
-        moves = len(self.moves) + 2 * self.undo_count
-        self.human.tell(message.format(moves, self.undo_count, self.scores[self.human.name]))
+        self.human.tell(message.format(self.turns, self.undo_count, self.scores[self.human.name]))
 
     def deal(self):
         """Deal the initial set up for the game. (None)"""
@@ -470,7 +482,6 @@ class Solitaire(game.Game):
             if self.moves:
                 # Update the move tracking.
                 move_stack, old_location, new_location, undo_index, flip = self.moves.pop()
-                self.undo_count += 1
                 moves_undone = True
                 # Check for flipping the undone card(s) back down.
                 if old_location:
@@ -489,8 +500,10 @@ class Solitaire(game.Game):
                         card.up = False
                 # Handle multiple-transfer moves recursively.
                 if undo_index:
-                    self.undo_count -= 1
                     self.do_undo('')
+                else:
+                    self.undo_count += 1
+                    self.move_count -= 1
             # Stop if there's nothing to undo.
             else:
                 self.human.error('There are no moves to undo.')
@@ -709,10 +722,11 @@ class Solitaire(game.Game):
         move = player.ask('\nWhat is your move? ')
         # Make the move.
         keep_playing = self.handle_cmd(move)
-        # Track the move.
-        move_count = len(self.moves) + 2 * self.undo_count
+        # Score the move.
         sorted_count = sum([len(foundation) for foundation in self.foundations])
-        self.scores[self.human.name] = 801 - move_count + sorted_count * 2
+        deck_size = len(self.deck.cards) + len(self.deck.in_play)
+        self.scores[self.human.name] = sorted_count * 5 - self.move_count - deck_size - self.undo_count * 2
+        return keep_playing
 
     def reserve_text(self):
         """Generate text for the reserve piles. (str)"""
@@ -783,6 +797,8 @@ class Solitaire(game.Game):
         # Initialize the undo history.
         self.moves = []
         self.undo_count = 0
+        self.move_count = 0
+        self.last_sort = 0
         # Initialize the game specific rules.
         self.set_checkers()
 
@@ -790,6 +806,7 @@ class Solitaire(game.Game):
         """Set up the game. (None)"""
         self.set_solitaire()
         self.deal()
+        self.scores[self.human.name] = -len(self.deck.cards) - len(self.deck.in_play)
 
     def sort_check(self, card, foundation, show_error = True):
         """
@@ -920,6 +937,13 @@ class Solitaire(game.Game):
         # Reset location tracking.
         for card in move_stack:
             card.game_location = new_location
+        # Update the move counts.
+        if not undo_ndx and track:
+            self.move_count += 1
+            if new_location in self.foundations:
+                self.last_sort += 1
+            else:
+                self.last_sort = 0
 
 
 class MultiSolitaire(Solitaire):
@@ -1336,6 +1360,8 @@ class MultiSolitaire(Solitaire):
         # Initialize the undo history.
         self.moves = []
         self.undo_count = 0
+        self.move_count = 0
+        self.last_sort = 0
         # Set the game specific rules.
         self.set_checkers()
 
