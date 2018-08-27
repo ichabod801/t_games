@@ -799,6 +799,7 @@ class Solitaire(game.Game):
         """Set up the game. (None)"""
         self.set_solitaire()
         self.deal()
+        self.scores[self.human.name] = -len(self.deck.cards) - len(self.deck.in_play)
 
     def sort_check(self, card, foundation, show_error = True):
         """
