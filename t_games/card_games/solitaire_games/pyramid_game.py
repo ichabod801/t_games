@@ -132,14 +132,17 @@ class Pyramid(solitaire.Solitaire):
         In Pyramid, cards in the waste are sorted to the foundation before the next
         card is turned over from the stock.
         """
+        # Store current move tracking.
+        count_hold = self.move_count
         # Move the current waste card to the foundation.
         if self.waste:
             self.transfer(self.waste[:], self.foundations[0])
         # Do the turn as normal.
         super(Pyramid, self).do_turn(arguments)
-        # Update the undo count for the turned cards.
+        # Update the undo and move tracking.
         for move in self.moves[-self.options['turn-count']:]:
             move[-2] += 1
+        self.move_count = count_hold + 1
 
     def find_foundation(self, card):
         """
