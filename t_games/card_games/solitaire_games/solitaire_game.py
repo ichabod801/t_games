@@ -240,10 +240,18 @@ class Solitaire(game.Game):
             self.human.tell('\nCongratulation! You won!')
         else:
             self.human.tell('\nYou lost. Better luck next time.')
+        # Calculate the score.
+        self.turns = len([move for move in self.moves if not move[-2]]) + 2 * self.undo_count
+        self.scores[self.human.name] += sum([len(foundation) for foundation in self.foundations]) * 5
+        if not self.undo_count:
+            last_sorts = 0
+            for move in reversed(self.moves):
+                if move[2] in self.foundations:
+                    last_sorts += 1
+            self.scores[self.human.name] += last_sorts * 5
         # Give a contrats message.
         message = 'You made {} moves (with {} undos), for a score of {}.'
-        moves = len(self.moves) + 2 * self.undo_count
-        self.human.tell(message.format(moves, self.undo_count, self.scores[self.human.name]))
+        self.human.tell(message.format(self.turns, self.undo_count, self.scores[self.human.name]))
 
     def deal(self):
         """Deal the initial set up for the game. (None)"""
@@ -556,14 +564,6 @@ class Solitaire(game.Game):
         if check == target:
             # Update the score.
             self.win_loss_draw[0] = 1
-            self.turns = len([move for move in self.moves if not move[-2]]) + 2 * self.undo_count
-            self.scores[self.human.name] += sum([len(foundation) for foundation in self.foundations]) * 5
-            if not self.undo_count:
-                last_sorts = 0
-                for move in reversed(self.moves):
-                    if move[2] in self.foundations:
-                        last_sorts += 1
-                self.scores[self.human.name] += last_sorts * 5
             return True
         else:
             # Carry on.
