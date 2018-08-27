@@ -930,7 +930,7 @@ class Solitaire(game.Game):
         for card in move_stack:
             card.game_location = new_location
         # Update the move counts.
-        if not undo_ndx:
+        if not undo_ndx and track:
             self.move_count += 1
             if new_location in self.foundations:
                 self.last_sort += 1
