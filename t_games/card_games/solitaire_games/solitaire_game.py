@@ -1360,6 +1360,8 @@ class MultiSolitaire(Solitaire):
         # Initialize the undo history.
         self.moves = []
         self.undo_count = 0
+        self.move_count = 0
+        self.last_sort = 0
         # Set the game specific rules.
         self.set_checkers()
 
