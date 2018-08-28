@@ -503,21 +503,22 @@ class Cribbage(game.Game):
                 player.error('That card would put the running total over 31.')
                 return True
             else:
+                # Score the card.
+                points, message = self.score_sequence(player, card)
+                if points:
+                    self.add_points(player, points)
+                    self.human.tell(message)
+                    if not self.auto_score:
+                        self.human.ask(ENTER_TEXT)
                 # Play the card.
                 hand.shift(card, in_play)
                 self.in_play['Play Sequence'].cards.append(in_play.cards[-1])
                 # Update the tracking variables.
                 self.card_total += card
                 self.go_count = 0
-                # Score the card.
-                points, message = self.score_sequence(player)
-                if points:
-                    self.add_points(player, points)
-                    self.human.tell(message)
-                    if not self.auto_score:
-                        self.human.ask(ENTER_TEXT)
-                    if self.card_total == 31:
-                        self.reset()
+                # Check for end of round
+                if self.card_total == 31:
+                    self.reset()
                 return False
         else:
             # Handle anything that isn't a playing card.
@@ -695,23 +696,25 @@ class Cribbage(game.Game):
             run_data.append((run_length, run_count))
         return run_data
 
-    def score_sequence(self, player):
+    def score_sequence(self, player, card):
         """
         Score cards as they are played in sequence. (int, str)
 
         Parameters:
         player: The player who is scoring. (player.Player)
+        card: The next card to play in sequence. (CribCard)
         """
-        played = self.in_play['Play Sequence']
+        played = list(reversed(self.in_play['Play Sequence'].cards + [card]))
+        next_total = self.card_total + card
         points, message = 0, ''
         # Check for a total of 15.
-        if self.card_total == 15:
+        if next_total == 15:
             points = 2
             message = '{} scores 2 points for reaching 15.'.format(player.name)
         # Count the cards of the same rank.
         rank_count = 1
-        for play_index in range(-2, -len(played) - 1, -1):
-            if played.cards[play_index].rank != played.cards[-1].rank:
+        for card, previous in zip(played, played[1:]):
+            if card.rank != previous.rank:
                 break
             rank_count += 1
         # Score any pairs.
@@ -720,13 +723,12 @@ class Cribbage(game.Game):
             if self.double_pairs:
                 pair_score *= 2
             points = pair_score
-            self.add_points(player, pair_score)
             message = '{} scores {} for getting {} cards of the same rank.'
             message = message.format(player.name, pair_score, utility.number_word(rank_count))
         # Check for runs.
         run_count = 0
-        for run_index in range(-3, -len(played) - 1, -1):
-            values = sorted([CribCard.ranks.index(card.rank) for card in played.cards[run_index:]])
+        for run_len in range(3, len(played)):
+            values = sorted([CribCard.ranks.index(card.rank) for card in played[:run_len]])
             diffs = [second - first for first, second in zip(values, values[1:])]
             if diffs and all([diff == 1 for diff in diffs]):
                 run_count = len(values)
@@ -736,7 +738,7 @@ class Cribbage(game.Game):
             message = '{} scores {} for getting a {}-card straight.'
             message = message.format(player.name, run_count, utility.number_word(run_count))
         # Check for a total of 31.
-        elif self.card_total == 31:
+        elif next_total == 31:
             points += 2
             message += '\nThe count has reached 31.\n{} scores 2 points for reaching 31.'
             message = message.format(player.name)
