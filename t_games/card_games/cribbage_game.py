@@ -510,14 +510,14 @@ class Cribbage(game.Game):
                 self.card_total += card
                 self.go_count = 0
                 # Score the card.
-                self.score_sequence(player)
-                if self.card_total == 31:
-                    self.human.tell('\nThe count has reached 31.')
-                    self.add_points(player, 2)
-                    self.human.tell('{} scores 2 points for reaching 31.'.format(player.name))
+                points, message = self.score_sequence(player)
+                if points:
+                    self.add_points(player, points)
+                    self.human.tell(message)
                     if not self.auto_score:
                         self.human.ask(ENTER_TEXT)
-                    self.reset()
+                    if self.card_total == 31:
+                        self.reset()
                 return False
         else:
             # Handle anything that isn't a playing card.
@@ -697,18 +697,17 @@ class Cribbage(game.Game):
 
     def score_sequence(self, player):
         """
-        Score cards as they are played in sequence. (None)
+        Score cards as they are played in sequence. (int, str)
 
         Parameters:
         player: The player who is scoring. (player.Player)
         """
         played = self.in_play['Play Sequence']
+        points, message = 0, ''
         # Check for a total of 15.
         if self.card_total == 15:
-            self.add_points(player, 2)
-            self.human.tell('{} scores 2 points for reaching 15.'.format(player.name))
-            if not self.auto_score:
-                self.human.ask(ENTER_TEXT)
+            points = 2
+            message = '{} scores 2 points for reaching 15.'.format(player.name)
         # Count the cards of the same rank.
         rank_count = 1
         for play_index in range(-2, -len(played) - 1, -1):
@@ -720,11 +719,10 @@ class Cribbage(game.Game):
             pair_score = utility.choose(rank_count, 2) * 2
             if self.double_pairs:
                 pair_score *= 2
+            points = pair_score
             self.add_points(player, pair_score)
             message = '{} scores {} for getting {} cards of the same rank.'
-            self.human.tell(message.format(player.name, pair_score, utility.number_word(rank_count)))
-            if not self.auto_score:
-                self.human.ask(ENTER_TEXT)
+            message = message.format(player.name, pair_score, utility.number_word(rank_count))
         # Check for runs.
         run_count = 0
         for run_index in range(-3, -len(played) - 1, -1):
@@ -734,11 +732,15 @@ class Cribbage(game.Game):
                 run_count = len(values)
         # Score any runs.
         if run_count:
-            self.add_points(player, run_count)
+            points = run_count
             message = '{} scores {} for getting a {}-card straight.'
-            self.human.tell(message.format(player.name, run_count, utility.number_word(run_count)))
-            if not self.auto_score:
-                self.human.ask(ENTER_TEXT)
+            message = message.format(player.name, run_count, utility.number_word(run_count))
+        # Check for a total of 31.
+        elif self.card_total == 31:
+            points += 2
+            message += '\nThe count has reached 31.\n{} scores 2 points for reaching 31.'
+            message = message.format(player.name)
+        return points, message
 
     def set_options(self):
         """Set the game options. (None)"""
