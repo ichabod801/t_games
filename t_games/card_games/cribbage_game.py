@@ -950,11 +950,11 @@ class CribBot(player.Bot):
         playable = [card for card in hand if 31 - card >= self.game.card_total]
         playable.sort()
         # Get the highest scoring play (randomly break ties)
-        plays = [self.game.score_sequence(self, card), card for card in playable]
+        plays = [(self.game.score_sequence(self, card), card) for card in playable]
         plays.sort(reverse = True)
-        best_plays = [play for play in plays if play[0] = plays[0][0]]
+        best_plays = [play for play in plays if play[0] == plays[0][0]]
         if plays[0][0]:
-            play = random.choice(best_plays)
+            play = random.choice(best_plays)[1]
         elif self.game.card_total < 15:
             # Get the resulting card total for each card.
             points = [(card + self.game.card_total, card) for card in playable]
@@ -973,7 +973,7 @@ class CribBot(player.Bot):
                 play = playable[-1]
         else:
             # If all else fails, play your biggest card.
-            play = playable[-1]
+            play = playable[0]
         # Make the play.
         self.game.human.tell('\n{} played the {}.'.format(self.name, play.name.lower()))
         return str(play)
