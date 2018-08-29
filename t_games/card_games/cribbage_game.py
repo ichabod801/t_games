@@ -503,20 +503,22 @@ class Cribbage(game.Game):
                 player.error('That card would put the running total over 31.')
                 return True
             else:
+                # Score the card.
+                points, message = self.score_sequence(player, card)
+                if points:
+                    self.add_points(player, points)
+                    # Inform the user.
+                    self.human.tell(message)
+                    if not self.auto_score:
+                        self.human.ask(ENTER_TEXT)
                 # Play the card.
                 hand.shift(card, in_play)
                 self.in_play['Play Sequence'].cards.append(in_play.cards[-1])
                 # Update the tracking variables.
                 self.card_total += card
                 self.go_count = 0
-                # Score the card.
-                self.score_sequence(player)
+                # Check for end of round
                 if self.card_total == 31:
-                    self.human.tell('\nThe count has reached 31.')
-                    self.add_points(player, 2)
-                    self.human.tell('{} scores 2 points for reaching 31.'.format(player.name))
-                    if not self.auto_score:
-                        self.human.ask(ENTER_TEXT)
                     self.reset()
                 return False
         else:
@@ -695,24 +697,28 @@ class Cribbage(game.Game):
             run_data.append((run_length, run_count))
         return run_data
 
-    def score_sequence(self, player):
+    def score_sequence(self, player, card):
         """
-        Score cards as they are played in sequence. (None)
+        Score cards as they are played in sequence. (int, str)
+
+        The return value is the points scored and any message about the points scored.
+        A return of (0, '') means no points were scored.
 
         Parameters:
         player: The player who is scoring. (player.Player)
+        card: The next card to play in sequence. (CribCard)
         """
-        played = self.in_play['Play Sequence']
+        played = list(reversed(self.in_play['Play Sequence'].cards + [card]))
+        next_total = self.card_total + card
+        points, message = 0, ''
         # Check for a total of 15.
-        if self.card_total == 15:
-            self.add_points(player, 2)
-            self.human.tell('{} scores 2 points for reaching 15.'.format(player.name))
-            if not self.auto_score:
-                self.human.ask(ENTER_TEXT)
+        if next_total == 15:
+            points = 2
+            message = '{} scores 2 points for reaching 15.'.format(player.name)
         # Count the cards of the same rank.
         rank_count = 1
-        for play_index in range(-2, -len(played) - 1, -1):
-            if played.cards[play_index].rank != played.cards[-1].rank:
+        for card, previous in zip(played, played[1:]):
+            if card.rank != previous.rank:
                 break
             rank_count += 1
         # Score any pairs.
@@ -720,25 +726,27 @@ class Cribbage(game.Game):
             pair_score = utility.choose(rank_count, 2) * 2
             if self.double_pairs:
                 pair_score *= 2
-            self.add_points(player, pair_score)
+            points = pair_score
             message = '{} scores {} for getting {} cards of the same rank.'
-            self.human.tell(message.format(player.name, pair_score, utility.number_word(rank_count)))
-            if not self.auto_score:
-                self.human.ask(ENTER_TEXT)
+            message = message.format(player.name, pair_score, utility.number_word(rank_count))
         # Check for runs.
         run_count = 0
-        for run_index in range(-3, -len(played) - 1, -1):
-            values = sorted([CribCard.ranks.index(card.rank) for card in played.cards[run_index:]])
+        for run_len in range(3, len(played) + 1):
+            values = sorted([CribCard.ranks.index(card.rank) for card in played[:run_len]])
             diffs = [second - first for first, second in zip(values, values[1:])]
             if diffs and all([diff == 1 for diff in diffs]):
                 run_count = len(values)
         # Score any runs.
         if run_count:
-            self.add_points(player, run_count)
+            points = run_count
             message = '{} scores {} for getting a {}-card straight.'
-            self.human.tell(message.format(player.name, run_count, utility.number_word(run_count)))
-            if not self.auto_score:
-                self.human.ask(ENTER_TEXT)
+            message = message.format(player.name, run_count, utility.number_word(run_count))
+        # Check for a total of 31.
+        elif next_total == 31:
+            points += 2
+            message += '\nThe count has reached 31.\n{} scores 2 points for reaching 31.'
+            message = message.format(player.name)
+        return points, message
 
     def set_options(self):
         """Set the game options. (None)"""
@@ -944,22 +952,32 @@ class CribBot(player.Bot):
         # Get the playable cards.
         hand = self.game.hands[self.name]
         playable = [card for card in hand if 31 - card >= self.game.card_total]
-        # Check for sums to fifteen.
-        sums = [card for card in playable if card + self.game.card_total in (1, 2, 3, 4, 15, 31)]
-        if sums:
-            play = sums[0]
         playable.sort()
-        if self.game.card_total:
-            # Check for pairs.
-            last_card = self.game.in_play['Play Sequence'].cards[-1]
-            pairs = [card for card in playable if card.rank == last_card.rank]
-            if pairs:
-                play = pairs[0]
+        # Get the highest scoring play (randomly break ties)
+        plays = [(self.game.score_sequence(self, card), card) for card in playable]
+        plays.sort(reverse = True)
+        best_plays = [play for play in plays if play[0] == plays[0][0]]
+        if plays[0][0]:
+            play = random.choice(best_plays)[1]
+        # Check for the running total being under 15.
+        elif self.game.card_total < 15:
+            # Get the resulting card total for each card.
+            points = [(card + self.game.card_total, card) for card in playable]
+            points.sort()
+            # Assume they will hoard 5's and 10's.
+            no_15 = [card for total, card in points if total not in (5, 10)]
+            # If you can, make 15 impossible on the next play.
+            if points[0][0] < 5:
+                play = points[0][1]
+            elif points[-1][0] > 15:
+                play = points[-1][1]
+            # Otherwise make it as hard as you can.
+            elif no_15:
+                play = no_15[0]
             else:
-                # If no pairs, play the largest playable card.
                 play = playable[-1]
         else:
-            # On no total, play the smallest playable card.
+            # If all else fails, play your biggest card.
             play = playable[0]
         # Make the play.
         self.game.human.tell('\n{} played the {}.'.format(self.name, play.name.lower()))
