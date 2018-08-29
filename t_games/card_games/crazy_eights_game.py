@@ -573,7 +573,7 @@ class CrazyEights(game.Game):
         self.history.append(self.deck.discards[-1])
         self.pass_count = 0
         # Handle crazy eights.
-        if self.change_rank in card_text.upper() and not self.change_set:
+        if self.change_rank == card_text.upper()[0] and not self.change_set:
             while True:
                 suit = player.ask('What suit do you choose? ').upper()
                 if suit and suit[0] in 'CDHS':
