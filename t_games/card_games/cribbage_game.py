@@ -456,10 +456,6 @@ class Cribbage(game.Game):
                         self.human.ask(ENTER_TEXT)
                     dealer = self.players[self.dealer_index]
                     self.add_points(dealer, 2)
-                    # Check for a win.
-                    if self.scores[dealer.name] >= self.target_score:
-                        self.force_end = True
-                        return False
             return False
 
     def player_play(self, player):
