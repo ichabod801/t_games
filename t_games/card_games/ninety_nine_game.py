@@ -70,6 +70,8 @@ reverse= (r=): The rank that reverses the order of play.
 skip= (s=): The rank that skips the next player.
 zero= (0=): The ranks valued at 0. It can be one rank or multiple ranks separated
     by slashes.
+
+To set a rank option to no rank, use ! instead of a rank character.
 """
 
 

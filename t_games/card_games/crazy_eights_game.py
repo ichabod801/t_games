@@ -70,6 +70,8 @@ one-alert (1a): A warning is given when a player has one card.
 one-round (1r): Only play one round.
 reverse= (r): The rank, typically A, that reverses the order of play.
 skip= (s): The rank, typically Q, that skips the next player.
+
+To set a rank option to no rank, use ! instead of a rank character.
 """
 
 
