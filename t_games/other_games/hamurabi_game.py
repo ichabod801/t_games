@@ -270,12 +270,12 @@ class Hamurabi(game.Game):
             self.human.error("You don't have that many acres to plant.")
         elif acres > self.storage * 2:
             self.human.error("You don't have enough seed to plant that many acres.")
-        elif acres > self.population * 10:
+        elif acres + self.seed > self.population * 10:
             self.human.error("You don't have enough people to plant that much seed.")
         else:
             # Sow your seed upon the dusty earth.
             self.seed += acres
-            self.storage -= acres // 2
+            self.storage -= int(round(acres / 2.0, 0))
         return True
 
     def do_sell(self, arguments):
