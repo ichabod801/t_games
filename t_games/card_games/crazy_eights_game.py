@@ -70,6 +70,8 @@ one-alert (1a): A warning is given when a player has one card.
 one-round (1r): Only play one round.
 reverse= (r): The rank, typically A, that reverses the order of play.
 skip= (s): The rank, typically Q, that skips the next player.
+
+To set a rank option to no rank, use ! instead of a rank character.
 """
 
 
@@ -573,7 +575,7 @@ class CrazyEights(game.Game):
         self.history.append(self.deck.discards[-1])
         self.pass_count = 0
         # Handle crazy eights.
-        if self.change_rank in card_text.upper() and not self.change_set:
+        if self.change_rank == card_text.upper()[0] and not self.change_set:
             while True:
                 suit = player.ask('What suit do you choose? ').upper()
                 if suit and suit[0] in 'CDHS':
@@ -703,22 +705,27 @@ class CrazyEights(game.Game):
 
     def set_options(self):
         """Define the options for the game. (None)"""
+        # Get rank converter.
+        def convert_rank(text):
+            if text == '!':
+                text = ''
+            return text.upper()
         # Set the card options.
         self.option_set.add_option('change-match', ['cm'],
             question = 'Should the suit change card have to match the last card played? bool')
         self.option_set.add_option('change-set', ['cs'],
             question = 'Should the suit change card just change to its own suit? bool')
         rank_error = 'The valid card ranks are {}.'.format(', '.join(cards.Card.ranks))
-        self.option_set.add_option('change', ['c'], options.upper, '8', valid = cards.Card.ranks,
+        self.option_set.add_option('change', ['c'], convert_rank, '8', valid = cards.Card.ranks,
             question = 'What rank should change the suit? ', error_text = rank_error,
             target = 'change_rank')
-        self.option_set.add_option('draw', ['d'], options.upper, '', valid = cards.Card.ranks,
+        self.option_set.add_option('draw', ['d'], convert_rank, '', valid = cards.Card.ranks,
             question = 'What rank should force the next player to draw? ', error_text = rank_error,
             target = 'draw_rank')
-        self.option_set.add_option('reverse', ['r'], options.upper, '', valid = cards.Card.ranks,
+        self.option_set.add_option('reverse', ['r'], convert_rank, '', valid = cards.Card.ranks,
             question = 'What rank should reverse the order of play? ', error_text = rank_error,
             target = 'reverse_rank')
-        self.option_set.add_option('skip', ['s'], options.upper, '', valid = cards.Card.ranks,
+        self.option_set.add_option('skip', ['s'], convert_rank, '', valid = cards.Card.ranks,
             question = 'What rank should skip the next player? ', error_text = rank_error,
             target = 'skip_rank')
         # Set the bot options.
