@@ -255,7 +255,7 @@ class Hamurabi(game.Game):
         Seed the land for the next harvest. (p)
 
         The argument is how many acres to plant. You need one bushel of grain to plant
-        two acres, and one person to plant ten acres.
+        two acres, and one person to plant ten acres. Costs are rounded up.
         """
         # Check for an integer argument.
         try:
