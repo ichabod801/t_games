@@ -507,6 +507,7 @@ class Cribbage(game.Game):
                 points, message = self.score_sequence(player, card)
                 if points:
                     self.add_points(player, points)
+                    # Inform the user.
                     self.human.tell(message)
                     if not self.auto_score:
                         self.human.ask(ENTER_TEXT)
@@ -699,6 +700,9 @@ class Cribbage(game.Game):
     def score_sequence(self, player, card):
         """
         Score cards as they are played in sequence. (int, str)
+
+        The return value is the points scored and any message about the points scored.
+        A return of (0, '') means no points were scored.
 
         Parameters:
         player: The player who is scoring. (player.Player)
@@ -955,6 +959,7 @@ class CribBot(player.Bot):
         best_plays = [play for play in plays if play[0] == plays[0][0]]
         if plays[0][0]:
             play = random.choice(best_plays)[1]
+        # Check for the running total being under 15.
         elif self.game.card_total < 15:
             # Get the resulting card total for each card.
             points = [(card + self.game.card_total, card) for card in playable]
