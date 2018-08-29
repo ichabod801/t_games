@@ -353,9 +353,13 @@ class NinetyNine(game.Game):
         self.card_values = {rank: (min(10, index),) for index, rank in enumerate(cards.Card.ranks)}
         self.card_values['A'] = (1, 11)
         self.free_pass = False
-        # Get check function for rank lists.
+        # Get functions for rank lists.
+        def convert_rank(text):
+            if text == '!':
+                text = ''
+            return text.upper()
         def is_rank_list(ranks):
-            return all(rank in cards.Card.ranks for rank in ranks)
+            return all(rank in self.deck.ranks for rank in ranks)
         # Set the groups.
         self.option_set.add_group('joker-rules', 'zero=9/k reverse=k jokers=2 99=x skip=')
         self.option_set.add_group('chicago', 'zero=4/9 skip=9 99=K minus=10 plus-minus=')
@@ -366,25 +370,25 @@ class NinetyNine(game.Game):
             question = 'How many medium bots do you want to play against (return for 2)? ')
         # Set the rank value options.
         self.option_set.add_option('99', target = 'rank99', default = ['9', 'X'],
-            check = is_rank_list, converter = options.upper,
+            check = is_rank_list, converter = convert_rank,
             question = 'What ranks should be worth 99 points (slash separated, return for 9 and joker)? ')
         self.option_set.add_option('minus', ['-'], default = [''], check = is_rank_list,
-            converter = options.upper,
+            converter = convert_rank,
             question = 'What ranks should be worth minus face value (slash separated, return for none)? ')
         self.option_set.add_option('plus-minus', ['+-'], default = ['T'], check = is_rank_list,
-            converter = options.upper,
+            converter = convert_rank,
             question = 'What ranks should be worth +/- face value (slash separated, return for tens)? ')
         self.option_set.add_option('zero', ['0'], default = ['4', 'K'], check = is_rank_list,
-            converter = options.upper,
+            converter = convert_rank,
             question = 'What ranks should be worth zero (slash separated, return for 4 and king)? ')
         # Set the special rank options.
         self.option_set.add_option('jokers', ['j'], converter = int, default = 0, valid = range(5),
             question = 'How many jokers should there be in the deck (return for 0)? ')
         self.option_set.add_option('reverse', ['r'], target = 'reverse_rank', valid = cards.Card.ranks,
-            default = '4', converter = options.upper,
+            default = '4', converter = convert_rank,
             question = 'What rank should reverse the order of play? ')
         self.option_set.add_option('skip', ['s'], target = 'skip_rank', valid = cards.Card.ranks,
-            default = '3', converter = options.upper, question = 'What rank should skip the next player? ')
+            default = '3', converter = convert_rank, question = 'What rank should skip the next player? ')
 
     def set_up(self):
         """Set up the game. (None)"""

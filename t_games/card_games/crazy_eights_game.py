@@ -703,22 +703,27 @@ class CrazyEights(game.Game):
 
     def set_options(self):
         """Define the options for the game. (None)"""
+        # Get rank converter.
+        def convert_rank(text):
+            if text == '!':
+                text = ''
+            return text.upper()
         # Set the card options.
         self.option_set.add_option('change-match', ['cm'],
             question = 'Should the suit change card have to match the last card played? bool')
         self.option_set.add_option('change-set', ['cs'],
             question = 'Should the suit change card just change to its own suit? bool')
-        rank_error = 'The valid card ranks are {}.'.format(', '.join(cards.Card.ranks))
-        self.option_set.add_option('change', ['c'], options.upper, '8', valid = cards.Card.ranks,
+        rank_error = 'The valid card ranks are {}.'.format(', '.join(self.deck.ranks))
+        self.option_set.add_option('change', ['c'], convert_rank, '8', valid = self.deck.ranks,
             question = 'What rank should change the suit? ', error_text = rank_error,
             target = 'change_rank')
-        self.option_set.add_option('draw', ['d'], options.upper, '', valid = cards.Card.ranks,
+        self.option_set.add_option('draw', ['d'], convert_rank, '', valid = self.deck.ranks,
             question = 'What rank should force the next player to draw? ', error_text = rank_error,
             target = 'draw_rank')
-        self.option_set.add_option('reverse', ['r'], options.upper, '', valid = cards.Card.ranks,
+        self.option_set.add_option('reverse', ['r'], convert_rank, '', valid = self.deck.ranks,
             question = 'What rank should reverse the order of play? ', error_text = rank_error,
             target = 'reverse_rank')
-        self.option_set.add_option('skip', ['s'], options.upper, '', valid = cards.Card.ranks,
+        self.option_set.add_option('skip', ['s'], convert_rank, '', valid = self.deck.ranks,
             question = 'What rank should skip the next player? ', error_text = rank_error,
             target = 'skip_rank')
         # Set the bot options.
