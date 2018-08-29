@@ -727,7 +727,7 @@ class Cribbage(game.Game):
             message = message.format(player.name, pair_score, utility.number_word(rank_count))
         # Check for runs.
         run_count = 0
-        for run_len in range(3, len(played)):
+        for run_len in range(3, len(played) + 1):
             values = sorted([CribCard.ranks.index(card.rank) for card in played[:run_len]])
             diffs = [second - first for first, second in zip(values, values[1:])]
             if diffs and all([diff == 1 for diff in diffs]):
