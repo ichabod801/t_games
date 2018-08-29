@@ -948,23 +948,32 @@ class CribBot(player.Bot):
         # Get the playable cards.
         hand = self.game.hands[self.name]
         playable = [card for card in hand if 31 - card >= self.game.card_total]
-        # Check for sums to fifteen.
-        sums = [card for card in playable if card + self.game.card_total in (1, 2, 3, 4, 15, 31)]
-        if sums:
-            play = sums[0]
         playable.sort()
-        if self.game.card_total:
-            # Check for pairs.
-            last_card = self.game.in_play['Play Sequence'].cards[-1]
-            pairs = [card for card in playable if card.rank == last_card.rank]
-            if pairs:
-                play = pairs[0]
+        # Get the highest scoring play (randomly break ties)
+        plays = [self.game.score_sequence(self, card), card for card in playable]
+        plays.sort(reverse = True)
+        best_plays = [play for play in plays if play[0] = plays[0][0]]
+        if plays[0][0]:
+            play = random.choice(best_plays)
+        elif self.game.card_total < 15:
+            # Get the resulting card total for each card.
+            points = [(card + self.game.card_total, card) for card in playable]
+            points.sort()
+            # Assume they will hoard 5's and 10's.
+            no_15 = [card for total, card in points if total not in (5, 10)]
+            # If you can, make 15 impossible on the next play.
+            if points[0][0] < 5:
+                play = points[0][1]
+            elif points[-1][0] > 15:
+                play = points[-1][1]
+            # Otherwise make it as hard as you can.
+            elif no_15:
+                play = no_15[0]
             else:
-                # If no pairs, play the largest playable card.
                 play = playable[-1]
         else:
-            # On no total, play the smallest playable card.
-            play = playable[0]
+            # If all else fails, play your biggest card.
+            play = playable[-1]
         # Make the play.
         self.game.human.tell('\n{} played the {}.'.format(self.name, play.name.lower()))
         return str(play)
