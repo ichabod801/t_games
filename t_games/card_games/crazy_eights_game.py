@@ -713,17 +713,17 @@ class CrazyEights(game.Game):
             question = 'Should the suit change card have to match the last card played? bool')
         self.option_set.add_option('change-set', ['cs'],
             question = 'Should the suit change card just change to its own suit? bool')
-        rank_error = 'The valid card ranks are {}.'.format(', '.join(self.deck.ranks))
-        self.option_set.add_option('change', ['c'], convert_rank, '8', valid = self.deck.ranks,
+        rank_error = 'The valid card ranks are {}.'.format(', '.join(cards.Card.ranks))
+        self.option_set.add_option('change', ['c'], convert_rank, '8', valid = cards.Card.ranks,
             question = 'What rank should change the suit? ', error_text = rank_error,
             target = 'change_rank')
-        self.option_set.add_option('draw', ['d'], convert_rank, '', valid = self.deck.ranks,
+        self.option_set.add_option('draw', ['d'], convert_rank, '', valid = cards.Card.ranks,
             question = 'What rank should force the next player to draw? ', error_text = rank_error,
             target = 'draw_rank')
-        self.option_set.add_option('reverse', ['r'], convert_rank, '', valid = self.deck.ranks,
+        self.option_set.add_option('reverse', ['r'], convert_rank, '', valid = cards.Card.ranks,
             question = 'What rank should reverse the order of play? ', error_text = rank_error,
             target = 'reverse_rank')
-        self.option_set.add_option('skip', ['s'], convert_rank, '', valid = self.deck.ranks,
+        self.option_set.add_option('skip', ['s'], convert_rank, '', valid = cards.Card.ranks,
             question = 'What rank should skip the next player? ', error_text = rank_error,
             target = 'skip_rank')
         # Set the bot options.

@@ -359,7 +359,7 @@ class NinetyNine(game.Game):
                 text = ''
             return text.upper()
         def is_rank_list(ranks):
-            return all(rank in self.deck.ranks for rank in ranks)
+            return all(rank in cards.Card.ranks for rank in ranks)
         # Set the groups.
         self.option_set.add_group('joker-rules', 'zero=9/k reverse=k jokers=2 99=x skip=')
         self.option_set.add_group('chicago', 'zero=4/9 skip=9 99=K minus=10 plus-minus=')
