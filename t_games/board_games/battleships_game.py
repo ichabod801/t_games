@@ -121,16 +121,16 @@ class Battleships(game.Game):
         """
         game, losses = self.gipf_check(arguments, ('wumpus', 'pig', 'canfield'))
         go = True
-        # Hunt the Wumpus
+        # Hunt the Wumpus tells you where a particular ship type is.
         if game == 'wumpus':
             if not losses:
                 self.gipf_wumpus()
                 go = False
-        # Pig
+        # Pig gives you a bonus shot if you hit your next shot.
         elif game == 'pig':
             if not losses:
                 self.gipf_pig()
-        # Canfield
+        # Canfield gives you a random hit.
         elif game == 'canfield':
             if not losses:
                 self.gipf_canfield()
@@ -143,6 +143,11 @@ class Battleships(game.Game):
             self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
             self.human.tell(self.boards[self.human.name].show())
         return go
+
+    def handle_options(self):
+        """Handle the current option settings. (None)"""
+        super(Battleships, self).handle_options()
+        self.inventory_name = self.inventory_aliases.get(self.inventory_name, self.inventory_name)
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
@@ -212,11 +217,6 @@ class Battleships(game.Game):
         # Update the human. (Bots don't need updates.)
         self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
         self.human.tell(self.boards[self.human.name].show())
-
-    def handle_options(self):
-        """Handle the current option settings. (None)"""
-        super(Battleships, self).handle_options()
-        self.inventory_name = self.inventory_aliases.get(self.inventory_name, self.inventory_name)
 
     def gipf_wumpus(self):
         """Handle the Hunt the Wumpus edge. (None)"""
