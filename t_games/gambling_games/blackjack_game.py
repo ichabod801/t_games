@@ -173,7 +173,7 @@ class Blackjack(game.Game):
                 hand_ordinal = utility.number_word(hand_index + 2, ordinal = True)
                 self.human.tell('Your {} hand is {}.'.format(hand_ordinal, hand))
             # Ask until you get a valid insurance amount, blocking other blackjack moves until done.
-            self.phase = 'bet'
+            self.phase = 'insurance'
             while True:
                 prompt = 'How much insurance would you like? '
                 insure = self.human.ask_int(prompt, low = 0, high = min(self.bets) / 2, default = 0)
@@ -220,8 +220,11 @@ class Blackjack(game.Game):
         set to the amount bet on the original hand.
         """
         # Check for proper timing.
-        if self.phase != 'play':
+        if self.phase == 'bet':
             self.human.error('No hands have been dealt yet.')
+            return False
+        elif self.phase == 'insurance':
+            self.human.error('You must decide on insurance before you can double.')
             return False
         # Parse the arguments.
         if not arguments.strip():
@@ -283,8 +286,11 @@ class Blackjack(game.Game):
         two for the second hand, and so on.)
         """
         # Check for proper timing.
-        if self.phase != 'play':
+        if self.phase == 'bet':
             self.human.error('No hands have been dealt yet.')
+            return False
+        elif self.phase == 'insurance':
+            self.human.error('You must decide on insurance before you can get a hint.')
             return False
         # Parse the arguments.
         int_args = self.parse_arguments('hint', arguments)
@@ -322,8 +328,11 @@ class Blackjack(game.Game):
         two for the second hand, and so on.)
         """
         # Check for proper timing.
-        if self.phase != 'play':
+        if self.phase == 'bet':
             self.human.error('No hands have been dealt yet.')
+            return False
+        elif self.phase == 'insurance':
+            self.human.error('You must decide on insurance before you can get hit.')
             return False
         # Parse the arguments.
         int_args = self.parse_arguments('hit', arguments)
@@ -378,8 +387,11 @@ class Blackjack(game.Game):
         two for the second hand, and so on.)
         """
         # Check timing.
-        if self.phase != 'play':
+        if self.phase == 'bet':
             self.human.error('No hands have been dealt yet.')
+            return False
+        elif self.phase == 'insurance':
+            self.human.error('You must decide on insurance before you can split.')
             return False
         # Parse arguments.
         int_args = self.parse_arguments('split', arguments)
@@ -421,8 +433,11 @@ class Blackjack(game.Game):
         two for the second hand, and so on.)
         """
         # Check timing.
-        if self.phase != 'play':
+        if self.phase == 'bet':
             self.human.error('No hands have been dealt yet.')
+            return False
+        elif self.phase == 'insurance':
+            self.human.error('You must decide on insurance before you can stand.')
             return False
         # Parse arguments.
         int_args = self.parse_arguments('hit', arguments)
@@ -449,8 +464,11 @@ class Blackjack(game.Game):
         if not self.surrender:
             self.human.error('Surrender is not allowed in this game.')
             return False
-        if self.phase != 'play':
+        if self.phase == 'bet':
             self.human.error('No hands have been dealt yet.')
+            return False
+        elif self.phase == 'insurance':
+            self.human.error('You must decide on insurance before you can surrender.')
             return False
         # Parse the arguments.
         int_args = self.parse_arguments('surrender', arguments)
