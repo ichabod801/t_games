@@ -138,6 +138,10 @@ class Battleships(game.Game):
         # Game with no gipf link
         else:
             self.human.tell('Gesundheit.')
+        # Update the human after a loss.
+        if game != 'invalid-game' and losses:
+            self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
+            self.human.tell(self.boards[self.human.name].show())
         return go
 
     def game_over(self):
@@ -165,11 +169,6 @@ class Battleships(game.Game):
             return False
         # Report the end of the game.
         return True
-
-    def handle_options(self):
-        """Handle the current option settings. (None)"""
-        super(Battleships, self).handle_options()
-        self.inventory_name = self.inventory_aliases.get(self.inventory_name, self.inventory_name)
 
     def gipf_canfield(self):
         """Handle the Canfield edge. (None)"""
@@ -213,6 +212,11 @@ class Battleships(game.Game):
         # Update the human. (Bots don't need updates.)
         self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
         self.human.tell(self.boards[self.human.name].show())
+
+    def handle_options(self):
+        """Handle the current option settings. (None)"""
+        super(Battleships, self).handle_options()
+        self.inventory_name = self.inventory_aliases.get(self.inventory_name, self.inventory_name)
 
     def gipf_wumpus(self):
         """Handle the Hunt the Wumpus edge. (None)"""
