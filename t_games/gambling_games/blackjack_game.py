@@ -172,7 +172,8 @@ class Blackjack(game.Game):
             for hand_index, hand in enumerate(self.player_hands[1:]):
                 hand_ordinal = utility.number_word(hand_index + 2, ordinal = True)
                 self.human.tell('Your {} hand is {}.'.format(hand_ordinal, hand))
-            # Ask until you get a valid insurance amount.
+            # Ask until you get a valid insurance amount, blocking other blackjack moves until done.
+            self.phase = 'bet'
             while True:
                 prompt = 'How much insurance would you like? '
                 insure = self.human.ask_int(prompt, low = 0, high = min(self.bets) / 2, default = 0)
@@ -182,6 +183,7 @@ class Blackjack(game.Game):
                     break
                 else:
                     self.handle_cmd(insure)
+            self.phase = 'play'
         else:
             self.insurance = 0
         # Check for dealer blackjack.
