@@ -129,6 +129,7 @@ class Blackjack(game.Game):
     load_hints: Parse the hint table from the condensed string. (None)
     load_table: Load a condensed table. (list of list of str)
     parse_arguments: Parse integer arguments to command. (list of int)
+    phase_check: Check that the phase is appropriate for hand actions. (bool)
     reset: Reset the game for the next deal. (None)
     show_status: Show the current game situation to the player. (None)
     showdown: Show and hit the dealer's hand and resolve the round. (None)
@@ -220,11 +221,7 @@ class Blackjack(game.Game):
         set to the amount bet on the original hand.
         """
         # Check for proper timing.
-        if self.phase == 'bet':
-            self.human.error('No hands have been dealt yet.')
-            return False
-        elif self.phase == 'insurance':
-            self.human.error('You must decide on insurance before you can double.')
+        if not self.phase_check('double'):
             return False
         # Parse the arguments.
         if not arguments.strip():
@@ -286,11 +283,7 @@ class Blackjack(game.Game):
         two for the second hand, and so on.)
         """
         # Check for proper timing.
-        if self.phase == 'bet':
-            self.human.error('No hands have been dealt yet.')
-            return False
-        elif self.phase == 'insurance':
-            self.human.error('You must decide on insurance before you can get a hint.')
+        if not self.phase_check('get a hint'):
             return False
         # Parse the arguments.
         int_args = self.parse_arguments('hint', arguments)
@@ -328,11 +321,7 @@ class Blackjack(game.Game):
         two for the second hand, and so on.)
         """
         # Check for proper timing.
-        if self.phase == 'bet':
-            self.human.error('No hands have been dealt yet.')
-            return False
-        elif self.phase == 'insurance':
-            self.human.error('You must decide on insurance before you can get hit.')
+        if not self.phase_check('get hit'):
             return False
         # Parse the arguments.
         int_args = self.parse_arguments('hit', arguments)
@@ -387,11 +376,7 @@ class Blackjack(game.Game):
         two for the second hand, and so on.)
         """
         # Check timing.
-        if self.phase == 'bet':
-            self.human.error('No hands have been dealt yet.')
-            return False
-        elif self.phase == 'insurance':
-            self.human.error('You must decide on insurance before you can split.')
+        if not self.phase_check('split a hand'):
             return False
         # Parse arguments.
         int_args = self.parse_arguments('split', arguments)
@@ -433,11 +418,7 @@ class Blackjack(game.Game):
         two for the second hand, and so on.)
         """
         # Check timing.
-        if self.phase == 'bet':
-            self.human.error('No hands have been dealt yet.')
-            return False
-        elif self.phase == 'insurance':
-            self.human.error('You must decide on insurance before you can stand.')
+        if not self.phase_check('stand'):
             return False
         # Parse arguments.
         int_args = self.parse_arguments('hit', arguments)
@@ -464,11 +445,7 @@ class Blackjack(game.Game):
         if not self.surrender:
             self.human.error('Surrender is not allowed in this game.')
             return False
-        if self.phase == 'bet':
-            self.human.error('No hands have been dealt yet.')
-            return False
-        elif self.phase == 'insurance':
-            self.human.error('You must decide on insurance before you can surrender.')
+        if not self.phase_check('surrender'):
             return False
         # Parse the arguments.
         int_args = self.parse_arguments('surrender', arguments)
@@ -617,6 +594,21 @@ class Blackjack(game.Game):
         int_args[0] -= 1
         # Return integer arguments.
         return int_args
+
+    def phase_check(self, task):
+        """
+        Check that the phase is appropriate for actions on hands. (bool)
+
+        Parameters:
+        task: The hand action being tried. (str)
+        """
+        if self.phase == 'bet':
+            self.human.error('No hands have been dealt yet.')
+        elif self.phase == 'insurance':
+            self.human.error('You must decide on insurance before you can {}.'.format(task))
+        else:
+            return True
+        return False
 
     def player_action(self, player):
         """
