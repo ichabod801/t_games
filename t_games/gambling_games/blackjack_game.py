@@ -192,7 +192,7 @@ class Blackjack(game.Game):
             self.insurance = 0
         # Check for dealer blackjack.
         if self.dealer_hand.blackjack():
-            self.human.tell('The dealer has blackjack.')
+            self.human.tell('\nThe dealer has blackjack.')
             # Check for insurance.
             if self.insurance:
                 self.human.tell('You won {} bucks from your insurance.'.format(self.insurance * 2))
@@ -206,9 +206,10 @@ class Blackjack(game.Game):
             for hand_index, hand in enumerate(self.player_hands):
                 if hand.blackjack():
                     self.human.tell('The dealer is showing {}.'.format(self.dealer_hand.cards[-1]))
-                    self.human.tell('You won with blackjack ({}).'.format(hand))
+                    self.human.tell('\nYou won with blackjack ({}).'.format(hand))
                     self.scores[self.human.name] += int(self.bets[hand_index] * 2.5)
                     hand.status = 'paid'
+                    self.bets[hand_index] = 0
             self.phase = 'play'
 
     def do_double(self, arguments):
