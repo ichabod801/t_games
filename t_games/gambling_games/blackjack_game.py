@@ -257,6 +257,7 @@ class Blackjack(game.Game):
             if score > 21:
                 self.human.tell('You busted with {} ({}).'.format(score, hand))
                 hand.status = 'busted'
+                self.bets[hand_index] = 0
             else:
                 hand.status = 'standing'
 
@@ -340,6 +341,7 @@ class Blackjack(game.Game):
             if score > 21:
                 self.human.tell('You busted with {} ({}).'.format(score, hand))
                 hand.status = 'busted'
+                self.bets[hand_index] = 0
             # Check for forced stand.
             elif score == 21:
                 hand.status = 'standing'
@@ -464,6 +466,7 @@ class Blackjack(game.Game):
             # Surrender the hand.
             hand.status = 'surrendered'
             self.scores[self.human.name] += int(self.bets[hand_index] / 2)
+            self.bets[hand_index] = 0
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
