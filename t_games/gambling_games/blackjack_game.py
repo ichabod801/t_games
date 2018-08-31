@@ -48,7 +48,10 @@ away. Otherwise you can continue to get hit (get another card) until you are
 ready to stand (stay with the cards you have). If you go over 21 you lose.
 
 If you are betting on multiple hands (send the hands= option), you can enter
-one bet and it will be applied to all of the hands.
+one bet and it will be applied to all of the hands. If you are playing
+multiple hands, you can specify which hand you want to act on with a number.
+For example, 'hit 2' will hit your second hand. If you do not specify a hand
+number, the command will apply to the lowest numbered open hand.
 
 You may increase your bet up to double at any point, on the condition that you
 get one and only more card. If you have a pair, you may split it into two
@@ -189,7 +192,7 @@ class Blackjack(game.Game):
             self.insurance = 0
         # Check for dealer blackjack.
         if self.dealer_hand.blackjack():
-            self.human.tell('The dealer has blackjack.')
+            self.human.tell('\nThe dealer has blackjack.')
             # Check for insurance.
             if self.insurance:
                 self.human.tell('You won {} bucks from your insurance.'.format(self.insurance * 2))
@@ -203,9 +206,10 @@ class Blackjack(game.Game):
             for hand_index, hand in enumerate(self.player_hands):
                 if hand.blackjack():
                     self.human.tell('The dealer is showing {}.'.format(self.dealer_hand.cards[-1]))
-                    self.human.tell('You won with blackjack ({}).'.format(hand))
+                    self.human.tell('\nYou won with blackjack ({}).'.format(hand))
                     self.scores[self.human.name] += int(self.bets[hand_index] * 2.5)
                     hand.status = 'paid'
+                    self.bets[hand_index] = 0
             self.phase = 'play'
 
     def do_double(self, arguments):
@@ -225,7 +229,11 @@ class Blackjack(game.Game):
             return False
         # Parse the arguments.
         if not arguments.strip():
-            int_args = [0, self.bets[0]]
+            # Find the default hand.
+            for hand_index, hand in enumerate(self.player_hands):
+                if hand.status == 'open':
+                    break
+            int_args = [hand_index, self.bets[hand_index]]
         else:
             int_args = self.parse_arguments('double', arguments, max_args = 2)
             if not int_args:
@@ -257,6 +265,7 @@ class Blackjack(game.Game):
             if score > 21:
                 self.human.tell('You busted with {} ({}).'.format(score, hand))
                 hand.status = 'busted'
+                self.bets[hand_index] = 0
             else:
                 hand.status = 'standing'
 
@@ -340,6 +349,7 @@ class Blackjack(game.Game):
             if score > 21:
                 self.human.tell('You busted with {} ({}).'.format(score, hand))
                 hand.status = 'busted'
+                self.bets[hand_index] = 0
             # Check for forced stand.
             elif score == 21:
                 hand.status = 'standing'
@@ -464,6 +474,7 @@ class Blackjack(game.Game):
             # Surrender the hand.
             hand.status = 'surrendered'
             self.scores[self.human.name] += int(self.bets[hand_index] / 2)
+            self.bets[hand_index] = 0
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
@@ -582,7 +593,11 @@ class Blackjack(game.Game):
                     return []
             # Add default hand index if necessary.
             else:
-                int_args.append(1)
+                # Default hand is the next open hand.
+                for hand_index, hand in enumerate(self.player_hands):
+                    if hand.status == 'open':
+                        break
+                int_args.append(hand_index + 1)
         if len(int_args) != max_args:
             self.human.error('Need more arguments to the {0} command. See help {0}.'.format(command))
             return []
@@ -701,13 +716,16 @@ class Blackjack(game.Game):
     def show_status(self):
         """Show the current game situation to the player. (None)"""
         # Show the stake left.
-        text = "\nYou have {} bucks.".format(self.scores[self.human.name])
+        text = "\nYou have {} bucks in hand and {} bucks in play."
+        text = text.format(self.scores[self.human.name], sum(self.bets))
         # Show all of the hands.
         text += "\nThe dealer's hand is {}.".format(self.dealer_hand)
-        text += '\nYour hand is {} ({}).'.format(self.player_hands[0], self.player_hands[0].score())
-        hand_text = '\nYour {} hand is {} ({}).'
+        text += '\nYour hand is {} ({}) [{}].'
+        text = text.format(self.player_hands[0], self.player_hands[0].score(), self.player_hands[0].status)
+        hand_text = '\nYour {} hand is {} ({}) [{}].'
         for hand_index, hand in enumerate(self.player_hands[1:]):
-            text += hand_text.format(utility.number_word(hand_index + 2, True), hand, hand.score())
+            ordinal = utility.number_word(hand_index + 2, True)
+            text += hand_text.format(ordinal, hand, hand.score(), hand.status)
         # Send the information to the human.
         self.human.tell(text)
 
@@ -715,7 +733,7 @@ class Blackjack(game.Game):
         """Show and hit the dealer's hand and resolve the round. (None)"""
         # Reveal the dealer's hole card.
         self.dealer_hand.cards[0].up = True
-        self.human.tell('The dealer has {}.'.format(self.dealer_hand))
+        self.human.tell('\nThe dealer has {}.'.format(self.dealer_hand))
         if self.dealer_skip:
             self.dealer_skip = False
         else:
