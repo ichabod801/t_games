@@ -705,10 +705,12 @@ class Blackjack(game.Game):
         text = text.format(self.scores[self.human.name], sum(self.bets))
         # Show all of the hands.
         text += "\nThe dealer's hand is {}.".format(self.dealer_hand)
-        text += '\nYour hand is {} ({}).'.format(self.player_hands[0], self.player_hands[0].score())
-        hand_text = '\nYour {} hand is {} ({}).'
+        text += '\nYour hand is {} ({}) [{}].'
+        text = text.format(self.player_hands[0], self.player_hands[0].score(), self.player_hands[0].status)
+        hand_text = '\nYour {} hand is {} ({}) [{}].'
         for hand_index, hand in enumerate(self.player_hands[1:]):
-            text += hand_text.format(utility.number_word(hand_index + 2, True), hand, hand.score())
+            ordinal = utility.number_word(hand_index + 2, True)
+            text += hand_text.format(ordinal, hand, hand.score(), hand.status)
         # Send the information to the human.
         self.human.tell(text)
 
