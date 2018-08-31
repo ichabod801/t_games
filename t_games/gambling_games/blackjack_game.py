@@ -229,7 +229,11 @@ class Blackjack(game.Game):
             return False
         # Parse the arguments.
         if not arguments.strip():
-            int_args = [0, self.bets[0]]
+            # Find the default hand.
+            for hand_index, hand in enumerate(self.player_hands):
+                if hand.status == 'open':
+                    break
+            int_args = [hand_index, self.bets[0]]
         else:
             int_args = self.parse_arguments('double', arguments, max_args = 2)
             if not int_args:
