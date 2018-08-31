@@ -729,7 +729,7 @@ class Blackjack(game.Game):
         """Show and hit the dealer's hand and resolve the round. (None)"""
         # Reveal the dealer's hole card.
         self.dealer_hand.cards[0].up = True
-        self.human.tell('The dealer has {}.'.format(self.dealer_hand))
+        self.human.tell('\nThe dealer has {}.'.format(self.dealer_hand))
         if self.dealer_skip:
             self.dealer_skip = False
         else:
