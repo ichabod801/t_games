@@ -233,7 +233,7 @@ class Blackjack(game.Game):
             for hand_index, hand in enumerate(self.player_hands):
                 if hand.status == 'open':
                     break
-            int_args = [hand_index, self.bets[0]]
+            int_args = [hand_index, self.bets[hand_index]]
         else:
             int_args = self.parse_arguments('double', arguments, max_args = 2)
             if not int_args:
