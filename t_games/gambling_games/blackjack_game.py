@@ -585,7 +585,11 @@ class Blackjack(game.Game):
                     return []
             # Add default hand index if necessary.
             else:
-                int_args.append(1)
+                # Default hand is the next open hand.
+                for hand_index, hand in enumerate(self.player_hands):
+                    if hand.status == 'open':
+                        break
+                int_args.append(hand_index + 1)
         if len(int_args) != max_args:
             self.human.error('Need more arguments to the {0} command. See help {0}.'.format(command))
             return []
