@@ -104,11 +104,21 @@ class MonteCarlo(solitaire.Solitaire):
         filled from the stock.
         """
         # Shift everything over.
-        self.tableau = [pile for pile in self.tableau if pile]
+        undo_index = 0
+        empty_indexes = []
+        for pile_index, pile in enumerate(self.tableau):
+            if pile and empty_indexes:
+                self.transfer(pile[:], self.tableau[empty_indexes.pop(0)], undo_ndx = undo_index)
+                undo_index += 1
+                empty_indexes.append(pile_index)
+            elif not pile:
+                empty_indexes.append(pile_index)
         # Refill the tableau.
-        while self.deck.cards and len(self.tableau) < self.options['num-tableau']:
-            self.tableau.append([])
-            self.deck.deal(self.tableau[-1])
+        for pile_index in empty_indexes:
+            if not self.stock:
+                break
+            self.transfer(self.stock[-1:], self.tableau[pile_index], undo_ndx = undo_index)
+            undo_index += 1
 
     def find_foundation(self, card):
         """
@@ -124,7 +134,7 @@ class MonteCarlo(solitaire.Solitaire):
         # Set the default checkers.
         super(MonteCarlo, self).set_checkers()
         # Set the dealers.
-        self.dealers = [solitaire.deal_n(self.options['num-tableau'])]
+        self.dealers = [solitaire.deal_n(self.options['num-tableau']), solitaire.deal_stock_all]
         # Set the rules checkers.
         self.build_checkers = [solitaire.build_none]
         self.lane_checkers = [solitaire.lane_none]
