@@ -701,7 +701,8 @@ class Blackjack(game.Game):
     def show_status(self):
         """Show the current game situation to the player. (None)"""
         # Show the stake left.
-        text = "\nYou have {} bucks.".format(self.scores[self.human.name])
+        text = "\nYou have {} bucks in hand and {} bucks in play."
+        text = text.format(self.scores[self.human.name], sum(self.bets))
         # Show all of the hands.
         text += "\nThe dealer's hand is {}.".format(self.dealer_hand)
         text += '\nYour hand is {} ({}).'.format(self.player_hands[0], self.player_hands[0].score())
