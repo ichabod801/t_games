@@ -48,7 +48,10 @@ away. Otherwise you can continue to get hit (get another card) until you are
 ready to stand (stay with the cards you have). If you go over 21 you lose.
 
 If you are betting on multiple hands (send the hands= option), you can enter
-one bet and it will be applied to all of the hands.
+one bet and it will be applied to all of the hands. If you are playing
+multiple hands, you can specify which hand you want to act on with a number.
+For example, 'hit 2' will hit your second hand. If you do not specify a hand
+number, the command will apply to the lowest numbered open hand.
 
 You may increase your bet up to double at any point, on the condition that you
 get one and only more card. If you have a pair, you may split it into two
