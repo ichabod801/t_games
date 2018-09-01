@@ -362,7 +362,7 @@ class Game(OtherCmd):
 
     def handle_options(self):
         """Handle game options and set the player list. (None)"""
-        self.option_set.handle_settings(self.raw_options)
+        return self.option_set.handle_settings(self.raw_options)
 
     def help_xyzzy(self):
         """Help for the xyzzy command. (None)"""
