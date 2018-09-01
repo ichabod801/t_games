@@ -140,8 +140,7 @@ class Game(OtherCmd):
         # Define and process the game options.
         self.option_set = options.OptionSet(self)
         self.set_options()
-        if not self.handle_options():
-            raise ValueError('Invalid options provided.')
+        self.handle_options()
         # Set up the players.
         if not hasattr(self, 'players'):
             self.players = [self.human]
@@ -362,7 +361,7 @@ class Game(OtherCmd):
 
     def handle_options(self):
         """Handle game options and set the player list. (None)"""
-        return self.option_set.handle_settings(self.raw_options)
+        self.option_set.handle_settings(self.raw_options)
 
     def help_xyzzy(self):
         """Help for the xyzzy command. (None)"""

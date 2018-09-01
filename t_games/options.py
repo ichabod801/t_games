@@ -390,9 +390,8 @@ class OptionSet(object):
         # Warn of any errors.
         if self.errors:
             self.game.human.tell('\n'.join(self.errors))
-            if self.game.human.ask('\nDo you still want to play the game? ') not in utility.YES:
-                return False
-        return True
+            if self.game.human.ask('\nDo you still want to play the game? ') in utility.YES:
+                self.errors = []
 
     def parse_settings(self, settings_text):
         """
