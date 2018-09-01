@@ -436,7 +436,10 @@ class Interface(other_cmd.OtherCmd):
         options: Options specified by the play command. (str)
         """
         # Set up the game.
-        self.game = game_class(self.human, options, self)
+        try:
+            self.game = game_class(self.human, options, self)
+        except ValueError:
+            return False
         # Play the game until the player wants to stop.
         while True:
             # Play the game.

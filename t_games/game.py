@@ -140,7 +140,8 @@ class Game(OtherCmd):
         # Define and process the game options.
         self.option_set = options.OptionSet(self)
         self.set_options()
-        self.handle_options()
+        if not self.handle_options():
+            raise ValueError('Invalid options provided.')
         # Set up the players.
         if not hasattr(self, 'players'):
             self.players = [self.human]
