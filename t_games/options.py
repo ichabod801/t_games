@@ -391,6 +391,7 @@ class OptionSet(object):
         if self.errors:
             self.game.human.tell()
             self.game.human.error('\n'.join(self.errors))
+            # Check for playing anyway.
             if self.game.human.ask('\nDo you still want to play the game? ') in utility.YES:
                 self.errors = []
 
