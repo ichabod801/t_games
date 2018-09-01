@@ -437,6 +437,9 @@ class Interface(other_cmd.OtherCmd):
         """
         # Set up the game.
         self.game = game_class(self.human, options, self)
+        # Don't play if there are option related errors.
+        if self.game.option_set.errors:
+            return False
         # Play the game until the player wants to stop.
         while True:
             # Play the game.
