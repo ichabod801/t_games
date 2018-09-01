@@ -107,13 +107,16 @@ class MonteCarlo(solitaire.Solitaire):
         undo_index = 0
         empty_indexes = []
         for pile_index, pile in enumerate(self.tableau):
+            # Move full piles to empty piles, if you have any.
             if pile and empty_indexes:
                 self.transfer(pile[:], self.tableau[empty_indexes.pop(0)], undo_ndx = undo_index)
                 undo_index += 1
+                # Note that the current pile is now empty.
                 empty_indexes.append(pile_index)
+            # Note empty piles for later filling.
             elif not pile:
                 empty_indexes.append(pile_index)
-        # Refill the tableau.
+        # Fill any remaining empty piles from the stock.
         for pile_index in empty_indexes:
             if not self.stock:
                 break
