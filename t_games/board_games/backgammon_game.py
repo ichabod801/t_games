@@ -179,7 +179,7 @@ class BackgammonBot(player.Bot):
         # Respond to opponent doubling.
         elif prompt.startswith('Your opponent wants to double'):
             features, points = self.describe_board(self.game.board)
-            if self.eval_board(features, 'accept') < -25:
+            if self.eval_board(features, 'accept') > -25:
                 return '1'
             else:
                 return '0'
@@ -215,7 +215,7 @@ class BackgammonBot(player.Bot):
                 features, points = self.describe_board(self.game.board)
                 board_quality = self.eval_board(features, 'double')
                 if board_quality > 25 and self.game.doubling_status in ('', self.piece):
-                    return double
+                    return 'double'
                 # Evaluate all the legal plays.
                 possibles = []
                 board = self.game.board
@@ -851,7 +851,7 @@ class Backgammon(game.Game):
         # Continue the turn if there are still rolls to move.
         return self.rolls
 
-    def do_double(self, player):
+    def do_double(self, arguments):
         """
         Double the stakes of the game.
 
@@ -860,11 +860,12 @@ class Backgammon(game.Game):
         whatever the stakes were before you offered the double.
         """
         # Check for valid doubling.
+        player = self.players[self.player_index]
         piece = self.pieces[player.name]
         if self.doubling_status in ('', piece):
             # See if the opponent accepts.
             opponent = self.players[1 - self.player_index]
-            query = 'Your opponent wants to double the stakes to {}. Do you accept the new stakes? '
+            query = '\nYour opponent wants to double the stakes to {}. Do you accept the new stakes? '
             accept = opponent.ask(query.format(self.doubling_die * 2))
             if accept.lower() in utility.YES:
                 # Process acceptance
@@ -876,9 +877,9 @@ class Backgammon(game.Game):
                 # Process rejection.
                 player.tell('\nYour opponent refuses the double, you win.')
                 if player == self.human:
-                    self.win_loss_draw[1] += self.doubling_die
-                else:
                     self.win_loss_draw[0] += self.doubling_die
+                else:
+                    self.win_loss_draw[1] += self.doubling_die
                 if self.win_loss_draw[0] >= self.match:
                     self.force_end = 'win'
                 elif self.win_loss_draw[1] >= self.match:
