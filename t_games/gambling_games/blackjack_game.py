@@ -71,13 +71,15 @@ played.
 COMMANDS:
 Double (d): Increse your bet up to double and get one more card. If you are
     not doubling the bet, specify the bet after the command.
+Hands: Change the number of hands you are playing.
+Hint: Get a hint about how to play a hand.
 Hit (h): Get annother card.
 Split (sp): Split a pair to create two hands.
 Stand (s): Stick with the cards you have.
 Surrender (su): Give up your hand in exchange for half your bet back.
 
 Any command may take a hand number from 1 to n, for times when you have more
-than one hand. If no hand number is given, the first hand is assumed.
+than one hand. If no hand number is given, the first open hand is assumed.
 
 OPTIONS:
 decks= (d=): The number of decks in the shoe. (1, 2, 4 (default), 6 or 8)
@@ -123,6 +125,7 @@ class Blackjack(game.Game):
     Methods:
     deal: Deal the hands. (None)
     do_double: Double your bet for one last card. (bool)
+    do_hands: Change the number of hands being played. (bool)
     do_hint: Get a suggested play for your position. (bool)
     do_hit: Deal a card to the player. (bool)
     do_split: Split a pair into two hands. (bool)
@@ -281,6 +284,33 @@ class Blackjack(game.Game):
         # Otherwise, I'm confused.
         else:
             self.human.tell('ValueError: gipf')
+        return True
+
+    def do_hands(self, arguments):
+        """
+        Change the number of hands being played.
+
+        The argument should be the number of hands to play, from 1 to 4.
+        """
+        # Check for integer input.
+        try:
+            new_count = int(arguments)
+        except ValueError:
+            self.human.error('\nInvalid arguments to hands command: {!r}.'.format(arguments))
+            return True
+        # Check for valid input.
+        if 1 <= new_count <= 4:
+            # Confirm the change to the user.
+            if self.phase == 'bet':
+                message = '\nYou are now playing {}.'
+            else:
+                message = '\nNext round you will play {}.'
+            self.human.tell(message.format(utility.number_plural(new_count, 'hand')))
+            # Make the change.
+            self.hand_count = new_count
+        else:
+            # Warn on invalid input.
+            self.human.error('\nYou can only play one to four hands.')
         return True
 
     def do_hint(self, arguments):
@@ -494,6 +524,12 @@ class Blackjack(game.Game):
         self.human.tell('\nYou have {} bucks.'.format(self.scores[self.human.name]))
         prompt = 'How much would you like to bet this round (return for max): '
         max_bet = min(self.limit, self.scores[self.human.name])
+        # Check for enough to bet one buck for each hand.
+        if self.scores[self.human.name] < self.hand_count:
+            # Get rid of unbettable hands.
+            plural = utility.number_plural(self.hand_count, 'hand')
+            self.human.tell('You do not have enough money to play {}.'.format(plural))
+            self.do_hands(self.scores[self.human.name])
         # Check for multiple bets.
         if self.hand_count == 1:
             num_bets = [1]
@@ -509,6 +545,10 @@ class Blackjack(game.Game):
                 # Single bets are assumed to be for all hands.
                 if len(bets) == 1:
                     bets = bets * self.hand_count
+                # Check for a valid total.
+                if sum(bets) > self.scores[self.human.name]:
+                    self.human.error('You do not have that much money ({} bucks needed).'.format(sum(bets)))
+                    continue
                 # Record the bets.
                 self.bets = bets
                 self.scores[self.human.name] -= sum(bets)
