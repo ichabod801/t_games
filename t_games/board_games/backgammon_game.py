@@ -177,7 +177,7 @@ class BackgammonBot(player.Bot):
             self.game.human.tell('{} has no legal moves.'.format(self.name))
             return ''
         # Respond to opponent doubling.
-        elif prompt.startswith('Your opponent wants to double'):
+        elif prompt.startswith('\nYour opponent wants to double'):
             features, points = self.describe_board(self.game.board)
             if self.eval_board(features, 'accept') > -25:
                 return '1'
