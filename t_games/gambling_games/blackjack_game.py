@@ -71,13 +71,15 @@ played.
 COMMANDS:
 Double (d): Increse your bet up to double and get one more card. If you are
     not doubling the bet, specify the bet after the command.
+Hands: Change the number of hands you are playing.
+Hint: Get a hint about how to play a hand.
 Hit (h): Get annother card.
 Split (sp): Split a pair to create two hands.
 Stand (s): Stick with the cards you have.
 Surrender (su): Give up your hand in exchange for half your bet back.
 
 Any command may take a hand number from 1 to n, for times when you have more
-than one hand. If no hand number is given, the first hand is assumed.
+than one hand. If no hand number is given, the first open hand is assumed.
 
 OPTIONS:
 decks= (d=): The number of decks in the shoe. (1, 2, 4 (default), 6 or 8)
@@ -123,6 +125,7 @@ class Blackjack(game.Game):
     Methods:
     deal: Deal the hands. (None)
     do_double: Double your bet for one last card. (bool)
+    do_hands: Change the number of hands being played. (bool)
     do_hint: Get a suggested play for your position. (bool)
     do_hit: Deal a card to the player. (bool)
     do_split: Split a pair into two hands. (bool)
