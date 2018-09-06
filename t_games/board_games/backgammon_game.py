@@ -769,6 +769,43 @@ class Backgammon(game.Game):
     num_options = 3
     rules = RULES
 
+    def auto_bear(self, player, piece):
+        """
+        Bear pieces automatically. (bool):
+
+        Parameters:
+        player: The player to bear pieces for (player.Player)
+        piece: The piece to bear off. (str)
+        """
+        go = False
+        # Get the rolls needed for the points the player is on.
+        points = [point for point, cell in self.board.cells.items() if piece in cell]
+        if piece == 'O':
+            points = [25 - point for point in points]
+        # Loop through the rolls.
+        while self.rolls:
+            max_roll, max_point = max(self.rolls), max(points)
+            if max_roll in points:
+                max_point = max_roll
+            if max_roll >= max_point:
+                # Bear a piece if you can.
+                if piece == 'O':
+                    max_point = 25 - max_point
+                self.rolls.remove(max_roll)
+                self.board.move(max_point, OUT)
+                # Check for the point still being valid
+                if not self.board.cells[max_point].contents:
+                    points.remove(max_point)
+                # Record that a succesful move was made.
+                go = True
+            else:
+                # Stop if you can't bear.
+                break
+        # Warn if no successful moves were made.
+        if not go:
+            player.error('There are no pieces that can be auto-built.')
+        return go
+
     def check_win(self, piece):
         """
         Check to see if a given player has won. (int)
@@ -811,7 +848,7 @@ class Backgammon(game.Game):
         piece = self.pieces[player.name]
         # Convert the arguments.
         words = argument.split()
-        if words[0].lower() == 'off':
+        if words and words[0].lower() == 'off':
             words = words[1:]
         try:
             bears = [int(word) for word in words]
@@ -827,6 +864,9 @@ class Backgammon(game.Game):
         elif piece in self.board.cells[BAR]:
             player.error('You still have a piece on the bar.')
         else:
+            # Check for automatic bearing
+            if not bears:
+                return self.auto_bear(player, piece)
             # Play any legal moves.
             for bear in bears:
                 # Get the correct point.
