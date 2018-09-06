@@ -122,7 +122,9 @@ done with a slash, as in '13/7', but it can be done with a space or a comma
 as well. If the move is unambiguous, you may just use the end point. To enter
 a piece from the bar use the enter command (or 'e') and the point you want to
 enter onto. To bear a piece off the board, use the bear command (or 'bear off'
-or 'b') and the point your want to bear off from (NOT the roll).
+or 'b') and the point your want to bear off from (NOT the roll). Using the
+bear command without any arguments will automatically bear off pieces, to the
+extent that there are obvious bearing off moves.
 
 Backgammon is often played in match play, to even out the luck of the dice.
 When using match play, a game won when the opponent has not born any pieces
@@ -740,6 +742,7 @@ class Backgammon(game.Game):
     rolls: The numbers that can be used to move. (list of int)
 
     Methods:
+    auto_bear: Bear pieces automatically. (bool)
     check_win: Check to see if a given player has won. (int)
     do_bear: Bear a piece of the board. (bool)
     do_double: Double the doubling die. (bool)
@@ -771,7 +774,7 @@ class Backgammon(game.Game):
 
     def auto_bear(self, player, piece):
         """
-        Bear pieces automatically. (bool):
+        Bear pieces automatically. (bool)
 
         Parameters:
         player: The player to bear pieces for (player.Player)
