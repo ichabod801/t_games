@@ -1014,6 +1014,9 @@ class Backgammon(game.Game):
             start = end - maybe * direction
             if start in self.board.cells and player_piece in self.board.cells[start]:
                 possible.append(start)
+            if (start == 25 and direction == -1) or (start == 0 and direction == 1):
+                if player_piece in self.board.cells[BAR]:
+                    possible.append(BAR)
         if len(possible) == 1:
             return possible[0]
         elif len(possible) > 1:
@@ -1063,6 +1066,10 @@ class Backgammon(game.Game):
             start, end = self.get_start(move[0], direction, player, player_piece), move[0]
             if start == -99:
                 return True
+            elif start == BAR:
+                if end > 6:
+                    end = 25 - end
+                return self.do_enter(end)
         else:
             start, end = move
         # Check for valid move.
