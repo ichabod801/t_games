@@ -1012,8 +1012,10 @@ class Backgammon(game.Game):
         possible = []
         for maybe in set(self.rolls):
             start = end - maybe * direction
+            # Check for valid standard move.
             if start in self.board.cells and player_piece in self.board.cells[start]:
                 possible.append(start)
+            # Check for valid enter move.
             if (start == 25 and direction == -1) or (start == 0 and direction == 1):
                 if player_piece in self.board.cells[BAR]:
                     possible.append(BAR)
@@ -1064,8 +1066,10 @@ class Backgammon(game.Game):
         # Convert moves with just the end point.
         if len(move) == 1:
             start, end = self.get_start(move[0], direction, player, player_piece), move[0]
+            # Handle invalid starts.
             if start == -99:
                 return True
+            # Handle starts from the bar.
             elif start == BAR:
                 if end > 6:
                     end = 25 - end
