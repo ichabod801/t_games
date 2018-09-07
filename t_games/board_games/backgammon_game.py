@@ -35,6 +35,7 @@ BackgammonPlay: A possible play (set of moves) in Backgammon. (object)
 
 from __future__ import print_function
 
+import itertools
 import random
 
 import t_games.board as board
@@ -1052,6 +1053,12 @@ class Backgammon(game.Game):
         player: The player moving. (player.Player)
         player_piece: The symbol for the player moving. (str)
         """
+        # Get all possible roll totals.
+        combos = []
+        for size in range(len(self.rolls)):
+            combos.extend(itertools.combinations(self.rolls, size))
+        all_totals = [sum(combo) for combo in combos]
+        # Get all possible moves to the given end point.
         possible = []
         for maybe in set(self.rolls):
             start = end - maybe * direction
@@ -1062,8 +1069,10 @@ class Backgammon(game.Game):
             if (start == 25 and direction == -1) or (start == 0 and direction == 1):
                 if player_piece in self.board.cells[BAR]:
                     possible.append(BAR)
+        # Only return valid single moves.
         if len(possible) == 1:
             return possible[0]
+        # Warn the user about invalid moves.
         elif len(possible) > 1:
             player.error('That move is ambiguous.')
             return -99
@@ -1124,7 +1133,13 @@ class Backgammon(game.Game):
             capture = self.board.move(start, end)
             self.rolls.remove(abs(start - end))
         else:
-            return True
+            # Check for a valid multiple move.
+            steps = self.validate_multi(start, end, direction, legal_plays, player, player_piece)
+            for start, end in steps:
+                capture = self.board.move(start, end)
+                self.rolls.remove(abs(start - end))
+            if not steps:
+                return True
         # Continue if there are still rolls to handle.
         return self.rolls
 
@@ -1205,6 +1220,20 @@ class Backgammon(game.Game):
             player.error('That move would not allow for the maximum possible play.')
             valid = False
         return valid
+
+    def validate_multi(self, start, end, direction, legal_plays, player, player_piece):
+        """
+        Check for a valid move. (bool)
+
+        Parameters:
+        start: The starting point for the move. (int)
+        end: The ending point for the move. (int)
+        direction: The direction of the move. (int)
+        legal_plays: The moves that can possibly be made. (list of BackgammonPlay)
+        player: The player moving. (player.Player)
+        player_piece: The symbol for the player moving. (str)
+        """
+        pass # validate_move will show errors solved by validate multi.
 
 
 class BackgammonBoard(board.LineBoard):
