@@ -781,7 +781,8 @@ class Backgammon(game.Game):
         player: The player to bear pieces for (player.Player)
         piece: The piece to bear off. (str)
         """
-        go = False
+        # Assume the turn will continue.
+        go = True
         # Get the rolls needed for the points the player is on.
         points = [point for point, cell in self.board.cells.items() if piece in cell]
         if piece == 'O':
@@ -800,13 +801,13 @@ class Backgammon(game.Game):
                 # Check for the point still being valid
                 if not self.board.cells[max_point].contents:
                     points.remove(max_point)
-                # Record that a succesful move was made.
-                go = True
+                # Continue the turn if there are still rolls left.
+                go = self.rolls
             else:
                 # Stop if you can't bear.
                 break
         # Warn if no successful moves were made.
-        if not go:
+        if go is True:
             player.error('There are no pieces that can be auto-built.')
         return go
 
@@ -858,7 +859,7 @@ class Backgammon(game.Game):
         # Try to parse if any notation fournd.
         if count:
             try:
-                player.held_moves = [move] * int(count) + player.held_inputs
+                player.held_inputs = [move] * int(count) + player.held_inputs
                 return True
             except ValueError:
                 pass
