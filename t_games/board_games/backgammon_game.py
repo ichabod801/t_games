@@ -858,7 +858,7 @@ class Backgammon(game.Game):
         # Try to parse if any notation fournd.
         if count:
             try:
-                player.held_moves = [move] * int(count) + player.held_moves
+                player.held_moves = [move] * int(count) + player.held_inputs
                 return True
             except ValueError:
                 pass
@@ -1261,6 +1261,7 @@ class Backgammon(game.Game):
             else:
                 # Warn the user about blocked moves.
                 player.error('That move is blocked.')
+                return []
             # Get the path followed by the move order.
             steps = []
             point = start

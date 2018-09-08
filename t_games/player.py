@@ -225,7 +225,7 @@ class Humanoid(Player):
     ask_valid
     """
 
-    int_re = re.compile('[, \t]?(-?\d+)')
+    list_re = re.compile('[, -/\t]+')
 
     def ask(self, prompt):
         """
@@ -320,42 +320,43 @@ class Humanoid(Player):
             elif not response and not cmd and (0 in valid_lens or not valid_lens):
                 return []
             # Check for valid response.
-            if self.int_re.match(response):
+            try:
                 # Extract integers.
-                response = [int(num) for num in self.int_re.findall(response)]
-                # Check low.
-                if low is not None and min(response) < low:
-                    self.error('{} is too low. The lowest valid response is {}.'.format(min(response), low))
-                # Check high.
-                elif high is not None and max(response) > high:
-                    highest = max(response)
-                    self.error('{} is too high. The highest valid response is {}'.format(highest, high))
-                # Check valid values.
-                elif valid:
-                    for number in set(response):
-                        if response.count(number) > valid.count(number):
-                            self.error("You have more {}'s than allowed".format(number))
-                            self.error("You must choose from:", ', '.join([str(x) for x in valid]))
-                            break
-                    else:
-                        break
-                # Check valid lengths.
-                elif valid_lens and len(response) not in valid_lens:
-                    self.error('That is an invalid number of integers.')
-                    if len(valid_lens) == 1:
-                        plural = utility.number_plural(valid_lens[0], 'integer')
-                        self.error('Please enter {}.'.format(plural))
-                    else:
-                        self.error('Please enter {} integers.'.format(utility.oxford(valid_lens, 'or')))
-                # Exit on valid input.
-                else:
-                    break
-            else:
+                response = [int(num) for num in self.list_re.split(response)]
+            except ValueError:
                 # Handle non-integer input based on cmd parameter.
                 if cmd:
-                    break
+                    return response
                 else:
                     self.error('Please enter the requested integers.')
+                    continue
+            # Check low.
+            if low is not None and min(response) < low:
+                self.error('{} is too low. The lowest valid response is {}.'.format(min(response), low))
+            # Check high.
+            elif high is not None and max(response) > high:
+                highest = max(response)
+                self.error('{} is too high. The highest valid response is {}'.format(highest, high))
+            # Check valid values.
+            elif valid:
+                for number in set(response):
+                    if response.count(number) > valid.count(number):
+                        self.error("You have more {}'s than allowed".format(number))
+                        self.error("You must choose from:", ', '.join([str(x) for x in valid]))
+                        break
+                else:
+                    break
+            # Check valid lengths.
+            elif valid_lens and len(response) not in valid_lens:
+                self.error('That is an invalid number of integers.')
+                if len(valid_lens) == 1:
+                    plural = utility.number_plural(valid_lens[0], 'integer')
+                    self.error('Please enter {}.'.format(plural))
+                else:
+                    self.error('Please enter {} integers.'.format(utility.oxford(valid_lens, 'or')))
+            # Exit on valid input.
+            else:
+                break
         return response
 
     def ask_valid(self, prompt, valid, default = '', lower = True):
