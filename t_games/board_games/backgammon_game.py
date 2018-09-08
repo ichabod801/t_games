@@ -839,6 +839,33 @@ class Backgammon(game.Game):
                     result *= 2
         return result
 
+    def default(self, line):
+        """
+        Handle unrecognized commands. (bool)
+
+        Parameters:
+        text: The raw text input by the user. (str)
+        """
+        # Set up the check.
+        player = self.players[self.player_index]
+        count = 0
+        # Check for multiplication notation.
+        if '*' in line:
+            move, symbol, count = line.partition('*')
+        # Check for standard notation.
+        if line.endswith(')'):
+            move, symbol, count = line[:-1].partition('(')
+        # Try to parse if any notation fournd.
+        if count:
+            try:
+                player.held_moves = [move] * int(count) + player.held_moves
+                return True
+            except ValueError:
+                pass
+        # Warn the user on unknown or incorrect notation.
+        player.error('I do not understand that move.')
+        return True
+
     def do_bear(self, argument):
         """
         Bear a piece off of the board.
