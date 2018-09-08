@@ -1053,14 +1053,10 @@ class Backgammon(game.Game):
         player: The player moving. (player.Player)
         player_piece: The symbol for the player moving. (str)
         """
-        # Get all possible roll totals.
-        combos = []
-        for size in range(len(self.rolls)):
-            combos.extend(itertools.combinations(self.rolls, size))
-        all_totals = [sum(combo) for combo in combos]
         # Get all possible moves to the given end point.
+        all_totals = self.get_totals()
         possible = []
-        for maybe in set(self.rolls):
+        for maybe in all_totals:
             start = end - maybe * direction
             # Check for valid standard move.
             if start in self.board.cells and player_piece in self.board.cells[start]:
@@ -1077,8 +1073,21 @@ class Backgammon(game.Game):
             player.error('That move is ambiguous.')
             return -99
         else:
-            player.error('There is no legal single move to that point.')
+            player.error('There is no legal move to that point.')
             return -99
+
+    def get_totals(self):
+        """Get all the possible total rolls. (dict of int: list of int)"""
+        # Get all possible roll totals.
+        totals = {roll: [roll] for roll in self.rolls}
+        num_rolls = len(self.rolls)
+        if num_rolls > 1:
+            if self.rolls[0] == self.rolls[1]:
+                for count in range(2, num_rolls + 1):
+                    totals[self.rolls[0] * count] = [self.rolls[0]] * count
+            else:
+                totals[sum(self.rolls)] = self.rolls[:]
+        return totals
 
     def player_action(self, player):
         """
@@ -1129,17 +1138,13 @@ class Backgammon(game.Game):
         else:
             start, end = move
         # Check for valid move.
-        if self.validate_move(start, end, direction, legal_moves, player, player_piece):
+        rolls = self.validate_move(start, end, direction, legal_moves, player, player_piece)
+        if rolls:
             capture = self.board.move(start, end)
-            self.rolls.remove(abs(start - end))
+            for roll in rolls:
+                self.rolls.remove(roll)
         else:
-            # Check for a valid multiple move.
-            steps = self.validate_multi(start, end, direction, legal_plays, player, player_piece)
-            for start, end in steps:
-                capture = self.board.move(start, end)
-                self.rolls.remove(abs(start - end))
-            if not steps:
-                return True
+            return True
         # Continue if there are still rolls to handle.
         return self.rolls
 
@@ -1196,44 +1201,52 @@ class Backgammon(game.Game):
         player: The player moving. (player.Player)
         player_piece: The symbol for the player moving. (str)
         """
-        valid = True
         # Get the details of the move.
         start_pieces = self.board.cells[start].contents
         end_pieces = self.board.cells[end].contents
+        # Get the combinations of rolls and moves.
+        # !! not finished. This is more complicated than I thought. Have to check each sub-move.
+        all_totals = self.get_totals()
+        valid = []
         # Check for a piece on the start.
         if not (start_pieces and start_pieces[0] == player_piece):
             player.error('You do not have a piece on that starting point.')
-            valid = False
         # Check for valid die roll.
-        elif (end - start) * direction not in self.rolls:
+        elif (end - start) * direction not in all_totals:
             player.error('You do not have a die roll matching that move.')
-            valid = False
-        # Check for valid end point
-        elif end_pieces and end_pieces[0] != player_piece and len(end_pieces) > 1:
-            player.error('That end point is blocked.')
-            valid = False
         # Check for a piece on the bar.
         elif player_piece in self.board.cells[BAR].contents and start != BAR:
             player.error('You must re-enter your piece on the bar before making any other move.')
-            valid = False
-        elif (start, end) not in legal_moves:
-            player.error('That move would not allow for the maximum possible play.')
-            valid = False
+        else:
+            # Check for blocked move, checking all possible move orders.
+            for move_order in itertools.permutations(all_totals[end - start * direction]):
+                point = start
+                # Check each step for being blocked.
+                for roll in move_order:
+                    point += roll * direction
+                    point_pieces = self.board.cells[point].contents
+                    if point_pieces and point_pieces[0] != player_piece and len(point_pieces) > 1:
+                        break
+                else:
+                    # Use the first unblocked set of moves found.
+                    valid = move_order
+                    break
+            else:
+                # Warn the user about blocked moves.
+                player.error('That move is blocked.')
+            # Get the path followed by the move order.
+            steps = []
+            point = start
+            for roll in move_order:
+                steps.append((point, point + roll * direction))
+                point = steps[-1][1]
+            # Check each step in the path for being a legal play.
+            for step in steps:
+                if step not in legal_moves:
+                    player.error('That move would not allow for the maximum possible play.')
+                    valid = []
+                    break
         return valid
-
-    def validate_multi(self, start, end, direction, legal_plays, player, player_piece):
-        """
-        Check for a valid move. (bool)
-
-        Parameters:
-        start: The starting point for the move. (int)
-        end: The ending point for the move. (int)
-        direction: The direction of the move. (int)
-        legal_plays: The moves that can possibly be made. (list of BackgammonPlay)
-        player: The player moving. (player.Player)
-        player_piece: The symbol for the player moving. (str)
-        """
-        pass # validate_move will show errors solved by validate multi.
 
 
 class BackgammonBoard(board.LineBoard):
