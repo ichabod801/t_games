@@ -1219,7 +1219,7 @@ class Backgammon(game.Game):
             player.error('You must re-enter your piece on the bar before making any other move.')
         else:
             # Check for blocked move, checking all possible move orders.
-            for move_order in itertools.permutations(all_totals[end - start * direction]):
+            for move_order in itertools.permutations(all_totals[(end - start) * direction]):
                 point = start
                 # Check each step for being blocked.
                 for roll in move_order:
