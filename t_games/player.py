@@ -225,7 +225,7 @@ class Humanoid(Player):
     ask_valid
     """
 
-    list_re = re.compile('[, -/\t]+')
+    list_re = re.compile('[,\-/\s]+')
 
     def ask(self, prompt):
         """
