@@ -751,11 +751,13 @@ class Backgammon(game.Game):
     do_pips: Show the pip counts. (bool)
     get_rolls: Determine the rolls you can move with from the dice roll. (None)
     get_start: Get the start of a move only specified by the end. (int)
+    get_totals: Get all the possible total rolls. (dict of int: list of int)
     reset: Reset the game state during match play. (None)
     validate_move: Check for a valid move. (bool)
     win_count: The number of pieces needed to bear off for a win. (int)
 
     Overridden Methods:
+    default
     game_over
     player_action
     set_options
@@ -790,6 +792,7 @@ class Backgammon(game.Game):
         # Loop through the rolls.
         while self.rolls:
             max_roll, max_point = max(self.rolls), max(points)
+            # Ensure exact matches bear.
             if max_roll in points:
                 max_point = max_roll
             if max_roll >= max_point:
@@ -1106,14 +1109,16 @@ class Backgammon(game.Game):
 
     def get_totals(self):
         """Get all the possible total rolls. (dict of int: list of int)"""
-        # Get all possible roll totals.
+        # Get the single die totals.
         totals = {roll: [roll] for roll in self.rolls}
         num_rolls = len(self.rolls)
         if num_rolls > 1:
             if self.rolls[0] == self.rolls[1]:
+                # Add the sum of two dice.
                 for count in range(2, num_rolls + 1):
                     totals[self.rolls[0] * count] = [self.rolls[0]] * count
             else:
+                # Add the multiples of paired dice.
                 totals[sum(self.rolls)] = self.rolls[:]
         return totals
 
@@ -1168,9 +1173,12 @@ class Backgammon(game.Game):
         # Check for valid move.
         rolls = self.validate_move(start, end, direction, legal_moves, player, player_piece)
         if rolls:
-            capture = self.board.move(start, end)
+            # Make each step of the roll.
             for roll in rolls:
+                sub_end = start + roll * direction
+                capture = self.board.move(start, sub_end)
                 self.rolls.remove(roll)
+                start = sub_end
         else:
             return True
         # Continue if there are still rolls to handle.
@@ -1233,7 +1241,6 @@ class Backgammon(game.Game):
         start_pieces = self.board.cells[start].contents
         end_pieces = self.board.cells[end].contents
         # Get the combinations of rolls and moves.
-        # !! not finished. This is more complicated than I thought. Have to check each sub-move.
         all_totals = self.get_totals()
         valid = []
         # Check for a piece on the start.

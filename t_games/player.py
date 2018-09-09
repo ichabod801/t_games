@@ -216,7 +216,7 @@ class Humanoid(Player):
     A player that communicates using input and print. (Player)
 
     Class Attributes:
-    int_re: A regex for detecting integers. (re. SRE_Expression)
+    list_re: A regex for splitting lists in user input. (re. SRE_Expression)
 
     Overridden Methods:
     ask
