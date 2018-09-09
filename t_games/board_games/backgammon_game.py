@@ -125,7 +125,9 @@ a piece from the bar use the enter command (or 'e') and the point you want to
 enter onto. To bear a piece off the board, use the bear command (or 'bear off'
 or 'b') and the point your want to bear off from (NOT the roll). Using the
 bear command without any arguments will automatically bear off pieces, to the
-extent that there are obvious bearing off moves.
+extent that there are obvious bearing off moves. You may repeat a move by
+putting the number of times to repeat the move after the move either after
+an asterisk (13 7 * 2) or in parentheses (13 7 (2)).
 
 Backgammon is often played in match play, to even out the luck of the dice.
 When using match play, a game won when the opponent has not born any pieces
