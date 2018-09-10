@@ -1043,11 +1043,11 @@ class Backgammon(game.Game):
                 # Process acceptance
                 self.doubling_die *= 2
                 self.doubling_status = {'X': 'O', 'O': 'X'}[piece]
-                message = '\nYour opponent accepts the double, the doubling die is now at {}.'
-                player.tell(message.format(self.doubling_die))
+                message = '\n{} accepts the double, the doubling die is now at {}.'
+                player.tell(message.format(opponent.name, self.doubling_die))
             else:
                 # Process rejection.
-                player.tell('\nYour opponent refuses the double, you win the game.')
+                player.tell('\n{} refuses the double, you win the game.'.format(opponent.name))
                 if player == self.human:
                     self.win_loss_draw[0] += self.doubling_die
                 else:
@@ -1058,16 +1058,12 @@ class Backgammon(game.Game):
                     self.force_end = 'loss'
                 else:
                     self.reset()
-                scores = (self.scores[self.human.name], self.scores[self.bot.name])
-                self.human.tell('\nThe match score is now {} to {}'.format(*scores))
+                self.human.tell('\nThe match score is now {} to {}.'.format(*self.win_loss_draw[:2]))
                 if self.force_end:
                     self.human.tell('You {} the match.'.format(self.force_end))
                 else:
                     player.ask('Press Enter to continue: ')
                 return False
-        else:
-            # Warn the player on an invalid doubling.
-            player.error("\nThe doubling die is in your opponent's control.")
         return True
 
     def game_over(self):
@@ -1155,6 +1151,7 @@ class Backgammon(game.Game):
         player.tell(self.board.get_text(player_piece))
         # Roll the dice if it's the start of the turn.
         if not self.rolls:
+            # Check for doubling.
             if max(self.scores.values()) + self.doubling_die < self.match:
                 accepted = self.double(player, player_piece)
                 if not accepted:
