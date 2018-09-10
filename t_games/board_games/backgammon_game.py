@@ -133,7 +133,7 @@ Backgammon is often played in match play, to even out the luck of the dice.
 When using match play, a game won when the opponent has not born any pieces
 off the board counts double, and a game won when the opponent still has a
 piece on the bar counts triple. Furthermore, there is a doubling die that
-can be used to double the stakes. At the beginning of the game, either
+can be used to double the stakes. At the beginning of their turn, either
 player may double the stakes using the double command. The other player must
 accept the doubled stakes or concede the game. After the initial doubling of
 the stakes, control of the doubling die goes to the player who accepted the
@@ -928,47 +928,6 @@ class Backgammon(game.Game):
         # Continue the turn if there are still rolls to move.
         return self.rolls
 
-    def do_double(self, arguments):
-        """
-        Double the stakes of the game.
-
-        You may only double the stakes if no one has doubled or your opponent was the
-        last person to double. If your opponent refuses the double, you win the game at
-        whatever the stakes were before you offered the double.
-        """
-        # Check for valid doubling.
-        player = self.players[self.player_index]
-        piece = self.pieces[player.name]
-        if self.doubling_status in ('', piece):
-            # See if the opponent accepts.
-            opponent = self.players[1 - self.player_index]
-            query = '\nYour opponent wants to double the stakes to {}. Do you accept the new stakes? '
-            accept = opponent.ask(query.format(self.doubling_die * 2))
-            if accept.lower() in utility.YES:
-                # Process acceptance
-                self.doubling_die *= 2
-                self.doubling_status = {'X': 'O', 'O': 'X'}[piece]
-                message = '\nYour opponent accepts the double, the doubling die is now at {}.'
-                player.tell(message.format(self.doubling_die))
-            else:
-                # Process rejection.
-                player.tell('\nYour opponent refuses the double, you win.')
-                if player == self.human:
-                    self.win_loss_draw[0] += self.doubling_die
-                else:
-                    self.win_loss_draw[1] += self.doubling_die
-                if self.win_loss_draw[0] >= self.match:
-                    self.force_end = 'win'
-                elif self.win_loss_draw[1] >= self.match:
-                    self.force_end = 'loss'
-                else:
-                    self.reset()
-                return False
-        else:
-            # Warn the player on an invalid doubling.
-            player.error("\nThe doubling die is in your opponent's control.")
-        return True
-
     def do_enter(self, argument):
         """
         Bring a piece back into play from the bar.
@@ -1050,6 +1009,56 @@ class Backgammon(game.Game):
         player.tell('\nX:', self.board.get_pip_count('X'))
         player.tell('O:', self.board.get_pip_count('O'))
         # Keep playing
+        return True
+
+    def double(self, player, piece):
+        """
+        Check for doubling the stakes of the game.
+
+        Parameters:
+        player: The current player. (player.Player)
+        piece: The current player's piece symbol. (str)
+        """
+        # Check for valid doubling.
+        if self.doubling_status in ('', piece):
+            # Ask for a double.
+            query = '\nWould you like to double the stakes from {} to {} (return to roll)? '
+            double = player.ask(query.format(self.doubling_die, self.doubling_die *2))
+            if double not in utility.YES:
+                return True
+            # See if the opponent accepts.
+            opponent = self.players[1 - self.player_index]
+            query = '\nYour opponent wants to double the stakes to {}. Do you accept the new stakes? '
+            accept = opponent.ask(query.format(self.doubling_die * 2))
+            if accept.lower() in utility.YES:
+                # Process acceptance
+                self.doubling_die *= 2
+                self.doubling_status = {'X': 'O', 'O': 'X'}[piece]
+                message = '\nYour opponent accepts the double, the doubling die is now at {}.'
+                player.tell(message.format(self.doubling_die))
+            else:
+                # Process rejection.
+                player.tell('\nYour opponent refuses the double, you win the game.')
+                if player == self.human:
+                    self.win_loss_draw[0] += self.doubling_die
+                else:
+                    self.win_loss_draw[1] += self.doubling_die
+                if self.win_loss_draw[0] >= self.match:
+                    self.force_end = 'win'
+                elif self.win_loss_draw[1] >= self.match:
+                    self.force_end = 'loss'
+                else:
+                    self.reset()
+                scores = (self.scores[self.human.name], self.scores[self.bot.name])
+                self.human.tell('\nThe match score is now {} to {}'.format(*scores))
+                if self.force_end:
+                    self.human.tell('You {} the match.'.format(self.force_end))
+                else:
+                    player.ask('Press Enter to continue: ')
+                return False
+        else:
+            # Warn the player on an invalid doubling.
+            player.error("\nThe doubling die is in your opponent's control.")
         return True
 
     def game_over(self):
@@ -1137,6 +1146,10 @@ class Backgammon(game.Game):
         player.tell(self.board.get_text(player_piece))
         # Roll the dice if it's the start of the turn.
         if not self.rolls:
+            if max(self.scores.values()) + self.doubling_die < self.match:
+                accepted = self.double(player, player_piece)
+                if not accepted:
+                    return False
             self.dice.roll()
             self.dice.sort()
             self.get_rolls()
