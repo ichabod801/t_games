@@ -35,6 +35,7 @@ BackgammonPlay: A possible play (set of moves) in Backgammon. (object)
 
 from __future__ import print_function
 
+import itertools
 import random
 
 import t_games.board as board
@@ -122,7 +123,11 @@ done with a slash, as in '13/7', but it can be done with a space or a comma
 as well. If the move is unambiguous, you may just use the end point. To enter
 a piece from the bar use the enter command (or 'e') and the point you want to
 enter onto. To bear a piece off the board, use the bear command (or 'bear off'
-or 'b') and the point your want to bear off from (NOT the roll).
+or 'b') and the point your want to bear off from (NOT the roll). Using the
+bear command without any arguments will automatically bear off pieces, to the
+extent that there are obvious bearing off moves. You may repeat a move by
+putting the number of times to repeat the move after the move either after
+an asterisk (13 7 * 2) or in parentheses (13 7 (2)).
 
 Backgammon is often played in match play, to even out the luck of the dice.
 When using match play, a game won when the opponent has not born any pieces
@@ -740,6 +745,7 @@ class Backgammon(game.Game):
     rolls: The numbers that can be used to move. (list of int)
 
     Methods:
+    auto_bear: Bear pieces automatically. (bool)
     check_win: Check to see if a given player has won. (int)
     do_bear: Bear a piece of the board. (bool)
     do_double: Double the doubling die. (bool)
@@ -747,11 +753,13 @@ class Backgammon(game.Game):
     do_pips: Show the pip counts. (bool)
     get_rolls: Determine the rolls you can move with from the dice roll. (None)
     get_start: Get the start of a move only specified by the end. (int)
+    get_totals: Get all the possible total rolls. (dict of int: list of int)
     reset: Reset the game state during match play. (None)
     validate_move: Check for a valid move. (bool)
     win_count: The number of pieces needed to bear off for a win. (int)
 
     Overridden Methods:
+    default
     game_over
     player_action
     set_options
@@ -768,6 +776,45 @@ class Backgammon(game.Game):
     name = 'Backgammon'
     num_options = 3
     rules = RULES
+
+    def auto_bear(self, player, piece):
+        """
+        Bear pieces automatically. (bool)
+
+        Parameters:
+        player: The player to bear pieces for (player.Player)
+        piece: The piece to bear off. (str)
+        """
+        # Assume the turn will continue.
+        go = True
+        # Get the rolls needed for the points the player is on.
+        points = [point for point, cell in self.board.cells.items() if piece in cell]
+        if piece == 'O':
+            points = [25 - point for point in points]
+        # Loop through the rolls.
+        while self.rolls:
+            max_roll, max_point = max(self.rolls), max(points)
+            # Ensure exact matches bear.
+            if max_roll in points:
+                max_point = max_roll
+            if max_roll >= max_point:
+                # Bear a piece if you can.
+                if piece == 'O':
+                    max_point = 25 - max_point
+                self.rolls.remove(max_roll)
+                self.board.move(max_point, OUT)
+                # Check for the point still being valid
+                if not self.board.cells[max_point].contents:
+                    points.remove(max_point)
+                # Continue the turn if there are still rolls left.
+                go = self.rolls
+            else:
+                # Stop if you can't bear.
+                break
+        # Warn if no successful moves were made.
+        if go is True:
+            player.error('There are no pieces that can be auto-built.')
+        return go
 
     def check_win(self, piece):
         """
@@ -798,6 +845,33 @@ class Backgammon(game.Game):
                     result *= 2
         return result
 
+    def default(self, line):
+        """
+        Handle unrecognized commands. (bool)
+
+        Parameters:
+        text: The raw text input by the user. (str)
+        """
+        # Set up the check.
+        player = self.players[self.player_index]
+        count = 0
+        # Check for multiplication notation.
+        if '*' in line:
+            move, symbol, count = line.partition('*')
+        # Check for standard notation.
+        if line.endswith(')'):
+            move, symbol, count = line[:-1].partition('(')
+        # Try to parse if any notation fournd.
+        if count:
+            try:
+                player.held_inputs = [move] * int(count) + player.held_inputs
+                return True
+            except ValueError:
+                pass
+        # Warn the user on unknown or incorrect notation.
+        player.error('I do not understand that move.')
+        return True
+
     def do_bear(self, argument):
         """
         Bear a piece off of the board.
@@ -811,7 +885,7 @@ class Backgammon(game.Game):
         piece = self.pieces[player.name]
         # Convert the arguments.
         words = argument.split()
-        if words[0].lower() == 'off':
+        if words and words[0].lower() == 'off':
             words = words[1:]
         try:
             bears = [int(word) for word in words]
@@ -827,6 +901,9 @@ class Backgammon(game.Game):
         elif piece in self.board.cells[BAR]:
             player.error('You still have a piece on the bar.')
         else:
+            # Check for automatic bearing
+            if not bears:
+                return self.auto_bear(player, piece)
             # Play any legal moves.
             for bear in bears:
                 # Get the correct point.
@@ -1009,19 +1086,43 @@ class Backgammon(game.Game):
         player: The player moving. (player.Player)
         player_piece: The symbol for the player moving. (str)
         """
+        # Get all possible moves to the given end point.
+        all_totals = self.get_totals()
         possible = []
-        for maybe in set(self.rolls):
+        for maybe in all_totals:
             start = end - maybe * direction
+            # Check for valid standard move.
             if start in self.board.cells and player_piece in self.board.cells[start]:
                 possible.append(start)
+            # Check for valid enter move.
+            if (start == 25 and direction == -1) or (start == 0 and direction == 1):
+                if player_piece in self.board.cells[BAR]:
+                    possible.append(BAR)
+        # Only return valid single moves.
         if len(possible) == 1:
             return possible[0]
+        # Warn the user about invalid moves.
         elif len(possible) > 1:
             player.error('That move is ambiguous.')
             return -99
         else:
-            player.error('There is no legal single move to that point.')
+            player.error('There is no legal move to that point.')
             return -99
+
+    def get_totals(self):
+        """Get all the possible total rolls. (dict of int: list of int)"""
+        # Get the single die totals.
+        totals = {roll: [roll] for roll in self.rolls}
+        num_rolls = len(self.rolls)
+        if num_rolls > 1:
+            if self.rolls[0] == self.rolls[1]:
+                # Add the sum of two dice.
+                for count in range(2, num_rolls + 1):
+                    totals[self.rolls[0] * count] = [self.rolls[0]] * count
+            else:
+                # Add the multiples of paired dice.
+                totals[sum(self.rolls)] = self.rolls[:]
+        return totals
 
     def player_action(self, player):
         """
@@ -1061,14 +1162,25 @@ class Backgammon(game.Game):
         # Convert moves with just the end point.
         if len(move) == 1:
             start, end = self.get_start(move[0], direction, player, player_piece), move[0]
+            # Handle invalid starts.
             if start == -99:
                 return True
+            # Handle starts from the bar.
+            elif start == BAR:
+                if end > 6:
+                    end = 25 - end
+                return self.do_enter(end)
         else:
             start, end = move
         # Check for valid move.
-        if self.validate_move(start, end, direction, legal_moves, player, player_piece):
-            capture = self.board.move(start, end)
-            self.rolls.remove(abs(start - end))
+        rolls = self.validate_move(start, end, direction, legal_moves, player, player_piece)
+        if rolls:
+            # Make each step of the roll.
+            for roll in rolls:
+                sub_end = start + roll * direction
+                capture = self.board.move(start, sub_end)
+                self.rolls.remove(roll)
+                start = sub_end
         else:
             return True
         # Continue if there are still rolls to handle.
@@ -1127,29 +1239,51 @@ class Backgammon(game.Game):
         player: The player moving. (player.Player)
         player_piece: The symbol for the player moving. (str)
         """
-        valid = True
         # Get the details of the move.
         start_pieces = self.board.cells[start].contents
         end_pieces = self.board.cells[end].contents
+        # Get the combinations of rolls and moves.
+        all_totals = self.get_totals()
+        valid = []
         # Check for a piece on the start.
         if not (start_pieces and start_pieces[0] == player_piece):
             player.error('You do not have a piece on that starting point.')
-            valid = False
         # Check for valid die roll.
-        elif (end - start) * direction not in self.rolls:
+        elif (end - start) * direction not in all_totals:
             player.error('You do not have a die roll matching that move.')
-            valid = False
-        # Check for valid end point
-        elif end_pieces and end_pieces[0] != player_piece and len(end_pieces) > 1:
-            player.error('That end point is blocked.')
-            valid = False
         # Check for a piece on the bar.
         elif player_piece in self.board.cells[BAR].contents and start != BAR:
             player.error('You must re-enter your piece on the bar before making any other move.')
-            valid = False
-        elif (start, end) not in legal_moves:
-            player.error('That move would not allow for the maximum possible play.')
-            valid = False
+        else:
+            # Check for blocked move, checking all possible move orders.
+            for move_order in itertools.permutations(all_totals[(end - start) * direction]):
+                point = start
+                # Check each step for being blocked.
+                for roll in move_order:
+                    point += roll * direction
+                    point_pieces = self.board.cells[point].contents
+                    if point_pieces and point_pieces[0] != player_piece and len(point_pieces) > 1:
+                        break
+                else:
+                    # Use the first unblocked set of moves found.
+                    valid = move_order
+                    break
+            else:
+                # Warn the user about blocked moves.
+                player.error('That move is blocked.')
+                return []
+            # Get the path followed by the move order.
+            steps = []
+            point = start
+            for roll in move_order:
+                steps.append((point, point + roll * direction))
+                point = steps[-1][1]
+            # Check each step in the path for being a legal play.
+            for step in steps:
+                if step not in legal_moves:
+                    player.error('That move would not allow for the maximum possible play.')
+                    valid = []
+                    break
         return valid
 
 
