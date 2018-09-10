@@ -195,6 +195,9 @@ class BackgammonBot(player.Bot):
                 return '1'
             else:
                 return '0'
+        # Handle pauses in game play.
+        elif prompt.startswith('Press enter'):
+            return 'Cowabunga'
         # Respond to be able to double.
         elif prompt.startswith('Would you like to double'):
             features, points = self.describe_board(self.game.board)
@@ -572,6 +575,9 @@ class PubEvalBot(BackgammonBot):
                 return '1'
             else:
                 return '0'
+        # Handle pauses in game play.
+        elif prompt.startswith('Press enter'):
+            return 'Bazinga'
         # Raise an error for any other question.
         else:
             raise ValueError('Unexpected question to BackgammonBot: {}'.format(prompt))
