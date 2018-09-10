@@ -181,6 +181,13 @@ class BackgammonBot(player.Bot):
         if prompt.startswith('You have no legal moves'):
             self.game.human.tell('{} has no legal moves.'.format(self.name))
             return ''
+        # Respond to being able to double.
+        elif prompt.startswith('\nWould you like to double the stakes'):
+            features, points = self.describe_board(self.game.board)
+            if self.eval_board(features, 'accept') > 25:
+                return '1'
+            else:
+                return '0'
         # Respond to opponent doubling.
         elif prompt.startswith('\nYour opponent wants to double'):
             features, points = self.describe_board(self.game.board)
@@ -216,11 +223,6 @@ class BackgammonBot(player.Bot):
         # Respond to move requests.
         if prompt.strip() == 'What is your move?':
             if not self.held_moves:
-                # Check for doubling.
-                features, points = self.describe_board(self.game.board)
-                board_quality = self.eval_board(features, 'double')
-                if board_quality > 25 and self.game.doubling_status in ('', self.piece):
-                    return 'double'
                 # Evaluate all the legal plays.
                 possibles = []
                 board = self.game.board
@@ -556,6 +558,13 @@ class PubEvalBot(BackgammonBot):
         if prompt.startswith('You have no legal moves'):
             self.game.human.tell('{} has no legal moves.'.format(self.name))
             return ''
+        # Respond to being able to double.
+        elif prompt.startswith('\nWould you like to double the stakes'):
+            features, points = self.describe_board(self.game.board)
+            if self.eval_board(features, 'accept') > 25:
+                return '1'
+            else:
+                return '0'
         # Respond to doubling requests.
         elif prompt.startswith('Your opponent wants to double'):
             features, points = self.describe_board(self.game.board)
