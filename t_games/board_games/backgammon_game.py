@@ -196,7 +196,7 @@ class BackgammonBot(player.Bot):
             else:
                 return '0'
         # Handle pauses in game play.
-        elif prompt.startswith('Press enter'):
+        elif prompt.startswith('Press Enter'):
             return 'Cowabunga'
         # Respond to be able to double.
         elif prompt.startswith('Would you like to double'):
@@ -576,7 +576,7 @@ class PubEvalBot(BackgammonBot):
             else:
                 return '0'
         # Handle pauses in game play.
-        elif prompt.startswith('Press enter'):
+        elif prompt.startswith('Press Enter'):
             return 'Bazinga'
         # Raise an error for any other question.
         else:
@@ -1068,7 +1068,7 @@ class Backgammon(game.Game):
                 if self.force_end:
                     self.human.tell('You {} the match.'.format(self.force_end))
                 else:
-                    player.ask('Press Enter to continue: ')
+                    self.human.ask('Press Enter to continue: ')
                 return False
         return True
 
