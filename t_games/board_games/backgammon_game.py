@@ -1606,8 +1606,9 @@ class BackgammonBoard(board.LineBoard):
         order_low = list(range(12, 0, -1))
         # Convert the details if the text is for O
         if piece == 'O':
-            frame_high = [line[::-1] for line in frame_high]
-            frame_low = [line[::-1] for line in frame_low]
+            frame_high = [line[::-1] for line in frame_high[2:] + frame_high[:2]]
+            frame_low = [line[::-1] for line in frame_low[1:] + frame_low[:1]]
+            frame_high, frame_low = frame_low, frame_high
             order_high = list(range(1, 13))
             order_low = list(range(24, 12, -1))
         # Get the top half of the board.
