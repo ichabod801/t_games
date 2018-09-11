@@ -54,31 +54,6 @@ piles= (p=): The number of tableau piles. 4-10, defaults to 8.
 supercell (sc): One random card in each pile is turned face down.
 """
 
-    def set_options(self):
-        """Set the game options. (None)"""
-        self.options = {}
-        # Set the tableau dimensions.
-        self.option_set.add_option('cells', ['c'], action = 'key=num-cells', converter = int,
-            default = 4, valid = range(1, 15), target = self.options,
-            question = 'How many free cells (1-10, return for 4)? ')
-        self.option_set.add_option('piles', ['p'], action = 'key=num-tableau', converter = int,
-            default = 8, valid = range(4, 14), target = self.options,
-            question = 'How many tableau piles (4-10, return for 8)? ')
-        # Set the deal options.
-        self.option_set.add_option('challenge', ['ch'],
-            question = 'Should the twos and aces be dealt first? bool')
-        self.option_set.add_option('egnellahc', ['eg'],
-            question = 'Should the aces and twos be dealt first? bool')
-        self.option_set.add_option('supercell', ['sc'],
-            question = 'Should random cards be flipped face down? bool')
-        self.option_set.add_option('fill-free', ['ff'],
-            question = 'Should the free cells be filled with the last four cards dealt? bool')
-        # Set the play options.
-        self.option_set.add_option('kings-only', ['ko'],
-            question = 'Should the kings be the only card playable to empty lanes? bool')
-        self.option_set.add_option('baker', ['b'],
-            question = "Should tableau cards be built by suit (Baker's Game)? bool")
-
 STACK_HELP = """
 The number of cards you can move at one time depends on the number of empty
 free cells and the number of empty lanes. The formula for how many you can
