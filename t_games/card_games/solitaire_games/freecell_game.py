@@ -50,7 +50,7 @@ egnellahc (eg): The aces then the twos are dealt on the bottom row.
 fill-free (ff): The free cells are filled with the last four cards from the
     deck.
 kings-only (ko): Only kings can be used to fill free cells.
-piles (p): The number of tableau piles. 4-10, defaults to 8.
+piles= (p=): The number of tableau piles. 4-10, defaults to 8.
 supercell (sc): One random card in each pile is turned face down.
 """
 
