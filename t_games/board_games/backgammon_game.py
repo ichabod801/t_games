@@ -1054,16 +1054,19 @@ class Backgammon(game.Game):
             else:
                 # Process rejection.
                 player.tell('\n{} refuses the double, you win the game.'.format(opponent.name))
+                # Set the match score.
                 if player == self.human:
                     self.win_loss_draw[0] += self.doubling_die
                 else:
                     self.win_loss_draw[1] += self.doubling_die
+                # Check for the end of the match (or reset for the next game).
                 if self.win_loss_draw[0] >= self.match:
                     self.force_end = 'win'
                 elif self.win_loss_draw[1] >= self.match:
                     self.force_end = 'loss'
                 else:
                     self.reset()
+                # Update the human on the match status.
                 self.human.tell('\nThe match score is now {} to {}.'.format(*self.win_loss_draw[:2]))
                 if self.force_end:
                     self.human.tell('You {} the match.'.format(self.force_end))
@@ -1162,6 +1165,7 @@ class Backgammon(game.Game):
                 accepted = self.double(player, player_piece)
                 if not accepted:
                     return False
+            # Roll the dice.
             self.dice.roll()
             self.dice.sort()
             self.get_rolls()
