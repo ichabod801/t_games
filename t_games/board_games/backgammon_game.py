@@ -805,21 +805,23 @@ class Backgammon(game.Game):
         # Get the rolls needed for the points the player is on.
         points = [point for point, cell in self.board.cells.items() if piece in cell]
         if piece == 'O':
-            points = [25 - point for point in points]
+            points = [25 - point for point in points if point > 0]
         # Loop through the rolls.
-        while self.rolls:
+        while self.rolls and points:
             max_roll, max_point = max(self.rolls), max(points)
             # Ensure exact matches bear.
             if max_roll in points:
                 max_point = max_roll
+            # Bear a piece if you can.
             if max_roll >= max_point:
-                # Bear a piece if you can.
                 if piece == 'O':
                     max_point = 25 - max_point
                 self.rolls.remove(max_roll)
                 self.board.move(max_point, OUT)
                 # Check for the point still being valid
                 if not self.board.cells[max_point].contents:
+                    if piece == 'O':
+                        max_point = 25 - max_point
                     points.remove(max_point)
                 # Continue the turn if there are still rolls left.
                 go = self.rolls
@@ -1054,16 +1056,19 @@ class Backgammon(game.Game):
             else:
                 # Process rejection.
                 player.tell('\n{} refuses the double, you win the game.'.format(opponent.name))
+                # Set the match score.
                 if player == self.human:
                     self.win_loss_draw[0] += self.doubling_die
                 else:
                     self.win_loss_draw[1] += self.doubling_die
+                # Check for the end of the match (or reset for the next game).
                 if self.win_loss_draw[0] >= self.match:
                     self.force_end = 'win'
                 elif self.win_loss_draw[1] >= self.match:
                     self.force_end = 'loss'
                 else:
                     self.reset()
+                # Update the human on the match status.
                 self.human.tell('\nThe match score is now {} to {}.'.format(*self.win_loss_draw[:2]))
                 if self.force_end:
                     self.human.tell('You {} the match.'.format(self.force_end))
@@ -1162,6 +1167,7 @@ class Backgammon(game.Game):
                 accepted = self.double(player, player_piece)
                 if not accepted:
                     return False
+            # Roll the dice.
             self.dice.roll()
             self.dice.sort()
             self.get_rolls()
@@ -1602,8 +1608,9 @@ class BackgammonBoard(board.LineBoard):
         order_low = list(range(12, 0, -1))
         # Convert the details if the text is for O
         if piece == 'O':
-            frame_high = [line[::-1] for line in frame_high]
-            frame_low = [line[::-1] for line in frame_low]
+            frame_high = [line[::-1] for line in frame_high[2:] + frame_high[:2]]
+            frame_low = [line[::-1] for line in frame_low[1:] + frame_low[:1]]
+            frame_high, frame_low = frame_low, frame_high
             order_high = list(range(1, 13))
             order_low = list(range(24, 12, -1))
         # Get the top half of the board.
