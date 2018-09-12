@@ -812,14 +812,16 @@ class Backgammon(game.Game):
             # Ensure exact matches bear.
             if max_roll in points:
                 max_point = max_roll
+            # Bear a piece if you can.
             if max_roll >= max_point:
-                # Bear a piece if you can.
                 if piece == 'O':
                     max_point = 25 - max_point
                 self.rolls.remove(max_roll)
                 self.board.move(max_point, OUT)
                 # Check for the point still being valid
                 if not self.board.cells[max_point].contents:
+                    if piece == 'O':
+                        max_point = 25 - max_point
                     points.remove(max_point)
                 # Continue the turn if there are still rolls left.
                 go = self.rolls
