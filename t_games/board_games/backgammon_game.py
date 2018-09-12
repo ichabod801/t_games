@@ -805,7 +805,7 @@ class Backgammon(game.Game):
         # Get the rolls needed for the points the player is on.
         points = [point for point, cell in self.board.cells.items() if piece in cell]
         if piece == 'O':
-            points = [25 - point for point in points]
+            points = [25 - point for point in points if point > 0]
         # Loop through the rolls.
         while self.rolls:
             max_roll, max_point = max(self.rolls), max(points)
