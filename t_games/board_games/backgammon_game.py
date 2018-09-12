@@ -807,7 +807,7 @@ class Backgammon(game.Game):
         if piece == 'O':
             points = [25 - point for point in points if point > 0]
         # Loop through the rolls.
-        while self.rolls:
+        while self.rolls and points:
             max_roll, max_point = max(self.rolls), max(points)
             # Ensure exact matches bear.
             if max_roll in points:
