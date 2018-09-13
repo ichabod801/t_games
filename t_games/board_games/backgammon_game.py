@@ -143,7 +143,8 @@ You may get both players' pip counts at any time with the pips command.
 
 Options:
 o: The human player plays with the red (O) pieces.
-layout (l): Which layout to use: long, standard, nack, or hyper.
+layout (l): Which layout to use: long (lg), standard (st), nack (nk), or
+    hyper (hy).
 match (m): The winning match score. Defaults to 1, or non-match play.
 """
 
@@ -785,9 +786,10 @@ class Backgammon(game.Game):
     aliases = {'b': 'bear', 'd': 'double', 'e': 'enter', 'p': 'pips', 's': 'start'}
     categories = ['Board Games']
     credits = CREDITS
-    layouts = {'hyper': ((24, 1), (23, 1), (22, 1)), 'long': ((24, 15),),
-        'nack': ((6, 4), (8, 3), (13, 4), (23, 2), (24, 2)),
-        'standard': ((6, 5), (8, 3), (13, 5), (24, 2))}
+    layouts = {'hyper': ((24, 1), (23, 1), (22, 1)), 'hy': ((24, 1), (23, 1), (22, 1)), 'long': ((24, 15),),
+        'lg': ((24, 15),), 'nack': ((6, 4), (8, 3), (13, 4), (23, 2), (24, 2)),
+         'nk': ((6, 4), (8, 3), (13, 4), (23, 2), (24, 2)), 'standard': ((6, 5), (8, 3), (13, 5), (24, 2)),
+         'st': ((6, 5), (8, 3), (13, 5), (24, 2))}
     name = 'Backgammon'
     num_options = 3
     rules = RULES
