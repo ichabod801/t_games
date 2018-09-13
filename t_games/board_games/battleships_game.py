@@ -248,6 +248,9 @@ class Battleships(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
+        # Update the human. (Bots don't need updates.)
+        self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
+        self.human.tell(self.boards[self.human.name].show())
         # Get the players' moves.
         human_shot = self.human.ask('\nWhere do you want to shoot? ').strip()
         if not SQUARE_RE.match(human_shot.upper()):
@@ -257,9 +260,6 @@ class Battleships(game.Game):
         # Fire the shots.
         self.boards[self.bot.name].fire(human_shot.upper(), self.human)
         self.boards[self.human.name].fire(bot_shot, self.bot)
-        # Update the human. (Bots don't need updates.)
-        self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
-        self.human.tell(self.boards[self.human.name].show())
 
     def set_options(self):
         """Define the options for the game. (None)"""
