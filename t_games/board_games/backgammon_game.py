@@ -755,7 +755,7 @@ class Backgammon(game.Game):
     doubling_die: The die recording the match score for the game. (int)
     doubling_status: Who can double the die. (str)
     human_piece: The symbol for the human's pieces. (str)
-    layout: The name of the starting layout. (str)
+    layout: The name of the starting layouts, with aliases. (str)
     match: The winning match score. (int)
     pieces: The symbols for the players' pieces. (dict of str: str)
     rolls: The numbers that can be used to move. (list of int)
@@ -788,8 +788,8 @@ class Backgammon(game.Game):
     credits = CREDITS
     layouts = {'hyper': ((24, 1), (23, 1), (22, 1)), 'hy': ((24, 1), (23, 1), (22, 1)), 'long': ((24, 15),),
         'lg': ((24, 15),), 'nack': ((6, 4), (8, 3), (13, 4), (23, 2), (24, 2)),
-         'nk': ((6, 4), (8, 3), (13, 4), (23, 2), (24, 2)), 'standard': ((6, 5), (8, 3), (13, 5), (24, 2)),
-         'st': ((6, 5), (8, 3), (13, 5), (24, 2))}
+        'nk': ((6, 4), (8, 3), (13, 4), (23, 2), (24, 2)), 'standard': ((6, 5), (8, 3), (13, 5), (24, 2)),
+        'st': ((6, 5), (8, 3), (13, 5), (24, 2))}
     name = 'Backgammon'
     num_options = 3
     rules = RULES
