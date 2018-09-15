@@ -1700,6 +1700,7 @@ class BackgammonPlay(object):
     __len__
     __lt__
     __repr__
+    __str__
     """
 
     def __init__(self, start = 0, end = 0, roll = 0):
@@ -1790,6 +1791,31 @@ class BackgammonPlay(object):
     def __repr__(self):
         """Generate a debugging text representation. (str)"""
         return '<BackgammonPlay {!r}>'.format(self.moves)
+
+    def __str__(self):
+        """Generates a human readable text representation. (str)"""
+        # Get the roll.
+        roll_text = '{}-{}: '.format(self.moves[0][2], self.moves[1][2])
+        # Get a word for each move.
+        base_words = ['{}/{}'.format(*move[:2]) for move in self.moves]
+        # Trim out duplicate moves, with appropriate notation.
+        move_words = []
+        skip = 0
+        for word in base_words:
+            # Skip already done moves.
+            if skip:
+                skip -= 1
+                continue
+            # Check for duplicate moves.
+            count = base_words.count(word)
+            if count > 1:
+                # Record duplicate moves, and skip duplicates.
+                move_words.append('{} ({})'.format(word, count))
+                skip = count - 1
+            else:
+                # Record normal moves.
+                move_words.append(word)
+        return '{}{}'.format(roll_text, ' '.join(move_words))
 
     def add_move(self, start = 0, end = 0, roll = 0):
         """
