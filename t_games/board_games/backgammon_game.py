@@ -180,7 +180,8 @@ class BackgammonBot(player.Bot):
         """
         # Respond to no-move notifications.
         if prompt.startswith('You have no legal moves'):
-            self.game.human.tell('{} has no legal moves.'.format(self.name))
+            roll_text = '-'.join(str(x) for x in self.game.rolls[:2])
+            self.game.human.tell('\n{} rolled {} and has no legal moves.'.format(self.name, roll_text))
             return ''
         # Respond to being able to double.
         elif prompt.startswith('\nWould you like to double the stakes'):
@@ -251,6 +252,7 @@ class BackgammonBot(player.Bot):
                 # Choose the play with the highest evaluation.
                 possibles.sort(reverse = True)
                 self.held_moves = possibles[0][1]
+                self.tell_move()
             # Return the move with the correct syntax.
             move = self.held_moves.next_move()
             if move[1] == OUT:
@@ -426,9 +428,11 @@ class BackgammonBot(player.Bot):
         Parameters:
         The parameters are as per the built-in print function.
         """
-        # Don't say anything while making multiple moves
-        if not self.held_moves:
-            super(BackgammonBot, self).tell(text)
+        pass
+
+    def tell_move(self):
+        """Tell the human player what the bot's move is."""
+        self.game.human.tell("\n{}'s move is {}".format(self.name, self.held_moves))
 
 
 class AdditiveBot(BackgammonBot):
@@ -520,14 +524,8 @@ class BackGeneBot(BackgammonBot):
         """
         return sum([f * r for f, r in zip(self.vectors[phase], board_features)])
 
-    def tell(self, *args, **kwargs):
-        """
-        Give information to the player. (None)
-
-        Parameters:
-        The parameters are as per the built-in print function.
-        """
-        # Shut up.
+    def tell_move(self):
+        """Tell the human player what the bot's move is."""
         pass
 
 
@@ -560,7 +558,8 @@ class PubEvalBot(BackgammonBot):
         """
         # Respond to no-move notifications.
         if prompt.startswith('You have no legal moves'):
-            self.game.human.tell('{} has no legal moves.'.format(self.name))
+            roll_text = '-'.join(str(x) for x in self.game.rolls[:2])
+            self.game.human.tell('\n{} rolled {} and has no legal moves.'.format(self.name, roll_text))
             return ''
         # Respond to being able to double.
         elif prompt.startswith('\nWould you like to double the stakes'):
@@ -611,6 +610,7 @@ class PubEvalBot(BackgammonBot):
                 # Choose the play with the highest evaluation.
                 possibles.sort(reverse = True)
                 self.held_moves = possibles[0][1]
+                self.tell_move()
             # Return the move with the correct syntax.
             move = self.held_moves.next_move()
             if move[1] == OUT:
@@ -1700,6 +1700,7 @@ class BackgammonPlay(object):
     __len__
     __lt__
     __repr__
+    __str__
     """
 
     def __init__(self, start = 0, end = 0, roll = 0):
@@ -1790,6 +1791,41 @@ class BackgammonPlay(object):
     def __repr__(self):
         """Generate a debugging text representation. (str)"""
         return '<BackgammonPlay {!r}>'.format(self.moves)
+
+    def __str__(self):
+        """Generates a human readable text representation. (str)"""
+        # Get the text for the roll.
+        if len(self.moves) > 1:
+            roll_text = '{}-{}: '.format(self.moves[0][2], self.moves[1][2])
+        elif self.moves:
+            roll_text = '{}: '.format(self.moves[0][2])
+        else:
+            'Empty Backgammon play.'
+        # Get a word for each move.
+        base_words = ['{}/{}'.format(*move[:2]) for move in self.moves]
+        # Trim out duplicate moves, with appropriate notation.
+        move_words = []
+        skip = 0
+        for word in base_words:
+            # Skip already done moves.
+            if skip:
+                skip -= 1
+                continue
+            # Check for duplicate moves.
+            count = base_words.count(word)
+            if count > 1:
+                # Record duplicate moves and skip count.
+                move_words.append('{} ({})'.format(word, count))
+                skip = count - 1
+            else:
+                # Record normal moves.
+                move_words.append(word)
+        # Use bar and out in the move text.
+        move_text = ' '.join(move_words)
+        move_text = move_text.replace('-1', 'bar')
+        move_text = move_text.replace('-2', 'out')
+        # Return the combined text for the roll and the moves.
+        return '{}{}'.format(roll_text, move_text)
 
     def add_move(self, start = 0, end = 0, roll = 0):
         """
