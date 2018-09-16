@@ -90,6 +90,12 @@ class PlayTest(unittest.TestCase):
         play = backgammon.BackgammonPlay(13, 7, 6)
         self.assertEqual('<BackgammonPlay [(13, 7, 6)]>', repr(play))
 
+    def testBasicStr(self):
+        """Test human readable representation of a standard move."""
+        play = backgammon.BackgammonPlay(13, 7, 6)
+        play.add_move(8, 7, 1)
+        self.assertEqual('6-1: 13/7 8/7', str(play))
+
     def testBear(self):
         """Test bearing off moves."""
         self.setBoard(layout = ((6, 2), (5, 2)))
@@ -112,6 +118,12 @@ class PlayTest(unittest.TestCase):
         """Test debugging text representation of a bearing off move."""
         play = backgammon.BackgammonPlay(21, OUT, 5)
         self.assertEqual('<BackgammonPlay [(21, -2, 5)]>', repr(play))
+
+    def testBearStr(self):
+        """Test human readable representation of a bearing off move."""
+        play = backgammon.BackgammonPlay(21, OUT, 5)
+        play.add_move(20, OUT, 4)
+        self.assertEqual('5-4: 21/out 20/out', str(play))
 
     def testDoubles(self):
         """Test moves with doubles."""

@@ -1824,7 +1824,7 @@ class BackgammonPlay(object):
         move_text = ' '.join(move_words)
         move_text = move_text.replace('-1', 'bar')
         move_text = move_text.replace('-2', 'out')
-        return '{}{}'.format(roll_text, ' '.join(move_words))
+        return '{}{}'.format(roll_text, move_text)
 
     def add_move(self, start = 0, end = 0, roll = 0):
         """
