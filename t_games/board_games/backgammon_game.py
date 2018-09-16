@@ -1794,7 +1794,7 @@ class BackgammonPlay(object):
 
     def __str__(self):
         """Generates a human readable text representation. (str)"""
-        # Get the roll.
+        # Get the text for the roll.
         if len(self.moves) > 1:
             roll_text = '{}-{}: '.format(self.moves[0][2], self.moves[1][2])
         elif self.moves:
@@ -1814,7 +1814,7 @@ class BackgammonPlay(object):
             # Check for duplicate moves.
             count = base_words.count(word)
             if count > 1:
-                # Record duplicate moves, and skip duplicates.
+                # Record duplicate moves and skip count.
                 move_words.append('{} ({})'.format(word, count))
                 skip = count - 1
             else:
@@ -1824,6 +1824,7 @@ class BackgammonPlay(object):
         move_text = ' '.join(move_words)
         move_text = move_text.replace('-1', 'bar')
         move_text = move_text.replace('-2', 'out')
+        # Return the combined text for the roll and the moves.
         return '{}{}'.format(roll_text, move_text)
 
     def add_move(self, start = 0, end = 0, roll = 0):
