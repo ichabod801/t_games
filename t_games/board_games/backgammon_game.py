@@ -180,7 +180,8 @@ class BackgammonBot(player.Bot):
         """
         # Respond to no-move notifications.
         if prompt.startswith('You have no legal moves'):
-            self.game.human.tell('{} has no legal moves.'.format(self.name))
+            message = '\n{} rolled {} and has no legal moves'
+            self.game.human.tell(message.format(self.name, '-'.join(self.game.rolls[:2])))
             return ''
         # Respond to being able to double.
         elif prompt.startswith('\nWould you like to double the stakes'):
@@ -557,7 +558,8 @@ class PubEvalBot(BackgammonBot):
         """
         # Respond to no-move notifications.
         if prompt.startswith('You have no legal moves'):
-            self.game.human.tell('{} has no legal moves.'.format(self.name))
+            message = '\n{} rolled {} and has no legal moves'
+            self.game.human.tell(message.format(self.name, '-'.join(self.game.rolls[:2])))
             return ''
         # Respond to being able to double.
         elif prompt.startswith('\nWould you like to double the stakes'):
