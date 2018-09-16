@@ -139,6 +139,14 @@ class PlayTest(unittest.TestCase):
         check = set(check)
         self.assertEqual(check, self.legal_moves)
 
+    def testDoublesStr(self):
+        """Test human readable representation of move with doubles."""
+        play = backgammon.BackgammonPlay(13, 7, 6)
+        play.add_move(13, 7, 6)
+        play.add_move(24, 18, 6)
+        play.add_move(24, 18, 6)
+        self.assertEqual('6-6: 13/7 (2) 24/18 (2)', str(play))
+
     def testEnter(self):
         """Test moves from the bar."""
         self.setBoard(layout = ((7, 2),), bar = ['X', 'O'], rolls = [2, 3])
@@ -163,6 +171,12 @@ class PlayTest(unittest.TestCase):
         play = backgammon.BackgammonPlay(BAR, 2, 2)
         self.assertEqual('<BackgammonPlay [(-1, 2, 2)]>', repr(play))
 
+    def testEnterStr(self):
+        """Test human readable representation of an entering move."""
+        play = backgammon.BackgammonPlay(BAR, 5, 5)
+        play.add_move(2, 5, 3)
+        self.assertEqual('5-3: bar/5 2/5', str(play))
+
     def testNone(self):
         """Test a situation with no legal moves."""
         self.setBoard(layout = ((7, 2), (6, 2), (5, 2), (4, 2), (3, 2), (2, 2), (24, 2)), rolls = [6, 6])
@@ -173,6 +187,11 @@ class PlayTest(unittest.TestCase):
         self.setBoard(layout = ((24, 1), (23, 1), (3, 2)), moves = [(24, 23)], rolls = [1, 1])
         check = [((1, 2),)]
         self.assertEqual(set(check), self.legal_moves)
+
+    def testPartialStr(self):
+        """Test human readable representation of a partial."""
+        play = backgammon.BackgammonPlay(BAR, 5, 5)
+        self.assertEqual('5: bar/5', str(play))
 
     def testStart(self):
         """Test the moves at the start of the game."""
