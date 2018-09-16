@@ -251,6 +251,7 @@ class BackgammonBot(player.Bot):
                 # Choose the play with the highest evaluation.
                 possibles.sort(reverse = True)
                 self.held_moves = possibles[0][1]
+                self.tell_move()
             # Return the move with the correct syntax.
             move = self.held_moves.next_move()
             if move[1] == OUT:
@@ -426,9 +427,11 @@ class BackgammonBot(player.Bot):
         Parameters:
         The parameters are as per the built-in print function.
         """
-        # Don't say anything while making multiple moves
-        if not self.held_moves:
-            super(BackgammonBot, self).tell(text)
+        pass
+
+    def tell_move(self):
+        """Tell the human player what the bot's move is."""
+        self.game.human.tell("\n{}'s move is {}".format(self.name, self.held_moves))
 
 
 class AdditiveBot(BackgammonBot):
