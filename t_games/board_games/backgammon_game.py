@@ -1059,14 +1059,11 @@ class Backgammon(game.Game):
                 # Process rejection.
                 player.tell('\n{} refuses the double, you win the game.'.format(opponent.name))
                 # Set the match score.
-                if player == self.human:
-                    self.win_loss_draw[0] += self.doubling_die
-                else:
-                    self.win_loss_draw[1] += self.doubling_die
+                self.scores[player.name] += self.doubling_die
                 # Check for the end of the match (or reset for the next game).
-                if self.win_loss_draw[0] >= self.match:
+                if self.scores[self.human.name] >= self.match:
                     self.force_end = 'win'
-                elif self.win_loss_draw[1] >= self.match:
+                elif self.scores[self.bot.name] >= self.match:
                     self.force_end = 'loss'
                 else:
                     self.reset()
