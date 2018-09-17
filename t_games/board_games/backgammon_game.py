@@ -1084,18 +1084,23 @@ class Backgammon(game.Game):
         # Check human win.
         human_win = self.check_win(self.pieces[self.human.name])
         if human_win:
-            self.win_loss_draw[0] += human_win
+            self.scores[self.human.name] += human_win
+            if self.scores[self.human.name] >= self.match:
+                self.win_loss_draw[0] = 1
             self.human.tell('\nYou win!')
-        bot_win = self.check_win(self.pieces[self.bot.name])
         # Check bot win.
+        bot_win = self.check_win(self.pieces[self.bot.name])
         if bot_win:
-            self.win_loss_draw[1] += bot_win
+            self.scores[self.bot.name] += bot_win
+            if self.scores[self.bot.name] >= self.match:
+                self.win_loss_draw[1] = 1
             self.human.tell('\nYou lose. :(')
         # Reset the game.
         if (human_win or bot_win) and self.match > 1:
-            self.human.tell('The match score is {} to {}.'.format(*self.win_loss_draw[:2]))
+            scores = self.scores[self.human.name], self.scores[self.bot.name]
+            self.human.tell('The match score is {} to {}.'.format(*scores))
             self.reset()
-        return max(self.win_loss_draw) >= self.match
+        return max(self.scores.values()) >= self.match
 
     def get_rolls(self):
         """Determine the rolls you can move with from the dice roll. (None)"""
