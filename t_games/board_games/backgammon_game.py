@@ -1069,7 +1069,7 @@ class Backgammon(game.Game):
                     self.reset()
                 # Update the human on the match status.
                 match_score = self.scores[self.human.name], self.scores[self.bot.name]
-                self.human.tell('\nThe match score is now {} to {}.'.format(*match_scores))
+                self.human.tell('\nThe match score is now {} to {}.'.format(*match_score))
                 if self.force_end:
                     self.human.tell('You {} the match.'.format(self.force_end))
                 else:
