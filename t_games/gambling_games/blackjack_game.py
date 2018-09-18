@@ -229,7 +229,7 @@ class Blackjack(game.Game):
         """
         # Check for proper timing.
         if not self.phase_check('double'):
-            return False
+            return True
         # Parse the arguments.
         if not arguments.strip():
             # Find the default hand.
@@ -240,7 +240,7 @@ class Blackjack(game.Game):
         else:
             int_args = self.parse_arguments('double', arguments, max_args = 2)
             if not int_args:
-                return False
+                return True
         hand_index, bet = int_args
         hand = self.player_hands[hand_index]
         # Check for valid bet amount.
@@ -271,6 +271,7 @@ class Blackjack(game.Game):
                 self.bets[hand_index] = 0
             else:
                 hand.status = 'standing'
+        return True
 
     def do_gipf(self, arguments):
         """
@@ -323,11 +324,11 @@ class Blackjack(game.Game):
         """
         # Check for proper timing.
         if not self.phase_check('get a hint'):
-            return False
+            return True
         # Parse the arguments.
         int_args = self.parse_arguments('hint', arguments)
         if not int_args:
-            return False
+            return True
         hand_index = int_args[0]
         hand = self.player_hands[hand_index]
         # Determine which column to use.
@@ -336,7 +337,7 @@ class Blackjack(game.Game):
         values = [BlackjackHand.card_values[card.rank] for card in hand.cards]
         if hand.score() == 21:
             self.human.tell('Stand, you idiot.')
-            return False
+            return True
         elif len(values) == 2 and values[0] == values[1]:
             table = self.hints['pair']
             row = values[0] - 2
@@ -350,6 +351,7 @@ class Blackjack(game.Game):
         self.human.tell(HINT_KEYS[table[row][column]])
         if self.flags & 1:
             self.human.tell('Hints may not be valid with the current options.')
+        return True
 
     def do_hit(self, arguments):
         """
@@ -361,11 +363,11 @@ class Blackjack(game.Game):
         """
         # Check for proper timing.
         if not self.phase_check('get hit'):
-            return False
+            return True
         # Parse the arguments.
         int_args = self.parse_arguments('hit', arguments)
         if not int_args:
-            return False
+            return True
         hand_index = int_args[0]
         # Make sure hand can receive cards.
         hand = self.player_hands[hand_index]
@@ -384,6 +386,7 @@ class Blackjack(game.Game):
             elif score == 21:
                 hand.status = 'standing'
                 self.human.tell('You now have 21 with {}.'.format(hand))
+        return True
 
     def do_quit(self, argument):
         """
@@ -417,11 +420,11 @@ class Blackjack(game.Game):
         """
         # Check timing.
         if not self.phase_check('split a hand'):
-            return False
+            return True
         # Parse arguments.
         int_args = self.parse_arguments('split', arguments)
         if not int_args:
-            return False
+            return True
         hand_index = int_args[0]
         hand = self.player_hands[hand_index]
         # Check for valid split.
@@ -448,6 +451,7 @@ class Blackjack(game.Game):
             if not self.hit_split_ace and hand.cards[0].rank == 'A':
                 hand.status = 'standing'
                 new_hand.status = 'standing'
+        return True
 
     def do_stand(self, arguments):
         """
@@ -459,11 +463,11 @@ class Blackjack(game.Game):
         """
         # Check timing.
         if not self.phase_check('stand'):
-            return False
+            return True
         # Parse arguments.
         int_args = self.parse_arguments('hit', arguments)
         if not int_args:
-            return False
+            return True
         hand_index = int_args[0]
         # Check that the hand is not arleady standing or busted.
         hand = self.player_hands[hand_index]
@@ -472,6 +476,7 @@ class Blackjack(game.Game):
         else:
             # Set the hand to standing.
             hand.status = 'standing'
+        return True
 
     def do_surrender(self, arguments):
         """
@@ -484,13 +489,13 @@ class Blackjack(game.Game):
         # Check for proper timing.
         if not self.surrender:
             self.human.error('Surrender is not allowed in this game.')
-            return False
+            return True
         if not self.phase_check('surrender'):
-            return False
+            return True
         # Parse the arguments.
         int_args = self.parse_arguments('surrender', arguments)
         if not int_args:
-            return False
+            return True
         hand_index = int_args[0]
         # Make sure hand has no actions taken on it.
         hand = self.player_hands[hand_index]
@@ -505,6 +510,7 @@ class Blackjack(game.Game):
             hand.status = 'surrendered'
             self.scores[self.human.name] += int(self.bets[hand_index] / 2)
             self.bets[hand_index] = 0
+        return True
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
