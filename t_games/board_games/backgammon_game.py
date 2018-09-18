@@ -133,8 +133,8 @@ Backgammon is often played in match play, to even out the luck of the dice.
 When using match play, a game won when the opponent has not born any pieces
 off the board counts double, and a game won when the opponent still has a
 piece on the bar counts triple. Furthermore, there is a doubling die that
-can be used to double the stakes. At the beginning of their turn, either
-player may double the stakes using the double command. The other player must
+can be used to double the stakes. At the beginning of their turn, each player
+is asked if they want to double the stakes of the game. The other player must
 accept the doubled stakes or concede the game. After the initial doubling of
 the stakes, control of the doubling die goes to the player who accepted the
 doubling of the stakes, and only they can double the stakes again.
@@ -1059,19 +1059,17 @@ class Backgammon(game.Game):
                 # Process rejection.
                 player.tell('\n{} refuses the double, you win the game.'.format(opponent.name))
                 # Set the match score.
-                if player == self.human:
-                    self.win_loss_draw[0] += self.doubling_die
-                else:
-                    self.win_loss_draw[1] += self.doubling_die
+                self.scores[player.name] += self.doubling_die
                 # Check for the end of the match (or reset for the next game).
-                if self.win_loss_draw[0] >= self.match:
+                if self.scores[self.human.name] >= self.match:
                     self.force_end = 'win'
-                elif self.win_loss_draw[1] >= self.match:
+                elif self.scores[self.bot.name] >= self.match:
                     self.force_end = 'loss'
                 else:
                     self.reset()
                 # Update the human on the match status.
-                self.human.tell('\nThe match score is now {} to {}.'.format(*self.win_loss_draw[:2]))
+                match_score = self.scores[self.human.name], self.scores[self.bot.name]
+                self.human.tell('\nThe match score is now {} to {}.'.format(*match_score))
                 if self.force_end:
                     self.human.tell('You {} the match.'.format(self.force_end))
                 else:
@@ -1084,18 +1082,23 @@ class Backgammon(game.Game):
         # Check human win.
         human_win = self.check_win(self.pieces[self.human.name])
         if human_win:
-            self.win_loss_draw[0] += human_win
+            self.scores[self.human.name] += human_win
+            if self.scores[self.human.name] >= self.match:
+                self.win_loss_draw[0] = 1
             self.human.tell('\nYou win!')
-        bot_win = self.check_win(self.pieces[self.bot.name])
         # Check bot win.
+        bot_win = self.check_win(self.pieces[self.bot.name])
         if bot_win:
-            self.win_loss_draw[1] += bot_win
+            self.scores[self.bot.name] += bot_win
+            if self.scores[self.bot.name] >= self.match:
+                self.win_loss_draw[1] = 1
             self.human.tell('\nYou lose. :(')
         # Reset the game.
         if (human_win or bot_win) and self.match > 1:
-            self.human.tell('The match score is {} to {}.'.format(*self.win_loss_draw[:2]))
+            scores = self.scores[self.human.name], self.scores[self.bot.name]
+            self.human.tell('The match score is {} to {}.'.format(*scores))
             self.reset()
-        return max(self.win_loss_draw) >= self.match
+        return max(self.scores.values()) >= self.match
 
     def get_rolls(self):
         """Determine the rolls you can move with from the dice roll. (None)"""
