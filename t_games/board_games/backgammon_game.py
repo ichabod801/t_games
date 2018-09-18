@@ -133,8 +133,8 @@ Backgammon is often played in match play, to even out the luck of the dice.
 When using match play, a game won when the opponent has not born any pieces
 off the board counts double, and a game won when the opponent still has a
 piece on the bar counts triple. Furthermore, there is a doubling die that
-can be used to double the stakes. At the beginning of their turn, either
-player may double the stakes using the double command. The other player must
+can be used to double the stakes. At the beginning of their turn, each player
+is asked if they want to double the stakes of the game. The other player must
 accept the doubled stakes or concede the game. After the initial doubling of
 the stakes, control of the doubling die goes to the player who accepted the
 doubling of the stakes, and only they can double the stakes again.
