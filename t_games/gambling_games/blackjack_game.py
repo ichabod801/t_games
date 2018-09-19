@@ -406,7 +406,7 @@ class Blackjack(game.Game):
         # Inform the user.
         plural = utility.plural(abs(self.scores[self.human.name]), 'buck')
         self.human.tell('\nYou {} {} {}.'.format(result, abs(self.scores[self.human.name]), plural))
-        # Keeps turns as number of hands.
+        # Keeps turns as number of (dealer) hands.
         if self.phase == 'bet':
             self.turns -= 1
         # Quit the game.
