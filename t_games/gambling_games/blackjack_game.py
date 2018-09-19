@@ -530,7 +530,6 @@ class Blackjack(game.Game):
     def get_bet(self):
         """Get the bet from the user. (None)"""
         # Prepare the query.
-        self.human.tell('\nYou have {} bucks.'.format(self.scores[self.human.name]))
         prompt = 'How much would you like to bet this round (return for max): '
         max_bet = min(self.limit, self.scores[self.human.name])
         # Check for enough to bet one buck for each hand.
@@ -547,6 +546,7 @@ class Blackjack(game.Game):
         # Loop until you have a bet or no-go command (like quit).
         while True:
             # Query the user.
+            self.human.tell('\nYou have {} bucks.'.format(self.scores[self.human.name]))
             bets = self.human.ask_int_list(prompt, low = 1, high = max_bet, default = [max_bet],
                 valid_lens = num_bets)
             # Handle bets.
