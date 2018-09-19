@@ -439,6 +439,8 @@ class Blackjack(game.Game):
             self.human.error('You may only split cards of the same value.')
         elif not self.resplit and hand.was_split:
             self.human.error('You may not split a hand that was already split.')
+        elif self.bets[hand_index] > self.scores[self.human.name]:
+            self.human.error('You do not have enough money to split that hand.')
         else:
             # Split the hands.
             new_hand = hand.split()
