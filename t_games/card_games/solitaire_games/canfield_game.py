@@ -41,7 +41,7 @@ Stacks on the tableau may be moved, but only if the whole stack is moved.
 
 Options:
 build= (b): How tableau piles are built by suit. (alt-color, suit, or any)
-chameleon: Equivalent to 'build=any max-passes=1 parial-move reserve=12
+chameleon: Equivalent to 'build=any max-passes=1 partial-move reserve=12
     tableau=3 turn-count=1'
 foundation= (f): The rank to start the foundations with.
 free-lane (fl): Empty tableau piles may be filled by any card.
@@ -52,7 +52,7 @@ rainbow-one: Equivalent to 'build=any max-passes=2 turn-count=1'.
 reserve-size= (rs): How many cards go into the reserve. (10-15)
 selective (s): Deal five cards, choose which goes on a foundation.
 storehouse: Equivalent to 'build=suit foundation=2 max-passes=2 turn-count=1'.
-superior: Equivalent to 'visible-reserve waste-lane'.
+superior: Equivalent to 'visible-reserve free-lane'.
 tableau= (t): How many tableau piles there are. (3-5)
 turn-count= (tc): How many cards get turned over from the stock at a time.
 two-by-one: Equivalent to 'max-passes=2 turn-count=1'
