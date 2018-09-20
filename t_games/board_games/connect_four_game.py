@@ -47,7 +47,7 @@ are filled, the game is a draw.
 
 Options:
 bot-level= (b=): How good the computer opponent is. Can be easy (e),
-    medium (m), or hard (h).
+    medium (m), or hard (h). The default is medium.
 columns (c): How many columns the board should have (4-35, default 7).
 pop (p): Allow pop moves, where you remove a piece of yours that is at the
     bottom of a column.
