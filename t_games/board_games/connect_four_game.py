@@ -46,10 +46,9 @@ orthogonally or diagonally, is the winner. If all of the spaces on the board
 are filled, the game is a draw.
 
 Options:
+bot-level= (b=): How good the computer opponent is. Can be easy (e),
+    medium (m), or hard (h). The default is medium.
 columns (c): How many columns the board should have (4-35, default 7).
-easy (e): Play against an easy bot.
-hard (h): Play against a hard bot.
-medium (m): Play against a bot that's just right (the default bot).
 pop (p): Allow pop moves, where you remove a piece of yours that is at the
     bottom of a column.
 rows: (r): How many rows the board should have (4-20, default 6).
@@ -591,9 +590,9 @@ class ConnectFour(game.Game):
         """Determine and handle the options for the game. (None)"""
         super(ConnectFour, self).handle_options()
         # Set the bot.
-        if self.bot_level == 'easy':
+        if self.bot_level.startswith('e'):
             self.bot = C4BotAlphaBeta(taken_names = [self.human.name])
-        elif self.bot_level == 'medium':
+        elif self.bot_level.startswith('m'):
             self.bot = C4BotGamma(taken_names = [self.human.name])
         else:
             self.bot = C4BotGamma(depth = 8, taken_names = [self.human.name])
@@ -623,7 +622,7 @@ class ConnectFour(game.Game):
             question = 'Should you be able to pop out the bottom piece in a row? bool')
         # Set the bot option.
         self.option_set.add_option('bot-level', ['b'],
-            valid = ['easy', 'medium', 'hard'], default = 'medium',
+            valid = ['easy', 'e', 'medium', 'm', 'hard', 'h'], default = 'medium',
             question = 'How hard of a bot do you want to play against (return for medium)? ')
 
     def player_action(self, now_player):
