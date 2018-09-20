@@ -293,26 +293,11 @@ class BattleBot(player.Bot):
     retarget: Reset target list based on a recent hit. (None)
 
     Overridden Methods:
-    __init__
     ask
     error
+    set_up
     tell
     """
-
-    def __init__(self, taken_names = []):
-        """
-        Initialize the bot. (None)
-
-        Parameters:
-        taken_names: Names already in use in the game. (list of str)
-        """
-        # Do the basic bot initialization.
-        super(BattleBot, self).__init__(taken_names)
-        # Set up the tracking variables.
-        self.dont_shoot = set()
-        self.targets = []
-        self.target_ship = []
-        self.last_shot = ''
 
     def add_adjacents(self):
         """Add adjacent squares of a ship to the don't shoot set."""
@@ -387,6 +372,13 @@ class BattleBot(player.Bot):
         else:
             self.targets = [adjacent for adjacent in adjacents if adjacent not in self.dont_shoot]
             self.target_ship = [self.last_shot]
+
+    def set_up(self):
+        """Reset the bot for a new game. (None)"""
+        self.dont_shoot = set()
+        self.targets = []
+        self.target_ship = []
+        self.last_shot = ''
 
     def tell(self, text):
         """
