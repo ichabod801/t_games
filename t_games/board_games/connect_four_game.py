@@ -600,7 +600,7 @@ class ConnectFour(game.Game):
         self.players = [self.human, self.bot]
         # get symbols
         self.symbols = []
-        if not self.symbols:
+        if not self.symbols and not self.option_set.errors:
             for player in self.players:
                 invalid = ''.join(self.symbols)
                 while True:
