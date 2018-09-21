@@ -840,7 +840,7 @@ class HardWayBet(CrapsBet):
         if self.game.lazy_hard and not self.game.point:
             result = 0
         # Check for resolution.
-        elif sum(roll) == self.number:
+        elif sum(roll) in (self.number, 7):
             if roll.values[0] == roll.values[1]:
                 result = self.payout
             else:
