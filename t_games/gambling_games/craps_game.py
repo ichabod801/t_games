@@ -143,8 +143,8 @@ Lay Bet: The revers of a buy bet, betting that a 7 will be rolled first. It
     also pays true odds (as a don't pass odds bet), and requires a 5%
     commission to be paid.
 Hard Way (Hard): A hard way bet can be played on 4, 6, 8, or 10. It is a bet
-    that the number will be rolled as a pair before it is rolled otherwise. It
-    pays out 7:1 for 4 or 10, 9:1 for 6 or 8.
+    that the number will be rolled as a pair before it is rolled otherwise (and
+    before a seven is rolled). It pays out 7:1 for 4 or 10, 9:1 for 6 or 8.
 
 PROPOSITION (SINGLE-ROLL) BETS:
 (To make a proposition bet, type "prop" or "propositon" and the name of the
@@ -177,7 +177,7 @@ Roll (r): Finish betting and roll the dice.
 
 OPTIONS:
 cars-pay-3 (c3): Make 12 (boxcars) pay 3:1 on a field bet.
-lazy-hard (lh): Turns hard way bets on during the come out roll.
+lazy-hard (lh): Turns hard way bets off during the come out roll.
 limit= (l=): The maximum ammount that can be bet (20).
 max-payout= (m$=): The multiple of the limit that is the maximum payout (3).
 max-players= (mp=): The maximum number of players at the table (7).
@@ -840,7 +840,7 @@ class HardWayBet(CrapsBet):
         if self.game.lazy_hard and not self.game.point:
             result = 0
         # Check for resolution.
-        elif sum(roll) == self.number:
+        elif sum(roll) in (self.number, 7):
             if roll.values[0] == roll.values[1]:
                 result = self.payout
             else:
