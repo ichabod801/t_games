@@ -696,10 +696,12 @@ class CrazyEights(game.Game):
                 winner_bump += round_scores[name]
             # Lowest score scores the relative total, divided by the number of players with that score.
             winner_bump = int(winner_bump / len(winners))
+            self.human.tell()
             for winner in winners:
-                self.human.tell('\n{} scores {} points.\n'.format(winner, winner_bump))
+                self.human.tell('{} scores {} points.'.format(winner, winner_bump))
                 self.scores[winner] += winner_bump
         # Announce the scores.
+        self.human.tell()
         for player in self.players:
             self.human.tell('{} has {} points.'.format(player.name, self.scores[player.name]))
 
