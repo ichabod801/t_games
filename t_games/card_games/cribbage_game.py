@@ -712,11 +712,11 @@ class Cribbage(game.Game):
         """
         played = list(reversed(self.in_play['Play Sequence'].cards + [card]))
         next_total = self.card_total + card
-        points, message = 0, ''
+        points, message = 0, []
         # Check for a total of 15.
         if next_total == 15:
             points = 2
-            message = '{} scores 2 points for reaching 15.'.format(player.name)
+            message.append('{} scores 2 points for reaching 15.'.format(player.name))
         # Count the cards of the same rank.
         rank_count = 1
         for card, previous in zip(played, played[1:]):
@@ -729,8 +729,8 @@ class Cribbage(game.Game):
             if self.double_pairs:
                 pair_score *= 2
             points = pair_score
-            message = '{} scores {} for getting {} cards of the same rank.'
-            message = message.format(player.name, pair_score, utility.number_word(rank_count))
+            text = '{} scores {} for getting {} cards of the same rank.'
+            message.append(text.format(player.name, pair_score, utility.number_word(rank_count)))
         # Check for runs.
         run_count = 0
         for run_len in range(3, len(played) + 1):
@@ -741,14 +741,14 @@ class Cribbage(game.Game):
         # Score any runs.
         if run_count:
             points = run_count
-            message = '{} scores {} for getting a {}-card straight.'
-            message = message.format(player.name, run_count, utility.number_word(run_count))
+            text = '{} scores {} for getting a {}-card straight.'
+            message.append(text.format(player.name, run_count, utility.number_word(run_count)))
         # Check for a total of 31.
         elif next_total == 31:
             points += 2
-            message += '\nThe count has reached 31.\n{} scores 2 points for reaching 31.'
-            message = message.format(player.name)
-        return points, message
+            text += '\nThe count has reached 31.\n{} scores 2 points for reaching 31.'
+            message.append(text.format(player.name))
+        return points, '\n'.join(message)
 
     def set_options(self):
         """Set the game options. (None)"""
