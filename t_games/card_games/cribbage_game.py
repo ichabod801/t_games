@@ -435,7 +435,7 @@ class Cribbage(game.Game):
                 # If no discards, assume it's another command.
                 if not self.handle_cmd(answer):
                     return False
-            elif len(discards) > self.discards:
+            elif len(discards) > to_discard:
                 # Warn on the wrong number of discards.
                 player.error('You can only discard {}.'.format(discard_plural))
             elif not all(card in self.hands[player.name] for card in discards):
