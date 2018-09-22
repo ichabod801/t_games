@@ -116,6 +116,7 @@ class Cribbage(game.Game):
     auto_score: Flag for not prompting when a player scores. (bool)
     card_total: The running total of cards played this round. (int)
     cards: The number of cards dealt. (int)
+    cyborg: A flag for using a cyborg for the bot player. (bool)
     dealer_index: Index of self.players marking the dealer. (int)
     deck: The deck of cards used in the game. (cards.Deck)
     discards: The number of cards discarded. (int)
@@ -345,11 +346,18 @@ class Cribbage(game.Game):
     def handle_options(self):
         """Handle the game option settings. (None)"""
         super(Cribbage, self).handle_options()
-        # Set up the players (bots).
+        # Add the human.
         self.players = [self.human]
         taken_names = [self.human.name]
+        # Check for bot class.
+        if self.cyborg:
+            bot_class = player.Cyborg
+            self.flags |= 512
+        else:
+            bot_class = CribBot
+        # Add the bots.
         for bot in range(self.n_bots):
-            self.players.append(CribBot(taken_names))
+            self.players.append(bot_class(taken_names))
             taken_names.append(self.players[-1].name)
         # Set up teams.
         self.teams = {player.name: [player.name] for player in self.players}
@@ -776,6 +784,7 @@ class Cribbage(game.Game):
         # Set the number of opponents.
         self.option_set.add_option('n-bots', ['nb'], converter = int, default = 1, valid = (1, 2, 3),
             question = 'How many bots would you like to play against (return for 1)? ')
+        self.option_set.add_option('cyborg')
         # Set the match options.
         self.option_set.add_option('match', ['m'], converter = int, default = 1,
             question = 'How many games for match play (return for single game)? ')
