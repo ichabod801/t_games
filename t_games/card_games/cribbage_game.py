@@ -436,6 +436,7 @@ class Cribbage(game.Game):
                 if not self.handle_cmd(answer):
                     return False
                 else:
+                    # Update the player after command output.
                     player.tell(self)
             elif len(discards) > to_discard:
                 # Warn on the wrong number of discards.
