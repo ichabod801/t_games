@@ -423,40 +423,46 @@ class Cribbage(game.Game):
             self.discards = self.cards - self.discards
             # Reset the crib.
             self.hands['The Crib'] = cards.Hand(self.deck)
-        # Get and parse the discards.
-        discard_plural = utility.number_plural(self.discards, 'card')
-        query = '\nWhich {} would you like to discard to the crib, {}? '
-        answer = player.ask(query.format(discard_plural, player.name))
-        discards = cards.Card.card_re.findall(answer)
-        if not discards:
-            # If no discards, assume it's another command.
-            return self.handle_cmd(answer)
-        elif len(discards) != self.discards:
-            # Warn on the wrong number of discards.
-            player.error('You must discard {}.'.format(discard_plural))
-            return True
-        elif not all(card in self.hands[player.name] for card in discards):
-            # Block discarding cards you don't have.
-            player.error('You do not have all of those cards in your hand.')
-            return True
-        else:
-            # Handle discards.
-            for card in discards:
-                self.hands[player.name].shift(card, self.hands['The Crib'])
-            # Check for starting play after dealer discards.
-            if self.players.index(player) == self.dealer_index:
-                self.phase = 'play'
-                self.starter = self.deck.deal(up = True)
-                if self.solo:
-                    self.discards = discard_save
-                # Check for heels.
-                if self.starter.rank == 'J':
-                    self.human.tell('The dealer got their heels.')
-                    if not self.auto_score:
-                        self.human.ask(ENTER_TEXT)
-                    dealer = self.players[self.dealer_index]
-                    self.add_points(dealer, 2)
-            return False
+        # Loop until the right number of discards have been made
+        to_discard = self.discards
+        while to_discard:
+            # Get and parse the discards.
+            discard_plural = utility.number_plural(to_discard, 'card')
+            query = '\nWhich {} would you like to discard to the crib, {}? '
+            answer = player.ask(query.format(discard_plural, player.name))
+            discards = cards.Card.card_re.findall(answer)
+            if not discards:
+                # If no discards, assume it's another command.
+                if not self.handle_cmd(answer):
+                    return False
+                else:
+                    # Update the player after command output.
+                    player.tell(self)
+            elif len(discards) > to_discard:
+                # Warn on the wrong number of discards.
+                player.error('You can only discard {}.'.format(discard_plural))
+            elif not all(card in self.hands[player.name] for card in discards):
+                # Block discarding cards you don't have.
+                player.error('You do not have all of those cards in your hand.')
+            else:
+                # Handle discards.
+                for card in discards:
+                    self.hands[player.name].shift(card, self.hands['The Crib'])
+                to_discard -= len(discards)
+        # Check for starting play after dealer discards.
+        if self.players.index(player) == self.dealer_index:
+            self.phase = 'play'
+            self.starter = self.deck.deal(up = True)
+            if self.solo:
+                self.discards = discard_save
+            # Check for heels.
+            if self.starter.rank == 'J':
+                self.human.tell('The dealer got their heels.')
+                if not self.auto_score:
+                    self.human.ask(ENTER_TEXT)
+                dealer = self.players[self.dealer_index]
+                self.add_points(dealer, 2)
+        return False
 
     def player_play(self, player):
         """
