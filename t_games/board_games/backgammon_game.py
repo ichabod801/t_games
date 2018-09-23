@@ -809,27 +809,23 @@ class Backgammon(game.Game):
         if piece == 'O':
             points = [25 - point for point in points if point > 0]
         # Loop through the rolls.
-        while self.rolls and points:
-            max_roll, max_point = max(self.rolls), max(points)
+        for roll in sorted(self.rolls, reverse = True):
+            max_point = max(points)
             # Ensure exact matches bear.
-            if max_roll in points:
-                max_point = max_roll
+            if roll in points:
+                max_point = roll
             # Bear a piece if you can.
-            if max_roll >= max_point:
+            if roll >= max_point:
                 if piece == 'O':
                     max_point = 25 - max_point
-                self.rolls.remove(max_roll)
+                self.rolls.remove(roll)
                 self.board.move(max_point, OUT)
-                # Check for the point still being valid
+                # Check for the point still being valid.
                 if not self.board.cells[max_point].contents:
                     if piece == 'O':
                         max_point = 25 - max_point
                     points.remove(max_point)
-                # Continue the turn if there are still rolls left.
                 go = self.rolls
-            else:
-                # Stop if you can't bear.
-                break
         # Warn if no successful moves were made.
         if go is True:
             player.error('There are no pieces that can be auto-built.')
