@@ -285,7 +285,7 @@ class Hangman(game.Game):
             for guess in self.frequency:
                 if guess not in self.guessed_letters:
                     break
-            valid = [index for index, letter in enumerate(self.guess) if letter == '_']
+            valid = [index + 1 for index, letter in enumerate(self.guess) if letter == '_']
         query = '\nI guess {0!r}. Please enter the indexes where {0!r} occurs in the word: '.format(guess)
         matches = self.human.ask_int_list(query, valid = valid, cmd = False, valid_lens = range(10))
         self.guessed_letters += guess
