@@ -353,7 +353,7 @@ class BackgammonBot(player.Bot):
                 blots[cell.contents[0]].append(cell.location)
         # Get all the points for each player.
         points = {piece: controlled[piece] + blots[piece] for piece in 'XO'}
-        points['O'] = [24 - point for point in points['O']]
+        points['O'] = [25 - point for point in points['O']]
         # Count the off board pieces.
         captured = {piece: board.cells[BAR].contents.count(piece) for piece in 'XO'}
         off = {piece: board.cells[OUT].contents.count(piece) for piece in 'XO'}
