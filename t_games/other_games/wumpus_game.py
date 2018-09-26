@@ -386,7 +386,7 @@ class Wumpus(game.Game):
             # Game still on.
             return False
         # Record score and end game.
-        self.scores[self.human.name] = self.turns
+        self.scores[self.human.name] = self.turns - 1
         return True
 
     def player_action(self, player):
@@ -396,6 +396,12 @@ class Wumpus(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
+        # Update the player
+        self.human.tell()
+        self.status_check()
+        # Check for end of game.
+        if sum(self.win_loss_draw):
+            return False
         move = player.ask('What is your move? ').strip().lower()
         # Check for standard moves that are mediated by the Dodecahedron.
         if move in ('b', 'back'):
@@ -420,10 +426,6 @@ class Wumpus(game.Game):
             return self.handle_cmd(move)
         # Set the current (losing) score.
         self.scores[self.human.name] = -self.turns
-        # Carry on.
-        if not sum(self.win_loss_draw):
-            self.human.tell()
-            self.status_check()
 
     def set_options(self):
         """Set the possible options for the game. (None)"""
@@ -434,8 +436,6 @@ class Wumpus(game.Game):
         """Set up the caves and the tracking variables. (None)"""
         self.dodec = Dodecahedron()
         self.arrows_left = self.arrows
-        self.human.tell()
-        self.status_check()
 
     def shoot(self, arg):
         """
