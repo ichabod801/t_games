@@ -162,6 +162,7 @@ class BackgammonBot(player.Bot):
     Methods:
     describe_board: Determine the features of the current board layout. (list)
     eval_board: Evaluate a board position. (list of int)
+    get_endgame: Get the moves at the end of the game. (BackgammonPlay)
     get_split_move: Get a move when the game has become a race to get home. (str)
     get_stretch_move: Get a move when all my pieces are home. (str)
 
@@ -237,33 +238,31 @@ class BackgammonBot(player.Bot):
                 foe_points = points[{'X': 'O', 'O': 'X'}[self.piece]]
                 # Make end of game moves.
                 if max(my_points) + max(foe_points) <= 24 and not board.cells[BAR]:
-                    if max(my_points) < 7:
-                        return self.get_stretch_move(board, my_points)
-                    else:
-                        return self.get_split_move(board, my_points)
-                # Evaluate all the legal plays.
-                possibles = []
-                for play in board.get_plays(self.piece, self.game.rolls):
-                    # Make the play.
-                    sub_board = board.copy()
-                    for move in play:
-                        capture = sub_board.move(*move, piece = self.piece)
-                    # Get the board features.
-                    features, points = self.describe_board(sub_board)
-                    max_x = max(points['X']) if points['X'] else 0
-                    max_o = max(points['O']) if points['O'] else 0
-                    # Get the game phase.
-                    if max_x + max_o > 24 or sub_board.cells[BAR].contents:
-                        phase = 'mixed'
-                    elif max_x <= 6 and max_o < 6:
-                        phase = 'stretch'
-                    else:
-                        phase = 'split'
-                    # Store the evaluation with the move.
-                    possibles.append((self.eval_board(features, phase), play))
-                # Choose the play with the highest evaluation.
-                possibles.sort(reverse = True)
-                self.held_moves = possibles[0][1]
+                    self.held_moves = self.get_endgame(board, my_points)
+                else:
+                    # Evaluate all the legal plays.
+                    possibles = []
+                    for play in board.get_plays(self.piece, self.game.rolls):
+                        # Make the play.
+                        sub_board = board.copy()
+                        for move in play:
+                            capture = sub_board.move(*move, piece = self.piece)
+                        # Get the board features.
+                        features, points = self.describe_board(sub_board)
+                        max_x = max(points['X']) if points['X'] else 0
+                        max_o = max(points['O']) if points['O'] else 0
+                        # Get the game phase.
+                        if max_x + max_o > 24 or sub_board.cells[BAR].contents:
+                            phase = 'mixed'
+                        elif max_x <= 6 and max_o < 6:
+                            phase = 'stretch'
+                        else:
+                            phase = 'split'
+                        # Store the evaluation with the move.
+                        possibles.append((self.eval_board(features, phase), play))
+                    # Choose the play with the highest evaluation.
+                    possibles.sort(reverse = True)
+                    self.held_moves = possibles[0][1]
                 self.tell_move()
             # Return the move with the correct syntax.
             move = self.held_moves.next_move()
@@ -428,16 +427,35 @@ class BackgammonBot(player.Bot):
         else:
             return board_features
 
-    def get_split_move(self, board, my_points):
+    def get_endgame(self, board, my_points):
+        """
+        Get the moves at the end of the game. (BackgammonPlay)
+
+        Parameters:
+        board: The current board position. (BackgammonBoard)
+        my_points: The points the bot's pieces are on. (list of int)
+        """
+        board = board.copy()
+        play = BackgammonPlay()
+        rolls = self.game.rolls[:]
+        while rolls:
+            if max(my_points) < 7:
+                play.add_move(*self.get_stretch_move(board, my_points, rolls))
+            else:
+                play.add_move(*self.get_split_move(board, my_points, rolls))
+        return play
+
+    def get_split_move(self, board, my_points, rolls):
         """
         Get a move when the game has become a race to get home. (str)
 
         Parameters:
         board: The current position. (BackBoard)
         my_points: The points where the bot has a piece. (list of int)
+        rolls: The rolls available for moves. (list of int)
         """
         # Get the next roll to move.
-        max_roll = max(self.game.rolls)
+        max_roll = max(rolls)
         # If you can get a piece home exactly, do it.
         if max_roll + 6 in my_points:
             move = (max_roll + 6, 6)
@@ -445,26 +463,35 @@ class BackgammonBot(player.Bot):
         else:
             my_max = max(my_points)
             move = (my_max, my_max - max_roll)
-        # Conver the points if necessary.
+        # Convert the points if necessary.
         if self.piece == 'O':
             move = [25 - point for point in move]
-        return move
+        # Make the move
+        board.move(move[0], move[1], self.piece)
+        if not board.cells[move[0]]:
+            if move[0] in my_points:
+                my_points.remove(move[0])
+            else:
+                my_points.remove(25 - move[0])
+        return move + [max_roll]
 
-    def get_stretch_move(self, board, my_points):
+    def get_stretch_move(self, board, my_points, rolls):
         """
         Get a move when all my pieces are home. (str)
 
         Parameters:
         board: The current position. (BackBoard)
         my_points: The points where the bot has a piece. (list of int)
+        rolls: The rolls available for moves. (list of int)
         """
+        # !! not finished converting
         # Get the next roll to move.
         max_roll = max(self.game.rolls)
         # Check for bearing.
         if max_roll in my_points:
-            return 'bear {}'.format(max_roll)
+            move = [max_roll, OUT]
         elif max_roll > max(my_points):
-            return 'bear {}'.format(max(my_points))
+            move = [max(my_points), OUT]
         else:
             # If you can't bear, fill empty spots.
             for point in sorted(my_points, reverse = True):
@@ -472,10 +499,19 @@ class BackgammonBot(player.Bot):
                     move = (point, point - max_roll)
             my_max = max(my_points)
             move = my_max, my_max - max_roll
-            # Convert the points if necessary.
-            if self.piece == 'O':
-                move = [25 - point for point in move]
-            return move
+        # Convert the points if necessary.
+        if self.piece == 'O':
+            move[0] = 25 - move[0]
+            if move[1] > 0:
+                move[1] = 25 - move[1]
+        # Make the move
+        board.move(move[0], move[1], self.piece)
+        if not board.cells[move[0]]:
+            if move[0] in my_points:
+                my_points.remove(move[0])
+            else:
+                my_points.remove(25 - move[0])
+        return move + [max_roll]
 
     def set_up(self):
         """Set up the bot. (None)"""
