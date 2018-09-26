@@ -162,6 +162,8 @@ class BackgammonBot(player.Bot):
     Methods:
     describe_board: Determine the features of the current board layout. (list)
     eval_board: Evaluate a board position. (list of int)
+    get_split_move: Get a move when the game has become a race to get home. (str)
+    get_stretch_move: Get a move when all my pieces are home. (str)
 
     Overridden Methods:
     ask
@@ -228,9 +230,19 @@ class BackgammonBot(player.Bot):
         # Respond to move requests.
         if prompt.strip() == 'What is your move?':
             if not self.held_moves:
+                # Get the current state of the game.
+                board = self.game.board
+                features, points = self.describe_board(board)
+                my_points = points[self.piece]
+                foe_points = points[{'X': 'O', 'O': 'X'}[self.piece]]
+                # Make end of game moves.
+                if max(my_points) + max(foe_points) <= 24 and not board.cells[BAR]:
+                    if max(my_points) < 7:
+                        return self.get_stretch_move(board, my_points)
+                    else:
+                        return self.get_split_move(board, my_points)
                 # Evaluate all the legal plays.
                 possibles = []
-                board = self.game.board
                 for play in board.get_plays(self.piece, self.game.rolls):
                     # Make the play.
                     sub_board = board.copy()
@@ -415,6 +427,55 @@ class BackgammonBot(player.Bot):
         # Check for normal play.
         else:
             return board_features
+
+    def get_split_move(self, board, my_points):
+        """
+        Get a move when the game has become a race to get home. (str)
+
+        Parameters:
+        board: The current position. (BackBoard)
+        my_points: The points where the bot has a piece. (list of int)
+        """
+        # Get the next roll to move.
+        max_roll = max(self.game.rolls)
+        # If you can get a piece home exactly, do it.
+        if max_roll + 6 in my_points:
+            move = (max_roll + 6, 6)
+        # Otherwise get your farthest piece closer.
+        else:
+            my_max = max(my_points)
+            move = (my_max, my_max - max_roll)
+        # Conver the points if necessary.
+        if self.piece == 'O':
+            move = [25 - point for point in move]
+        return move
+
+    def get_stretch_move(self, board, my_points):
+        """
+        Get a move when all my pieces are home. (str)
+
+        Parameters:
+        board: The current position. (BackBoard)
+        my_points: The points where the bot has a piece. (list of int)
+        """
+        # Get the next roll to move.
+        max_roll = max(self.game.rolls)
+        # Check for bearing.
+        if max_roll in my_points:
+            return 'bear {}'.format(max_roll)
+        elif max_roll > max(my_points):
+            return 'bear {}'.format(max(my_points))
+        else:
+            # If you can't bear, fill empty spots.
+            for point in sorted(my_points, reverse = True):
+                if point - max_roll not in my_points:
+                    move = (point, point - max_roll)
+            my_max = max(my_points)
+            move = my_max, my_max - max_roll
+            # Convert the points if necessary.
+            if self.piece == 'O':
+                move = [25 - point for point in move]
+            return move
 
     def set_up(self):
         """Set up the bot. (None)"""
