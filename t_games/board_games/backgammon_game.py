@@ -439,7 +439,6 @@ class BackgammonBot(player.Bot):
         play = BackgammonPlay()
         rolls = self.game.rolls[:]
         while rolls:
-            print(my_points)
             if max(my_points) < 7:
                 play.add_move(*self.get_stretch_move(board, my_points, rolls))
             else:
@@ -448,7 +447,6 @@ class BackgammonBot(player.Bot):
             my_points = points[self.piece]
             if not my_points:
                 break
-            print(play)
         return play
 
     def get_split_move(self, board, my_points, rolls):
@@ -498,8 +496,10 @@ class BackgammonBot(player.Bot):
             for point in sorted(my_points, reverse = True):
                 if point - max_roll not in my_points:
                     move = [point, point - max_roll]
-            my_max = max(my_points)
-            move = my_max, my_max - max_roll
+                    break
+            else:
+                my_max = max(my_points)
+                move = [my_max, my_max - max_roll]
         # Convert the points if necessary.
         if self.piece == 'O':
             move[0] = 25 - move[0]
