@@ -494,7 +494,7 @@ class BackgammonBot(player.Bot):
         else:
             # If you can't bear, fill empty spots.
             for point in sorted(my_points, reverse = True):
-                if point - max_roll not in my_points:
+                if max_roll < point and point - max_roll not in my_points:
                     move = [point, point - max_roll]
                     break
             else:
