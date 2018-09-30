@@ -785,19 +785,20 @@ class LiarsDice(game.Game):
         winner: The player who won the challenge. (player.Player)
         loser: The player who lost the challenge. (player.Player)
         """
-        # Adjust and announce the scores.
+        # Adjust and announce the loser's score.
         self.scores[loser.name] -= 1
         loser_score = self.scores[loser.name]
         if loser_score:
             plural = number_plural(loser_score, 'token')
             self.human.tell('{} now has {}.'.format(loser.name, plural))
-        if self.betting:
-            self.scores[winner.name] += 1
-            self.human.tell('{} now has {} tokens.'.format(winner.name, self.scores[winner.name]))
-        # Remove the loser if necessary.
         if not self.scores[loser.name]:
             drop_message = '\n{} has lost all of their tokens and is out of the game.'
             self.human.tell(drop_message.format(loser.name))
+        # Adjust and announce the winner's score.
+        if self.betting:
+            self.scores[winner.name] += 1
+            plural = number_plural(self.scores[winner.name], 'token')
+            self.human.tell('{} now has {}.'.format(winner.name, plural))
 
     def set_options(self):
         """Set the game specific options. (None)"""
