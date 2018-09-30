@@ -145,7 +145,7 @@ class MonteCarlo(solitaire.Solitaire):
         # Account for the thirteen option.
         if self.thirteen:
             self.match_checkers[-1] = solitaire.match_thirteen
-            self.sort_checkers = [solitaire.sort_kings]
+            self.sort_checkers = [solitaire.sort_kings_only]
         else:
             self.sort_checkers = [solitaire.sort_none]
 
