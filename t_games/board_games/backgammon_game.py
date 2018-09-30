@@ -435,16 +435,21 @@ class BackgammonBot(player.Bot):
         board: The current board position. (BackgammonBoard)
         my_points: The points the bot's pieces are on. (list of int)
         """
+        # Copy the game state.
         board = board.copy()
-        play = BackgammonPlay()
         rolls = self.game.rolls[:]
+        # Put the moves into a play.
+        play = BackgammonPlay()
         while rolls:
+            # Get the right move for the phase.
             if max(my_points) < 7:
                 play.add_move(*self.get_stretch_move(board, my_points, rolls))
             else:
                 play.add_move(*self.get_split_move(board, my_points, rolls))
+            # Update the game tracking.
             features, points = self.describe_board(board)
             my_points = points[self.piece]
+            # Check for all of my pieces being of the board.
             if not my_points:
                 break
         return play
@@ -462,11 +467,11 @@ class BackgammonBot(player.Bot):
         max_roll = max(rolls)
         # If you can get a piece home exactly, do it.
         if max_roll + 6 in my_points:
-            move = (max_roll + 6, 6)
+            move = [max_roll + 6, 6]
         # Otherwise get your farthest piece closer.
         else:
             my_max = max(my_points)
-            move = (my_max, my_max - max_roll)
+            move = [my_max, my_max - max_roll]
         # Convert the points if necessary.
         if self.piece == 'O':
             move = [25 - point for point in move]
