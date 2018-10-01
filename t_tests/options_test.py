@@ -16,6 +16,7 @@ import unittest
 from t_games import game
 from t_games import options
 from t_games import player
+import unitility
 
 
 class AllRangeTest(unittest.TestCase):
@@ -38,7 +39,7 @@ class OptionTextTest(unittest.TestCase):
     """Tests of text representations of OptionSet. (unittest.TestCase)"""
 
     def setUp(self):
-        self.game = game.Game(player.Bot(), 'none')
+        self.game = game.Game(unitility.AutoBot(), 'none')
         self.option_set = self.game.option_set
         self.option_set.add_option('floats')
 
@@ -60,15 +61,65 @@ class ParseTest(unittest.TestCase):
         self.option_set.add_option('spam')
         self.option_set.add_option('three', ['3'], int, 5)
 
+    def testAlias(self):
+        """Test an option alias."""
+        self.option_set.parse_settings('3=5')
+        self.assertEqual('three=5', self.option_set.settings_text)
+
     def testBasic(self):
         """Test a simple option."""
         self.option_set.parse_settings('spam')
         self.assertEqual('spam', self.option_set.settings_text)
 
+    def testDoubleEquals(self):
+        """Test an invalid option."""
+        self.option_set.parse_settings('one=1=juan')
+        self.assertEqual("Syntax error with equals: 'one=1=juan'.", self.option_set.errors[0])
+
     def testEquals(self):
         """Test setting an option value."""
         self.option_set.parse_settings('three=5')
         self.assertEqual('three=5', self.option_set.settings_text)
+
+    def testInvalid(self):
+        """Test an invalid option."""
+        self.option_set.parse_settings('splitter')
+        self.assertEqual('Unrecognized option: splitter.', self.option_set.errors[0])
+
+    def testInvalidEquals(self):
+        """Test an invalid option with a value assigned."""
+        self.option_set.parse_settings('splitter = jpf')
+        self.assertEqual('Unrecognized option: splitter.', self.option_set.errors[0])
+
+    def testInvalidMixedError(self):
+        """Test error for an invalid option mixed with other options."""
+        self.option_set.parse_settings('spam splitter three = 3')
+        self.assertEqual('Unrecognized option: splitter.', self.option_set.errors[0])
+
+    def testInvalidMixedParse(self):
+        """Test parsing valid options when mixed with an invalid one."""
+        self.option_set.parse_settings('spam splitter three = 3')
+        self.assertEqual('spam three=3', self.option_set.settings_text)
+
+    def testInvalidRepeat(self):
+        """Test an invalid option with a repeat."""
+        self.option_set.parse_settings('splitter * 3')
+        self.assertEqual('Unrecognized option: splitter.', self.option_set.errors[0])
+
+    def testRepeat(self):
+        """Test repeatedly setting an option value."""
+        self.option_set.parse_settings('spam * 3')
+        self.assertEqual('spam spam spam', self.option_set.settings_text)
+
+    def testRepeatInvalid(self):
+        """Test an invalid repeat value."""
+        self.option_set.parse_settings('spam * three')
+        self.assertEqual("Invalid repeat value: 'spam*three'.", self.option_set.errors[0])
+
+    def testRepeatNegative(self):
+        """Test a negative repeat value."""
+        self.option_set.parse_settings('spam * -1')
+        self.assertEqual('', self.option_set.settings_text)
 
     def testEqualsSpace(self):
         """Test setting an option value with spaces."""
@@ -100,7 +151,7 @@ class ReprTest(unittest.TestCase):
     """Test the repr of an OptionSet. (unittest.TestCase)"""
 
     def setUp(self):
-        self.game = game.Game(player.Bot(), '')
+        self.game = game.Game(unitility.AutoBot(), '')
         self.options = options.OptionSet(self.game)
 
     def testOneOption(self):
@@ -118,6 +169,67 @@ class ReprTest(unittest.TestCase):
     def testZeroOptions(self):
         """Test repr(OptionSet) with zero options."""
         self.assertEqual('<OptionSet for Null with 0 options>', repr(self.options))
+
+
+class TakeActionTest(unittest.TestCase):
+    """Tests of OptionSet.take_action."""
+
+    def setUp(self):
+        self.game = game.Game(unitility.AutoBot(), '')
+        self.options = options.OptionSet(self.game)
+
+    def testAppend(self):
+        """Test appending a value to the option."""
+        self.options.settings['test'] = ['spam', 'spam']
+        self.options.take_action({'action': 'append', 'target': 'test'}, 'eggs')
+        self.assertEqual(['spam', 'spam', 'eggs'], self.options.settings['test'])
+
+    def testAppendEmpty(self):
+        """Test appending to an empty value to the option."""
+        self.options.take_action({'action': 'append', 'target': 'test'}, 'eggs')
+        self.assertEqual(['eggs'], self.options.settings['test'])
+
+    def testAssign(self):
+        """Test assigning a value to the option."""
+        self.options.take_action({'action': 'assign', 'target': 'test'}, 108)
+        self.assertEqual(108, self.options.settings['test'])
+
+    def testBotList(self):
+        """Test assigning a bot with parameters."""
+        self.game.bot_classes = {'fred': object, 'george': int}
+        self.options.take_action({'action': 'bot', 'target': 'fred'}, (1, 0, 8))
+        self.assertEqual([(object, (1, 0, 8))], self.options.settings['bots'])
+
+    def testBotPlain(self):
+        """Test assigning a bot with no parameters."""
+        self.game.bot_classes = {'fred': object, 'george': int}
+        self.options.take_action({'action': 'bot', 'target': 'george'}, True)
+        self.assertEqual([(int, [])], self.options.settings['bots'])
+
+    def testBotSecond(self):
+        """Test assigning a second bot"""
+        self.game.bot_classes = {'fred': object, 'george': int}
+        self.options.settings['bots'] = [(object, ['crazy'])]
+        self.options.take_action({'action': 'bot', 'target': 'george'}, True)
+        self.assertEqual([(object, ['crazy']), (int, [])], self.options.settings['bots'])
+
+    def testBotSingle(self):
+        """Test assigning a bot with one parameter."""
+        self.game.bot_classes = {'fred': object, 'george': int}
+        self.options.take_action({'action': 'bot', 'target': 'fred'}, 'crazy')
+        self.assertEqual([(object, ['crazy'])], self.options.settings['bots'])
+
+    def testKey(self):
+        """Test assigning an option value to a key."""
+        self.game.test = {}
+        self.options.take_action({'action': 'key=test', 'target': self.game.test}, 108)
+        self.assertEqual(108, self.game.test['test'])
+
+    def testMap(self):
+        """Test assigning an option value from a mapping."""
+        self.game.test = {'low': 108, 'high': 801}
+        self.options.take_action({'action': 'map', 'value': self.game.test, 'target': 'test'}, 'high')
+        self.assertEqual(801, self.options.settings['test'])
 
 
 if __name__ == '__main__':
