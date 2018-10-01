@@ -545,6 +545,47 @@ class Pig(game.Game):
         self.option_set.handle_settings(self.raw_options)
         random.shuffle(self.players)
 
+    def player_action_test(self, player):
+        """
+        Have one player roll until terminal number or they choose to stop. (bool)
+
+        Parameters:
+        player: The player whose turn it is. (Player)
+        """
+        self.do_scores('')
+        roll = self.die.roll()
+        space = False
+        go = True
+        while go:
+            if space:
+                player.tell()
+                space = False
+            if roll == self.bad:
+                # Handle ending the turn.
+                player.tell('You rolled a {}, your turn is over.'.format(self.bad))
+                go = False
+                break
+            else:
+                # Handle scoring.
+                self.turn_score += roll
+                player.tell('You rolled a {}, your turn score is {}'.format(roll, self.turn_score))
+            move = player.ask('Would you like to roll or stop? ')
+            if move.lower() in ('s', 'stop', 'whoa'):
+                # End the turn and score.
+                self.scores[player.name] += self.turn_score
+                go = False
+            elif move.lower() in ('r', 'roll', 'go'):
+                # Roll and risk scoring nothing.
+                roll = self.die.roll()
+            else:
+                go = self.handle_cmd(move)
+                space = True
+        if not self.force_end:
+            # Inform the player of their current total score.
+            player.tell("{}'s score is now {}.".format(player.name, self.scores[player.name]))
+            self.turn_score = 0
+        return go
+
     def player_action(self, player):
         """
         Have one player roll until terminal number or they choose to stop. (bool)
@@ -577,8 +618,9 @@ class Pig(game.Game):
         else:
             # Handle other commands.
             go = self.handle_cmd(move)
-            player.tell()
-        if not go:
+            if not self.force_end:
+                player.tell()
+        if not go and not self.force_end:
             # Inform the player of their current total score.
             player.tell("{}'s score is now {}.".format(player.name, self.scores[player.name]))
             self.turn_score = 0
