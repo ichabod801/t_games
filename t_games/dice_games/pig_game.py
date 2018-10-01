@@ -508,7 +508,6 @@ class Pig(game.Game):
         self.human.tell()
         for score, name in scores:
             self.human.tell('{}: {}'.format(name, score))
-        self.human.tell()
         return True
 
     def game_over(self):
@@ -556,6 +555,8 @@ class Pig(game.Game):
         if self.turn_score:
             move = player.ask('Would you like to roll or stop? ')
         else:
+            # Show the scores at the start of the turn.
+            self.do_scores('')
             player.tell()
             move = 'roll'
         if move.lower() in ('s', 'stop', 'whoa'):
@@ -577,7 +578,9 @@ class Pig(game.Game):
         else:
             # Handle other commands.
             go = self.handle_cmd(move)
-        if not go:
+            if not self.force_end:
+                player.tell()
+        if not go and not self.force_end:
             # Inform the player of their current total score.
             player.tell("{}'s score is now {}.".format(player.name, self.scores[player.name]))
             self.turn_score = 0
