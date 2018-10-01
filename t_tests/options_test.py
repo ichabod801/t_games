@@ -71,6 +71,31 @@ class ParseTest(unittest.TestCase):
         self.option_set.parse_settings('three=5')
         self.assertEqual('three=5', self.option_set.settings_text)
 
+    def testInvalid(self):
+        """Test an invalid option."""
+        self.option_set.parse_settings('splitter')
+        self.assertEqual('Unrecognized option: splitter.', self.option_set.errors[0])
+
+    def testInvalidEquals(self):
+        """Test an invalid option with a value assigned."""
+        self.option_set.parse_settings('splitter = jpf')
+        self.assertEqual('Unrecognized option: splitter.', self.option_set.errors[0])
+
+    def testInvalidMixedError(self):
+        """Test error for an invalid option mixed with other options."""
+        self.option_set.parse_settings('spam splitter three = 3')
+        self.assertEqual('Unrecognized option: splitter.', self.option_set.errors[0])
+
+    def testInvalidMixedParse(self):
+        """Test parsing valid options when mixed with an invalid one."""
+        self.option_set.parse_settings('spam splitter three = 3')
+        self.assertEqual('spam three=3', self.option_set.settings_text)
+
+    def testInvalidRepeat(self):
+        """Test an invalid option with a repeat."""
+        self.option_set.parse_settings('splitter * 3')
+        self.assertEqual('Unrecognized option: splitter.', self.option_set.errors[0])
+
     def testRepeat(self):
         """Test repeatedly setting an option value."""
         self.option_set.parse_settings('spam * 3')
