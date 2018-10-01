@@ -61,10 +61,20 @@ class ParseTest(unittest.TestCase):
         self.option_set.add_option('spam')
         self.option_set.add_option('three', ['3'], int, 5)
 
+    def testAlias(self):
+        """Test an option alias."""
+        self.option_set.parse_settings('3=5')
+        self.assertEqual('three=5', self.option_set.settings_text)
+
     def testBasic(self):
         """Test a simple option."""
         self.option_set.parse_settings('spam')
         self.assertEqual('spam', self.option_set.settings_text)
+
+    def testDoubleEquals(self):
+        """Test an invalid option."""
+        self.option_set.parse_settings('one=1=juan')
+        self.assertEqual("Syntax error with equals: 'one=1=juan'.", self.option_set.errors[0])
 
     def testEquals(self):
         """Test setting an option value."""
