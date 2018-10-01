@@ -26,6 +26,34 @@ class CardTest(unittest.TestCase):
         self.jack = cards.Card('J', 'H')
         self.joker = cards.Card('X', 'D')
 
+    def testEqualCard(self):
+        """Test equality of card and card."""
+        self.assertEqual(cards.Card('A', 'S'), self.ace)
+
+    def testEqualCardLower(self):
+        """Test equality of card and lower case string."""
+        self.assertEqual('jh', self.jack)
+
+    def testEqualCardUpper(self):
+        """Test equality of card and upper case string."""
+        self.assertEqual('XD', self.joker)
+
+    def testNotEqualCard(self):
+        """Test inequality of card and card."""
+        self.assertNotEqual(cards.Card('A', 'C'), self.ace)
+
+    def testNotEqualCardLower(self):
+        """Test inequality of card and lower case string."""
+        self.assertNotEqual('js', self.jack)
+
+    def testNotEqualCardUpper(self):
+        """Test inequality of card and upper case string."""
+        self.assertNotEqual('2D', self.joker)
+
+    def testNotEqualNotImplemented(self):
+        """Test inequality of card and integer."""
+        self.assertNotEqual(108, self.ace)
+
     def testRepr(self):
         """Test the computer readable text representation."""
         self.assertEqual("Card('A', 'S')", repr(self.ace))

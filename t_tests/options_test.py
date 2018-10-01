@@ -8,6 +8,7 @@ AllRangeTest: Tests of the all inclusive range. (unittest.TestCase)
 OptionTextTest: Tests of text representations of OptionSet. (unittest.TestCase)
 ParseTest: Tests of OptionSet.parse_settings changing settings_text (TestCase)
 ReprTest: Test the repr of an OptionSet. (unittest.TestCase)
+TakeActionTest: Tests of OptionSet.take_action. (unittest.TestCase)
 """
 
 
@@ -172,7 +173,7 @@ class ReprTest(unittest.TestCase):
 
 
 class TakeActionTest(unittest.TestCase):
-    """Tests of OptionSet.take_action."""
+    """Tests of OptionSet.take_action. (unittest.TestCase)"""
 
     def setUp(self):
         self.game = game.Game(unitility.AutoBot(), '')
