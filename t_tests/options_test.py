@@ -71,6 +71,21 @@ class ParseTest(unittest.TestCase):
         self.option_set.parse_settings('three=5')
         self.assertEqual('three=5', self.option_set.settings_text)
 
+    def testRepeat(self):
+        """Test repeatedly setting an option value."""
+        self.option_set.parse_settings('spam * 3')
+        self.assertEqual('spam spam spam', self.option_set.settings_text)
+
+    def testRepeatInvalid(self):
+        """Test an invalid repeat value."""
+        self.option_set.parse_settings('spam * three')
+        self.assertEqual("Invalid repeat value: 'spam*three'.", self.option_set.errors[0])
+
+    def testRepeatNegative(self):
+        """Test a negative repeat value."""
+        self.option_set.parse_settings('spam * -1')
+        self.assertEqual('', self.option_set.settings_text)
+
     def testEqualsSpace(self):
         """Test setting an option value with spaces."""
         self.option_set.parse_settings('three = 5')
