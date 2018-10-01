@@ -171,5 +171,18 @@ class ReprTest(unittest.TestCase):
         self.assertEqual('<OptionSet for Null with 0 options>', repr(self.options))
 
 
+class TakeActionTest(unittest.TestCase):
+    """Tests of OptionSet.take_action."""
+
+    def setUp(self):
+        self.game = game.Game(unitility.AutoBot(), '')
+        self.options = options.OptionSet(self.game)
+
+    def testAssign(self):
+        """Test assigning a value to the option."""
+        self.options.take_action({'action': 'assign', 'target': 'test'}, 108)
+        self.assertEqual(108, self.options.settings['test'])
+
+
 if __name__ == '__main__':
     unittest.main()
