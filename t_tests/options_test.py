@@ -16,6 +16,7 @@ import unittest
 from t_games import game
 from t_games import options
 from t_games import player
+import unitility
 
 
 class AllRangeTest(unittest.TestCase):
@@ -38,7 +39,7 @@ class OptionTextTest(unittest.TestCase):
     """Tests of text representations of OptionSet. (unittest.TestCase)"""
 
     def setUp(self):
-        self.game = game.Game(player.Bot(), 'none')
+        self.game = game.Game(unitility.AutoBot(), 'none')
         self.option_set = self.game.option_set
         self.option_set.add_option('floats')
 
@@ -100,7 +101,7 @@ class ReprTest(unittest.TestCase):
     """Test the repr of an OptionSet. (unittest.TestCase)"""
 
     def setUp(self):
-        self.game = game.Game(player.Bot(), '')
+        self.game = game.Game(unitility.AutoBot(), '')
         self.options = options.OptionSet(self.game)
 
     def testOneOption(self):
