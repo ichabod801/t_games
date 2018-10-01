@@ -178,10 +178,58 @@ class TakeActionTest(unittest.TestCase):
         self.game = game.Game(unitility.AutoBot(), '')
         self.options = options.OptionSet(self.game)
 
+    def testAppend(self):
+        """Test appending a value to the option."""
+        self.options.settings['test'] = ['spam', 'spam']
+        self.options.take_action({'action': 'append', 'target': 'test'}, 'eggs')
+        self.assertEqual(['spam', 'spam', 'eggs'], self.options.settings['test'])
+
+    def testAppendEmpty(self):
+        """Test appending to an empty value to the option."""
+        self.options.take_action({'action': 'append', 'target': 'test'}, 'eggs')
+        self.assertEqual(['eggs'], self.options.settings['test'])
+
     def testAssign(self):
         """Test assigning a value to the option."""
         self.options.take_action({'action': 'assign', 'target': 'test'}, 108)
         self.assertEqual(108, self.options.settings['test'])
+
+    def testBotList(self):
+        """Test assigning a bot with parameters."""
+        self.game.bot_classes = {'fred': object, 'george': int}
+        self.options.take_action({'action': 'bot', 'target': 'fred'}, (1, 0, 8))
+        self.assertEqual([(object, (1, 0, 8))], self.options.settings['bots'])
+
+    def testBotPlain(self):
+        """Test assigning a bot with no parameters."""
+        self.game.bot_classes = {'fred': object, 'george': int}
+        self.options.take_action({'action': 'bot', 'target': 'george'}, True)
+        self.assertEqual([(int, [])], self.options.settings['bots'])
+
+    def testBotSecond(self):
+        """Test assigning a second bot"""
+        self.game.bot_classes = {'fred': object, 'george': int}
+        self.options.settings['bots'] = [(object, ['crazy'])]
+        self.options.take_action({'action': 'bot', 'target': 'george'}, True)
+        self.assertEqual([(object, ['crazy']), (int, [])], self.options.settings['bots'])
+
+    def testBotSingle(self):
+        """Test assigning a bot with one parameter."""
+        self.game.bot_classes = {'fred': object, 'george': int}
+        self.options.take_action({'action': 'bot', 'target': 'fred'}, 'crazy')
+        self.assertEqual([(object, ['crazy'])], self.options.settings['bots'])
+
+    def testKey(self):
+        """Test assigning an option value to a key."""
+        self.game.test = {}
+        self.options.take_action({'action': 'key=test', 'target': self.game.test}, 108)
+        self.assertEqual(108, self.game.test['test'])
+
+    def testMap(self):
+        """Test assigning an option value from a mapping."""
+        self.game.test = {'low': 108, 'high': 801}
+        self.options.take_action({'action': 'map', 'value': self.game.test, 'target': 'test'}, 'high')
+        self.assertEqual(801, self.options.settings['test'])
 
 
 if __name__ == '__main__':
