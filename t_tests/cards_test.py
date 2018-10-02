@@ -222,6 +222,12 @@ class DeckTest(unittest.TestCase):
         valid_suit = card.suit in self.deck.suits
         self.assertTrue(isinstance(card, cards.Card) and valid_rank and valid_suit)
 
+    def testDealDown(self):
+        """Test that Deck.deal returns a down card."""
+        self.deck.shuffle()
+        card = self.deck.deal()
+        self.assertFalse(card.up)
+
     def testDealEmpty(self):
         """Test deck.deal with an empty deck."""
         self.deck.shuffle()
@@ -241,6 +247,12 @@ class DeckTest(unittest.TestCase):
         check = self.deck.cards[-1]
         card = self.deck.deal()
         self.assertEqual(check, card)
+
+    def testDealUp(self):
+        """Test that Deck.deal can return a up card."""
+        self.deck.shuffle()
+        card = self.deck.deal(up = True)
+        self.assertTrue(card.up)
 
     def testRepr(self):
         """Test the repr of a fresh deck."""
