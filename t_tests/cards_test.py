@@ -254,6 +254,48 @@ class DeckTest(unittest.TestCase):
         card = self.deck.deal(up = True)
         self.assertTrue(card.up)
 
+    def testDiscard(self):
+        """Test discarding a card."""
+        self.deck.shuffle()
+        card = self.deck.deal()
+        self.deck.discard(card)
+        self.assertEqual([card], self.deck.discards)
+
+    def testDiscardDeal(self):
+        """Test discarding a card after dealing some cards."""
+        self.deck.shuffle()
+        for deal in range(9):
+            card = self.deck.deal()
+        check = self.deck.deal()
+        for deal in range(9):
+            card = self.deck.deal()
+        self.deck.discard(check)
+        self.assertEqual([check], self.deck.discards)
+
+    def testDiscardDown(self):
+        """Test discarding a card face down."""
+        self.deck.shuffle()
+        card = self.deck.deal(up = True)
+        self.deck.discard(card)
+        self.assertFalse(card.up)
+
+    def testDiscardMultiple(self):
+        """Test discarding multiple cards."""
+        self.deck.shuffle()
+        check = []
+        for deal in range(9):
+            card = self.deck.deal()
+            self.deck.discard(card)
+            check.append(card)
+        self.assertEqual(check, self.deck.discards)
+
+    def testDiscardUp(self):
+        """Test discarding a card face down."""
+        self.deck.shuffle()
+        card = self.deck.deal()
+        self.deck.discard(card, up = True)
+        self.assertTrue(card.up)
+
     def testRepr(self):
         """Test the repr of a fresh deck."""
         self.assertEqual('<Deck with 52 cards remaining>', repr(self.deck))
