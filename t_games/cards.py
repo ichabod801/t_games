@@ -301,8 +301,9 @@ class Deck(object):
         card_text: The string version of the card. (str)
         face_up = Flag for dealing the card face up. (bool)
         """
-        card = self.cards.index(card)
+        card = self.cards[self.cards.index(card_text)]
         self.cards.remove(card)
+        card.up = up
         return card
 
     def pick(self, card_index, up = True):

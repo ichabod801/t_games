@@ -296,6 +296,51 @@ class DeckTest(unittest.TestCase):
         self.deck.discard(card, up = True)
         self.assertTrue(card.up)
 
+    def testForceCard(self):
+        """Test that Deck.force returns a card."""
+        self.deck.shuffle()
+        card = self.deck.force('9S')
+        self.assertTrue(isinstance(card, cards.Card))
+
+    def testForceDown(self):
+        """Test that Deck.force can return a down card."""
+        self.deck.shuffle()
+        card = self.deck.force('QH', up = False)
+        self.assertFalse(card.up)
+
+    def testForcePlain(self):
+        """Test that forced cards are no longer in the deck."""
+        self.deck.shuffle()
+        card = self.deck.force('AC')
+        self.assertNotIn(card, self.deck.cards)
+
+    def testForceLower(self):
+        """Test forcing a card from the deck with lower case text."""
+        self.deck.shuffle()
+        card = self.deck.force('tc')
+        check = cards.Card('T', 'C')
+        self.assertEqual(check, card)
+
+    def testForceMixed(self):
+        """Test forcing a card from the deck with mixed case text."""
+        self.deck.shuffle()
+        card = self.deck.force('Jd')
+        check = cards.Card('J', 'D')
+        self.assertEqual(check, card)
+
+    def testForcePlain(self):
+        """Test forcing a card from the deck."""
+        self.deck.shuffle()
+        card = self.deck.force('8H')
+        check = cards.Card('8', 'H')
+        self.assertEqual(check, card)
+
+    def testForceUp(self):
+        """Test that Deck.force returns an up card."""
+        self.deck.shuffle()
+        card = self.deck.force('KS')
+        self.assertTrue(card.up)
+
     def testRepr(self):
         """Test the repr of a fresh deck."""
         self.assertEqual('<Deck with 52 cards remaining>', repr(self.deck))
