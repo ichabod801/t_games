@@ -604,7 +604,7 @@ class Pig(game.Game):
         self.option_set.add_option(name = 'scoring-turns', aliases = ['t'], action = 'bot', default = None,
             check = lambda param: param <= 100, converter = int)
         self.option_set.add_option(name = 'pace-race', aliases = ['pr'], action = 'bot', default = None,
-            check = lambda params: len(params) <= 2 and max(params) <= 100, converter = int)
+            check = lambda params: len(params) <= 3 and max(params) <= 100, converter = int)
         self.option_set.add_option(name = 'rolls', aliases = ['r'], action = 'bot', default = None,
             check = lambda param: param <= 100, converter = int)
         # Pre-set bots.
