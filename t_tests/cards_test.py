@@ -102,6 +102,18 @@ class CardTest(unittest.TestCase):
         """Test inequality of card and integer."""
         self.assertNotEqual(108, self.ace)
 
+    def testLessThanEqal(self):
+        """Test a less than comparison of equalcards."""
+        self.assertFalse(self.jack < self.jack)
+
+    def testLessThanNo(self):
+        """Test an incorrect less than comparison of cards."""
+        self.assertFalse(self.jack < self.ace)
+
+    def testLessThanYes(self):
+        """Test a correct less than comparison of cards."""
+        self.assertTrue(self.ace < self.jack)
+
     def testRepr(self):
         """Test the computer readable text representation."""
         self.assertEqual("Card('A', 'S')", repr(self.ace))
