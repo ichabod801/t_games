@@ -102,7 +102,7 @@ class CardTest(unittest.TestCase):
         """Test inequality of card and integer."""
         self.assertNotEqual(108, self.ace)
 
-    def testLessThanEqal(self):
+    def testLessThanEqual(self):
         """Test a less than comparison of equalcards."""
         self.assertFalse(self.jack < self.jack)
 
@@ -113,6 +113,26 @@ class CardTest(unittest.TestCase):
     def testLessThanYes(self):
         """Test a correct less than comparison of cards."""
         self.assertTrue(self.ace < self.jack)
+
+    def testRegExBackwards(self):
+        """Test the card regular expression on backwards card text."""
+        self.assertIsNone(self.ace.card_re.match('dk'))
+
+    def testRegExLower(self):
+        """Test the card regular expression on lower case card text."""
+        self.assertIsNotNone(self.ace.card_re.match('kd'))
+
+    def testRegExMixed(self):
+        """Test the card regular expression on mexed case card text."""
+        self.assertIsNotNone(self.ace.card_re.match('aC'))
+
+    def testRegExValid(self):
+        """Test the card regular expression on valid card text."""
+        self.assertIsNotNone(self.ace.card_re.match('9C'))
+
+    def testRegExWord(self):
+        """Test the card regular expression on an English word."""
+        self.assertIsNone(self.ace.card_re.match('feline'))
 
     def testRepr(self):
         """Test the computer readable text representation."""
