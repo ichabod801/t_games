@@ -178,6 +178,70 @@ class DeckTest(unittest.TestCase):
     def setUp(self):
         self.deck = cards.Deck()
 
+    def testCut(self):
+        """Test cutting a deck of cards."""
+        self.deck.shuffle()
+        check = self.deck.cards[:]
+        for card in range(18):
+            check.append(check.pop(0))
+        self.deck.cut(18)
+        self.assertEqual(check, self.deck.cards)
+
+    def testCutDeal(self):
+        """Test cutting a deck of cards after some have been dealt."""
+        self.deck.shuffle()
+        for deal in range(18):
+            card = self.deck.deal()
+        check = self.deck.cards[:]
+        for card in range(18):
+            check.append(check.pop(0))
+        self.deck.cut(18)
+        self.assertEqual(check, self.deck.cards)
+
+    def testCutMod(self):
+        """Test cutting a deck of cards with a large cut number."""
+        self.deck.shuffle()
+        check = self.deck.cards[:]
+        for card in range(4):
+            check.append(check.pop(0))
+        self.deck.cut(108)
+        self.assertEqual(check, self.deck.cards)
+
+    def testCutNot(self):
+        """Test not really cutting a deck of cards."""
+        self.deck.shuffle()
+        check = self.deck.cards[:]
+        self.deck.cut(0)
+        self.assertEqual(check, self.deck.cards)
+
+    def testDealCard(self):
+        """Test that Deck.deal returns a valid card."""
+        self.deck.shuffle()
+        card = self.deck.deal()
+        valid_rank = card.rank in self.deck.ranks
+        valid_suit = card.suit in self.deck.suits
+        self.assertTrue(isinstance(card, cards.Card) and valid_rank and valid_suit)
+
+    def testDealEmpty(self):
+        """Test deck.deal with an empty deck."""
+        self.deck.shuffle()
+        self.deck.cards, self.deck.discards = self.deck.discards, self.deck.cards
+        card = self.deck.deal()
+        self.assertEqual(51, len(self.deck.cards))
+
+    def testDealGone(self):
+        """Test that Deck.deal removes the card from the deck."""
+        self.deck.shuffle()
+        card = self.deck.deal()
+        self.assertFalse(card in self.deck.cards)
+
+    def testDealTop(self):
+        """Test that Deck.deal deals the top card of the deck."""
+        self.deck.shuffle()
+        check = self.deck.cards[-1]
+        card = self.deck.deal()
+        self.assertEqual(check, card)
+
     def testRepr(self):
         """Test the repr of a fresh deck."""
         self.assertEqual('<Deck with 52 cards remaining>', repr(self.deck))
