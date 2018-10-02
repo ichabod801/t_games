@@ -26,6 +26,30 @@ class CardTest(unittest.TestCase):
         self.jack = cards.Card('J', 'H')
         self.joker = cards.Card('X', 'D')
 
+    def testAboveBelow(self):
+        """Test Card.above when below."""
+        self.assertFalse(self.jack.above(cards.Card('Q', 'H')))
+
+    def testAboveOne(self):
+        """Test Card.above when above."""
+        self.assertTrue(self.jack.above(cards.Card('T', 'C')))
+
+    def testAboveTwoNo(self):
+        """Test Card.above when too far above."""
+        self.assertFalse(self.jack.above(cards.Card('9', 'D')))
+
+    def testAboveTwoYes(self):
+        """Test Card.above with multi-rank distance."""
+        self.assertTrue(self.jack.above(cards.Card('9', 'D'), n = 2))
+
+    def testAboveWrapNo(self):
+        """Test Card.above with wrapped ranks."""
+        self.assertFalse(self.ace.above(cards.Card('K', 'S')))
+
+    def testAboveWrapYes(self):
+        """Test Card.above with wrapped ranks."""
+        self.assertTrue(self.ace.above(cards.Card('K', 'S'), wrap_ranks = True))
+
     def testEqualCard(self):
         """Test equality of card and card."""
         self.assertEqual(cards.Card('A', 'S'), self.ace)
