@@ -4,6 +4,7 @@ options_test.py
 Unit testing of options.py
 
 Classes:
+AddOptionTest: Tests of adding options to OptionSets. (unittest.TestCase)
 AllRangeTest: Tests of the all inclusive range. (unittest.TestCase)
 OptionTextTest: Tests of text representations of OptionSet. (unittest.TestCase)
 ParseTest: Tests of OptionSet.parse_settings changing settings_text (TestCase)
@@ -17,6 +18,97 @@ from t_games import game
 from t_games import options
 from t_games import player
 import unitility
+
+
+class AddOptionTest(unittest.TestCase):
+    """Tests of adding options to OptionSet objects. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.game = game.Game(unitility.AutoBot(), 'none')
+        self.option_set = self.game.option_set
+
+    def testAddAlias(self):
+        """Test adding an option with an alias."""
+        self.option_set.add_option('spam', ['s', 'spiced-ham'])
+        check = {'s': 'spam', 'spiced-ham': 'spam', 'spam': 'spam'}
+        self.assertEqual(check, self.option_set.aliases)
+
+    def testAddBoolQuestion(self):
+        """Test the question for an option with a yes or no question."""
+        query = 'Would you like some spam with your spam? '
+        self.option_set.add_option('spam', question = query + 'bool')
+        self.assertEqual(query, self.option_set.definitions[0]['question'])
+
+    def testAddBoolQuestionType(self):
+        """Test the question type for an option with a yes or no question."""
+        query = 'Would you like some spam with your spam? '
+        self.option_set.add_option('spam', question = query + 'bool')
+        self.assertEqual('bool', self.option_set.definitions[0]['question_type'])
+
+    def testAddBotCountQuestionType(self):
+        """Test the question type for a bot option with paramters."""
+        self.option_set.add_option('spam-bot', action = 'bot', value = (1, 2))
+        self.assertEqual('bot-count', self.option_set.definitions[0]['question_type'])
+
+    def testAddBotParamQuestionType(self):
+        """Test the question type for a bot option without paramters."""
+        self.option_set.add_option('spam-bot', action = 'bot', value = None)
+        self.assertEqual('bot-param', self.option_set.definitions[0]['question_type'])
+
+    def testAddDefaultAction(self):
+        """Test adding an option with the default action."""
+        self.option_set.add_option('spam')
+        self.assertEqual('assign', self.option_set.definitions[0]['action'])
+
+    def testAddDefaultConverter(self):
+        """Test adding an option with the default converter."""
+        self.option_set.add_option('spam')
+        self.assertEqual(str, self.option_set.definitions[0]['converter'])
+
+    def testAddDefaultDefault(self):
+        """Test adding an option with the default default."""
+        self.option_set.add_option('spam')
+        self.assertEqual(False, self.option_set.definitions[0]['default'])
+
+    def testAddDefaultError(self):
+        """Test adding an option with the default error text."""
+        self.option_set.add_option('spam')
+        self.assertEqual('', self.option_set.definitions[0]['error_text'])
+
+    def testAddDefaultName(self):
+        """Test adding an option with the default name."""
+        self.option_set.add_option('spam')
+        self.assertEqual('spam', self.option_set.definitions[0]['name'])
+
+    def testAddDefaultQuestion(self):
+        """Test adding an option with the default question."""
+        self.option_set.add_option('spam')
+        self.assertEqual('', self.option_set.definitions[0]['question'])
+
+    def testAddDefaultQuestionType(self):
+        """Test adding an option with the default question type."""
+        self.option_set.add_option('spam')
+        self.assertEqual('none', self.option_set.definitions[0]['question_type'])
+
+    def testAddDefaultTarget(self):
+        """Test adding an option with the default target."""
+        self.option_set.add_option('spam')
+        self.assertEqual('spam', self.option_set.definitions[0]['target'])
+
+    def testAddDefaultValue(self):
+        """Test adding an option with the default value."""
+        self.option_set.add_option('spam')
+        self.assertEqual(True, self.option_set.definitions[0]['value'])
+
+    def testAddHyphenated(self):
+        """Test adding an option with a hyphenated name."""
+        self.option_set.add_option('spam-spam-eggs')
+        self.assertEqual('spam_spam_eggs', self.option_set.definitions[0]['target'])
+
+    def testAddHyphenatedBot(self):
+        """Test adding a bot option with a hyphenated name."""
+        self.option_set.add_option('spam-bot', action = 'bot')
+        self.assertEqual('spam-bot', self.option_set.definitions[0]['target'])
 
 
 class AllRangeTest(unittest.TestCase):

@@ -597,16 +597,16 @@ class Pig(game.Game):
             question = 'How many repeats should the shuffle die have (return or 0 for normal die)? ')
         # Parameterized bots.
         self.option_set.add_option('value', ['v'], action = 'bot', default = None, converter = int,
-            check = lambda params: len(params) <= 1 and max(params) <= 100)
+            check = lambda param: param <= 100)
         self.option_set.add_option('base-pace-race', aliases = ['bpr'], action = 'bot',
             default = None, check = lambda params: len(params) <= 3 and max(params) <= 100,
             converter = int)
         self.option_set.add_option(name = 'scoring-turns', aliases = ['t'], action = 'bot', default = None,
-            check = lambda params: len(params) <= 1 and max(params) <= 100, converter = int)
+            check = lambda param: param <= 100, converter = int)
         self.option_set.add_option(name = 'pace-race', aliases = ['pr'], action = 'bot', default = None,
-            check = lambda params: len(params) <= 2 and max(params) <= 100, converter = int)
+            check = lambda params: len(params) <= 3 and max(params) <= 100, converter = int)
         self.option_set.add_option(name = 'rolls', aliases = ['r'], action = 'bot', default = None,
-            check = lambda params: len(params) <= 1 and max(params) <= 100, converter = int)
+            check = lambda param: param <= 100, converter = int)
         # Pre-set bots.
         self.option_set.add_option('stupid', ['st'], action = 'bot', target = 'value', value = (),
             default = None)
