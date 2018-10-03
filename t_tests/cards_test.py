@@ -341,6 +341,36 @@ class DeckTest(unittest.TestCase):
         card = self.deck.force('KS')
         self.assertTrue(card.up)
 
+    def testPickCard(self):
+        """Test that Deck.pick gets the right card."""
+        self.deck.shuffle()
+        check = self.deck.cards[18]
+        self.assertEqual(check, self.deck.pick(18))
+
+    def testPickUp(self):
+        """Test that Deck.pick can get a face down card."""
+        self.deck.shuffle()
+        card = self.deck.pick(18, up = False)
+        self.assertFalse(card.up)
+
+    def testPickGone(self):
+        """Test that Deck.pick removes the card."""
+        self.deck.shuffle()
+        check = self.deck.pick(18)
+        self.assertNotIn(check, self.deck.cards)
+
+    def testPickLarge(self):
+        """Test that Deck.pick gets the right card with a large number."""
+        self.deck.shuffle()
+        check = self.deck.cards[8]
+        self.assertEqual(check, self.deck.pick(123456))
+
+    def testPickUp(self):
+        """Test that Deck.pick gets a face up card."""
+        self.deck.shuffle()
+        card = self.deck.pick(18)
+        self.assertTrue(card.up)
+
     def testRepr(self):
         """Test the repr of a fresh deck."""
         self.assertEqual('<Deck with 52 cards remaining>', repr(self.deck))

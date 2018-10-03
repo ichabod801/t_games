@@ -314,7 +314,9 @@ class Deck(object):
         card_index: A number to determine the card picked. (int)
         up: Flag for picking the card face up. (bool)
         """
-        return self.cards.pop(card_index % len(self.cards))
+        card = self.cards.pop(card_index % len(self.cards))
+        card.up = up
+        return card
 
     def shuffle(self, number = None):
         """
