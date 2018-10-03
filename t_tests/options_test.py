@@ -55,18 +55,50 @@ class AddOptionTest(unittest.TestCase):
         self.option_set.add_option('spam-bot', action = 'bot', value = None)
         self.assertEqual('bot-param', self.option_set.definitions[0]['question_type'])
 
-    def testAddDefault(self):
-        """Test adding an option using all the defaults."""
+    def testAddDefaultAction(self):
+        """Test adding an option with the default action."""
+        self.option_set.add_option('spam')
+        self.assertEqual('assign', self.option_set.definitions[0]['action'])
+
+    def testAddDefaultConverter(self):
+        """Test adding an option with the default converter."""
+        self.option_set.add_option('spam')
+        self.assertEqual(str, self.option_set.definitions[0]['converter'])
+
+    def testAddDefaultDefault(self):
+        """Test adding an option with the default default."""
+        self.option_set.add_option('spam')
+        self.assertEqual(False, self.option_set.definitions[0]['default'])
+
+    def testAddDefaultError(self):
+        """Test adding an option with the default error text."""
+        self.option_set.add_option('spam')
+        self.assertEqual('', self.option_set.definitions[0]['error_text'])
+
+    def testAddDefaultName(self):
+        """Test adding an option with the default name."""
         self.option_set.add_option('spam')
         self.assertEqual('spam', self.option_set.definitions[0]['name'])
-        self.assertEqual(str, self.option_set.definitions[0]['converter'])
-        self.assertEqual(False, self.option_set.definitions[0]['default'])
-        self.assertEqual(True, self.option_set.definitions[0]['value'])
-        self.assertEqual('spam', self.option_set.definitions[0]['target'])
-        self.assertEqual('assign', self.option_set.definitions[0]['action'])
+
+    def testAddDefaultQuestion(self):
+        """Test adding an option with the default question."""
+        self.option_set.add_option('spam')
         self.assertEqual('', self.option_set.definitions[0]['question'])
-        self.assertEqual('', self.option_set.definitions[0]['error_text'])
+
+    def testAddDefaultQuestionType(self):
+        """Test adding an option with the default question type."""
+        self.option_set.add_option('spam')
         self.assertEqual('none', self.option_set.definitions[0]['question_type'])
+
+    def testAddDefaultTarget(self):
+        """Test adding an option with the default target."""
+        self.option_set.add_option('spam')
+        self.assertEqual('spam', self.option_set.definitions[0]['target'])
+
+    def testAddDefaultValue(self):
+        """Test adding an option with the default value."""
+        self.option_set.add_option('spam')
+        self.assertEqual(True, self.option_set.definitions[0]['value'])
 
     def testAddHyphenated(self):
         """Test adding an option with a hyphenated name."""
