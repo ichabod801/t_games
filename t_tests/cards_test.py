@@ -434,6 +434,24 @@ class HandTest(unittest.TestCase):
         self.deck = cards.Deck()
         self.hand = cards.Hand(self.deck)
 
+    def testBoolFalse(self):
+        """Test the bool of an empty hand."""
+        self.assertFalse(self.hand)
+
+    def testBoolTrue(self):
+        """Test the bool of a hand with cards in it."""
+        self.deck.shuffle()
+        for card in range(5):
+            self.hand.draw()
+        self.assertTrue(self.hand)
+
+    def testBoolTrueFalse(self):
+        """Test the bool of a hand that discard all of its cards."""
+        for deal in range(5):
+            self.hand.draw()
+        self.hand.discard()
+        self.assertFalse(self.hand)
+
     def testRepr(self):
         """Test the repr of a hand of cards."""
         for card in range(5):
