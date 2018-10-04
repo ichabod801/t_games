@@ -487,12 +487,14 @@ class HandTest(unittest.TestCase):
 
     def testLenFull(self):
         """Test the length of a hand with cards."""
+        self.deck.shuffle()
         for card in range(5):
             self.hand.draw()
         self.assertEqual(5, len(self.hand))
 
     def testLenGone(self):
         """Test the length of a hand that has discarded cards."""
+        self.deck.shuffle()
         for card in range(5):
             self.hand.draw()
         self.hand.discard(self.hand.cards[0])
@@ -517,6 +519,26 @@ class HandTest(unittest.TestCase):
         """Test the repr of an empty hand of cards."""
         self.assertEqual('<Hand: (empty)>', repr(self.hand))
 
+    def testStrEmpty(self):
+        """Test the string version of an empty hand."""
+        self.assertEqual('', str(self.hand))
+
+    def testStrFull(self):
+        """Test the string version of a hand with cards in it."""
+        self.deck.shuffle()
+        check = ''
+        for card in range(5):
+            self.hand.draw()
+            check = '{}, {}'.format(check, self.hand.cards[-1])
+        check = check[2:]
+        self.assertEqual(check, str(self.hand))
+
+    def testStrOne(self):
+        """Test the string version of a hand with one card in it."""
+        self.deck.shuffle()
+        check = self.deck.cards[-1].rank + self.deck.cards[-1].suit
+        self.hand.draw()
+        self.assertEqual(check, str(self.hand))
 
 class MultiTrackingDeckTest(unittest.TestCase):
     """Tests of the MultiTrackingDeck class. (unittest.TestCase)"""
