@@ -82,7 +82,7 @@ class Quadrille(solitaire.Solitaire):
         computer plays from 0 (one move per second) to 10 (as fast as possible).
         """
         # Check for full auto.
-        if arguments.lower() in ('f', 'full'):
+        if arguments.lower().split()[0] in ('f', 'full'):
             self.full_auto(arguments)
             return False
         # Otherwise handle normally.
