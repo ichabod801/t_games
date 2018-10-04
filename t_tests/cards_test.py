@@ -452,6 +452,31 @@ class HandTest(unittest.TestCase):
         self.hand.discard()
         self.assertFalse(self.hand)
 
+    def testContainsGone(self):
+        """Test contains for a card that used to be in the hand."""
+        self.deck.shuffle()
+        for card in range(5):
+            self.hand.draw()
+        check = self.hand.cards[2]
+        self.hand.discard()
+        self.assertNotIn(check, self.hand)
+
+    def testContainsNo(self):
+        """Test contains for a card not in the hand."""
+        self.deck.shuffle()
+        for card in range(5):
+            self.hand.draw()
+        check = self.deck.cards[2]
+        self.assertNotIn(check, self.hand)
+
+    def testContainsYes(self):
+        """Test contains for a card in the hand."""
+        self.deck.shuffle()
+        for card in range(5):
+            self.hand.draw()
+        check = self.hand.cards[2]
+        self.assertIn(check, self.hand)
+
     def testRepr(self):
         """Test the repr of a hand of cards."""
         for card in range(5):
