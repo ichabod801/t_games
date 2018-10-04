@@ -336,10 +336,7 @@ class BattleBot(player.Bot):
         """Decide where to fire the next shot. (str)"""
         # Shoot ranomly when there are no specified targets.
         if not self.targets:
-            while True:
-                self.last_shot = random.choice(SeaBoard.letters) + random.choice(SeaBoard.numbers)
-                if self.last_shot not in self.dont_shoot:
-                    break
+            self.last_shot = self.new_shot()
         # Shoot a randomly targetted square.
         else:
             self.last_shot = random.choice(self.targets)
@@ -347,6 +344,15 @@ class BattleBot(player.Bot):
         # Return the chosen shot.
         self.dont_shoot.add(self.last_shot)
         return self.last_shot
+
+    def new_shot(self):
+        """Make a shot when there are no current targets. (str)"""
+        # Shoot ranomly.
+        while True:
+            new_shot = random.choice(SeaBoard.letters) + random.choice(SeaBoard.numbers)
+            if new_shot not in self.dont_shoot:
+                break
+        return new_shot
 
     def retarget(self):
         """Reset target list based on a recent hit. (None)"""
