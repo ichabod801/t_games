@@ -477,6 +477,28 @@ class HandTest(unittest.TestCase):
         check = self.hand.cards[2]
         self.assertIn(check, self.hand)
 
+    def testIter(self):
+        """Test the iterator for a hand."""
+        self.assertEqual(list(self.hand), self.hand.cards)
+
+    def testLenEmpty(self):
+        """Test the len of a hand."""
+        self.assertEqual(0, len(self.hand))
+
+    def testLenFull(self):
+        """Test the length of a hand with cards."""
+        for card in range(5):
+            self.hand.draw()
+        self.assertEqual(5, len(self.hand))
+
+    def testLenGone(self):
+        """Test the length of a hand that has discarded cards."""
+        for card in range(5):
+            self.hand.draw()
+        self.hand.discard(self.hand.cards[0])
+        self.hand.discard(self.hand.cards[-1])
+        self.assertEqual(3, len(self.hand))
+
     def testRepr(self):
         """Test the repr of a hand of cards."""
         for card in range(5):
