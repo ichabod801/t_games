@@ -603,9 +603,12 @@ class ConnectFour(game.Game):
             for player in self.players:
                 invalid = ''.join(self.symbols)
                 while True:
-                    symbol = player.ask('\nWhat symbol would you like to use? ')
+                    symbol = player.ask('\nWhat symbol would you like to use? ').strip()
+                    # Check for unused, single-character symbol
                     if symbol in invalid:
                         player.tell('That symbols is already being used by another player.')
+                    elif len(symbol) > 1:
+                        player.error('One character only, please.')
                     else:
                         break
                 self.symbols.append(symbol)
