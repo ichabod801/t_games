@@ -381,6 +381,51 @@ class DeckTest(unittest.TestCase):
             card = self.deck.deal()
         self.assertEqual('<Deck with 34 cards remaining>', repr(self.deck))
 
+    def testShuffleDiscards(self):
+        """Test that shuffling the deck gets back the discards."""
+        self.deck.shuffle()
+        for deal in range(18):
+            card = self.deck.deal()
+            self.deck.discard(card)
+        self.deck.shuffle()
+        self.assertEqual(52, len(self.deck.cards))
+
+    def testShuffleInPlayCount(self):
+        """Test that shuffling does not gets back cards in play (by count)."""
+        self.deck.shuffle()
+        for deal in range(18):
+            card = self.deck.deal()
+            card = self.deck.deal()
+            self.deck.discard(card)
+        self.deck.shuffle()
+        self.assertEqual(34, len(self.deck.cards))
+
+    def testShuffleInPlayGone(self):
+        """Test that shuffling does not gets back cards in play (by contains)."""
+        self.deck.shuffle()
+        for deal in range(18):
+            in_play = self.deck.deal()
+            card = self.deck.deal()
+            self.deck.discard(card)
+        self.deck.shuffle()
+        self.assertNotIn(in_play, self.deck.cards)
+
+    def testShuffleNumbered(self):
+        """Test shuffling a deck with a deal number."""
+        self.deck.shuffle(801)
+        # Deal list from http://fc-solve.shlomifish.org/js-fc-solve/find-deal/
+        check = 'ah ac 6s 4c qd 2d 8h 7h 5h 3s 4h 8c jd 5c 4s tc 3d jh as 2h 7s qs qc 9c th 2c js ks kh 2s '
+        check += 'td 6h 7d qh 6c kd 3h 3c 9h 5s ts 9s jc 4d 9d ad 6d 8s kc 8d 5d 7c'
+        check = [cards.Card(*text.upper()) for text in check.split()]
+        check.reverse()
+        self.assertEqual(check, self.deck.cards)
+
+    def testShuffleOrder(self):
+        """Test that shuffling the deck changes the order."""
+        check = self.deck.cards[:]
+        self.deck.shuffle()
+        self.assertNotEqual(check, self.deck.cards)
+
 
 class HandTest(unittest.TestCase):
     """Test of the Hand (of cards) class. (unittest.TestCase)"""
