@@ -13,6 +13,7 @@ TrackingDeckTest: Tests of the TrackingDeck class. (unittest.TestCase)
 """
 
 
+import random
 import unittest
 
 import t_games.cards as cards
@@ -495,6 +496,41 @@ class HandTest(unittest.TestCase):
         self.deck.shuffle()
         self.hand.draw()
         self.assertTrue(self.hand.cards[0].up)
+
+    def testDiscardAll(self):
+        """Test that discarding a whole hand sends it to the discard pile."""
+        self.deck.shuffle()
+        for card in range(5):
+            self.hand.draw()
+        discards = self.hand.cards[:]
+        self.hand.discard()
+        self.assertEqual(discards, self.deck.discards)
+
+    def testDiscardCard(self):
+        """Test discarding a specific card puts it in the discard pile."""
+        self.deck.shuffle()
+        for card in range(5):
+            self.hand.draw()
+        discard = random.choice(self.hand.cards)
+        self.hand.discard(discard)
+        self.assertEqual([discard], self.deck.discards)
+
+    def testDiscardEmpty(self):
+        """Test that discarding a whole hand leaves the hand empty."""
+        self.deck.shuffle()
+        for card in range(5):
+            self.hand.draw()
+        self.hand.discard()
+        self.assertEqual([], self.hand.cards)
+
+    def testDiscardGone(self):
+        """Test discarding a specific card removes it from the hand.."""
+        self.deck.shuffle()
+        for card in range(5):
+            self.hand.draw()
+        discard = random.choice(self.hand.cards)
+        self.hand.discard(discard)
+        self.assertNotIn(discard, self.hand.cards)
 
     def testIter(self):
         """Test the iterator for a hand."""
