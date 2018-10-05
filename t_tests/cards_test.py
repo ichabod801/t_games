@@ -477,6 +477,25 @@ class HandTest(unittest.TestCase):
         check = self.hand.cards[2]
         self.assertIn(check, self.hand)
 
+    def testDrawCard(self):
+        """Test drawing a card from the deck."""
+        self.deck.shuffle()
+        check = self.deck.cards[-1]
+        self.hand.draw()
+        self.assertEqual([check], self.hand.cards)
+
+    def testDrawDown(self):
+        """Test drawing a down card from the deck."""
+        self.deck.shuffle()
+        self.hand.draw(up = False)
+        self.assertFalse(self.hand.cards[0].up)
+
+    def testDrawUp(self):
+        """Test drawing a down card from the deck."""
+        self.deck.shuffle()
+        self.hand.draw()
+        self.assertTrue(self.hand.cards[0].up)
+
     def testIter(self):
         """Test the iterator for a hand."""
         self.assertEqual(list(self.hand), self.hand.cards)
