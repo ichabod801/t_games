@@ -574,6 +574,24 @@ class HandTest(unittest.TestCase):
         """Test the repr of an empty hand of cards."""
         self.assertEqual('<Hand: (empty)>', repr(self.hand))
 
+    def testShiftGone(self):
+        """Test that a shifted card is not in the old hand."""
+        other = cards.Hand(self.deck)
+        for card in range(5):
+            self.hand.draw()
+        card = random.choice(self.hand.cards)
+        self.hand.shift(card, other)
+        self.assertNotIn(card, self.hand.cards)
+
+    def testShiftIn(self):
+        """Test that a shifted card is in the new hand."""
+        other = cards.Hand(self.deck)
+        for card in range(5):
+            self.hand.draw()
+        card = random.choice(self.hand.cards)
+        self.hand.shift(card, other)
+        self.assertIn(card, other.cards)
+
     def testStrEmpty(self):
         """Test the string version of an empty hand."""
         self.assertEqual('', str(self.hand))
