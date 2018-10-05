@@ -13,6 +13,7 @@ TrackingDeckTest: Tests of the TrackingDeck class. (unittest.TestCase)
 """
 
 
+import collections
 import random
 import unittest
 
@@ -647,10 +648,90 @@ class MultiTrackingDeckTest(unittest.TestCase):
 class TrackingCardTest(unittest.TestCase):
     """Tests of the location aware TrackingCard class. (unittest.TestCase)"""
 
+    game_tuple = collections.namedtuple('game_tuple', 'wrap_ranks')
+
     def setUp(self):
-        self.deck = cards.TrackingDeck('dummy game')
+        self.game = self.game_tuple(wrap_ranks = False)
+        self.deck = cards.TrackingDeck(self.game)
         self.ace = self.deck.force('AS', self.deck.cards)
         self.jack = self.deck.force('JH', self.deck.cards)
+
+    def testAboveBelow(self):
+        """Test TrackingCard.above when below."""
+        self.assertFalse(self.jack.above(cards.TrackingCard('Q', 'H', self.deck)))
+
+    def testAboveOne(self):
+        """Test TrackingCard.above when above."""
+        self.assertTrue(self.jack.above(cards.TrackingCard('T', 'C', self.deck)))
+
+    def testAboveTwoNo(self):
+        """Test TrackingCard.above when too far above."""
+        self.assertFalse(self.jack.above(cards.TrackingCard('9', 'D', self.deck)))
+
+    def testAboveTwoYes(self):
+        """Test TrackingCard.above with multi-rank distance."""
+        self.assertTrue(self.jack.above(cards.TrackingCard('9', 'D', self.deck), card_index = 2))
+
+    def testAboveWrapNo(self):
+        """Test TrackingCard.above with wrapped ranks."""
+        self.assertFalse(self.ace.above(cards.TrackingCard('K', 'S', self.deck)))
+
+    def testAboveWrapYes(self):
+        """Test TrackingCard.above with wrapped ranks."""
+        self.deck.game = self.game_tuple(wrap_ranks = True)
+        self.assertTrue(self.ace.above(cards.TrackingCard('K', 'S', self.deck)))
+
+    def testBelowAbove(self):
+        """Test TrackingCard.below when below."""
+        self.assertFalse(self.jack.below(cards.TrackingCard('T', 'H', self.deck)))
+
+    def testBelowOne(self):
+        """Test TrackingCard.below when below."""
+        self.assertTrue(self.jack.below(cards.TrackingCard('Q', 'C', self.deck)))
+
+    def testBelowTwoNo(self):
+        """Test TrackingCard.below when too far below."""
+        self.assertFalse(self.jack.below(cards.TrackingCard('K', 'D', self.deck)))
+
+    def testBelowTwoYes(self):
+        """Test TrackingCard.below with multi-rank distance."""
+        self.assertTrue(self.jack.below(cards.TrackingCard('K', 'D', self.deck), card_index = 2))
+
+    def testBelowWrapNo(self):
+        """Test TrackingCard.below with wrapped ranks."""
+        self.assertFalse(cards.TrackingCard('K', 'S', self.deck).below(self.ace))
+
+    def testBelowWrapYes(self):
+        """Test TrackingCard.below with wrapped ranks."""
+        self.deck.game = self.game_tuple(wrap_ranks = True)
+        self.assertTrue(cards.TrackingCard('K', 'S', self.deck).below(self.ace))
+
+    def testEqualSelf(self):
+        """Test that a TrackingCard is equal to iteslf."""
+        self.assertEqual(self.ace, self.ace)
+
+    def testEqualSimilar(self):
+        """Test that TrackingCard is not equal to one of the same rank and suit."""
+        check = cards.TrackingCard('A', 'S', self.deck)
+        self.assertNotEqual(check, self.ace)
+
+    def testEqualStringNo(self):
+        """Test that TrackingCard is not equal to a different string."""
+        self.assertNotEqual('AC', self.ace)
+
+    def testEqualStringYes(self):
+        """Test that Tracking card is equal to a similar string."""
+        self.assertEqual('AS', self.ace)
+
+    def testEqualUntrackedNo(self):
+        """Test that a TrackingCard is not equal to a different untracked card."""
+        check = cards.Card('2', 'C')
+        self.assertNotEqual(check, self.jack)
+
+    def testEqualUntrackedYes(self):
+        """Test that a TrackingCard is equal to a similar untracked card."""
+        check = cards.Card('J', 'H')
+        self.assertEqual(check, self.jack)
 
     def testRepr(self):
         """Test the debugging text representation."""
