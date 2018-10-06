@@ -445,16 +445,20 @@ class SmarterBot(BattleBot):
     def expand_search(self):
         """Add another search line to the search pattern. (None)"""
         # Determine width between lines.
-        max_target = max(self.target_sizes)
+        line_spacing = max(self.target_sizes)
+        sorted_start = sorted(self.search_starts)
+        diffs = [abs(a - b) for a, b in zip(sorted_start, sorted_start[1:])]
+        if diffs:
+            line_spacing = min(line_spacing, max(diffs) // 2)
         # Find the new line.
         next_start = self.search_starts[-1]
         while True:
-            next_start = (next_start + max_target) % 10
+            next_start = (next_start + line_spacing) % 10
             if next_start not in self.search_starts:
                 break
             # Prevent infinite loops
             if next_start == self.search_starts[-1]:
-                max_target -= 1
+                line_spacing -= 1
         # Add the line.
         self.add_line(next_start)
 
