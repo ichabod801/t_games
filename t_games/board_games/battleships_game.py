@@ -449,7 +449,7 @@ class SmarterBot(BattleBot):
         next_start = self.search_starts[-1]
         while True:
             next_start = (next_start + max_target) % 10
-            if next_start not in self.target_squares:
+            if next_start not in self.search_starts:
                 break
             # Prevent infinite loops
             if next_start == self.search_starts[-1]:
