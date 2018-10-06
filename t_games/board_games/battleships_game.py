@@ -438,7 +438,8 @@ class SmarterBot(BattleBot):
         for letter in SeaBoard.letters:
             new_line.append('{}{}'.format(letter, start))
             start = (start + self.search_direction) % 10
-        # Add them to the search pattern
+        # Add them to the search pattern without impossible squares
+        self.search_squares = list(set(self.search_squares) - self.dont_shoot)
         self.search_squares.extend(new_line)
 
     def expand_search(self):
@@ -460,7 +461,7 @@ class SmarterBot(BattleBot):
     def new_shot(self):
         """Make a shot when there are no current targets. (str)"""
         # Update the search pattern if necessary.
-        if not self.search_squares:
+        while not self.search_squares:
             self.expand_search()
         # Target a random square from the search pattern.
         square = random.choice(self.search_squares)
@@ -493,6 +494,9 @@ class SmarterBot(BattleBot):
             self.target_sizes.remove(len(self.target_ship))
         # Handle targetting found ships.
         super(SmarterBot, self).tell(text)
+        # Remove impossible squares from the search pattern.
+        if 'sank a' in text:
+            self.search_squares = list(set(self.search_squares) - self.dont_shoot)
 
 class SeaBoard(object):
     """
