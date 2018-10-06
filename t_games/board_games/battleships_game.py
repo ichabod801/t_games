@@ -263,7 +263,7 @@ class Battleships(game.Game):
 
     def set_options(self):
         """Define the options for the game. (None)"""
-        self.option_set.default_bots = [(BattleBot, ())]
+        self.option_set.default_bots = [(SmarterBot, ())]
         self.option_set.add_option('inventory', ['i'], converter = options.lower, default = 'bradley',
             target = 'inventory_name',
             valid = ['bradley', 'br', 'bednar', 'bd', 'ichabod', 'ik', 'wikipedia', 'wk'],
@@ -478,7 +478,7 @@ class SmarterBot(BattleBot):
         self.add_line(random.randrange(10))
         # Set up tracking the sizes of remaining enemy ships.
         self.target_sizes = []
-        for size, count in self.game.board.inventory.values():
+        for size, count in self.game.boards[self.name].inventory.values():
             self.target_sizes.extend([size] * count)
 
     def tell(self, text):
@@ -489,7 +489,7 @@ class SmarterBot(BattleBot):
         text: The message from the game. (str)
         """
         # Track sizes of remaining enemy ships.
-        elif 'sank a' in text:
+        if 'sank a' in text:
             self.target_sizes.remove(len(self.target_ship))
         # Handle targetting found ships.
         super(SmarterBot, self).tell(text)
