@@ -144,11 +144,6 @@ class Battleships(game.Game):
             self.human.tell(self.boards[self.human.name].show())
         return go
 
-    def handle_options(self):
-        """Handle the current option settings. (None)"""
-        super(Battleships, self).handle_options()
-        self.inventory_name = self.inventory_aliases.get(self.inventory_name, self.inventory_name)
-
     def game_over(self):
         """Check for the end of the game. (bool)"""
         # Check for a tie.
@@ -241,6 +236,18 @@ class Battleships(game.Game):
             square = random.choice(squares)
             self.human.tell('There is a {} at {}.'.format(ship, square))
 
+    def handle_options(self):
+        """Handle the option settings for the current game. (None)"""
+        super(Battleships, self).handle_options()
+        # Handle inventory aliases.
+        self.inventory_name = self.inventory_aliases.get(self.inventory_name, self.inventory_name)
+        # Set up the players.
+        if self.bot_level.startswith('e'):
+            self.bot = BattleBot(taken_names = [self.human.name])
+        elif self.bot_level.startswith('m'):
+            self.bot = SmarterBot(taken_names = [self.human.name])
+        self.players = [self.human, self.bot]
+
     def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
@@ -263,16 +270,17 @@ class Battleships(game.Game):
 
     def set_options(self):
         """Define the options for the game. (None)"""
-        self.option_set.default_bots = [(SmarterBot, ())]
         self.option_set.add_option('inventory', ['i'], converter = options.lower, default = 'bradley',
             target = 'inventory_name',
             valid = ['bradley', 'br', 'bednar', 'bd', 'ichabod', 'ik', 'wikipedia', 'wk'],
             question = 'Which inventory would you like to use (return for Bradley)? ',
             error_text = 'The available inventories are Bradley, Bednar, Ichabod, and Wikipedia')
+        self.option_set.add_option('bot-level', ['b'], converter = options.lower, default = 'medium',
+            valid = ['e', 'easy', 'm', 'medium'],
+            question = 'How hard should the bot be (Easy, Medium, or Hard, return for medium)? ')
 
     def set_up(self):
         """Set up a board for each player. (None)"""
-        self.bot = self.players[1]
         self.boards = {self.bot.name: SeaBoard(self.bot, self.inventory_name)}
         self.boards[self.human.name] = SeaBoard(self.human, self.inventory_name)
 
