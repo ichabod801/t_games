@@ -18,6 +18,8 @@ import random
 import unittest
 
 import t_games.cards as cards
+import t_games.card_games.solitaire_games.solitaire_game as solitaire
+import unitility
 
 
 class CardTest(unittest.TestCase):
@@ -742,11 +744,44 @@ class TrackingDeckTest(unittest.TestCase):
     """Tests of the TrackingDeck class. (unittest.TestCase)"""
 
     def setUp(self):
-        self.deck = cards.TrackingDeck('dummy game')
+        self.game = solitaire.Solitaire(unitility.AutoBot(), 'none')
+        #self.game.set_up()
+        self.deck = cards.TrackingDeck(self.game)
+        self.game.deck = self.deck
 
     def testRepr(self):
         """Test the debugging text representation."""
-        self.assertEqual("<TrackingDeck of TrackingCards for 'dummy game'>", repr(self.deck))
+        check = "<TrackingDeck of TrackingCards for <Game of Solitaire Base with 1 player>>"
+        self.assertEqual(check, repr(self.deck))
+
+    def testStrAllNumbers(self):
+        """Test the human readable text representation with discarded and in-play cards."""
+        for deal in range(18):
+            card = self.deck.deal([])
+            card = self.deck.deal([])
+            self.deck.discard(card)
+        check = 'Deck of cards with 16 cards, plus 18 cards in play and 18 cards discarded'
+        self.assertEqual(check, str(self.deck))
+
+    def testStrDiscards(self):
+        """Test the human readable text representation with discarded cards."""
+        for deal in range(18):
+            card = self.deck.deal([])
+            self.deck.discard(card)
+        check = 'Deck of cards with 34 cards, plus 0 cards in play and 18 cards discarded'
+        self.assertEqual(check, str(self.deck))
+
+    def testStrInPlay(self):
+        """Test the human readable text representation with cards in play."""
+        for deal in range(18):
+            card = self.deck.deal([])
+        check = 'Deck of cards with 34 cards, plus 18 cards in play and 0 cards discarded'
+        self.assertEqual(check, str(self.deck))
+
+    def testStrStart(self):
+        """Test the human readable text representation at the start."""
+        check = 'Deck of cards with 52 cards, plus 0 cards in play and 0 cards discarded'
+        self.assertEqual(check, str(self.deck))
 
 
 if __name__ == '__main__':
