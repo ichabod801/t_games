@@ -745,9 +745,60 @@ class TrackingDeckTest(unittest.TestCase):
 
     def setUp(self):
         self.game = solitaire.Solitaire(unitility.AutoBot(), 'none')
-        #self.game.set_up()
         self.deck = cards.TrackingDeck(self.game)
         self.game.deck = self.deck
+
+    def testDealCard(self):
+        """Test that Deck.deal returns a valid card."""
+        self.deck.shuffle()
+        card = self.deck.deal([])
+        valid_rank = card.rank in self.deck.ranks
+        valid_suit = card.suit in self.deck.suits
+        self.assertTrue(isinstance(card, cards.Card) and valid_rank and valid_suit)
+
+    def testDealDown(self):
+        """Test that Deck.deal returns a down card."""
+        self.deck.shuffle()
+        card = self.deck.deal([], face_up = False)
+        self.assertFalse(card.up)
+
+    def testDealInPlayDeck(self):
+        """Test that Deck.deal puts the card in play per deck."""
+        self.deck.shuffle()
+        dummy_location = []
+        card = self.deck.deal(dummy_location)
+        self.assertEqaul(dummy_location, card.game_location)
+
+    def testDealGone(self):
+        """Test that Deck.deal removes the card from the deck."""
+        self.deck.shuffle()
+        card = self.deck.deal([])
+        self.assertNotIn(card, self.deck.cards)
+
+    def testDealInPlayDeck(self):
+        """Test that Deck.deal puts the card in play per deck."""
+        self.deck.shuffle()
+        card = self.deck.deal([])
+        self.assertIn(card, self.deck.in_play)
+
+    def testDealInPlayCard(self):
+        """Test that Deck.deal puts the card in play per card."""
+        self.deck.shuffle()
+        card = self.deck.deal([])
+        self.assertIn(card, card.deck_location)
+
+    def testDealTop(self):
+        """Test that Deck.deal deals the top card of the deck."""
+        self.deck.shuffle()
+        check = self.deck.cards[-1]
+        card = self.deck.deal([])
+        self.assertEqual(check, card)
+
+    def testDealUp(self):
+        """Test that Deck.deal can return a up card."""
+        self.deck.shuffle()
+        card = self.deck.deal([])
+        self.assertTrue(card.up)
 
     def testRepr(self):
         """Test the debugging text representation."""
