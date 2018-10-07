@@ -455,6 +455,7 @@ class SmarterBot(BattleBot):
         # Determine width between lines.
         line_spacing = max(self.target_sizes)
         sorted_start = sorted(self.search_starts)
+        sorted_start.append(sorted_start[0] + 10)
         diffs = [abs(a - b) for a, b in zip(sorted_start, sorted_start[1:])]
         if diffs:
             line_spacing = min(line_spacing, max(diffs) // 2)
