@@ -36,12 +36,12 @@ Special Thanks: Matt Groening
 """
 
 RULES = """
-Each player chooses one of rock, paper, or scissors. Rock beats scissors,
-paper beats rock, and scissors beats paper. If players choose the same thing,
-both players choose again.
+Each player chooses one of rock (r), paper (p), or scissors (s). Rock beats
+scissors, paper beats rock, and scissors beats paper. If players choose the
+same thing, both players choose again.
 
-If the lizard-spock option is chosen, players may also choose lizard or
-Spock. Lizard beats paper and Spock and loses to rock and scissors. Spock
+If the lizard-spock option is chosen, players may also choose lizard (l) or
+Spock (sp). Lizard beats paper and Spock and loses to rock and scissors. Spock
 beats scissors and rock and loses to paper and lizard.
 
 The bots you can play against are Bart ('Good old rock, nothing beats rock.'),
@@ -292,6 +292,7 @@ class RPS(game.Game):
     Class Attributes:
     bot_classes: The bots available as options for play. (dict of str: Bot)
     lizard_spock: A wins attribute for the lizard-spock option. (dict)
+    move_aliases: Abbreviations for the available moves. (dict)
     wins: What each move beats. (dict of str: list of str)
 
     Attributes:
@@ -317,6 +318,7 @@ class RPS(game.Game):
     credits = CREDITS
     lizard_spock = {'rock': ['scissors', 'lizard'], 'scissors': ['paper', 'lizard'],
         'paper': ['rock', 'spock'], 'lizard': ['paper', 'spock'], 'spock': ['scissors', 'rock']}
+    move_aliases = {'r': 'rock', 'p': 'paper', 's': 'scissors', 'l': 'lizard', 'sp': 'spock'}
     name = 'Rock-Paper-Scissors'
     num_options = 3
     rules = RULES
@@ -384,6 +386,7 @@ class RPS(game.Game):
         player: The player whose turn it is. (Player)
         """
         move = player.ask('\nWhat is your move? ').lower()
+        move = self.move_aliases.get(move, move)
         # Process game moves.
         if move in self.wins:
             self.moves[player.name] = move
