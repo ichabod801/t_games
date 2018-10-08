@@ -15,6 +15,7 @@ SQUARE_RE: A regular expression matching coordinate. (re.SRE_Pattern)
 Classes:
 Battleships: A game of Battleships. (game.Game)
 BattleBot: A bot for playing Battleships. (player.Bot)
+SmarterBot: A smarter BattleBot with a search pattern. (BattleBot)
 SeaBoard: A board in a game of Battleships. (object)
 
 Functions:
@@ -69,7 +70,9 @@ The winner's score is the number of un-hit squares that they had left.
 
 Options:
 
-inventory= (i): This determines the number and size of ships played with. The
+bot-level= (b=): How strong the computer opponent is. Can be easy (e) or
+    medium (m).
+inventory= (i=): This determines the number and size of ships played with. The
 value can be Bradley (the Milton Bradley version), Bednar (an open source
 version by Samuel Bednar), Ichabod (the version I remember), and Wikipedia
 (the inventory shown in a picture in the Wikipedia article on the game.) the
