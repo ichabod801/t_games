@@ -15,6 +15,7 @@ SQUARE_RE: A regular expression matching coordinate. (re.SRE_Pattern)
 Classes:
 Battleships: A game of Battleships. (game.Game)
 BattleBot: A bot for playing Battleships. (player.Bot)
+SmarterBot: A smarter BattleBot with a search pattern. (BattleBot)
 SeaBoard: A board in a game of Battleships. (object)
 
 Functions:
@@ -69,7 +70,9 @@ The winner's score is the number of un-hit squares that they had left.
 
 Options:
 
-inventory= (i): This determines the number and size of ships played with. The
+bot-level= (b=): How strong the computer opponent is. Can be easy (e) or
+    medium (m).
+inventory= (i=): This determines the number and size of ships played with. The
 value can be Bradley (the Milton Bradley version), Bednar (an open source
 version by Samuel Bednar), Ichabod (the version I remember), and Wikipedia
 (the inventory shown in a picture in the Wikipedia article on the game.) the
@@ -112,7 +115,7 @@ class Battleships(game.Game):
     credits = CREDITS
     inventory_aliases = {'br': 'bradley', 'bd': 'bednar', 'ik': 'ichabod', 'wk': 'wikipedia'}
     name = 'Battleships'
-    num_options = 1
+    num_options = 2
     rules = RULES
 
     def do_gipf(self, arguments):
@@ -143,11 +146,6 @@ class Battleships(game.Game):
             self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
             self.human.tell(self.boards[self.human.name].show())
         return go
-
-    def handle_options(self):
-        """Handle the current option settings. (None)"""
-        super(Battleships, self).handle_options()
-        self.inventory_name = self.inventory_aliases.get(self.inventory_name, self.inventory_name)
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
@@ -241,6 +239,18 @@ class Battleships(game.Game):
             square = random.choice(squares)
             self.human.tell('There is a {} at {}.'.format(ship, square))
 
+    def handle_options(self):
+        """Handle the option settings for the current game. (None)"""
+        super(Battleships, self).handle_options()
+        # Handle inventory aliases.
+        self.inventory_name = self.inventory_aliases.get(self.inventory_name, self.inventory_name)
+        # Set up the players.
+        if self.bot_level.startswith('e'):
+            self.bot = BattleBot(taken_names = [self.human.name])
+        elif self.bot_level.startswith('m'):
+            self.bot = SmarterBot(taken_names = [self.human.name])
+        self.players = [self.human, self.bot]
+
     def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
@@ -263,16 +273,17 @@ class Battleships(game.Game):
 
     def set_options(self):
         """Define the options for the game. (None)"""
-        self.option_set.default_bots = [(BattleBot, ())]
         self.option_set.add_option('inventory', ['i'], converter = options.lower, default = 'bradley',
             target = 'inventory_name',
             valid = ['bradley', 'br', 'bednar', 'bd', 'ichabod', 'ik', 'wikipedia', 'wk'],
             question = 'Which inventory would you like to use (return for Bradley)? ',
             error_text = 'The available inventories are Bradley, Bednar, Ichabod, and Wikipedia')
+        self.option_set.add_option('bot-level', ['b'], converter = options.lower, default = 'medium',
+            valid = ['e', 'easy', 'm', 'medium'],
+            question = 'How hard should the bot be (Easy, Medium, or Hard, return for medium)? ')
 
     def set_up(self):
         """Set up a board for each player. (None)"""
-        self.bot = self.players[1]
         self.boards = {self.bot.name: SeaBoard(self.bot, self.inventory_name)}
         self.boards[self.human.name] = SeaBoard(self.human, self.inventory_name)
 
@@ -290,6 +301,7 @@ class BattleBot(player.Bot):
     Methods:
     add_adjacents: Add adjacent squares of a ship to the don't shoot set. (None)
     fire: Decide where to fire the next shot. (str)
+    new_shot: Make a shot when there are no current targets. (str)
     retarget: Reset target list based on a recent hit. (None)
 
     Overridden Methods:
@@ -336,10 +348,7 @@ class BattleBot(player.Bot):
         """Decide where to fire the next shot. (str)"""
         # Shoot ranomly when there are no specified targets.
         if not self.targets:
-            while True:
-                self.last_shot = random.choice(SeaBoard.letters) + random.choice(SeaBoard.numbers)
-                if self.last_shot not in self.dont_shoot:
-                    break
+            self.last_shot = self.new_shot()
         # Shoot a randomly targetted square.
         else:
             self.last_shot = random.choice(self.targets)
@@ -347,6 +356,15 @@ class BattleBot(player.Bot):
         # Return the chosen shot.
         self.dont_shoot.add(self.last_shot)
         return self.last_shot
+
+    def new_shot(self):
+        """Make a shot when there are no current targets. (str)"""
+        # Shoot ranomly.
+        while True:
+            new_shot = random.choice(SeaBoard.letters) + random.choice(SeaBoard.numbers)
+            if new_shot not in self.dont_shoot:
+                break
+        return new_shot
 
     def retarget(self):
         """Reset target list based on a recent hit. (None)"""
@@ -396,6 +414,105 @@ class BattleBot(player.Bot):
             self.target_ship = []
             self.targets = []
 
+
+class SmarterBot(BattleBot):
+    """
+    A smarter BattleBot with a search pattern. (BattleBot)
+
+    The search pattern is a series of lines drawn across the board. These lines
+    are called search lines. You start with a random one. After each one is
+    searched, the next one is added so that the longest remaining enemy ship
+    cannot fit between it and the last search line.
+
+    Attributes:
+    search_direction: The slope of the search lines. (-1 or 1)
+    search_squares: The squares to search for new targets. (list of str)
+    search_starts: The A-row squares search lines start from. (list of int)
+    target_sizes: The sizes of the remaining enemy ships. (list of int)
+
+    Methods:
+    add_line: Add a search line to the search pattern. (None)
+    expand_search: Add another search line to the search pattern. (None)
+
+    Overridden Methods:
+    new_shot
+    set_up
+    tell
+    """
+
+    def add_line(self, start):
+        """Add a search line to the search pattern. (None)"""
+        # Save the new start.
+        self.search_starts.append(start)
+        # Get the new squares.
+        new_line = []
+        for letter in SeaBoard.letters:
+            new_line.append('{}{}'.format(letter, start))
+            start = (start + self.search_direction) % 10
+        # Add them to the search pattern without impossible squares
+        self.search_squares = list(set(self.search_squares) - self.dont_shoot)
+        self.search_squares.extend(new_line)
+
+    def expand_search(self):
+        """Add another search line to the search pattern. (None)"""
+        # Determine width between lines.
+        line_spacing = max(self.target_sizes)
+        sorted_start = sorted(self.search_starts)
+        sorted_start.append(sorted_start[0] + 10)
+        diffs = [abs(a - b) for a, b in zip(sorted_start, sorted_start[1:])]
+        if diffs:
+            line_spacing = min(line_spacing, max(diffs) // 2)
+        # Find the new line.
+        next_start = self.search_starts[-1]
+        while True:
+            next_start = (next_start + line_spacing) % 10
+            if next_start not in self.search_starts:
+                break
+            # Prevent infinite loops
+            if next_start == self.search_starts[-1]:
+                line_spacing -= 1
+        # Add the line.
+        self.add_line(next_start)
+
+    def new_shot(self):
+        """Make a shot when there are no current targets. (str)"""
+        # Update the search pattern if necessary.
+        while not self.search_squares:
+            self.expand_search()
+        # Target a random square from the search pattern.
+        square = random.choice(self.search_squares)
+        self.search_squares.remove(square)
+        return square
+
+    def set_up(self):
+        """Teset the bot for a new game. (None)"""
+        # Set up the targetting of found ships.
+        super(SmarterBot, self).set_up()
+        # Set up the search pattern.
+        self.search_direction = random.choice([-1, 1])
+        self.search_starts = []
+        self.search_squares = []
+        self.add_line(random.randrange(10))
+        # Set up tracking the sizes of remaining enemy ships.
+        self.target_sizes = []
+        for size, count in self.game.boards[self.name].inventory.values():
+            self.target_sizes.extend([size] * count)
+
+    def tell(self, text):
+        """
+        Send information to the player. (None)
+
+        Parameters:
+        text: The message from the game. (str)
+        """
+        # Track sizes of remaining enemy ships.
+        if 'sank a' in text:
+            self.target_sizes.remove(len(self.target_ship))
+        # Handle targetting found ships.
+        super(SmarterBot, self).tell(text)
+        # Remove impossible squares from the search pattern.
+        if 'sank a' in text:
+            self.search_squares = list(set(self.search_squares) - self.dont_shoot)
 
 class SeaBoard(object):
     """
