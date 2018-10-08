@@ -71,6 +71,7 @@ Double Street/Six Line: Bet on six numbers that form two rows. Specify the
 Dozen: Bet on the first, second, or third dozen. Use 1/2/3, P/M/D, or F/S/T
     to specify the dozen (seel Column bet). [1]
 Split: Bet on two numbers that are adjacent on the board. [2]
+Straight/Single: Bet on one number. [1]
 Street: Bet on a three number row. Specify the last number in the row. [1]
 Top Line: Bet on the first two rowns of the American layout. (0-3 and 00) [0]
 Trio: Bet on three adjacent numbers, including at least one zero. [3]
