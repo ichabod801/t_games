@@ -22,6 +22,19 @@ class DieTest(unittest.TestCase):
     def setUp(self):
         self.die = dice.Die()
 
+    def testAddDie(self):
+        """Test adding two dice together."""
+        d8 = dice.Die(8)
+        self.assertEqual(self.die.value + d8.value, self.die + d8)
+
+    def testAddFloat(self):
+        """Test adding a die to a floating point number."""
+        self.assertEqual(self.die.value + 1.8, self.die + 1.8)
+
+    def testAddInt(self):
+        """Test adding a die to an integer."""
+        self.assertEqual(self.die.value + 18, self.die + 18)
+
     def testRepr(self):
         """Test a computer readable text representation of a die."""
         self.assertEqual('<Die {}>'.format(self.die.value), repr(self.die))
