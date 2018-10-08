@@ -115,7 +115,7 @@ class Battleships(game.Game):
     credits = CREDITS
     inventory_aliases = {'br': 'bradley', 'bd': 'bednar', 'ik': 'ichabod', 'wk': 'wikipedia'}
     name = 'Battleships'
-    num_options = 1
+    num_options = 2
     rules = RULES
 
     def do_gipf(self, arguments):
