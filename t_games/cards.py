@@ -301,8 +301,9 @@ class Deck(object):
         card_text: The string version of the card. (str)
         face_up = Flag for dealing the card face up. (bool)
         """
-        card = self.cards.index(card)
+        card = self.cards[self.cards.index(card_text)]
         self.cards.remove(card)
+        card.up = up
         return card
 
     def pick(self, card_index, up = True):
@@ -313,7 +314,9 @@ class Deck(object):
         card_index: A number to determine the card picked. (int)
         up: Flag for picking the card face up. (bool)
         """
-        return self.cards.pop(card_index % len(self.cards))
+        card = self.cards.pop(card_index % len(self.cards))
+        card.up = up
+        return card
 
     def shuffle(self, number = None):
         """
@@ -687,27 +690,6 @@ class TrackingDeck(Deck):
         """
         return self.deal(game_location, face_up = face_up, card_index = self.cards.index(card_text))
 
-    def gather(self, in_play = True):
-        """
-        Gather cards back into the deck. (None)
-
-        Parameters:
-        in_play: A flag for gathering in play cards as well as discards. (bool)
-        """
-        for card in self.discards + self.in_play:
-            # Remove the card from it's locations.
-            card.deck_location.remove(card)
-            try:
-                card.game_location.remove(card)
-            except IndexError:
-                pass
-            # Put the card in the discards.
-            self.cards.append(card)
-            card.up = False
-            # Reset the card tracking.
-            card.deck_location = self.cards
-            card.game_location = self.cards
-
     def shuffle(self, number = None):
         """Shuffle the discards back into the deck. (None)"""
         # Shuffle the cards.
@@ -716,28 +698,6 @@ class TrackingDeck(Deck):
         for card in self.cards:
             card.deck_location = self.cards
             card.game_location = self.cards
-
-    def stack(self, order):
-        """
-        Put the stack in a specified order. (None)
-
-        The order given must include all the Cards currently in the deck.
-
-        Parameters:
-        order: The order to put the deck into. (list of Card or str)
-        """
-        # Check for valid order.
-        if sorted(self.last_order) != sorted(order):
-            raise ValueError('Invalid deck order.')
-        # Stack the deck.
-        for card_ref in order:
-            card = self.card_map[card_ref]
-            self.cards.append(card)
-            self.card.deck_location = self.cards
-            self.card.game_location = self.cards
-        # Clear the other piles.
-        self.discards = []
-        self.in_play = []
 
 
 class MultiTrackingDeck(TrackingDeck):
