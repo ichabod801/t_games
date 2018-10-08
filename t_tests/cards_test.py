@@ -859,6 +859,22 @@ class TrackingDeckTest(unittest.TestCase):
             check.append(card)
         self.assertEqual(check, self.deck.discards)
 
+    def testShuffleDeckLocation(self):
+        """Test shuffle on discard's deck location."""
+        self.deck.shuffle()
+        card = self.deck.deal([])
+        self.deck.discard(card)
+        self.deck.shuffle()
+        self.assertEqual(card.deck_location, self.deck.cards)
+
+    def testShuffleGameLocation(self):
+        """Test shuffle on discard's game location."""
+        self.deck.shuffle()
+        card = self.deck.deal([])
+        self.deck.discard(card)
+        self.deck.shuffle()
+        self.assertEqual(card.game_location, self.deck.cards)
+
     def testRepr(self):
         """Test the debugging text representation."""
         check = "<TrackingDeck of TrackingCards for <Game of Solitaire Base with 1 player>>"
