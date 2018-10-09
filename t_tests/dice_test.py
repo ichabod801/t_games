@@ -84,6 +84,10 @@ class DieTest(unittest.TestCase):
         pool.sort()
         self.assertTrue(all([lower <= higher for lower, higher in zip(pool, pool[1:])]))
 
+    def testStr(self):
+        """Test a human readable text representation of a die."""
+        self.assertEqual(str(self.die.value), str(self.die))
+
 
 class DominoPoolTest(unittest.TestCase):
     """Test of a sampling pool of dice. (unittest.TestCase)"""
