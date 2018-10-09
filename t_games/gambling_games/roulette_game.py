@@ -843,7 +843,7 @@ class Roulette(game.Game):
         """
         Bet on the orphans: the numbers not in the neighbors or the thirds.
 
-        This bet includes the following bets:
+        This bet is only available on the French layout and includes five bets:
             * A single bet on 1.
             * Split bets on 6-9, 14-17, 17-20, 31-34.
 
@@ -854,6 +854,8 @@ class Roulette(game.Game):
         numbers, bet = self.check_bet('orphans {}'.format(argument))
         if bet * 5 > self.scores[self.human.name]:
             self.human.error('You do not have enough money for the full bet.')
+        elif self.layout != 'french':
+            self.human.error('You can only make that be on the French layout.')
         elif numbers:
             # Make the bet.
             self.bets.append(('single bet on 1', ['1'], bet))
@@ -1115,7 +1117,7 @@ class Roulette(game.Game):
         """
         # Get the integer arguments
         int_args = self.int_re.findall(arguments)
-        if int_args:
+        if int_args and self.layout == 'french':
             # Check the bet.
             numbers, bet = self.check_bet('third {}'.format(int_args[-1]))
             # Check the full wager.
@@ -1144,6 +1146,8 @@ class Roulette(game.Game):
                     self.bets.append(('single bet on 23', ['23'], bet))
                     self.bets.append(('single bet on 30', ['30'], bet))
                 self.scores[self.human.name] -= full_bet
+        elif self.layout != 'french':
+            self.human.error('You can only make that be on the French layout.')
         else:
             # Warn the user if no bet is given.
             self.human.error('You must give an amount to bet.')
@@ -1202,10 +1206,11 @@ class Roulette(game.Game):
         """
         Make a zero game bet. (jeu, jeu zero)
 
-        This is a variant of the cousins bet, which bets on 0 and eight neighbors. The
-        exact bets made are a straight bet on 26 and three split bets on 0-3, 12-15,
-        and 32-35. If 'naca' is included as an argument, a straight bet on 19 is
-        added.
+        This is a variant of the neighbors bet, which bets on 0 and eight neighbors.
+        The exact bets made are a straight bet on 26 and three split bets on 0-3,
+        12-15, and 32-35. If 'naca' is included as an argument, a straight bet on 19 is
+        added. As with the neighbors bet, this bet is only available on the French
+        layout.
 
         The last argument to the zero command is the amount to bet on each of the
         individual bets.
