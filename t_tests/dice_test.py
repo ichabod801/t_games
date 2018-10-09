@@ -35,9 +35,46 @@ class DieTest(unittest.TestCase):
         """Test adding a die to an integer."""
         self.assertEqual(self.die.value + 18, self.die + 18)
 
+    def testEqualDie(self):
+        """Test equality across dice."""
+        other = dice.Die()
+        while other.value != self.die.value:
+            other.roll()
+        self.assertEqual(other, self.die)
+
+    def testEqualFloat(self):
+        """Test equality between a Die and a floating point number."""
+        while self.die < 6:
+            self.die.roll()
+        self.assertEqual(6.0, self.die)
+
+    def testEqualInt(self):
+        """Test equality between a Die and an integer."""
+        while self.die > 1:
+            self.die.roll()
+        self.assertEqual(1, self.die)
+
+    def testInequalityGreater(self):
+        """Test greater than for a die."""
+        self.assertTrue(-1 < self.die)
+
+    def testInequalityLess(self):
+        """Test less than for a die."""
+        self.assertTrue(self.die < 18)
+
+    def testInqualityNot(self):
+        """Test not equals for a die."""
+        self.assertNotEqual(801, self.die)
+
     def testRepr(self):
         """Test a computer readable text representation of a die."""
         self.assertEqual('<Die {}>'.format(self.die.value), repr(self.die))
+
+    def testSort(self):
+        """Test sorting a bunch of dice."""
+        pool = [dice.Die() for die in range(18)]
+        pool.sort()
+        self.assertTrue(all([lower <= higher for lower, higher in zip(pool, pool[1:])]))
 
 
 class DominoPoolTest(unittest.TestCase):
