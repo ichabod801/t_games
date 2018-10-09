@@ -135,8 +135,28 @@ class ShuffleDieTest(unittest.TestCase):
     def setUp(self):
         self.die = dice.ShuffleDie()
 
+    def testRoll(self):
+        """Test rolling a shuffle die."""
+        values = [self.die.value]
+        for roll in range(5):
+            self.die.roll()
+            values.append(self.die.value)
+        values.sort()
+        self.assertEqual([1, 2, 3, 4, 5, 6], values)
+
+    def testRollRepeat(self):
+        """Test rolling a shuffle die with a repeat."""
+        self.die.repeats = 2
+        self.die.reset()
+        values = []
+        for roll in range(12):
+            self.die.roll()
+            values.append(self.die.value)
+        values.sort()
+        self.assertEqual([1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6], values)
+
     def testRepr(self):
-        """Test a computer readable text representation of a sampling die."""
+        """Test a computer readable text representation of a shuffle die."""
         self.assertEqual('<ShuffleDie {}>'.format(self.die.value), repr(self.die))
 
 
