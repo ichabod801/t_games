@@ -1142,6 +1142,7 @@ class Backgammon(game.Game):
                 return True
             # See if the opponent accepts.
             opponent = self.players[1 - self.player_index]
+            opponent.tell(self.board.get_text(self.pieces[opponent.name]))
             query = '\nYour opponent wants to double the stakes to {}. Do you accept the new stakes? '
             accept = opponent.ask(query.format(self.doubling_die * 2))
             if accept.lower() in utility.YES:
