@@ -66,6 +66,14 @@ class DieTest(unittest.TestCase):
         """Test not equals for a die."""
         self.assertNotEqual(801, self.die)
 
+    def testRAddFloat(self):
+        """Test right adding a die to a floating point number."""
+        self.assertEqual(self.die.value + 1.8, 1.8 + self.die)
+
+    def testRAddInt(self):
+        """Test right adding a die to an integer."""
+        self.assertEqual(self.die.value + 18, 18 + self.die)
+
     def testRepr(self):
         """Test a computer readable text representation of a die."""
         self.assertEqual('<Die {}>'.format(self.die.value), repr(self.die))
