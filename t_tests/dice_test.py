@@ -135,6 +135,11 @@ class ShuffleDieTest(unittest.TestCase):
     def setUp(self):
         self.die = dice.ShuffleDie()
 
+    def testReset(self):
+        """Test reeetting a shuffle die."""
+        self.die.reset()
+        self.assertEqual([1, 2, 3, 4, 5, 6], sorted(self.die.population))
+
     def testRoll(self):
         """Test rolling a shuffle die."""
         values = [self.die.value]
@@ -144,12 +149,27 @@ class ShuffleDieTest(unittest.TestCase):
         values.sort()
         self.assertEqual([1, 2, 3, 4, 5, 6], values)
 
+    def testRollPop(self):
+        """Test that roll removes a possible value."""
+        old_len = len(self.die.population)
+        self.die.roll()
+        self.assertEqual(old_len - 1, len(self.die.population))
+
     def testRollRepeat(self):
         """Test rolling a shuffle die with a repeat."""
         self.die.repeats = 2
         self.die.reset()
         values = []
         for roll in range(12):
+            self.die.roll()
+            values.append(self.die.value)
+        values.sort()
+        self.assertEqual([1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6], values)
+
+    def testRollTwice(self):
+        """Test rolling a shuffle die through a reset."""
+        values = [self.die.value]
+        for roll in range(11):
             self.die.roll()
             values.append(self.die.value)
         values.sort()
