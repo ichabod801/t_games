@@ -710,13 +710,7 @@ class MultiTrackingDeck(TrackingDeck):
 
     Overridden Methods:
     __init__
-    __repr__
-    __str__
-    deal
-    discard
     find
-    force
-    gather
     """
 
     def __init__(self, game, decks = 2, card_class = TrackingCard):
@@ -734,7 +728,8 @@ class MultiTrackingDeck(TrackingDeck):
         # Extract attributes from the card class.
         self.ranks = card_class.ranks
         self.suits = card_class.suits
-        self.card_re = card_class.card_re
+        reg_text = '[{}][{}](?:-[twrf]?\d*)?'
+        self.card_re = re.compile(reg_text.format(self.ranks, self.suits), re.IGNORECASE)
         # Fill the deck.
         self.cards = []
         self.card_map = collections.defaultdict(list)
@@ -750,6 +745,52 @@ class MultiTrackingDeck(TrackingDeck):
         self.in_play = []
         self.discards = []
         self.last_order = self.cards[:]
+
+    def find(self, card_text):
+        """
+        Find a card in the deck. (Card)
+
+        Paramters:
+        card_text: The string version of the card. (str)
+        """
+        #print(card_text)
+        # Check for a location specifier
+        if '-' in card_text:
+            card_text, location = card_text.split('-')
+        else:
+            location = ''
+        if location:
+            # Parse the location specifier.
+            location = location.upper()
+            if location.isdigit():
+                location_type = 'T'
+                location_count = int(location) - 1
+            elif location[-1].isdigit():
+                location_type = location[0]
+                location_count = int(location[1:]) - 1
+            else:
+                location_type = location
+                location_count = 0
+            #print(location_type, location_count)
+        else:
+            # Distinguish no location from an empty location
+            location = None
+        if location:
+            # Get the location from the game.
+            if location_type == 'F':
+                location = self.game.cells
+            elif location_type == 'R':
+                location = self.game.reserve[location_count]
+            elif location_type == 'T':
+                location = self.game.tableau[location_count]
+            else:
+                location = self.game.waste
+            #print(location)
+        # Find the cards, filtered by any location specified.
+        cards = self.card_map[card_text.upper()]
+        if location is not None:
+            cards = [card for card in cards if card in location]
+        return cards
 
 
 if __name__ == '__main__':
