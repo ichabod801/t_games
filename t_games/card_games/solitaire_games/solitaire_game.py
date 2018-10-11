@@ -1238,6 +1238,43 @@ class MultiSolitaire(Solitaire):
             foundations.append(self.foundations[first_index + len(self.deck.suits) * deck_index])
         return foundations
 
+    def find_location(self, location_text):
+        """
+        Find a location in the game. (list)
+
+        Parameters:
+        location_text: Text specifying the location. (str)
+        """
+        # Parse the location specifier.
+        location_text = location_text.upper()
+        if location_text.isdigit():
+            location_type = 'T'
+            location_count = int(location_text) - 1
+        elif location_text[-1].isdigit():
+            location_type = location_text[0]
+            location_count = int(location_text[1:]) - 1
+        else:
+            location_type = location_text
+            location_count = 0
+        # Get the location from the game.
+        if location_type == 'F':
+            location = self.game.cells
+        elif location_type == 'R':
+            location = self.game.reserve
+        elif location_type == 'T':
+            location = self.game.tableau
+        elif location_type == 'W':
+            location = self.game.waste
+        else:
+            location = []
+        # Get the sub-location based on the count.
+        if location_type in 'RT':
+            try:
+                location = location[location_count]
+            except IndexError:
+                location = []
+        return location
+
     def guess(self, card_text):
         """
         Guess what move to make for a particular card. (None)
