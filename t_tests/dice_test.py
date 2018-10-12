@@ -129,7 +129,7 @@ class PoolTest(unittest.TestCase):
         last_two = self.pool.dice[-2:]
         values = [die.value for die in last_two]
         self.pool.hold(*values)
-        self.assertEqual(last_two, self.pool.held)
+        self.assertEqual(sorted(last_two), self.pool.held)
 
     def testIter(self):
         """Test of iterating over the dice in the pool."""
@@ -178,6 +178,19 @@ class PoolTest(unittest.TestCase):
         """Test a computer readable text representation of a pool of dice."""
         pool = dice.Pool()
         self.assertEqual('<Pool {} and {}>'.format(*pool.values), repr(pool))
+
+    def testRollHeld(self):
+        """Test that rolling does not affect held dice."""
+        held_values = self.pool.values[:2]
+        self.pool.hold(*held_values)
+        self.pool.roll()
+        self.assertEqual(held_values, self.pool.values[:2])
+
+    def testRollIndex(self):
+        """Test that rolling by index does not affect the other values."""
+        held_values = self.pool.values[:]
+        self.pool.roll(4)
+        self.assertEqual(held_values[:4], self.pool.values[:4])
 
     def testStr(self):
         """Test a human readable text representation of a pool of two dice."""
