@@ -117,6 +117,20 @@ class PoolTest(unittest.TestCase):
         values = [die.value for die in self.pool.dice + self.pool.held]
         self.assertEqual(values.count(5), self.pool.count(5))
 
+    def testHoldDice(self):
+        """Test holding dice removes the dice."""
+        last_two = self.pool.dice[-2:]
+        values = [die.value for die in last_two]
+        self.pool.hold(*values)
+        self.assertEqual(3, len(self.pool.dice))
+
+    def testHoldHeld(self):
+        """Test holding dice holds the dice."""
+        last_two = self.pool.dice[-2:]
+        values = [die.value for die in last_two]
+        self.pool.hold(*values)
+        self.assertEqual(last_two, self.pool.held)
+
     def testIter(self):
         """Test of iterating over the dice in the pool."""
         self.assertEqual(list(self.pool), self.pool.dice)
