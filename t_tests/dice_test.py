@@ -192,6 +192,45 @@ class PoolTest(unittest.TestCase):
         self.pool.roll(4)
         self.assertEqual(held_values[:4], self.pool.values[:4])
 
+    def testSortHoldKey(self):
+        """Test sorting the values with a key function and held dice."""
+        self.pool.hold(*self.pool.values[:2])
+        check = [die.value for die in sorted(self.pool, key = id)]
+        self.pool.sort(key = id)
+        self.assertEqual(check, self.pool.values)
+
+    def testSortHoldPlain(self):
+        """Test sorting the values with held dice."""
+        self.pool.hold(*self.pool.values[:2])
+        check = [die.value for die in sorted(self.pool)]
+        self.pool.sort()
+        self.assertEqual(check, self.pool.values)
+
+    def testSortHoldReverse(self):
+        """Test sorting the values with reversal and held dice."""
+        self.pool.hold(*self.pool.values[:2])
+        check = [die.value for die in sorted(self.pool, reverse = True)]
+        self.pool.sort(reverse = True)
+        self.assertEqual(check, self.pool.values)
+
+    def testSortKey(self):
+        """Test sorting the values with a key function."""
+        check = [die.value for die in sorted(self.pool, key = id)]
+        self.pool.sort(key = id)
+        self.assertEqual(check, self.pool.values)
+
+    def testSortPlain(self):
+        """Test sorting the values without parameters."""
+        check = [die.value for die in sorted(self.pool)]
+        self.pool.sort()
+        self.assertEqual(check, self.pool.values)
+
+    def testSortReverse(self):
+        """Test sorting the values with reversal."""
+        check = [die.value for die in sorted(self.pool, reverse = True)]
+        self.pool.sort(reverse = True)
+        self.assertEqual(check, self.pool.values)
+
     def testStr(self):
         """Test a human readable text representation of a pool of two dice."""
         values = self.pool.values
