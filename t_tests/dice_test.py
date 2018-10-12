@@ -140,6 +140,23 @@ class PoolTest(unittest.TestCase):
         self.pool.hold(*self.pool.values[-2:])
         self.assertEqual(list(self.pool), self.pool.held + self.pool.dice)
 
+    def testReleaseAll(self):
+        """Test releasing all of the dice."""
+        self.pool.hold(*self.pool.values)
+        self.pool.release()
+        self.assertEqual(5, len(self.pool.dice))
+
+    def testReleaseNone(self):
+        """Test releasing when no dice are held."""
+        self.pool.release()
+        self.assertEqual(5, len(self.pool.dice))
+
+    def testReleaseSome(self):
+        """Test releasing some of the dice."""
+        self.pool.hold(*self.pool.values[:2])
+        self.pool.release()
+        self.assertEqual(5, len(self.pool.dice))
+
     def testRepr(self):
         """Test a computer readable text representation of a pool of dice."""
         values = self.pool.values
