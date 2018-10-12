@@ -347,7 +347,7 @@ class DominoPool(Pool):
 
     def __str__(self):
         """Generate a human readable text representation. (str)"""
-        return ', '.join([str(value) for value in self.values])
+        return utility.oxford(self.values)
 
     def replace(self, value):
         """
@@ -370,7 +370,7 @@ class DominoPool(Pool):
 
     def sort(self, key = None, reverse = False):
         """Sort the dice in the pool. (list)"""
-        pass
+        self.values.sort(key = key, reverse = reverse)
 
 
 if __name__ == '__main__':

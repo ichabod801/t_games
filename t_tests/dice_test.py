@@ -96,8 +96,18 @@ class DominoPoolTest(unittest.TestCase):
         self.pool = dice.DominoPool()
 
     def testRepr(self):
-        """Test a computer readable text representation of a pool of dice."""
-        self.assertEqual('<DominoPool {}, {}>'.format(*self.pool.values), repr(self.pool))
+        """Test a computer readable text representation of a pool of dominoes."""
+        self.assertEqual('<DominoPool {} and {}>'.format(*self.pool.values), repr(self.pool))
+
+    def testStr(self):
+        """Test a human readable text representation of a domino pool."""
+        self.assertEqual('{} and {}'.format(*self.pool.values), str(self.pool))
+
+    def testStrLong(self):
+        """Test a human readable text representation of a triomino pool."""
+        pool = dice.DominoPool([4, 4, 4], dice.Die(4))
+        check = '{0}, {1}, and {2}'.format(*pool.values)
+        self.assertEqual(check, str(pool))
 
 
 class PoolTest(unittest.TestCase):
@@ -181,7 +191,7 @@ class PoolTest(unittest.TestCase):
 
     def testRollHeld(self):
         """Test that rolling does not affect held dice."""
-        held_values = self.pool.values[:2]
+        held_values = sorted(self.pool.values[:2])
         self.pool.hold(*held_values)
         self.pool.roll()
         self.assertEqual(held_values, self.pool.values[:2])
