@@ -95,6 +95,14 @@ class DominoPoolTest(unittest.TestCase):
     def setUp(self):
         self.pool = dice.DominoPool()
 
+    def testReplaceNo(self):
+        """Test replacing with a valid value."""
+        self.assertEqual(5, self.pool.replace(5))
+
+    def testReplaceYes(self):
+        """Test replacing with an invalid value."""
+        self.assertNotEqual(0, self.pool.replace(0))
+
     def testRepr(self):
         """Test a computer readable text representation of a pool of dominoes."""
         self.assertEqual('<DominoPool {} and {}>'.format(*self.pool.values), repr(self.pool))
