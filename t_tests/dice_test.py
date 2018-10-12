@@ -106,6 +106,15 @@ class PoolTest(unittest.TestCase):
     def setUp(self):
         self.pool = dice.Pool([6] * 5)
 
+    def testIter(self):
+        """Test of iterating over the dice in the pool."""
+        self.assertEqual(list(self.pool), self.pool.dice)
+
+    def testIterHold(self):
+        """Test of iterating over the dice in the pool."""
+        self.pool.hold(*self.pool.values[-2:])
+        self.assertEqual(list(self.pool), self.pool.held + self.pool.dice)
+
     def testRepr(self):
         """Test a computer readable text representation of a pool of dice."""
         values = self.pool.values
@@ -127,6 +136,28 @@ class PoolTest(unittest.TestCase):
         """Test a computer readable text representation of a pool of dice."""
         pool = dice.Pool()
         self.assertEqual('<Pool {} and {}>'.format(*pool.values), repr(pool))
+
+    def testStr(self):
+        """Test a human readable text representation of a pool of two dice."""
+        values = self.pool.values
+        base_text = ', '.join([str(value) for value in values[:4]])
+        self.assertEqual('{}, and {}'.format(base_text, values[4]), str(self.pool))
+
+    def testStrHold(self):
+        """Test a humn readable text representation of a pool of dice with holds."""
+        # Hold two dice.
+        self.pool.hold(self.pool.dice[1].value)
+        self.pool.hold(self.pool.dice[2].value)
+        # Get the text for the values.
+        text_bits = [str(die) + '*' for die in self.pool.held] + [str(die) for die in self.pool.dice]
+        base_text = ', '.join(text_bits[:4])
+        # Check for a match.
+        self.assertEqual('{}, and {}'.format(base_text, text_bits[4]), str(self.pool))
+
+    def testStrSmall(self):
+        """Test a human readable text representation of a pool of two dice."""
+        pool = dice.Pool()
+        self.assertEqual('{} and {}'.format(*pool.values), str(pool))
 
 
 class ShuffleDieTest(unittest.TestCase):
