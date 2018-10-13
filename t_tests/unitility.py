@@ -33,7 +33,7 @@ class AutoBot(player.Bot):
     tell
     """
 
-    def __init__(self, name = 'Buckaroo', replies = []):
+    def __init__(self, replies = []):
         """
         Set up the bot. (None)
 
@@ -41,9 +41,10 @@ class AutoBot(player.Bot):
         name: The name of the bot. (str)
         replies: The answers to questions the bot will be asked. (list)
         """
-        super(AutoBot, self).__init__(name)
+        super(AutoBot, self).__init__()
         self.replies = replies
         self.info = []
+        self.errors = []
         self.game = game.Game(self, 'none')
 
     def ask(self, prompt):
@@ -98,6 +99,17 @@ class AutoBot(player.Bot):
         lower: A flag for case insensitive matching. (bool)
         """
         return replies.pop(0)
+
+    def error(self, *args, **kwargs):
+        """
+        Warn the player about an invalid play. (None)
+
+        Parameters:
+        The parameters are as teh built-in print function.
+        """
+        sep = kwargs.get('sep', ' ')
+        end = kwargs.get('end', '\n')
+        self.errors.append('{}{}'.format(sep.join(args), end))
 
     def tell(self, *args, **kwargs):
         """
