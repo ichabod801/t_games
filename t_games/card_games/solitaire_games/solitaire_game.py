@@ -990,12 +990,36 @@ class MultiSolitaire(Solitaire):
             while self.moves[move_index][3]:
                 move_index -= 1
             base_move = self.moves[move_index]
-            # Undo the last move without penalty.
-            self.do_undo('1', clear_alt = False)
-            self.undo_count -= 1
-            # Redo the move with the next move.
-            self.transfer(*self.alt_moves.pop())
-            return False
+            # Find the move to make.
+            if argument:
+                # Get the specifications and possibilities.
+                locations = [self.find_location(word) for word in argument.split()]
+                valid = self.alt_moves[:]
+                print(valid)
+                # Filter the possibilities by the location specifications.
+                if locations:
+                    valid = [move for move in valid if move[0][0].game_location == locations[0]]
+                    print(valid)
+                if len(locations) > 1:
+                    valid = [move for move in valid if move[1] == locations[1]]
+                    print(valid)
+                # Make the move if there is one.
+                if valid:
+                    new_move = valid.pop()
+                    self.alt_moves.remove(new_move)
+                else:
+                    # Warn the user of bad specifications.
+                    new_move = None
+                    self.human.error('There is no alternate move matching that specification.')
+            else:
+                new_move = self.alt_moves.pop()
+            if new_move:
+                # Undo the last move without penalty.
+                self.do_undo('1', clear_alt = False)
+                self.undo_count -= 1
+                # Redo the move with the next move.
+                self.transfer(*new_move)
+                return False
         else:
             # Warn the user of invalid plays.
             self.human.error('The last move is not alternatable.')
@@ -1256,15 +1280,15 @@ class MultiSolitaire(Solitaire):
         else:
             location_type = location_text
             location_count = 0
-        # Get the location from the game.
+        # Get the location.
         if location_type == 'F':
-            location = self.game.cells
+            location = self.cells
         elif location_type == 'R':
-            location = self.game.reserve
+            location = self.reserve
         elif location_type == 'T':
-            location = self.game.tableau
+            location = self.tableau
         elif location_type == 'W':
-            location = self.game.waste
+            location = self.waste
         else:
             location = []
         # Get the sub-location based on the count.
