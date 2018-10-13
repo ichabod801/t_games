@@ -5,6 +5,7 @@ Unit testing of dice.py.
 
 Classes:
 DieTest: Tests of a single die. (unittest.TestCase)
+DominoPoolRollTest: Test rolling a sampling pool of dice. (unittest.TestCase)
 DominoPoolTest: Test of a sampling pool of dice. (unittest.TestCase)
 PoolTest: Test of a pool of dice. (unittest.TestCase)
 ShuffleDieTest: Tests of a sampling die. (unittest.TestCase)
@@ -87,6 +88,44 @@ class DieTest(unittest.TestCase):
     def testStr(self):
         """Test a human readable text representation of a die."""
         self.assertEqual(str(self.die.value), str(self.die))
+
+
+class DominoPoolRollTest(unittest.TestCase):
+    """Test rolling a sampling pool of dice. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.pool = dice.DominoPool()
+        self.rolls = self.pool.values[:]
+        for roll in range(len(self.pool.possible) - 1):
+            self.rolls.extend(self.pool.roll())
+
+    def test1s(self):
+        """Test that an appropriate number of ones are rolled by a domino pool."""
+        self.assertTrue(self.rolls.count(1) >= 7)
+
+    def test2s(self):
+        """Test that an appropriate number of twos are rolled by a domino pool."""
+        self.assertTrue(self.rolls.count(2) >= 7)
+
+    def test3s(self):
+        """Test that an appropriate number of threes are rolled by a domino pool."""
+        self.assertTrue(self.rolls.count(3) >= 7)
+
+    def test4s(self):
+        """Test that an appropriate number of fours are rolled by a domino pool."""
+        self.assertTrue(self.rolls.count(4) >= 7)
+
+    def test5s(self):
+        """Test that an appropriate number of fives are rolled by a domino pool."""
+        self.assertTrue(self.rolls.count(5) >= 7)
+
+    def test6s(self):
+        """Test that an appropriate number of sixes are rolled by a domino pool."""
+        self.assertTrue(self.rolls.count(6) >= 7)
+
+    def testPopulation(self):
+        """Test resetting a domino pool."""
+        self.assertEqual(len(self.pool.possible), len(self.pool.population))
 
 
 class DominoPoolTest(unittest.TestCase):

@@ -323,6 +323,7 @@ class DominoPool(Pool):
 
     Methods:
     replace: Replace a blank with a value from the filler die. (int)
+    reset: Reset the population of dice rolls. (None)
 
     Overridden Methods:
     __init__
@@ -341,8 +342,8 @@ class DominoPool(Pool):
         """
         ranges = [range(x + 1) for x in sorted(dice)]
         self.possible = [prod for prod in itertools.product(*ranges) if sorted(prod) == list(prod)]
-        self.population = self.possible[:]
         self.filler = filler
+        self.reset()
         self.roll()
 
     def __str__(self):
@@ -361,12 +362,18 @@ class DominoPool(Pool):
         else:
             return self.filler.roll()
 
+    def reset(self):
+        """Reset the population of dice rolls. (None)"""
+        self.population = self.possible[:]
+        random.shuffle(self.population)
+
     def roll(self):
         """Roll the pool. (list)"""
         self.values = [self.replace(x) for x in self.population.pop()]
         if not self.population:
-            self.population = self.possible[:]
+            self.reset()
         self.values.sort()
+        return self.values
 
     def sort(self, key = None, reverse = False):
         """Sort the dice in the pool. (list)"""
