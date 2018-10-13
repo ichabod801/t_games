@@ -19,7 +19,7 @@ by_count: Crate a counts dictionary for testing. (collections.defaultdict)
 import collections
 import unittest
 
-import _test_utility
+import unitility
 import t_games.dice_games.liars_dice_game as liar
 import t_games.player as player
 
@@ -29,7 +29,7 @@ class OneSixAdjustTest(unittest.TestCase):
 
     def setUp(self):
         """Set up the tests."""
-        self.game = liar.LiarsDice(player.Tester(), 'one-six')
+        self.game = liar.LiarsDice(unitility.AutoBot(), 'one-six')
 
     def testBothUnique(self):
         """Test one-six adjustemnt with unique ones count and sixes count."""
@@ -86,7 +86,7 @@ class OneWildAdjustTest(unittest.TestCase):
 
     def setUp(self):
         """Set up the tests."""
-        self.game = liar.LiarsDice(player.Tester(), 'one-wild')
+        self.game = liar.LiarsDice(unitility.AutoBot(), 'one-wild')
 
     def testFiveKind(self):
         """Test one-wild adjustment with five of a kind."""
@@ -166,7 +166,7 @@ class OneSixScoreTest(unittest.TestCase):
 
     def setUp(self):
         """Set up the tests."""
-        self.game = liar.LiarsDice(player.Tester(), 'one-six')
+        self.game = liar.LiarsDice(unitility.AutoBot(), 'one-six')
 
     def testFiveKind(self):
         """Test scoring five of a kind with ones as sixes."""
@@ -222,7 +222,7 @@ class PokerScoreTest(unittest.TestCase):
 
     def setUp(self):
         """Set up the tests."""
-        self.game = liar.LiarsDice(player.Tester(), 'none')
+        self.game = liar.LiarsDice(unitility.AutoBot(), 'none')
 
     def testFiveKind(self):
         """Test scoring five of a kind."""
@@ -338,7 +338,7 @@ class PokerTextTest(unittest.TestCase):
 
     def setUp(self):
         """Set up the tests."""
-        self.game = liar.LiarsDice(player.Tester(), 'none')
+        self.game = liar.LiarsDice(unitility.AutoBot(), 'none')
 
     def testFiveKind(self):
         """Test text generation for five of a kind."""
@@ -453,7 +453,7 @@ class ValidateClaimTest(unittest.TestCase):
     """Test validating that the new claim is better than the old. (TestCase)"""
 
     def setUp(self):
-        self.player = _test_utility.Mute()
+        self.player = unitility.AutoBot()
         self.game = liar.LiarsDice(self.player, 'none')
         self.game.reset()
 
@@ -470,7 +470,7 @@ class ValidateClaimTest(unittest.TestCase):
         self.assertFalse(self.game.validate_claim(claim, self.player))
         # Test the lower against itself.
         self.game.claim = claim
-        self.assertFalse(self.game.validate_claim(claim, self.player)) 
+        self.assertFalse(self.game.validate_claim(claim, self.player))
 
     def testFiveFour(self):
         """Test comparing five of a kind to four of a kind."""
