@@ -521,7 +521,7 @@ class Bachter(Bacht):
                 score_diff = roll * count - target_score
                 possibles.append((count - target_dice, [roll] * count, score_diff, 'run'))
             # Check three/four of a kind
-            elif 'of a Kind' in category_name or category_name == self.game.five_name:
+            elif 'of a Kind' in category_name or category_name == self.game.five_name.replace('_', ' '):
                 count, roll = counts[0]
                 score_diff = category.score(self.game.dice, 1) - target_score
                 possibles.append((count - target_dice, [roll] * count, score_diff, 'run'))
