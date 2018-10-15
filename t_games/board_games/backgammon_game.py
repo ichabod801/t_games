@@ -904,26 +904,28 @@ class Backgammon(game.Game):
         # Assume the turn will continue.
         go = True
         # Get the rolls needed for the points the player is on.
-        points = [point for point, cell in self.board.cells.items() if piece in cell]
+        board_points = [point for point, cell in self.board.cells.items() if piece in cell]
         if piece == 'O':
-            points = [25 - point for point in points if point > 0]
+            player_points = [25 - point for point in board_points if point > 0]
+        else:
+            player_point = board_points[:]
         # Loop through the rolls.
         for roll in sorted(self.rolls, reverse = True):
-            max_point = max(points)
+            max_player = max(player_points)
+            if piece == 'O':
+                max_board = 25 - max_player
+            else:
+                max_board = max_player
             # Ensure exact matches bear.
-            if roll in points:
-                max_point = roll
+            if roll in player_points:
+                max_player = roll
             # Bear a piece if you can.
-            if roll >= max_point:
-                if piece == 'O':
-                    max_point = 25 - max_point
+            if roll >= max_player:
                 self.rolls.remove(roll)
-                self.board.move(max_point, OUT)
+                self.board.move(max_board, OUT)
                 # Check for the point still being valid.
-                if not self.board.cells[max_point].contents:
-                    if piece == 'O':
-                        max_point = 25 - max_point
-                    points.remove(max_point)
+                if not self.board.cells[max_board].contents:
+                    player_points.remove(max_player)
                 go = self.rolls
         # Warn if no successful moves were made.
         if go is True:
