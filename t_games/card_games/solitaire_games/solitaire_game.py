@@ -68,11 +68,21 @@ to build them on.
 
 The first way to deal with this is to be specific when possible. If you just
 type '2S' to move the Two of Spades onto the Three of Diamonds, it might get
-moved on to the Three of Hearts. So be clear with '2S 3D'.
+moved on to the Three of Hearts. So be clear with '2S 3D'. You can be more
+specific with location identifiers. The format for cards with location
+identifiers is RS-AN (Rank, Suit, Area, Number). The area can be F (free
+cells), R (reserve), T (tableau), or W (waste). The number is only needed for
+reserve and tableau piles, and can be from 1 (the first/leftmost) to the number
+of piles. It defaults to one, for cases where there is only one reserve pile.
+Note that using just a number for a location identifier is assumed to be
+refering to a tableau pile.
 
 If the move made is still not the one you intended, you can use the alternate
 command (alias alt) to pick an alternate version of the move. This does not
-penalize you in terms of the move count.
+penalize you in terms of the move count. You can add location identifiers as
+arguments to the alternate command. The first one refers to the (current)
+location of the card you want to move, and the second (if given) indicates
+where you want to move it to.
 """
 
 SCORE_HELP = """
@@ -958,6 +968,7 @@ class MultiSolitaire(Solitaire):
 
     Methods:
     do_alternate: Redo the last command with different but matching cards. (bool)
+    find_location: Find a location in the game. (list)
 
     Overridden Methods:
     do_auto
@@ -1266,7 +1277,7 @@ class MultiSolitaire(Solitaire):
         Parameters:
         location_text: Text specifying the location. (str)
         """
-        # Parse the location specifier.
+        # Parse out the location type and the location count.
         location_text = location_text.upper()
         if location_text.isdigit():
             location_type = 'T'
@@ -1277,7 +1288,7 @@ class MultiSolitaire(Solitaire):
         else:
             location_type = location_text
             location_count = 0
-        # Get the location.
+        # Get the location by type.
         if location_type == 'F':
             location = self.cells
         elif location_type == 'R':
