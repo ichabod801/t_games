@@ -753,7 +753,6 @@ class MultiTrackingDeck(TrackingDeck):
         Paramters:
         card_text: The string version of the card. (str)
         """
-        #print(card_text)
         # Check for a location specifier
         if '-' in card_text:
             card_text, location = card_text.split('-')
@@ -771,7 +770,6 @@ class MultiTrackingDeck(TrackingDeck):
             else:
                 location_type = location
                 location_count = 0
-            #print(location_type, location_count)
         else:
             # Distinguish no location from an empty location
             location = None
@@ -785,7 +783,6 @@ class MultiTrackingDeck(TrackingDeck):
                 location = self.game.tableau[location_count]
             else:
                 location = self.game.waste
-            #print(location)
         # Find the cards, filtered by any location specified.
         cards = self.card_map[card_text.upper()]
         if location is not None:

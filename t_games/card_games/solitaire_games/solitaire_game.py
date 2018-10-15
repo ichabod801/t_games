@@ -995,14 +995,11 @@ class MultiSolitaire(Solitaire):
                 # Get the specifications and possibilities.
                 locations = [self.find_location(word) for word in argument.split()]
                 valid = self.alt_moves[:]
-                print(valid)
                 # Filter the possibilities by the location specifications.
                 if locations:
                     valid = [move for move in valid if move[0][0].game_location == locations[0]]
-                    print(valid)
                 if len(locations) > 1:
                     valid = [move for move in valid if move[1] == locations[1]]
-                    print(valid)
                 # Make the move if there is one.
                 if valid:
                     new_move = valid.pop()
@@ -1307,6 +1304,7 @@ class MultiSolitaire(Solitaire):
         card_text: The card to move. (str)
         """
         # Loop through the possible cards.
+        card_text = card_text.upper()
         cards = self.deck.find(card_text)
         moves = []
         for card in cards:
@@ -1314,31 +1312,31 @@ class MultiSolitaire(Solitaire):
             if self.foundations:
                 for foundation in self.find_foundation(card):
                     if self.sort_check(card, foundation, False):
-                        moves.append('sort {}'.format(card))
+                        moves.append('sort {}'.format(card_text))
             if not moves:
                 moving_stack = self.super_stack(card)
                 for pile in self.tableau:
                     # Check bulding the card.
                     if pile and self.build_check(card, pile[-1], moving_stack, False):
-                        moves.append('build {} {}'.format(card, pile[-1]))
+                        moves.append('build {} {}'.format(card_text, pile[-1]))
                         break
                     # Check matching the card.
                     elif pile and self.match_check(card, pile[-1], False):
-                        moves.append('match {} {}'.format(card, pile[-1]))
+                        moves.append('match {} {}'.format(card_text, pile[-1]))
                         break
                 else:
                     # Check non-tableau matching of the card.
                     for pile in [self.waste] + self.reserve + [[free] for free in self.cells]:
                         if pile and self.match_check(card, pile[-1], False):
-                            moves.append('match {} {}'.format(card, pile[-1]))
+                            moves.append('match {} {}'.format(card_text, pile[-1]))
                             break
                     else:
                         # Check freeing the card.
                         if card.game_location is not self.cells and self.free_check(card, False):
-                            moves.append('free {}'.format(card))
+                            moves.append('free {}'.format(card_text))
                         # Check laning the card.
                         elif self.lane_check(card, moving_stack, False):
-                            moves.append('lane {}'.format(card))
+                            moves.append('lane {}'.format(card_text))
             if moves:
                 break
         # Make a move if you have one.
@@ -1376,8 +1374,8 @@ class MultiSolitaire(Solitaire):
             return self.handle_cmd(moves.pop())
         # If no moves were found, errror out.
         else:
-            message = '\nThere is no valid move for a {}{} and a {}{}.'
-            self.human.error(message.format(card.rank, card.suit, target.rank, target.suit))
+            message = '\nThere is no valid move for a {} and a {}.'
+            self.human.error(message.format(card, target))
 
     def set_solitaire(self):
         """
