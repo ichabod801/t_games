@@ -969,7 +969,7 @@ class Yacht(game.Game):
                 break
         else:
             # Check for single character category reference.
-            if specifier.upper() in self.letters:
+            if specifier and specifier.upper() in self.letters:
                 category = self.score_cats[self.letters.index(specifier.upper())]
             else:
                 # Handle unknown categories.
