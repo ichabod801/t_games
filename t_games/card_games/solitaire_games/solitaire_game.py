@@ -68,11 +68,21 @@ to build them on.
 
 The first way to deal with this is to be specific when possible. If you just
 type '2S' to move the Two of Spades onto the Three of Diamonds, it might get
-moved on to the Three of Hearts. So be clear with '2S 3D'.
+moved on to the Three of Hearts. So be clear with '2S 3D'. You can be more
+specific with location identifiers. The format for cards with location
+identifiers is RS-AN (Rank, Suit, Area, Number). The area can be F (free
+cells), R (reserve), T (tableau), or W (waste). The number is only needed for
+reserve and tableau piles, and can be from 1 (the first/leftmost) to the number
+of piles. It defaults to one, for cases where there is only one reserve pile.
+Note that using just a number for a location identifier is assumed to be
+refering to a tableau pile.
 
 If the move made is still not the one you intended, you can use the alternate
 command (alias alt) to pick an alternate version of the move. This does not
-penalize you in terms of the move count.
+penalize you in terms of the move count. You can add location identifiers as
+arguments to the alternate command. The first one refers to the (current)
+location of the card you want to move, and the second (if given) indicates
+where you want to move it to.
 """
 
 SCORE_HELP = """
@@ -958,6 +968,7 @@ class MultiSolitaire(Solitaire):
 
     Methods:
     do_alternate: Redo the last command with different but matching cards. (bool)
+    find_location: Find a location in the game. (list)
 
     Overridden Methods:
     do_auto
@@ -990,12 +1001,33 @@ class MultiSolitaire(Solitaire):
             while self.moves[move_index][3]:
                 move_index -= 1
             base_move = self.moves[move_index]
-            # Undo the last move without penalty.
-            self.do_undo('1', clear_alt = False)
-            self.undo_count -= 1
-            # Redo the move with the next move.
-            self.transfer(*self.alt_moves.pop())
-            return False
+            # Find the move to make.
+            if argument:
+                # Get the specifications and possibilities.
+                locations = [self.find_location(word) for word in argument.split()]
+                valid = self.alt_moves[:]
+                # Filter the possibilities by the location specifications.
+                if locations:
+                    valid = [move for move in valid if move[0][0].game_location == locations[0]]
+                if len(locations) > 1:
+                    valid = [move for move in valid if move[1] == locations[1]]
+                # Make the move if there is one.
+                if valid:
+                    new_move = valid.pop()
+                    self.alt_moves.remove(new_move)
+                else:
+                    # Warn the user of bad specifications.
+                    new_move = None
+                    self.human.error('There is no alternate move matching that specification.')
+            else:
+                new_move = self.alt_moves.pop()
+            if new_move:
+                # Undo the last move without penalty.
+                self.do_undo('1', clear_alt = False)
+                self.undo_count -= 1
+                # Redo the move with the next move.
+                self.transfer(*new_move)
+                return False
         else:
             # Warn the user of invalid plays.
             self.human.error('The last move is not alternatable.')
@@ -1238,6 +1270,43 @@ class MultiSolitaire(Solitaire):
             foundations.append(self.foundations[first_index + len(self.deck.suits) * deck_index])
         return foundations
 
+    def find_location(self, location_text):
+        """
+        Find a location in the game. (list)
+
+        Parameters:
+        location_text: Text specifying the location. (str)
+        """
+        # Parse out the location type and the location count.
+        location_text = location_text.upper()
+        if location_text.isdigit():
+            location_type = 'T'
+            location_count = int(location_text) - 1
+        elif location_text[-1].isdigit():
+            location_type = location_text[0]
+            location_count = int(location_text[1:]) - 1
+        else:
+            location_type = location_text
+            location_count = 0
+        # Get the location by type.
+        if location_type == 'F':
+            location = self.cells
+        elif location_type == 'R':
+            location = self.reserve
+        elif location_type == 'T':
+            location = self.tableau
+        elif location_type == 'W':
+            location = self.waste
+        else:
+            location = []
+        # Get the sub-location based on the count.
+        if location_type in 'RT':
+            try:
+                location = location[location_count]
+            except IndexError:
+                location = []
+        return location
+
     def guess(self, card_text):
         """
         Guess what move to make for a particular card. (None)
@@ -1246,6 +1315,7 @@ class MultiSolitaire(Solitaire):
         card_text: The card to move. (str)
         """
         # Loop through the possible cards.
+        card_text = card_text.upper()
         cards = self.deck.find(card_text)
         moves = []
         for card in cards:
@@ -1253,31 +1323,31 @@ class MultiSolitaire(Solitaire):
             if self.foundations:
                 for foundation in self.find_foundation(card):
                     if self.sort_check(card, foundation, False):
-                        moves.append('sort {}'.format(card))
+                        moves.append('sort {}'.format(card_text))
             if not moves:
                 moving_stack = self.super_stack(card)
                 for pile in self.tableau:
                     # Check bulding the card.
                     if pile and self.build_check(card, pile[-1], moving_stack, False):
-                        moves.append('build {} {}'.format(card, pile[-1]))
+                        moves.append('build {} {}'.format(card_text, pile[-1]))
                         break
                     # Check matching the card.
                     elif pile and self.match_check(card, pile[-1], False):
-                        moves.append('match {} {}'.format(card, pile[-1]))
+                        moves.append('match {} {}'.format(card_text, pile[-1]))
                         break
                 else:
                     # Check non-tableau matching of the card.
                     for pile in [self.waste] + self.reserve + [[free] for free in self.cells]:
                         if pile and self.match_check(card, pile[-1], False):
-                            moves.append('match {} {}'.format(card, pile[-1]))
+                            moves.append('match {} {}'.format(card_text, pile[-1]))
                             break
                     else:
                         # Check freeing the card.
                         if card.game_location is not self.cells and self.free_check(card, False):
-                            moves.append('free {}'.format(card))
+                            moves.append('free {}'.format(card_text))
                         # Check laning the card.
                         elif self.lane_check(card, moving_stack, False):
-                            moves.append('lane {}'.format(card))
+                            moves.append('lane {}'.format(card_text))
             if moves:
                 break
         # Make a move if you have one.
@@ -1315,8 +1385,8 @@ class MultiSolitaire(Solitaire):
             return self.handle_cmd(moves.pop())
         # If no moves were found, errror out.
         else:
-            message = '\nThere is no valid move for a {}{} and a {}{}.'
-            self.human.error(message.format(card.rank, card.suit, target.rank, target.suit))
+            message = '\nThere is no valid move for a {} and a {}.'
+            self.human.error(message.format(card, target))
 
     def set_solitaire(self):
         """
