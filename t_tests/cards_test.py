@@ -19,7 +19,7 @@ import unittest
 
 import t_games.cards as cards
 import t_games.card_games.solitaire_games.solitaire_game as solitaire
-import unitility
+from t_tests import unitility
 
 
 class CardTest(unittest.TestCase):
@@ -640,11 +640,38 @@ class MultiTrackingDeckTest(unittest.TestCase):
     """Tests of the MultiTrackingDeck class. (unittest.TestCase)"""
 
     def setUp(self):
-        self.deck = cards.MultiTrackingDeck('dummy game')
+        self.game = unitility.ProtoObject(reserve = [[], [], []], cells = [], waste = [],
+            tableau = [[], [], []])
+        self.deck = cards.MultiTrackingDeck(self.game)
+
+    def testFindBlank(self):
+        """Find a card with no location indicator."""
+        self.deck.shuffle()
+        card = self.deck.deal(self.game.cells)
+        self.assertIn(card, self.deck.find(str(card)))
+
+    def testFindMultiple(self):
+        """Find a card with a full location indicator."""
+        self.deck.shuffle()
+        card = self.deck.deal(self.game.reserve[1])
+        self.assertEqual([card], self.deck.find(str(card) + '-R2'))
+
+    def testFindSingle(self):
+        """Find a card with just a alphabetic location indicator."""
+        self.deck.shuffle()
+        card = self.deck.deal(self.game.waste)
+        self.assertEqual([card], self.deck.find(str(card) + '-W'))
+
+    def testFindTableau(self):
+        """Find a card with just a numeric location indicator."""
+        self.deck.shuffle()
+        card = self.deck.deal(self.game.tableau[2])
+        self.assertEqual([card], self.deck.find(str(card) + '-3'))
 
     def testRepr(self):
         """Test the debugging text representation."""
-        self.assertEqual("<MultiTrackingDeck of TrackingCards for 'dummy game'>", repr(self.deck))
+        check = '<MultiTrackingDeck of TrackingCards for {!r}>'.format(self.game)
+        self.assertEqual(check, repr(self.deck))
 
 
 class TrackingCardTest(unittest.TestCase):

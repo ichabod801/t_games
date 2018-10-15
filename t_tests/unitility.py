@@ -111,6 +111,39 @@ class AutoBot(player.Bot):
         self.info.append('{}{}'.format(sep.join(args), end))
 
 
+class ProtoObject(object):
+    """
+    An object whose attributes can be defined during initialization. (object)
+
+    Methods:
+    dummy_method: Return whatever is passed to this method.
+
+    Overriddent Methods:
+    __init__
+    """
+
+    def __init__(self, *args, **kwargs):
+        """
+        Set up the object's attributes. (None)
+
+        Parameters:
+        *args: The names of any dummy methods.
+        **kwargs: Attributes and their values.
+        """
+        self.__dict__.update(kwargs)
+        for arg in args:
+            setattr(self, arg, self.dummy_method)
+
+    def dummy_method(self, *args, **kwargs):
+        """Return whatever is passed to this method."""
+        if args and kwargs:
+            return args, kwargs
+        elif args:
+            return args
+        elif kwargs:
+            return kwargs
+
+
 class ProtoStdIn(object):
     """
     A programatically controlled stdin. (object)
