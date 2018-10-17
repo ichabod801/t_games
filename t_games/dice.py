@@ -59,6 +59,8 @@ class Die(object):
             self.sides = sides
         # Get an initial value for the die.
         self.roll()
+        # Set the default attribute.
+        self.held = False
 
     def __add__(self, other):
         """
@@ -123,7 +125,10 @@ class Die(object):
 
     def __str__(self):
         """Generate a human readable text representation. (str)"""
-        return str(self.value)
+        if self.held:
+            return '{}*'.format(self.value)
+        else:
+            return str(self.value)
 
     def roll(self):
         """
@@ -194,7 +199,6 @@ class Pool(object):
 
     Attributes:
     dice: The dice in the pool. (list of Die)
-    held: Dice put aside and not rolled. (list of Die)
     values: The current values of the dice in the pool. (list)
 
     Methods:
@@ -223,7 +227,6 @@ class Pool(object):
         """
         # Set up the dice containers.
         self.dice = []
-        self.held = []
         # Set up the dice.
         for die in dice:
             if isinstance(die, Die):
@@ -235,7 +238,7 @@ class Pool(object):
 
     def __iter__(self):
         """Iterate over the dice. (iterator)"""
-        return iter(self.held + self.dice)
+        return iter(self.dice)
 
     def __repr__(self):
         """Generate debugging text representation. (str)"""
@@ -243,7 +246,7 @@ class Pool(object):
 
     def __str__(self):
         """Generate human readable text representation. (str)"""
-        return utility.oxford(['{}*'.format(die) for die in self.held] + self.dice)
+        return utility.oxford(self.dice)
 
     def count(self, object):
         """
@@ -252,7 +255,7 @@ class Pool(object):
         Parameters:
         object: The roll to count. (object)
         """
-        return self.dice.count(object) + self.held.count(object)
+        return self.dice.count(object)
 
     def hold(self, *values):
         """
@@ -261,16 +264,16 @@ class Pool(object):
         Parameters:
         *values: The values of the dice to hold.
         """
+        unheld = [die for die in self.dice if not die.held]
         for value in values:
-            spot = self.dice.index(value)
-            self.held.append(self.dice[spot])
-            del self.dice[spot]
-        self.held.sort()
+            spot = unheld.index(value)
+            unheld[spot].hold = True
+            del unheld[spot]
 
     def release(self):
         """Make all held dice available for rolling. (None)"""
-        self.dice.extend(self.held)
-        self.held = []
+        for die in self.dice:
+            die.held = False
 
     def roll(self, index = None):
         """
@@ -281,14 +284,17 @@ class Pool(object):
         """
         if index is not None:
             # Roll a single die.
-            self.values[index] = self.dice[index].roll()
+            if self.dice[index].held:
+                raise ValueError('Cannot roll a held die.')
+            else:
+                self.values[index] = self.dice[index].roll()
         else:
-            # Roll all of the dice.
+            # Roll all of the unheld dice.
             self.values = []
-            for die in self.held:
-                self.values.append(die.value)
             for die in self.dice:
-                self.values.append(die.roll())
+                if not die.held:
+                    die.roll()
+                self.values.append(die.value)
         return self.values
 
     def sort(self, key = None, reverse = False):
@@ -302,9 +308,8 @@ class Pool(object):
         key: A function returning the value to sort an item by. (callable)
         reverse: A flag for reversing the sort order. (bool)
         """
-        all_dice = self.held + self.dice
-        all_dice.sort(key = key, reverse = reverse)
-        self.values = [die.value for die in all_dice]
+        self.dice.sort(key = key, reverse = reverse)
+        self.values = [die.value for die in self.dice]
 
 
 class DominoPool(Pool):
