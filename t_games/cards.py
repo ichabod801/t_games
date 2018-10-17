@@ -25,6 +25,8 @@ import collections
 import random
 import re
 
+import t_games.utility as utility
+
 
 class Card(object):
     """
@@ -255,7 +257,8 @@ class Deck(object):
 
     def __repr__(self):
         """Create a debugging text representation. (str)"""
-        return '<{} with {} cards remaining>'.format(self.__class__.__name__, len(self.cards))
+        card_text = utility.plural(len(self.cards), 'card')
+        return '<{} with {} {} remaining>'.format(self.__class__.__name__, len(self.cards), card_text)
 
     def cut(self, card_index):
         """
@@ -631,8 +634,17 @@ class TrackingDeck(Deck):
 
     def __str__(self):
         """Generate a human readable text representation. (str)"""
-        text = 'Deck of cards with {} cards, plus {} cards in play and {} cards discarded'
-        return text.format(len(self.cards), len(self.in_play), len(self.discards))
+        # Get the relevant counts.
+        cards = len(self.cards)
+        in_play = len(self.in_play)
+        discards = len(self.discards)
+        # Get the relevant plurals.
+        card_text = utility.plural(cards, 'card')
+        play_text = utility.plural(in_play, 'card')
+        discard_text = utility.plural(discards, 'card')
+        # Generate the text.
+        text = 'Deck of cards with {} {}, plus {} {} in play and {} {} discarded'
+        return text.format(cards, card_text, in_play, play_text, discards, discard_text)
 
     def deal(self, game_location, face_up = True, card_index = -1):
         """
