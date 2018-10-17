@@ -904,28 +904,32 @@ class Backgammon(game.Game):
         # Assume the turn will continue.
         go = True
         # Get the rolls needed for the points the player is on.
-        points = [point for point, cell in self.board.cells.items() if piece in cell]
+        player_points = [point for point, cell in self.board.cells.items() if piece in cell]
         if piece == 'O':
-            points = [25 - point for point in points if point > 0]
+            player_points = [25 - point for point in player_points if point > 0]
         # Loop through the rolls.
         for roll in sorted(self.rolls, reverse = True):
-            max_point = max(points)
+            max_player = max(player_points)
             # Ensure exact matches bear.
-            if roll in points:
-                max_point = roll
+            if roll in player_points:
+                max_player = roll
+            # Get the board's perspective from the player's perspective.
+            if piece == 'O':
+                max_board = 25 - max_player
+            else:
+                max_board = max_player
             # Bear a piece if you can.
-            if roll >= max_point:
-                if piece == 'O':
-                    max_point = 25 - max_point
+            if roll >= max_player:
                 self.rolls.remove(roll)
-                self.board.move(max_point, OUT)
+                self.board.move(max_board, OUT)
                 # Check for the point still being valid.
-                if not self.board.cells[max_point].contents:
-                    if piece == 'O':
-                        max_point = 25 - max_point
-                    points.remove(max_point)
+                if not self.board.cells[max_board].contents:
+                    player_points.remove(max_player)
+                    # Check for the game being over.
+                    if not player_points:
+                        break
                 go = self.rolls
-        # Warn if no successful moves were made.
+        # Warn if no successful moves were made ('is' to distinguish from rolls left).
         if go is True:
             player.error('There are no pieces that can be auto-built.')
         return go
@@ -993,6 +997,9 @@ class Backgammon(game.Game):
         The argument is the pieces to bear, a space delimited list of numbers. The
         numbers should be the points of the pieces to bear, not the die rolls used to
         bear them. The computer will figure out the numbers to use.
+
+        If bear is used without arguments, it will bear whatever pieces it can, but it
+        will not move pieces to make them bearable.
         """
         # Get the current player.
         player = self.players[self.player_index]
