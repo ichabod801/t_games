@@ -1,8 +1,8 @@
 """
 rule_checkers.py
 
-These are rule checking and dealing functions for the Solitaire and 
-MultiSolitaire classes in solitaire_game.py. They are in their own file for 
+These are rule checking and dealing functions for the Solitaire and
+MultiSolitaire classes in solitaire_game.py. They are in their own file for
 greater readability.
 
 The parameter list for each type of function:
@@ -336,7 +336,7 @@ def deal_klondike(game):
     """
     for card_index in range(len(game.tableau)):
         for tableau_index in range(card_index, len(game.tableau)):
-            game.deck.deal(game.tableau[tableau_index], face_up = card_index == tableau_index)
+            game.deck.deal(game.tableau[tableau_index], up = card_index == tableau_index)
 
 
 def deal_n(n, up = True):
@@ -352,7 +352,7 @@ def deal_n(n, up = True):
     def dealer(game):
         # Deal the cards.
         for card_index in range(n):
-            game.deck.deal(game.tableau[card_index % len(game.tableau)], face_up = up)
+            game.deck.deal(game.tableau[card_index % len(game.tableau)], up = up)
         # Turn the top cards face up.
         for pile in game.tableau:
             pile[-1].up = True
@@ -482,7 +482,7 @@ def deal_stock_all(game):
     """
     # Deal the cards individually to update game_location attribute.
     while game.deck.cards:
-        game.deck.deal(game.stock, face_up = False)
+        game.deck.deal(game.stock, up = False)
     # Reverse the cards after being dealt.
     game.stock.reverse()
 

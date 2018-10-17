@@ -158,7 +158,7 @@ class Spider(solitaire.MultiSolitaire):
         else:
             # Deal the cards to the tableau.
             for pile_index, pile in enumerate(self.tableau):
-                self.transfer([self.stock[-1]], pile, face_up = True, undo_ndx = pile_index)
+                self.transfer([self.stock[-1]], pile, up = True, undo_ndx = pile_index)
                 if not self.stock:
                     break
 

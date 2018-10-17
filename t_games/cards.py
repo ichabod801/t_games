@@ -302,7 +302,7 @@ class Deck(object):
 
         Parameters:
         card_text: The string version of the card. (str)
-        face_up = Flag for dealing the card face up. (bool)
+        up = Flag for dealing the card face up. (bool)
         """
         card = self.cards[self.cards.index(card_text)]
         self.cards.remove(card)
@@ -646,13 +646,13 @@ class TrackingDeck(Deck):
         text = 'Deck of cards with {} {}, plus {} {} in play and {} {} discarded'
         return text.format(cards, card_text, in_play, play_text, discards, discard_text)
 
-    def deal(self, game_location, face_up = True, card_index = -1):
+    def deal(self, game_location, up = True, card_index = -1):
         """
         Deal a card from the deck. (Card)
 
         Parameters:
         game_location: The new location of card in the game. (list of Card)
-        face_up: Flag for dealing the card face up. (bool)
+        up: Flag for dealing the card face up. (bool)
         card_index: The location of the card to deal. (int)
         """
         # move the card
@@ -662,7 +662,7 @@ class TrackingDeck(Deck):
         # change the cards attributes
         card.game_location = game_location
         card.deck_location = self.in_play
-        card.up = face_up
+        card.up = up
         # return the card
         return card
 
@@ -691,16 +691,16 @@ class TrackingDeck(Deck):
         """
         return self.card_map[card_text.upper()]
 
-    def force(self, card_text, game_location, face_up = True):
+    def force(self, card_text, game_location, up = True):
         """
         Remove a particular card from the deck. (Card)
 
         Parameters:
         card_text: The string version of the card. (str)
         game_location: The new location of card in the game. (list of Card)
-        face_up = Flag for dealing the card face up. (bool)
+        up = Flag for dealing the card face up. (bool)
         """
-        return self.deal(game_location, face_up = face_up, card_index = self.cards.index(card_text))
+        return self.deal(game_location, up = up, card_index = self.cards.index(card_text))
 
     def shuffle(self, number = None):
         """Shuffle the discards back into the deck. (None)"""
