@@ -634,12 +634,15 @@ class TrackingDeck(Deck):
 
     def __str__(self):
         """Generate a human readable text representation. (str)"""
+        # Get the relevant counts.
         cards = len(self.cards)
         in_play = len(self.in_play)
         discards = len(self.discards)
+        # Get the relevant plurals.
         card_text = utility.plural(cards, 'card')
         play_text = utility.plural(in_play, 'card')
         discard_text = utility.plural(discards, 'card')
+        # Generate the text.
         text = 'Deck of cards with {} {}, plus {} {} in play and {} {} discarded'
         return text.format(cards, card_text, in_play, play_text, discards, discard_text)
 
