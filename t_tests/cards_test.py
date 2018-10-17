@@ -831,7 +831,7 @@ class TrackingDeckTest(unittest.TestCase):
     def testDealDown(self):
         """Test that Deck.deal returns a down card."""
         self.deck.shuffle()
-        card = self.deck.deal([], face_up = False)
+        card = self.deck.deal([], up = False)
         self.assertFalse(card.up)
 
     def testDealInPlayDeck(self):
