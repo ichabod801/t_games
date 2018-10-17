@@ -385,6 +385,12 @@ class DeckTest(unittest.TestCase):
             card = self.deck.deal()
         self.assertEqual('<Deck with 34 cards remaining>', repr(self.deck))
 
+    def testReprOne(self):
+        """Test the repr of a deck after dealing all but one card."""
+        for deal in range(51):
+            card = self.deck.deal()
+        self.assertEqual('<Deck with 1 card remaining>', repr(self.deck))
+
     def testShuffleDiscards(self):
         """Test that shuffling the deck gets back the discards."""
         self.deck.shuffle()
@@ -643,6 +649,7 @@ class MultiTrackingDeckTest(unittest.TestCase):
         self.game = unitility.ProtoObject(reserve = [[], [], []], cells = [], waste = [],
             tableau = [[], [], []])
         self.deck = cards.MultiTrackingDeck(self.game)
+        self.game.deck = self.deck
 
     def testFindBlank(self):
         """Find a card with no location indicator."""
@@ -672,6 +679,44 @@ class MultiTrackingDeckTest(unittest.TestCase):
         """Test the debugging text representation."""
         check = '<MultiTrackingDeck of TrackingCards for {!r}>'.format(self.game)
         self.assertEqual(check, repr(self.deck))
+
+    def testStr(self):
+        """Test base human readable text representation."""
+        check = 'Deck of cards with 104 cards, plus 0 cards in play and 0 cards discarded'
+        self.assertEqual(check, str(self.deck))
+
+    def testStrAll(self):
+        """Test human readable text representation with cards in play and discarded."""
+        for deal in range(18):
+            card = self.deck.deal(self.game.waste)
+            if deal % 2:
+                card.discard()
+        check = 'Deck of cards with 86 cards, plus 9 cards in play and 9 cards discarded'
+
+    def testStrDiscards(self):
+        """Test human readable text representation with discards."""
+        for deal in range(18):
+            card = self.deck.deal(self.game.waste)
+            card.discard()
+        check = 'Deck of cards with 86 cards, plus 0 cards in play and 18 cards discarded'
+
+    def testStrDiscardsOne(self):
+        """Test human readable text representation with one discard."""
+        card = self.deck.deal(self.game.waste)
+        card.discard()
+        check = 'Deck of cards with 103 cards, plus 0 cards in play and 1 card discarded'
+        self.assertEqual(check, str(self.deck))
+
+    def testStrInPlay(self):
+        """Test human readable text representation with cards in play."""
+        for deal in range(18):
+            card = self.deck.deal(self.game.waste)
+        check = 'Deck of cards with 86 cards, plus 18 cards in play and 0 cards discarded'
+
+    def testStrInPlayOne(self):
+        """Test human readable text representation with one card in play."""
+        card = self.deck.deal(self.game.waste)
+        check = 'Deck of cards with 103 cards, plus 1 card in play and 0 cards discarded'
 
 
 class TrackingCardTest(unittest.TestCase):
