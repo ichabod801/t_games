@@ -913,6 +913,7 @@ class Backgammon(game.Game):
             # Ensure exact matches bear.
             if roll in player_points:
                 max_player = roll
+            # Get the board's perspective from the player's perspective.
             if piece == 'O':
                 max_board = 25 - max_player
             else:
@@ -924,6 +925,7 @@ class Backgammon(game.Game):
                 # Check for the point still being valid.
                 if not self.board.cells[max_board].contents:
                     player_points.remove(max_player)
+                    # Check for the game being over.
                     if not player_points:
                         break
                 go = self.rolls
@@ -995,6 +997,9 @@ class Backgammon(game.Game):
         The argument is the pieces to bear, a space delimited list of numbers. The
         numbers should be the points of the pieces to bear, not the die rolls used to
         bear them. The computer will figure out the numbers to use.
+
+        If bear is used without arguments, it will bear whatever pieces it can, but it
+        will not move pieces to make them bearable.
         """
         # Get the current player.
         player = self.players[self.player_index]
