@@ -455,7 +455,7 @@ class Solitaire(game.Game):
         if self.stock_passes != self.max_passes and (self.stock or self.waste):
             # Put the waste back in the stock if necessary.
             if not self.stock:
-                self.transfer(self.waste[:], self.stock, face_up = False)
+                self.transfer(self.waste[:], self.stock, up = False)
                 self.stock.reverse()
             # Flip over turn count cards.
             for card_index in range(self.turn_count):
@@ -914,7 +914,7 @@ class Solitaire(game.Game):
                 tableau_lines[card_index][pile_index] = str(card)
         return '\n'.join([' '.join(line) for line in tableau_lines])
 
-    def transfer(self, move_stack, new_location, track = True, face_up = True, undo_ndx = 0):
+    def transfer(self, move_stack, new_location, track = True, up = True, undo_ndx = 0):
         """
         Move a stack of cards from one game location to another. (None)
 
@@ -924,7 +924,7 @@ class Solitaire(game.Game):
         move_stack: The stack of cards to move. (list of Card)
         new_location: The new game location for the cards. (list of Card)
         track: A flag for tracking the move. (bool)
-        face_up: A flag for the cards being face up. (bool)
+        up: A flag for the cards being face up. (bool)
         undo_ndx: Nominally how many undos there are to do. (int)
         """
         # Record the move.
@@ -934,7 +934,7 @@ class Solitaire(game.Game):
         # Move the cards.
         for card in move_stack:
             old_location.remove(card)
-            card.up = face_up
+            card.up = up
         new_location.extend(move_stack)
         # Turn over any revealed cards.
         if old_location and old_location is not self.stock and not old_location[-1].up:

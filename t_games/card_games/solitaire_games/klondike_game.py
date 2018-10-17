@@ -333,7 +333,7 @@ class Klondike(solitaire.Solitaire):
             self.switched = True
             self.turn_count = 1
             # Reset the stock
-            self.transfer(self.waste[:], self.stock, face_up = False)
+            self.transfer(self.waste[:], self.stock, up = False)
             self.stock.reverse()
             # Reset the stock tracking
             self.stock_passes += 1
