@@ -28,6 +28,7 @@ class Die(object):
     While typically integers, the sides of the die can be any object.
 
     Attributes:
+    held: A flag for holding the die aside and not rolling it. (bool)
     sides: The sides of the die. (list)
     value: The current value of the die. (object)
 
@@ -137,8 +138,10 @@ class Die(object):
         The return value depends on the sides attribute.
         """
         if self.held:
+            # Raise error if the die is held.
             raise ValueError('Attempt to roll a held die.')
         else:
+            # Get the new value and return it.
             self.value = random.choice(self.sides)
             return self.value
 
@@ -268,8 +271,10 @@ class Pool(object):
         Parameters:
         *values: The values of the dice to hold.
         """
+        # Loop through the values.
         unheld = [die for die in self.dice if not die.held]
         for value in values:
+            # Find a die with that value and hold it.
             spot = unheld.index(value)
             unheld[spot].held = True
             self.held += 1
