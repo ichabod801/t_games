@@ -57,10 +57,10 @@ class Die(object):
             self.sides = list(range(1, sides + 1))
         else:
             self.sides = sides
-        # Get an initial value for the die.
-        self.roll()
         # Set the default attribute.
         self.held = False
+        # Get an initial value for the die.
+        self.roll()
 
     def __add__(self, other):
         """
@@ -136,8 +136,11 @@ class Die(object):
 
         The return value depends on the sides attribute.
         """
-        self.value = random.choice(self.sides)
-        return self.value
+        if self.held:
+            raise ValueError('Attempt to roll a held die.')
+        else:
+            self.value = random.choice(self.sides)
+            return self.value
 
 
 class ShuffleDie(Die):
@@ -284,10 +287,7 @@ class Pool(object):
         """
         if index is not None:
             # Roll a single die.
-            if self.dice[index].held:
-                raise ValueError('Cannot roll a held die.')
-            else:
-                self.values[index] = self.dice[index].roll()
+            self.values[index] = self.dice[index].roll()
         else:
             # Roll all of the unheld dice.
             self.values = []

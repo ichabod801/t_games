@@ -79,6 +79,11 @@ class DieTest(unittest.TestCase):
         """Test a computer readable text representation of a die."""
         self.assertEqual('<Die {}>'.format(self.die.value), repr(self.die))
 
+    def testRollHeld(self):
+        """Test trying to roll a held die."""
+        self.die.held = True
+        self.assertRaises(ValueError, self.die.roll)
+
     def testSort(self):
         """Test sorting a bunch of dice."""
         pool = [dice.Die() for die in range(18)]
