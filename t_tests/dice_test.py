@@ -180,18 +180,18 @@ class PoolTest(unittest.TestCase):
         self.assertEqual(values.count(5), self.pool.count(5))
 
     def testHoldDice(self):
-        """Test holding dice removes the dice."""
-        last_two = self.pool.dice[-2:]
-        values = [die.value for die in last_two]
-        self.pool.hold(*values)
-        self.assertEqual(3, len([die for die in self.pool if not die.held]))
-
-    def testHoldHeld(self):
         """Test holding dice holds the dice."""
         last_two = self.pool.dice[-2:]
         values = [die.value for die in last_two]
         self.pool.hold(*values)
         self.assertEqual(sorted(last_two), sorted([die for die in self.pool if die.held]))
+
+    def testHoldHeld(self):
+        """Test holding dice updates the count."""
+        last_two = self.pool.dice[-2:]
+        values = [die.value for die in last_two]
+        self.pool.hold(*values)
+        self.assertEqual(2, self.pool.held)
 
     def testIter(self):
         """Test of iterating over the dice in the pool."""
