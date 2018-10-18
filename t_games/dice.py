@@ -202,6 +202,7 @@ class Pool(object):
 
     Attributes:
     dice: The dice in the pool. (list of Die)
+    held: The number of dice currently being held. (int)
     values: The current values of the dice in the pool. (list)
 
     Methods:
@@ -228,9 +229,8 @@ class Pool(object):
         Parameters:
         dice: A list of dice specifications. (list)
         """
-        # Set up the dice containers.
-        self.dice = []
         # Set up the dice.
+        self.dice = []
         for die in dice:
             if isinstance(die, Die):
                 self.dice.append(die)
@@ -238,6 +238,7 @@ class Pool(object):
                 self.dice.append(Die(die))
         # Get an initial value.
         self.roll()
+        self.held = 0
 
     def __iter__(self):
         """Iterate over the dice. (iterator)"""
@@ -271,12 +272,14 @@ class Pool(object):
         for value in values:
             spot = unheld.index(value)
             unheld[spot].held = True
+            self.held += 1
             del unheld[spot]
 
     def release(self):
         """Make all held dice available for rolling. (None)"""
         for die in self.dice:
             die.held = False
+        self.held = 0
 
     def roll(self, index = None):
         """
