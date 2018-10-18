@@ -343,14 +343,16 @@ class Bacht(player.Bot):
                 return 'roll'
             # Check for time to score.
             elif (self.game.roll_count == self.game.max_rolls or self.next == 'score' or
-                not self.game.dice.dice):
+                self.game.dice.held == 5):
                 move = 'score ' + self.get_category()
             # Otherwise hold dice.
             else:
                 move = 'hold ' + ' '.join([str(x) for x in self.get_holds()])
+                move = move.replace('*', '')
+                print(self.game.dice.held)
                 if move == 'hold ':
                     move = 'roll'
-                elif self.game.dice.dice:
+                elif self.game.dice.held < 5:
                     self.next = 'roll'
                 else:
                     self.next = 'score'
@@ -425,8 +427,8 @@ class Bacht(player.Bot):
     def later_holds(self):
         """Get the holds on the second and third rolls. (list of int)"""
         # Get local references to commonly used information.
-        held = self.game.dice.held
-        pending = self.game.dice.dice
+        held = [die for die in self.game.dice if die.held]
+        pending = [die for die in self.game.dice if not die.held]
         unique_held = len(set(held))
         # Holding one value means go for a run.
         if unique_held == 1:
@@ -551,8 +553,8 @@ class Bachter(Bacht):
     def later_holds(self):
         """Get the holds on the first roll. (list of int)"""
         # Get a local reference to the dice.
-        held = self.game.dice.held
-        pending = self.game.dice.dice
+        held = [die for die in self.game.dice if die.held]
+        pending = [die for die in self.game.dice if not die.held]
         # Hold based on target type as set in initial_hold.
         # Hold based on runs.
         if self.target == 'run':
@@ -814,12 +816,7 @@ class Yacht(game.Game):
                 # Change the value and the underlying die.
                 die_index = self.dice.values.index(value)
                 self.dice.values[die_index] = 3
-                # Check if the die is held or waiting to be rolled.
-                if die_index >= len(self.dice.held):
-                    die_index -= len(self.dice.held)
-                    self.dice.dice[die_index].value = 3
-                else:
-                    self.dice.held[die_index].value = 3
+                self.dice.dice[die_index].value = 3
         # Otherwise I'm confused.
         else:
             self.human.tell('No hablo Ingles.')
