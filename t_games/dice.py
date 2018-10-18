@@ -267,7 +267,7 @@ class Pool(object):
         unheld = [die for die in self.dice if not die.held]
         for value in values:
             spot = unheld.index(value)
-            unheld[spot].hold = True
+            unheld[spot].held = True
             del unheld[spot]
 
     def release(self):

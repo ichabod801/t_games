@@ -171,7 +171,7 @@ class PoolTest(unittest.TestCase):
     def testCountHeld(self):
         """Test of counting values among the dice with held dice."""
         self.pool.hold(*self.pool.values[-2:])
-        values = [die.value for die in self.pool.dice + self.pool.held]
+        values = [die.value for die in self.pool.dice]
         self.assertEqual(values.count(5), self.pool.count(5))
 
     def testHoldDice(self):
@@ -179,14 +179,14 @@ class PoolTest(unittest.TestCase):
         last_two = self.pool.dice[-2:]
         values = [die.value for die in last_two]
         self.pool.hold(*values)
-        self.assertEqual(3, len(self.pool.dice))
+        self.assertEqual(3, len([die for die in self.pool if not die.held]))
 
     def testHoldHeld(self):
         """Test holding dice holds the dice."""
         last_two = self.pool.dice[-2:]
         values = [die.value for die in last_two]
         self.pool.hold(*values)
-        self.assertEqual(sorted(last_two), self.pool.held)
+        self.assertEqual(sorted(last_two), sorted([die for die in self.pool if die.held]))
 
     def testIter(self):
         """Test of iterating over the dice in the pool."""
@@ -194,8 +194,7 @@ class PoolTest(unittest.TestCase):
 
     def testIterHold(self):
         """Test of iterating over the dice in the pool."""
-        self.pool.hold(*self.pool.values[-2:])
-        self.assertEqual(list(self.pool), self.pool.held + self.pool.dice)
+        self.assertEqual(self.pool.dice, list(self.pool))
 
     def testReleaseAll(self):
         """Test releasing all of the dice."""
@@ -226,10 +225,11 @@ class PoolTest(unittest.TestCase):
         self.pool.hold(self.pool.dice[1].value)
         self.pool.hold(self.pool.dice[2].value)
         # Get the text for the values.
-        text_bits = [str(die) + '*' for die in self.pool.held] + [str(die) for die in self.pool.dice]
-        base_text = ', '.join(text_bits[:4])
+        base_text = ', '.join([str(die) for die in self.pool])
+        last_comma = base_text.rfind(',') + 1
+        check = '<Pool {} and{}>'.format(base_text[:last_comma], base_text[last_comma:])
         # Check for a match.
-        self.assertEqual('<Pool {}, and {}>'.format(base_text, text_bits[4]), repr(self.pool))
+        self.assertEqual(check, repr(self.pool))
 
     def testReprSmall(self):
         """Test a computer readable text representation of a pool of dice."""
@@ -241,7 +241,7 @@ class PoolTest(unittest.TestCase):
         held_values = sorted(self.pool.values[:2])
         self.pool.hold(*held_values)
         self.pool.roll()
-        self.assertEqual(held_values, self.pool.values[:2])
+        self.assertEqual(held_values, sorted([die for die in self.pool if die.held]))
 
     def testRollIndex(self):
         """Test that rolling by index does not affect the other values."""
@@ -300,10 +300,11 @@ class PoolTest(unittest.TestCase):
         self.pool.hold(self.pool.dice[1].value)
         self.pool.hold(self.pool.dice[2].value)
         # Get the text for the values.
-        text_bits = [str(die) + '*' for die in self.pool.held] + [str(die) for die in self.pool.dice]
-        base_text = ', '.join(text_bits[:4])
+        base_text = ', '.join([str(die) for die in self.pool])
+        last_comma = base_text.rfind(',') + 1
+        check = '{} and{}'.format(base_text[:last_comma], base_text[last_comma:])
         # Check for a match.
-        self.assertEqual('{}, and {}'.format(base_text, text_bits[4]), str(self.pool))
+        self.assertEqual(check, str(self.pool))
 
     def testStrSmall(self):
         """Test a human readable text representation of a pool of two dice."""
