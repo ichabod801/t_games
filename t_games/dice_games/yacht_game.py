@@ -40,6 +40,7 @@ import t_games.dice as dice
 import t_games.game as game
 import t_games.options as options
 import t_games.player as player
+import t_games.utility as utility
 
 
 # The credits for Yacht.
@@ -972,7 +973,7 @@ class Yacht(game.Game):
                 # Handle unknown categories.
                 player.error('I do not recognize that category.')
                 known = [category.name for category in self.score_cats]
-                player.error('The categories I know are: {}.'.format(', '.join(known)))
+                player.error('The categories I know are: {}.'.format(utility.oxford(known)))
                 return None
         return category
 
