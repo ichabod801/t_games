@@ -55,6 +55,7 @@ class Card(object):
     Overridden Methods:
     __init__
     __eq__
+    __format__
     __hash__
     __lt__
     __repr__
@@ -68,13 +69,14 @@ class Card(object):
     rank_names += ['Jack', 'Queen', 'King']
     card_re = re.compile('[{}][{}]'.format(ranks, suits), re.IGNORECASE)
 
-    def __init__(self, rank, suit):
+    def __init__(self, rank, suit, down_text = '??'):
         """
         Set up the card. (None)
 
         Parameters:
         rank: The rank of the card. (str)
         suit: The suit of the card. (str)
+        down_text: How the card looks when face down. (str)
         """
         # Set the specified paramters.
         self.rank = rank[0]
@@ -84,10 +86,13 @@ class Card(object):
             self.color = 'R'
         else:
             self.color = 'B'
-        # Calcuate the full name of the card.
+        # Calcuate the text attributes of the card.
         rank_name = self.rank_names[self.ranks.index(self.rank)]
         suit_name = self.suit_names[self.suits.index(self.suit)]
         self.name = '{} of {}'.format(rank_name, suit_name)
+        self.up_text = self.rank + self.suit
+        self.down_text = down_text
+        self.format_types = {'d': self.down_text, 'n': self.name, 'u': self.up_text}
         # Default face down.
         self.up = False
 
@@ -114,6 +119,23 @@ class Card(object):
         """The hash is the card text. (hash)"""
         return hash(self.rank + self.suit)
 
+    def __format__(self, format_spec):
+        """
+        Return a formatted text version of the card. (str)
+
+        Parameters:
+        format_spec: The format specification. (str)
+        """
+        # Use and remove format type if given.
+        if format_spec and format_spec[-1] in self.format_types:
+            target = self.format_types[format_spec[-1]]
+            format_spec = format_spec[:-1]
+        else:
+            target = str(self)
+        # Return the text based on type with the rest of the format spec applied.
+        format_text = '{{:{}}}'.format(format_spec)
+        return format_text.format(target)
+
     def __lt__(self, other):
         """For sorting by rank. (bool)"""
         if isinstance(other, Card):
@@ -128,10 +150,9 @@ class Card(object):
     def __str__(self):
         """Generate human readable text representation. (str)"""
         if self.up:
-            text = self.rank + self.suit
+            return self.up_text
         else:
-            text = '??'
-        return text
+            return self.down_text
 
     def above(self, other, n = 1, wrap_ranks = False):
         """

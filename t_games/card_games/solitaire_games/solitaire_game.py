@@ -624,7 +624,7 @@ class Solitaire(game.Game):
                     else:
                         # Error out if nothing works.
                         player = self.players[self.player_index]
-                        player.error('\nThere are no valid moves for the {}.'.format(card.name))
+                        player.error('\nThere are no valid moves for the {:n}.'.format(card))
         return go
 
     def guess_two(self, card_text, target_text):
@@ -650,8 +650,8 @@ class Solitaire(game.Game):
         # Error out if you can't build or match.
         else:
             player = self.players[self.player_index]
-            error = '\nThere are no valid moves for a {}{} and a {}{}.'
-            player.error(error.format(card.rank, card.suit, target.rank, target.suit))
+            error = '\nThere are no valid moves for a {:u} and a {:u}.'
+            player.error(error.format(card, target))
         return go
 
     def lane_check(self, card, moving_stack, show_error = True):
@@ -1385,7 +1385,7 @@ class MultiSolitaire(Solitaire):
             return self.handle_cmd(moves.pop())
         # If no moves were found, errror out.
         else:
-            message = '\nThere is no valid move for a {} and a {}.'
+            message = '\nThere is no valid move for a {:u} and a {:u}.'
             self.human.error(message.format(card, target))
 
     def set_solitaire(self):
