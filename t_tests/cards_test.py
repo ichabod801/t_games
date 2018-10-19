@@ -90,6 +90,14 @@ class CardTest(unittest.TestCase):
         """Test equality of card and upper case string."""
         self.assertEqual('XD', self.joker)
 
+    def testFormatA(self):
+        """Test formatting with no format specification."""
+        self.assertEqual('a jack of hearts', '{:a}'.format(self.jack))
+
+    def testFormatAn(self):
+        """Test formatting with no format specification."""
+        self.assertEqual('an ace of spades', '{:a}'.format(self.ace))
+
     def testFormatBlank(self):
         """Test formatting with no format specification."""
         self.assertEqual('??', '{}'.format(self.ace))

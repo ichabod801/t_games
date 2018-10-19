@@ -1385,7 +1385,7 @@ class MultiSolitaire(Solitaire):
             return self.handle_cmd(moves.pop())
         # If no moves were found, errror out.
         else:
-            message = '\nThere is no valid move for a {:u} and a {:u}.'
+            message = '\nThere is no valid move for a {:n} and a {:n}.'
             self.human.error(message.format(card, target))
 
     def set_solitaire(self):

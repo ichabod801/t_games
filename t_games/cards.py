@@ -62,6 +62,7 @@ class Card(object):
     __str__
     """
 
+    an_ranks = 'A8'
     suits = 'CDHS'
     suit_names = ['Clubs', 'Diamonds', 'Hearts', 'Spades']
     ranks = 'XA23456789TJQK'
@@ -92,7 +93,11 @@ class Card(object):
         self.name = '{} of {}'.format(rank_name, suit_name)
         self.up_text = self.rank + self.suit
         self.down_text = down_text
-        self.format_types = {'d': self.down_text, 'n': self.name, 'u': self.up_text}
+        if self.rank in self.an_ranks:
+            a_text = 'an {}'.format(self.name.lower())
+        else:
+            a_text = 'a {}'.format(self.name.lower())
+        self.format_types = {'a': a_text, 'd': self.down_text, 'n': self.name, 'u': self.up_text}
         # Default face down.
         self.up = False
 
