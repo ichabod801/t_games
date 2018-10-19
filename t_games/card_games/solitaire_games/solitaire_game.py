@@ -205,16 +205,16 @@ class Solitaire(game.Game):
         error = ''
         # check for valid destination
         if target.game_location not in self.tableau or target != target.game_location[-1]:
-            error = 'The destination (the {}) is not on top of a tableau pile.'.format(target.name)
+            error = 'The destination (the {:n}) is not on top of a tableau pile.'.format(target)
         # check for moving foundation cards
         elif mover.game_location in self.foundations:
             error = 'Cards may not be moved from the foundation.'
         # check for face down cards
         elif not mover.up:
-            error = 'The {} is face down and cannot be moved.'.format(mover.name)
+            error = 'The {:n} is face down and cannot be moved.'.format(mover)
         # check for a valid stack to move
         elif not moving_stack:
-            error = '{} is not the base of a movable stack.'.format(mover)
+            error = 'The {:n} is not the base of a movable stack.'.format(mover)
         # check valid stack
         else:
             error = self.build_pair(mover, target)
@@ -545,16 +545,16 @@ class Solitaire(game.Game):
         error = ''
         # Check for open cells.
         if len(self.cells) == self.num_cells:
-            error = 'There are no free cells to place the {} into.'.format(card.name.lower())
+            error = 'There are no free cells to place the {:n} into.'.format(card)
         # Check for foundation card.
         elif card.game_location in self.foundations:
             error = 'Cards cannot be freed from the foundation.'
         # Check for blocked card.
         elif card.game_location[-1] != card:
-            error = 'The {} is not available to be freed.'.format(card.name)
+            error = 'The {:n} is not available to be freed.'.format(card)
         # Check for a face down card.
         elif not card.up:
-            error = 'The {} is face down and cannot be freed.'.format(card.name)
+            error = 'The {:n} is face down and cannot be freed.'.format(card)
         # Check game specific rules.
         else:
             for checker in self.free_checkers:
@@ -602,17 +602,17 @@ class Solitaire(game.Game):
             for pile in self.tableau:
                 # Check building the card
                 if pile and self.build_check(card, pile[-1], moving_stack, False):
-                    go = self.do_build('{} {}'.format(card, pile[-1]))
+                    go = self.do_build('{:u} {:u}'.format(card, pile[-1]))
                     break
                 # Check matching the card.
                 elif pile and self.match_check(card, pile[-1], False):
-                    go = self.do_match('{} {}'.format(card, pile[-1]))
+                    go = self.do_match('{:u} {:u}'.format(card, pile[-1]))
                     break
             else:
                 # Check non-tableau matching.
                 for pile in [self.waste] + self.reserve + [[free] for free in self.cells]:
                     if pile and self.match_check(card, pile[-1], False):
-                        go = self.do_match('{} {}'.format(card, pile[-1]))
+                        go = self.do_match('{:u} {:u}'.format(card, pile[-1]))
                         break
                 else:
                     # Check freeing the card.
@@ -640,7 +640,7 @@ class Solitaire(game.Game):
         card = self.deck.find(card_text)
         target = self.deck.find(target_text)
         moving_stack = self.super_stack(card)
-        two_text = '{} {}'.format(card_text, target_text)
+        two_text = '{:u} {:u}'.format(card, target)
         # Check for building the card on the target.
         if self.build_check(card, target, moving_stack, False):
             go = self.do_build(two_text)
@@ -650,7 +650,7 @@ class Solitaire(game.Game):
         # Error out if you can't build or match.
         else:
             player = self.players[self.player_index]
-            error = '\nThere are no valid moves for a {:u} and a {:u}.'
+            error = '\nThere are no valid moves for the {:n} and the {:n}.'
             player.error(error.format(card, target))
         return go
 
@@ -666,16 +666,16 @@ class Solitaire(game.Game):
         error = ''
         # Check for sorted cards.
         if card.game_location in self.foundations:
-            error = 'The {} is sorted and cannot be moved.'.format(card.name)
+            error = 'The {:n} is sorted and cannot be moved.'.format(card)
         # Check for face down cards.
         elif not card.up:
-            error = 'The {} is face down and cannot be moved.'.format(card.name)
+            error = 'The {:n} is face down and cannot be moved.'.format(card)
         # Check for open lanes.
         elif not self.tableau.count([]):
             error = 'There are no open lanes.'
         # Check for a valid stack.
         elif not moving_stack:
-            error = 'The {} is not the base of a valid stack to move.'.format(card.name)
+            error = 'The {:n} is not the base of a valid stack to move.'.format(card)
         # Check game specific rules.
         else:
             for checker in self.lane_checkers:
@@ -701,11 +701,11 @@ class Solitaire(game.Game):
         for check_it in [card, match]:
             # Check for sorted cards.
             if check_it.game_location in self.foundations:
-                error = 'The {} is sorted and cannot be moved.'.format(check_it.name)
+                error = 'The {:n} is sorted and cannot be moved.'.format(check_it)
                 break
             # Check for face down cards.
             elif not check_it.up:
-                error = 'The {} is face down and cannot be moved.'.format(check_it.name)
+                error = 'The {:n} is face down and cannot be moved.'.format(check_it)
                 break
         # Check game specific rules.
         else:
@@ -830,14 +830,14 @@ class Solitaire(game.Game):
         error = ''
         # Check for moving foundation cards.
         if card.game_location in self.foundations:
-            error = 'The {} is already sorted.'.format(card.name)
+            error = 'The {:n} is already sorted.'.format(card)
         # check for face down cards.
         elif not card.up:
-            error = 'The {} is face down and cannot be sorted.'.format(card.name)
+            error = 'The {:n} is face down and cannot be sorted.'.format(card)
         # Check for blocked cards.
         elif (card.game_location in self.tableau + self.reserve + [self.waste] and
             card.game_location[-1] != card):
-            error = 'The {} is blocked and cannot be sorted.'.format(card.name)
+            error = 'The {:n} is blocked and cannot be sorted.'.format(card)
         # Check game specific rules.
         else:
             for checker in self.sort_checkers:
@@ -1121,7 +1121,7 @@ class MultiSolitaire(Solitaire):
             return False
         else:
             # Warn the user if there are no valid moves.
-            message = 'There are no valid moves for building a {} onto a {}.'
+            message = 'There are no valid moves for building {} onto {}.'
             self.human.error(message.format(*card_arguments))
             return True
 
@@ -1148,20 +1148,20 @@ class MultiSolitaire(Solitaire):
             return False
         else:
             # Warn the user if there are no valid moves.
-            self.human.error('There are no valid moves for freeing a {}.'.format(card.name))
+            self.human.error('There are no valid moves for freeing {}.'.format(card_arguments))
             return True
 
-    def do_lane(self, card):
+    def do_lane(self, card_text):
         """
         Move a card into an empty lane. (l)
 
         This command takes one argument: the card to move.
         """
         # Get the card and the cards to be moved.
-        if not self.deck.card_re.match(card):
+        if not self.deck.card_re.match(card_text):
             self.human.error('Invalid card passed to lane command: {!r}.'.format(card))
             return True
-        cards = self.deck.find(card)
+        cards = self.deck.find(card_text)
         self.alt_moves = []
         for card in cards:
             moving_stack = self.super_stack(card)
@@ -1174,23 +1174,23 @@ class MultiSolitaire(Solitaire):
             return False
         else:
             # Warn the user if there are no valid moves.
-            self.human.error('There are no valid moves for laning a {}.'.format(card.name))
+            self.human.error('There are no valid moves for laning {}.'.format(card_text.upper()))
             return True
 
-    def do_match(self, cards):
+    def do_match(self, card_text):
         """
         Match two cards and discard them. (m)
 
         The two cards specified by the arguments can be listed in any order.
         """
         # Get the cards to match.
-        cards = self.deck.card_re.findall(cards)
+        card_words = self.deck.card_re.findall(card_text)
         # Check for a valid number of cards.
-        if len(cards) != 2:
+        if len(card_words) != 2:
             self.human.error('You must provide two valid cards to the match command.')
             return True
         # Check the actual cards.
-        cards = [self.deck.find(card) for card in cards]
+        cards = [self.deck.find(card) for card in card_words]
         # Check all possibled combinations of cards for valid moves.
         for card in cards[0]:
             for match in cards[1]:
@@ -1204,20 +1204,20 @@ class MultiSolitaire(Solitaire):
             return False
         else:
             # If there are no valid moves, warn the user.
-            self.human.error('There are not valid moves for matching a {} and a {}.'.format(*cards))
+            self.human.error('There are not valid moves for matching {} and {}.'.format(*card_words))
             return True
 
-    def do_sort(self, card):
+    def do_sort(self, card_text):
         """
         Move a card to the foundation. (s)
 
         This command takes one argument: the card to move.
         """
         # Get the cards.
-        if not self.deck.card_re.match(card):
+        if not self.deck.card_re.match(card_text):
             self.human.error('Invalid card passed to sort command: {!r}.'.format(card))
             return True
-        cards = self.deck.find(card)
+        cards = self.deck.find(card_text)
         # Check the cards for sortability.
         self.alt_moves = []
         for card in cards:
@@ -1231,7 +1231,7 @@ class MultiSolitaire(Solitaire):
             return False
         else:
             # If there are no valid moves, warn the user.
-            self.human.error('There are no valid moves for sorting a {}.'.format(card.name))
+            self.human.error('There are no valid moves for sorting {}.'.format(card_text))
             return True
 
     def do_turn(self, arguments):
@@ -1356,7 +1356,7 @@ class MultiSolitaire(Solitaire):
             return self.handle_cmd(moves.pop())
         # If no moves were found, errror out.
         else:
-            self.human.error('\nThere is no valid move for a {}.'.format(card_text))
+            self.human.error('\nThere is no valid move for the {}.'.format(card_text))
 
     def guess_two(self, card, target):
         """
@@ -1376,17 +1376,17 @@ class MultiSolitaire(Solitaire):
             moving_stack = self.super_stack(card)
             # Check for building the card on the target.
             if self.build_check(card, target, moving_stack, False):
-                moves.append('build {}'.format(card_text))
+                moves.append('build {}'.format(card_text.upper()))
             # Check for matching the card with the target.
             elif self.match_check(card, target, False):
-                moves.append('match {}'.format(card_text))
+                moves.append('match {}'.format(card_text.upper()))
         # Make a move if you have one.
         if moves:
             return self.handle_cmd(moves.pop())
         # If no moves were found, errror out.
         else:
-            message = '\nThere is no valid move for a {:n} and a {:n}.'
-            self.human.error(message.format(card, target))
+            message = '\nThere is no valid move for {} and {}.'
+            self.human.error(message.format(*card_text.upper().split()))
 
     def set_solitaire(self):
         """
