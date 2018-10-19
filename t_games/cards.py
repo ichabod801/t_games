@@ -531,6 +531,7 @@ class TrackingCard(Card):
         else:
             self.deck_location = None
             self.game_location = None
+        self.location_text = ''
 
     def __eq__(self, other):
         """
@@ -546,6 +547,29 @@ class TrackingCard(Card):
             return id(self) == id(other)
         else:
             return super(TrackingCard, self).__eq__(other)
+
+    def __format__(self, format_spec):
+        """
+        Return a formatted text version of the card. (str)
+
+        The additional recognized format types are:
+            d: The face down two-letter abbreviation.
+            n: The full name.
+            u: The face up two-letter abbreviation.
+
+        Parameters:
+        format_spec: The format specification. (str)
+        """
+        # Use and remove format type if given.
+        if format_spec and format_spec[-1] in self.format_types:
+            target = self.format_types[format_spec[-1]]
+            format_spec = format_spec[:-1]
+        else:
+            target = str(self)
+        target += self.location_text
+        # Return the text based on type with the rest of the format spec applied.
+        format_text = '{{:{}}}'.format(format_spec)
+        return format_text.format(target)
 
     def __repr__(self):
         """Create a debugging text representation."""
@@ -801,6 +825,7 @@ class MultiTrackingDeck(TrackingDeck):
             card_text, location = card_text.split('-')
         else:
             location = ''
+            location_text = ''
         if location:
             # Parse the location specifier.
             location = location.upper()
@@ -820,16 +845,27 @@ class MultiTrackingDeck(TrackingDeck):
             # Get the location from the game.
             if location_type == 'F':
                 location = self.game.cells
+                location_text = ' in the free cells'
             elif location_type == 'R':
                 location = self.game.reserve[location_count]
+                if len(self.game.reserve) > 1:
+                    text = ' in the {} reserve pile'
+                    location_text = text.format(utility.number_word(location_count + 1, ordinal = True))
+                else:
+                    location_text = ' in the reserve'
             elif location_type == 'T':
                 location = self.game.tableau[location_count]
+                text = ' in the {} tableau pile'
+                location_text = text.format(utility.number_word(location_count + 1, ordinal = True))
             else:
                 location = self.game.waste
+                location_text = ' in the waste'
         # Find the cards, filtered by any location specified.
         cards = self.card_map[card_text.upper()]
         if location is not None:
             cards = [card for card in cards if card in location]
+            for card in cards:
+                card.location_text = location_text
         return cards
 
 

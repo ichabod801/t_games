@@ -1356,7 +1356,7 @@ class MultiSolitaire(Solitaire):
             return self.handle_cmd(moves.pop())
         # If no moves were found, errror out.
         else:
-            self.human.error('\nThere is no valid move for the {}.'.format(card_text))
+            self.human.error('\nThere is no valid move for the {:n}.'.format(card))
 
     def guess_two(self, card, target):
         """
