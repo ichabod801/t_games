@@ -175,7 +175,7 @@ class PoolTest(unittest.TestCase):
 
     def testCountHeld(self):
         """Test of counting values among the dice with held dice."""
-        self.pool.hold(*self.pool.values[-2:])
+        self.pool.hold(self.pool.values[-2:])
         values = [die.value for die in self.pool.dice]
         self.assertEqual(values.count(5), self.pool.count(5))
 
@@ -183,14 +183,14 @@ class PoolTest(unittest.TestCase):
         """Test holding dice holds the dice."""
         last_two = self.pool.dice[-2:]
         values = [die.value for die in last_two]
-        self.pool.hold(*values)
+        self.pool.hold(values)
         self.assertEqual(sorted(last_two), sorted([die for die in self.pool if die.held]))
 
     def testHoldHeld(self):
         """Test holding dice updates the count."""
         last_two = self.pool.dice[-2:]
         values = [die.value for die in last_two]
-        self.pool.hold(*values)
+        self.pool.hold(values)
         self.assertEqual(2, self.pool.held)
 
     def testIter(self):
@@ -203,7 +203,7 @@ class PoolTest(unittest.TestCase):
 
     def testReleaseAll(self):
         """Test releasing all of the dice."""
-        self.pool.hold(*self.pool.values)
+        self.pool.hold(self.pool.values)
         self.pool.release()
         self.assertEqual(5, len(self.pool.dice))
 
@@ -214,7 +214,7 @@ class PoolTest(unittest.TestCase):
 
     def testReleaseSome(self):
         """Test releasing some of the dice."""
-        self.pool.hold(*self.pool.values[:2])
+        self.pool.hold(self.pool.values[:2])
         self.pool.release()
         self.assertEqual(5, len(self.pool.dice))
 
@@ -244,7 +244,7 @@ class PoolTest(unittest.TestCase):
     def testRollHeld(self):
         """Test that rolling does not affect held dice."""
         held_values = sorted(self.pool.values[:2])
-        self.pool.hold(*held_values)
+        self.pool.hold(held_values)
         self.pool.roll()
         self.assertEqual(held_values, sorted([die for die in self.pool if die.held]))
 
@@ -256,21 +256,21 @@ class PoolTest(unittest.TestCase):
 
     def testSortHoldKey(self):
         """Test sorting the values with a key function and held dice."""
-        self.pool.hold(*self.pool.values[:2])
+        self.pool.hold(self.pool.values[:2])
         check = [die.value for die in sorted(self.pool, key = id)]
         self.pool.sort(key = id)
         self.assertEqual(check, self.pool.values)
 
     def testSortHoldPlain(self):
         """Test sorting the values with held dice."""
-        self.pool.hold(*self.pool.values[:2])
+        self.pool.hold(self.pool.values[:2])
         check = [die.value for die in sorted(self.pool)]
         self.pool.sort()
         self.assertEqual(check, self.pool.values)
 
     def testSortHoldReverse(self):
         """Test sorting the values with reversal and held dice."""
-        self.pool.hold(*self.pool.values[:2])
+        self.pool.hold(self.pool.values[:2])
         check = [die.value for die in sorted(self.pool, reverse = True)]
         self.pool.sort(reverse = True)
         self.assertEqual(check, self.pool.values)

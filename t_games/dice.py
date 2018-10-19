@@ -264,13 +264,16 @@ class Pool(object):
         """
         return self.dice.count(object)
 
-    def hold(self, *values):
+    def hold(self, values):
         """
         Hold some of the dice from further rolling. (None)
 
         Parameters:
-        *values: The values of the dice to hold.
+        values: The values of the dice to hold. (int or list of int)
         """
+        # Check for single value.
+        if not isinstance(values, (list, tuple, set)):
+            values = [values]
         # Loop through the values.
         unheld = [die for die in self.dice if not die.held]
         for value in values:

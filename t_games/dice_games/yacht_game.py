@@ -844,7 +844,7 @@ class Yacht(game.Game):
             return True
         # Hold the dice.
         try:
-            self.dice.hold(*holds)
+            self.dice.hold(holds)
         except ValueError:
             player.error('You do not have all of those dice to hold.')
         return True
