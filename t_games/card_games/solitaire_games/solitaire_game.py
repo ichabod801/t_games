@@ -969,6 +969,7 @@ class MultiSolitaire(Solitaire):
     Methods:
     do_alternate: Redo the last command with different but matching cards. (bool)
     find_location: Find a location in the game. (list)
+    move_error: Warn the user about an invalid move. (None)
 
     Overridden Methods:
     do_auto
@@ -1120,9 +1121,8 @@ class MultiSolitaire(Solitaire):
             self.transfer(*self.alt_moves.pop())
             return False
         else:
-            # Warn the user if there are no valid moves.
-            message = 'There are no valid moves for building {:a} onto {:a}.'
-            self.human.error(message.format(mover, target))
+            # Warn the user about invalid moves.
+            self.move_error('building', card_arguments, movers, targets)
             return True
 
     def do_free(self, card):
@@ -1147,8 +1147,8 @@ class MultiSolitaire(Solitaire):
             self.transfer(*self.alt_moves.pop())
             return False
         else:
-            # Warn the user if there are no valid moves.
-            self.human.error('There are no valid moves for freeing {:a}.'.format(card))
+            # Warn the user about invalid moves.
+            self.move_error('freeing', card_arguments, cards)
             return True
 
     def do_lane(self, card_text):
@@ -1173,8 +1173,8 @@ class MultiSolitaire(Solitaire):
             self.transfer(*self.alt_moves.pop())
             return False
         else:
-            # Warn the user if there are no valid moves.
-            self.human.error('There are no valid moves for laning {:a}.'.format(card))
+            # Warn the user about invalid moves.
+            self.move_error('laning', [card_text], cards)
             return True
 
     def do_match(self, card_text):
@@ -1203,8 +1203,8 @@ class MultiSolitaire(Solitaire):
             self.transfer([card[1]], self.foundations[0])
             return False
         else:
-            # If there are no valid moves, warn the user.
-            self.human.error('There are not valid moves for matching {:a} and {:a}.'.format(card, match))
+            # Warn the user about invalid moves.
+            self.move_error('matching', card_words, cards[0], cards[1])
             return True
 
     def do_sort(self, card_text):
@@ -1230,8 +1230,8 @@ class MultiSolitaire(Solitaire):
             self.transfer(*self.alt_moves.pop())
             return False
         else:
-            # If there are no valid moves, warn the user.
-            self.human.error('There are no valid moves for sorting {:a}.'.format(card))
+            # Warn the user about invalid moves.
+            self.move_error('sorting', card_text, cards)
             return True
 
     def do_turn(self, arguments):
@@ -1386,6 +1386,31 @@ class MultiSolitaire(Solitaire):
         # If no moves were found, errror out.
         else:
             self.human.error('\nThere is no valid move for {:a} and {:a}.'.format(card, target))
+
+    def move_error(self, move_type, card_arguments, movers, targets = None):
+        """
+        Warn the user about an invalid move. (None)
+
+        Parameters:
+        move_type: The type of move being made. (str)
+        card_arguments: The arguments passed to the do_move method. (str or list of str)
+        movers: The possible cards to move. (list of TrackingCard)
+        targets: The possible cards to move onto. (list of TrackingCard)
+        """
+        if movers:
+            if targets:
+                # Warn the user if there are no valid two-card moves.
+                message = 'There are no valid moves for {} {:a} onto {:a}.'
+                self.human.error(message.format(move_type, movers[0], targets[0]))
+            elif targets is None:
+                # Warn the user if there are no valid one-card moves.
+                self.human.error('There are no valid moves for {} {:a}.'.format(move_type, movers[0]))
+            else:
+                # Warn the user if the target card can't be found.
+                self.human.error('There is no card matching {!r}.'.format(card_arguments[1]))
+        else:
+            # Warn the user if the moving card can't be found.
+            self.human.error('There is no card matching {!r}.'.format(card_arguments[0]))
 
     def set_solitaire(self):
         """
