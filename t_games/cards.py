@@ -531,6 +531,7 @@ class TrackingCard(Card):
         else:
             self.deck_location = None
             self.game_location = None
+        self.loc_txt = ''
         self.location_text = ''
 
     def __eq__(self, other):
@@ -561,12 +562,17 @@ class TrackingCard(Card):
         format_spec: The format specification. (str)
         """
         # Use and remove format type if given.
-        if format_spec and format_spec[-1] in self.format_types:
-            target = self.format_types[format_spec[-1]]
+        format_type = format_spec[-1] if format_spec else ''
+        if format_type in self.format_types:
+            target = self.format_types[format_type]
             format_spec = format_spec[:-1]
         else:
             target = str(self)
-        target += self.location_text
+        # Add the location text based on the format type.
+        if format_type == 'u':
+            target += self.loc_txt
+        elif format_type != 'd':
+            target += self.location_text
         # Return the text based on type with the rest of the format spec applied.
         format_text = '{{:{}}}'.format(format_spec)
         return format_text.format(target)
@@ -825,6 +831,7 @@ class MultiTrackingDeck(TrackingDeck):
             card_text, location = card_text.split('-')
         else:
             location = ''
+            loc_txt = ''
             location_text = ''
         if location:
             # Parse the location specifier.
@@ -860,12 +867,17 @@ class MultiTrackingDeck(TrackingDeck):
             else:
                 location = self.game.waste
                 location_text = ' in the waste'
+            loc_txt = '-{}'.format(location_type)
+            if location_type in 'RT':
+                loc_txt = '{}{}'.format(loc_txt, location_count + 1)
         # Find the cards, filtered by any location specified.
         cards = self.card_map[card_text.upper()]
         if location is not None:
             cards = [card for card in cards if card in location]
-            for card in cards:
-                card.location_text = location_text
+        # Set (or unset) location text.
+        for card in cards:
+            card.loc_txt = loc_txt
+            card.location_text = location_text
         return cards
 
 

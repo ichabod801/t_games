@@ -1121,8 +1121,8 @@ class MultiSolitaire(Solitaire):
             return False
         else:
             # Warn the user if there are no valid moves.
-            message = 'There are no valid moves for building {} onto {}.'
-            self.human.error(message.format(*card_arguments))
+            message = 'There are no valid moves for building {:a} onto {:a}.'
+            self.human.error(message.format(mover, target))
             return True
 
     def do_free(self, card):
@@ -1148,7 +1148,7 @@ class MultiSolitaire(Solitaire):
             return False
         else:
             # Warn the user if there are no valid moves.
-            self.human.error('There are no valid moves for freeing {}.'.format(card_arguments))
+            self.human.error('There are no valid moves for freeing {:a}.'.format(card))
             return True
 
     def do_lane(self, card_text):
@@ -1174,7 +1174,7 @@ class MultiSolitaire(Solitaire):
             return False
         else:
             # Warn the user if there are no valid moves.
-            self.human.error('There are no valid moves for laning {}.'.format(card_text.upper()))
+            self.human.error('There are no valid moves for laning {:a}.'.format(card))
             return True
 
     def do_match(self, card_text):
@@ -1204,7 +1204,7 @@ class MultiSolitaire(Solitaire):
             return False
         else:
             # If there are no valid moves, warn the user.
-            self.human.error('There are not valid moves for matching {} and {}.'.format(*card_words))
+            self.human.error('There are not valid moves for matching {:a} and {:a}.'.format(card, match))
             return True
 
     def do_sort(self, card_text):
@@ -1231,7 +1231,7 @@ class MultiSolitaire(Solitaire):
             return False
         else:
             # If there are no valid moves, warn the user.
-            self.human.error('There are no valid moves for sorting {}.'.format(card_text))
+            self.human.error('There are no valid moves for sorting {:a}.'.format(card))
             return True
 
     def do_turn(self, arguments):
@@ -1323,31 +1323,31 @@ class MultiSolitaire(Solitaire):
             if self.foundations:
                 for foundation in self.find_foundation(card):
                     if self.sort_check(card, foundation, False):
-                        moves.append('sort {}'.format(card_text))
+                        moves.append('sort {:u}'.format(card))
             if not moves:
                 moving_stack = self.super_stack(card)
                 for pile in self.tableau:
                     # Check bulding the card.
                     if pile and self.build_check(card, pile[-1], moving_stack, False):
-                        moves.append('build {} {}'.format(card_text, pile[-1]))
+                        moves.append('build {:u} {:u}'.format(card, pile[-1]))
                         break
                     # Check matching the card.
                     elif pile and self.match_check(card, pile[-1], False):
-                        moves.append('match {} {}'.format(card_text, pile[-1]))
+                        moves.append('match {:u} {:u}'.format(card, pile[-1]))
                         break
                 else:
                     # Check non-tableau matching of the card.
                     for pile in [self.waste] + self.reserve + [[free] for free in self.cells]:
                         if pile and self.match_check(card, pile[-1], False):
-                            moves.append('match {} {}'.format(card_text, pile[-1]))
+                            moves.append('match {:u} {:u}'.format(card, pile[-1]))
                             break
                     else:
                         # Check freeing the card.
                         if card.game_location is not self.cells and self.free_check(card, False):
-                            moves.append('free {}'.format(card_text))
+                            moves.append('free {:u}'.format(card))
                         # Check laning the card.
                         elif self.lane_check(card, moving_stack, False):
-                            moves.append('lane {}'.format(card_text))
+                            moves.append('lane {:u}'.format(card))
             if moves:
                 break
         # Make a move if you have one.
@@ -1356,7 +1356,7 @@ class MultiSolitaire(Solitaire):
             return self.handle_cmd(moves.pop())
         # If no moves were found, errror out.
         else:
-            self.human.error('\nThere is no valid move for the {:n}.'.format(card))
+            self.human.error('\nThere is no valid move for {:a}.'.format(card))
 
     def guess_two(self, card, target):
         """
@@ -1376,17 +1376,16 @@ class MultiSolitaire(Solitaire):
             moving_stack = self.super_stack(card)
             # Check for building the card on the target.
             if self.build_check(card, target, moving_stack, False):
-                moves.append('build {}'.format(card_text.upper()))
+                moves.append('build {:u} {:u}'.format(card, target))
             # Check for matching the card with the target.
             elif self.match_check(card, target, False):
-                moves.append('match {}'.format(card_text.upper()))
+                moves.append('match {:u} {:u}'.format(card, target))
         # Make a move if you have one.
         if moves:
             return self.handle_cmd(moves.pop())
         # If no moves were found, errror out.
         else:
-            message = '\nThere is no valid move for {} and {}.'
-            self.human.error(message.format(*card_text.upper().split()))
+            self.human.error('\nThere is no valid move for {:a} and {:a}.'.format(card, target))
 
     def set_solitaire(self):
         """
