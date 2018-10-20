@@ -1355,8 +1355,12 @@ class MultiSolitaire(Solitaire):
             moves.reverse()
             return self.handle_cmd(moves.pop())
         # If no moves were found, errror out.
-        else:
+        elif cards:
             self.human.error('\nThere is no valid move for {:a}.'.format(card))
+            return True
+        # If no cards were found, error out.
+        else:
+            self.human.error('\nNo card was found matching {!r}.'.format(card_text))
 
     def guess_two(self, card, target):
         """
@@ -1385,7 +1389,8 @@ class MultiSolitaire(Solitaire):
             return self.handle_cmd(moves.pop())
         # If no moves were found, errror out.
         else:
-            self.human.error('\nThere is no valid move for {:a} and {:a}.'.format(card, target))
+            self.move_error('bulding or matching', card_text.split(), cards, targets)
+            return True
 
     def move_error(self, move_type, card_arguments, movers, targets = None):
         """
