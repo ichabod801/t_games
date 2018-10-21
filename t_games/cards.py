@@ -901,7 +901,7 @@ class MultiTrackingDeck(TrackingDeck):
             # Location count defaults to 0.
             location_type = location_text
             location_count = 0
-        return location_text, location_count
+        return location_type, location_count
 
 
 if __name__ == '__main__':
