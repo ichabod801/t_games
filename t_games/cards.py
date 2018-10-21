@@ -499,6 +499,8 @@ class TrackingCard(Card):
     deck: The deck the card is a part of. (Deck)
     deck_location: The location of the card in the deck. (list of Card)
     game_location: The location of the card in the game. (list of Card)
+    loc_txt: The location identifier for abbreviated card text. (str)
+    location_text: The location identifier for full card text. (str)
     rank_num: The numeric rank of the card. (int)
 
     Methods:
