@@ -4,7 +4,7 @@ game_test.py
 Unit tests of t_games/game.py.
 
 Classes:
-GameTest: Tests of the base game class. (unittest.TestCase)
+GameTextTest: Tests of the base game class text versions. (unittest.TestCase)
 """
 
 
@@ -12,11 +12,46 @@ import unittest
 
 import t_games.game as game
 import t_games.player as player
-import unitility
+import t_tests.unitility as unitility
 
 
-class GameTest(unittest.TestCase):
-    """Tests of the base game class. (unittest.TestCase)"""
+class GameInitTest(unittest.TestCase):
+    """Test of game initialization."""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.bot.name = 'Bumblebee'
+        self.game = game.Game(self.bot, ' ')
+
+    def testAlias(self):
+        """Test updating the aliases dictionary."""
+        self.assertIn('&', self.game.aliases)
+
+    def testGreeting(self):
+        """Test displaying the greeting text."""
+        check = '\nWelcome to a game of Null, Bumblebee.'
+        self.assertEqual(check, self.bot.info[0])
+
+    def testHelp(self):
+        """Test updating help dictionairy."""
+        check = '\nUse the rules command for instructions on how to play.'
+        self.assertEqual(check, self.game.help_text['help'])
+
+    def testPlayers(self):
+        """Test default players."""
+        self.assertEqual([self.bot], self.game.players)
+
+    def testPlayerGame(self):
+        """Test setting the player's game attribute."""
+        self.assertEqual(self.game, self.bot.game)
+
+    def testRawOptions(self):
+        """Test setting raw_options."""
+        self.assertEqual('', self.game.raw_options)
+
+
+class GameTextTest(unittest.TestCase):
+    """Tests of the base game class text representations. (unittest.TestCase)"""
 
     def setUp(self):
         self.game = game.Game(unitility.AutoBot(), '')

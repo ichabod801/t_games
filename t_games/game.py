@@ -122,6 +122,7 @@ class Game(OtherCmd):
         """
         # Set the specified attributes.
         self.human = human
+        print(self.human.name)
         self.interface = interface
         self.raw_options = raw_options.strip()
         # Set the default attributes.
