@@ -984,6 +984,7 @@ class MultiSolitaire(Solitaire):
     guess
     guess_two
     set_solitaire
+    transfer
     """
 
     aliases = {'alt': 'alternate'}
@@ -1463,6 +1464,23 @@ class MultiSolitaire(Solitaire):
         self.last_sort = 0
         # Set the game specific rules.
         self.set_checkers()
+
+    def transfer(self, move_stack, new_location, track = True, up = True, undo_ndx = 0):
+        """
+        Move a stack of cards from one game location to another. (None)
+
+        This handles the card's knowledge of where it is and tracking game moves.
+
+        Parameters:
+        move_stack: The stack of cards to move. (list of Card)
+        new_location: The new game location for the cards. (list of Card)
+        track: A flag for tracking the move. (bool)
+        up: A flag for the cards being face up. (bool)
+        undo_ndx: Nominally how many undos there are to do. (int)
+        """
+        super(MultiSolitaire, self).transfer(move_stack, new_location, track, up, undo_ndx)
+        move_stack[0].loc_txt = ''
+        move_stack[0].location_text = ''
 
 
 if __name__ == '__main__':
