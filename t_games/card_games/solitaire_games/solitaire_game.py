@@ -1413,10 +1413,10 @@ class MultiSolitaire(Solitaire):
                 self.human.error('There are no valid moves for {} {:a}.'.format(move_type, movers[0]))
             else:
                 # Warn the user if the target card can't be found.
-                self.human.error('There is no card matching {!r}.'.format(card_arguments[1]))
+                self.human.error('There is no card matching {!r}.'.format(card_arguments[1].upper()))
         else:
             # Warn the user if the moving card can't be found.
-            self.human.error('There is no card matching {!r}.'.format(card_arguments[0]))
+            self.human.error('There is no card matching {!r}.'.format(card_arguments[0].upper()))
 
     def set_solitaire(self):
         """
