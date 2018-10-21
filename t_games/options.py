@@ -3,7 +3,7 @@ options.py
 
 Option handling for tgames.
 
-Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Classes:

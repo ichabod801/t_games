@@ -3,7 +3,7 @@ connect4_game.py
 
 Connect four and related games.
 
-Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
@@ -606,7 +606,7 @@ class ConnectFour(game.Game):
                     symbol = player.ask('\nWhat symbol would you like to use? ').strip()
                     # Check for unused, single-character symbol
                     if symbol in invalid:
-                        player.tell('That symbols is already being used by another player.')
+                        player.tell('That symbol is already being used by another player.')
                     elif len(symbol) > 1:
                         player.error('One character only, please.')
                     else:

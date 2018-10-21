@@ -3,7 +3,7 @@ cards.py
 
 Cards and decks of cards for tgames.
 
-Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Classes:
@@ -674,7 +674,7 @@ class TrackingDeck(Deck):
                 card = card_class(rank, suit, self)
                 self.cards.append(card)
                 self.card_map[card.rank + card.suit] = card
-        # Set hte calcuated attribute.
+        # Set the calcuated attribute.
         self.max_rank = self.ranks[-1]
         # Set the default attributes.
         self.in_play = []

@@ -1,7 +1,7 @@
 """
 roulette_game.py
 
-Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
@@ -62,14 +62,10 @@ played.
 
 INSIDE BETS:
 Basket/First Four: A bet on the first two rows of numbers (0, 1, 2, 3). [0F]
-Column: Bet on a column of 12 numbers. The column can be specified with 1/2/3,
-    P/M/D (Premiere, Moyenne, Derniere) or F/S/T (First, Second, Third). [1]
 Corner/Square: Bet on four numbers in a square. Specify the highest and lowest
     numbers in the square. [2]
 Double Street/Six Line: Bet on six numbers that form two rows. Specify the
     first number of the first row and the last number of the second row. [2]
-Dozen: Bet on the first, second, or third dozen. Use 1/2/3, P/M/D, or F/S/T
-    to specify the dozen (seel Column bet). [1]
 Split: Bet on two numbers that are adjacent on the board. [2]
 Straight/Single: Bet on one number. [1]
 Street: Bet on a three number row. Specify the last number in the row. [1]
@@ -78,12 +74,14 @@ Trio: Bet on three adjacent numbers, including at least one zero. [3]
 
 OUTSIDE BETS:
 Black/Noir: Bet on the black numbers. [0]
+Column: Bet on a column of 12 numbers. The column can be specified with 1/2/3,
+    P/M/D (Premiere, Moyenne, Derniere) or F/S/T (First, Second, Third). [1]
+Dozen: Bet on the first, second, or third dozen. Use 1/2/3, P/M/D, or F/S/T
+    to specify the dozen (see column bet). [1]
 Even/Pair: Bet on the even numbers. [0]
 High/19-36: Bet on the high numbers (over 18). [0]
 Low/1-18: Bet on the low numbers (18 and under). [0]
 Odd/Impair: Bet on the odd numbers. [0]
-Prime: Bet on all of the primes except 2. Twins can be used insted of
-    excluding two (it excludes 2 and 23). [2]
 Red/Rouge: Bet on the red numbers. [0]
 
 CALLED BETS:
@@ -98,6 +96,8 @@ Neighbors: The neighbors bet with a number specified bets on that number and
     the two numbers on either side on the wheel. [1]
 Niner: Bet on a number and the four numbers on either side on the wheel. [1]
 Orphans: Bet on numbers not in Neighbors of Zero or Third of the Wheel. [0]
+Prime: Bet on all of the primes except 2. Twins can be used insted of
+    excluding two (it excludes 2 and 23). [2]
 Seven: Bet on a number and the three numbers on either side on the wheel. [1]
 Snake: A bet on the zig-zag of red numbers from 1 to 34. [0]
 Third of the Wheel/Le Tiers du Cylindre: Bet on a specific third of the wheel
@@ -201,6 +201,7 @@ class Roulette(game.Game):
     black = ['2', '4', '6', '8', '10', '11', '13', '15', '17', '20', '22', '24', '26', '28', '29', '31',
         '33', '35']
     categories = ['Gambling Games']
+    credits = CREDITS
     french = ['0', '32', '15', '19', '4', '21', '2', '25', '17', '34', '6', '27', '13', '36', '11', '30',
         '8', '23', '10', '5', '24', '16', '33', '1', '20', '14', '31', '9', '22', '18', '29', '7', '28',
         '12', '35', '3', '26']
@@ -210,6 +211,7 @@ class Roulette(game.Game):
     num_options = 4
     red = ['1', '3', '5', '7', '9', '12', '14', '16', '18', '19', '21', '23', '25', '27', '30', '32', '34',
         '36']
+    rules = RULES
 
     def check_bet(self, arguments):
         """
@@ -880,7 +882,7 @@ class Roulette(game.Game):
         """
         # Check for betting on twin primes.
         if arguments.lower().startswith('twins'):
-            arguments = '2-23'
+            arguments = arguments.lower().replace('twins', '2-23')
         # Check the bet and two numbers.
         numbers, bet = self.check_bet(arguments)
         if numbers and self.check_two_numbers(numbers, 'split'):

@@ -3,7 +3,7 @@ hangman_game.py
 
 A game of hangman.
 
-Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
@@ -235,7 +235,7 @@ class Hangman(game.Game):
         if self.phase == 'answer':
             # Start computer guessing.
             if not self.word:
-                query = '\nThink of a word for me to guess. How many letter are in it? '
+                query = '\nThink of a word for me to guess. How many letters are in it? '
                 self.word_length = player.ask_int(query, low = 1)
                 self.guess = '_' * self.word_length
                 self.word = '???'

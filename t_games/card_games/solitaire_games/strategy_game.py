@@ -1,7 +1,7 @@
 """
 strategy_game.py
 
-Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
@@ -30,7 +30,7 @@ Parlett suggests that each time you win, play again with one less tableau
 pile.
 
 Options:
-piles: The number of tableau piles (1-8).
+piles= (p=): The number of tableau piles (1-8).
 """
 
 

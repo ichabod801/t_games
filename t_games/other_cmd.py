@@ -8,7 +8,7 @@ Note that the return values for command handling methods are different in
 OtherCmd compared to Cmd. To match game.Game processing, True means keep
 processing without moving to the next turn.
 
-Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Classes:

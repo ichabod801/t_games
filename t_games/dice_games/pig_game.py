@@ -9,7 +9,7 @@ If you write a new kind of bot, it will not be usable unless you:
     3. Give a list of paramter descriptions as a class attribute.
     4. Put it in the general bots class attribute of the Pig Class.
 
-Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:

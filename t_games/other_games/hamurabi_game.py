@@ -3,7 +3,7 @@ hamurabi_game.py
 
 The computer classic Hamurabi. No, it is not misspelled.
 
-Copyright (C) 2018 by Craig O'Brien and the t_game contributors.
+Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
@@ -36,8 +36,8 @@ be.
 
 RULES = """
 You have ten turns to run ancient Sumeria. Each turn you can buy or sell land,
-buy or sell grain, how much to feed your people, and how much grain to plant.
-You will have to deal with disasters such as rats and plagues.
+buy or sell grain, decide how much to feed your people, and decide how much
+grain to plant. You will have to deal with disasters such as rats and plagues.
 
 Commands:
 buy (b): Buy the specified number of acres.
@@ -47,8 +47,8 @@ plant (p): Plant seed in the specified number of acres.
 sell (s): Sell the specified number of acres.
 
 Options:
-plague-chance (pc): The chance of plague. 0 to 100, defaults to 15.
-rat-chance (rc): The chance of rats eating grain. 0 to 100, defaults to 40.
+plague-chance= (pc=): The chance of plague. 0 to 100, defaults to 15.
+rat-chance= (rc=): The chance of rats eating grain. 0 to 100, defaults to 40.
 steady-grain (sg): Grain yields are more likely to be average.
 steady-land (sl): Land prices are more likely to be average.
 """
