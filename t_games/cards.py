@@ -783,6 +783,9 @@ class MultiTrackingDeck(TrackingDeck):
     decks: The number of decks shuffled together. (int)
     max_rank: The highest rank in the deck. (int)
 
+    Methods:
+    parse_location: Parse a location identifier into type and count. (str, int)
+
     Overridden Methods:
     __init__
     find
@@ -835,18 +838,7 @@ class MultiTrackingDeck(TrackingDeck):
             location, loc_txt, location_text = '', '', ''
         # Parse the location specifier.
         if location:
-            location = location.upper()
-            if location.isdigit():
-                # Number only locations default to the tableau.
-                location_type = 'T'
-                location_count = int(location) - 1
-            elif location[-1].isdigit():
-                location_type = location[0]
-                location_count = int(location[1:]) - 1
-            else:
-                # Location count defaults to 0.
-                location_type = location
-                location_count = 0
+            location_type, location_count = self.parse_location(location)
         else:
             # Distinguish no location from an empty location.
             location = None
@@ -856,17 +848,23 @@ class MultiTrackingDeck(TrackingDeck):
                 location = self.game.cells
                 location_text = ' in the free cells'
             elif location_type == 'R':
-                location = self.game.reserve[location_count]
-                # Distinguish single reserve games from multi-reserve games.
-                if len(self.game.reserve) > 1:
-                    text = ' in the {} reserve pile'
-                    location_text = text.format(utility.number_word(location_count + 1, ordinal = True))
-                else:
-                    location_text = ' in the reserve'
+                try:
+                    location = self.game.reserve[location_count]
+                    # Distinguish single reserve games from multi-reserve games.
+                    if len(self.game.reserve) > 1:
+                        text = ' in the {} reserve pile'
+                        location_text = text.format(utility.number_word(location_count + 1, ordinal = True))
+                    else:
+                        location_text = ' in the reserve'
+                except IndexError:
+                    location = []
             elif location_type == 'T':
-                location = self.game.tableau[location_count]
-                text = ' in the {} tableau pile'
-                location_text = text.format(utility.number_word(location_count + 1, ordinal = True))
+                try:
+                    location = self.game.tableau[location_count]
+                    text = ' in the {} tableau pile'
+                    location_text = text.format(utility.number_word(location_count + 1, ordinal = True))
+                except IndexError:
+                    location = []
             else:
                 location = self.game.waste
                 location_text = ' in the waste'
@@ -883,6 +881,27 @@ class MultiTrackingDeck(TrackingDeck):
             card.loc_txt = loc_txt
             card.location_text = location_text
         return cards
+
+    def parse_location(self, location_text):
+        """
+        Parse a location identifier into type and count. (str, int)
+
+        Parameters:
+        location_text: The location identifier. (str)
+        """
+        location_text = location_text.upper()
+        if location_text.isdigit():
+            # Number only locations default to the tableau.
+            location_type = 'T'
+            location_count = int(location_text) - 1
+        elif location_text[-1].isdigit():
+            location_type = location_text[0]
+            location_count = int(location_text[1:]) - 1
+        else:
+            # Location count defaults to 0.
+            location_type = location_text
+            location_count = 0
+        return location_text, location_count
 
 
 if __name__ == '__main__':
