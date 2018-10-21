@@ -62,6 +62,7 @@ class Card(object):
     __str__
     """
 
+    an_ranks = 'A8'
     suits = 'CDHS'
     suit_names = ['Clubs', 'Diamonds', 'Hearts', 'Spades']
     ranks = 'XA23456789TJQK'
@@ -92,7 +93,11 @@ class Card(object):
         self.name = '{} of {}'.format(rank_name, suit_name)
         self.up_text = self.rank + self.suit
         self.down_text = down_text
-        self.format_types = {'d': self.down_text, 'n': self.name, 'u': self.up_text}
+        if self.rank in self.an_ranks:
+            a_text = 'an {}'.format(self.name.lower())
+        else:
+            a_text = 'a {}'.format(self.name.lower())
+        self.format_types = {'a': a_text, 'd': self.down_text, 'n': self.name, 'u': self.up_text}
         # Default face down.
         self.up = False
 
@@ -494,6 +499,8 @@ class TrackingCard(Card):
     deck: The deck the card is a part of. (Deck)
     deck_location: The location of the card in the deck. (list of Card)
     game_location: The location of the card in the game. (list of Card)
+    loc_txt: The location identifier for abbreviated card text. (str)
+    location_text: The location identifier for full card text. (str)
     rank_num: The numeric rank of the card. (int)
 
     Methods:
@@ -526,6 +533,8 @@ class TrackingCard(Card):
         else:
             self.deck_location = None
             self.game_location = None
+        self.loc_txt = ''
+        self.location_text = ''
 
     def __eq__(self, other):
         """
@@ -541,6 +550,34 @@ class TrackingCard(Card):
             return id(self) == id(other)
         else:
             return super(TrackingCard, self).__eq__(other)
+
+    def __format__(self, format_spec):
+        """
+        Return a formatted text version of the card. (str)
+
+        The additional recognized format types are:
+            d: The face down two-letter abbreviation.
+            n: The full name.
+            u: The face up two-letter abbreviation.
+
+        Parameters:
+        format_spec: The format specification. (str)
+        """
+        # Use and remove format type if given.
+        format_type = format_spec[-1] if format_spec else ''
+        if format_type in self.format_types:
+            target = self.format_types[format_type]
+            format_spec = format_spec[:-1]
+        else:
+            target = str(self)
+        # Add the location text based on the format type.
+        if format_type == 'u':
+            target += self.loc_txt
+        elif format_type != 'd':
+            target += self.location_text
+        # Return the text based on type with the rest of the format spec applied.
+        format_text = '{{:{}}}'.format(format_spec)
+        return format_text.format(target)
 
     def __repr__(self):
         """Create a debugging text representation."""
@@ -746,6 +783,9 @@ class MultiTrackingDeck(TrackingDeck):
     decks: The number of decks shuffled together. (int)
     max_rank: The highest rank in the deck. (int)
 
+    Methods:
+    parse_location: Parse a location identifier into type and count. (str, int)
+
     Overridden Methods:
     __init__
     find
@@ -791,41 +831,77 @@ class MultiTrackingDeck(TrackingDeck):
         Paramters:
         card_text: The string version of the card. (str)
         """
-        # Check for a location specifier
+        # Check for a location specifier.
         if '-' in card_text:
             card_text, location = card_text.split('-')
         else:
-            location = ''
+            location, loc_txt, location_text = '', '', ''
+        # Parse the location specifier.
         if location:
-            # Parse the location specifier.
-            location = location.upper()
-            if location.isdigit():
-                location_type = 'T'
-                location_count = int(location) - 1
-            elif location[-1].isdigit():
-                location_type = location[0]
-                location_count = int(location[1:]) - 1
-            else:
-                location_type = location
-                location_count = 0
+            location_type, location_count = self.parse_location(location)
         else:
-            # Distinguish no location from an empty location
+            # Distinguish no location from an empty location.
             location = None
         if location:
             # Get the location from the game.
             if location_type == 'F':
                 location = self.game.cells
+                location_text = ' in the free cells'
             elif location_type == 'R':
-                location = self.game.reserve[location_count]
+                try:
+                    location = self.game.reserve[location_count]
+                    # Distinguish single reserve games from multi-reserve games.
+                    if len(self.game.reserve) > 1:
+                        text = ' in the {} reserve pile'
+                        location_text = text.format(utility.number_word(location_count + 1, ordinal = True))
+                    else:
+                        location_text = ' in the reserve'
+                except IndexError:
+                    location = []
             elif location_type == 'T':
-                location = self.game.tableau[location_count]
+                try:
+                    location = self.game.tableau[location_count]
+                    text = ' in the {} tableau pile'
+                    location_text = text.format(utility.number_word(location_count + 1, ordinal = True))
+                except IndexError:
+                    location = []
             else:
                 location = self.game.waste
+                location_text = ' in the waste'
+            # Set the abbreviated location text.
+            loc_txt = '-{}'.format(location_type)
+            if location_type in 'RT':
+                loc_txt = '{}{}'.format(loc_txt, location_count + 1)
         # Find the cards, filtered by any location specified.
         cards = self.card_map[card_text.upper()]
         if location is not None:
             cards = [card for card in cards if card in location]
+        # Set (or unset) location text.
+        for card in cards:
+            card.loc_txt = loc_txt
+            card.location_text = location_text
         return cards
+
+    def parse_location(self, location_text):
+        """
+        Parse a location identifier into type and count. (str, int)
+
+        Parameters:
+        location_text: The location identifier. (str)
+        """
+        location_text = location_text.upper()
+        if location_text.isdigit():
+            # Number only locations default to the tableau.
+            location_type = 'T'
+            location_count = int(location_text) - 1
+        elif location_text[-1].isdigit():
+            location_type = location_text[0]
+            location_count = int(location_text[1:]) - 1
+        else:
+            # Location count defaults to 0.
+            location_type = location_text
+            location_count = 0
+        return location_type, location_count
 
 
 if __name__ == '__main__':
