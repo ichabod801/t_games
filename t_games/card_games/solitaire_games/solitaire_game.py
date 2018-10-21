@@ -1479,6 +1479,7 @@ class MultiSolitaire(Solitaire):
         undo_ndx: Nominally how many undos there are to do. (int)
         """
         super(MultiSolitaire, self).transfer(move_stack, new_location, track, up, undo_ndx)
+        # Clear the location text for the moving card.
         move_stack[0].loc_txt = ''
         move_stack[0].location_text = ''
 

@@ -826,27 +826,27 @@ class MultiTrackingDeck(TrackingDeck):
         Paramters:
         card_text: The string version of the card. (str)
         """
-        # Check for a location specifier
+        # Check for a location specifier.
         if '-' in card_text:
             card_text, location = card_text.split('-')
         else:
-            location = ''
-            loc_txt = ''
-            location_text = ''
+            location, loc_txt, location_text = '', '', ''
+        # Parse the location specifier.
         if location:
-            # Parse the location specifier.
             location = location.upper()
             if location.isdigit():
+                # Number only locations default to the tableau.
                 location_type = 'T'
                 location_count = int(location) - 1
             elif location[-1].isdigit():
                 location_type = location[0]
                 location_count = int(location[1:]) - 1
             else:
+                # Location count defaults to 0.
                 location_type = location
                 location_count = 0
         else:
-            # Distinguish no location from an empty location
+            # Distinguish no location from an empty location.
             location = None
         if location:
             # Get the location from the game.
@@ -855,6 +855,7 @@ class MultiTrackingDeck(TrackingDeck):
                 location_text = ' in the free cells'
             elif location_type == 'R':
                 location = self.game.reserve[location_count]
+                # Distinguish single reserve games from multi-reserve games.
                 if len(self.game.reserve) > 1:
                     text = ' in the {} reserve pile'
                     location_text = text.format(utility.number_word(location_count + 1, ordinal = True))
@@ -867,6 +868,7 @@ class MultiTrackingDeck(TrackingDeck):
             else:
                 location = self.game.waste
                 location_text = ' in the waste'
+            # Set the abbreviated location text.
             loc_txt = '-{}'.format(location_type)
             if location_type in 'RT':
                 loc_txt = '{}{}'.format(loc_txt, location_count + 1)
