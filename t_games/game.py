@@ -55,6 +55,7 @@ class Game(OtherCmd):
     aka: Other names for the game. (list of str)
     categories: The interface categories for the game. (list of str)
     credits: The design and programming credits for this game. (str)
+    int_re: A regular expression matching integer numbers. (SRE_Pattern)
     float_re: A regular expression matching decimal numbers. (SRE_Pattern)
     help_text: Extra help text for the game. (dict of str: str)
     name: The primary name of the game. (str)
@@ -100,6 +101,7 @@ class Game(OtherCmd):
     categories = ['Test Games']
     credits = 'No credits have been specified for this game.'
     help_text = {'help': '\nUse the rules command for instructions on how to play.'}
+    int_re = re.compile('-?\d*')
     float_re = re.compile('-?\d*\.\d+')
     name = 'Null'
     num_options = 0
@@ -256,7 +258,7 @@ class Game(OtherCmd):
                 else:
                     stack.append(result)
             # handle integers
-            elif word.isdigit():
+            elif self.int_re.match(word):
                 stack.append(int(word))
             # handle decimals
             elif self.float_re.match(word):
