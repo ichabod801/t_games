@@ -4,6 +4,7 @@ game_test.py
 Unit tests of t_games/game.py.
 
 Classes:
+GameCommandTest:
 GameInitTest: Test of game initialization. (unittest.TestCase)
 GameTextTest: Tests of the base game class text versions. (unittest.TestCase)
 """
@@ -16,8 +17,39 @@ import t_games.player as player
 import t_tests.unitility as unitility
 
 
+class GameCommandTest(unittest.TestCase):
+    """Test of game do_foo methods. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.game = game.Game(self.bot, ' ')
+
+    def testCredits(self):
+        """Test showing the credits."""
+        check = 'No credits have been specified for this game.\n'
+        self.game.do_credits('')
+        self.assertEqual(check, self.bot.info[1])
+
+    def testDebugFlag(self):
+        """Test setting the flag after a debug command."""
+        self.game.do_debug('self.name')
+        self.assertEqual(2, self.game.flags)
+
+    def testDebugResponse(self):
+        """Test the response from a debug command."""
+        self.game.do_debug('self.name')
+        check = "'Null'\n"
+        self.assertEqual(check, self.bot.info[1])
+
+    def testDefault(self):
+        """Test handling unknown commands."""
+        check = "\nI do not recognize the command 'obey'.\n"
+        self.game.player_index = 0
+        self.game.handle_cmd('obey')
+
+
 class GameInitTest(unittest.TestCase):
-    """Test of game initialization."""
+    """Test of game initialization. (unittest.TestCase)"""
 
     def setUp(self):
         self.bot = unitility.AutoBot()
