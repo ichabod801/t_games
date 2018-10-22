@@ -6,6 +6,7 @@ Unit tests of t_games/game.py.
 Classes:
 GameCommandTest:
 GameInitTest: Test of game initialization. (unittest.TestCase)
+GameRPNTest: Test of the RPN calculator in game.Game. (unittest.TestCase)
 GameTextTest: Tests of the base game class text versions. (unittest.TestCase)
 """
 
@@ -102,6 +103,26 @@ class GameInitTest(unittest.TestCase):
     def testRawOptions(self):
         """Test setting raw_options."""
         self.assertEqual('', self.game.raw_options)
+
+
+class GameRPNTest(unittest.TestCase):
+    """Test of the reverse polish notation calculator in game.Game. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.game = game.Game(self.bot, ' ')
+
+def make_rpn_test(arguments, check, description):
+    def testSomething(self):
+        self.game.do_rpn(arguments)
+        self.assertEqual(check, self.bot.info[-1].strip())
+    testSomething.__doc__ = 'Test RPN calculation of {}.'.format(description)
+    return testSomething
+
+tests = [('testAbsPos', '1 |', '1', 'the absolute value of a postive number'),
+    ('testAbsNeg', '-2 |', '2', 'the absolute value of a negative number')]
+for arguments in tests:
+    setattr(GameRPNTest, arguments[0], make_rpn_test(*arguments[1:]))
 
 
 class GameTextTest(unittest.TestCase):
