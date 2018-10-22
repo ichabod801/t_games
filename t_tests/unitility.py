@@ -45,7 +45,6 @@ class AutoBot(player.Bot):
         self.replies = replies
         self.info = []
         self.errors = []
-        self.game = game.Game(self, 'none')
 
     def ask(self, prompt):
         """
@@ -54,7 +53,7 @@ class AutoBot(player.Bot):
         Parameters:
         prompt: The question being asked of the player. (str)
         """
-        return replies.pop(0)
+        return self.replies.pop(0)
 
     def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
         """
@@ -68,7 +67,7 @@ class AutoBot(player.Bot):
         default: The default choice. (int or None)
         cmd: A flag for returning commands for processing. (bool)
         """
-        return replies.pop(0)
+        return self.replies.pop(0)
 
     def ask_int_list(self, prompt, low = None, high = None, valid = [], valid_lens = [], default = None,
         cmd = True):
@@ -84,7 +83,7 @@ class AutoBot(player.Bot):
         default: The default choice. (list or None)
         cmd: A flag for returning commands for processing. (bool)
         """
-        return replies.pop(0)
+        return self.replies.pop(0)
 
     def ask_valid(self, prompt, valid, default = '', lower = True):
         """
@@ -98,7 +97,7 @@ class AutoBot(player.Bot):
         default: The default value for the response. (str)
         lower: A flag for case insensitive matching. (bool)
         """
-        return replies.pop(0)
+        return self.replies.pop(0)
 
     def error(self, *args, **kwargs):
         """

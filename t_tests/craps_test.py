@@ -19,6 +19,7 @@ class CrapsBetTest(unittest.TestCase):
 
     def setUp(self):
         self.player = unitility.AutoBot()
+        self.game = craps.Craps(self.player, 'none')
 
     def testReprCome(self):
         """Test the computer readable text for a come bet."""

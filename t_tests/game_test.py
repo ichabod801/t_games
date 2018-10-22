@@ -4,6 +4,7 @@ game_test.py
 Unit tests of t_games/game.py.
 
 Classes:
+GameInitTest: Test of game initialization. (unittest.TestCase)
 GameTextTest: Tests of the base game class text versions. (unittest.TestCase)
 """
 
@@ -29,7 +30,7 @@ class GameInitTest(unittest.TestCase):
 
     def testGreeting(self):
         """Test displaying the greeting text."""
-        check = '\nWelcome to a game of Null, Bumblebee.'
+        check = '\nWelcome to a game of Null, Bumblebee.\n'
         self.assertEqual(check, self.bot.info[0])
 
     def testHelp(self):
