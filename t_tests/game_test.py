@@ -8,6 +8,9 @@ GameCommandTest:
 GameInitTest: Test of game initialization. (unittest.TestCase)
 GameRPNTest: Test of the RPN calculator in game.Game. (unittest.TestCase)
 GameTextTest: Tests of the base game class text versions. (unittest.TestCase)
+
+Functions:
+rpn_tests: Make a test class for the Game.do_rpn calculations. (unittest.TestCase)
 """
 
 
@@ -110,20 +113,21 @@ class GameInitTest(unittest.TestCase):
         self.assertEqual('', self.game.raw_options)
 
 def rpn_tests():
+    """Make a test class for the Game.do_rpn calculations. (unittest.TestCase)"""
+    # Create the base class.
     class GameRPNTest(unittest.TestCase):
         """Test of the reverse polish notation calculator in game.Game. (unittest.TestCase)"""
-
         def setUp(self):
             self.bot = unitility.AutoBot()
             self.game = game.Game(self.bot, ' ')
-
+    # Create a function to add test methods.
     def make_rpn_test(arguments, check, description):
         def testSomething(self):
             self.game.do_rpn(arguments)
             self.assertEqual(check, self.bot.info[-1].strip())
         testSomething.__doc__ = 'Test RPN calculation of {}.'.format(description)
         return testSomething
-
+    # Define the tests to run.
     tests = [
         ('testAbsNeg', '-2 |', '2', 'the absolute value of a negative number'),
         ('testAbsPos', '1 |', '1', 'the absolute value of a postive number'),
@@ -140,6 +144,7 @@ def rpn_tests():
         ('testDivModUp', '-15 2 /%', '-8 1', 'divmod with a negative dividend'),
         ('testDivModRemain', '23 5 /%', '4 3', 'divmod with a remainder')
         ]
+    # Add the tests to the class.
     for arguments in tests:
         setattr(GameRPNTest, arguments[0], make_rpn_test(*arguments[1:]))
     return GameRPNTest
