@@ -101,7 +101,7 @@ class Game(OtherCmd):
     categories = ['Test Games']
     credits = 'No credits have been specified for this game.'
     help_text = {'help': '\nUse the rules command for instructions on how to play.'}
-    int_re = re.compile('-?\d*')
+    int_re = re.compile('-?\d*$')
     float_re = re.compile('-?\d*\.\d+')
     name = 'Null'
     num_options = 0

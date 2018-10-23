@@ -131,7 +131,14 @@ def rpn_tests():
         ('testAddNeg', '-2 -2 +', '-4', 'adding two negative numbers'),
         ('testAddPos', '2 2 +', '4', 'adding two positive numbers'),
         ('textChooseLarge', '108 23 C', '181886780350687116846960', 'n choose r with large numbers'),
-        ('testChooseSmall', '5 2 C', '10', 'n choose r with small numbers')
+        ('testChooseSmall', '5 2 C', '10', 'n choose r with small numbers'),
+        ('testCosPi', '3.1415926535 cos', '-1.0', 'the cos of pi'),
+        ('testCosZero', '0 cos', '1.0', 'the cos of zero'),
+        ('testDivModEven', '108 27 /%', '4 0', 'divmod with no remainder'),
+        ('testDivModNegBoth', '-15 -2 /%', '7 -1', 'divmod with two negative numbers'),
+        ('testDivModNegDown', '15 -2 /%', '-8 -1', 'divmod with a negative divisor'),
+        ('testDivModUp', '-15 2 /%', '-8 1', 'divmod with a negative dividend'),
+        ('testDivModRemain', '23 5 /%', '4 3', 'divmod with a remainder')
         ]
     for arguments in tests:
         setattr(GameRPNTest, arguments[0], make_rpn_test(*arguments[1:]))
