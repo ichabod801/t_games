@@ -149,6 +149,7 @@ def rpn_tests():
         return testSomething
     # Define the tests to run.
     tests = [
+        ('testABC', '1 2 4 ab/c', '1.5', 'the abc of powers of two'),
         ('testAbsNeg', '-2 |', '2', 'the absolute value of a negative number'),
         ('testAbsPos', '1 |', '1', 'the absolute value of a postive number'),
         ('testAddMixed', '2 -2 +', '0', 'adding a negative and a postive'),
@@ -207,6 +208,9 @@ def rpn_tests():
         ('testSubtractMixed', '2 -2 -', '4', 'subtracting a negative and a postive'),
         ('testSubtractNeg', '-2 -2 -', '0', 'subtracting two negative numbers'),
         ('testSubtractPos', '2 2 -', '0', 'subtracting two positive numbers'),
+        ('testSquareRootFloat', '6.25 V', '2.5', 'the sqaure root of a floating point number'),
+        ('testSquareRootInt', '81 V', '9.0', 'the square root of an integer'),
+        ('testTanZero', '0 tan', '0.0', 'the tangent of zero')
         ]
     # Add the tests to the class.
     for arguments in tests:

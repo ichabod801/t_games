@@ -235,7 +235,7 @@ class Game(OtherCmd):
 
         For example, '= 1 1 +' returns 2. '= 1 1 ^ 2 2 ^ 3 3 ^ * *' returns 108.
         '= R 108 * 1 + 1 //' returns a random number from 1 to 108. So does
-        '1 1 R 108 * + //'.
+        '= 1 R 108 * + 1 //'.
 
         Note that the full stack is displayed at the end of the calculation.
         """
