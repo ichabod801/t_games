@@ -62,6 +62,11 @@ class GameCommandTest(unittest.TestCase):
         self.game.do_rpn('2 5 C')
         self.assertEqual('Bad value for C operator.\n', self.bot.errors[0])
 
+    def testRPNZeroDivisionError(self):
+        """Test raising a zero division error with the rpn command."""
+        self.game.do_rpn('18 0 /')
+        self.assertEqual('Zero division error.\n', self.bot.errors[0])
+
     def testQuitReturn(self):
         """Test quit command return value."""
         self.assertFalse(self.game.do_quit(''))
@@ -143,6 +148,11 @@ def rpn_tests():
         ('testChooseSmall', '5 2 C', '10', 'n choose r with small numbers'),
         ('testCosPi', '3.1415926535 cos', '-1.0', 'the cos of pi'),
         ('testCosZero', '0 cos', '1.0', 'the cos of zero'),
+        ('testDivideEven', '4 2 /', '2.0', 'an even division'),
+        ('testDivideNegBoth', '-4 -2 /', '2.0', 'division with two negatives'),
+        ('testDivideNegDown', '4 -2 /', '-2.0', 'division with a negative denominator'),
+        ('testDivideNegUp', '-4 2 /', '-2.0', 'division with a negative numerator'),
+        ('testDivideReaminder', '18 4 /', '4.5', 'division resulting in a float'),
         ('testDivModEven', '108 27 /%', '4 0', 'divmod with no remainder'),
         ('testDivModNegBoth', '-15 -2 /%', '7 -1', 'divmod with two negative numbers'),
         ('testDivModNegDown', '15 -2 /%', '-8 -1', 'divmod with a negative divisor'),
@@ -154,7 +164,13 @@ def rpn_tests():
         ('testExponentSimple', '2 10 ^', '1024', 'a basic exponent'),
         ('testFactorialLarge', '23 !', '25852016738884976640000', 'a large factorial'),
         ('testFactorialSmall', '5 !', '120', 'a small factorial'),
-        ('testFactorialZero', '0 !', '1', 'the factorial of zero')
+        ('testFactorialZero', '0 !', '1', 'the factorial of zero'),
+        ('testFloorDivideEven', '4 2 //', '2', 'an even floor division'),
+        ('testFloorDivideFloorNeg', '18 -4 //', '-5', 'floor division that floors a negative'),
+        ('testFloorDivideFloorPos', '18 4 //', '4', 'floor division that floors'),
+        ('testFloorDivideNegBoth', '-4 -2 //', '2', 'floor division with two negatives'),
+        ('testFloorDivideNegDown', '4 -2 //', '-2', 'floor division with a negative denominator'),
+        ('testFloorDivideNegUp', '-4 2 //', '-2', 'floor division with a negative numerator')
         ]
     # Add the tests to the class.
     for arguments in tests:

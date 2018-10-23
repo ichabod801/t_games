@@ -258,6 +258,7 @@ class Game(OtherCmd):
                     break
                 except ZeroDivisionError:
                     self.human.error('Zero division error.')
+                    break
                 # add to stack
                 if isinstance(result, tuple):
                     stack.extend(result)
