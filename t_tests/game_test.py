@@ -174,7 +174,16 @@ def rpn_tests():
         ('testLnE', '2.718281828459045 ln', '1.0', 'the natural logarith of e'),
         ('testLnOne', '1 ln', '0.0', 'the natural logarith of 1'),
         ('testLogK', '1000 log', '3.0', 'the common logarithm of 1000'),
-        ('testLogOne', '1 log', '0.0', 'the common logarithm of 1')
+        ('testLogOne', '1 log', '0.0', 'the common logarithm of 1'),
+        ('testModEven', '108 27 %', '0', 'divmod with no remainder'),
+        ('testModNegBoth', '-15 -2 %', '-1', 'divmod with two negative numbers'),
+        ('testModNegDown', '15 -2 %', '-1', 'divmod with a negative divisor'),
+        ('testModUp', '-15 2 %', '1', 'divmod with a negative dividend'),
+        ('testModRemain', '23 5 %', '3', 'divmod with a remainder'),
+        ('testMultiplyFloat', '2.3 8.1 *', '18.63', 'mulitplying floating point numbers'),
+        ('testMulitplyInt', '108 801 *', '86508', 'multiplying integers'),
+        ('testMultiplyNegOne', '2 -3 *', '-6', 'mulitplying a negative and a positive'),
+        ('testMultiplyNegTwo', '-8 -1', '8', 'multplying two negatives')
         ]
     # Add the tests to the class.
     for arguments in tests:
