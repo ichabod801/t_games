@@ -201,7 +201,12 @@ def rpn_tests():
         ('testPermuteSmall', '5 2 P', '20.0', 'n permute r with small numbers'),
         ('testReciprocalFloat', '0.25 1/', '4.0', 'the reciprocal of a floating point number'),
         ('testReciprocalInt', '5 1/', '0.2', 'the reciprocal of an integer'),
-        ('testReciprocalNegative', '-8 1/', '-0.125', 'the reciprocal of a negative')
+        ('testReciprocalNegative', '-8 1/', '-0.125', 'the reciprocal of a negative'),
+        ('testSinHalfPi', '3.141592653589793 2 / sin', '1.0', 'the sine of pi over two'),
+        ('testSinZero', '0 sin', '0.0', 'the sine of zero'),
+        ('testSubtractMixed', '2 -2 -', '4', 'subtracting a negative and a postive'),
+        ('testSubtractNeg', '-2 -2 -', '0', 'subtracting two negative numbers'),
+        ('testSubtractPos', '2 2 -', '0', 'subtracting two positive numbers'),
         ]
     # Add the tests to the class.
     for arguments in tests:
