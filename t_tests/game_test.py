@@ -160,7 +160,7 @@ def rpn_tests():
         ('testDivModRemain', '23 5 /%', '4 3', 'divmod with a remainder'),
         ('testExponentNegative', '2 -2 ^', '0.25', 'a negative exponent'),
         ('testExponentOfNegative', '-2 4 ^', '-16', 'failures of mathematical notation'),
-        ('testExpoenentRoot', '81 0.5 ^', '9.0', 'a fractional expoenent'),
+        ('testExpoenentRoot', '81 0.5 ^', '9.0', 'a fractional exponent'),
         ('testExponentSimple', '2 10 ^', '1024', 'a basic exponent'),
         ('testFactorialLarge', '23 !', '25852016738884976640000', 'a large factorial'),
         ('testFactorialSmall', '5 !', '120', 'a small factorial'),
@@ -170,7 +170,11 @@ def rpn_tests():
         ('testFloorDivideFloorPos', '18 4 //', '4', 'floor division that floors'),
         ('testFloorDivideNegBoth', '-4 -2 //', '2', 'floor division with two negatives'),
         ('testFloorDivideNegDown', '4 -2 //', '-2', 'floor division with a negative denominator'),
-        ('testFloorDivideNegUp', '-4 2 //', '-2', 'floor division with a negative numerator')
+        ('testFloorDivideNegUp', '-4 2 //', '-2', 'floor division with a negative numerator'),
+        ('testLnE', '2.718281828459045 ln', '1.0', 'the natural logarith of e'),
+        ('testLnOne', '1 ln', '0.0', 'the natural logarith of 1'),
+        ('testLogK', '1000 log', '3.0', 'the common logarithm of 1000'),
+        ('testLogOne', '1 log', '0.0', 'the common logarithm of 1')
         ]
     # Add the tests to the class.
     for arguments in tests:
