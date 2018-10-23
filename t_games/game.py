@@ -107,11 +107,11 @@ class Game(OtherCmd):
     num_options = 0
     operators = {'|': (abs, 1), '+': (operator.add, 2), 'C': (utility.choose, 2), '/%': (divmod, 2),
         '!': (math.factorial, 1), '//': (operator.floordiv, 2), '*': (operator.mul, 2),
-        '%': (operator.mod, 2), '+-': (operator.neg, 1), 'P': (utility.permutations, 2), '^': (pow, 2),
-        '1/': (lambda x: 1 / x, 1), '-': (operator.sub, 2), '/': (operator.truediv, 2),
-        'ab/c': (lambda a, b, c: a + b / c, 3), 'cos': (math.cos, 1), 'ln': (math.log, 1),
-        'log': (math.log10, 1), 'R': (random.random, 0), 'F': (utility.flip, 0), 'sin': (math.sin, 1),
-        'V': (math.sqrt, 1), 'tan': (math.tan, 1)}
+        '%': (operator.mod, 2), '+-': (operator.neg, 1), 'P': (utility.permutations, 2),
+        '^': (utility.pow, 2), '1/': (lambda x: 1 / x, 1), '-': (operator.sub, 2),
+        '/': (operator.truediv, 2), 'ab/c': (lambda a, b, c: a + b / c, 3), 'cos': (math.cos, 1),
+        'ln': (math.log, 1), 'log': (math.log10, 1), 'R': (random.random, 0), 'F': (utility.flip, 0),
+        'sin': (math.sin, 1), 'V': (math.sqrt, 1), 'tan': (math.tan, 1)}
     rules = 'No rules have been specified for this game.'
 
     def __init__(self, human, raw_options, interface = None):

@@ -142,7 +142,11 @@ def rpn_tests():
         ('testDivModNegBoth', '-15 -2 /%', '7 -1', 'divmod with two negative numbers'),
         ('testDivModNegDown', '15 -2 /%', '-8 -1', 'divmod with a negative divisor'),
         ('testDivModUp', '-15 2 /%', '-8 1', 'divmod with a negative dividend'),
-        ('testDivModRemain', '23 5 /%', '4 3', 'divmod with a remainder')
+        ('testDivModRemain', '23 5 /%', '4 3', 'divmod with a remainder'),
+        ('testExponentNegative', '2 -2 ^', '0.25', 'a negative exponent'),
+        ('testExponentOfNegative', '-2 4 ^', '-16', 'failures of mathematical notation'),
+        ('testExpoenentRoot', '81 0.5 ^', '9.0', 'a fractional expoenent'),
+        ('testExponentSimple', '2 10 ^', '1024', 'a basic exponent')
         ]
     # Add the tests to the class.
     for arguments in tests:
