@@ -57,6 +57,16 @@ class GameCommandTest(unittest.TestCase):
         self.game.do_rpn('F')
         self.assertIn(self.bot.info[-1], ('0\n', '1\n'))
 
+    def testRPNRandomChange(self):
+        """Test that consecutive random numbers from rpn are different."""
+        self.game.do_rpn('R R')
+        first, second = [float(x) for x in self.bot.info[-1].split()]
+        self.assertNotEqual(first, second)
+
+    def testRPNRandomRange(self):
+        """Test that random numbers from rpn are in the zero to one range."""
+        self.game.do_rpn('R')
+
     def testRPNValueError(self):
         """Test raising a value error with the rpn command."""
         self.game.do_rpn('2 5 C')
@@ -188,7 +198,10 @@ def rpn_tests():
         ('testNegationNegative', '-8 +-', '8', 'negating a negative'),
         ('testNegationPositive', '8 +-', '-8', 'negating a positive'),
         ('textPermuteLarge', '32 9 P', '10178348544000.0', 'n permute r with large numbers'),
-        ('testPermuteSmall', '5 2 P', '20.0', 'n permute r with small numbers')
+        ('testPermuteSmall', '5 2 P', '20.0', 'n permute r with small numbers'),
+        ('testReciprocalFloat', '0.25 1/', '4.0', 'the reciprocal of a floating point number'),
+        ('testReciprocalInt', '5 1/', '0.2', 'the reciprocal of an integer'),
+        ('testReciprocalNegative', '-8 1/', '-0.125', 'the reciprocal of a negative')
         ]
     # Add the tests to the class.
     for arguments in tests:

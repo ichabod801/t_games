@@ -249,6 +249,9 @@ class Game(OtherCmd):
                 if len(stack) < n_params:
                     self.human.tell('Too few parameters for {}.'.format(word))
                     break
+                # Correctly handle no paramters.
+                if n_params == 0:
+                    n_params = -len(stack)
                 params = stack[-n_params:]
                 stack = stack[:-n_params]
                 try:
