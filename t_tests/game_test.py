@@ -49,6 +49,11 @@ class GameCommandTest(unittest.TestCase):
         self.game.handle_cmd('obey')
         self.assertEqual(check, self.bot.errors[0])
 
+    def testRPNValueError(self):
+        """Test raising a value error with the rpn command."""
+        self.game.do_rpn('2 5 C')
+        self.assertEqual('Bad value for C operator.\n', self.bot.errors[0])
+
     def testQuitReturn(self):
         """Test quit command return value."""
         self.assertFalse(self.game.do_quit(''))
@@ -119,8 +124,15 @@ def rpn_tests():
         testSomething.__doc__ = 'Test RPN calculation of {}.'.format(description)
         return testSomething
 
-    tests = [('testAbsPos', '1 |', '1', 'the absolute value of a postive number'),
-        ('testAbsNeg', '-2 |', '2', 'the absolute value of a negative number')]
+    tests = [
+        ('testAbsNeg', '-2 |', '2', 'the absolute value of a negative number'),
+        ('testAbsPos', '1 |', '1', 'the absolute value of a postive number'),
+        ('testAddMixed', '2 -2 +', '0', 'adding a negative and a postive'),
+        ('testAddNeg', '-2 -2 +', '-4', 'adding two negative numbers'),
+        ('testAddPos', '2 2 +', '4', 'adding two positive numbers'),
+        ('textChooseLarge', '108 23 C', '181886780350687116846960', 'n choose r with large numbers'),
+        ('testChooseSmall', '5 2 C', '10', 'n choose r with small numbers')
+        ]
     for arguments in tests:
         setattr(GameRPNTest, arguments[0], make_rpn_test(*arguments[1:]))
     return GameRPNTest

@@ -251,7 +251,13 @@ class Game(OtherCmd):
                     break
                 params = stack[-n_params:]
                 stack = stack[:-n_params]
-                result = op(*params)
+                try:
+                    result = op(*params)
+                except ValueError:
+                    self.human.error('Bad value for {} operator.'.format(word))
+                    break
+                except ZeroDivisionError:
+                    self.human.error('Zero division error.')
                 # add to stack
                 if isinstance(result, tuple):
                     stack.extend(result)
