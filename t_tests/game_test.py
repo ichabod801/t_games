@@ -52,6 +52,11 @@ class GameCommandTest(unittest.TestCase):
         self.game.handle_cmd('obey')
         self.assertEqual(check, self.bot.errors[0])
 
+    def testRPNFlip(self):
+        """Test flipping a coin with the rpn command."""
+        self.game.do_rpn('F')
+        self.assertIn(self.bot.info[-1], ('0\n', '1\n'))
+
     def testRPNValueError(self):
         """Test raising a value error with the rpn command."""
         self.game.do_rpn('2 5 C')
@@ -146,7 +151,10 @@ def rpn_tests():
         ('testExponentNegative', '2 -2 ^', '0.25', 'a negative exponent'),
         ('testExponentOfNegative', '-2 4 ^', '-16', 'failures of mathematical notation'),
         ('testExpoenentRoot', '81 0.5 ^', '9.0', 'a fractional expoenent'),
-        ('testExponentSimple', '2 10 ^', '1024', 'a basic exponent')
+        ('testExponentSimple', '2 10 ^', '1024', 'a basic exponent'),
+        ('testFactorialLarge', '23 !', '25852016738884976640000', 'a large factorial'),
+        ('testFactorialSmall', '5 !', '120', 'a small factorial'),
+        ('testFactorialZero', '0 !', '1', 'the factorial of zero')
         ]
     # Add the tests to the class.
     for arguments in tests:
