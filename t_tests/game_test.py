@@ -183,7 +183,12 @@ def rpn_tests():
         ('testMultiplyFloat', '2.3 8.1 *', '18.63', 'mulitplying floating point numbers'),
         ('testMulitplyInt', '108 801 *', '86508', 'multiplying integers'),
         ('testMultiplyNegOne', '2 -3 *', '-6', 'mulitplying a negative and a positive'),
-        ('testMultiplyNegTwo', '-8 -1', '8', 'multplying two negatives')
+        ('testMultiplyNegTwo', '-8 -1 *', '8', 'multplying two negatives'),
+        ('testNegationFloat', '8.01 +-', '-8.01', 'negating a floating point number'),
+        ('testNegationNegative', '-8 +-', '8', 'negating a negative'),
+        ('testNegationPositive', '8 +-', '-8', 'negating a positive'),
+        ('textPermuteLarge', '32 9 P', '10178348544000.0', 'n permute r with large numbers'),
+        ('testPermuteSmall', '5 2 P', '20.0', 'n permute r with small numbers')
         ]
     # Add the tests to the class.
     for arguments in tests:
