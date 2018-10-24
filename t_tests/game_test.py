@@ -52,6 +52,26 @@ class GameCommandTest(unittest.TestCase):
         self.game.handle_cmd('obey')
         self.assertEqual(check, self.bot.errors[0])
 
+    def testQuitReturn(self):
+        """Test quit command return value."""
+        self.assertFalse(self.game.do_quit(''))
+
+    def testQuitSet(self):
+        """Test quit command setting attributes."""
+        self.game.do_quit('')
+        attrs = (self.game.flags, self.game.force_end, self.game.win_loss_draw)
+        self.assertEqual((4, 'loss', [0, 1, 0]), attrs)
+
+    def testQuitQuit(self):
+        """Test quit quit command."""
+        self.game.do_quit('quit')
+        self.assertEqual(['!'], self.bot.held_inputs)
+
+    def testQuitWithQuit(self):
+        """Test quit command with quit argument."""
+        self.game.do_quit('quit')
+        self.assertEqual(['!'], self.bot.held_inputs)
+
     def testRPNFlip(self):
         """Test flipping a coin with the rpn command."""
         self.game.do_rpn('F')
@@ -77,25 +97,11 @@ class GameCommandTest(unittest.TestCase):
         self.game.do_rpn('18 0 /')
         self.assertEqual('Zero division error.\n', self.bot.errors[0])
 
-    def testQuitReturn(self):
-        """Test quit command return value."""
-        self.assertFalse(self.game.do_quit(''))
-
-    def testQuitSet(self):
-        """Test quit command setting attributes."""
-        self.game.do_quit('')
-        attrs = (self.game.flags, self.game.force_end, self.game.win_loss_draw)
-        self.assertEqual((4, 'loss', [0, 1, 0]), attrs)
-
-    def testQuitQuit(self):
-        """Test quit quit command."""
-        self.game.do_quit('quit')
-        self.assertEqual(['!'], self.bot.held_inputs)
-
-    def testQuitWithQuit(self):
-        """Test quit command with quit argument."""
-        self.game.do_quit('quit')
-        self.assertEqual(['!'], self.bot.held_inputs)
+    def testRules(self):
+        """Test showing the rules."""
+        check = 'No rules have been specified for this game.\n'
+        self.game.do_rules('')
+        self.assertEqual(check, self.bot.info[1])
 
 
 class GameInitTest(unittest.TestCase):
