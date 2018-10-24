@@ -5,6 +5,7 @@ Utility classes and functions for unit testing.
 
 Classes:
 AutoBot: A programmatically controlled bot. (player.Bot)
+ProtoObject: An object whose attributes can be defined w/ __init__. (object)
 ProtoStdIn: A programatically controlled stdin. (object)
 ProtoStdOut: A locally stored stdout. (object)
 """

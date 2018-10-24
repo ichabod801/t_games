@@ -154,8 +154,7 @@ def rpn_tests():
         testSomething.__doc__ = 'Test RPN calculation of {}.'.format(description)
         return testSomething
     # Define the tests to run.
-    tests = [
-        ('testABC', '1 2 4 ab/c', '1.5', 'the abc of powers of two'),
+    tests = [('testABC', '1 2 4 ab/c', '1.5', 'the abc of powers of two'),
         ('testAbsNeg', '-2 |', '2', 'the absolute value of a negative number'),
         ('testAbsPos', '1 |', '1', 'the absolute value of a postive number'),
         ('testAddMixed', '2 -2 +', '0', 'adding a negative and a postive'),
@@ -204,8 +203,8 @@ def rpn_tests():
         ('testNegationFloat', '8.01 +-', '-8.01', 'negating a floating point number'),
         ('testNegationNegative', '-8 +-', '8', 'negating a negative'),
         ('testNegationPositive', '8 +-', '-8', 'negating a positive'),
-        ('textPermuteLarge', '32 9 P', '10178348544000.0', 'n permute r with large numbers'),
-        ('testPermuteSmall', '5 2 P', '20.0', 'n permute r with small numbers'),
+        ('textPermuteLarge', '32 9 P', '10178348544000', 'n permute r with large numbers'),
+        ('testPermuteSmall', '5 2 P', '20', 'n permute r with small numbers'),
         ('testReciprocalFloat', '0.25 1/', '4.0', 'the reciprocal of a floating point number'),
         ('testReciprocalInt', '5 1/', '0.2', 'the reciprocal of an integer'),
         ('testReciprocalNegative', '-8 1/', '-0.125', 'the reciprocal of a negative'),
@@ -216,8 +215,7 @@ def rpn_tests():
         ('testSubtractPos', '2 2 -', '0', 'subtracting two positive numbers'),
         ('testSquareRootFloat', '6.25 V', '2.5', 'the sqaure root of a floating point number'),
         ('testSquareRootInt', '81 V', '9.0', 'the square root of an integer'),
-        ('testTanZero', '0 tan', '0.0', 'the tangent of zero')
-        ]
+        ('testTanZero', '0 tan', '0.0', 'the tangent of zero')]
     # Add the tests to the class.
     for arguments in tests:
         setattr(GameRPNTest, arguments[0], make_rpn_test(*arguments[1:]))
@@ -240,6 +238,25 @@ class GameTextTest(unittest.TestCase):
         self.game.players.append(player.Bot())
         self.game.players.append(player.Bot())
         self.assertEqual('<Game of Null with 3 players>', repr(self.game))
+
+
+class GameXyzzyTest(unittest.TestCase):
+    """Tests of the xyzzy command."""
+
+    def setUp(self):
+        game_mock = unitility.ProtoObject(play = lambda s: self.results)
+        game_list = {'card_game': game_mock, 'dice_game': game_mock}
+        valve = unitility.ProtoObject(blow = lambda s: self.trigger)
+        interface = unitility.ProtoObject(games = game_list, valve = valve)
+        self.bot = unitility.AutoBot()
+        self.game = game.Game(self.bot, '')
+        self.game.interface = interface
+
+    def testFailure(self):
+        """Test a xyzzy failure."""
+        self.trigger = False
+        self.game.do_xyzzy('')
+        self.assertEqual('Nothing happens.\n', self.bot.info[-1])
 
 
 if __name__ == '__main__':

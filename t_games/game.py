@@ -17,7 +17,7 @@ load_games: Load all of the games defined locally. (tuple of dict)
 """
 
 
-from __future__ import print_function
+from __future__ import division, print_function
 
 import glob
 import itertools

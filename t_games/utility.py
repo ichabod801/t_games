@@ -205,7 +205,7 @@ def permutations(n, r):
     n: The number of objects to choose from. (int)
     r: The number of objects to permute. (int)
     """
-    return math.factorial(n) / math.factorial(n - r)
+    return int(math.factorial(n) / math.factorial(n - r))
 
 
 def plural(number, singular, many = ''):
