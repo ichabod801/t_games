@@ -244,19 +244,30 @@ class GameXyzzyTest(unittest.TestCase):
     """Tests of the xyzzy command."""
 
     def setUp(self):
-        game_mock = unitility.ProtoObject(play = lambda s: self.results)
-        game_list = {'card_game': game_mock, 'dice_game': game_mock}
+        game_list = {'sorter': game.Sorter}
         valve = unitility.ProtoObject(blow = lambda s: self.trigger)
         interface = unitility.ProtoObject(games = game_list, valve = valve)
         self.bot = unitility.AutoBot()
-        self.game = game.Game(self.bot, '')
+        self.game = game.Game(self.bot, 'none')
         self.game.interface = interface
 
-    def testFailure(self):
-        """Test a xyzzy failure."""
+    def testBlowPrint(self):
+        """Test the printed response for a successful blow."""
+        self.trigger = True
+        self.bot.replies = ['n', 'quit']
+        self.game.do_xyzzy('')
+        self.assertIn('\nPoof!\n', self.bot.info)
+
+    def testFailurePrint(self):
+        """Test a xyzzy failure's printed text."""
         self.trigger = False
         self.game.do_xyzzy('')
         self.assertEqual('Nothing happens.\n', self.bot.info[-1])
+
+    def testFailureReturn(self):
+        """Test a xyzzy failure's return value."""
+        self.trigger = False
+        self.assertTrue(self.game.do_xyzzy(''))
 
 
 if __name__ == '__main__':
