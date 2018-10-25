@@ -273,7 +273,16 @@ class GameXyzzyTest(unittest.TestCase):
 class TestGame(game.Game):
     """
     A Game sub-class for testing purposes. (game.Game)
+
+    Attributes:
+    move: The move the player made.
+
+    Overridden Methods
+    game_over
+    player_action
     """
+
+    rules = '\nIf you enter win, you win; if you enter lose, you lose.\n'
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
@@ -284,12 +293,11 @@ class TestGame(game.Game):
         else:
             return False
         self.scores[self.human.name] = self.turns
+        True
 
     def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
-
-        The return value is a flag for the player's turn continuing.
 
         Parameters:
         player: The player whose turn it is. (Player)
