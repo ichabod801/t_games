@@ -252,18 +252,54 @@ class GameXyzzyTest(unittest.TestCase):
         self.game.interface = interface
 
     def testBlowFlagEnter(self):
-        """Test the printed response for a successful blow."""
+        """Test the xyzzy used flag after a successful blow."""
         self.trigger = True
         self.bot.replies = ['lose']
         self.game.do_xyzzy('')
         self.assertTrue(self.bot.results[0][6] & 64)
 
     def testBlowFlagExit(self):
-        """Test the printed response for a successful blow."""
+        """Test the results flag after a successful blow."""
         self.trigger = True
         self.bot.replies = ['lose']
         self.game.do_xyzzy('')
         self.assertTrue(self.game.flags & 32)
+
+    def testBlowLoseReturn(self):
+        """Test the return value for a failed incantation."""
+        self.trigger = True
+        self.bot.replies = ['lose']
+        self.assertTrue(self.game.do_xyzzy(''))
+
+    def testBlowWinFlag(self):
+        """Test the starting flag after a successful incantation."""
+        self.trigger = True
+        self.bot.replies = ['win']
+        self.assertTrue(self.game.flags & 128)
+
+    def testBlowWinForce(self):
+        """Test forcing the win after a successful incantation."""
+        self.trigger = True
+        self.bot.replies = ['win']
+        self.assertEqual(self.game.force_end, 'win')
+
+    def testBlowWinPrint(self):
+        """Test the printed output after a successful incantation."""
+        self.trigger = True
+        self.bot.replies = ['win']
+        self.assertIn('\nThe incantation is complete. You win at Unit.\n', self.bot.info)
+
+    def testBlowWinReturn(self):
+        """Test the return value for a succesful incantation."""
+        self.trigger = True
+        self.bot.replies = ['win']
+        self.assertFalse(self.game.do_xyzzy(''))
+
+    def testBlowWinWLD(self):
+        """Test the win/loss/draw record after a successful incantation."""
+        self.trigger = True
+        self.bot.replies = ['win']
+        self.assertEqual(self.game.win_loss_draw, [1, 0, 0])
 
     def testBlowPrint(self):
         """Test the printed response for a successful blow."""
