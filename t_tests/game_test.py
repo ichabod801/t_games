@@ -275,19 +275,22 @@ class GameXyzzyTest(unittest.TestCase):
         """Test the starting flag after a successful incantation."""
         self.trigger = True
         self.bot.replies = ['win']
+        self.game.do_xyzzy('')
         self.assertTrue(self.game.flags & 128)
 
     def testBlowWinForce(self):
         """Test forcing the win after a successful incantation."""
         self.trigger = True
         self.bot.replies = ['win']
+        self.game.do_xyzzy('')
         self.assertEqual(self.game.force_end, 'win')
 
     def testBlowWinPrint(self):
         """Test the printed output after a successful incantation."""
         self.trigger = True
         self.bot.replies = ['win']
-        self.assertIn('\nThe incantation is complete. You win at Unit.\n', self.bot.info)
+        self.game.do_xyzzy('')
+        self.assertIn('\nThe incantation is complete. You win at Null.\n\n', self.bot.info)
 
     def testBlowWinReturn(self):
         """Test the return value for a succesful incantation."""
@@ -299,6 +302,7 @@ class GameXyzzyTest(unittest.TestCase):
         """Test the win/loss/draw record after a successful incantation."""
         self.trigger = True
         self.bot.replies = ['win']
+        self.game.do_xyzzy('')
         self.assertEqual(self.game.win_loss_draw, [1, 0, 0])
 
     def testBlowPrint(self):
