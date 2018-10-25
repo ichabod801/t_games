@@ -244,7 +244,7 @@ class GameXyzzyTest(unittest.TestCase):
     """Tests of the xyzzy command."""
 
     def setUp(self):
-        game_list = {'sorter': game.Sorter}
+        game_list = {'unit': TestGame}
         valve = unitility.ProtoObject(blow = lambda s: self.trigger)
         interface = unitility.ProtoObject(games = game_list, valve = valve)
         self.bot = unitility.AutoBot()
@@ -254,7 +254,7 @@ class GameXyzzyTest(unittest.TestCase):
     def testBlowPrint(self):
         """Test the printed response for a successful blow."""
         self.trigger = True
-        self.bot.replies = ['n', 'quit']
+        self.bot.replies = ['lose']
         self.game.do_xyzzy('')
         self.assertIn('\nPoof!\n', self.bot.info)
 
@@ -282,6 +282,7 @@ class TestGame(game.Game):
     player_action
     """
 
+    name = 'Unit'
     rules = '\nIf you enter win, you win; if you enter lose, you lose.\n'
 
     def game_over(self):
@@ -293,7 +294,7 @@ class TestGame(game.Game):
         else:
             return False
         self.scores[self.human.name] = self.turns
-        True
+        return True
 
     def player_action(self, player):
         """
