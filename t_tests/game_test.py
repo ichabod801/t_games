@@ -270,5 +270,32 @@ class GameXyzzyTest(unittest.TestCase):
         self.assertTrue(self.game.do_xyzzy(''))
 
 
+class TestGame(game.Game):
+    """
+    A Game sub-class for testing purposes. (game.Game)
+    """
+
+    def game_over(self):
+        """Check for the end of the game. (bool)"""
+        if self.move == 'win':
+            self.win_loss_draw[0] = 1
+        elif self.move == 'lose':
+            self.win_loss_draw[1] = 1
+        else:
+            return False
+        self.scores[self.human.name] = self.turns
+
+    def player_action(self, player):
+        """
+        Handle a player's turn or other player actions. (bool)
+
+        The return value is a flag for the player's turn continuing.
+
+        Parameters:
+        player: The player whose turn it is. (Player)
+        """
+        self.move = player.ask('What is your move, {}? '.format(player.name))
+
+
 if __name__ == '__main__':
     unittest.main()
