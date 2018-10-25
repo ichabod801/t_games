@@ -265,6 +265,20 @@ class GameXyzzyTest(unittest.TestCase):
         self.game.do_xyzzy('')
         self.assertTrue(self.game.flags & 32)
 
+    def testBlowLoseFlag(self):
+        """Test the return value for a failed incantation."""
+        self.trigger = True
+        self.bot.replies = ['lose']
+        self.assertTrue(self.game.do_xyzzy(''))
+
+    def testBlowLoseMatch(self):
+        """Test identifying a match loss."""
+        self.trigger = True
+        self.bot.replies = ['lose']
+        self.game.interface.flags = 256
+        self.game.do_xyzzy('')
+        self.assertFalse(self.game.flags & 128)
+
     def testBlowLoseReturn(self):
         """Test the return value for a failed incantation."""
         self.trigger = True
@@ -282,6 +296,14 @@ class GameXyzzyTest(unittest.TestCase):
         """Test forcing the win after a successful incantation."""
         self.trigger = True
         self.bot.replies = ['win']
+        self.game.do_xyzzy('')
+        self.assertEqual(self.game.force_end, 'win')
+
+    def testBlowWinMatch(self):
+        """Test identifying a match win."""
+        self.trigger = True
+        self.bot.replies = ['win']
+        self.game.interface.flags = 256
         self.game.do_xyzzy('')
         self.assertEqual(self.game.force_end, 'win')
 
@@ -339,12 +361,26 @@ class TestGame(game.Game):
     name = 'Unit'
     rules = '\nIf you enter win, you win; if you enter lose, you lose.\n'
 
+    def __init__(self, human, raw_options, interface = None):
+        """
+        Set up the game. (None)
+
+        human: The primary player of the game. (player.Player)
+        raw_options: The user's option choices as provided by the interface. (str)
+        interface: The interface that started the game playing. (interface.Interface)
+        """
+        super(TestGame, self).__init__(human, raw_options, interface)
+        if hasattr(self.interface, 'flags'):
+            self.flags = self.interface.flags
+            if self.flags & 256:
+                self.win_loss_draw = [2, 2, 1]
+
     def game_over(self):
         """Check for the end of the game. (bool)"""
         if self.move == 'win':
-            self.win_loss_draw[0] = 1
+            self.win_loss_draw[0] += 1
         elif self.move == 'lose':
-            self.win_loss_draw[1] = 1
+            self.win_loss_draw[1] += 1
         else:
             return False
         self.scores[self.human.name] = self.turns
