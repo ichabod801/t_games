@@ -251,6 +251,20 @@ class GameXyzzyTest(unittest.TestCase):
         self.game = game.Game(self.bot, 'none')
         self.game.interface = interface
 
+    def testBlowFlagEnter(self):
+        """Test the printed response for a successful blow."""
+        self.trigger = True
+        self.bot.replies = ['lose']
+        self.game.do_xyzzy('')
+        self.assertTrue(self.bot.results[0][6] & 64)
+
+    def testBlowFlagExit(self):
+        """Test the printed response for a successful blow."""
+        self.trigger = True
+        self.bot.replies = ['lose']
+        self.game.do_xyzzy('')
+        self.assertTrue(self.game.flags & 32)
+
     def testBlowPrint(self):
         """Test the printed response for a successful blow."""
         self.trigger = True

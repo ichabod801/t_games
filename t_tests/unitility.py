@@ -46,6 +46,7 @@ class AutoBot(player.Bot):
         self.replies = replies
         self.info = []
         self.errors = []
+        self.results = []
 
     def ask(self, prompt):
         """
@@ -110,6 +111,16 @@ class AutoBot(player.Bot):
         sep = kwargs.get('sep', ' ')
         end = kwargs.get('end', '\n')
         self.errors.append('{}{}'.format(sep.join(args), end))
+
+    def store_results(self, game_name, result):
+        """
+        Store game results. (None)
+
+        Parameters:
+        game_name: The name of the game the result is from. (str)
+        results: The results of playing the game. (list of int)
+        """
+        self.results.append([game_name] + result)
 
     def tell(self, *args, **kwargs):
         """
