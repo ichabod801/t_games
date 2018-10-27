@@ -4,10 +4,12 @@ game_test.py
 Unit tests of t_games/game.py.
 
 Classes:
-GameCommandTest:
+GameCommandTest: Test of game do_foo methods. (unittest.TestCase)
+GameGipfCheckTest: Test of validating a gipf move. (unittest.TestCase)
 GameInitTest: Test of game initialization. (unittest.TestCase)
 GameRPNTest: Test of the RPN calculator in game.Game. (unittest.TestCase)
 GameTextTest: Tests of the base game class text versions. (unittest.TestCase)
+GameXyzzyTest: Tests of the xyzzy command. (unittest.TestCase)
 
 Functions:
 rpn_tests: Make a test class for the Game.do_rpn calculations. (unittest.TestCase)
@@ -102,6 +104,42 @@ class GameCommandTest(unittest.TestCase):
         check = 'No rules have been specified for this game.\n'
         self.game.do_rules('')
         self.assertEqual(check, self.bot.info[1])
+
+
+class GameGipfCheckTest(unittest.TestCase):
+    """Test of validating a gipf move. (unittest.TestCase)"""
+
+    def setUp(self):
+        game_list = {'dice': TestGame, 'cards': TestGame}
+        interface = unitility.ProtoObject(games = game_list)
+        self.bot = unitility.AutoBot()
+        self.bot.replies = ['win']
+        self.game = game.Game(self.bot, 'none')
+        self.game.interface = interface
+
+    def testInvalidGame(self):
+        """Test gipfing to an invalid game."""
+        self.assertEqual(('invalid-game', 1), self.game.gipf_check('Dice', ('cards',)))
+
+    def testGiphedFromFlag(self):
+        """Test the flag for gipfing from a game."""
+        self.game.gipf_check('Dice', ('cards', 'dice'))
+        self.assertTrue(self.game.flags & 8)
+
+    def testGiphedToFlag(self):
+        """Test the flag for gipfing to a game."""
+        self.game.gipf_check('Dice', ('cards', 'dice'))
+        self.assertTrue(self.bot.results[0][6] & 16)
+
+    def testGiphTracking(self):
+        """Test that the game gipfed to is tracked."""
+        self.game.gipf_check('Dice', ('cards', 'dice'))
+        self.assertIn('Unit', self.game.gipfed)
+
+    def testGiphTwice(self):
+        """Test that you can't gipf to the same game twice."""
+        self.game.gipf_check('Dice', ('cards', 'dice'))
+        self.assertEqual(('invalid-game', 1), self.game.gipf_check('Dice', ('cards', 'dice')))
 
 
 class GameInitTest(unittest.TestCase):
@@ -241,7 +279,7 @@ class GameTextTest(unittest.TestCase):
 
 
 class GameXyzzyTest(unittest.TestCase):
-    """Tests of the xyzzy command."""
+    """Tests of the xyzzy command. (unittest.TestCase)s"""
 
     def setUp(self):
         game_list = {'unit': TestGame}
@@ -358,6 +396,7 @@ class TestGame(game.Game):
     player_action
     """
 
+    aka = '1'
     name = 'Unit'
     rules = '\nIf you enter win, you win; if you enter lose, you lose.\n'
 
