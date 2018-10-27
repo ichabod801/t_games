@@ -305,7 +305,7 @@ class GameXyzzyTest(unittest.TestCase):
         self.bot.replies = ['win']
         self.game.interface.flags = 256
         self.game.do_xyzzy('')
-        self.assertEqual(self.game.force_end, 'win')
+        self.assertIn('\nThe incantation is complete. You win at Null.\n\n', self.bot.info)
 
     def testBlowWinPrint(self):
         """Test the printed output after a successful incantation."""
@@ -372,17 +372,21 @@ class TestGame(game.Game):
         super(TestGame, self).__init__(human, raw_options, interface)
         if hasattr(self.interface, 'flags'):
             self.flags = self.interface.flags
-            if self.flags & 256:
-                self.win_loss_draw = [2, 2, 1]
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
+        # Check for match play.
+        if self.flags & 256:
+            self.win_loss_draw = [2, 2, 1]
+        # Resolve win or loss.
         if self.move == 'win':
             self.win_loss_draw[0] += 1
         elif self.move == 'lose':
             self.win_loss_draw[1] += 1
         else:
+            # Keep playing.
             return False
+        # Set the score when the game ends.
         self.scores[self.human.name] = self.turns
         return True
 

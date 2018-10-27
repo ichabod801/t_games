@@ -305,7 +305,7 @@ class Game(OtherCmd):
             results[5] |= 64
             self.human.store_results(game.name, results)
             # Check for a successful incantation.
-            if (results[1] == 0 and results[0] > 0) or (self.flags & 256 and results[0] > results[1]):
+            if (results[1] == 0 and results[0] > 0) or (results[5] & 256 and results[0] > results[1]):
                 # Bind the tongues and seal the sigils.
                 self.flags |= 128
                 self.force_end = 'win'
