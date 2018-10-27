@@ -122,6 +122,16 @@ class GameGipfCheckTest(unittest.TestCase):
         self.game.gipf_check('1', ('cards', 'dice'))
         self.assertTrue(self.game.flags & 8)
 
+    def testDraw(self):
+        """Test losing on a multi-player draw."""
+        self.bot.replies = ['draw++']
+        self.assertEqual(('dice', 1), self.game.gipf_check('Dice', ('cards', 'dice')))
+
+    def testDrawSolo(self):
+        """Test losing on a solitaire draw."""
+        self.bot.replies = ['draw']
+        self.assertEqual(('dice', 1), self.game.gipf_check('Dice', ('cards', 'dice')))
+
     def testFocus(self):
         """Test returning the human's focus to the original game."""
         self.game.gipf_check('Dice', ('cards', 'dice'))
@@ -156,14 +166,20 @@ class GameGipfCheckTest(unittest.TestCase):
         self.bot.replies = ['lose']
         self.assertEqual(('dice', 1), self.game.gipf_check('Dice', ('cards', 'dice')))
 
+    def testMatchDraw(self):
+        """Test drawing the gipf challenge with match play."""
+        self.bot.replies = ['lose+']
+        self.game.interface.flags = 256
+        self.assertEqual(('dice', 3), self.game.gipf_check('Dice', ('cards', 'dice')))
+
     def testMatchLoss(self):
-        """Test losing the gipf challenge."""
+        """Test losing the gipf challenge with match play."""
         self.bot.replies = ['lose']
         self.game.interface.flags = 256
         self.assertEqual(('dice', 3), self.game.gipf_check('Dice', ('cards', 'dice')))
 
     def testMatchWin(self):
-        """Test winning the gipf challenge."""
+        """Test winning the gipf challenge with match play."""
         self.game.interface.flags = 256
         self.assertEqual(('dice', 0), self.game.gipf_check('Dice', ('cards', 'dice')))
 
@@ -447,14 +463,19 @@ class TestGame(game.Game):
         # Check for match play.
         if self.flags & 256:
             self.win_loss_draw = [2, 2, 1]
-        # Resolve win or loss.
-        if self.move == 'win':
+        # Resolve game ending moves.
+        if self.move.startswith('win'):
             self.win_loss_draw[0] += 1
-        elif self.move == 'lose':
+        elif self.move.startswith('lose'):
+            self.win_loss_draw[1] += 1
+        elif self.move.startswith('draw'):
             self.win_loss_draw[1] += 1
         else:
             # Keep playing.
             return False
+        # Add additional wins, losses, and draws.
+        for result_index, result_char in enumerate('+-='):
+            self.win_loss_draw[result_index] += self.move.count(result_char)
         # Set the score when the game ends.
         self.scores[self.human.name] = self.turns
         return True
