@@ -117,9 +117,10 @@ class GameGipfCheckTest(unittest.TestCase):
         self.game = game.Game(self.bot, 'none')
         self.game.interface = interface
 
-    def testInvalidGame(self):
-        """Test gipfing to an invalid game."""
-        self.assertEqual(('invalid-game', 1), self.game.gipf_check('Dice', ('cards',)))
+    def testFocus(self):
+        """Test returning the human's focus to the original game."""
+        self.game.gipf_check('Dice', ('cards', 'dice'))
+        self.assertEqual(self.game, self.bot.game)
 
     def testGiphedFromFlag(self):
         """Test the flag for gipfing from a game."""
@@ -128,18 +129,31 @@ class GameGipfCheckTest(unittest.TestCase):
 
     def testGiphedToFlag(self):
         """Test the flag for gipfing to a game."""
-        self.game.gipf_check('Dice', ('cards', 'dice'))
+        self.game.gipf_check('Cards', ('cards', 'dice'))
         self.assertTrue(self.bot.results[0][6] & 16)
 
     def testGiphTracking(self):
         """Test that the game gipfed to is tracked."""
-        self.game.gipf_check('Dice', ('cards', 'dice'))
+        self.game.gipf_check('Cards', ('cards', 'dice'))
         self.assertIn('Unit', self.game.gipfed)
 
     def testGiphTwice(self):
         """Test that you can't gipf to the same game twice."""
         self.game.gipf_check('Dice', ('cards', 'dice'))
         self.assertEqual(('invalid-game', 1), self.game.gipf_check('Dice', ('cards', 'dice')))
+
+    def testInvalidGame(self):
+        """Test gipfing to an invalid game."""
+        self.assertEqual(('invalid-game', 1), self.game.gipf_check('Dice', ('cards',)))
+
+    def testLoss(self):
+        """Test losing the gipf challenge."""
+        self.bot.replies = ['lose']
+        self.assertEqual(('dice', 1), self.game.gipf_check('Dice', ('cards', 'dice')))
+
+    def testWin(self):
+        """Test winning the gipf challenge."""
+        self.assertEqual(('dice', 0), self.game.gipf_check('Dice', ('cards', 'dice')))
 
 
 class GameInitTest(unittest.TestCase):
