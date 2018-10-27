@@ -117,6 +117,11 @@ class GameGipfCheckTest(unittest.TestCase):
         self.game = game.Game(self.bot, 'none')
         self.game.interface = interface
 
+    def testAlias(self):
+        """Test gipfing using an alias."""
+        self.game.gipf_check('1', ('cards', 'dice'))
+        self.assertTrue(self.game.flags & 8)
+
     def testFocus(self):
         """Test returning the human's focus to the original game."""
         self.game.gipf_check('Dice', ('cards', 'dice'))
@@ -150,6 +155,17 @@ class GameGipfCheckTest(unittest.TestCase):
         """Test losing the gipf challenge."""
         self.bot.replies = ['lose']
         self.assertEqual(('dice', 1), self.game.gipf_check('Dice', ('cards', 'dice')))
+
+    def testMatchLoss(self):
+        """Test losing the gipf challenge."""
+        self.bot.replies = ['lose']
+        self.game.interface.flags = 256
+        self.assertEqual(('dice', 3), self.game.gipf_check('Dice', ('cards', 'dice')))
+
+    def testMatchWin(self):
+        """Test winning the gipf challenge."""
+        self.game.interface.flags = 256
+        self.assertEqual(('dice', 0), self.game.gipf_check('Dice', ('cards', 'dice')))
 
     def testWin(self):
         """Test winning the gipf challenge."""
