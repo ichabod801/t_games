@@ -134,6 +134,62 @@ class AutoBot(player.Bot):
         self.info.append('{}{}'.format(sep.join(args), end))
 
 
+class MockRandom(object):
+    """
+    A fake random module for testing with random numbers. (object)
+
+    Attributes:
+    values: A stack of fake random values to return. (list of number)
+
+    Methods:
+    choice: Fake choice function. (object)
+    push: Add more values to the fake random number list. (None)
+    randint: Fake randint function. (number)
+    random: Fake random number. (number)
+    randrange: Fake randrange function. (number)
+
+    Overridden Methods:
+    __init__
+    """
+
+    def __init__(self, values = []):
+        """
+        Set the values to return. (None)
+
+        Parameters:
+        values: A stack of fake random values to return. (list of number)
+        """
+        self.values = values
+
+    def choice(self, seq):
+        """Fanke choice function. (object)"""
+        return seq[self.values.pop()]
+
+    def push(self, values):
+        """
+        Add more values to the fake random number list. (None)
+
+        Parameters:
+        values: A takc of fake random values to return. (number or seq of number)
+        """
+        try:
+            self.values.extend(values)
+        except TypeError:
+            self.values.append(values)
+
+    def randint(self, start, stop):
+        """Fake randint function. (number)"""
+        return self.values.pop()
+
+    def random(self):
+        """Fake random number. (number)"""
+        return self.values.pop()
+
+    def randrange(self, start, stop = None, step = None):
+        """Fake randrange function. (number)"""
+        return self.values.pop()
+
+
 class ProtoObject(object):
     """
     An object whose attributes can be defined during initialization. (object)

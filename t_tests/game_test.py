@@ -430,6 +430,40 @@ class GameXyzzyTest(unittest.TestCase):
         self.assertTrue(self.game.do_xyzzy(''))
 
 
+class GameXyzzyHelpTest(unittest.TestCase):
+    """Tests of Game.help_xyzzy. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.random_hold = game.random
+        self.mock_random = unitility.MockRandom()
+        game.random = self.mock_random
+        self.bot = unitility.AutoBot([''])
+        self.game = game.Game(self.bot, '')
+
+    def tearDown(self):
+        game.random = self.random_hold
+
+    def testNothing(self):
+        """Test nothing happening with help xyzzy."""
+        self.mock_random.push(0.81)
+        self.game.help_xyzzy()
+        self.assertEqual('\nNothing happens.\n', self.bot.info[-1])
+
+    def testNotNothing(self):
+        """Test not nothing happening with 1 in 5 help xyzzy."""
+        self.bot.info = []
+        self.mock_random.push([0, 0.18])
+        self.game.help_xyzzy()
+        self.assertNotEqual('\nNothing happens.\n', self.bot.info[0])
+
+    def testSomething(self):
+        """Test something happening with 1 in 5 help xyzzy."""
+        self.bot.info = []
+        self.mock_random.push([0, 0.18])
+        self.game.help_xyzzy()
+        self.assertEqual(1, len(self.bot.info))
+
+
 class TestGame(game.Game):
     """
     A Game sub-class for testing purposes. (game.Game)
