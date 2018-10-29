@@ -22,6 +22,9 @@ class AutoBot(player.Bot):
     A programmatically controlled bot. (player.Bot)
 
     Attributes:
+    all_done: A flag for the clean_up method being called. (bool)
+    all_set: A flag for the set_up method being called. (bool)
+    errors: Errors the bot has been warned about. (list of str)
     info: Things the bot has been told. (list of str)
     replies: The answers to questions the bot will be asked. (list)
 
@@ -47,6 +50,7 @@ class AutoBot(player.Bot):
         self.info = []
         self.errors = []
         self.results = []
+        self.all_set, self.all_done = False, False
 
     def ask(self, prompt):
         """
@@ -101,6 +105,10 @@ class AutoBot(player.Bot):
         """
         return self.replies.pop(0)
 
+    def clean_up(self):
+        """Do any necessary post-game processing. (None)"""
+        self.all_done = True
+
     def error(self, *args, **kwargs):
         """
         Warn the player about an invalid play. (None)
@@ -111,6 +119,10 @@ class AutoBot(player.Bot):
         sep = kwargs.get('sep', ' ')
         end = kwargs.get('end', '\n')
         self.errors.append('{}{}'.format(sep.join(args), end))
+
+    def set_up(self):
+        """Do any necessary pre-game processing. (None)"""
+        self.all_set = True
 
     def store_results(self, game_name, result):
         """

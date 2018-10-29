@@ -522,7 +522,14 @@ class TestGame(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        self.move = player.ask('What is your move, {}? '.format(player.name))
+        self.move = player.ask('What is your move, {}? '.format(player.name)).lower()
+        if self.move == 'continue':
+            return True
+        elif self.move.startswith('quit'):
+            if '+' in self.move:
+                self.force_end = 'win'
+            else:
+                self.force_end = 'loss'
 
 
 if __name__ == '__main__':
