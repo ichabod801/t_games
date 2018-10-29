@@ -10,6 +10,7 @@ GameInitTest: Test of game initialization. (unittest.TestCase)
 GameRPNTest: Test of the RPN calculator in game.Game. (unittest.TestCase)
 GameTextTest: Tests of the base game class text versions. (unittest.TestCase)
 GameXyzzyTest: Tests of the xyzzy command. (unittest.TestCase)
+GameXyzzyHelpText: Tests of Game.help_xyzzy. (unittest.TestCase)
 
 Functions:
 rpn_tests: Make a test class for the Game.do_rpn calculations. (unittest.TestCase)
