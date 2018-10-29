@@ -233,6 +233,32 @@ class GamePlayTest(unittest.TestCase):
         self.bot = unitility.AutoBot(['win'])
         self.game = TestGame(self.bot, '')
 
+    def testCleanUpBot(self):
+        """Test that the bot is set up."""
+        self.game.play()
+        self.assertTrue(self.bot.all_done)
+
+    def testCleanUpGame(self):
+        """Test that the game is set up."""
+        self.game.play()
+        self.assertTrue(self.game.all_done)
+
+    def testForceLoss(self):
+        """Test forcing the end of the game with a loss."""
+        self.bot.replies = ['quit']
+        self.game.play()
+
+    def testForceWin(self):
+        """Test forcing the end of the game with a win."""
+        self.bot.replies = ['quit+']
+        self.game.play()
+
+    def testGipfReset(self):
+        """Test resetting the list of game gipfed to."""
+        self.game.gipfed = ['cat']
+        self.game.play()
+        self.assertFalse(self.game.gipfed)
+
     def testPlayerLoopRestart(self):
         """Test the player loop getting to the end."""
         self.bot.replies = ['pass']
