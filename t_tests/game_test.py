@@ -7,6 +7,7 @@ Classes:
 GameCommandTest: Test of game do_foo methods. (unittest.TestCase)
 GameGipfCheckTest: Test of validating a gipf move. (unittest.TestCase)
 GameInitTest: Test of game initialization. (unittest.TestCase)
+GamePlayTest: Tests of playing the game. (unittest.TestCase)
 GameRPNTest: Test of the RPN calculator in game.Game. (unittest.TestCase)
 GameTextTest: Tests of the base game class text versions. (unittest.TestCase)
 GameXyzzyTest: Tests of the xyzzy command. (unittest.TestCase)
@@ -222,6 +223,29 @@ class GameInitTest(unittest.TestCase):
     def testRawOptions(self):
         """Test setting raw_options."""
         self.assertEqual('', self.game.raw_options)
+
+
+class GamePlayTest(unittest.TestCase):
+    """Tests of playing the game. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot(['win'])
+        self.game = TestGame(self.bot, '')
+
+    def testScores(self):
+        """Test that the scores are set up."""
+        self.game.play()
+        self.assertEqual({self.bot.name: 1}, self.game.scores)
+
+    def testSetUpBot(self):
+        """Test that the bot is set up."""
+        self.game.play()
+        self.assertTrue(self.bot.all_set)
+
+    def testSetUpGame(self):
+        """Test that the game is set up."""
+        self.game.play()
+        self.assertTrue(self.game.all_set)
 
 def rpn_tests():
     """Make a test class for the Game.do_rpn calculations. (unittest.TestCase)"""
@@ -470,6 +494,8 @@ class TestGame(game.Game):
     A Game sub-class for testing purposes. (game.Game)
 
     Attributes:
+    all_set: A flag for the set_up method being called. (bool)
+    all_done: A flag for the clean_up method being called. (bool)
     move: The move the player made.
 
     Overridden Methods
@@ -492,6 +518,7 @@ class TestGame(game.Game):
         super(TestGame, self).__init__(human, raw_options, interface)
         if hasattr(self.interface, 'flags'):
             self.flags = self.interface.flags
+        self.all_set, self.all_done = False, False
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
@@ -515,6 +542,10 @@ class TestGame(game.Game):
         self.scores[self.human.name] = self.turns
         return True
 
+    def clean_up(self):
+        """Do any necessary post-game processing. (None)"""
+        self.all_done = True
+
     def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
@@ -530,6 +561,10 @@ class TestGame(game.Game):
                 self.force_end = 'win'
             else:
                 self.force_end = 'loss'
+
+    def set_up(self):
+        """Do any necessary pre-game processing. (None)"""
+        self.all_set = True
 
 
 if __name__ == '__main__':
