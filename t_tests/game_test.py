@@ -18,6 +18,7 @@ rpn_tests: Make a test class for the Game.do_rpn calculations. (unittest.TestCas
 """
 
 
+import random
 import unittest
 
 import t_games.game as game
@@ -232,6 +233,21 @@ class GamePlayTest(unittest.TestCase):
         self.bot = unitility.AutoBot(['win'])
         self.game = TestGame(self.bot, '')
 
+    def testPlayerLoopRestart(self):
+        """Test the player loop getting to the end."""
+        self.bot.replies = ['pass']
+        other_bot = unitility.AutoBot(['pass', 'win'])
+        self.game.players = [other_bot, self.bot]
+        self.game.play()
+        self.assertEqual(1, self.game.player_index)
+
+    def testPlayerLoopEnd(self):
+        """Test the player loop getting to the end."""
+        other_bot = unitility.AutoBot(['pass'])
+        self.game.players = [other_bot, self.bot]
+        self.game.play()
+        self.assertEqual(0, self.game.player_index)
+
     def testScores(self):
         """Test that the scores are set up."""
         self.game.play()
@@ -246,6 +262,26 @@ class GamePlayTest(unittest.TestCase):
         """Test that the game is set up."""
         self.game.play()
         self.assertTrue(self.game.all_set)
+
+    def testTurnsContinue(self):
+        """Test the turn count with actions that don't end the turn."""
+        self.bot.replies = ['continue'] * 3 + ['next'] * 5
+        random.shuffle(self.bot.replies)
+        self.bot.replies.append('lose')
+        self.game.play()
+        self.assertEqual(6, self.game.turns)
+
+    def testTurnsMultiple(self):
+        """Test the turn count for a multi-turn game."""
+        self.bot.replies = ['question', 'everything', 'be', 'human', 'draw']
+        self.game.play()
+        self.assertEqual(5, self.game.turns)
+
+    def testTurnsSimple(self):
+        """Test the turn count for a quick win."""
+        self.game.play()
+        self.assertEqual(1, self.game.turns)
+
 
 def rpn_tests():
     """Make a test class for the Game.do_rpn calculations. (unittest.TestCase)"""
