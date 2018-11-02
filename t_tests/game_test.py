@@ -12,12 +12,15 @@ GameRPNTest: Test of the RPN calculator in game.Game. (unittest.TestCase)
 GameTextTest: Tests of the base game class text versions. (unittest.TestCase)
 GameXyzzyTest: Tests of the xyzzy command. (unittest.TestCase)
 GameXyzzyHelpText: Tests of Game.help_xyzzy. (unittest.TestCase)
+LoadGamesTest: Tests of the load_games function. (unittest.TestCase)
+TestGame: A Game sub-class for testing purposes. (game.Game)
 
 Functions:
 rpn_tests: Make a test class for the Game.do_rpn calculations. (unittest.TestCase)
 """
 
 
+import os
 import random
 import unittest
 
@@ -411,6 +414,44 @@ class GameTextTest(unittest.TestCase):
         self.assertEqual('<Game of Null with 3 players>', repr(self.game))
 
 
+class GameTournamentTest(unittest.TestCase):
+    """Test of tournaments. (unittest.TestCase)"""
+
+    class AlphabetGame(game.Game):
+        name = 'Alphabet'
+        def play(self):
+            names = sorted(player.name for player in self.players)
+            self.scores = {name: index for index, name in enumerate(names)}
+
+    def setUp(self):
+        self.human = unitility.AutoBot()
+        self.game = self.AlphabetGame(self.human, '')
+        self.bots = []
+        self.bot_names = ['Andy', "Bob", 'Charlie', 'David']
+        for bot_name in self.bot_names:
+            self.bots.append(unitility.AutoBot())
+            self.bots[-1].name = bot_name
+        self.results = self.game.tournament(self.bots, 5)
+
+    def testHumanReset(self):
+        """Test resetting the human after a tournament."""
+        self.assertEqual(self.human, self.game.human)
+
+    def testPlaceTracking(self):
+        """Test rank tracking in a tournament."""
+        check = {name: [4 - index] * 5 for index, name in enumerate(self.bot_names)}
+        self.assertEqual(check, self.results['places'])
+
+    def testRounds(self):
+        """Test the right number of rounds played in a tournament."""
+        self.assertEqual(5, len(self.results['scores']["Bob"]))
+
+    def testScoreTracking(self):
+        """Test score tracking in a tournament."""
+        check = {name: [index] * 5 for index, name in enumerate(self.bot_names)}
+        self.assertEqual(check, self.results['scores'])
+
+
 class GameXyzzyTest(unittest.TestCase):
     """Tests of the xyzzy command. (unittest.TestCase)s"""
 
@@ -549,6 +590,24 @@ class GameXyzzyHelpTest(unittest.TestCase):
         self.mock_random.push([0, 0.18])
         self.game.help_xyzzy()
         self.assertEqual(1, len(self.bot.info))
+
+
+class LoadGamesTest(unittest.TestCase):
+    """Tests of the load_games function. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.loc_hold = game.utility.LOC
+        game.utility.LOC = os.path.dirname(os.path.abspath(__file__)) + '\\m_games'
+        #print(game.utility.LOC)
+        self.games, self.categories = game.load_games()
+
+    def tearDown(self):
+        game.utility.LOC = self.loc_hold
+
+    @unittest.skip('Implementation problems.')
+    def testEasy(self):
+        """Test loading an easy to get to game."""
+        self.assertIn('double cranko', self.games)
 
 
 class TestGame(game.Game):
