@@ -421,12 +421,12 @@ class Game(OtherCmd):
             # Loop through player actions until their turn is done.
             while self.player_action(self.players[self.player_index]):
                 pass
-            # Update tracking.
             self.turns += 1
-            self.player_index = (self.player_index + 1) % len(self.players)
             # Check for the end of game.
             if self.force_end or self.game_over():
                 break
+            # Move to the next player.
+            self.player_index = (self.player_index + 1) % len(self.players)
         # Clean up the game.
         self.clean_up()
         for player in self.players:
