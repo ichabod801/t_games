@@ -5,6 +5,7 @@ Utility classes and functions for unit testing.
 
 Classes:
 AutoBot: A programmatically controlled bot. (player.Bot)
+MockRandom: A fake random module for testing with random numbers. (object)
 ProtoObject: An object whose attributes can be defined w/ __init__. (object)
 ProtoStdIn: A programatically controlled stdin. (object)
 ProtoStdOut: A locally stored stdout. (object)
@@ -46,10 +47,13 @@ class AutoBot(player.Bot):
         replies: The answers to questions the bot will be asked. (list)
         """
         super(AutoBot, self).__init__()
+        # Output from the bot.
         self.replies = replies
+        # Input to the bot.
         self.info = []
         self.errors = []
         self.results = []
+        # Method call tracking.
         self.all_set, self.all_done = False, False
 
     def ask(self, prompt):

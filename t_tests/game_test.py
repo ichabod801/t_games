@@ -10,6 +10,7 @@ GameInitTest: Test of game initialization. (unittest.TestCase)
 GamePlayTest: Tests of playing the game. (unittest.TestCase)
 GameRPNTest: Test of the RPN calculator in game.Game. (unittest.TestCase)
 GameTextTest: Tests of the base game class text versions. (unittest.TestCase)
+GameTournamentTest: Tests of tournaments. (unittest.TestCase)
 GameXyzzyTest: Tests of the xyzzy command. (unittest.TestCase)
 GameXyzzyHelpText: Tests of Game.help_xyzzy. (unittest.TestCase)
 LoadGamesTest: Tests of the load_games function. (unittest.TestCase)
@@ -116,10 +117,13 @@ class GameGipfCheckTest(unittest.TestCase):
     """Test of validating a gipf move. (unittest.TestCase)"""
 
     def setUp(self):
+        # Make a fake interface.
         game_list = {'dice': TestGame, 'cards': TestGame}
         interface = unitility.ProtoObject(games = game_list)
+        # Set up the fake bot.
         self.bot = unitility.AutoBot()
         self.bot.replies = ['win']
+        # Set up the fake game.
         self.game = game.Game(self.bot, 'none')
         self.game.interface = interface
 
@@ -415,22 +419,27 @@ class GameTextTest(unittest.TestCase):
 
 
 class GameTournamentTest(unittest.TestCase):
-    """Test of tournaments. (unittest.TestCase)"""
+    """Tests of tournaments. (unittest.TestCase)"""
 
     class AlphabetGame(game.Game):
+        """A game that scores players alphabetically by name. (game.Game)"""
         name = 'Alphabet'
         def play(self):
+            """Score players alphabetically by name. (None)"""
             names = sorted(player.name for player in self.players)
             self.scores = {name: index for index, name in enumerate(names)}
 
     def setUp(self):
+        # Set up the game.
         self.human = unitility.AutoBot()
         self.game = self.AlphabetGame(self.human, '')
+        # Set up the bots with alphabetical names.
         self.bots = []
         self.bot_names = ['Andy', "Bob", 'Charlie', 'David']
         for bot_name in self.bot_names:
             self.bots.append(unitility.AutoBot())
             self.bots[-1].name = bot_name
+        # Run a tournament with the bots.
         self.results = self.game.tournament(self.bots, 5)
 
     def testHumanReset(self):
@@ -456,9 +465,11 @@ class GameXyzzyTest(unittest.TestCase):
     """Tests of the xyzzy command. (unittest.TestCase)s"""
 
     def setUp(self):
+        # Set up the interface, with a programmable valve.
         game_list = {'unit': TestGame}
         valve = unitility.ProtoObject(blow = lambda s: self.trigger)
         interface = unitility.ProtoObject(games = game_list, valve = valve)
+        # Set up the game.
         self.bot = unitility.AutoBot()
         self.game = game.Game(self.bot, 'none')
         self.game.interface = interface
@@ -562,9 +573,11 @@ class GameXyzzyHelpTest(unittest.TestCase):
     """Tests of Game.help_xyzzy. (unittest.TestCase)"""
 
     def setUp(self):
+        # Set up a random module you can manipulate.
         self.random_hold = game.random
         self.mock_random = unitility.MockRandom()
         game.random = self.mock_random
+        # Set up the game.
         self.bot = unitility.AutoBot([''])
         self.game = game.Game(self.bot, '')
 
@@ -675,8 +688,10 @@ class TestGame(game.Game):
         player: The player whose turn it is. (Player)
         """
         self.move = player.ask('What is your move, {}? '.format(player.name)).lower()
+        # Check for continuation.
         if self.move == 'continue':
             return True
+        # Check for quitting early.
         elif self.move.startswith('quit'):
             if '+' in self.move:
                 self.force_end = 'win'
