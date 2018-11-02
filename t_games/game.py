@@ -17,7 +17,7 @@ load_games: Load all of the games defined locally. (tuple of dict)
 """
 
 
-from __future__ import print_function
+from __future__ import division, print_function
 
 import glob
 import itertools
@@ -55,6 +55,7 @@ class Game(OtherCmd):
     aka: Other names for the game. (list of str)
     categories: The interface categories for the game. (list of str)
     credits: The design and programming credits for this game. (str)
+    int_re: A regular expression matching integer numbers. (SRE_Pattern)
     float_re: A regular expression matching decimal numbers. (SRE_Pattern)
     help_text: Extra help text for the game. (dict of str: str)
     name: The primary name of the game. (str)
@@ -100,16 +101,17 @@ class Game(OtherCmd):
     categories = ['Test Games']
     credits = 'No credits have been specified for this game.'
     help_text = {'help': '\nUse the rules command for instructions on how to play.'}
+    int_re = re.compile('-?\d*$')
     float_re = re.compile('-?\d*\.\d+')
     name = 'Null'
     num_options = 0
     operators = {'|': (abs, 1), '+': (operator.add, 2), 'C': (utility.choose, 2), '/%': (divmod, 2),
         '!': (math.factorial, 1), '//': (operator.floordiv, 2), '*': (operator.mul, 2),
-        '%': (operator.mod, 2), '+-': (operator.neg, 1), 'P': (utility.permutations, 2), '^': (pow, 2),
-        '1/': (lambda x: 1 / x, 1), '-': (operator.sub, 2), '/': (operator.truediv, 2),
-        'ab/c': (lambda a, b, c: a + b / c, 3), 'cos': (math.cos, 1), 'ln': (math.log, 1),
-        'log': (math.log10, 1), 'R': (random.random, 0), 'F': (utility.flip, 0), 'sin': (math.sin, 1),
-        'V': (math.sqrt, 1), 'tan': (math.tan, 1)}
+        '%': (operator.mod, 2), '+-': (operator.neg, 1), 'P': (utility.permutations, 2),
+        '^': (utility.pow, 2), '1/': (lambda x: 1 / x, 1), '-': (operator.sub, 2),
+        '/': (operator.truediv, 2), 'ab/c': (lambda a, b, c: a + b / c, 3), 'cos': (math.cos, 1),
+        'ln': (math.log, 1), 'log': (math.log10, 1), 'R': (random.random, 0), 'F': (utility.flip, 0),
+        'sin': (math.sin, 1), 'V': (math.sqrt, 1), 'tan': (math.tan, 1)}
     rules = 'No rules have been specified for this game.'
 
     def __init__(self, human, raw_options, interface = None):
@@ -233,7 +235,7 @@ class Game(OtherCmd):
 
         For example, '= 1 1 +' returns 2. '= 1 1 ^ 2 2 ^ 3 3 ^ * *' returns 108.
         '= R 108 * 1 + 1 //' returns a random number from 1 to 108. So does
-        '1 1 R 108 * + //'.
+        '= 1 R 108 * + 1 //'.
 
         Note that the full stack is displayed at the end of the calculation.
         """
@@ -247,16 +249,26 @@ class Game(OtherCmd):
                 if len(stack) < n_params:
                     self.human.tell('Too few parameters for {}.'.format(word))
                     break
+                # Correctly handle no paramters.
+                if n_params == 0:
+                    n_params = -len(stack)
                 params = stack[-n_params:]
                 stack = stack[:-n_params]
-                result = op(*params)
+                try:
+                    result = op(*params)
+                except ValueError:
+                    self.human.error('Bad value for {} operator.'.format(word))
+                    break
+                except ZeroDivisionError:
+                    self.human.error('Zero division error.')
+                    break
                 # add to stack
                 if isinstance(result, tuple):
                     stack.extend(result)
                 else:
                     stack.append(result)
             # handle integers
-            elif word.isdigit():
+            elif self.int_re.match(word):
                 stack.append(int(word))
             # handle decimals
             elif self.float_re.match(word):
@@ -293,7 +305,7 @@ class Game(OtherCmd):
             results[5] |= 64
             self.human.store_results(game.name, results)
             # Check for a successful incantation.
-            if (results[1] == 0 and results[0] > 0) or (self.flags & 256 and results[0] > results[1]):
+            if (results[1] == 0 and results[0] > 0) or (results[5] & 256 and results[0] > results[1]):
                 # Bind the tongues and seal the sigils.
                 self.flags |= 128
                 self.force_end = 'win'

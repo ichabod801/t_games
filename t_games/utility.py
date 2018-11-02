@@ -24,6 +24,7 @@ number_word: Give the word form of a number. (str)
 oxford: Convert a sequence to a word list with an Oxford comma. (str)
 permutations: The number of permutations of n out r objects. (int)
 plural: Match the plural/singular form of the word to the number. (str)
+pow: Expnonentiation. (number)
 streaks: Calculates longest streaks for a sequence. (dict of float: int)
 thousand_word: Give the word form of a number less than 100. (str)
 """
@@ -204,7 +205,7 @@ def permutations(n, r):
     n: The number of objects to choose from. (int)
     r: The number of objects to permute. (int)
     """
-    return math.factorial(n) / math.factorial(n - r)
+    return int(math.factorial(n) / math.factorial(n - r))
 
 
 def plural(number, singular, many = ''):
@@ -222,6 +223,23 @@ def plural(number, singular, many = ''):
         return many
     else:
         return '{}s'.format(singular)
+
+
+def pow(x, y):
+    """
+    Expnonentiation. (number)
+
+    This  assumes x and y are literal numbers, and preserves order of operations.
+
+    Parameters:
+    x: The base. (number)
+    y: The exponent. (number)
+    """
+    result = x ** y
+    if x < 0:
+        return -abs(result)
+    else:
+        return result
 
 
 def streaks(values):

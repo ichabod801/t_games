@@ -5,6 +5,8 @@ Utility classes and functions for unit testing.
 
 Classes:
 AutoBot: A programmatically controlled bot. (player.Bot)
+MockRandom: A fake random module for testing with random numbers. (object)
+ProtoObject: An object whose attributes can be defined w/ __init__. (object)
 ProtoStdIn: A programatically controlled stdin. (object)
 ProtoStdOut: A locally stored stdout. (object)
 """
@@ -21,6 +23,9 @@ class AutoBot(player.Bot):
     A programmatically controlled bot. (player.Bot)
 
     Attributes:
+    all_done: A flag for the clean_up method being called. (bool)
+    all_set: A flag for the set_up method being called. (bool)
+    errors: Errors the bot has been warned about. (list of str)
     info: Things the bot has been told. (list of str)
     replies: The answers to questions the bot will be asked. (list)
 
@@ -42,10 +47,14 @@ class AutoBot(player.Bot):
         replies: The answers to questions the bot will be asked. (list)
         """
         super(AutoBot, self).__init__()
+        # Output from the bot.
         self.replies = replies
+        # Input to the bot.
         self.info = []
         self.errors = []
-        self.game = game.Game(self, 'none')
+        self.results = []
+        # Method call tracking.
+        self.all_set, self.all_done = False, False
 
     def ask(self, prompt):
         """
@@ -54,7 +63,7 @@ class AutoBot(player.Bot):
         Parameters:
         prompt: The question being asked of the player. (str)
         """
-        return replies.pop(0)
+        return self.replies.pop(0)
 
     def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
         """
@@ -68,7 +77,7 @@ class AutoBot(player.Bot):
         default: The default choice. (int or None)
         cmd: A flag for returning commands for processing. (bool)
         """
-        return replies.pop(0)
+        return self.replies.pop(0)
 
     def ask_int_list(self, prompt, low = None, high = None, valid = [], valid_lens = [], default = None,
         cmd = True):
@@ -84,7 +93,7 @@ class AutoBot(player.Bot):
         default: The default choice. (list or None)
         cmd: A flag for returning commands for processing. (bool)
         """
-        return replies.pop(0)
+        return self.replies.pop(0)
 
     def ask_valid(self, prompt, valid, default = '', lower = True):
         """
@@ -98,7 +107,11 @@ class AutoBot(player.Bot):
         default: The default value for the response. (str)
         lower: A flag for case insensitive matching. (bool)
         """
-        return replies.pop(0)
+        return self.replies.pop(0)
+
+    def clean_up(self):
+        """Do any necessary post-game processing. (None)"""
+        self.all_done = True
 
     def error(self, *args, **kwargs):
         """
@@ -111,6 +124,20 @@ class AutoBot(player.Bot):
         end = kwargs.get('end', '\n')
         self.errors.append('{}{}'.format(sep.join(args), end))
 
+    def set_up(self):
+        """Do any necessary pre-game processing. (None)"""
+        self.all_set = True
+
+    def store_results(self, game_name, result):
+        """
+        Store game results. (None)
+
+        Parameters:
+        game_name: The name of the game the result is from. (str)
+        results: The results of playing the game. (list of int)
+        """
+        self.results.append([game_name] + result)
+
     def tell(self, *args, **kwargs):
         """
         Give information to the player. (None)
@@ -121,6 +148,62 @@ class AutoBot(player.Bot):
         sep = kwargs.get('sep', ' ')
         end = kwargs.get('end', '\n')
         self.info.append('{}{}'.format(sep.join(args), end))
+
+
+class MockRandom(object):
+    """
+    A fake random module for testing with random numbers. (object)
+
+    Attributes:
+    values: A stack of fake random values to return. (list of number)
+
+    Methods:
+    choice: Fake choice function. (object)
+    push: Add more values to the fake random number list. (None)
+    randint: Fake randint function. (number)
+    random: Fake random number. (number)
+    randrange: Fake randrange function. (number)
+
+    Overridden Methods:
+    __init__
+    """
+
+    def __init__(self, values = []):
+        """
+        Set the values to return. (None)
+
+        Parameters:
+        values: A stack of fake random values to return. (list of number)
+        """
+        self.values = values
+
+    def choice(self, seq):
+        """Fanke choice function. (object)"""
+        return seq[self.values.pop()]
+
+    def push(self, values):
+        """
+        Add more values to the fake random number list. (None)
+
+        Parameters:
+        values: A takc of fake random values to return. (number or seq of number)
+        """
+        try:
+            self.values.extend(values)
+        except TypeError:
+            self.values.append(values)
+
+    def randint(self, start, stop):
+        """Fake randint function. (number)"""
+        return self.values.pop()
+
+    def random(self):
+        """Fake random number. (number)"""
+        return self.values.pop()
+
+    def randrange(self, start, stop = None, step = None):
+        """Fake randrange function. (number)"""
+        return self.values.pop()
 
 
 class ProtoObject(object):
