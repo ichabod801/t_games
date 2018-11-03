@@ -679,6 +679,14 @@ class MultiTrackingDeckTest(unittest.TestCase):
         self.deck = cards.MultiTrackingDeck(self.game)
         self.game.deck = self.deck
 
+    def testCardREBadRank(self):
+        """Test the card regular expression with an invalid rank."""
+        self.assertIsNone(self.deck.card_re.match('MS'))
+
+    def testCardREBadSuit(self):
+        """Test the card regular expression with an invalid suit."""
+        self.assertIsNone(self.deck.card_re.match('8W'))
+
     def testCardRELocFull(self):
         """Test the card regular expression with a leter and number location id."""
         self.assertIsNotNone(self.deck.card_re.match('3D-T4'))
