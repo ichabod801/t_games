@@ -751,6 +751,10 @@ class MultiTrackingDeckTest(unittest.TestCase):
         """Parse a location with a type and a count."""
         self.assertEqual(('R', 1), self.deck.parse_location('R2'))
 
+    def testParseLocationLower(self):
+        """Parse a location with a lower case identifier."""
+        self.assertEqual(('T', 0), self.deck.parse_location('t1'))
+
     def testParseLocationNoPile(self):
         """Parse a location with just a count."""
         self.assertEqual(('T', 4), self.deck.parse_location('5'))
@@ -758,6 +762,10 @@ class MultiTrackingDeckTest(unittest.TestCase):
     def testParseLocationNoIndex(self):
         """Parse a location with just a type."""
         self.assertEqual(('W', 0), self.deck.parse_location('W'))
+
+    def testParseLocationTwoDigit(self):
+        """Parse a location with a two digit count."""
+        self.assertEqual(('R', 10), self.deck.parse_location('R11'))
 
     def testRepr(self):
         """Test the debugging text representation."""
