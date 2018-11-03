@@ -679,6 +679,50 @@ class MultiTrackingDeckTest(unittest.TestCase):
         self.deck = cards.MultiTrackingDeck(self.game)
         self.game.deck = self.deck
 
+    def testCardREBadRank(self):
+        """Test the card regular expression with an invalid rank."""
+        self.assertIsNone(self.deck.card_re.match('MS'))
+
+    def testCardREBadSuit(self):
+        """Test the card regular expression with an invalid suit."""
+        self.assertIsNone(self.deck.card_re.match('8W'))
+
+    def testCardRELocFull(self):
+        """Test the card regular expression with a leter and number location id."""
+        self.assertIsNotNone(self.deck.card_re.match('3D-T4'))
+
+    def testCardRELocLetter(self):
+        """Test the card regular expression with a leter only location id."""
+        self.assertIsNotNone(self.deck.card_re.match('KH-R'))
+
+    def testCardRELocLower(self):
+        """Test the card regular expression with lower case and a location id."""
+        self.assertIsNotNone(self.deck.card_re.match('as-t2'))
+
+    def testCardRELocMixed(self):
+        """Test the card regular expression with mixed case and a location id."""
+        self.assertIsNotNone(self.deck.card_re.match('jC-w'))
+
+    def testCardRELocNumber(self):
+        """Test the card regular expression with a number only location id."""
+        self.assertIsNotNone(self.deck.card_re.match('TH-8'))
+
+    def testCardRELocUpper(self):
+        """Test the card regular expression with lower case and a location id."""
+        self.assertIsNotNone(self.deck.card_re.match('3D-R1'))
+
+    def testCardRENowhereLower(self):
+        """Test the card regular expression with lower case and no location id."""
+        self.assertIsNotNone(self.deck.card_re.match('as'))
+
+    def testCardRENowhereMixed(self):
+        """Test the card regular expression with mixed case and no location id."""
+        self.assertIsNotNone(self.deck.card_re.match('jC'))
+
+    def testCardRENowhereUpper(self):
+        """Test the card regular expression with lower case and no location id."""
+        self.assertIsNotNone(self.deck.card_re.match('3D'))
+
     def testFindBlank(self):
         """Find a card with no location indicator."""
         self.deck.shuffle()
@@ -702,6 +746,26 @@ class MultiTrackingDeckTest(unittest.TestCase):
         self.deck.shuffle()
         card = self.deck.deal(self.game.tableau[2])
         self.assertEqual([card], self.deck.find(str(card) + '-3'))
+
+    def testParseLocationFull(self):
+        """Parse a location with a type and a count."""
+        self.assertEqual(('R', 1), self.deck.parse_location('R2'))
+
+    def testParseLocationLower(self):
+        """Parse a location with a lower case identifier."""
+        self.assertEqual(('T', 0), self.deck.parse_location('t1'))
+
+    def testParseLocationNoPile(self):
+        """Parse a location with just a count."""
+        self.assertEqual(('T', 4), self.deck.parse_location('5'))
+
+    def testParseLocationNoIndex(self):
+        """Parse a location with just a type."""
+        self.assertEqual(('W', 0), self.deck.parse_location('W'))
+
+    def testParseLocationTwoDigit(self):
+        """Parse a location with a two digit count."""
+        self.assertEqual(('R', 10), self.deck.parse_location('R11'))
 
     def testRepr(self):
         """Test the debugging text representation."""
