@@ -4,6 +4,8 @@ interface_test.py
 Unit testing of t_games/interface.py
 
 Classes:
+InterfaceGameTest: Tests of the Interface's game handling. (unittest.TestCase)
+InterfaceTextTest: Tests of the Interface's text handling. (unittest.TestCase)
 ValveTest: Tests of the RandomValve class. (unittest.TestCase)
 """
 
@@ -12,6 +14,28 @@ import itertools
 import unittest
 
 import t_games.interface as interface
+import t_tests.unitility as unitility
+
+
+class InterfaceGameTest(unittest.TestCase):
+    """Tests of the Interface's game handling. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.interface = interface.Interface(self.bot)
+
+
+class InterfaceTextTest(unittest.TestCase):
+    """Tests of the Interface's text handling. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.interface = interface.Interface(self.bot)
+
+    def testRepr(self):
+        """Test the debugging text representation of the interface."""
+        check = '<Interface <AutoBot {}>>'.format(self.bot.name)
+        self.assertEqual(check, repr(self.interface))
 
 
 class ValveTest(unittest.TestCase):

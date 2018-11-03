@@ -141,6 +141,10 @@ class Interface(other_cmd.OtherCmd):
             if hasattr(cls, 'aliases'):
                 self.aliases.update(cls.aliases)
 
+    def __repr__(self):
+        """Generate a debugging text representation. (str)"""
+        return '<Interface {!r}>'.format(self.human)
+
     def category_games(self):
         """Get the games in the current category. (list of game.Game)"""
         # Breadth first search of the game category tree.
