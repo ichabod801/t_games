@@ -747,6 +747,18 @@ class MultiTrackingDeckTest(unittest.TestCase):
         card = self.deck.deal(self.game.tableau[2])
         self.assertEqual([card], self.deck.find(str(card) + '-3'))
 
+    def testParseLocationFull(self):
+        """Parse a location with a type and a count."""
+        self.assertEqual(('R', 1), self.deck.parse_location('R2'))
+
+    def testParseLocationNoPile(self):
+        """Parse a location with just a count."""
+        self.assertEqual(('T', 4), self.deck.parse_location('5'))
+
+    def testParseLocationNoIndex(self):
+        """Parse a location with just a type."""
+        self.assertEqual(('W', 0), self.deck.parse_location('W'))
+
     def testRepr(self):
         """Test the debugging text representation."""
         check = '<MultiTrackingDeck of TrackingCards for {!r}>'.format(self.game)
