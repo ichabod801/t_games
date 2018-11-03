@@ -679,6 +679,18 @@ class MultiTrackingDeckTest(unittest.TestCase):
         self.deck = cards.MultiTrackingDeck(self.game)
         self.game.deck = self.deck
 
+    def testCardRELocLower(self):
+        """Test the card regular expression with lower case and a location id."""
+        self.assertIsNotNone(self.deck.card_re.match('as-t2'))
+
+    def testCardRELocMixed(self):
+        """Test the card regular expression with mixed case and a location id."""
+        self.assertIsNotNone(self.deck.card_re.match('jC-w'))
+
+    def testCardRELocUpper(self):
+        """Test the card regular expression with lower case and a location id."""
+        self.assertIsNotNone(self.deck.card_re.match('3D-R1'))
+
     def testCardRENowhereLower(self):
         """Test the card regular expression with lower case and no location id."""
         self.assertIsNotNone(self.deck.card_re.match('as'))
