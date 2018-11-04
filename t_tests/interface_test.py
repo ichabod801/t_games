@@ -18,6 +18,9 @@ import t_games.interface as interface
 import t_tests.unitility as unitility
 
 
+TEST_GAMES = {'flip': interface.game.Flip, 'sorter': interface.game.Sorter, 'unit': unitility.TestGame}
+
+
 class InterfaceCommandTest(unittest.TestCase):
     """Tests of the Interface's command handling. (unittest.TestCase)"""
 
