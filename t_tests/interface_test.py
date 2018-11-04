@@ -4,6 +4,7 @@ interface_test.py
 Unit testing of t_games/interface.py
 
 Classes:
+InterfaceCommandTest: Tests of Interface command handling. (unittest.TestCase)
 InterfaceGameTest: Tests of the Interface's game handling. (unittest.TestCase)
 InterfaceTextTest: Tests of the Interface's text handling. (unittest.TestCase)
 ValveTest: Tests of the RandomValve class. (unittest.TestCase)
@@ -15,6 +16,31 @@ import unittest
 
 import t_games.interface as interface
 import t_tests.unitility as unitility
+
+
+class InterfaceCommandTest(unittest.TestCase):
+    """Tests of the Interface's command handling. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.interface = interface.Interface(self.bot)
+
+    def testDefaultFail(self):
+        """Test default's handling of an invalid command."""
+        self.interface.default('Spam')
+        self.assertEqual(self.bot.errors[0], '\nThat is an invalid selection.\n')
+
+    def testDefaultOptions(self):
+        """Test default's handling of a game with options."""
+        self.bot.replies = ['!', 'n']
+        self.interface.default('Sorter / 2')
+        self.assertIn('The current sequence is:  1, 0\n', self.bot.info)
+
+    def testDefaultPlay(self):
+        """Test default's handling of a game name."""
+        self.bot.replies = ['n', '!', 'n']
+        self.interface.default('Sorter')
+        self.assertEqual(self.bot.info[-1], 'You are currently on a 1 game losing streak.\n')
 
 
 class InterfaceGameTest(unittest.TestCase):
