@@ -24,6 +24,19 @@ class InterfaceGameTest(unittest.TestCase):
         self.bot = unitility.AutoBot()
         self.interface = interface.Interface(self.bot)
 
+    def testCategoryParent(self):
+        """Test category_games with a sub-category."""
+        check = ['Bisley', 'Canfield', 'Crazy Eights', 'Cribbage', 'Forty Thieves', 'FreeCell', 'Klondike']
+        check += ['Monte Carlo', 'Ninety-Nine', 'Pyramid', 'Quadrille', 'Spider', 'Strategy']
+        self.interface.focus = self.interface.categories['sub-categories']['Card Games']
+        self.assertEqual(check, sorted([game.name for game in self.interface.category_games()]))
+
+    def testCategoryTerminal(self):
+        """Test category_games with a terminal category."""
+        check = ["Liar's Dice", 'Pig', 'Solitaire Dice', 'Yacht']
+        self.interface.focus = self.interface.categories['sub-categories']['Dice Games']
+        self.assertEqual(check, sorted([game.name for game in self.interface.category_games()]))
+
 
 class InterfaceTextTest(unittest.TestCase):
     """Tests of the Interface's text handling. (unittest.TestCase)"""

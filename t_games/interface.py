@@ -147,7 +147,7 @@ class Interface(other_cmd.OtherCmd):
 
     def category_games(self):
         """Get the games in the current category. (list of game.Game)"""
-        # Breadth first search of the game category tree.
+        # Depth first search of the game category tree.
         search = [self.focus]
         games = []
         while search:
