@@ -32,6 +32,14 @@ class InterfaceTextTest(unittest.TestCase):
         self.bot = unitility.AutoBot()
         self.interface = interface.Interface(self.bot)
 
+    def testAliasLocal(self):
+        """Test that the local aliases are retained."""
+        self.assertEqual('help', self.interface.aliases['?'])
+
+    def testAliasParent(self):
+        """Test that the parent aliases are copied."""
+        self.assertEqual('debug', self.interface.aliases['&'])
+
     def testRepr(self):
         """Test the debugging text representation of the interface."""
         check = '<Interface <AutoBot {}>>'.format(self.bot.name)
