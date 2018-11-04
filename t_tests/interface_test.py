@@ -65,6 +65,24 @@ class InterfaceCommandTest(unittest.TestCase):
         self.interface.do_games('')
         self.assertEqual(check, self.bot.info[1:])
 
+    def testHomeFocus(self):
+        """Test do_home resetting the focus in the menu tree."""
+        self.interface.focus = self.interface.categories['sub-categories']['Dice Games']
+        self.interface.do_home('')
+        self.assertEqual(self.interface.focus, self.interface.categories)
+
+    def testHomePrevious(self):
+        """Test do_home resetting the previous menu category."""
+        self.interface.focus = self.interface.categories['sub-categories']['Dice Games']
+        self.interface.do_home('')
+        self.assertEqual([], self.interface.previous)
+
+    def testHomeTitle(self):
+        """Test do_home resetting the title history."""
+        self.interface.focus = self.interface.categories['sub-categories']['Dice Games']
+        self.interface.do_home('')
+        self.assertEqual(['Home Menu'], self.interface.titles)
+
 
 class InterfaceGameTest(unittest.TestCase):
     """Tests of the Interface's game handling. (unittest.TestCase)"""
