@@ -42,6 +42,29 @@ class InterfaceCommandTest(unittest.TestCase):
         self.interface.default('Sorter')
         self.assertEqual(self.bot.info[-1], 'You are currently on a 1 game losing streak.\n')
 
+    def testGamesParent(self):
+        """Test do_games with a sub-category."""
+        check = ['Bisley (Bisl)\n', 'Canfield (Demon, Canf)\n']
+        check += ['Crazy Eights (Rockaway, Swedish Rummy, CrEi)\n', 'Cribbage (Crib)\n']
+        check += ['Forty Thieves (Big Forty, Le Cadran, Napoleon at St Helena, Roosevelt at San Juan, FoTh)\n']
+        check += ['FreeCell (Free)\n', 'Klondike (Seven Up, Sevens, Klon)\n']
+        check += ['Monte Carlo (Weddings, MoCa)\n', 'Ninety-Nine (99)\n', 'Pyramid (Pyra)\n']
+        check += ['Quadrille (Captive Queens, La Francaise, Partners, Quad)\n', 'Spider (Spid)\n']
+        check += ['Strategy (Stra)\n']
+        self.interface.focus = self.interface.categories['sub-categories']['Card Games']
+        self.bot.replies = ['']
+        self.interface.do_games('')
+        self.assertEqual(check, self.bot.info[1:])
+
+    def testGamesTerminal(self):
+        """Test do_games with a terminal category."""
+        check = ["Liar's Dice (Doubting Dice, Schummeln, Liars Dice, LiDi)\n", 'Pig\n']
+        check += ['Solitaire Dice (SoDi)\n', 'Yacht (Yach)\n']
+        self.interface.focus = self.interface.categories['sub-categories']['Dice Games']
+        self.bot.replies = ['']
+        self.interface.do_games('')
+        self.assertEqual(check, self.bot.info[1:])
+
 
 class InterfaceGameTest(unittest.TestCase):
     """Tests of the Interface's game handling. (unittest.TestCase)"""

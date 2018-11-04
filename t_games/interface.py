@@ -190,14 +190,8 @@ class Interface(other_cmd.OtherCmd):
         The games listed are aware of your location in the menu, so only games in the
         current category are listed.
         """
-        # Get the games in the current context (breadth first search).
-        games = self.focus['games'][:]
-        search = list(self.focus['sub-categories'].values())
-        while search:
-            sub_category = search.pop()
-            games.extend(sub_category['games'])
-            search.extend(sub_category['sub-categories'].values())
-        # Sort the games alphabetically.
+        # Get the games, sorted alphabetically.
+        games = self.category_games()
         games.sort(key = lambda game: game.name)
         # Print the game list with aliases.
         self.human.tell()
