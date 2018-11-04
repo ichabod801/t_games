@@ -83,6 +83,23 @@ class InterfaceCommandTest(unittest.TestCase):
         self.interface.do_home('')
         self.assertEqual(['Home Menu'], self.interface.titles)
 
+    def testPlayFail(self):
+        """Test do_play's handling of an invalid game name."""
+        self.interface.do_play('Spam')
+        self.assertEqual("\nI don't know how to play that game.\n", self.bot.errors[0])
+
+    def testPlayOptions(self):
+        """Test do_play's handling of a game with options."""
+        self.bot.replies = ['!', 'n']
+        self.interface.do_play('Sorter / 2')
+        self.assertIn('The current sequence is:  1, 0\n', self.bot.info)
+
+    def testPlayPlay(self):
+        """Test do_play's handling of a game name."""
+        self.bot.replies = ['n', '!', 'n']
+        self.interface.do_play('Sorter')
+        self.assertEqual([], self.bot.replies)
+
 
 class InterfaceGameTest(unittest.TestCase):
     """Tests of the Interface's game handling. (unittest.TestCase)"""
