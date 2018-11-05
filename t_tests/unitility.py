@@ -216,6 +216,7 @@ class ProtoObject(object):
 
     Overriddent Methods:
     __init__
+    __call__
     """
 
     def __init__(self, *args, **kwargs):
@@ -229,6 +230,17 @@ class ProtoObject(object):
         self.__dict__.update(kwargs)
         for arg in args:
             setattr(self, arg, self.dummy_method)
+
+    def __call__(self, *args, **kwargs):
+        """
+        Store any parameters passed to the object as a function. (None)
+
+        Parameters:
+        *args: The names of any dummy methods.
+        **kwargs: Attributes and their values.
+        """
+        self.args = args
+        self.kwargs = kwargs
 
     def dummy_method(self, *args, **kwargs):
         """Return whatever is passed to this method."""
