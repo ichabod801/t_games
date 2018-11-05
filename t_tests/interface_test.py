@@ -51,20 +51,24 @@ class InterfaceCommandTest(unittest.TestCase):
 
     def testGamesParent(self):
         """Test do_games with a sub-category."""
-        check = ['Flip\n', 'Null\n', 'Sorter\n', 'Unit (1)\n']
+        # Set up the bot and the interface.
         self.interface.categories = TEST_CATEGORIES
         self.interface.focus = self.interface.categories
         self.bot.replies = ['']
+        # Get and check the game shown.
         self.interface.do_games('')
+        check = ['Flip\n', 'Null\n', 'Sorter\n', 'Unit (1)\n']
         self.assertEqual(check, self.bot.info[1:])
 
     def testGamesTerminal(self):
         """Test do_games with a terminal category."""
-        check = ['Null\n', 'Unit (1)\n']
+        # Set up the bot and the interface.
         self.interface.categories = TEST_CATEGORIES
         self.interface.focus = self.interface.categories['sub-categories']['Unit Games']
         self.bot.replies = ['']
+        # Get and check the game shown.
         self.interface.do_games('')
+        check = ['Null\n', 'Unit (1)\n']
         self.assertEqual(check, self.bot.info[1:])
 
     def testHomeFocus(self):
@@ -102,16 +106,46 @@ class InterfaceCommandTest(unittest.TestCase):
         self.interface.do_play('Sorter')
         self.assertEqual([], self.bot.replies)
 
+    def testRandomAll(self):
+        """Test do_random forcing all games."""
+        # Set up the bot and the interface.
+        self.bot.replies = ['n', '!', 'lose', 'n']
+        self.interface.categories = TEST_CATEGORIES
+        self.interface.games = {game.name: game for game in TEST_GAMES}
+        self.interface.focus = self.interface.categories['sub-categories']['Unit Games']
+        # Get the actual value
+        self.interface.do_random('all')
+        intro = self.bot.info[0]
+        comma_index = intro.index(',')
+        # Check for a valid value.
+        self.assertIn(intro[22:comma_index], [game.name for game in TEST_GAMES])
+
     def testRandomParent(self):
         """Test do_random with child categories."""
-        names = [game.name for game in TEST_GAMES]
+        # Set up the bot and the interface.
         self.bot.replies = ['n', '!', 'lose', 'n']
         self.interface.categories = TEST_CATEGORIES
         self.interface.focus = self.interface.categories
+        # Get the actual value
         self.interface.do_random('')
         intro = self.bot.info[0]
         comma_index = intro.index(',')
-        self.assertIn(intro[22:comma_index], names)
+        # Check for a valid value.
+        self.assertIn(intro[22:comma_index], [game.name for game in TEST_GAMES])
+
+    def testRandomTerminal(self):
+        """Test do_random without child categories."""
+        # Set up the bot and the interface.
+        self.bot.replies = ['n', '!', 'lose', 'n']
+        self.interface.categories = TEST_CATEGORIES
+        self.interface.focus = self.interface.categories['sub-categories']['Unit Games']
+        # Get the actual value
+        self.interface.do_random('')
+        intro = self.bot.info[0]
+        comma_index = intro.index(',')
+        # Check for a valid value.
+        check = [game.name for game in TEST_CATEGORIES['sub-categories']['Unit Games']['games']]
+        self.assertIn(intro[22:comma_index], check)
 
 
 class InterfaceGameTest(unittest.TestCase):
