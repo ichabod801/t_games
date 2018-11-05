@@ -18,7 +18,11 @@ import t_games.interface as interface
 import t_tests.unitility as unitility
 
 
-TEST_GAMES = {'flip': interface.game.Flip, 'sorter': interface.game.Sorter, 'unit': unitility.TestGame}
+TEST_CATEGORIES= {'games': [interface.game.Flip, interface.game.Sorter],
+    'sub-categories': {'Unit Games': {'games': [unitility.TestGame, interface.game.Game],
+    'sub-categories': {}}}}
+
+TEST_GAMES = [interface.game.Game, interface.game.Flip, interface.game.Sorter, unitility.TestGame]
 
 
 class InterfaceCommandTest(unittest.TestCase):
@@ -47,23 +51,18 @@ class InterfaceCommandTest(unittest.TestCase):
 
     def testGamesParent(self):
         """Test do_games with a sub-category."""
-        check = ['Bisley (Bisl)\n', 'Canfield (Demon, Canf)\n']
-        check += ['Crazy Eights (Rockaway, Swedish Rummy, CrEi)\n', 'Cribbage (Crib)\n']
-        check += ['Forty Thieves (Big Forty, Le Cadran, Napoleon at St Helena, Roosevelt at San Juan, FoTh)\n']
-        check += ['FreeCell (Free)\n', 'Klondike (Seven Up, Sevens, Klon)\n']
-        check += ['Monte Carlo (Weddings, MoCa)\n', 'Ninety-Nine (99)\n', 'Pyramid (Pyra)\n']
-        check += ['Quadrille (Captive Queens, La Francaise, Partners, Quad)\n', 'Spider (Spid)\n']
-        check += ['Strategy (Stra)\n']
-        self.interface.focus = self.interface.categories['sub-categories']['Card Games']
+        check = ['Flip\n', 'Null\n', 'Sorter\n', 'Unit (1)\n']
+        self.interface.categories = TEST_CATEGORIES
+        self.interface.focus = self.interface.categories
         self.bot.replies = ['']
         self.interface.do_games('')
         self.assertEqual(check, self.bot.info[1:])
 
     def testGamesTerminal(self):
         """Test do_games with a terminal category."""
-        check = ["Liar's Dice (Doubting Dice, Schummeln, Liars Dice, LiDi)\n", 'Pig\n']
-        check += ['Solitaire Dice (SoDi)\n', 'Yacht (Yach)\n']
-        self.interface.focus = self.interface.categories['sub-categories']['Dice Games']
+        check = ['Null\n', 'Unit (1)\n']
+        self.interface.categories = TEST_CATEGORIES
+        self.interface.focus = self.interface.categories['sub-categories']['Unit Games']
         self.bot.replies = ['']
         self.interface.do_games('')
         self.assertEqual(check, self.bot.info[1:])
@@ -102,6 +101,17 @@ class InterfaceCommandTest(unittest.TestCase):
         self.bot.replies = ['n', '!', 'n']
         self.interface.do_play('Sorter')
         self.assertEqual([], self.bot.replies)
+
+    def testRandomParent(self):
+        """Test do_random with child categories."""
+        names = [game.name for game in TEST_GAMES]
+        self.bot.replies = ['n', '!', 'lose', 'n']
+        self.interface.categories = TEST_CATEGORIES
+        self.interface.focus = self.interface.categories
+        self.interface.do_random('')
+        intro = self.bot.info[0]
+        comma_index = intro.index(',')
+        self.assertIn(intro[22:comma_index], names)
 
 
 class InterfaceGameTest(unittest.TestCase):
