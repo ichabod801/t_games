@@ -261,6 +261,16 @@ class InterfaceDoStatsTest(unittest.TestCase):
         self.interface.do_stats('unit')
         self.assertIn((TEST_RESULTS[-3:],), self.interface.show_stats.arg_list)
 
+    def testUnknownStatsAllGames(self):
+        """Test stat groups shown for Interface.do_stats for an unknown game."""
+        self.interface.do_stats('calvin ball')
+        self.assertEqual(0, len(self.interface.show_stats.arg_list))
+
+    def testUnknownWarnimg(self):
+        """Test error text for Interface.do_stats for an unknown game."""
+        self.interface.do_stats('calvin ball')
+        self.assertIn('You have never played that game.\n', self.bot.errors)
+
 
 class ValveTest(unittest.TestCase):
     """Tests of the RandomValve class. (unittest.TestCase)"""

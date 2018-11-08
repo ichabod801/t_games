@@ -316,7 +316,7 @@ class Interface(other_cmd.OtherCmd):
                 self.show_stats(relevant, options = options)
         # Show an error if there are no results.
         else:
-            self.human.tell('You have never played that game.')
+            self.human.error('You have never played that game.')
 
     def figure_win_loss_draw(self, results):
         """
