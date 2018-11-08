@@ -24,6 +24,12 @@ TEST_CATEGORIES= {'games': [interface.game.Flip, interface.game.Sorter],
 
 TEST_GAMES = [interface.game.Game, interface.game.Flip, interface.game.Sorter, unitility.TestGame]
 
+# need games across all TEST_CATEGORIES,
+TEST_RESULTS = [['Flip', 1, 0, 0, 5, 10, 2, ''], ['Flip', 0, 1, 0, 3, 8, 4, ''],
+    ['Flip', 1, 0, 0, 4, 9, 0, ''], ['Sorter', 1, 0, 0, 0, 5, 128, ''], ['Sorter', 0, 1, 0, -1, 7, 8, ''],
+    ['Sorter', 1, 0, 0, 0, 1, 3, '2'], ['Unit', 3, 2, 0, 5, 5, 0, ''], ['Unit', 2, 3, 0, 4, 4, 0, ''],
+    ['Unit', 2, 2, 2, 8, 8, 128, '']]
+
 
 class InterfaceCommandTest(unittest.TestCase):
     """Tests of the Interface's command handling. (unittest.TestCase)"""
@@ -188,6 +194,27 @@ class InterfaceTextTest(unittest.TestCase):
         """Test the debugging text representation of the interface."""
         check = '<Interface <AutoBot {}>>'.format(self.bot.name)
         self.assertEqual(check, repr(self.interface))
+
+
+class InterfaceDoStatsTest(unittest.TestCase):
+    """Tests of the Interface's stats command. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.bot.results = TEST_RESULTS
+        self.interface = interface.Interface(self.bot)
+        self.interface.focus = TEST_CATEGORIES
+        self.interface.show_stats = unitility.ProtoObject()
+
+    def testBaseStatsAllGames(self):
+        """Test stat groups shown for Interface.do_stats with no mods."""
+        self.interface.do_stats('')
+        self.assertEqual(4, len(self.interface.show_stats.arg_list))
+
+    def testBaseStatsTitle(self):
+        """Test stat groups shown for Interface.do_stats with no mods."""
+        self.interface.do_stats('')
+        self.assertIn((TEST_RESULTS, 'Category Statistics', ''), self.interface.show_stats.arg_list)
 
 
 class ValveTest(unittest.TestCase):

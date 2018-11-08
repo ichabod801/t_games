@@ -230,6 +230,8 @@ class ProtoObject(object):
         self.__dict__.update(kwargs)
         for arg in args:
             setattr(self, arg, self.dummy_method)
+        self.arg_list = []
+        self.kwarg_list = []
 
     def __call__(self, *args, **kwargs):
         """
@@ -240,7 +242,9 @@ class ProtoObject(object):
         **kwargs: Attributes and their values.
         """
         self.args = args
+        self.arg_list.append(args)
         self.kwargs = kwargs
+        self.kwarg_list.append(kwargs)
 
     def dummy_method(self, *args, **kwargs):
         """Return whatever is passed to this method."""
