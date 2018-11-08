@@ -27,7 +27,8 @@ TEST_GAMES = [interface.game.Game, interface.game.Flip, interface.game.Sorter, u
 # need games across all TEST_CATEGORIES,
 TEST_RESULTS = [['Flip', 1, 0, 0, 5, 10, 2, ''], ['Flip', 0, 1, 0, 3, 8, 4, ''],
     ['Flip', 1, 0, 0, 4, 9, 0, ''], ['Sorter', 1, 0, 0, 0, 5, 128, ''], ['Sorter', 0, 1, 0, -1, 7, 8, ''],
-    ['Sorter', 1, 0, 0, 0, 1, 3, '2'], ['Unit', 3, 2, 0, 5, 5, 0, ''], ['Unit', 2, 3, 0, 4, 4, 0, ''],
+    ['Sorter', 1, 0, 0, 0, 1, 3, '2'], ['Null', 1, 0, 0, 0, 1, 0, ''], ['Null', 0, 1, 1, 0, 2, 0, ''],
+    ['Null', 1, 0, 0, 0, 18, 0, ''], ['Unit', 3, 2, 0, 5, 5, 0, ''], ['Unit', 2, 3, 0, 4, 4, 0, ''],
     ['Unit', 2, 2, 2, 8, 8, 128, '']]
 
 
@@ -209,12 +210,24 @@ class InterfaceDoStatsTest(unittest.TestCase):
     def testBaseStatsAllGames(self):
         """Test stat groups shown for Interface.do_stats with no mods."""
         self.interface.do_stats('')
-        self.assertEqual(4, len(self.interface.show_stats.arg_list))
+        self.assertEqual(5, len(self.interface.show_stats.arg_list))
 
     def testBaseStatsTitle(self):
         """Test stat groups shown for Interface.do_stats with no mods."""
         self.interface.do_stats('')
         self.assertIn((TEST_RESULTS, 'Category Statistics', ''), self.interface.show_stats.arg_list)
+
+    def testCategoryStatsAllGames(self):
+        """Test stat groups shown for Interface.do_stats in a category."""
+        self.interface.focus = TEST_CATEGORIES['sub-categories']['Unit Games']
+        self.interface.do_stats('')
+        self.assertEqual(3, len(self.interface.show_stats.arg_list))
+
+    def testCategoryStatsTitle(self):
+        """Test stat groups shown for Interface.do_stats in a category."""
+        self.interface.focus = TEST_CATEGORIES['sub-categories']['Unit Games']
+        self.interface.do_stats('')
+        self.assertIn((TEST_RESULTS[-6:], 'Category Statistics', ''), self.interface.show_stats.arg_list)
 
 
 class ValveTest(unittest.TestCase):
