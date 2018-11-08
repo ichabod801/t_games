@@ -5,6 +5,7 @@ Unit testing of t_games/interface.py
 
 Classes:
 InterfaceCommandTest: Tests of Interface command handling. (unittest.TestCase)
+InterfaceDoStatsTest: Tests of the Interface's stats command. (unittest.TestCase)
 InterfaceGameTest: Tests of the Interface's game handling. (unittest.TestCase)
 InterfaceTextTest: Tests of the Interface's text handling. (unittest.TestCase)
 ValveTest: Tests of the RandomValve class. (unittest.TestCase)
@@ -155,48 +156,6 @@ class InterfaceCommandTest(unittest.TestCase):
         self.assertIn(intro[22:comma_index], check)
 
 
-class InterfaceGameTest(unittest.TestCase):
-    """Tests of the Interface's game handling. (unittest.TestCase)"""
-
-    def setUp(self):
-        self.bot = unitility.AutoBot()
-        self.interface = interface.Interface(self.bot)
-
-    def testCategoryParent(self):
-        """Test category_games with a sub-category."""
-        check = ['Bisley', 'Canfield', 'Crazy Eights', 'Cribbage', 'Forty Thieves', 'FreeCell', 'Klondike']
-        check += ['Monte Carlo', 'Ninety-Nine', 'Pyramid', 'Quadrille', 'Spider', 'Strategy']
-        self.interface.focus = self.interface.categories['sub-categories']['Card Games']
-        self.assertEqual(check, sorted([game.name for game in self.interface.category_games()]))
-
-    def testCategoryTerminal(self):
-        """Test category_games with a terminal category."""
-        check = ["Liar's Dice", 'Pig', 'Solitaire Dice', 'Yacht']
-        self.interface.focus = self.interface.categories['sub-categories']['Dice Games']
-        self.assertEqual(check, sorted([game.name for game in self.interface.category_games()]))
-
-
-class InterfaceTextTest(unittest.TestCase):
-    """Tests of the Interface's text handling. (unittest.TestCase)"""
-
-    def setUp(self):
-        self.bot = unitility.AutoBot()
-        self.interface = interface.Interface(self.bot)
-
-    def testAliasLocal(self):
-        """Test that the local aliases are retained."""
-        self.assertEqual('help', self.interface.aliases['?'])
-
-    def testAliasParent(self):
-        """Test that the parent aliases are copied."""
-        self.assertEqual('debug', self.interface.aliases['&'])
-
-    def testRepr(self):
-        """Test the debugging text representation of the interface."""
-        check = '<Interface <AutoBot {}>>'.format(self.bot.name)
-        self.assertEqual(check, repr(self.interface))
-
-
 class InterfaceDoStatsTest(unittest.TestCase):
     """Tests of the Interface's stats command. (unittest.TestCase)"""
 
@@ -270,6 +229,48 @@ class InterfaceDoStatsTest(unittest.TestCase):
         """Test error text for Interface.do_stats for an unknown game."""
         self.interface.do_stats('calvin ball')
         self.assertIn('You have never played that game.\n', self.bot.errors)
+
+
+class InterfaceGameTest(unittest.TestCase):
+    """Tests of the Interface's game handling. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.interface = interface.Interface(self.bot)
+
+    def testCategoryParent(self):
+        """Test category_games with a sub-category."""
+        check = ['Bisley', 'Canfield', 'Crazy Eights', 'Cribbage', 'Forty Thieves', 'FreeCell', 'Klondike']
+        check += ['Monte Carlo', 'Ninety-Nine', 'Pyramid', 'Quadrille', 'Spider', 'Strategy']
+        self.interface.focus = self.interface.categories['sub-categories']['Card Games']
+        self.assertEqual(check, sorted([game.name for game in self.interface.category_games()]))
+
+    def testCategoryTerminal(self):
+        """Test category_games with a terminal category."""
+        check = ["Liar's Dice", 'Pig', 'Solitaire Dice', 'Yacht']
+        self.interface.focus = self.interface.categories['sub-categories']['Dice Games']
+        self.assertEqual(check, sorted([game.name for game in self.interface.category_games()]))
+
+
+class InterfaceTextTest(unittest.TestCase):
+    """Tests of the Interface's text handling. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.interface = interface.Interface(self.bot)
+
+    def testAliasLocal(self):
+        """Test that the local aliases are retained."""
+        self.assertEqual('help', self.interface.aliases['?'])
+
+    def testAliasParent(self):
+        """Test that the parent aliases are copied."""
+        self.assertEqual('debug', self.interface.aliases['&'])
+
+    def testRepr(self):
+        """Test the debugging text representation of the interface."""
+        check = '<Interface <AutoBot {}>>'.format(self.bot.name)
+        self.assertEqual(check, repr(self.interface))
 
 
 class ValveTest(unittest.TestCase):
