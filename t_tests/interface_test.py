@@ -217,6 +217,18 @@ class InterfaceDoStatsTest(unittest.TestCase):
         self.interface.do_stats('')
         self.assertIn((TEST_RESULTS, 'Category Statistics', ''), self.interface.show_stats.arg_list)
 
+    def testCategoryAllStatsAllGames(self):
+        """Test stat groups shown for Interface.do_stats in a category with 'all'."""
+        self.interface.focus = TEST_CATEGORIES['sub-categories']['Unit Games']
+        self.interface.do_stats('all')
+        self.assertEqual(5, len(self.interface.show_stats.arg_list))
+
+    def testCategoryAllStatsTitle(self):
+        """Test stat groups shown for Interface.do_stats in a category with 'all'."""
+        self.interface.focus = TEST_CATEGORIES['sub-categories']['Unit Games']
+        self.interface.do_stats('all')
+        self.assertIn((TEST_RESULTS, 'Overall Statistics', ''), self.interface.show_stats.arg_list)
+
     def testCategoryStatsAllGames(self):
         """Test stat groups shown for Interface.do_stats in a category."""
         self.interface.focus = TEST_CATEGORIES['sub-categories']['Unit Games']
