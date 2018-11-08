@@ -207,13 +207,23 @@ class InterfaceDoStatsTest(unittest.TestCase):
         self.interface.focus = TEST_CATEGORIES
         self.interface.show_stats = unitility.ProtoObject()
 
+    def testAliasStatsAllGames(self):
+        """Test stat groups shown for Interface.do_stats for a specific game alias."""
+        self.interface.do_stats('1')
+        self.assertEqual(1, len(self.interface.show_stats.arg_list))
+
+    def testAiliasStatsTitle(self):
+        """Test call arguments for Interface.do_stats for a specific game alias."""
+        self.interface.do_stats('1')
+        self.assertIn((TEST_RESULTS[-3:],), self.interface.show_stats.arg_list)
+
     def testBaseStatsAllGames(self):
         """Test stat groups shown for Interface.do_stats with no mods."""
         self.interface.do_stats('')
         self.assertEqual(5, len(self.interface.show_stats.arg_list))
 
     def testBaseStatsTitle(self):
-        """Test stat groups shown for Interface.do_stats with no mods."""
+        """Test call arguments for Interface.do_stats with no mods."""
         self.interface.do_stats('')
         self.assertIn((TEST_RESULTS, 'Category Statistics', ''), self.interface.show_stats.arg_list)
 
@@ -224,7 +234,7 @@ class InterfaceDoStatsTest(unittest.TestCase):
         self.assertEqual(5, len(self.interface.show_stats.arg_list))
 
     def testCategoryAllStatsTitle(self):
-        """Test stat groups shown for Interface.do_stats in a category with 'all'."""
+        """Test call arguments for Interface.do_stats in a category with 'all'."""
         self.interface.focus = TEST_CATEGORIES['sub-categories']['Unit Games']
         self.interface.do_stats('all')
         self.assertIn((TEST_RESULTS, 'Overall Statistics', ''), self.interface.show_stats.arg_list)
@@ -236,10 +246,20 @@ class InterfaceDoStatsTest(unittest.TestCase):
         self.assertEqual(3, len(self.interface.show_stats.arg_list))
 
     def testCategoryStatsTitle(self):
-        """Test stat groups shown for Interface.do_stats in a category."""
+        """Test call arguments for Interface.do_stats in a category."""
         self.interface.focus = TEST_CATEGORIES['sub-categories']['Unit Games']
         self.interface.do_stats('')
         self.assertIn((TEST_RESULTS[-6:], 'Category Statistics', ''), self.interface.show_stats.arg_list)
+
+    def testGameStatsAllGames(self):
+        """Test stat groups shown for Interface.do_stats for a specific game."""
+        self.interface.do_stats('unit')
+        self.assertEqual(1, len(self.interface.show_stats.arg_list))
+
+    def testGameStatsTitle(self):
+        """Test call arguments for Interface.do_stats for a specific game."""
+        self.interface.do_stats('unit')
+        self.assertIn((TEST_RESULTS[-3:],), self.interface.show_stats.arg_list)
 
 
 class ValveTest(unittest.TestCase):
