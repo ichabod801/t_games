@@ -5,9 +5,10 @@ Unit testing of t_games/interface.py
 
 Classes:
 InterfaceCommandTest: Tests of Interface command handling. (unittest.TestCase)
-InterfaceDoStatsTest: Tests of the Interface's stats command. (unittest.TestCase)
+InterfaceDoStatsTest: Tests of the Interface.do_stats. (unittest.TestCase)
 InterfaceGameTest: Tests of the Interface's game handling. (unittest.TestCase)
 InterfaceTextTest: Tests of the Interface's text handling. (unittest.TestCase)
+InterfaceWinLossDrawTest: Tests of figure_win_loss_draw. (unittest.TestCase)
 ValveTest: Tests of the RandomValve class. (unittest.TestCase)
 """
 
@@ -27,9 +28,9 @@ TEST_GAMES = [interface.game.Game, interface.game.Flip, interface.game.Sorter, u
 
 # need games across all TEST_CATEGORIES,
 TEST_RESULTS = [['Flip', 1, 0, 0, 5, 10, 2, ''], ['Flip', 0, 1, 0, 3, 8, 4, ''],
-    ['Flip', 1, 0, 0, 4, 9, 0, ''], ['Sorter', 1, 0, 0, 0, 5, 128, ''], ['Sorter', 0, 1, 0, -1, 7, 8, ''],
-    ['Sorter', 1, 0, 0, 0, 1, 3, '2'], ['Null', 1, 0, 0, 0, 1, 0, ''], ['Null', 0, 1, 1, 0, 2, 0, ''],
-    ['Null', 1, 0, 0, 0, 18, 0, ''], ['Unit', 3, 2, 0, 5, 5, 0, ''], ['Unit', 2, 3, 0, 4, 4, 0, ''],
+    ['Flip', 1, 0, 0, 4, 9, 0, ''], ['Sorter', 1, 0, 0, 0, 5, 128, ''], ['Sorter', 1, 0, 0, 0, 1, 3, '2'],
+    ['Sorter', 0, 1, 0, -1, 7, 8, ''], ['Null', 1, 0, 0, 0, 1, 0, ''], ['Null', 0, 1, 0, 0, 2, 0, ''],
+    ['Null', 0, 0, 1, 0, 18, 0, ''], ['Unit', 3, 2, 0, 5, 5, 0, ''], ['Unit', 2, 3, 0, 4, 4, 0, ''],
     ['Unit', 2, 2, 2, 8, 8, 128, '']]
 
 
@@ -271,6 +272,22 @@ class InterfaceTextTest(unittest.TestCase):
         """Test the debugging text representation of the interface."""
         check = '<Interface <AutoBot {}>>'.format(self.bot.name)
         self.assertEqual(check, repr(self.interface))
+
+
+class InterfaceWinLossDrawTest(unittest.TestCase):
+    """Tests of Interface.figure_win_loss_draw. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.interface = interface.Interface(self.bot)
+
+    def testGameRecord(self):
+        """Test the game win/loss/draw calculation."""
+        self.assertEqual([5, 6, 1], self.interface.figure_win_loss_draw(TEST_RESULTS)[0])
+
+    def testPlayerRecord(self):
+        """Test the player win/loss/draw calculation."""
+        self.assertEqual([12, 10, 3], self.interface.figure_win_loss_draw(TEST_RESULTS)[1])
 
 
 class ValveTest(unittest.TestCase):
