@@ -285,8 +285,22 @@ class InterfaceWinLossDrawTest(unittest.TestCase):
         """Test the game win/loss/draw calculation."""
         self.assertEqual([5, 6, 1], self.interface.figure_win_loss_draw(TEST_RESULTS)[0])
 
+    def testGameRecordMatch(self):
+        """Test the game win/loss/draw calculation with match play."""
+        test_results = [results[:] for results in TEST_RESULTS]
+        for result in test_results:
+            results[-2] = results[-2] | 256
+        self.assertEqual([6, 4, 2], self.interface.figure_win_loss_draw(TEST_RESULTS)[0])
+
     def testPlayerRecord(self):
         """Test the player win/loss/draw calculation."""
+        self.assertEqual([12, 10, 3], self.interface.figure_win_loss_draw(TEST_RESULTS)[1])
+
+    def testPlayerRecordMatch(self):
+        """Test player game win/loss/draw calculation with match play."""
+        test_results = [results[:] for results in TEST_RESULTS]
+        for result in test_results:
+            results[-2] = results[-2] | 256
         self.assertEqual([12, 10, 3], self.interface.figure_win_loss_draw(TEST_RESULTS)[1])
 
 
