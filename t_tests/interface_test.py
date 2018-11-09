@@ -307,6 +307,13 @@ class InterfaceMenuTest(unittest.TestCase):
         self.bot = unitility.AutoBot()
         self.interface = interface.Interface(self.bot)
 
+    def testHandleCommand(self):
+        """Test handling a command."""
+        self.interface.handle_cmd = unitility.ProtoObject()
+        self.bot.replies = ['Fnord', '!']
+        self.interface.menu()
+        self.assertEqual(('Fnord',), self.interface.handle_cmd.args)
+
     def testIntroText(self):
         """Test display of the introductory text."""
         self.bot.replies = ['!']
@@ -314,6 +321,20 @@ class InterfaceMenuTest(unittest.TestCase):
         self.assertIn("\nWelcome to Ichabod's Text Game Extravaganza!\n", self.bot.info)
         self.assertIn("Copyright (C) 2018 by Craig O'Brien and the t_games contributors.\n", self.bot.info)
         self.assertIn("For more details type 'help' or 'help license'.\n", self.bot.info)
+
+    def testPlay(self):
+        """Test playing a game."""
+        self.interface.play_game = unitility.ProtoObject()
+        self.bot.replies = ['C', 'B', '!']
+        self.interface.menu()
+        self.assertEqual((self.interface.games['pig'], ''), self.interface.play_game.args)
+
+    def testPlayOptions(self):
+        """Test playing a game with options."""
+        self.interface.play_game = unitility.ProtoObject()
+        self.bot.replies = ['C', 'B / satan', '!']
+        self.interface.menu()
+        self.assertEqual((self.interface.games['pig'], 'satan'), self.interface.play_game.args)
 
     def testPrevious(self):
         """Test moving back to the main menu."""
