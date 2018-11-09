@@ -8,6 +8,7 @@ InterfaceCommandTest: Tests of Interface command handling. (unittest.TestCase)
 InterfaceDoStatsTest: Tests of the Interface.do_stats. (unittest.TestCase)
 InterfaceFilterResultsTest: Tests of results filtering. (untittest.TestCase)
 InterfaceGameTest: Tests of the Interface's game handling. (unittest.TestCase)
+InterfaceMenuTest: Tests of the Interface's menu system. (unittest.TestCase)
 InterfaceTextTest: Tests of the Interface's text handling. (unittest.TestCase)
 InterfaceWinLossDrawTest: Tests of figure_win_loss_draw. (unittest.TestCase)
 ValveTest: Tests of the RandomValve class. (unittest.TestCase)
@@ -297,6 +298,58 @@ class InterfaceGameTest(unittest.TestCase):
         check = ["Liar's Dice", 'Pig', 'Solitaire Dice', 'Yacht']
         self.interface.focus = self.interface.categories['sub-categories']['Dice Games']
         self.assertEqual(check, sorted([game.name for game in self.interface.category_games()]))
+
+
+class InterfaceMenuTest(unittest.TestCase):
+    """Tests of the Interface's menu system. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.interface = interface.Interface(self.bot)
+
+    def testIntroText(self):
+        """Test display of the introductory text."""
+        self.bot.replies = ['!']
+        self.interface.menu()
+        self.assertIn("\nWelcome to Ichabod's Text Game Extravaganza!\n", self.bot.info)
+        self.assertIn("Copyright (C) 2018 by Craig O'Brien and the t_games contributors.\n", self.bot.info)
+        self.assertIn("For more details type 'help' or 'help license'.\n", self.bot.info)
+
+    def testPrevious(self):
+        """Test moving back to the main menu."""
+        self.bot.replies = ['C', '<', '!']
+        self.interface.menu()
+        self.assertEqual(self.interface.categories, self.interface.focus)
+
+    def testPreviousComplicatedFocus(self):
+        """Test focus complicated movement through the menu."""
+        self.bot.replies = ['C', '<', 'B', 'A', '<', '!']
+        self.interface.menu()
+        self.assertEqual(self.interface.categories['sub-categories']['Card Games'], self.interface.focus)
+
+    def testPreviousComplicatedPrevious(self):
+        """Test move history complicated movement through the menu."""
+        self.bot.replies = ['C', '<', 'B', 'A', '<', '!']
+        self.interface.menu()
+        self.assertEqual([self.interface.categories], self.interface.previous)
+
+    def testPreviousOverkill(self):
+        """Test moving back above the main menu."""
+        self.bot.replies = ['C', '<', '<', '!']
+        self.interface.menu()
+        self.assertEqual(self.interface.categories, self.interface.focus)
+
+    def testPreviousTwice(self):
+        """Test moving back to the main menu after two moves."""
+        self.bot.replies = ['B', 'A', '<', '<', '!']
+        self.interface.menu()
+        self.assertEqual(self.interface.categories, self.interface.focus)
+
+    def testSubCategory(self):
+        """Test moving to a sub-category."""
+        self.bot.replies = ['C', '!']
+        self.interface.menu()
+        self.assertEqual(self.interface.categories['sub-categories']['Dice Games'], self.interface.focus)
 
 
 class InterfaceTextTest(unittest.TestCase):
