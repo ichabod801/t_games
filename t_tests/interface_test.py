@@ -6,6 +6,7 @@ Unit testing of t_games/interface.py
 Classes:
 InterfaceCommandTest: Tests of Interface command handling. (unittest.TestCase)
 InterfaceDoStatsTest: Tests of the Interface.do_stats. (unittest.TestCase)
+InterfaceFilterResultsTest: Tests of results filtering. (untittest.TestCase)
 InterfaceGameTest: Tests of the Interface's game handling. (unittest.TestCase)
 InterfaceTextTest: Tests of the Interface's text handling. (unittest.TestCase)
 InterfaceWinLossDrawTest: Tests of figure_win_loss_draw. (unittest.TestCase)
@@ -230,6 +231,51 @@ class InterfaceDoStatsTest(unittest.TestCase):
         """Test error text for Interface.do_stats for an unknown game."""
         self.interface.do_stats('calvin ball')
         self.assertIn('You have never played that game.\n', self.bot.errors)
+
+
+class InterfaceFilterResultsTest(unittest.TestCase):
+    """Tests of the Interface's results filtering. (untittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.interface = interface.Interface(self.bot)
+
+    def testFilterAll(self):
+        """Test filtering with nothing allowed."""
+        check = TEST_RESULTS[:]
+        for index in (11, 5, 4, 3, 0):
+            del check[index]
+        filtered = self.interface.filter_results(TEST_RESULTS, '')
+        self.assertEqual(check, filtered)
+
+    def testFilterAllowCheating(self):
+        """Test filtering with cheating allowed."""
+        check = TEST_RESULTS[:]
+        for index in (11, 5, 3):
+            del check[index]
+        filtered = self.interface.filter_results(TEST_RESULTS, 'cheat')
+        self.assertEqual(check, filtered)
+
+    def testFilterAllowGipf(self):
+        """Test filtering with gipf wins allowed."""
+        check = TEST_RESULTS[:]
+        for index in (11, 4, 3, 0):
+            del check[index]
+        filtered = self.interface.filter_results(TEST_RESULTS, 'gipf')
+        self.assertEqual(check, filtered)
+
+    def testFilterAllowXyzzy(self):
+        """Test filtering with xyzzy allowed."""
+        check = TEST_RESULTS[:]
+        for index in (5, 4, 0):
+            del check[index]
+        filtered = self.interface.filter_results(TEST_RESULTS, 'xyzzy')
+        self.assertEqual(check, filtered)
+
+    def testFilterNone(self):
+        """Test not filtering any results."""
+        filtered = self.interface.filter_results(TEST_RESULTS, 'cheat gipf xyzzy')
+        self.assertEqual(TEST_RESULTS, filtered)
 
 
 class InterfaceGameTest(unittest.TestCase):
