@@ -338,6 +338,10 @@ class TestGame(game.Game):
             self.flags = self.interface.flags
         self.all_set, self.all_done = False, False
 
+    def clean_up(self):
+        """Do any necessary post-game processing. (None)"""
+        self.all_done = True
+
     def game_over(self):
         """Check for the end of the game. (bool)"""
         # Check for match play.
@@ -346,7 +350,7 @@ class TestGame(game.Game):
         # Resolve game ending moves.
         if self.move.startswith('win'):
             self.win_loss_draw[0] += 1
-        elif self.move.startswith('lose'):
+        elif self.move.startswith('lose') or self.move.startswith('loss'):
             self.win_loss_draw[1] += 1
         elif self.move.startswith('draw'):
             self.win_loss_draw[1] += 1
@@ -360,9 +364,10 @@ class TestGame(game.Game):
         self.scores[self.human.name] = self.turns
         return True
 
-    def clean_up(self):
-        """Do any necessary post-game processing. (None)"""
-        self.all_done = True
+    def handle_options(self):
+        """Handle the options for this play of the game."""
+        if self.raw_options.lower() == 'error':
+            self.option_set.error = True
 
     def player_action(self, player):
         """

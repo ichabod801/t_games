@@ -9,6 +9,7 @@ InterfaceDoStatsTest: Tests of the Interface.do_stats. (unittest.TestCase)
 InterfaceFilterResultsTest: Tests of results filtering. (untittest.TestCase)
 InterfaceGameTest: Tests of the Interface's game handling. (unittest.TestCase)
 InterfaceMenuTest: Tests of the Interface's menu system. (unittest.TestCase)
+InterfacePlayGameTest: Tests playing a game through the interface. (TestCase)
 InterfaceTextTest: Tests of the Interface's text handling. (unittest.TestCase)
 InterfaceWinLossDrawTest: Tests of figure_win_loss_draw. (unittest.TestCase)
 ValveTest: Tests of the RandomValve class. (unittest.TestCase)
@@ -371,6 +372,32 @@ class InterfaceMenuTest(unittest.TestCase):
         self.bot.replies = ['C', '!']
         self.interface.menu()
         self.assertEqual(self.interface.categories['sub-categories']['Dice Games'], self.interface.focus)
+
+
+class InterfacePlayGameTest(unittest.TestCase):
+    """Tests playing a game through the interface. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.interface = interface.Interface(self.bot)
+        self.interface.do_stats = unitility.ProtoObject()
+
+    def testAgain(self):
+        """Test playing a game and then playing again."""
+        self.bot.replies = ['win', 'y', 'loss' 'n', '!']
+        self.interface.play_game(unitility.TestGame, '')
+        self.assertEqual(2, len(self.bot.results))
+
+    def testNotAgain(self):
+        """Test playing a game without playing again."""
+        self.bot.replies = ['win', 'n', '!']
+        self.interface.play_game(unitility.TestGame, '')
+        self.assertEqual(1, len(self.bot.results))
+
+    def testOptionError(self):
+        """Test catching an error in the options."""
+        self.bot.replies = ['win', 'n', '!']
+        self.assertFalse(self.interface.play_game(unitility.TestGame, 'error'))
 
 
 class InterfaceTextTest(unittest.TestCase):
