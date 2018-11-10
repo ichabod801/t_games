@@ -409,6 +409,12 @@ class InterfacePlayGameTest(unittest.TestCase):
         check = '\nStatistics were calculated with the folloing options: cheat xyzzy.\n'
         self.assertIn(check, self.bot.info)
 
+    def testNoFilter(self):
+        """Test playing a game without statistics blocks."""
+        self.bot.replies = ['win', 'n', '!']
+        self.interface.play_game(unitility.TestGame, '')
+        self.assertEqual(('Unit / ',), self.interface.do_stats.args)
+
     def testNotAgain(self):
         """Test playing a game without playing again."""
         self.bot.replies = ['win', 'n', '!']
