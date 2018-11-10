@@ -445,8 +445,21 @@ class InterfaceShowMenuTest(unittest.TestCase):
         self.interface.games = TEST_GAMES
         self.interface.do_home('')
 
+    def testSubCategoryDict(self):
+        """Test generatirng sub-category menu data."""
+        check = {'A': 'Null', 'B': 'Unit', '<': 'Previous Menu', '!': 'Quit'}
+        self.assertEqual(check, self.interface.show_menu(TEST_CATEGORIES['sub-categories']['Unit Games']))
+
+    def testSubCategoryText(self):
+        """Test displaying a sub-category menu."""
+        check = ['\n', 'Home Menu > Unit Games\n', '\n', 'A: Null\n', 'B: Unit\n', '<: Previous Menu\n']
+        check += ['!: Quit\n']
+        self.interface.titles = ['Home Menu', 'Unit Games']
+        self.interface.show_menu(TEST_CATEGORIES['sub-categories']['Unit Games'])
+        self.assertEqual(check, self.bot.info)
+
     def testTopLevelDict(self):
-        """Test generating to level menu data."""
+        """Test generating top level menu data."""
         check = {'A': 'Unit Games Category', 'B': 'Flip', 'C': 'Sorter', '!': 'Quit'}
         self.assertEqual(check, self.interface.show_menu(TEST_CATEGORIES))
 
