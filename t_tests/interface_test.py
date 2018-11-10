@@ -486,6 +486,17 @@ class InterfaceTextTest(unittest.TestCase):
         """Test that the parent aliases are copied."""
         self.assertEqual('debug', self.interface.aliases['&'])
 
+    def testShowScores(self):
+        """Test taht showing scores."""
+        self.interface.show_scores([1, 2, 2, 3, 3, 3, 4, 4, 4, 10], 'Winning Scores', '')
+        check = 'Winning Scores: 1 - 3.6 / 3 - 10\n'
+        self.assertEqual([check], self.bot.info)
+
+    def testShowScoresNot(self):
+        """Test taht showing scores with no scores."""
+        self.interface.show_scores([], 'Losing Scores', '')
+        self.assertEqual([], self.bot.info)
+
     def testRepr(self):
         """Test the debugging text representation of the interface."""
         check = '<Interface <AutoBot {}>>'.format(self.bot.name)
