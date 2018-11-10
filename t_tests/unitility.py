@@ -380,6 +380,8 @@ class TestGame(game.Game):
         # Check for continuation.
         if self.move == 'continue':
             return True
+        elif self.move.startswith('&'):
+            return self.do_debug(self.move[2:])
         # Check for quitting early.
         elif self.move.startswith('quit'):
             if '+' in self.move:

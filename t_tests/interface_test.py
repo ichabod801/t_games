@@ -388,6 +388,27 @@ class InterfacePlayGameTest(unittest.TestCase):
         self.interface.play_game(unitility.TestGame, '')
         self.assertEqual(2, len(self.bot.results))
 
+    def testCheat(self):
+        """Test playing a game with cheating."""
+        self.bot.replies = ["& setattr(self, 'flags', 2)", 'win' 'n', '!']
+        self.interface.play_game(unitility.TestGame, '')
+        check = '\nStatistics were calculated with the folloing options: cheat.\n'
+        self.assertIn(check, self.bot.info)
+
+    def testGipf(self):
+        """Test playing a game with gipfing."""
+        self.bot.replies = ["& setattr(self, 'flags', 8)", 'win' 'n', '!']
+        self.interface.play_game(unitility.TestGame, '')
+        check = '\nStatistics were calculated with the folloing options: gipf.\n'
+        self.assertIn(check, self.bot.info)
+
+    def testMultiFilter(self):
+        """Test playing a game with multiple statistics blocks."""
+        self.bot.replies = ["& setattr(self, 'flags', 130)", 'win' 'n', '!']
+        self.interface.play_game(unitility.TestGame, 'cheat xyzzy')
+        check = '\nStatistics were calculated with the folloing options: cheat xyzzy.\n'
+        self.assertIn(check, self.bot.info)
+
     def testNotAgain(self):
         """Test playing a game without playing again."""
         self.bot.replies = ['win', 'n', '!']
@@ -398,6 +419,13 @@ class InterfacePlayGameTest(unittest.TestCase):
         """Test catching an error in the options."""
         self.bot.replies = ['win', 'n', '!']
         self.assertFalse(self.interface.play_game(unitility.TestGame, 'error'))
+
+    def testXyzzy(self):
+        """Test playing a game with xyzzy."""
+        self.bot.replies = ["& setattr(self, 'flags', 128)", 'win' 'n', '!']
+        self.interface.play_game(unitility.TestGame, '')
+        check = '\nStatistics were calculated with the folloing options: xyzzy.\n'
+        self.assertIn(check, self.bot.info)
 
 
 class InterfaceTextTest(unittest.TestCase):
