@@ -10,6 +10,7 @@ InterfaceFilterResultsTest: Tests of results filtering. (untittest.TestCase)
 InterfaceGameTest: Tests of the Interface's game handling. (unittest.TestCase)
 InterfaceMenuTest: Tests of the Interface's menu system. (unittest.TestCase)
 InterfacePlayGameTest: Tests playing a game through the interface. (TestCase)
+InterfaceShwoMenuTest: Tests of setting up the interface menu. (TestCase)
 InterfaceTextTest: Tests of the Interface's text handling. (unittest.TestCase)
 InterfaceWinLossDrawTest: Tests of figure_win_loss_draw. (unittest.TestCase)
 ValveTest: Tests of the RandomValve class. (unittest.TestCase)
@@ -432,6 +433,29 @@ class InterfacePlayGameTest(unittest.TestCase):
         self.interface.play_game(unitility.TestGame, '')
         check = '\nStatistics were calculated with the folloing options: xyzzy.\n'
         self.assertIn(check, self.bot.info)
+
+
+class InterfaceShowMenuTest(unittest.TestCase):
+    """Tests of setting up the interface menu. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.interface = interface.Interface(self.bot)
+        self.interface.categories = TEST_CATEGORIES
+        self.interface.games = TEST_GAMES
+        self.interface.do_home('')
+
+    def testTopLevelDict(self):
+        """Test generating to level menu data."""
+        check = {'A': 'Unit Games Category', 'B': 'Flip', 'C': 'Sorter', '!': 'Quit'}
+        self.assertEqual(check, self.interface.show_menu(TEST_CATEGORIES))
+
+    def testTopLevelText(self):
+        """Test displaying the top level menu."""
+        check = ['\n', 'Home Menu\n', '\n', 'A: Unit Games Category\n', 'B: Flip\n', 'C: Sorter\n']
+        check += ['!: Quit\n']
+        self.interface.show_menu(TEST_CATEGORIES)
+        self.assertEqual(check, self.bot.info)
 
 
 class InterfaceTextTest(unittest.TestCase):
