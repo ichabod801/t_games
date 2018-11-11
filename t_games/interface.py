@@ -547,16 +547,17 @@ class Statistics(object):
         else:
             self.title = '{} Statistics'.format(results[0][0])
         # Set the default options.
-        self.results, self.stats = {}
+        self.results, self.stats = {}, {}
         for result_type in ('win', 'loss', 'draw', 'overall'):
             self.results[result_type] = []
             self.stats[result_type] = {}
+        self.results['overall'] = self.filter_results(results, self.options)
         self.game_wld, self.player_wld = [0, 0, 0], [0, 0, 0]
         # Calculate statistics.
         self.bin_results()
         for result_type in ('win', 'loss', 'draw', 'overall'):
-            self.sequence_stats(result_type, 'scores', [result[3] for result in self.results[result_type]])
-            self.sequence_stats(result_type, 'turns', [result[4] for result in self.results[result_type]])
+            self.sequence_stats(result_type, 'scores', [result[4] for result in self.results[result_type]])
+            self.sequence_stats(result_type, 'turns', [result[5] for result in self.results[result_type]])
 
     def __bool__(self):
         """Boolean value of the stats, or are there results? (bool)"""
@@ -564,17 +565,17 @@ class Statistics(object):
 
     def __repr__(self):
         """Debugging text representation. (str)"""
-        result_count = len(self.results['overall']
-        result_plural = utility.plural_word(result_count, 'result'))
+        result_count = len(self.results['overall'])
+        result_plural = utility.plural_word(result_count, 'result')
         return '<Statistics object with {} for {} results>'.format(self.title, result_count, result_plural)
 
     def __str__(self):
         """Human readable text representation. (str)"""
         # Check for empty results.
-        if not results:
+        if not self.results['overall']:
             return 'N/A'
         # Set up the output
-        lines = [self.title, '-' * len(title)]
+        lines = ['', self.title, '-' * len(self.title)]
         # Display the win-loss-draw numbers.
         lines.append('Overall Win-Loss-Draw: {}-{}-{}'.format(*self.game_wld))
         lines.append('Player Win-Loss-Draw: {}-{}-{}'.format(*self.player_wld))
@@ -582,10 +583,11 @@ class Statistics(object):
         stat_format = '{} {}: {} : {:.2f} / {} : {}'
         for prefix in ('scores', 'turns'):
             for result_type, word in (('overall', 'Overall'), ('win', 'Winning'), ('loss', 'Losing')):
-                stats = [word, prefix.capitalize()]
-                for stat in ('min', 'mean', 'median', 'max'):
-                    stats.append(self.stats[result_type]['{}-{}'.format(prefix, stat)])
-                lines.append(stat_format.format(stats))
+                if self.results[result_type]:
+                    stats = [word, prefix.capitalize()]
+                    for stat in ('min', 'mean', 'median', 'max'):
+                        stats.append(self.stats[result_type]['{}-{}'.format(prefix, stat)])
+                    lines.append(stat_format.format(*stats))
         # Display the streaks.
         if self.stats['win']['longest-streak']:
             lines.append('Longest winning streak: {}'.format(self.stats['win']['longest-streak']))
@@ -593,18 +595,18 @@ class Statistics(object):
             lines.append('Longest losing streak: {}'.format(self.stats['loss']['longest-streak']))
         if self.stats['draw']['longest-streak']:
             lines.append('Longest drawing streak: {}'.format(self.stats['draw']['longest-streak']))
-        streak_name = ('drawing', 'winning', 'losing')[self.stats['overall']['streak_type']]
+        streak_name = ('drawing', 'winning', 'losing')[self.stats['overall']['streak-type']]
         current_streak = self.stats['overall']['current-streak']
         lines.append('You are currently on a {} game {} streak.'.format(current_streak, streak_name))
         return '\n'.join(lines)
 
     def bin_results(self):
         """Categorize results based on win, loss, or draw. (None)"""
-        self.results['overall'] = self.filter_results(results, self.options)
         # Loop through results storing totals and streak data.
+        wins = []
         for result in self.results['overall']:
             win, loss, draw = result[1:4]
-            if flags & 256:
+            if result[-2] & 256:
                 # Handle match play.
                 if win > loss:
                     self.results['win'].apend(result)
@@ -618,25 +620,27 @@ class Statistics(object):
             else:
                 # Handle single games.
                 if not loss and not win:
-                    self.results['win'].apend(result)
+                    self.results['draw'].apend(result)
                     wins.append(0)
                 elif not loss:
-                    self.results['loss'].append(result)
+                    self.results['win'].append(result)
                     wins.append(1)
                 else:
-                    self.results['draw'].append(result)
+                    self.results['loss'].append(result)
                     wins.append(-1)
             # Update the per-player stats.
             self.player_wld[0] += win
             self.player_wld[1] += loss
             self.player_wld[2] += draw
+        # Update the per-game stats.
+        self.game_wld = [len(self.results[result_type]) for result_type in ('win', 'loss', 'draw')]
         # Get streaks.
         current_streak, streak_type, longest_streaks = utility.streaks(wins)
         self.stats['overall']['current-streak'] = current_streak
         self.stats['overall']['streak-type'] = streak_type
-        self.stats['win']['longest-streak'] = longest_streaks[0]
-        self.stats['loss']['longest-streak'] = longest_streaks[1]
-        self.stats['draw']['longest-streak'] = longest_streaks[2]
+        self.stats['win']['longest-streak'] = longest_streaks[1]
+        self.stats['loss']['longest-streak'] = longest_streaks[-1]
+        self.stats['draw']['longest-streak'] = longest_streaks[0]
 
     def filter_results(self, results, options):
         """
