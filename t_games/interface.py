@@ -293,27 +293,35 @@ class Interface(other_cmd.OtherCmd):
             names = [game.name for game in self.category_games()]
             relevant = [result for result in self.human.results if result[0] in names]
             # Show the category and individual game stats.
-            self.show_stats(relevant, 'Category Statistics', options)
+            stats = Statistics(relevant, 'Category Statistics', options)
+            self.human.tell(stats)
             games = sorted(set([result[0] for result in relevant]))
             for game in games:
                 relevant = [result for result in self.human.results if result[0] == game]
-                self.show_stats(relevant, options = options)
+                stats = Statistics(relevant, options = options)
+                self.human.tell(stats)
         # Handle specific game stats.
         elif arguments.lower() in self.games:
             game_class = self.games[arguments.lower()]
             relevant = [result for result in self.human.results if result[0] == game_class.name]
-            self.show_stats(relevant, options = options)
+            if relevant:
+                stats = Statistics(relevant, options = options)
+                self.human.tell(stats)
+            else:
+                self.human.error('You have never played {!r}.'.format(arguments))
         # Handle overall stats.
         elif arguments.lower() == 'all':
-            self.show_stats(self.human.results, 'Overall Statistics', options)
+            stats = Statistics(self.human.results, 'Overall Statistics', options)
+            self.human.tell(stats)
             games = sorted(set([result[0] for result in self.human.results]))
             # Show the stats for the individual games.
             for game in games:
                 relevant = [result for result in self.human.results if result[0] == game]
-                self.show_stats(relevant, options = options)
+                stats = Statistics(relevant, options = options)
+                self.human.tell(stats)
         # Show an error if there are no results.
         else:
-            self.human.error('You have never played that game.')
+            self.human.error("I don't know that game.")
 
     def menu(self):
         """Run the game selection menu. (None)"""
