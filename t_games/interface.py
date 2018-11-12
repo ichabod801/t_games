@@ -609,7 +609,7 @@ class Statistics(object):
             if result[-2] & 256:
                 # Handle match play.
                 if win > loss:
-                    self.results['win'].apend(result)
+                    self.results['win'].append(result)
                     wins.append(1)
                 elif loss > win:
                     self.results['loss'].append(result)
@@ -620,7 +620,7 @@ class Statistics(object):
             else:
                 # Handle single games.
                 if not loss and not win:
-                    self.results['draw'].apend(result)
+                    self.results['draw'].append(result)
                     wins.append(0)
                 elif not loss:
                     self.results['win'].append(result)
