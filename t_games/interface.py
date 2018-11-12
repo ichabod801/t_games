@@ -293,7 +293,7 @@ class Interface(other_cmd.OtherCmd):
             names = [game.name for game in self.category_games()]
             relevant = [result for result in self.human.results if result[0] in names]
             # Show the category and individual game stats.
-            stats = Statistics(relevant, 'Category Statistics', options)
+            stats = Statistics(relevant, options, 'Category Statistics')
             self.human.tell(stats)
             games = sorted(set([result[0] for result in relevant]))
             for game in games:
@@ -311,7 +311,7 @@ class Interface(other_cmd.OtherCmd):
                 self.human.error('You have never played {!r}.'.format(arguments))
         # Handle overall stats.
         elif arguments.lower() == 'all':
-            stats = Statistics(self.human.results, 'Overall Statistics', options)
+            stats = Statistics(self.human.results, options, 'Overall Statistics')
             self.human.tell(stats)
             games = sorted(set([result[0] for result in self.human.results]))
             # Show the stats for the individual games.
@@ -539,6 +539,7 @@ class Statistics(object):
         Parameters:
         results: The raw game results. (list of list)
         options: The options for filtering the results. (str)
+        title: The title for the statistics to show. (str)
         """
         # Set provided attributes.
         self.options = options.lower().split()
