@@ -518,6 +518,7 @@ class StatisticsFilterResultsTest(unittest.TestCase):
 
     def testFilterNone(self):
         """Test not filtering any results."""
+        check = TEST_RESULTS[:]
         self.stats = interface.Statistics(TEST_RESULTS, 'cheat gipf xyzzy')
         self.assertEqual(check, self.stats.results['overall'])
 

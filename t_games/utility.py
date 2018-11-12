@@ -249,6 +249,8 @@ def streaks(values):
     Parameters:
     values: The list of values. (seq of float)
     """
+    if not values:
+        return 0, 0, [0, 0, 0]
     # Prep the loop.
     previous = values[0]
     lengths = collections.defaultdict(int)

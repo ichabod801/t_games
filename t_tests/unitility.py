@@ -123,7 +123,7 @@ class AutoBot(player.Bot):
         """
         sep = kwargs.get('sep', ' ')
         end = kwargs.get('end', '\n')
-        self.info.append('{}{}'.format(sep.join([str(arg) for arg in args]), end))
+        self.errors.append('{}{}'.format(sep.join([str(arg) for arg in args]), end))
 
     def set_up(self):
         """Do any necessary pre-game processing. (None)"""
