@@ -302,15 +302,19 @@ class Interface(other_cmd.OtherCmd):
                 self.human.tell(stats)
         # Handle specific game stats.
         elif arguments.lower() in self.games:
+            # Find the relevant results.
             game_class = self.games[arguments.lower()]
             relevant = [result for result in self.human.results if result[0] == game_class.name]
             if relevant:
+                # Show any relevant statistics
                 stats = Statistics(relevant, options = options)
                 self.human.tell(stats)
             else:
+                # Give a warning if there are no matching resutls.
                 self.human.error('You have never played {!r}.'.format(arguments))
         # Handle overall stats.
         elif arguments.lower() == 'all':
+            # Show the overall statistics.
             stats = Statistics(self.human.results, options, 'Overall Statistics')
             self.human.tell(stats)
             games = sorted(set([result[0] for result in self.human.results]))
@@ -319,7 +323,7 @@ class Interface(other_cmd.OtherCmd):
                 relevant = [result for result in self.human.results if result[0] == game]
                 stats = Statistics(relevant, options = options)
                 self.human.tell(stats)
-        # Show an error if there are no results.
+        # Show an error for invalid game names.
         else:
             self.human.error("I don't know that game.")
 
@@ -508,17 +512,13 @@ class Statistics(object):
     """
     Statistics on a sequence of t_games results. (object)
 
-    Attributes:losing
-    drawing_results: The results for the drawn games. (list of list)
-    drawing_stats: The statistics for the drawn game. (dict of str: number)
+    Attributes:
     game_wld: The per game win/loss/draw counts. (list of int)
-    losing_results: The results for the lost games. (list of list)
-    losing_stats: The statistics for the lost game. (dict of str: number)
     options: The options for filtering the results. (str)
-    results: The raw game results. (list of list)
+    results: The categoriezed results. (dict of str: list)
     player_wld: The per player win/loss/draw counts. (list of int)
-    winning_results: The results for the won games. (list of list)
-    winning_stats: The statistics for the won game. (dict of str: number)
+    stats: The categorized statistics. (dict of str: dict)
+    title: The title for the statistics. (str)
 
     Methods:
     bin_results: Categorize results based on win, loss, or draw. (None)
@@ -568,7 +568,7 @@ class Statistics(object):
         """Debugging text representation. (str)"""
         result_count = len(self.results['overall'])
         result_plural = utility.plural_word(result_count, 'result')
-        return '<Statistics object with {} for {} results>'.format(self.title, result_count, result_plural)
+        return '<Statistics object with {} for {} {}>'.format(self.title, result_count, result_plural)
 
     def __str__(self):
         """Human readable text representation. (str)"""
@@ -577,10 +577,10 @@ class Statistics(object):
             return 'N/A'
         # Set up the output
         lines = ['', self.title, '-' * len(self.title)]
-        # Display the win-loss-draw numbers.
+        # Add the win-loss-draw numbers.
         lines.append('Overall Win-Loss-Draw: {}-{}-{}'.format(*self.game_wld))
         lines.append('Player Win-Loss-Draw: {}-{}-{}'.format(*self.player_wld))
-        # Display the scores and turns.
+        # Add the scores and turns.
         stat_format = '{} {}: {} : {:.2f} / {} : {}'
         for prefix in ('scores', 'turns'):
             for result_type, word in (('overall', 'Overall'), ('win', 'Winning'), ('loss', 'Losing')):
@@ -589,7 +589,7 @@ class Statistics(object):
                     for stat in ('min', 'mean', 'median', 'max'):
                         stats.append(self.stats[result_type]['{}-{}'.format(prefix, stat)])
                     lines.append(stat_format.format(*stats))
-        # Display the streaks.
+        # Add the streaks.
         if self.stats['win']['longest-streak']:
             lines.append('Longest winning streak: {}'.format(self.stats['win']['longest-streak']))
         if self.stats['loss']['longest-streak']:
