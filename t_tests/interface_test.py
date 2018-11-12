@@ -452,7 +452,10 @@ class StatisticsBinResults(unittest.TestCase):
     """Tests of Statistics.bin_results. (unittest.TestCase)"""
 
     def setUp(self):
-        self.stats = interface.Statistics(TEST_RESULTS)
+        test_results = [results[:] for results in TEST_RESULTS]
+        for results in test_results:
+            results[-2] = 0
+        self.stats = interface.Statistics(test_results)
 
     def testGameRecord(self):
         """Test the game win/loss/draw calculation."""
@@ -469,7 +472,7 @@ class StatisticsBinResultsMatch(unittest.TestCase):
     def setUp(self):
         test_results = [results[:] for results in TEST_RESULTS]
         for results in test_results:
-            results[-2] = results[-2] | 256
+            results[-2] = 256
         self.stats = interface.Statistics(test_results)
 
     def testGameRecord(self):
