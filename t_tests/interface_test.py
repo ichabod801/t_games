@@ -6,13 +6,14 @@ Unit testing of t_games/interface.py
 Classes:
 InterfaceCommandTest: Tests of Interface command handling. (unittest.TestCase)
 InterfaceDoStatsTest: Tests of the Interface.do_stats. (unittest.TestCase)
-InterfaceFilterResultsTest: Tests of results filtering. (untittest.TestCase)
 InterfaceGameTest: Tests of the Interface's game handling. (unittest.TestCase)
 InterfaceMenuTest: Tests of the Interface's menu system. (unittest.TestCase)
 InterfacePlayGameTest: Tests playing a game through the interface. (TestCase)
 InterfaceShwoMenuTest: Tests of setting up the interface menu. (TestCase)
 InterfaceTextTest: Tests of the Interface's text handling. (unittest.TestCase)
-InterfaceWinLossDrawTest: Tests of figure_win_loss_draw. (unittest.TestCase)
+StatisticsBinResultsTest: Tests of Statistics.bin_results. (TestCase)
+StatisticsBinResultsMatchTest: Tests of bin_results with match play. (TestCase)
+StatisticsFilterResultsTest: Tests of Statistic's results filtering. (TestCase)
 ValveTest: Tests of the RandomValve class. (unittest.TestCase)
 """
 
@@ -233,52 +234,7 @@ class InterfaceDoStatsTest(unittest.TestCase):
     def testUnknownWarnimg(self):
         """Test error text for Interface.do_stats for an unknown game."""
         self.interface.do_stats('calvin ball')
-        self.assertIn('You have never played that game.\n', self.bot.errors)
-
-
-class InterfaceFilterResultsTest(unittest.TestCase):
-    """Tests of the Interface's results filtering. (untittest.TestCase)"""
-
-    def setUp(self):
-        self.bot = unitility.AutoBot()
-        self.interface = interface.Interface(self.bot)
-
-    def testFilterAll(self):
-        """Test filtering with nothing allowed."""
-        check = TEST_RESULTS[:]
-        for index in (11, 5, 4, 3, 0):
-            del check[index]
-        filtered = self.interface.filter_results(TEST_RESULTS, '')
-        self.assertEqual(check, filtered)
-
-    def testFilterAllowCheating(self):
-        """Test filtering with cheating allowed."""
-        check = TEST_RESULTS[:]
-        for index in (11, 5, 3):
-            del check[index]
-        filtered = self.interface.filter_results(TEST_RESULTS, 'cheat')
-        self.assertEqual(check, filtered)
-
-    def testFilterAllowGipf(self):
-        """Test filtering with gipf wins allowed."""
-        check = TEST_RESULTS[:]
-        for index in (11, 4, 3, 0):
-            del check[index]
-        filtered = self.interface.filter_results(TEST_RESULTS, 'gipf')
-        self.assertEqual(check, filtered)
-
-    def testFilterAllowXyzzy(self):
-        """Test filtering with xyzzy allowed."""
-        check = TEST_RESULTS[:]
-        for index in (5, 4, 0):
-            del check[index]
-        filtered = self.interface.filter_results(TEST_RESULTS, 'xyzzy')
-        self.assertEqual(check, filtered)
-
-    def testFilterNone(self):
-        """Test not filtering any results."""
-        filtered = self.interface.filter_results(TEST_RESULTS, 'cheat gipf xyzzy')
-        self.assertEqual(TEST_RESULTS, filtered)
+        self.assertIn("I don't know that game.\n", self.bot.errors)
 
 
 class InterfaceGameTest(unittest.TestCase):
@@ -486,51 +442,84 @@ class InterfaceTextTest(unittest.TestCase):
         """Test that the parent aliases are copied."""
         self.assertEqual('debug', self.interface.aliases['&'])
 
-    def testShowScores(self):
-        """Test taht showing scores."""
-        self.interface.show_scores([1, 2, 2, 3, 3, 3, 4, 4, 4, 10], 'Winning Scores', '')
-        check = 'Winning Scores: 1 - 3.6 / 3 - 10\n'
-        self.assertEqual([check], self.bot.info)
-
-    def testShowScoresNot(self):
-        """Test taht showing scores with no scores."""
-        self.interface.show_scores([], 'Losing Scores', '')
-        self.assertEqual([], self.bot.info)
-
     def testRepr(self):
         """Test the debugging text representation of the interface."""
         check = '<Interface <AutoBot {}>>'.format(self.bot.name)
         self.assertEqual(check, repr(self.interface))
 
 
-class InterfaceWinLossDrawTest(unittest.TestCase):
-    """Tests of Interface.figure_win_loss_draw. (unittest.TestCase)"""
+class StatisticsBinResults(unittest.TestCase):
+    """Tests of Statistics.bin_results. (unittest.TestCase)"""
 
     def setUp(self):
-        self.bot = unitility.AutoBot()
-        self.interface = interface.Interface(self.bot)
+        self.stats = interface.Statistics(TEST_RESULTS)
 
     def testGameRecord(self):
         """Test the game win/loss/draw calculation."""
-        self.assertEqual([5, 6, 1], self.interface.figure_win_loss_draw(TEST_RESULTS)[0])
-
-    def testGameRecordMatch(self):
-        """Test the game win/loss/draw calculation with match play."""
-        test_results = [results[:] for results in TEST_RESULTS]
-        for results in test_results:
-            results[-2] = results[-2] | 256
-        self.assertEqual([6, 4, 2], self.interface.figure_win_loss_draw(test_results)[0])
+        self.assertEqual([5, 6, 1], self.stats.game_wld)
 
     def testPlayerRecord(self):
         """Test the player win/loss/draw calculation."""
-        self.assertEqual([12, 10, 3], self.interface.figure_win_loss_draw(TEST_RESULTS)[1])
+        self.assertEqual([12, 10, 3], self.stats.player_wld)
 
-    def testPlayerRecordMatch(self):
-        """Test player game win/loss/draw calculation with match play."""
+
+class StatisticsBinResultsMatch(unittest.TestCase):
+    """Tests of Statistics.bin_results with match play. (unittest.TestCase)"""
+
+    def setUp(self):
         test_results = [results[:] for results in TEST_RESULTS]
         for results in test_results:
             results[-2] = results[-2] | 256
-        self.assertEqual([12, 10, 3], self.interface.figure_win_loss_draw(test_results)[1])
+        self.stats = interface.Statistics(test_results)
+
+    def testGameRecord(self):
+        """Test the game win/loss/draw calculation with match play."""
+        self.assertEqual([6, 4, 2], self.stats.game_wld)
+
+    def testPlayerRecord(self):
+        """Test the player win/loss/draw calculation with match play."""
+        self.assertEqual([12, 10, 3], self.stats.player_wld)
+
+
+class StatisticsFilterResultsTest(unittest.TestCase):
+    """Tests of the Statistics's results filtering. (untittest.TestCase)"""
+
+    def testFilterAll(self):
+        """Test filtering with nothing allowed."""
+        check = TEST_RESULTS[:]
+        for index in (11, 5, 4, 3, 0):
+            del check[index]
+        self.stats = interface.Statistics(TEST_RESULTS)
+        self.assertEqual(check, self.stats.results['overall'])
+
+    def testFilterAllowCheating(self):
+        """Test filtering with cheating allowed."""
+        check = TEST_RESULTS[:]
+        for index in (11, 5, 3):
+            del check[index]
+        self.stats = interface.Statistics(TEST_RESULTS, 'cheat')
+        self.assertEqual(check, self.stats.results['overall'])
+
+    def testFilterAllowGipf(self):
+        """Test filtering with gipf wins allowed."""
+        check = TEST_RESULTS[:]
+        for index in (11, 4, 3, 0):
+            del check[index]
+        self.stats = interface.Statistics(TEST_RESULTS, 'gipf')
+        self.assertEqual(check, self.stats.results['overall'])
+
+    def testFilterAllowXyzzy(self):
+        """Test filtering with xyzzy allowed."""
+        check = TEST_RESULTS[:]
+        for index in (5, 4, 0):
+            del check[index]
+        self.stats = interface.Statistics(TEST_RESULTS, 'xyzzy')
+        self.assertEqual(check, self.stats.results['overall'])
+
+    def testFilterNone(self):
+        """Test not filtering any results."""
+        self.stats = interface.Statistics(TEST_RESULTS, 'cheat gipf xyzzy')
+        self.assertEqual(check, self.stats.results['overall'])
 
 
 class ValveTest(unittest.TestCase):

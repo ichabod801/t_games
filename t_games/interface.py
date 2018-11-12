@@ -532,7 +532,7 @@ class Statistics(object):
     __str__
     """
 
-    def __init__(self, results = [], options = [], title = ''):
+    def __init__(self, results = [], options = '', title = ''):
         """
         Set up the statistics attributes. (None)
 
