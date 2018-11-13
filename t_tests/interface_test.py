@@ -170,66 +170,60 @@ class InterfaceDoStatsTest(unittest.TestCase):
         self.bot.results = TEST_RESULTS
         self.interface = interface.Interface(self.bot)
         self.interface.focus = TEST_CATEGORIES
-        self.interface.show_stats = unitility.ProtoObject()
 
     def testAliasStatsAllGames(self):
         """Test stat groups shown for Interface.do_stats for a specific game alias."""
         self.interface.do_stats('1')
-        self.assertEqual(1, len(self.interface.show_stats.arg_list))
+        self.assertEqual(1, len(self.bot.info))
 
-    def testAiliasStatsTitle(self):
+    def testAliasStatsTitle(self):
         """Test call arguments for Interface.do_stats for a specific game alias."""
         self.interface.do_stats('1')
-        self.assertIn((TEST_RESULTS[-3:],), self.interface.show_stats.arg_list)
+        self.assertIn('\nUnit Statistics\n', self.bot.info[0])
 
     def testBaseStatsAllGames(self):
         """Test stat groups shown for Interface.do_stats with no mods."""
         self.interface.do_stats('')
-        self.assertEqual(5, len(self.interface.show_stats.arg_list))
+        self.assertEqual(5, len(self.bot.info))
 
     def testBaseStatsTitle(self):
         """Test call arguments for Interface.do_stats with no mods."""
         self.interface.do_stats('')
-        self.assertIn((TEST_RESULTS, 'Category Statistics', ''), self.interface.show_stats.arg_list)
+        self.assertIn('\nCategory Statistics\n', self.bot.info[0])
 
     def testCategoryAllStatsAllGames(self):
         """Test stat groups shown for Interface.do_stats in a category with 'all'."""
         self.interface.focus = TEST_CATEGORIES['sub-categories']['Unit Games']
         self.interface.do_stats('all')
-        self.assertEqual(5, len(self.interface.show_stats.arg_list))
+        self.assertEqual(5, len(self.bot.info))
 
     def testCategoryAllStatsTitle(self):
         """Test call arguments for Interface.do_stats in a category with 'all'."""
         self.interface.focus = TEST_CATEGORIES['sub-categories']['Unit Games']
         self.interface.do_stats('all')
-        self.assertIn((TEST_RESULTS, 'Overall Statistics', ''), self.interface.show_stats.arg_list)
+        self.assertIn('Overall Statistics\n', self.bot.info[0])
 
     def testCategoryStatsAllGames(self):
         """Test stat groups shown for Interface.do_stats in a category."""
         self.interface.focus = TEST_CATEGORIES['sub-categories']['Unit Games']
         self.interface.do_stats('')
-        self.assertEqual(3, len(self.interface.show_stats.arg_list))
+        self.assertEqual(3, len(self.bot.info))
 
     def testCategoryStatsTitle(self):
         """Test call arguments for Interface.do_stats in a category."""
         self.interface.focus = TEST_CATEGORIES['sub-categories']['Unit Games']
         self.interface.do_stats('')
-        self.assertIn((TEST_RESULTS[-6:], 'Category Statistics', ''), self.interface.show_stats.arg_list)
+        self.assertIn('Category Statistics\n', self.bot.info[0])
 
     def testGameStatsAllGames(self):
         """Test stat groups shown for Interface.do_stats for a specific game."""
         self.interface.do_stats('unit')
-        self.assertEqual(1, len(self.interface.show_stats.arg_list))
+        self.assertEqual(1, len(self.bot.info))
 
     def testGameStatsTitle(self):
         """Test call arguments for Interface.do_stats for a specific game."""
         self.interface.do_stats('unit')
-        self.assertIn((TEST_RESULTS[-3:],), self.interface.show_stats.arg_list)
-
-    def testUnknownStatsAllGames(self):
-        """Test stat groups shown for Interface.do_stats for an unknown game."""
-        self.interface.do_stats('calvin ball')
-        self.assertEqual(0, len(self.interface.show_stats.arg_list))
+        self.assertIn('Unit Statistics\n', self.bot.info[0])
 
     def testUnknownWarnimg(self):
         """Test error text for Interface.do_stats for an unknown game."""
