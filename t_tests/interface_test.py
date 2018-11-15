@@ -61,7 +61,7 @@ class InterfaceCommandTest(unittest.TestCase):
         """Test default's handling of a game name."""
         self.bot.replies = ['n', '!', 'n']
         self.interface.default('Sorter')
-        self.assertEqual(self.bot.info[-1], 'You are currently on a 1 game losing streak.\n')
+        self.assertEqual(self.bot.info[-1].split('\n')[-2], 'You are currently on a 1 game losing streak.')
 
     def testGamesParent(self):
         """Test do_games with a sub-category."""
