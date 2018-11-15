@@ -13,7 +13,9 @@ InterfaceShwoMenuTest: Tests of setting up the interface menu. (TestCase)
 InterfaceTextTest: Tests of the Interface's text handling. (unittest.TestCase)
 StatisticsBinResultsTest: Tests of Statistics.bin_results. (TestCase)
 StatisticsBinResultsMatchTest: Tests of bin_results with match play. (TestCase)
+StatisticsDunderTest: Tests of other dunder methods for Statistics. (TestCase)
 StatisticsFilterResultsTest: Tests of Statistic's results filtering. (TestCase)
+StatisticsStringTest: Tests of the output for a Statistics object. (TestCase)
 ValveTest: Tests of the RandomValve class. (unittest.TestCase)
 """
 
@@ -542,6 +544,31 @@ class StatisticsFilterResultsTest(unittest.TestCase):
         check = TEST_RESULTS[:]
         self.stats = interface.Statistics(TEST_RESULTS, 'cheat gipf xyzzy')
         self.assertEqual(check, self.stats.results['overall'])
+
+
+class StatisticsStringTest(unittest.TestCase):
+    """Tests of the full output for a Statistics object."""
+
+    def setUp(self):
+        self.stats = interface.Statistics(TEST_RESULTS, title = 'Test Statistics')
+        self.text = str(self.stats)
+
+    def testEmpty(self):
+        """Test the output for no statistics."""
+        stats = interface.Statistics([])
+        self.assertEqual('N/A', str(stats))
+
+    def testGameRecord(self):
+        """Test the game win/loss/draw output."""
+        self.assertIn('Overall Win-Loss-Draw: 2-4-1', self.text)
+
+    def testPlayerRecord(self):
+        """Test the player win/loss/draw calculation."""
+        self.assertIn('Player Win-Loss-Draw: 7-7-1', self.text)
+
+    def testTitle(self):
+        """Test outputting the title of the statistics."""
+        self.assertIn('Test Statistics\n---------------', self.text)
 
 
 class ValveTest(unittest.TestCase):

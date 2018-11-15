@@ -547,7 +547,7 @@ class Statistics(object):
             self.title = title
         else:
             self.title = '{} Statistics'.format(results[0][0])
-        # Set the default options.
+        # Set the default attributes.
         self.results, self.stats = {}, {}
         for result_type in ('win', 'loss', 'draw', 'overall'):
             self.results[result_type] = []
