@@ -564,6 +564,10 @@ class Statistics(object):
         """Boolean value of the stats, or are there results? (bool)"""
         return bool(self.results['overall'])
 
+    def __nonzero__(self):
+        """Boolean value for version 2.7."""
+        return self.__bool__()
+
     def __repr__(self):
         """Debugging text representation. (str)"""
         result_count = len(self.results['overall'])
