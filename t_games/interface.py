@@ -543,7 +543,7 @@ class Statistics(object):
         """
         # Set provided attributes.
         self.options = options.lower().split()
-        if title:
+        if title or not results:
             self.title = title
         else:
             self.title = '{} Statistics'.format(results[0][0])
@@ -567,7 +567,7 @@ class Statistics(object):
     def __repr__(self):
         """Debugging text representation. (str)"""
         result_count = len(self.results['overall'])
-        result_plural = utility.plural_word(result_count, 'result')
+        result_plural = utility.plural(result_count, 'result')
         return '<Statistics object with {} for {} {}>'.format(self.title, result_count, result_plural)
 
     def __str__(self):

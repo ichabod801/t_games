@@ -442,7 +442,7 @@ class InterfaceTextTest(unittest.TestCase):
         self.assertEqual(check, repr(self.interface))
 
 
-class StatisticsBinResults(unittest.TestCase):
+class StatisticsBinResultsTest(unittest.TestCase):
     """Tests of Statistics.bin_results. (unittest.TestCase)"""
 
     def setUp(self):
@@ -460,7 +460,7 @@ class StatisticsBinResults(unittest.TestCase):
         self.assertEqual([12, 10, 3], self.stats.player_wld)
 
 
-class StatisticsBinResultsMatch(unittest.TestCase):
+class StatisticsBinResultsMatchTest(unittest.TestCase):
     """Tests of Statistics.bin_results with match play. (unittest.TestCase)"""
 
     def setUp(self):
@@ -476,6 +476,30 @@ class StatisticsBinResultsMatch(unittest.TestCase):
     def testPlayerRecord(self):
         """Test the player win/loss/draw calculation with match play."""
         self.assertEqual([12, 10, 3], self.stats.player_wld)
+
+
+class StatisticsDunderTest(unittest.TestCase):
+    """Tests of the other dunder methods for the Statistics class. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.stats = interface.Statistics(TEST_RESULTS, title = 'Test Statistics')
+
+    def testBool(self):
+        """Test boolean conversion of statistics."""
+        self.assertTrue(bool(self.stats))
+
+    def testBoolNot(self):
+        """Test boolean conversion of empty statistics."""
+        self.assertFalse(bool(interface.Statistics([])))
+
+    def testRepr(self):
+        """Test the debugging text representation."""
+        self.assertEqual('<Statistics object with Test Statistics for 7 results>', repr(self.stats))
+
+    def testReprOne(self):
+        """Test the debugging text representation with one result."""
+        self.stats.results['overall'] = self.stats.results['overall'][:1]
+        self.assertEqual('<Statistics object with Test Statistics for 1 result>', repr(self.stats))
 
 
 class StatisticsFilterResultsTest(unittest.TestCase):
