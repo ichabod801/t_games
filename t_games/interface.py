@@ -14,6 +14,7 @@ RULES: Some basic guidelines for life. (str)
 Classes:
 Interface: A menu interface for playing games. (OtherCmd)
 RandomValve: A random variable that gets more likely to be true. (object)
+Statistics: Statistics on a sequence of t_games results. (object)
 
 Functions:
 excel_column: Convert a number into a Excel style column header. (str)
@@ -105,14 +106,10 @@ class Interface(other_cmd.OtherCmd):
     do_random: Play a random game. (bool)
     do_rules: Show the rules for the specified game. (bool)
     do_stats: Show game statistics. (bool)
-    figure_win_loss_draw: Determine win/loss/draw numbers and streaks. (tuple)
-    filter_results: Filter game results based on user's input. (list of lists)
     load_games: Load all of the games defined locally. (None)
     menu: Run the game selection menu. (None)
     play_game: Play a selected game. (None)
     show_menu: Display the menu options to the user. (dict)
-    show_scores: Show the base statistics for a set of scores or turns. (None)
-    show_stats: Show the statistics for a set of game results. (None)
 
     Overridden Methods:
     __init__
@@ -141,9 +138,13 @@ class Interface(other_cmd.OtherCmd):
             if hasattr(cls, 'aliases'):
                 self.aliases.update(cls.aliases)
 
+    def __repr__(self):
+        """Generate a debugging text representation. (str)"""
+        return '<Interface {!r}>'.format(self.human)
+
     def category_games(self):
         """Get the games in the current category. (list of game.Game)"""
-        # Breadth first search of the game category tree.
+        # Depth first search of the game category tree.
         search = [self.focus]
         games = []
         while search:
@@ -186,14 +187,8 @@ class Interface(other_cmd.OtherCmd):
         The games listed are aware of your location in the menu, so only games in the
         current category are listed.
         """
-        # Get the games in the current context (breadth first search).
-        games = self.focus['games'][:]
-        search = list(self.focus['sub-categories'].values())
-        while search:
-            sub_category = search.pop()
-            games.extend(sub_category['games'])
-            search.extend(sub_category['sub-categories'].values())
-        # Sort the games alphabetically.
+        # Get the games, sorted alphabetically.
+        games = self.category_games()
         games.sort(key = lambda game: game.name)
         # Print the game list with aliases.
         self.human.tell()
@@ -298,92 +293,39 @@ class Interface(other_cmd.OtherCmd):
             names = [game.name for game in self.category_games()]
             relevant = [result for result in self.human.results if result[0] in names]
             # Show the category and individual game stats.
-            self.show_stats(relevant, 'Category Statistics', options)
+            stats = Statistics(relevant, options, 'Category Statistics')
+            self.human.tell(stats)
             games = sorted(set([result[0] for result in relevant]))
             for game in games:
                 relevant = [result for result in self.human.results if result[0] == game]
-                self.show_stats(relevant, options = options)
+                stats = Statistics(relevant, options = options)
+                self.human.tell(stats)
         # Handle specific game stats.
         elif arguments.lower() in self.games:
+            # Find the relevant results.
             game_class = self.games[arguments.lower()]
             relevant = [result for result in self.human.results if result[0] == game_class.name]
-            self.show_stats(relevant, options = options)
+            if relevant:
+                # Show any relevant statistics
+                stats = Statistics(relevant, options = options)
+                self.human.tell(stats)
+            else:
+                # Give a warning if there are no matching resutls.
+                self.human.error('You have never played {!r}.'.format(arguments))
         # Handle overall stats.
         elif arguments.lower() == 'all':
-            self.show_stats(self.human.results, 'Overall Statistics', options)
+            # Show the overall statistics.
+            stats = Statistics(self.human.results, options, 'Overall Statistics')
+            self.human.tell(stats)
             games = sorted(set([result[0] for result in self.human.results]))
             # Show the stats for the individual games.
             for game in games:
                 relevant = [result for result in self.human.results if result[0] == game]
-                self.show_stats(relevant, options = options)
-        # Show an error if there are no results.
+                stats = Statistics(relevant, options = options)
+                self.human.tell(stats)
+        # Show an error for invalid game names.
         else:
-            self.human.tell('You have never played that game.')
-
-    def figure_win_loss_draw(self, results):
-        """
-        Determine win/loss/draw numbers and streaks for statistics. (tuple)
-
-        The return value is the game record, the per player record, the current
-        streak, the type of the current streak, and the longest streaks for each
-        type.
-
-        Parameters:
-        results: The game results to calculate from. (list of list)
-        """
-        # Prep for loop.
-        wins = []
-        game_wld = [0, 0, 0]
-        player_wld = [0, 0, 0]
-        # Loop through results storing totals and streak data.
-        for name, win, loss, draw, score, turns, flags, settings in results:
-            if flags & 256:
-                # Handle match play.
-                if win > loss:
-                    game_wld[0] += 1
-                    wins.append(1)
-                elif loss > win:
-                    game_wld[1] += 1
-                    wins.append(-1)
-                else:
-                    game_wld[2] += 1
-                    wins.append(0)
-            else:
-                # Handle single games.
-                if not loss and not win:
-                    game_wld[2] += 1
-                    wins.append(0)
-                elif not loss:
-                    game_wld[0] += 1
-                    wins.append(1)
-                else:
-                    game_wld[1] += 1
-                    wins.append(-1)
-            # Update the per-player stats.
-            player_wld[0] += win
-            player_wld[1] += loss
-            player_wld[2] += draw
-        # Get streaks.
-        current_streak, streak_type, longest_streaks = utility.streaks(wins)
-        return game_wld, player_wld, current_streak, streak_type, longest_streaks
-
-    def filter_results(self, results, options):
-        """
-        Filter game results based on user requests. (list of lists)
-
-        Paramters:
-        results: The game results to filter. (list of lists)
-        options: The user provided options, including any filters. (str)
-        """
-        # Do the predefined filters.
-        if 'cheat' not in options:
-            results = [result for result in results if not result[6] & 2]
-        if 'gipf' not in options:
-            results = [result for result in results if not result[6] & 8]
-        if 'xyzzy' not in options:
-            results = [result for result in results if not result[6] & 128]
-        # Return the filtered data.
-        return results
+            self.human.error("I don't know that game.")
 
     def menu(self):
         """Run the game selection menu. (None)"""
@@ -456,7 +398,8 @@ class Interface(other_cmd.OtherCmd):
             stats_options = ' '.join(stats_options)
             self.do_stats('{} / {}'.format(self.game.name, stats_options))
             if stats_options:
-                print('\nStatistics were calculated with the folloing options: {}.'.format(stats_options))
+                message = '\nStatistics were calculated with the folloing options: {}.'
+                self.human.tell(message.format(stats_options))
             # See if they want to play again.
             again = self.human.ask('\nWould you like to play again? ').strip().lower()
             if again in ('!', '!!'):
@@ -498,75 +441,6 @@ class Interface(other_cmd.OtherCmd):
         # Return the meaning of the menu letters.
         menu_map = dict(pairs)
         return dict(pairs)
-
-    def show_scores(self, scores, score_type, options):
-        """
-        Show the base statistics for a set of scores or turns. (None)
-
-        Parameters:
-        scores: A list of scores or turns. (list of int)
-        score_type: The type of scores or turns being shown. (str)
-        options: User specified filtering and statistic options. (str)
-        """
-        # Show nothing if no matching scores.
-        if scores:
-            # Show the base statistics.
-            score_stats = [min(scores), utility.mean(scores), utility.median(scores), max(scores)]
-            self.human.tell('{}: {} - {:.1f} / {} - {}'.format(score_type, *score_stats))
-
-    def show_stats(self, results, title = '', options = ''):
-        """
-        Show the statistics for a set of game results. (None)
-
-        If the title is blank, it is taken from the game name in the first result.
-
-        Parameters:
-        results: The game results to generate stats for. (list of list)
-        title: The title to print for the statistics. (str)
-        options: User specified filtering and statistic options. (str)
-        """
-        # Check for empty results.
-        if not results:
-            self.human.tell('\nYou have never played that game.')
-            return None
-        # Process the parameters.
-        if not title:
-            title = '\n{} Statistics'.format(results[0][0])
-        elif not title.startswith('\n'):
-            title = '\n{}'.format(title)
-        # Process the filters.
-        results = self.filter_results(results, options)
-        # Check for no valid results.
-        if not results:
-            self.human.tell('\nNo game results to show.')
-            return None
-        # Calculate total win-loss-draw and get data for streaks.
-        stats = self.figure_win_loss_draw(results)
-        game_wld, player_wld, current_streak, streak_type, longest_streaks = stats
-        # Display the statistics to the user.
-        # Display the title.
-        self.human.tell(title)
-        self.human.tell('-' * len(title))
-        # Display the win-loss-draw numbers.
-        self.human.tell('Overall Win-Loss-Draw: {}-{}-{}'.format(*game_wld))
-        self.human.tell('Player Win-Loss-Draw: {}-{}-{}'.format(*player_wld))
-        # Display the scores.
-        self.show_scores([rez[4] for rez in results], 'Overall Scores', options)
-        self.show_scores([rez[4] for rez in results if rez[1] and not rez[2]], 'Winning Scores', options)
-        self.show_scores([rez[4] for rez in results if rez[2]], 'Losing Scores', options)
-        # Display the turns.
-        self.show_scores([rez[5] for rez in results], 'Overall Turns', options)
-        self.show_scores([rez[5] for rez in results if rez[1] and not rez[2]], 'Winning Turns', options)
-        self.show_scores([rez[5] for rez in results if rez[2]], 'Losing Turns', options)
-        # Display the streaks.
-        if longest_streaks[1]:
-            self.human.tell('Longest winning streak: {}'.format(longest_streaks[1]))
-        if longest_streaks[-1]:
-            self.human.tell('Longest losing streak: {}'.format(longest_streaks[-1]))
-        if longest_streaks[0]:
-            self.human.tell('Longest drawing streak: {}'.format(longest_streaks[0]))
-        streak_name = ('drawing', 'winning', 'losing')[streak_type]
-        self.human.tell('You are currently on a {} game {} streak.'.format(current_streak, streak_name))
 
 
 class RandomValve(object):
@@ -632,6 +506,179 @@ class RandomValve(object):
             # Increase probability.
             self.q += self.q * check
             return False
+
+
+class Statistics(object):
+    """
+    Statistics on a sequence of t_games results. (object)
+
+    Attributes:
+    game_wld: The per game win/loss/draw counts. (list of int)
+    options: The options for filtering the results. (str)
+    results: The categoriezed results. (dict of str: list)
+    player_wld: The per player win/loss/draw counts. (list of int)
+    stats: The categorized statistics. (dict of str: dict)
+    title: The title for the statistics. (str)
+
+    Methods:
+    bin_results: Categorize results based on win, loss, or draw. (None)
+    filter_results: Filter game results based on user requests. (list of lists)
+    sequence_stats: Calculate and store statistics for some numbers. (None)
+
+    Overridden Methods:
+    __init__
+    __bool__
+    __repr__
+    __str__
+    """
+
+    def __init__(self, results = [], options = '', title = ''):
+        """
+        Set up the statistics attributes. (None)
+
+        Parameters:
+        results: The raw game results. (list of list)
+        options: The options for filtering the results. (str)
+        title: The title for the statistics to show. (str)
+        """
+        # Set provided attributes.
+        self.options = options.lower().split()
+        if title or not results:
+            self.title = title
+        else:
+            self.title = '{} Statistics'.format(results[0][0])
+        # Set the default attributes.
+        self.results, self.stats = {}, {}
+        for result_type in ('win', 'loss', 'draw', 'overall'):
+            self.results[result_type] = []
+            self.stats[result_type] = {}
+        self.results['overall'] = self.filter_results(results, self.options)
+        self.game_wld, self.player_wld = [0, 0, 0], [0, 0, 0]
+        # Calculate statistics.
+        self.bin_results()
+        for result_type in ('win', 'loss', 'draw', 'overall'):
+            self.sequence_stats(result_type, 'scores', [result[4] for result in self.results[result_type]])
+            self.sequence_stats(result_type, 'turns', [result[5] for result in self.results[result_type]])
+
+    def __bool__(self):
+        """Boolean value of the stats, or are there results? (bool)"""
+        return bool(self.results['overall'])
+
+    def __nonzero__(self):
+        """Boolean value for version 2.7."""
+        return self.__bool__()
+
+    def __repr__(self):
+        """Debugging text representation. (str)"""
+        result_count = len(self.results['overall'])
+        result_plural = utility.plural(result_count, 'result')
+        return '<Statistics object with {} for {} {}>'.format(self.title, result_count, result_plural)
+
+    def __str__(self):
+        """Human readable text representation. (str)"""
+        # Check for empty results.
+        if not self.results['overall']:
+            return 'N/A'
+        # Set up the output
+        lines = ['', self.title, '-' * len(self.title)]
+        # Add the win-loss-draw numbers.
+        lines.append('Overall Win-Loss-Draw: {}-{}-{}'.format(*self.game_wld))
+        lines.append('Player Win-Loss-Draw: {}-{}-{}'.format(*self.player_wld))
+        # Add the scores and turns.
+        stat_format = '{} {}: {} : {:.2f} / {} : {}'
+        for prefix in ('scores', 'turns'):
+            for result_type, word in (('overall', 'Overall'), ('win', 'Winning'), ('loss', 'Losing')):
+                if self.results[result_type]:
+                    stats = [word, prefix.capitalize()]
+                    for stat in ('min', 'mean', 'median', 'max'):
+                        stats.append(self.stats[result_type]['{}-{}'.format(prefix, stat)])
+                    lines.append(stat_format.format(*stats))
+        # Add the streaks.
+        if self.stats['win']['longest-streak']:
+            lines.append('Longest winning streak: {}'.format(self.stats['win']['longest-streak']))
+        if self.stats['loss']['longest-streak']:
+            lines.append('Longest losing streak: {}'.format(self.stats['loss']['longest-streak']))
+        if self.stats['draw']['longest-streak']:
+            lines.append('Longest drawing streak: {}'.format(self.stats['draw']['longest-streak']))
+        streak_name = ('drawing', 'winning', 'losing')[self.stats['overall']['streak-type']]
+        current_streak = self.stats['overall']['current-streak']
+        lines.append('You are currently on a {} game {} streak.'.format(current_streak, streak_name))
+        return '\n'.join(lines)
+
+    def bin_results(self):
+        """Categorize results based on win, loss, or draw. (None)"""
+        # Loop through results storing totals and streak data.
+        wins = []
+        for result in self.results['overall']:
+            win, loss, draw = result[1:4]
+            if result[-2] & 256:
+                # Handle match play.
+                if win > loss:
+                    self.results['win'].append(result)
+                    wins.append(1)
+                elif loss > win:
+                    self.results['loss'].append(result)
+                    wins.append(-1)
+                else:
+                    self.results['draw'].append(result)
+                    wins.append(0)
+            else:
+                # Handle single games.
+                if not loss and not win:
+                    self.results['draw'].append(result)
+                    wins.append(0)
+                elif not loss:
+                    self.results['win'].append(result)
+                    wins.append(1)
+                else:
+                    self.results['loss'].append(result)
+                    wins.append(-1)
+            # Update the per-player stats.
+            self.player_wld[0] += win
+            self.player_wld[1] += loss
+            self.player_wld[2] += draw
+        # Update the per-game stats.
+        self.game_wld = [len(self.results[result_type]) for result_type in ('win', 'loss', 'draw')]
+        # Get streaks.
+        current_streak, streak_type, longest_streaks = utility.streaks(wins)
+        self.stats['overall']['current-streak'] = current_streak
+        self.stats['overall']['streak-type'] = streak_type
+        self.stats['win']['longest-streak'] = longest_streaks[1]
+        self.stats['loss']['longest-streak'] = longest_streaks[-1]
+        self.stats['draw']['longest-streak'] = longest_streaks[0]
+
+    def filter_results(self, results, options):
+        """
+        Filter game results based on user requests. (list of lists)
+
+        Paramters:
+        results: The game results to filter. (list of lists)
+        options: The user provided options, including any filters. (str)
+        """
+        # Do the predefined filters.
+        if 'cheat' not in options:
+            results = [result for result in results if not result[6] & 2]
+        if 'gipf' not in options:
+            results = [result for result in results if not result[6] & 8]
+        if 'xyzzy' not in options:
+            results = [result for result in results if not result[6] & 128]
+        # Return the filtered data.
+        return results
+
+    def sequence_stats(self, result_type, prefix, data):
+        """
+        Calculate and store statistics for some numbers. (None)
+
+        Paramters:
+        result_type: Win, loss, or draw. (str)
+        prefix: What the data represents. (str)
+        data: The numbers to get statistics for. (list of number)
+        """
+        if self.results[result_type]:
+            self.stats[result_type]['{}-mean'.format(prefix)] = utility.mean(data)
+            self.stats[result_type]['{}-median'.format(prefix)] = utility.median(data)
+            self.stats[result_type]['{}-min'.format(prefix)] = min(data)
+            self.stats[result_type]['{}-max'.format(prefix)] = max(data)
 
 
 def excel_column(n):

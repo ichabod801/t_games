@@ -14,7 +14,6 @@ GameTournamentTest: Tests of tournaments. (unittest.TestCase)
 GameXyzzyTest: Tests of the xyzzy command. (unittest.TestCase)
 GameXyzzyHelpText: Tests of Game.help_xyzzy. (unittest.TestCase)
 LoadGamesTest: Tests of the load_games function. (unittest.TestCase)
-TestGame: A Game sub-class for testing purposes. (game.Game)
 
 Functions:
 rpn_tests: Make a test class for the Game.do_rpn calculations. (unittest.TestCase)
@@ -118,7 +117,7 @@ class GameGipfCheckTest(unittest.TestCase):
 
     def setUp(self):
         # Make a fake interface.
-        game_list = {'dice': TestGame, 'cards': TestGame}
+        game_list = {'dice': unitility.TestGame, 'cards': unitility.TestGame}
         interface = unitility.ProtoObject(games = game_list)
         # Set up the fake bot.
         self.bot = unitility.AutoBot()
@@ -238,7 +237,7 @@ class GamePlayTest(unittest.TestCase):
 
     def setUp(self):
         self.bot = unitility.AutoBot(['win'])
-        self.game = TestGame(self.bot, '')
+        self.game = unitility.TestGame(self.bot, '')
 
     def testCleanUpBot(self):
         """Test that the bot is set up."""
@@ -272,14 +271,14 @@ class GamePlayTest(unittest.TestCase):
         other_bot = unitility.AutoBot(['pass', 'win'])
         self.game.players = [other_bot, self.bot]
         self.game.play()
-        self.assertEqual(1, self.game.player_index)
+        self.assertEqual(0, self.game.player_index)
 
     def testPlayerLoopEnd(self):
         """Test the player loop getting to the end."""
         other_bot = unitility.AutoBot(['pass'])
         self.game.players = [other_bot, self.bot]
         self.game.play()
-        self.assertEqual(0, self.game.player_index)
+        self.assertEqual(1, self.game.player_index)
 
     def testScores(self):
         """Test that the scores are set up."""
@@ -466,7 +465,7 @@ class GameXyzzyTest(unittest.TestCase):
 
     def setUp(self):
         # Set up the interface, with a programmable valve.
-        game_list = {'unit': TestGame}
+        game_list = {'unit': unitility.TestGame}
         valve = unitility.ProtoObject(blow = lambda s: self.trigger)
         interface = unitility.ProtoObject(games = game_list, valve = valve)
         # Set up the game.
@@ -621,86 +620,6 @@ class LoadGamesTest(unittest.TestCase):
     def testEasy(self):
         """Test loading an easy to get to game."""
         self.assertIn('double cranko', self.games)
-
-
-class TestGame(game.Game):
-    """
-    A Game sub-class for testing purposes. (game.Game)
-
-    Attributes:
-    all_set: A flag for the set_up method being called. (bool)
-    all_done: A flag for the clean_up method being called. (bool)
-    move: The move the player made.
-
-    Overridden Methods
-    game_over
-    player_action
-    """
-
-    aka = '1'
-    name = 'Unit'
-    rules = '\nIf you enter win, you win; if you enter lose, you lose.\n'
-
-    def __init__(self, human, raw_options, interface = None):
-        """
-        Set up the game. (None)
-
-        human: The primary player of the game. (player.Player)
-        raw_options: The user's option choices as provided by the interface. (str)
-        interface: The interface that started the game playing. (interface.Interface)
-        """
-        super(TestGame, self).__init__(human, raw_options, interface)
-        if hasattr(self.interface, 'flags'):
-            self.flags = self.interface.flags
-        self.all_set, self.all_done = False, False
-
-    def game_over(self):
-        """Check for the end of the game. (bool)"""
-        # Check for match play.
-        if self.flags & 256:
-            self.win_loss_draw = [2, 2, 1]
-        # Resolve game ending moves.
-        if self.move.startswith('win'):
-            self.win_loss_draw[0] += 1
-        elif self.move.startswith('lose'):
-            self.win_loss_draw[1] += 1
-        elif self.move.startswith('draw'):
-            self.win_loss_draw[1] += 1
-        else:
-            # Keep playing.
-            return False
-        # Add additional wins, losses, and draws.
-        for result_index, result_char in enumerate('+-='):
-            self.win_loss_draw[result_index] += self.move.count(result_char)
-        # Set the score when the game ends.
-        self.scores[self.human.name] = self.turns
-        return True
-
-    def clean_up(self):
-        """Do any necessary post-game processing. (None)"""
-        self.all_done = True
-
-    def player_action(self, player):
-        """
-        Handle a player's turn or other player actions. (bool)
-
-        Parameters:
-        player: The player whose turn it is. (Player)
-        """
-        self.move = player.ask('What is your move, {}? '.format(player.name)).lower()
-        # Check for continuation.
-        if self.move == 'continue':
-            return True
-        # Check for quitting early.
-        elif self.move.startswith('quit'):
-            if '+' in self.move:
-                self.force_end = 'win'
-            else:
-                self.force_end = 'loss'
-
-    def set_up(self):
-        """Do any necessary pre-game processing. (None)"""
-        self.all_set = True
 
 
 if __name__ == '__main__':

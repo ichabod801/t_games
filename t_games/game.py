@@ -558,7 +558,7 @@ class Flip(Game):
             self.scores[player.name] += 1
         # Update the player.
         player.tell('You now have {} heads.'.format(self.scores[player.name]))
-        print()
+        player.tell()
 
 
 class FlipBot(Player):
@@ -583,7 +583,7 @@ class FlipBot(Player):
         prompt: The question being asked of the player. (str)
         """
         flips = random.randint(1, 3)
-        print('{} chooses to flip {}.'.format(self.name, self.count_words[flips]))
+        self.game.human.tell('{} chooses to flip {}.'.format(self.name, self.count_words[flips]))
         return str(flips)
 
     def tell(self, *args, **kwargs):
@@ -594,7 +594,7 @@ class FlipBot(Player):
         The parameters are as per the built-in print function.
         """
         if args:
-            print(args[0].replace('You', self.name).replace('have', 'has'))
+            self.game.human.tell(args[0].replace('You', self.name).replace('have', 'has'))
 
 
 class Sorter(Game):
