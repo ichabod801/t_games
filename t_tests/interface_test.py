@@ -566,9 +566,53 @@ class StatisticsStringTest(unittest.TestCase):
         """Test the player win/loss/draw calculation."""
         self.assertIn('Player Win-Loss-Draw: 7-7-1', self.text)
 
+    def testScoresLosing(self):
+        """Test the losing scores output."""
+        self.assertIn('Losing Scores: 0 : 3.00 / 4 : 5', self.text)
+
+    def testScoresOverall(self):
+        """Test the overall scores output."""
+        self.assertIn('Overall Scores: 0 : 2.29 / 3 : 5', self.text)
+
+    def testScoresWinning(self):
+        """Test the winning scores output."""
+        self.assertIn('Winning Scores: 0 : 2.00 / 4 : 4', self.text)
+
+    def testStreakCurrent(self):
+        """Test the current streak output."""
+        self.assertIn('You are currently on a 2 game losing streak.', self.text)
+
+    def testStreakDrawing(self):
+        """Test the drawing streak output."""
+        self.assertIn('Longest drawing streak: 1', self.text)
+
+    def testStreakLosing(self):
+        """Test the losing streak output."""
+        self.assertIn('Longest losing streak: 2', self.text)
+
+    def testStreakDrawing(self):
+        """Test the drawing streak output."""
+        self.assertIn('Longest drawing streak: 1', self.text)
+
+    def testStreakWinning(self):
+        """Test the winning streak output."""
+        self.assertIn('Longest winning streak: 2', self.text)
+
     def testTitle(self):
         """Test outputting the title of the statistics."""
         self.assertIn('Test Statistics\n---------------', self.text)
+
+    def testTurnsLosing(self):
+        """Test the losing turns output."""
+        self.assertIn('Losing Turns: 2 : 4.75 / 5 : 8', self.text)
+
+    def testTurnsOverall(self):
+        """Test the overall turns output."""
+        self.assertIn('Overall Turns: 1 : 6.71 / 5 : 18', self.text)
+
+    def testTurnsWinning(self):
+        """Test the winning turns output."""
+        self.assertIn('Winning Turns: 1 : 5.00 / 9 : 9', self.text)
 
 
 class ValveTest(unittest.TestCase):
