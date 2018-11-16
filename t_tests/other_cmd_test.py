@@ -5,6 +5,7 @@ Unit testing of t_games/other_cmd.py.
 
 Classes:
 OtherCmdDebugTest: Tests of debugging with a text command handler. (TestCase)
+OtherCmdHelpTest: Tests of help text from a command handler. (.TestCase)
 OtherCmdTextTest: Tests of text for a command handler. (unittest.TestCase)
 """
 
@@ -43,6 +44,69 @@ class OtherCmdDebugTest(unittest.TestCase):
 		"""Test that debugging does not end the turn."""
 		self.cmd_handler.do_debug('1 ** 1 * 2 ** 2 * 3 ** 3')
 		self.assertTrue(self.bot.info[0])
+
+
+class OtherCmdHelpTest(unittest.TestCase):
+	"""Tests of help text from a command handler. (unittest.TestCase)"""
+
+	def setUp(self):
+		self.bot = unitility.AutoBot([''])
+		self.cmd_handler = other_cmd.OtherCmd(self.bot)
+		self.cmd_handler.help_text['test'] = '\nCheck, 1, 2, 3, 4.\n'
+
+	def testAliasHelp(self):
+		"""Test help text from a doc string."""
+		self.cmd_handler.do_help('&')
+		self.assertEqual("\nI can't help you with that.\n", self.bot.info[0])
+
+	def testBlankHelpText(self):
+		"""Test the default help text."""
+		self.cmd_handler.do_help('')
+		self.assertEqual('\nResistance is futile.\n', self.bot.info[0])
+
+	def testBlankHelpTopics(self):
+		"""Test the default help topic list."""
+		self.cmd_handler.do_help('')
+		self.assertEqual('set, test\n', self.bot.info[-1])
+
+	def testDictionaryHelp(self):
+		"""Test help text from the help_text dictionary."""
+		self.cmd_handler.do_help('test')
+		self.assertEqual('\nCheck, 1, 2, 3, 4.\n', self.bot.info[0])
+
+	def testDocStringHelp(self):
+		"""Test help text from a doc string."""
+		self.cmd_handler.do_help('debug')
+		self.assertEqual("\nI can't help you with that.\n", self.bot.info[0])
+
+	def testMethodHelpCall(self):
+		"""Test help calling a help_foo method."""
+		self.cmd_handler.help_foo = unitility.ProtoObject()
+		self.cmd_handler.do_help('foo')
+		self.assertEqual([()], self.cmd_handler.help_foo.arg_list)
+
+	def testMethodHelpCall(self):
+		"""Test help calling a help_foo method."""
+		self.cmd_handler.help_foo = unitility.ProtoObject()
+		self.cmd_handler.do_help('foo')
+		self.assertEqual([()], self.cmd_handler.help_foo.arg_list)
+
+	def testMethodHelpAsk(self):
+		"""Test a help_foo asking for an enter."""
+		self.cmd_handler.help_foo = unitility.ProtoObject()
+		self.cmd_handler.do_help('foo')
+		self.assertEqual([], self.bot.replies)
+
+	def testMethodHelpSkip(self):
+		"""Test a help_foo not asking for an enter."""
+		self.cmd_handler.help_foo = lambda: True
+		self.cmd_handler.do_help('foo')
+		self.assertEqual([''], self.bot.replies)
+
+	def testUnknownHelp(self):
+		"""Test help text for an unknown topic."""
+		self.cmd_handler.do_help("Cthulhu")
+		self.assertEqual("\nI can't help you with that.\n", self.bot.info[0])
 
 
 class OtherCmdTextTest(unittest.TestCase):
