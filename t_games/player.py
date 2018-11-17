@@ -183,7 +183,7 @@ class Player(object):
         Warn the player about an invalid play. (None)
 
         Parameters:
-        The parameters are as teh built-in print function.
+        The parameters are as the built-in print function.
         """
         print(*args, **kwargs)
 

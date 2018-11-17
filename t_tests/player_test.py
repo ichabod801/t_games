@@ -67,6 +67,48 @@ class PlayerAskTest(unittest.TestCase):
         self.assertEqual(check, err.exception.args[0])
 
 
+class PythonPrintTest(unittest.TestCase):
+    """Test the printing methods of the Player class. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.player = player.Player('Wordsworth')
+        self.stdout_hold = sys.stdout
+        sys.stdout = unitility.ProtoStdOut()
+
+    def tearDown(self):
+        sys.stdout = self.stdout_hold
+
+    def testErrorKwarg(self):
+        """Test Player.error with a keyword argument."""
+        self.player.error('You messed up', 'dude.', sep = ', ')
+        self.assertEqual('You messed up, dude.\n', ''.join(sys.stdout.output))
+
+    def testErrorMutliple(self):
+        """Test Player.error with multiple strings."""
+        self.player.error('You', 'messed', 'up.')
+        self.assertEqual('You messed up.\n', ''.join(sys.stdout.output))
+
+    def testErrorSingle(self):
+        """Test Player.error with a single string."""
+        self.player.error('You messed up.')
+        self.assertEqual('You messed up.\n', ''.join(sys.stdout.output))
+
+    def testTellKwarg(self):
+        """Test Player.error with a keyword argument."""
+        self.player.tell('You win', 'dude.', sep = ', ')
+        self.assertEqual('You win, dude.\n', ''.join(sys.stdout.output))
+
+    def testTellMutliple(self):
+        """Test Player.error with multiple strings."""
+        self.player.tell('You', 'win.')
+        self.assertEqual('You win.\n', ''.join(sys.stdout.output))
+
+    def testTellSingle(self):
+        """Test Player.error with a single string."""
+        self.player.tell('You win.')
+        self.assertEqual('You win.\n', ''.join(sys.stdout.output))
+
+
 class PlayerTextTest(unittest.TestCase):
     """Test the text representation of various play objects. (TestCase)"""
 
