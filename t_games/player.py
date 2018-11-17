@@ -128,7 +128,7 @@ class Player(object):
         Parameters:
         prompt: The question being asked of the player. (str)
         """
-        raise BotError('Unexcpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
+        raise BotError('Unexpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
 
     def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
         """
@@ -142,7 +142,7 @@ class Player(object):
         default: The default choice. (int or None)
         cmd: A flag for returning commands for processing. (bool)
         """
-        raise BotError('Unexcpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
+        raise BotError('Unexpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
 
     def ask_int_list(self, prompt, low = None, high = None, valid = [], valid_lens = [], default = None,
         cmd = True):
@@ -158,7 +158,7 @@ class Player(object):
         default: The default choice. (list or None)
         cmd: A flag for returning commands for processing. (bool)
         """
-        raise BotError('Unexcpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
+        raise BotError('Unexpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
 
     def ask_valid(self, prompt, valid, default = '', lower = True):
         """
@@ -172,7 +172,7 @@ class Player(object):
         default: The default value for the response. (str)
         lower: A flag for case insensitive matching. (bool)
         """
-        raise BotError('Unexcpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
+        raise BotError('Unexpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
 
     def clean_up(self):
         """Do any necessary post-game processing. (None)"""

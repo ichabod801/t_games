@@ -4,6 +4,7 @@ player_test.py
 Unittesting of t_games/player.py
 
 Classes:
+PlayerAskTest: Tests of the Player ask methods. (unittest.TestCase)
 PlayerTextTest: Test the text representation of various play objects. (TestCase)
 """
 
@@ -12,7 +13,58 @@ import unittest
 import sys
 
 import t_games.player as player
-import unitility
+import t_tests.unitility as unitility
+
+
+class PlayerAskTest(unittest.TestCase):
+    """Tests of the Player ask methods. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.player = player.Player('Nicodemus')
+
+    def testAskRaises(self):
+        """Test that Player.ask raises a BotError."""
+        self.assertRaises(player.BotError, self.player.ask, 'What is your name? ')
+
+    def testAskText(self):
+        """The the error text for Player.ask."""
+        with self.assertRaises(player.BotError) as err:
+            self.player.ask_int('What is your name? ')
+        check = "Unexpected question asked of Player: 'What is your name? '"
+        self.assertEqual(check, err.exception.args[0])
+
+    def testAskIntRaises(self):
+        """Test that Player.ask_int raises a BotError."""
+        self.assertRaises(player.BotError, self.player.ask, 'What is your age? ')
+
+    def testAskIntText(self):
+        """The the error text for Player.ask_int."""
+        with self.assertRaises(player.BotError) as err:
+            self.player.ask_int('What is your age? ')
+        check = "Unexpected question asked of Player: 'What is your age? '"
+        self.assertEqual(check, err.exception.args[0])
+
+    def testAskIntListRaises(self):
+        """Test that Player.ask_int_list raises a BotError."""
+        self.assertRaises(player.BotError, self.player.ask_int_list, 'What is your move? ')
+
+    def testAskIntListText(self):
+        """The the error text for Player.ask_int_list."""
+        with self.assertRaises(player.BotError) as err:
+            self.player.ask_int_list('What is your move? ')
+        check = "Unexpected question asked of Player: 'What is your move? '"
+        self.assertEqual(check, err.exception.args[0])
+
+    def testAskValidRaises(self):
+        """Test that Player.ask_valid raises a BotError."""
+        self.assertRaises(player.BotError, self.player.ask_valid, 'What is your name? ', [])
+
+    def testAskValidText(self):
+        """The the error text for Player.ask_valid."""
+        with self.assertRaises(player.BotError) as err:
+            self.player.ask_valid('What is your name? ', [])
+        check = "Unexpected question asked of Player: 'What is your name? '"
+        self.assertEqual(check, err.exception.args[0])
 
 
 class PlayerTextTest(unittest.TestCase):
