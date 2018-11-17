@@ -43,7 +43,7 @@ class OtherCmd(object):
     __repr__
     """
 
-    aliases = {'&': 'debug'}
+    aliases = {'&': 'debug', '?': 'help'}
     help_text = {'help': '\nResistance is futile.'}
 
     def __init__(self, human):
@@ -148,7 +148,12 @@ class OtherCmd(object):
         challenge' to play with three cells and the challenge option.
         """
         shortcut, space, text = arguments.strip().partition(' ')
-        self.human.store_shortcut(shortcut, text)
+        if shortcut and text:
+            self.human.store_shortcut(shortcut, text)
+        elif shortcut:
+            self.human.error('\nNo expansion text was provided, the shortcut was not set.')
+        else:
+            self.human.error('\nNo shortcut was provided, nothing was set.')
 
     def handle_cmd(self, text):
         """

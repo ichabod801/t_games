@@ -139,6 +139,17 @@ class AutoBot(player.Bot):
         """
         self.results.append([game_name] + result)
 
+    def store_shortcut(self, shortcut, text):
+        """
+        Store new shortcuts. (None)
+
+        Parameters:
+        shortcut: The word that is the short cut. (str)
+        text: The text the shortcut expands into. (str)
+        """
+        # Store locally
+        self.shortcuts[shortcut] = text
+
     def tell(self, *args, **kwargs):
         """
         Give information to the player. (None)
