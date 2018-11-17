@@ -43,7 +43,7 @@ class OtherCmd(object):
     __repr__
     """
 
-    aliases = {'&': 'debug'}
+    aliases = {'&': 'debug', '?': 'help'}
     help_text = {'help': '\nResistance is futile.'}
 
     def __init__(self, human):

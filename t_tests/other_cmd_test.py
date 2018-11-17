@@ -18,6 +18,39 @@ import t_games.player as player
 import t_tests.unitility as unitility
 
 
+class OtherCmdCmdTest(unittest.TestCase):
+    """Tests of actually handling other commands. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot([''])
+        self.cmd_handler = other_cmd.OtherCmd(self.bot)
+
+    def testAliasArguments(self):
+        """Test handling an alias with arguments."""
+        self.cmd_handler.handle_cmd('& self.human.name')
+        self.assertEqual("'{}'\n".format(self.bot.name), self.bot.info[0])
+
+    def testAliasPlain(self):
+        """Test handling an alias with no arguments."""
+        self.cmd_handler.handle_cmd('?')
+        self.assertEqual('\nResistance is futile.\n', self.bot.info[0])
+
+    def testArguments(self):
+        """Test handling a command with arguments."""
+        self.cmd_handler.handle_cmd('set foo bar')
+        self.assertEqual('bar', self.bot.shortcuts['foo'])
+
+    def testPlain(self):
+        """Test handling a command with no arguments."""
+        self.cmd_handler.handle_cmd('help')
+        self.assertEqual('\nResistance is futile.\n', self.bot.info[0])
+
+    def testUnknown(self):
+        """Test handling an unknown command."""
+        self.cmd_handler.handle_cmd('sit')
+        self.assertEqual("\nI do not recognize the command 'sit'.\n", self.bot.errors[0])
+
+
 class OtherCmdDebugTest(unittest.TestCase):
     """Tests of debugging with a text command handler. (unittest.TestCase)"""
 

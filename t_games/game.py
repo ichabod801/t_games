@@ -97,7 +97,7 @@ class Game(OtherCmd):
     """
 
     aka = []
-    aliases = {'!!': 'quit_quit', '&': 'debug', '=': 'rpn', '?': 'help', '!': 'quit'}
+    aliases = {'!!': 'quit_quit', '=': 'rpn', '!': 'quit'}
     categories = ['Test Games']
     credits = 'No credits have been specified for this game.'
     help_text = {'help': '\nUse the rules command for instructions on how to play.'}

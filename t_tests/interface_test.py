@@ -125,7 +125,7 @@ class InterfaceCommandTest(unittest.TestCase):
     def testRandomAll(self):
         """Test do_random forcing all games."""
         # Set up the bot and the interface.
-        self.bot.replies = ['n', '!', 'lose', 'n']
+        self.bot.replies = ['n', '!', 'lose', '!', 'lose', '!', 'lose', 'n']
         self.interface.categories = TEST_CATEGORIES
         self.interface.games = {game.name: game for game in TEST_GAMES}
         self.interface.focus = self.interface.categories['sub-categories']['Unit Games']
@@ -139,7 +139,7 @@ class InterfaceCommandTest(unittest.TestCase):
     def testRandomParent(self):
         """Test do_random with child categories."""
         # Set up the bot and the interface.
-        self.bot.replies = ['n', '!', 'lose', 'n']
+        self.bot.replies = ['n', '!', 'lose', '!', 'lose', '!', 'lose', 'n']
         self.interface.categories = TEST_CATEGORIES
         self.interface.focus = self.interface.categories
         # Get the actual value
@@ -152,7 +152,7 @@ class InterfaceCommandTest(unittest.TestCase):
     def testRandomTerminal(self):
         """Test do_random without child categories."""
         # Set up the bot and the interface.
-        self.bot.replies = ['n', '!', 'lose', 'n']
+        self.bot.replies = ['n', '!', 'lose', '!', 'lose', '!', 'lose', 'n']
         self.interface.categories = TEST_CATEGORIES
         self.interface.focus = self.interface.categories['sub-categories']['Unit Games']
         # Get the actual value
