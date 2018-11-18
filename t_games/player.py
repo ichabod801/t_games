@@ -246,7 +246,7 @@ class Humanoid(Player):
             answer = self.held_inputs.pop(0)
         # Process shortcuts.
         first, space, rest = answer.partition(' ')
-        first = self.shortcuts.get(first, first)
+        first = self.shortcuts.get(first.lower(), first)
         # Return the processed inputs.
         return '{} {}'.format(first, rest).strip()
 
@@ -484,6 +484,7 @@ class Human(Humanoid):
         text: The text the shortcut expands into. (str)
         """
         # Store locally
+        shortcut = shortcut.lower()
         self.shortcuts[shortcut] = text
         # Store in the player's file.
         with open(os.path.join(self.folder_name, 'shortcuts.txt'), 'a') as player_data:
