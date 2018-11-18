@@ -285,10 +285,10 @@ class Humanoid(Player):
                 if low is not None and response < low:
                     self.error('That number is too low. The lowest valid response is {}.'.format(low))
                 elif high is not None and response > high:
-                    self.error('That number is too high. The highest valid response is {}'.format(high))
+                    self.error('That number is too high. The highest valid response is {}.'.format(high))
                 elif valid and response not in valid:
                     self.error('{} is not a valid choice.'.format(response))
-                    self.error('You must choose one of {}.'.format(', '.join([str(x) for x in valid])))
+                    self.error('You must choose one of {}.'.format(utility.oxford(valid, 'or')))
                 else:
                     break
         return response

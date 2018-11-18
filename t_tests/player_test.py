@@ -5,9 +5,10 @@ Unittesting of t_games/player.py
 
 Classes:
 HumanoidAskTest: Tests of basic Humanoid question asking. (unittest.TestCase)
+HumanoidAskIntTest: Tests of Humanoid asking for an int. (unittest.TestCase)
 PlayerAskTest: Tests of the Player ask methods. (unittest.TestCase)
 PythonPrintTest: Test the printing methods of the Player class. (TestCase)
-PlayerTextTest: Test the text representation of various play objects. (TestCase)
+PlayerTextTest: Test the text representation of player objects. (TestCase)
 """
 
 
@@ -81,6 +82,108 @@ class HumanoidAskTest(unittest.TestCase):
         """Test a stripping white space from an answer."""
         sys.stdin.lines = ['\tCharge! ']
         self.assertEqual('Charge!', self.human.ask('What is your move?'))
+
+
+class HumanoidAskIntTest(unittest.TestCase):
+    """Tests of Humanoid asking for an integer. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.human = player.Humanoid('Gandalf')
+        self.human.game = unitility.ProtoObject(force_end = False)
+        self.stdin_hold = sys.stdin
+        self.stdout_hold = sys.stdout
+        sys.stdin = unitility.ProtoStdIn()
+        sys.stdout = unitility.ProtoStdOut()
+
+    def tearDown(self):
+        sys.stdin = self.stdin_hold
+        sys.stdout = self.stdout_hold
+
+    def testAskIntCommand(self):
+        """Test a request for an integer with a command answer."""
+        sys.stdin.lines = ['not-pass']
+        self.assertEqual('not-pass', self.human.ask_int('Pick a number: '))
+
+    def testAskIntCommandNotAnswer(self):
+        """Test the answer for an integer with an invalid command answer."""
+        sys.stdin.lines = ['not-pass', '108']
+        self.assertEqual(108, self.human.ask_int('Pick a number: ', cmd = False))
+
+    def testAskIntCommandNotError(self):
+        """Test the error for an integer with an invalid command answer."""
+        sys.stdin.lines = ['not-pass', '108']
+        self.human.ask_int('Pick a number: ', cmd = False)
+        self.assertEqual('Integers only please.', sys.stdout.output[1])
+
+    def testAskIntDoubleDouble(self):
+        """Test the error for an integer with upper and lower bounds and both errors."""
+        sys.stdin.lines = ['810', '180', '801']
+        self.assertEqual(801, self.human.ask_int('Pick a number: ', low = 321, high = 808))
+
+    def testAskIntDoubleHigh(self):
+        """Test the error for an integer with upper and lower bounds and a high error."""
+        sys.stdin.lines = ['810', '180']
+        self.human.ask_int('Pick a number: ', low = 123, high = 666)
+        check = 'That number is too high. The highest valid response is 666.'
+        self.assertEqual(check, sys.stdout.output[1])
+
+    def testAskIntDoubleLow(self):
+        """Test the error for an integer with upper and lower bounds and a low error."""
+        sys.stdin.lines = ['180', '810']
+        self.human.ask_int('Pick a number: ', low = 230, high = 999)
+        self.assertEqual('That number is too low. The lowest valid response is 230.', sys.stdout.output[1])
+
+    def testAskIntHighAnswer(self):
+        """Test the answer for an integer with an upper bound."""
+        sys.stdin.lines = ['108', '18']
+        self.assertEqual(18, self.human.ask_int('Pick a number: ', high = 100))
+
+    def testAskIntHighError(self):
+        """Test the error for an integer with an upper bound."""
+        sys.stdin.lines = ['108', '18']
+        self.human.ask_int('Pick a number: ', high = 100)
+        check = 'That number is too high. The highest valid response is 100.'
+        self.assertEqual(check, sys.stdout.output[1])
+
+    def testAskIntLowAnswer(self):
+        """Test the answer for an integer with a lower bound."""
+        sys.stdin.lines = ['81', '801']
+        self.assertEqual(801, self.human.ask_int('Pick a number: ', low = 500))
+
+    def testAskIntLowError(self):
+        """Test the error for an integer with a lower bound."""
+        sys.stdin.lines = ['81', '801']
+        self.human.ask_int('Pick a number: ', low = 500)
+        self.assertEqual('That number is too low. The lowest valid response is 500.', sys.stdout.output[1])
+
+    def testAskIntPlain(self):
+        """Test a simple request for an integer."""
+        sys.stdin.lines = ['18']
+        self.assertEqual(18, self.human.ask_int('Pick a number: '))
+
+    def testAskIntSkip(self):
+        """Test skipping ask_int at the end of the game."""
+        self.human.game.force_end = True
+        self.assertEqual(0, self.human.ask_int('Pick a number: '))
+
+    def testAskIntValidAnswer(self):
+        """Test the answer for an integer with defined valid answers."""
+        sys.stdin.lines = ['66', '180']
+        self.assertEqual(180, self.human.ask_int('Pick a number: ', valid = [18, 81, 108, 180, 801, 810]))
+
+    def testAskIntValidErrorA(self):
+        """Test the first error for an integer with defined valid answers."""
+        sys.stdin.lines = ['66', '18']
+        self.human.ask_int('Pick a number: ', valid = [18, 81, 108, 180, 801, 810])
+        check = '66 is not a valid choice.'
+        self.assertEqual(check, sys.stdout.output[1])
+
+    def testAskIntValidErrorB(self):
+        """Test the second error for an integer with defined valid answers."""
+        sys.stdin.lines = ['66', '18']
+        self.human.ask_int('Pick a number: ', valid = [18, 81, 108, 180, 801, 810])
+        check = 'You must choose one of 18, 81, 108, 180, 801, or 810.'
+        self.assertEqual(check, sys.stdout.output[3])
 
 
 class PlayerAskTest(unittest.TestCase):
