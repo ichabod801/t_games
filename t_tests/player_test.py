@@ -4,7 +4,9 @@ player_test.py
 Unittesting of t_games/player.py
 
 Classes:
+HumanoidAskTest: Tests of basic Humanoid question asking. (unittest.TestCase)
 PlayerAskTest: Tests of the Player ask methods. (unittest.TestCase)
+PythonPrintTest: Test the printing methods of the Player class. (TestCase)
 PlayerTextTest: Test the text representation of various play objects. (TestCase)
 """
 
@@ -14,6 +16,71 @@ import sys
 
 import t_games.player as player
 import t_tests.unitility as unitility
+
+
+class HumanoidAskTest(unittest.TestCase):
+    """Tests of basic Humanoid question asking. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.human = player.Humanoid('Thorin')
+        self.stdin_hold = sys.stdin
+        self.stdout_hold = sys.stdout
+        sys.stdin = unitility.ProtoStdIn()
+        sys.stdout = unitility.ProtoStdOut()
+
+    def tearDown(self):
+        sys.stdin = self.stdin_hold
+        sys.stdout = self.stdout_hold
+
+    def testAskHoldAnswer(self):
+        """Test answer when holding inputs for later questions."""
+        sys.stdin.lines = ['charge; hack; slay']
+        self.assertEqual('charge', self.human.ask('What is your move?'))
+
+    def testAskHoldHeld(self):
+        """Test holding inputs for later questions."""
+        sys.stdin.lines = ['charge; hack; slay']
+        self.human.ask('What is your move?')
+        self.assertEqual(['hack', 'slay'], self.human.held_inputs)
+
+    def testAskHeldAnswer(self):
+        """Test answer when using held inputs as answers."""
+        self.human.held_inputs = ['hack', 'slay']
+        self.assertEqual('hack', self.human.ask('What is your move?'))
+
+    def testAskHeldHeld(self):
+        """Test using held inputs as answers."""
+        self.human.held_inputs = ['hack', 'slay']
+        self.human.ask('What is your move?')
+        self.assertEqual(['slay'], self.human.held_inputs)
+
+    def testAskPlain(self):
+        """Test a simple question."""
+        sys.stdin.lines = ['Charge!']
+        self.assertEqual('Charge!', self.human.ask('What is your move?'))
+
+    def testAskShortcut(self):
+        """Test replacing text with short cuts."""
+        self.human.shortcuts = {'d': 'Death'}
+        sys.stdin.lines = ['d to my enemies!']
+        self.assertEqual('Death to my enemies!', self.human.ask('What is your move?'))
+
+    def testAskShortcutCase(self):
+        """Test replacing text with case insensitive short cuts."""
+        self.human.shortcuts = {'d': 'Death'}
+        sys.stdin.lines = ['D to my enemies!']
+        self.assertEqual('Death to my enemies!', self.human.ask('What is your move?'))
+
+    def testAskShortcutNot(self):
+        """Test not replacing text with short cuts."""
+        self.human.shortcuts = {'D': 'Death'}
+        sys.stdin.lines = ['Doom to my enemies!']
+        self.assertEqual('Doom to my enemies!', self.human.ask('What is your move?'))
+
+    def testAskStrip(self):
+        """Test a stripping white space from an answer."""
+        sys.stdin.lines = ['\tCharge! ']
+        self.assertEqual('Charge!', self.human.ask('What is your move?'))
 
 
 class PlayerAskTest(unittest.TestCase):
