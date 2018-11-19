@@ -38,94 +38,123 @@ class HumanoidAskIntListTest(unittest.TestCase):
     def testAskListCommand(self):
         """Test a request for an integer with a command answer."""
         sys.stdin.lines = ['not-pass']
-        self.assertEqual('not-pass', self.human.ask_int_list('Pick a number: '))
+        self.assertEqual('not-pass', self.human.ask_int_list('Pick some numbers: '))
 
     def testAskListCommandNotAnswer(self):
         """Test the answer for an integer with an invalid command answer."""
         sys.stdin.lines = ['not-pass', '108 81']
-        self.assertEqual([108, 81], self.human.ask_int_list('Pick a number: ', cmd = False))
+        self.assertEqual([108, 81], self.human.ask_int_list('Pick some numbers: ', cmd = False))
 
     def testAskListCommandNotError(self):
         """Test the error for an integer with an invalid command answer."""
         sys.stdin.lines = ['not-pass', '108 801']
-        self.human.ask_int_list('Pick a number: ', cmd = False)
+        self.human.ask_int_list('Pick some numbers: ', cmd = False)
         self.assertEqual('Please enter the requested integers.', sys.stdout.output[1])
 
     def testAskListDoubleDouble(self):
         """Test the error for an integer with upper and lower bounds and both errors."""
         sys.stdin.lines = ['810 500', '180 666', '801 404']
-        self.assertEqual([801, 404], self.human.ask_int_list('Pick a number: ', low = 321, high = 808))
+        self.assertEqual([801, 404], self.human.ask_int_list('Pick some numbers: ', low = 321, high = 808))
 
     def testAskListDoubleHigh(self):
         """Test the error for an integer with upper and lower bounds and a high error."""
         sys.stdin.lines = ['810 124', '180 404']
-        self.human.ask_int_list('Pick a number: ', low = 123, high = 666)
+        self.human.ask_int_list('Pick some numbers: ', low = 123, high = 666)
         check = '810 is too high. The highest valid response is 666.'
         self.assertEqual(check, sys.stdout.output[1])
 
     def testAskListDoubleLow(self):
         """Test the error for an integer with upper and lower bounds and a low error."""
         sys.stdin.lines = ['180 108', '801 810']
-        self.human.ask_int_list('Pick a number: ', low = 230, high = 999)
+        self.human.ask_int_list('Pick some numbers: ', low = 230, high = 999)
         self.assertEqual('108 is too low. The lowest valid response is 230.', sys.stdout.output[1])
 
     def testAskListHighAnswer(self):
         """Test the answer for an integer with an upper bound."""
         sys.stdin.lines = ['108 801', '18 81']
-        self.assertEqual([18, 81], self.human.ask_int_list('Pick a number: ', high = 100))
+        self.assertEqual([18, 81], self.human.ask_int_list('Pick some numbers: ', high = 100))
 
     def testAskListHighError(self):
         """Test the error for an integer with an upper bound."""
         sys.stdin.lines = ['108 801', '18 81']
-        self.human.ask_int_list('Pick a number: ', high = 100)
+        self.human.ask_int_list('Pick some numbers: ', high = 100)
         check = '801 is too high. The highest valid response is 100.'
         self.assertEqual(check, sys.stdout.output[1])
+
+    def testAskListLenAnswer(self):
+        """Test the answer for integer request with valid lengths."""
+        sys.stdin.lines = ['108', '108 801 18 81', '18 81 108']
+        self.assertEqual([18, 81, 108], self.human.ask_int_list('Pick some numbers: ', valid_lens = [2, 3]))
+
+    def testAskListLenErrorInvalid(self):
+        """Test the first part of the error for an invalid length."""
+        sys.stdin.lines = ['108', '108 801 18 81', '18 81 108']
+        self.human.ask_int_list('Pick some numbers: ', valid_lens = [2, 3])
+        self.assertEqual('That is an invalid number of integers.', sys.stdout.output[1])
+
+    def testAskListLenErrorPlease1(self):
+        """Test the first part of the error for an invalid length."""
+        sys.stdin.lines = ['108 801 18 81', '108']
+        self.human.ask_int_list('Pick some numbers: ', valid_lens = [1])
+        self.assertEqual('Please enter one integer.', sys.stdout.output[3])
+
+    def testAskListLenErrorPlease2(self):
+        """Test the first part of the error for an invalid length."""
+        sys.stdin.lines = ['108 801 18 81', '108 801']
+        self.human.ask_int_list('Pick some numbers: ', valid_lens = [2])
+        self.assertEqual('Please enter two integers.', sys.stdout.output[3])
+
+    def testAskListLenErrorPlease123(self):
+        """Test the first part of the error for an invalid length."""
+        sys.stdin.lines = ['108 801 18 81', '108 801']
+        self.human.ask_int_list('Pick some numbers: ', valid_lens = [1, 2, 3])
+        self.assertEqual('Please enter 1, 2, or 3 integers.', sys.stdout.output[3])
 
     def testAskListLowAnswer(self):
         """Test the answer for an integer with a lower bound."""
         sys.stdin.lines = ['81 18', '801 810']
-        self.assertEqual([801, 810], self.human.ask_int_list('Pick a number: ', low = 500))
+        self.assertEqual([801, 810], self.human.ask_int_list('Pick some numbers: ', low = 500))
 
     def testAskListLowError(self):
         """Test the error for an integer with a lower bound."""
         sys.stdin.lines = ['81 18', '801 810']
-        self.human.ask_int_list('Pick a number: ', low = 500)
+        self.human.ask_int_list('Pick some numbers: ', low = 500)
         self.assertEqual('18 is too low. The lowest valid response is 500.', sys.stdout.output[1])
 
     def testAskListPlain(self):
         """Test a simple request for an integer."""
         sys.stdin.lines = ['18 108']
-        self.assertEqual([18, 108], self.human.ask_int_list('Pick a number: '))
+        self.assertEqual([18, 108], self.human.ask_int_list('Pick some numbers: '))
 
     def testAskListSkip(self):
         """Test skipping ask_int_list at the end of the game."""
         self.human.game.force_end = True
-        self.assertEqual([0], self.human.ask_int_list('Pick a number: '))
+        self.assertEqual([0], self.human.ask_int_list('Pick some numbers: '))
 
     def testAskListValidAnswer(self):
         """Test the answer for an integer with defined valid answers."""
         sys.stdin.lines = ['66 108', '180 81']
         valid = [18, 81, 108, 180, 801, 810]
-        self.assertEqual([180, 81], self.human.ask_int_list('Pick a number: ', valid = valid))
+        self.assertEqual([180, 81], self.human.ask_int_list('Pick some numbers: ', valid = valid))
 
     def testAskListValidErrorA(self):
         """Test the first error for an integer with defined valid answers."""
         sys.stdin.lines = ['66 99', '18 81']
-        self.human.ask_int_list('Pick a number: ', valid = [18, 81, 108, 180, 801, 810])
+        self.human.ask_int_list('Pick some numbers: ', valid = [18, 81, 108, 180, 801, 810])
         check = "You have more 66's than allowed."
         self.assertEqual(check, sys.stdout.output[1])
 
     def testAskListValidErrorB(self):
         """Test the second error for an integer with defined valid answers."""
         sys.stdin.lines = ['66 99', '18 81']
-        self.human.ask_int_list('Pick a number: ', valid = [18, 81, 108, 180, 801, 810])
+        self.human.ask_int_list('Pick some numbers: ', valid = [18, 81, 108, 180, 801, 810])
         check = 'You must choose from: 18, 81, 108, 180, 801, and 810.'
         self.assertEqual(check, sys.stdout.output[3])
 
     def testAskListValidErrorC(self):
         """Test the first error for an integer with too many of one integer."""
         sys.stdin.lines = ['18 18', '18 81']
-        self.human.ask_int_list('Pick a number: ', valid = [18, 81, 108, 180, 801, 810])
+        self.human.ask_int_list('Pick some numbers: ', valid = [18, 81, 108, 180, 801, 810])
         check = "You have more 18's than allowed."
         self.assertEqual(check, sys.stdout.output[1])
 
