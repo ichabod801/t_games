@@ -4,8 +4,9 @@ player_test.py
 Unittesting of t_games/player.py
 
 Classes:
-HumanoidAskTest: Tests of basic Humanoid question asking. (unittest.TestCase)
+HumanoidAskIntListTest: Tests of Humaoid asking for integers. (TestCase)
 HumanoidAskIntTest: Tests of Humanoid asking for an int. (unittest.TestCase)
+HumanoidAskTest: Tests of basic Humanoid question asking. (unittest.TestCase)
 PlayerAskTest: Tests of the Player ask methods. (unittest.TestCase)
 PythonPrintTest: Test the printing methods of the Player class. (TestCase)
 PlayerTextTest: Test the text representation of player objects. (TestCase)
@@ -19,11 +20,12 @@ import t_games.player as player
 import t_tests.unitility as unitility
 
 
-class HumanoidAskTest(unittest.TestCase):
-    """Tests of basic Humanoid question asking. (unittest.TestCase)"""
+class HumanoidAskIntListTest(unittest.TestCase):
+    """Tests of Humaoid asking for integers. (unittest.TestCase)"""
 
     def setUp(self):
-        self.human = player.Humanoid('Thorin')
+        self.human = player.Humanoid('Gandalf')
+        self.human.game = unitility.ProtoObject(force_end = False)
         self.stdin_hold = sys.stdin
         self.stdout_hold = sys.stdout
         sys.stdin = unitility.ProtoStdIn()
@@ -33,55 +35,99 @@ class HumanoidAskTest(unittest.TestCase):
         sys.stdin = self.stdin_hold
         sys.stdout = self.stdout_hold
 
-    def testAskHoldAnswer(self):
-        """Test answer when holding inputs for later questions."""
-        sys.stdin.lines = ['charge; hack; slay']
-        self.assertEqual('charge', self.human.ask('What is your move?'))
+    def testAskListCommand(self):
+        """Test a request for an integer with a command answer."""
+        sys.stdin.lines = ['not-pass']
+        self.assertEqual('not-pass', self.human.ask_int_list('Pick a number: '))
 
-    def testAskHoldHeld(self):
-        """Test holding inputs for later questions."""
-        sys.stdin.lines = ['charge; hack; slay']
-        self.human.ask('What is your move?')
-        self.assertEqual(['hack', 'slay'], self.human.held_inputs)
+    def testAskListCommandNotAnswer(self):
+        """Test the answer for an integer with an invalid command answer."""
+        sys.stdin.lines = ['not-pass', '108 81']
+        self.assertEqual([108, 81], self.human.ask_int_list('Pick a number: ', cmd = False))
 
-    def testAskHeldAnswer(self):
-        """Test answer when using held inputs as answers."""
-        self.human.held_inputs = ['hack', 'slay']
-        self.assertEqual('hack', self.human.ask('What is your move?'))
+    def testAskListCommandNotError(self):
+        """Test the error for an integer with an invalid command answer."""
+        sys.stdin.lines = ['not-pass', '108 801']
+        self.human.ask_int_list('Pick a number: ', cmd = False)
+        self.assertEqual('Please enter the requested integers.', sys.stdout.output[1])
 
-    def testAskHeldHeld(self):
-        """Test using held inputs as answers."""
-        self.human.held_inputs = ['hack', 'slay']
-        self.human.ask('What is your move?')
-        self.assertEqual(['slay'], self.human.held_inputs)
+    def testAskListDoubleDouble(self):
+        """Test the error for an integer with upper and lower bounds and both errors."""
+        sys.stdin.lines = ['810 500', '180 666', '801 404']
+        self.assertEqual([801, 404], self.human.ask_int_list('Pick a number: ', low = 321, high = 808))
 
-    def testAskPlain(self):
-        """Test a simple question."""
-        sys.stdin.lines = ['Charge!']
-        self.assertEqual('Charge!', self.human.ask('What is your move?'))
+    def testAskListDoubleHigh(self):
+        """Test the error for an integer with upper and lower bounds and a high error."""
+        sys.stdin.lines = ['810 124', '180 404']
+        self.human.ask_int_list('Pick a number: ', low = 123, high = 666)
+        check = '810 is too high. The highest valid response is 666.'
+        self.assertEqual(check, sys.stdout.output[1])
 
-    def testAskShortcut(self):
-        """Test replacing text with short cuts."""
-        self.human.shortcuts = {'d': 'Death'}
-        sys.stdin.lines = ['d to my enemies!']
-        self.assertEqual('Death to my enemies!', self.human.ask('What is your move?'))
+    def testAskListDoubleLow(self):
+        """Test the error for an integer with upper and lower bounds and a low error."""
+        sys.stdin.lines = ['180 108', '801 810']
+        self.human.ask_int_list('Pick a number: ', low = 230, high = 999)
+        self.assertEqual('108 is too low. The lowest valid response is 230.', sys.stdout.output[1])
 
-    def testAskShortcutCase(self):
-        """Test replacing text with case insensitive short cuts."""
-        self.human.shortcuts = {'d': 'Death'}
-        sys.stdin.lines = ['D to my enemies!']
-        self.assertEqual('Death to my enemies!', self.human.ask('What is your move?'))
+    def testAskListHighAnswer(self):
+        """Test the answer for an integer with an upper bound."""
+        sys.stdin.lines = ['108 801', '18 81']
+        self.assertEqual([18, 81], self.human.ask_int_list('Pick a number: ', high = 100))
 
-    def testAskShortcutNot(self):
-        """Test not replacing text with short cuts."""
-        self.human.shortcuts = {'D': 'Death'}
-        sys.stdin.lines = ['Doom to my enemies!']
-        self.assertEqual('Doom to my enemies!', self.human.ask('What is your move?'))
+    def testAskListHighError(self):
+        """Test the error for an integer with an upper bound."""
+        sys.stdin.lines = ['108 801', '18 81']
+        self.human.ask_int_list('Pick a number: ', high = 100)
+        check = '801 is too high. The highest valid response is 100.'
+        self.assertEqual(check, sys.stdout.output[1])
 
-    def testAskStrip(self):
-        """Test a stripping white space from an answer."""
-        sys.stdin.lines = ['\tCharge! ']
-        self.assertEqual('Charge!', self.human.ask('What is your move?'))
+    def testAskListLowAnswer(self):
+        """Test the answer for an integer with a lower bound."""
+        sys.stdin.lines = ['81 18', '801 810']
+        self.assertEqual([801, 810], self.human.ask_int_list('Pick a number: ', low = 500))
+
+    def testAskListLowError(self):
+        """Test the error for an integer with a lower bound."""
+        sys.stdin.lines = ['81 18', '801 810']
+        self.human.ask_int_list('Pick a number: ', low = 500)
+        self.assertEqual('18 is too low. The lowest valid response is 500.', sys.stdout.output[1])
+
+    def testAskListPlain(self):
+        """Test a simple request for an integer."""
+        sys.stdin.lines = ['18 108']
+        self.assertEqual([18, 108], self.human.ask_int_list('Pick a number: '))
+
+    def testAskListSkip(self):
+        """Test skipping ask_int_list at the end of the game."""
+        self.human.game.force_end = True
+        self.assertEqual([0], self.human.ask_int_list('Pick a number: '))
+
+    def testAskListValidAnswer(self):
+        """Test the answer for an integer with defined valid answers."""
+        sys.stdin.lines = ['66 108', '180 81']
+        valid = [18, 81, 108, 180, 801, 810]
+        self.assertEqual([180, 81], self.human.ask_int_list('Pick a number: ', valid = valid))
+
+    def testAskListValidErrorA(self):
+        """Test the first error for an integer with defined valid answers."""
+        sys.stdin.lines = ['66 99', '18 81']
+        self.human.ask_int_list('Pick a number: ', valid = [18, 81, 108, 180, 801, 810])
+        check = "You have more 66's than allowed."
+        self.assertEqual(check, sys.stdout.output[1])
+
+    def testAskListValidErrorB(self):
+        """Test the second error for an integer with defined valid answers."""
+        sys.stdin.lines = ['66 99', '18 81']
+        self.human.ask_int_list('Pick a number: ', valid = [18, 81, 108, 180, 801, 810])
+        check = 'You must choose from: 18, 81, 108, 180, 801, and 810.'
+        self.assertEqual(check, sys.stdout.output[3])
+
+    def testAskListValidErrorC(self):
+        """Test the first error for an integer with too many of one integer."""
+        sys.stdin.lines = ['18 18', '18 81']
+        self.human.ask_int_list('Pick a number: ', valid = [18, 81, 108, 180, 801, 810])
+        check = "You have more 18's than allowed."
+        self.assertEqual(check, sys.stdout.output[1])
 
 
 class HumanoidAskIntTest(unittest.TestCase):
@@ -184,6 +230,71 @@ class HumanoidAskIntTest(unittest.TestCase):
         self.human.ask_int('Pick a number: ', valid = [18, 81, 108, 180, 801, 810])
         check = 'You must choose one of 18, 81, 108, 180, 801, or 810.'
         self.assertEqual(check, sys.stdout.output[3])
+
+
+class HumanoidAskTest(unittest.TestCase):
+    """Tests of basic Humanoid question asking. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.human = player.Humanoid('Thorin')
+        self.stdin_hold = sys.stdin
+        self.stdout_hold = sys.stdout
+        sys.stdin = unitility.ProtoStdIn()
+        sys.stdout = unitility.ProtoStdOut()
+
+    def tearDown(self):
+        sys.stdin = self.stdin_hold
+        sys.stdout = self.stdout_hold
+
+    def testAskHoldAnswer(self):
+        """Test answer when holding inputs for later questions."""
+        sys.stdin.lines = ['charge; hack; slay']
+        self.assertEqual('charge', self.human.ask('What is your move?'))
+
+    def testAskHoldHeld(self):
+        """Test holding inputs for later questions."""
+        sys.stdin.lines = ['charge; hack; slay']
+        self.human.ask('What is your move?')
+        self.assertEqual(['hack', 'slay'], self.human.held_inputs)
+
+    def testAskHeldAnswer(self):
+        """Test answer when using held inputs as answers."""
+        self.human.held_inputs = ['hack', 'slay']
+        self.assertEqual('hack', self.human.ask('What is your move?'))
+
+    def testAskHeldHeld(self):
+        """Test using held inputs as answers."""
+        self.human.held_inputs = ['hack', 'slay']
+        self.human.ask('What is your move?')
+        self.assertEqual(['slay'], self.human.held_inputs)
+
+    def testAskPlain(self):
+        """Test a simple question."""
+        sys.stdin.lines = ['Charge!']
+        self.assertEqual('Charge!', self.human.ask('What is your move?'))
+
+    def testAskShortcut(self):
+        """Test replacing text with short cuts."""
+        self.human.shortcuts = {'d': 'Death'}
+        sys.stdin.lines = ['d to my enemies!']
+        self.assertEqual('Death to my enemies!', self.human.ask('What is your move?'))
+
+    def testAskShortcutCase(self):
+        """Test replacing text with case insensitive short cuts."""
+        self.human.shortcuts = {'d': 'Death'}
+        sys.stdin.lines = ['D to my enemies!']
+        self.assertEqual('Death to my enemies!', self.human.ask('What is your move?'))
+
+    def testAskShortcutNot(self):
+        """Test not replacing text with short cuts."""
+        self.human.shortcuts = {'D': 'Death'}
+        sys.stdin.lines = ['Doom to my enemies!']
+        self.assertEqual('Doom to my enemies!', self.human.ask('What is your move?'))
+
+    def testAskStrip(self):
+        """Test a stripping white space from an answer."""
+        sys.stdin.lines = ['\tCharge! ']
+        self.assertEqual('Charge!', self.human.ask('What is your move?'))
 
 
 class PlayerAskTest(unittest.TestCase):

@@ -309,7 +309,7 @@ class Humanoid(Player):
         """
         # Give a dummy answer if the game is over.
         if cmd and self.game.force_end:
-            return [x for x in valid + [[low], [high], default, [0]] if x is not None][0]
+            return [x for x in valid + [[low], [high], [0]] if x != [None]][0]
         # Ask until you get a valid answer.
         while True:
             response = self.ask(prompt).strip()
@@ -336,13 +336,13 @@ class Humanoid(Player):
             # Check high.
             elif high is not None and max(response) > high:
                 highest = max(response)
-                self.error('{} is too high. The highest valid response is {}'.format(highest, high))
+                self.error('{} is too high. The highest valid response is {}.'.format(highest, high))
             # Check valid values.
             elif valid:
                 for number in set(response):
                     if response.count(number) > valid.count(number):
-                        self.error("You have more {}'s than allowed".format(number))
-                        self.error("You must choose from:", ', '.join([str(x) for x in valid]))
+                        self.error("You have more {}'s than allowed.".format(number))
+                        self.error("You must choose from: {}.".format(utility.oxford(valid)))
                         break
                 else:
                     break
