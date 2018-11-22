@@ -4,7 +4,7 @@ utility_test.py
 Tests of t_games/utility.py.
 
 Classes:
-ChooseTest: Tests of n choose r. (unittest.TestCase)
+FactorialTest: Tests of factorial functions in utility. (unittest.TestCase)
 MedianTest: Test of median calculation. (unittest.TestCase)
 NumberPluralTests: Tests of number word & singular/plural. (unittest.TestCase)
 NumberWordTests: Tests of converting numbers to words. (unittest.TestCase)
@@ -18,16 +18,24 @@ import unittest
 import t_games.utility as utility
 
 
-class ChooseTest(unittest.TestCase):
-    """Tests of n choose r. (unittest.TestCase)"""
+class FactorialTest(unittest.TestCase):
+    """Tests of factorial functions in utility. (unittest.TestCase)"""
 
-    def testSmall(self):
+    def testChooseSmall(self):
         """Test getting a small n choose r value."""
         self.assertEqual(10, utility.choose(5, 2))
 
-    def testLarge(self):
+    def testChooseLarge(self):
         """Test getting a large n choose r value."""
         self.assertEqual(2598960, utility.choose(52, 5))
+
+    def testPermuteSmall(self):
+        """Test getting a small n permute r value."""
+        self.assertEqual(20, utility.permutations(5, 2))
+
+    def testPermuteLarge(self):
+        """Test getting a large n permute r value."""
+        self.assertEqual(311875200, utility.permutations(52, 5))
 
 
 class MeanTest(unittest.TestCase):
