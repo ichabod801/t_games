@@ -4,6 +4,8 @@ utility_test.py
 Tests of t_games/utility.py.
 
 Classes:
+ChooseTest: Tests of n choose r. (unittest.TestCase)
+MedianTest: Test of median calculation. (unittest.TestCase)
 NumberPluralTests: Tests of number word & singular/plural. (unittest.TestCase)
 NumberWordTests: Tests of converting numbers to words. (unittest.TestCase)
 OxfordTest: Tests of converting Python lists to English lists. (TestCase)
@@ -26,6 +28,26 @@ class ChooseTest(unittest.TestCase):
     def testLarge(self):
         """Test getting a large n choose r value."""
         self.assertEqual(2598960, utility.choose(52, 5))
+
+
+class MedianTest(unittest.TestCase):
+    """Test of median calculation. (unittest.TestCase)"""
+
+    def testEvenList(self):
+        """Test a median for an even number of values."""
+        self.assertEqual(3.5, utility.median([1, 2, 3, 4, 5, 6]))
+
+    def testLeftSkew(self):
+        """Test a median higher than the mean."""
+        self.assertEqual(5, utility.median([3, 1, 6, 5, 7]))
+
+    def testNoSkew(self):
+        """Test a median equal to the mean."""
+        self.assertEqual(5, utility.median([3, 7, 4, 6, 5]))
+
+    def testRightSkew(self):
+        """Test a median lower than the mean."""
+        self.assertEqual(5, utility.median([5, 3, 4, 9, 7]))
 
 
 class NumberPluralTest(unittest.TestCase):

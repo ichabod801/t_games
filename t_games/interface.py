@@ -584,7 +584,7 @@ class Statistics(object):
         lines.append('Overall Win-Loss-Draw: {}-{}-{}'.format(*self.game_wld))
         lines.append('Player Win-Loss-Draw: {}-{}-{}'.format(*self.player_wld))
         # Add the scores and turns.
-        stat_format = '{} {}: {} : {:.2f} / {} : {}'
+        stat_format = '{} {}: {} : {:.2f} / {:.1f} : {}'
         for prefix in ('scores', 'turns'):
             for result_type, word in (('overall', 'Overall'), ('win', 'Winning'), ('loss', 'Losing')):
                 if self.results[result_type]:

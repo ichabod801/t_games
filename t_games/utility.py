@@ -119,7 +119,12 @@ def median(values):
     Parameters:
     values: The list of values. (seq of float)
     """
-    return sorted(values)[len(values) // 2]
+    if len(values) % 2:
+        return sorted(values)[len(values) // 2]
+    else:
+        mid_point = len(values) // 2
+        values = sorted(values)
+        return sum(values[(mid_point - 1):(mid_point + 1)]) / 2.0
 
 
 def mean(values):
