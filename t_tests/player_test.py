@@ -27,6 +27,11 @@ class BotTest(unittest.TestCase):
 
     def setUp(self):
         self.bot = player.Bot()
+        self.stdout_hold = sys.stdout
+        sys.stdout = unitility.ProtoStdOut()
+
+    def tearDown(self):
+        sys.stdout = self.stdout_hold
 
     def testErrorComplex(self):
         """Test a complex case for Bot.error."""
@@ -39,6 +44,22 @@ class BotTest(unittest.TestCase):
         with self.assertRaises(player.BotError) as err:
             self.bot.error('Whoops.')
         self.assertEqual('Whoops.', err.exception.args[0])
+
+    def testTellComplex(self):
+        """Test complex output for Bot.tell"""
+        self.bot.tell('Spam', 'spam', 'and eggs', sep = ', ', end = '!')
+        self.assertEqual(['Spam, spam, and eggs', '!'], sys.stdout.output)
+
+    def testTellReplace(self):
+        """Test output with replacements for Bot.tell"""
+        self.bot.tell('You have won the game. Your quest is complete.')
+        check = "{0} has won the game. {0}'s quest is complete.".format(self.bot.name)
+        self.assertEqual(check, sys.stdout.output[0])
+
+    def testTellSimple(self):
+        """Test a simple case for Bot.tell."""
+        self.bot.tell('Craig moved west.')
+        self.assertEqual('Craig moved west.', sys.stdout.output[0])
 
 
 class HumanoidAskIntListTest(unittest.TestCase):
