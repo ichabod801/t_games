@@ -7,14 +7,15 @@ Classes:
 HumanoidAskIntListTest: Tests of Humaoid asking for integers. (TestCase)
 HumanoidAskIntTest: Tests of Humanoid asking for an int. (unittest.TestCase)
 HumanoidAskTest: Tests of basic Humanoid question asking. (unittest.TestCase)
+NamelessTest: Tests of the Nameless class. (unittest.TestCase)
 PlayerAskTest: Tests of the Player ask methods. (unittest.TestCase)
 PythonPrintTest: Test the printing methods of the Player class. (TestCase)
 PlayerTextTest: Test the text representation of player objects. (TestCase)
 """
 
-
-import unittest
+import random
 import sys
+import unittest
 
 import t_games.player as player
 import t_tests.unitility as unitility
@@ -324,6 +325,38 @@ class HumanoidAskTest(unittest.TestCase):
         """Test a stripping white space from an answer."""
         sys.stdin.lines = ['\tCharge! ']
         self.assertEqual('Charge!', self.human.ask('What is your move?'))
+
+
+class NamelessTest(unittest.TestCase):
+    """Tests of the Nameless class. (unittest.TestCase)"""
+
+    def testAnyName(self):
+        """Test a Nameless picking any name."""
+        bot = player.Nameless()
+        initial = bot.name[0].lower()
+        check = player.BOT_NAMES[initial].split('/')
+        self.assertIn(bot.name, check)
+
+    def testInitial(self):
+        """Test a Nameless with an initial."""
+        bot = player.Nameless(initial = 'b')
+        check = player.BOT_NAMES['b'].split('/')
+        self.assertIn(bot.name, check)
+
+    def testInitialUpper(self):
+        """Test a Nameless with an uppercase initial."""
+        bot = player.Nameless(initial = 'b')
+        check = player.BOT_NAMES['b'].split('/')
+        self.assertIn(bot.name, check)
+
+    def testTaken(self):
+        """Test a Nameless with taken names."""
+        initial = random.choice(player.string.ascii_lowercase)
+        names = player.BOT_NAMES[initial].split('/')
+        force = random.choice(names)
+        names.remove(force)
+        bot = player.Nameless(initial = initial, taken_names = names)
+        self.assertEqual(force, bot.name)
 
 
 class PlayerAskTest(unittest.TestCase):

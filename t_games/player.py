@@ -514,7 +514,7 @@ class Nameless(Player):
         # Get a random name that hasn't been used yet.
         while True:
             if initial:
-                self.name = random.choice(BOT_NAMES[initial].split('/'))
+                self.name = random.choice(BOT_NAMES[initial.lower()].split('/'))
             else:
                 self.name = random.choice(BOT_NAMES[random.choice(string.ascii_lowercase)].split('/'))
             if self.name not in taken_names:
