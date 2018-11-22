@@ -30,6 +30,26 @@ class ChooseTest(unittest.TestCase):
         self.assertEqual(2598960, utility.choose(52, 5))
 
 
+class MeanTest(unittest.TestCase):
+    """Test of mean calculation. (unittest.TestCase)"""
+
+    def testEvenList(self):
+        """Test a mean for an even number of values."""
+        self.assertEqual(3.5, utility.mean([1, 2, 3, 4, 5, 6]))
+
+    def testLeftSkew(self):
+        """Test a mean lower than the median."""
+        self.assertEqual(4.4, utility.mean([3, 1, 6, 5, 7]))
+
+    def testNoSkew(self):
+        """Test a mean equal to the median."""
+        self.assertEqual(5.0, utility.mean([3, 7, 4, 6, 5]))
+
+    def testRightSkew(self):
+        """Test a mean higher than the median."""
+        self.assertEqual(5.6, utility.mean([5, 3, 4, 9, 7]))
+
+
 class MedianTest(unittest.TestCase):
     """Test of median calculation. (unittest.TestCase)"""
 

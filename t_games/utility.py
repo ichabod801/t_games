@@ -17,8 +17,8 @@ Functions:
 choose: Combinations [n choose r]. (int)
 flip: Returns a random bit. (int)
 hundred_word: Give the word form of a number less than 100. (str)
-median: Calculate the median of a list of values. (float)
 mean: Calculate the mean of a list of values. (float)
+median: Calculate the median of a list of values. (float)
 number_plural: Convert a number and word to two words with the plural. (str)
 number_word: Give the word form of a number. (str)
 oxford: Convert a sequence to a word list with an Oxford comma. (str)
@@ -112,6 +112,16 @@ def hundred_word(n):
         return word
 
 
+def mean(values):
+    """
+    Calculate the mean of a list. (float)
+
+    Parameters:
+    values: The list of values. (seq of float)
+    """
+    return sum(values) / float(len(values))
+
+
 def median(values):
     """
     Calculate the median of a list. (float)
@@ -125,16 +135,6 @@ def median(values):
         mid_point = len(values) // 2
         values = sorted(values)
         return sum(values[(mid_point - 1):(mid_point + 1)]) / 2.0
-
-
-def mean(values):
-    """
-    Calculate the mean of a list. (float)
-
-    Parameters:
-    values: The list of values. (seq of float)
-    """
-    return sum(values) / float(len(values))
 
 
 def number_plural(number, singular, many = ''):
