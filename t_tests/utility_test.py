@@ -16,6 +16,18 @@ import unittest
 import t_games.utility as utility
 
 
+class ChooseTest(unittest.TestCase):
+    """Tests of n choose r. (unittest.TestCase)"""
+
+    def testSmall(self):
+        """Test getting a small n choose r value."""
+        self.assertEqual(10, utility.choose(5, 2))
+
+    def testLarge(self):
+        """Test getting a large n choose r value."""
+        self.assertEqual(2598960, utility.choose(52, 5))
+
+
 class NumberPluralTest(unittest.TestCase):
     """Tests of getting the number word and singular/plural. (unittest.TestCase)"""
 
