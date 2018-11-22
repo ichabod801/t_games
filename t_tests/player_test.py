@@ -4,6 +4,7 @@ player_test.py
 Unittesting of t_games/player.py
 
 Classes:
+BotTest: Tests of the Bot class. (unittest.TestCase)
 HumanoidAskIntListTest: Tests of Humaoid asking for integers. (TestCase)
 HumanoidAskIntTest: Tests of Humanoid asking for an int. (unittest.TestCase)
 HumanoidAskTest: Tests of basic Humanoid question asking. (unittest.TestCase)
@@ -19,6 +20,25 @@ import unittest
 
 import t_games.player as player
 import t_tests.unitility as unitility
+
+
+class BotTest(unittest.TestCase):
+    """Tests of the Bot class. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = player.Bot()
+
+    def testErrorComplex(self):
+        """Test a complex case for Bot.error."""
+        with self.assertRaises(player.BotError) as err:
+            self.bot.error('Spam', 'spam', 'and eggs', sep = ', ', end = '!')
+        self.assertEqual('Spam, spam, and eggs!', err.exception.args[0])
+
+    def testErrorSimple(self):
+        """Test a simple case for Bot.error."""
+        with self.assertRaises(player.BotError) as err:
+            self.bot.error('Whoops.')
+        self.assertEqual('Whoops.', err.exception.args[0])
 
 
 class HumanoidAskIntListTest(unittest.TestCase):
