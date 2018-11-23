@@ -10,6 +10,7 @@ NumberPluralTests: Tests of number word & singular/plural. (unittest.TestCase)
 NumberWordTests: Tests of converting numbers to words. (unittest.TestCase)
 OxfordTest: Tests of converting Python lists to English lists. (TestCase)
 PluralTest: Tests of getting the singular/plural form. (unittest.TestCase)
+PowTest: Tests of power calculations. (unittest.TestCase)
 """
 
 
@@ -21,21 +22,21 @@ import t_games.utility as utility
 class FactorialTest(unittest.TestCase):
     """Tests of factorial functions in utility. (unittest.TestCase)"""
 
-    def testChooseSmall(self):
-        """Test getting a small n choose r value."""
-        self.assertEqual(10, utility.choose(5, 2))
-
     def testChooseLarge(self):
         """Test getting a large n choose r value."""
         self.assertEqual(2598960, utility.choose(52, 5))
 
-    def testPermuteSmall(self):
-        """Test getting a small n permute r value."""
-        self.assertEqual(20, utility.permutations(5, 2))
+    def testChooseSmall(self):
+        """Test getting a small n choose r value."""
+        self.assertEqual(10, utility.choose(5, 2))
 
     def testPermuteLarge(self):
         """Test getting a large n permute r value."""
         self.assertEqual(311875200, utility.permutations(52, 5))
+
+    def testPermuteSmall(self):
+        """Test getting a small n permute r value."""
+        self.assertEqual(20, utility.permutations(5, 2))
 
 
 class MeanTest(unittest.TestCase):
@@ -238,6 +239,30 @@ class PluralTest(unittest.TestCase):
     def testZeroNoS(self):
         """Test getting a plural with zero and not adding s."""
         self.assertEqual('dice', utility.plural(0, 'die', 'dice'))
+
+
+class PowTest(unittest.TestCase):
+    """Tests of Adam West punching things. (unittest.TestCase)"""
+
+    def testFractionalPower(self):
+        """Test a power calcualtion with a fractional power."""
+        self.assertEqual(9, utility.pow(81, 0.5))
+
+    def testNegativeBase(self):
+        """Test a power calculation with a negative base."""
+        self.assertEqual(-81, utility.pow(-9, 2))
+
+    def testNegativePower(self):
+        """Test a power calculation with a negative power."""
+        self.assertEqual(0.25, utility.pow(2, -2))
+
+    def testLarge(self):
+        """Test a large power calculation."""
+        self.assertEqual(14693280768, utility.pow(108, 5))
+
+    def testSmall(self):
+        """Test a small power calculation."""
+        self.assertEqual(81, utility.pow(3, 4))
 
 
 if __name__ == '__main__':
