@@ -3,9 +3,16 @@ backgammon_test.py
 
 Unit testing for backgammon_game.py.
 
+Constants:
+BAR: The index of the bar in BackgammonBoard.cells. (int)
+OUT: The index of the removed pieces in BackgammonBoard.cells. (int)
+START_TEXT_O: The starting text from the 'O' player's perspective. (str)
+START_TEXT_X: The starting text from the 'X' player's perspective. (str)
+
 Classes:
-MoveTest: Test movement on a BackgammonBoard. (TestCase)
-PlayTest: Test play generation. (TestCase)
+BackMoveTest: Test movement on a BackgammonBoard. (unittest.TestCase)
+BackPlayTest: Test backgammon play generation. (unittest.TestCase)
+BackPrintTest: Test printing a backgammon board. (unittest.TestCase)
 
 Functions:
 make_play: Make a BackgammonPlay from a list as tuples. (BackgammonPlay)
@@ -24,7 +31,14 @@ BAR = -1
 
 OUT = -2
 
-PRINT_START = '\n'.join(['', '  1 1 1 1 1 1   1 2 2 2 2 2  ', '  3 4 5 6 7 8   9 0 1 2 3 4  ',
+START_TEXT_O = '\n'.join(['', '                      1 1 1  ', '  1 2 3 4 5 6   7 8 9 0 1 2  ',
+    '+-------------+-------------+', '| O : . : . X | . X . : . O |', '| O : . : . X | . X . : . O |',
+    '| . : . : . X | . X . : . O |', '| . : . : . X | . : . : . O |', '| . : . : . X | . : . : . O |',
+    '|             |             |', '| : . : . : O | : . : . : X |', '| : . : . : O | : . : . : X |',
+    '| : . : . : O | : O : . : X |', '| X . : . : O | : O : . : X |', '| X . : . : O | : O : . : X |',
+    '+-------------+-------------+', '  2 2 2 2 2 1   1 1 1 1 1 1  ', '  4 3 2 1 0 9   8 7 6 5 4 3  '])
+
+START_TEXT_X = '\n'.join(['', '  1 1 1 1 1 1   1 2 2 2 2 2  ', '  3 4 5 6 7 8   9 0 1 2 3 4  ',
     '+-------------+-------------+', '| X : . : O : | O : . : . X |', '| X : . : O : | O : . : . X |',
     '| X : . : O : | O : . : . : |', '| X : . : . : | O : . : . : |', '| X : . : . : | O : . : . : |',
     '|             |             |', '| O . : . : . | X . : . : . |', '| O . : . : . | X . : . : . |',
@@ -32,7 +46,7 @@ PRINT_START = '\n'.join(['', '  1 1 1 1 1 1   1 2 2 2 2 2  ', '  3 4 5 6 7 8   9
     '+-------------+-------------+', '  1 1 1                      ', '  2 1 0 9 8 7   6 5 4 3 2 1  '])
 
 
-class MoveTest(unittest.TestCase):
+class BackMoveTest(unittest.TestCase):
     """Test movement on a BackgammonBoard. (TestCase)"""
     # Most of this should be covered by board_test.LineBoardTest.
 
@@ -71,8 +85,8 @@ class MoveTest(unittest.TestCase):
         self.assertEqual(['X'], self.board.cells[BAR].contents)
 
 
-class PlayTest(unittest.TestCase):
-    """Test play generation. (TestCase)"""
+class BackPlayTest(unittest.TestCase):
+    """Test backgammon play generation. (TestCase)"""
 
     def setBoard(self, layout = ((6, 5), (8, 3), (13, 5), (24, 2)), moves = [], piece = 'O',
         rolls = [6, 5], bar = []):
@@ -223,9 +237,26 @@ class PlayTest(unittest.TestCase):
         self.setBoard(layout = ((5, 2),), moves = [(20, 24), (20, 24)], rolls = [3, 2], bar = ['X', 'O'])
         check = [((BAR, 3),)]
         self.assertEqual(set(check), self.legal_moves)
-
-
-class PrintTest(unittest.TestCase):
+"""
+                      1 1 1
+  1 2 3 4 5 6   7 8 9 0 1 2
++-------------+-------------+
+| O : . : . X | . X . : . O |
+| O : . : . X | . X . : . O |
+| . : . : . X | . X . : . O |
+| . : . : . X | . : . : . O |
+| . : . : . X | . : . : . O |
+|             |             |
+| : . : . : O | : . : . : X |
+| : . : . : O | : . : . : X |
+| : . : . : O | : O : . : X |
+| X . : . : O | : O : . : X |
+| X . : . : O | : O : . : X |
++-------------+-------------+
+  2 2 2 2 2 1   1 1 1 1 1 1
+  4 3 2 1 0 9   8 7 6 5 4 3
+"""
+class BackPrintTest(unittest.TestCase):
     """Test printing of the board on the screen. (TestCase)"""
 
     def setUp(self):
@@ -233,38 +264,72 @@ class PrintTest(unittest.TestCase):
         self.board = backgammon.BackgammonBoard()
         self.maxDiff = None
 
-    def testBar(self):
+    def testBarO(self):
+        """Test printing with a piece on the bar from O's perspective."""
+        self.board.cells[BAR].contents = ['O']
+        check = START_TEXT_O + '\n\nBar: O'
+        self.assertEqual(check, self.board.get_text('O'))
+
+    def testBarX(self):
         """Test printing with a piece on the bar."""
         self.board.cells[BAR].contents = ['X']
-        check = PRINT_START + '\n\nBar: X'
+        check = START_TEXT_X + '\n\nBar: X'
         self.assertEqual(check, self.board.get_text('X'))
 
-    def testSixHigh(self):
-        """Test printing a board with more than five X's on a point."""
-        self.board.cells[13].contents = ['X'] * 6
-        check = PRINT_START[:93] + '6' + PRINT_START[94:]
-        self.assertEqual(check, self.board.get_text('X'))
-
-    def testSixLow(self):
-        """Test printing a board with more than five O's on a point."""
+    def testSixHighO(self):
+        """Test printing an O board with more than five O's on a point."""
         self.board.cells[12].contents = ['O'] * 6
-        check = PRINT_START[:393] + '6' + PRINT_START[394:]
+        check = START_TEXT_O[:117] + '6' + START_TEXT_O[118:]
+        self.assertEqual(check, self.board.get_text('O'))
+
+    def testSixHighX(self):
+        """Test printing an X board with more than five X's on a point."""
+        self.board.cells[13].contents = ['X'] * 6
+        check = START_TEXT_X[:93] + '6' + START_TEXT_X[94:]
         self.assertEqual(check, self.board.get_text('X'))
 
-    def testStart(self):
+    def testSixLowO(self):
+        """Test printing an O board with more than five X's on a point."""
+        self.board.cells[13].contents = ['X'] * 6
+        check = START_TEXT_O[:417] + '6' + START_TEXT_O[418:]
+        self.assertEqual(check, self.board.get_text('O'))
+
+    def testSixLowX(self):
+        """Test printing an X board with more than five O's on a point."""
+        self.board.cells[12].contents = ['O'] * 6
+        check = START_TEXT_X[:393] + '6' + START_TEXT_X[394:]
+        self.assertEqual(check, self.board.get_text('X'))
+
+    def testStartO(self):
+        """Test printing the starting board from O's perspective."""
+        self.assertEqual(START_TEXT_O, self.board.get_text('O'))
+
+    def testStartX(self):
         """Test printing the starting board."""
-        self.assertEqual(PRINT_START, self.board.get_text('X'))
+        self.assertEqual(START_TEXT_X, self.board.get_text('X'))
 
-    def testTenHigh(self):
-        """Test printing a board with more than nine O's on a point."""
+    def testTenHighO(self):
+        """Test printing an O board with more than nine X's on a point."""
+        self.board.cells[6].contents = ['X'] * 10
+        check = START_TEXT_O[:103] + '1' + START_TEXT_O[104:133] + '0' + START_TEXT_O[134:]
+        self.assertEqual(check, self.board.get_text('O'))
+
+    def testTenHighX(self):
+        """Test printing an X board with more than nine O's on a point."""
         self.board.cells[19].contents = ['O'] * 10
-        check = PRINT_START[:107] + '1' + PRINT_START[108:137] + '0' + PRINT_START[138:]
+        check = START_TEXT_X[:107] + '1' + START_TEXT_X[108:137] + '0' + START_TEXT_X[138:]
         self.assertEqual(check, self.board.get_text('X'))
 
-    def testTenLow(self):
+    def testTenLowO(self):
+        """Test printing an O board with more than nine O's on a point."""
+        self.board.cells[19].contents = ['O'] * 10
+        check = START_TEXT_O[:373] + '1' + START_TEXT_O[374:403] + '0' + START_TEXT_O[404:]
+        self.assertEqual(check, self.board.get_text('O'))
+
+    def testTenLowX(self):
         """Test printing a board with more than nine X's on a point."""
         self.board.cells[6].contents = ['X'] * 10
-        check = PRINT_START[:377] + '1' + PRINT_START[378:407] + '0' + PRINT_START[408:]
+        check = START_TEXT_X[:377] + '1' + START_TEXT_X[378:407] + '0' + START_TEXT_X[408:]
         self.assertEqual(check, self.board.get_text('X'))
 
 
