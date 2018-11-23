@@ -4,16 +4,80 @@ utility_test.py
 Tests of t_games/utility.py.
 
 Classes:
+FactorialTest: Tests of factorial functions in utility. (unittest.TestCase)
+MedianTest: Test of median calculation. (unittest.TestCase)
 NumberPluralTests: Tests of number word & singular/plural. (unittest.TestCase)
 NumberWordTests: Tests of converting numbers to words. (unittest.TestCase)
 OxfordTest: Tests of converting Python lists to English lists. (TestCase)
 PluralTest: Tests of getting the singular/plural form. (unittest.TestCase)
+PowTest: Tests of power calculations. (unittest.TestCase)
+StreakTest: Tests of longest streak calculations. (unittest.TestCase)
 """
 
 
 import unittest
 
 import t_games.utility as utility
+
+
+class FactorialTest(unittest.TestCase):
+    """Tests of factorial functions in utility. (unittest.TestCase)"""
+
+    def testChooseLarge(self):
+        """Test getting a large n choose r value."""
+        self.assertEqual(2598960, utility.choose(52, 5))
+
+    def testChooseSmall(self):
+        """Test getting a small n choose r value."""
+        self.assertEqual(10, utility.choose(5, 2))
+
+    def testPermuteLarge(self):
+        """Test getting a large n permute r value."""
+        self.assertEqual(311875200, utility.permutations(52, 5))
+
+    def testPermuteSmall(self):
+        """Test getting a small n permute r value."""
+        self.assertEqual(20, utility.permutations(5, 2))
+
+
+class MeanTest(unittest.TestCase):
+    """Test of mean calculation. (unittest.TestCase)"""
+
+    def testEvenList(self):
+        """Test a mean for an even number of values."""
+        self.assertEqual(3.5, utility.mean([1, 2, 3, 4, 5, 6]))
+
+    def testLeftSkew(self):
+        """Test a mean lower than the median."""
+        self.assertEqual(4.4, utility.mean([3, 1, 6, 5, 7]))
+
+    def testNoSkew(self):
+        """Test a mean equal to the median."""
+        self.assertEqual(5.0, utility.mean([3, 7, 4, 6, 5]))
+
+    def testRightSkew(self):
+        """Test a mean higher than the median."""
+        self.assertEqual(5.6, utility.mean([5, 3, 4, 9, 7]))
+
+
+class MedianTest(unittest.TestCase):
+    """Test of median calculation. (unittest.TestCase)"""
+
+    def testEvenList(self):
+        """Test a median for an even number of values."""
+        self.assertEqual(3.5, utility.median([1, 2, 3, 4, 5, 6]))
+
+    def testLeftSkew(self):
+        """Test a median higher than the mean."""
+        self.assertEqual(5, utility.median([3, 1, 6, 5, 7]))
+
+    def testNoSkew(self):
+        """Test a median equal to the mean."""
+        self.assertEqual(5, utility.median([3, 7, 4, 6, 5]))
+
+    def testRightSkew(self):
+        """Test a median lower than the mean."""
+        self.assertEqual(5, utility.median([5, 3, 4, 9, 7]))
 
 
 class NumberPluralTest(unittest.TestCase):
@@ -176,6 +240,63 @@ class PluralTest(unittest.TestCase):
     def testZeroNoS(self):
         """Test getting a plural with zero and not adding s."""
         self.assertEqual('dice', utility.plural(0, 'die', 'dice'))
+
+
+class PowTest(unittest.TestCase):
+    """Tests of Adam West punching things. (unittest.TestCase)"""
+
+    def testFractionalPower(self):
+        """Test a power calcualtion with a fractional power."""
+        self.assertEqual(9, utility.pow(81, 0.5))
+
+    def testNegativeBase(self):
+        """Test a power calculation with a negative base."""
+        self.assertEqual(-81, utility.pow(-9, 2))
+
+    def testNegativePower(self):
+        """Test a power calculation with a negative power."""
+        self.assertEqual(0.25, utility.pow(2, -2))
+
+    def testLarge(self):
+        """Test a large power calculation."""
+        self.assertEqual(14693280768, utility.pow(108, 5))
+
+    def testSmall(self):
+        """Test a small power calculation."""
+        self.assertEqual(81, utility.pow(3, 4))
+
+
+class StreakTest(unittest.TestCase):
+    """Tests of longest streak calculations. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.results = [1, 1, -1, -1, -1, -1, 0, 1, -1, 0, 1, 1, 1]
+        self.streaks = utility.streaks(self.results)
+
+    def testCurrent(self):
+        """Test the current streak calculation."""
+        self.assertEqual((3, 1), self.streaks[:2])
+
+    def testDuplicate(self):
+        """Test a longest streak coming more than once in the results."""
+        self.assertEqual(1, self.streaks[2][0])
+
+    def testEarlier(self):
+        """Test a longest streak coming earlier in the results."""
+        self.assertEqual(4, self.streaks[2][-1])
+
+    def testEmpty(self):
+        """Test a longest streak with no results."""
+        self.assertEqual((0, 0, [0, 0, 0]), utility.streaks([]))
+
+    def testLater(self):
+        """Test a longest streak coming later in the results."""
+        self.assertEqual(3, self.streaks[2][1])
+
+    def testNone(self):
+        """Test a longest streak of zero."""
+        streaks = utility.streaks([result for result in self.results if result])
+        self.assertEqual(0, streaks[2][0])
 
 
 if __name__ == '__main__':

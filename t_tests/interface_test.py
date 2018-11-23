@@ -568,15 +568,15 @@ class StatisticsStringTest(unittest.TestCase):
 
     def testScoresLosing(self):
         """Test the losing scores output."""
-        self.assertIn('Losing Scores: 0 : 3.00 / 4 : 5', self.text)
+        self.assertIn('Losing Scores: 0 : 3.00 / 3.5 : 5', self.text)
 
     def testScoresOverall(self):
         """Test the overall scores output."""
-        self.assertIn('Overall Scores: 0 : 2.29 / 3 : 5', self.text)
+        self.assertIn('Overall Scores: 0 : 2.29 / 3.0 : 5', self.text)
 
     def testScoresWinning(self):
         """Test the winning scores output."""
-        self.assertIn('Winning Scores: 0 : 2.00 / 4 : 4', self.text)
+        self.assertIn('Winning Scores: 0 : 2.00 / 2.0 : 4', self.text)
 
     def testStreakCurrent(self):
         """Test the current streak output."""
@@ -604,15 +604,15 @@ class StatisticsStringTest(unittest.TestCase):
 
     def testTurnsLosing(self):
         """Test the losing turns output."""
-        self.assertIn('Losing Turns: 2 : 4.75 / 5 : 8', self.text)
+        self.assertIn('Losing Turns: 2 : 4.75 / 4.5 : 8', self.text)
 
     def testTurnsOverall(self):
         """Test the overall turns output."""
-        self.assertIn('Overall Turns: 1 : 6.71 / 5 : 18', self.text)
+        self.assertIn('Overall Turns: 1 : 6.71 / 5.0 : 18', self.text)
 
     def testTurnsWinning(self):
         """Test the winning turns output."""
-        self.assertIn('Winning Turns: 1 : 5.00 / 9 : 9', self.text)
+        self.assertIn('Winning Turns: 1 : 5.00 / 5.0 : 9', self.text)
 
 
 class ValveTest(unittest.TestCase):
