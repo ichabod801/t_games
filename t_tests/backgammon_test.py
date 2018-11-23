@@ -10,8 +10,10 @@ START_TEXT_O: The starting text from the 'O' player's perspective. (str)
 START_TEXT_X: The starting text from the 'X' player's perspective. (str)
 
 Classes:
+BackBoardSetTest: A test case that can set up a board. (unittest.TestCase)
 BackMoveTest: Test movement on a BackgammonBoard. (unittest.TestCase)
-BackPlayTest: Test backgammon play generation. (unittest.TestCase)
+BackPipCountTest: Tests of BackgammonBoard.get_pip_count. (BackBoardSetTest)
+BackPlayTest: Test backgammon play generation. (BackBoardSetTest)
 BackPrintTest: Test printing a backgammon board. (unittest.TestCase)
 
 Functions:
@@ -44,6 +46,21 @@ START_TEXT_X = '\n'.join(['', '  1 1 1 1 1 1   1 2 2 2 2 2  ', '  3 4 5 6 7 8   
     '|             |             |', '| O . : . : . | X . : . : . |', '| O . : . : . | X . : . : . |',
     '| O . : . X . | X . : . : . |', '| O . : . X . | X . : . : O |', '| O . : . X . | X . : . : O |',
     '+-------------+-------------+', '  1 1 1                      ', '  2 1 0 9 8 7   6 5 4 3 2 1  '])
+
+
+class BackBoardSetTest(unittest.TestCase):
+    """A test case that can set up a board. (unittest.TestCase)"""
+
+    def setBoard(self, layout = ((6, 5), (8, 3), (13, 5), (24, 2)), moves = [], piece = 'O',
+        rolls = [6, 5], bar = []):
+        """Set up the board for a test. (None)"""
+        self.board = backgammon.BackgammonBoard(layout = layout)
+        for captured in bar:
+            self.board.cells[BAR].add_piece(captured)
+        for start, end in moves:
+            self.board.move(start, end)
+        raw_moves = self.board.get_plays(piece, rolls)
+        self.legal_moves = set(tuple(move) for move in raw_moves)
 
 
 class BackMoveTest(unittest.TestCase):
@@ -85,19 +102,36 @@ class BackMoveTest(unittest.TestCase):
         self.assertEqual(['X'], self.board.cells[BAR].contents)
 
 
-class BackPlayTest(unittest.TestCase):
-    """Test backgammon play generation. (TestCase)"""
+class BackPipCountTest(BackBoardSetTest):
+    """Tests of BackgammonBoard.get_pip_count. (BackBoardSetTest)"""
 
-    def setBoard(self, layout = ((6, 5), (8, 3), (13, 5), (24, 2)), moves = [], piece = 'O',
-        rolls = [6, 5], bar = []):
-        """Set up the board for a test. (None)"""
-        self.board = backgammon.BackgammonBoard(layout = layout)
-        for captured in bar:
-            self.board.cells[BAR].add_piece(captured)
-        for start, end in moves:
-            self.board.move(start, end)
-        raw_moves = self.board.get_plays(piece, rolls)
-        self.legal_moves = set(tuple(move) for move in raw_moves)
+    def getDoublePip(self):
+        """Get both pip counts at the same time. (tuple of int)"""
+        return (self.board.get_pip_count('X'), self.board.get_pip_count('O'))
+
+    def testHyper(self):
+        """Test the pip counts at the beginning of hypergammon."""
+        self.setBoard(layout = ((24, 1), (23, 1), (22, 1)))
+        self.assertEqual((69, 69), self.getDoublePip())
+
+    def testLate(self):
+        """Test the pip counts late in the game."""
+        self.setBoard(layout = ((1, 4), (2, 2), (3, 2)), moves = [(23, OUT), (24, OUT)])
+        self.assertEqual((14, 11), self.getDoublePip())
+
+    def testSixOne(self):
+        """Test the pip counts after X gets six-one"""
+        self.setBoard(moves = [(13, 7), (8, 7)])
+        self.assertEqual((160, 167), self.getDoublePip())
+
+    def testStart(self):
+        """Test the pip counts at the beginning of the game."""
+        self.setBoard()
+        self.assertEqual((167, 167), self.getDoublePip())
+
+
+class BackPlayTest(BackBoardSetTest):
+    """Test backgammon play generation. (BackBoardSetTest)"""
 
     def testBasicRepr(self):
         """Test debugging text representation of a standard move."""
@@ -237,25 +271,8 @@ class BackPlayTest(unittest.TestCase):
         self.setBoard(layout = ((5, 2),), moves = [(20, 24), (20, 24)], rolls = [3, 2], bar = ['X', 'O'])
         check = [((BAR, 3),)]
         self.assertEqual(set(check), self.legal_moves)
-"""
-                      1 1 1
-  1 2 3 4 5 6   7 8 9 0 1 2
-+-------------+-------------+
-| O : . : . X | . X . : . O |
-| O : . : . X | . X . : . O |
-| . : . : . X | . X . : . O |
-| . : . : . X | . : . : . O |
-| . : . : . X | . : . : . O |
-|             |             |
-| : . : . : O | : . : . : X |
-| : . : . : O | : . : . : X |
-| : . : . : O | : O : . : X |
-| X . : . : O | : O : . : X |
-| X . : . : O | : O : . : X |
-+-------------+-------------+
-  2 2 2 2 2 1   1 1 1 1 1 1
-  4 3 2 1 0 9   8 7 6 5 4 3
-"""
+
+
 class BackPrintTest(unittest.TestCase):
     """Test printing of the board on the screen. (TestCase)"""
 
