@@ -232,14 +232,38 @@ class PrintTest(unittest.TestCase):
         """Set up the test case. (None)"""
         self.board = backgammon.BackgammonBoard()
 
-    def testStart(self):
-        """Test printing the starting board."""
-        self.assertEqual(PRINT_START, self.board.get_text('X'))
-
     def testBar(self):
         """Test printing with a piece on the bar."""
         self.board.cells[BAR].contents = ['X']
         check = PRINT_START + '\n\nBar: X'
+        self.assertEqual(check, self.board.get_text('X'))
+
+    def testSixHigh(self):
+        """Test printing a board with more than five X's on a point."""
+        self.board.cells[13].contents = ['X'] * 6
+        check = PRINT_START[:93] + '6' + PRINT_START[94:]
+        self.assertEqual(check, self.board.get_text('X'))
+
+    def testSixLow(self):
+        """Test printing a board with more than five O's on a point."""
+        self.board.cells[12].contents = ['O'] * 6
+        check = PRINT_START[:393] + '6' + PRINT_START[394:]
+        self.assertEqual(check, self.board.get_text('X'))
+
+    def testStart(self):
+        """Test printing the starting board."""
+        self.assertEqual(PRINT_START, self.board.get_text('X'))
+
+    def testTenHigh(self):
+        """Test printing a board with more than nine O's on a point."""
+        self.board.cells[19].contents = ['O'] * 10
+        check = PRINT_START[:107] + '1' + PRINT_START[108:137] + '0' + PRINT_START[138:]
+        self.assertEqual(check, self.board.get_text('X'))
+
+    def testTenLow(self):
+        """Test printing a board with more than nine X's on a point."""
+        self.board.cells[6].contents = ['X'] * 10
+        check = PRINT_START[:377] + '1' + PRINT_START[378:407] + '0' + PRINT_START[408:]
         self.assertEqual(check, self.board.get_text('X'))
 
 
