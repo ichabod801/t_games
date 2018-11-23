@@ -10,7 +10,9 @@ START_TEXT_O: The starting text from the 'O' player's perspective. (str)
 START_TEXT_X: The starting text from the 'X' player's perspective. (str)
 
 Classes:
+BackAutoBearTest: Tests of Backgammon.auto_bear. (unittest.TestCase)
 BackBoardSetTest: A test case that can set up a board. (unittest.TestCase)
+BackCheckWinTest: Tests of Backgammon.check_win. (BackBoardSetTest)
 BackMoveTest: Test movement on a BackgammonBoard. (unittest.TestCase)
 BackPipCountTest: Tests of BackgammonBoard.get_pip_count. (BackBoardSetTest)
 BackPlayTest: Test backgammon play generation. (BackBoardSetTest)
@@ -115,8 +117,76 @@ class BackBoardSetTest(unittest.TestCase):
             self.board.cells[BAR].add_piece(captured)
         for start, end in moves:
             self.board.move(start, end)
-        raw_moves = self.board.get_plays(piece, rolls)
-        self.legal_moves = set(tuple(move) for move in raw_moves)
+
+
+class BackCheckWinTest(BackBoardSetTest):
+    """Tests of Backgammon.check_win. (unittest.TestCase)"""
+
+    def setBoard(self, layout = ((6, 5), (8, 3), (13, 5), (24, 2)), moves = [], piece = 'O',
+        rolls = [6, 5], bar = []):
+        """Set up the board for a test. (None)"""
+        super(BackCheckWinTest, self).setBoard(layout, moves, piece, rolls, bar)
+        self.human = unitility.AutoBot()
+        self.game = backgammon.Backgammon(self.human, 'none')
+        self.game.set_up()
+        self.game.board = self.board
+        self.game.board.cells[OUT].contents = [piece] * 15
+
+    def testMatchWinBackgammonHome(self):
+        """Test a match backgammon win due to a piece in the enemy's home."""
+        self.setBoard(layout = ((1, 1),), piece = 'X')
+        self.board.cells[1].contents = ['O']
+        self.game.doubling_die = 2
+        self.assertEqual(6, self.game.check_win('X'))
+
+    def testMatchWinBackgammonBar(self):
+        """Test a match backgammon win due to a piece on the bar."""
+        self.setBoard(layout = ((1, 1),), piece = 'O')
+        self.board.cells[1].contents = []
+        self.board.cells[BAR].contents = ['X']
+        self.game.doubling_die = 4
+        self.assertEqual(12, self.game.check_win('O'))
+
+    def testMatchWinBasic(self):
+        """Test a match win."""
+        self.setBoard(layout = ((1, 1),), piece = 'X')
+        self.board.cells[1].contents = []
+        self.board.cells[OUT].contents.append('O')
+        self.game.doubling_die = 8
+        self.assertEqual(8, self.game.check_win('X'))
+
+    def testMatchWinGammon(self):
+        """Test a match win with a gammon."""
+        self.setBoard(layout = ((1, 1),), piece = 'O')
+        self.board.cells[24].contents = []
+        self.game.doubling_die = 16
+        self.assertEqual(32, self.game.check_win('O'))
+
+    def testWinBackgammonHome(self):
+        """Test a backgammon win due to a piece in the enemy's home."""
+        self.setBoard(layout = ((1, 1),), piece = 'X')
+        self.board.cells[1].contents = ['O']
+        self.assertEqual(3, self.game.check_win('X'))
+
+    def testWinBackgammonBar(self):
+        """Test a backgammon win due to a piece on the bar."""
+        self.setBoard(layout = ((1, 1),), piece = 'O')
+        self.board.cells[1].contents = []
+        self.board.cells[BAR].contents = ['X']
+        self.assertEqual(3, self.game.check_win('O'))
+
+    def testWinBasic(self):
+        """Test a basic win."""
+        self.setBoard(layout = ((1, 1),), piece = 'X')
+        self.board.cells[1].contents = []
+        self.board.cells[OUT].contents.append('O')
+        self.assertEqual(1, self.game.check_win('X'))
+
+    def testWinGammon(self):
+        """Test a win with a gammon."""
+        self.setBoard(layout = ((1, 1),), piece = 'O')
+        self.board.cells[24].contents = []
+        self.assertEqual(2, self.game.check_win('O'))
 
 
 class BackMoveTest(unittest.TestCase):
@@ -188,6 +258,13 @@ class BackPipCountTest(BackBoardSetTest):
 
 class BackPlayTest(BackBoardSetTest):
     """Test backgammon play generation. (BackBoardSetTest)"""
+
+    def setBoard(self, layout = ((6, 5), (8, 3), (13, 5), (24, 2)), moves = [], piece = 'O',
+        rolls = [6, 5], bar = []):
+        """Set up the board for a test. (None)"""
+        super(BackPlayTest, self).setBoard(layout, moves, piece, rolls, bar)
+        raw_moves = self.board.get_plays(piece, rolls)
+        self.legal_moves = set(tuple(move) for move in raw_moves)
 
     def testBasicRepr(self):
         """Test debugging text representation of a standard move."""

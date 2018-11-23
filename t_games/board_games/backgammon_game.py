@@ -943,7 +943,7 @@ class Backgammon(game.Game):
         Parameters:
         piece: The piece used by the player being checked. (str)
         """
-        other_piece = 'XO'['OX'.index(piece)]
+        other_piece = 'O' if piece == 'X' else 'X'
         result = 0
         # Check for win.
         if self.board.cells[OUT].count(piece) == self.win_count:
