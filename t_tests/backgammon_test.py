@@ -27,6 +27,7 @@ import sys
 
 import t_games.board_games.backgammon_game as backgammon
 import t_games.player as player
+import t_tests.unitility as unitility
 
 
 BAR = -1
@@ -46,6 +47,61 @@ START_TEXT_X = '\n'.join(['', '  1 1 1 1 1 1   1 2 2 2 2 2  ', '  3 4 5 6 7 8   
     '|             |             |', '| O . : . : . | X . : . : . |', '| O . : . : . | X . : . : . |',
     '| O . : . X . | X . : . : . |', '| O . : . X . | X . : . : O |', '| O . : . X . | X . : . : O |',
     '+-------------+-------------+', '  1 1 1                      ', '  2 1 0 9 8 7   6 5 4 3 2 1  '])
+
+
+class BackAutoBearTest(unittest.TestCase):
+    """Tests of Backgammon.auto_bear. (unittest.TestCase)"""
+
+    def getHome(self):
+        """Get the state of X's home."""
+        return [self.game.board.cells[point].contents for point in range(6, 0, -1)]
+
+    def setUp(self):
+        self.human = unitility.AutoBot()
+        self.game = backgammon.Backgammon(self.human, 'none')
+        self.game.board = backgammon.BackgammonBoard(layout = ((4, 1), (2, 1), (1, 2)))
+
+    def testInside(self):
+        """Test bearing two pieces below the max piece."""
+        self.game.rolls = [2, 1]
+        self.game.auto_bear(self.human, 'X')
+        self.assertEqual([[], [], ['X'], [], [], ['X']], self.getHome())
+
+    def testNoneHome(self):
+        """Test a case where no bearing is possible."""
+        self.game.rolls = [3, 3]
+        self.game.auto_bear(self.human, 'X')
+        self.assertEqual([[], [], ['X'], [], ['X'], ['X', 'X']], self.getHome())
+
+    def testNoneWarning(self):
+        """Test the warning from a case where no bearing is possible."""
+        self.game.rolls = [3, 3]
+        self.game.auto_bear(self.human, 'X')
+        self.assertEqual('There are no pieces that can be auto-built.\n', self.human.errors[0])
+
+    def testOnPoint(self):
+        """Test bearing two pieces with exact rolls."""
+        self.game.rolls = [4, 2]
+        self.game.auto_bear(self.human, 'X')
+        self.assertEqual([[], [], [], [], [], ['X', 'X']], self.getHome())
+
+    def testOver(self):
+        """Test bearing two pieces with over-rolls."""
+        self.game.rolls = [6, 5]
+        self.game.auto_bear(self.human, 'X')
+        self.assertEqual([[], [], [], [], [], ['X', 'X']], self.getHome())
+
+    def testPartialHome(self):
+        """Test a case where only one roll can bear."""
+        self.game.rolls = [3, 2]
+        self.game.auto_bear(self.human, 'X')
+        self.assertEqual([[], [], ['X'], [], [], ['X', 'X']], self.getHome())
+
+    def testPartialHomeRoll(self):
+        """Test thre remaining roll after a case where only one roll can bear."""
+        self.game.rolls = [3, 2]
+        self.game.auto_bear(self.human, 'X')
+        self.assertEqual([3], self.game.rolls)
 
 
 class BackBoardSetTest(unittest.TestCase):
