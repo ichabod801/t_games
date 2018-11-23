@@ -1500,7 +1500,7 @@ class BackgammonBoard(board.LineBoard):
                         row_text += '{} '.format(self.cells[location].contents[0])
                 else:
                     # Handle board design.
-                    row_text += '{} '.format(':.'[location % 2])
+                    row_text += '{} '.format('.' if location % 2 else ':')
                 if bar_check == 5:
                     # Handle the bar.
                     row_text += '| '
