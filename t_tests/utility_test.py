@@ -11,6 +11,7 @@ NumberWordTests: Tests of converting numbers to words. (unittest.TestCase)
 OxfordTest: Tests of converting Python lists to English lists. (TestCase)
 PluralTest: Tests of getting the singular/plural form. (unittest.TestCase)
 PowTest: Tests of power calculations. (unittest.TestCase)
+StreakTest: Tests of longest streak calculations. (unittest.TestCase)
 """
 
 
@@ -263,6 +264,39 @@ class PowTest(unittest.TestCase):
     def testSmall(self):
         """Test a small power calculation."""
         self.assertEqual(81, utility.pow(3, 4))
+
+
+class StreakTest(unittest.TestCase):
+    """Tests of longest streak calculations. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.results = [1, 1, -1, -1, -1, -1, 0, 1, -1, 0, 1, 1, 1]
+        self.streaks = utility.streaks(self.results)
+
+    def testCurrent(self):
+        """Test the current streak calculation."""
+        self.assertEqual((3, 1), self.streaks[:2])
+
+    def testDuplicate(self):
+        """Test a longest streak coming more than once in the results."""
+        self.assertEqual(1, self.streaks[2][0])
+
+    def testEarlier(self):
+        """Test a longest streak coming earlier in the results."""
+        self.assertEqual(4, self.streaks[2][-1])
+
+    def testEmpty(self):
+        """Test a longest streak with no results."""
+        self.assertEqual((0, 0, [0, 0, 0]), utility.streaks([]))
+
+    def testLater(self):
+        """Test a longest streak coming later in the results."""
+        self.assertEqual(3, self.streaks[2][1])
+
+    def testNone(self):
+        """Test a longest streak of zero."""
+        streaks = utility.streaks([result for result in self.results if result])
+        self.assertEqual(0, streaks[2][0])
 
 
 if __name__ == '__main__':

@@ -270,9 +270,6 @@ def streaks(values):
             previous = value
     # Record the last streak.
     lengths[value] = max(length, lengths[value])
-    # Get notable streaks.
-    max_winning = max(max(lengths), 0)
-    max_losing = min(min(lengths), 0)
     return length, value, lengths
 
 
