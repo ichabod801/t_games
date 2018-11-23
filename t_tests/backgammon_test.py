@@ -231,6 +231,7 @@ class PrintTest(unittest.TestCase):
     def setUp(self):
         """Set up the test case. (None)"""
         self.board = backgammon.BackgammonBoard()
+        self.maxDiff = None
 
     def testBar(self):
         """Test printing with a piece on the bar."""

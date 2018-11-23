@@ -1465,15 +1465,16 @@ class BackgammonBoard(board.LineBoard):
         # Set up attributes
         self.legal_plays = []
 
-    def board_text(self, locations):
+    def board_text(self, locations, reverse = False):
         """
         Generate a text lines for the pieces on the board. (list of str)
 
         Parameters:
         locations: The order for displaying the points. (list of int)
+        reverse: A flag for reversing the rows.
         """
-        lines = []
         # Loop through placements within points.
+        lines = []
         for row in range(5):
             row_text = '| '
             # Loop through the points.
@@ -1482,13 +1483,18 @@ class BackgammonBoard(board.LineBoard):
                 if pieces > row:
                     # Handle first row numbers.
                     if row == 0 and pieces > 5:
-                        if pieces > 9:
+                        if pieces > 9 and reverse:
                             row_text += '{} '.format(pieces % 10)
+                        elif pieces > 9:
+                            row_text += '{} '.format(pieces // 10)
                         elif pieces > 5:
                             row_text += '{} '.format(pieces)
                     # Handle second row number.
                     elif row == 1 and pieces > 9:
-                        row_text += '1 '
+                        if reverse:
+                            row_text += '{} '.format(pieces // 10)
+                        else:
+                            row_text += '{} '.format(pieces % 10)
                     # Handle piece symbols.
                     else:
                         row_text += '{} '.format(self.cells[location].contents[0])
@@ -1499,6 +1505,9 @@ class BackgammonBoard(board.LineBoard):
                     # Handle the bar.
                     row_text += '| '
             lines.append(row_text + '|')
+        # Reverse the lines if requested.
+        if reverse:
+            lines.reverse()
         return lines
 
     def get_moves(self, piece, rolls, moves):
@@ -1726,7 +1735,7 @@ class BackgammonBoard(board.LineBoard):
         lines.extend(self.board_text(order_high))
         # Get the middle and bottom half of the board.
         lines.append('|             |             |')
-        lines.extend(reversed(self.board_text(order_low)))
+        lines.extend(self.board_text(order_low, reverse = True))
         lines.extend(frame_low)
         # Include a line for any pieces on the bar.
         if self.cells[BAR].contents:
