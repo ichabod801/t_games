@@ -350,6 +350,29 @@ class BackPrintTest(unittest.TestCase):
         self.assertEqual(check, self.board.get_text('X'))
 
 
+class BackSetUpTest(unittest.TestCase):
+    """Tests of setting up the board."""
+
+    def setUp(self):
+        self.board = backgammon.BackgammonBoard()
+
+    def testHigh(self):
+        """Test pieces being placed on the high half of the board."""
+        self.assertEqual(['X', 'X'], self.board.cells[24].contents)
+
+    def testHighCross(self):
+        """Test pieces being placed across from the high half of the board."""
+        self.assertEqual(['O'] * 5, self.board.cells[12].contents)
+
+    def testLow(self):
+        """Test pieces being placed on the low half of the board."""
+        self.assertEqual(['X'] * 5, self.board.cells[6].contents)
+
+    def testLowCross(self):
+        """Test pieces being placed on the low half of the board."""
+        self.assertEqual(['O'] * 3, self.board.cells[17].contents)
+
+
 def make_play(moves):
     """
     Make a BackgammonPlay from a list of moves as tuples. (BackgammonPlay)
