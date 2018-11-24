@@ -14,6 +14,7 @@ BackAutoBearTest: Tests of Backgammon.auto_bear. (unittest.TestCase)
 BackBoardSetTest: A test case that can set up a board. (unittest.TestCase)
 BackCheckWinTest: Tests of Backgammon.check_win. (BackBoardSetTest)
 BackDefaultTest: Tests of Backgammon.default repeating move. (TestCase)
+BackDoBearTest: Tests of the bear command in Backgammon. (unittest.TestCase)
 BackMoveTest: Test movement on a BackgammonBoard. (unittest.TestCase)
 BackPipCountTest: Tests of BackgammonBoard.get_pip_count. (BackBoardSetTest)
 BackPlayTest: Test backgammon play generation. (BackBoardSetTest)
@@ -228,6 +229,163 @@ class BackDefaultTest(unittest.TestCase):
         self.bot.held_inputs = ['eggs']
         self.game.default('spam * 3')
         self.assertEqual(['spam', 'spam', 'spam', 'eggs'], self.bot.held_inputs)
+
+
+class BackDoBearOTest(unittest.TestCase):
+    """Tests of the bear command with the O pieces in Backgammon. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.game = backgammon.Backgammon(self.bot, 'none')
+        self.game.layout = ((4, 2), (2, 2), (1, 2))
+        self.game.players[1] = unitility.AutoBot()
+        self.game.set_up()
+        self.game.player_index = self.game.players.index(self.game.bot)
+
+    def testBarredBearError(self):
+        """Test of error from bearing off an O with an O still on the bar."""
+        self.game.rolls = [4, 2]
+        self.game.board.cells[BAR].contents = ['O']
+        self.game.do_bear('2')
+        self.assertEqual(['You still have a piece on the bar.\n'], self.game.bot.errors)
+
+    def testBarredBearPieces(self):
+        """Test of pieces after bearing off an O with an O still on the bar."""
+        self.game.rolls = [4, 2]
+        self.game.board.cells[BAR].contents = ['O']
+        self.game.do_bear('2')
+        check = [2, 2, 0, 2, 0, 0]
+        self.assertEqual(check, [len(self.game.board.cells[point]) for point in range(24, 18, -1)])
+
+    def testBasicBear(self):
+        """Test bearing off two O's with exact rolls."""
+        self.game.rolls = [4, 2]
+        self.game.do_bear('4 2')
+        check = (['O'], ['O'])
+        self.assertEqual(check, (self.game.board.cells[21].contents, self.game.board.cells[21].contents))
+
+    def testHomelessBearError(self):
+        """Test the error from trying to bear an O with pieces outside O's home."""
+        self.game.rolls = [4, 2]
+        self.game.board.cells[15].contents = ['O']
+        self.game.do_bear('2')
+        self.assertEqual(['You do not have all of your pieces in your home yet.\n'], self.game.bot.errors)
+
+    def testHomelessBearPieces(self):
+        """Test the pieces after trying to bear an O with pieces outside O's home."""
+        self.game.rolls = [4, 2]
+        self.game.board.cells[15].contents = ['O']
+        self.game.do_bear('2')
+        check = [2, 2, 0, 2, 0, 0]
+        self.assertEqual(check, [len(self.game.board.cells[point]) for point in range(24, 18, -1)])
+
+    def testNothingBearError(self):
+        """Test the error from trying to bear an O from an empty space."""
+        self.game.rolls = [3, 2]
+        self.game.do_bear('3')
+        self.assertEqual(['You do not have a piece on the 3 point.\n'], self.game.bot.errors)
+
+    def testNothingBearPieces(self):
+        """Test the the pieces after trying to bear an O from an empty space."""
+        self.game.rolls = [3, 2]
+        self.game.do_bear('3')
+        check = [2, 2, 0, 2, 0, 0]
+        self.assertEqual(check, [len(self.game.board.cells[point]) for point in range(24, 18, -1)])
+
+    def testSingleBear(self):
+        """Test bearing off one piece."""
+        self.game.rolls = [4, 1]
+        self.game.do_bear('1')
+        self.assertEqual(['O'], self.game.board.cells[24].contents)
+
+
+class BackDoBearXTest(unittest.TestCase):
+    """Tests of the bear command with the X pieces in Backgammon. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.game = backgammon.Backgammon(self.bot, 'none')
+        self.game.layout = ((4, 2), (2, 2), (1, 2))
+        self.game.set_up()
+        self.game.player_index = self.game.players.index(self.bot)
+
+    def testAutoBear(self):
+        """Test that auto_bear is called after do_bear with no arguments."""
+        self.game.auto_bear = unitility.ProtoObject()
+        self.game.rolls = [4, 2]
+        self.game.do_bear('')
+        self.assertEqual((self.bot, 'X'), self.game.auto_bear.args)
+
+    def testBarredBearError(self):
+        """Test of error from bearing off an X with an X still on the bar."""
+        self.game.rolls = [4, 2]
+        self.game.board.cells[BAR].contents = ['X']
+        self.game.do_bear('2')
+        self.assertEqual(['You still have a piece on the bar.\n'], self.bot.errors)
+
+    def testBarredBearPieces(self):
+        """Test of pieces after bearing off an X with an X still on the bar."""
+        self.game.rolls = [4, 2]
+        self.game.board.cells[BAR].contents = ['X']
+        self.game.do_bear('2')
+        self.assertEqual([2, 2, 0, 2, 0, 0], [len(self.game.board.cells[point]) for point in range(1, 7)])
+
+    def testBasicBear(self):
+        """Test bearing off two X's with exact rolls."""
+        self.game.rolls = [4, 2]
+        self.game.do_bear('4 2')
+        check = (['X'], ['X'])
+        self.assertEqual(check, (self.game.board.cells[4].contents, self.game.board.cells[4].contents))
+
+    def testBearOff(self):
+        """Test bearing with the off word."""
+        self.game.rolls = [4, 2]
+        self.game.do_bear('off 2')
+        self.assertEqual(['X'], self.game.board.cells[2].contents)
+
+    def testHomelessBearError(self):
+        """Test the error from trying to bear an X with pieces outside X's home."""
+        self.game.rolls = [4, 2]
+        self.game.board.cells[15].contents = ['X']
+        self.game.do_bear('2')
+        self.assertEqual(['You do not have all of your pieces in your home yet.\n'], self.bot.errors)
+
+    def testHomelessBearPieces(self):
+        """Test the pieces trying to bear an X with pieces outside X's home."""
+        self.game.rolls = [4, 2]
+        self.game.board.cells[15].contents = ['X']
+        self.game.do_bear('2')
+        self.assertEqual([2, 2, 0, 2, 0, 0], [len(self.game.board.cells[point]) for point in range(1, 7)])
+
+    def testNothingBearError(self):
+        """Test the error from trying to bear an X from an empty space."""
+        self.game.rolls = [3, 2]
+        self.game.do_bear('3')
+        self.assertEqual(['You do not have a piece on the 3 point.\n'], self.bot.errors)
+
+    def testNothingBearPieces(self):
+        """Test the the pieces after trying to bear an X from an empty space."""
+        self.game.rolls = [3, 2]
+        self.game.do_bear('3')
+        self.assertEqual([2, 2, 0, 2, 0, 0], [len(self.game.board.cells[point]) for point in range(1, 7)])
+
+    def testSingleBear(self):
+        """Test bearing off one piece."""
+        self.game.rolls = [4, 1]
+        self.game.do_bear('1')
+        self.assertEqual(['X'], self.game.board.cells[1].contents)
+
+    def testWordBearError(self):
+        """Test the error from bearing off with a word instead of a number."""
+        self.game.rolls = [4, 1]
+        self.game.do_bear('one')
+        self.assertEqual(['Invalid argument to the bear command: one.\n'], self.bot.errors)
+
+    def testWordBearPieces(self):
+        """Test the pieces after bearing off with a word instead of a number."""
+        self.game.rolls = [4, 1]
+        self.game.do_bear('one')
+        self.assertEqual([2, 2, 0, 2, 0, 0], [len(self.game.board.cells[point]) for point in range(1, 7)])
 
 
 class BackMoveTest(unittest.TestCase):
