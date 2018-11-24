@@ -982,7 +982,7 @@ class Backgammon(game.Game):
         # Try to parse if any notation fournd.
         if count:
             try:
-                player.held_inputs = [move] * int(count) + player.held_inputs
+                player.held_inputs = [move.strip()] * int(count) + player.held_inputs
                 return True
             except ValueError:
                 pass

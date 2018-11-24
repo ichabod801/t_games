@@ -13,6 +13,7 @@ Classes:
 BackAutoBearTest: Tests of Backgammon.auto_bear. (unittest.TestCase)
 BackBoardSetTest: A test case that can set up a board. (unittest.TestCase)
 BackCheckWinTest: Tests of Backgammon.check_win. (BackBoardSetTest)
+BackDefaultTest: Tests of Backgammon.default repeating move. (TestCase)
 BackMoveTest: Test movement on a BackgammonBoard. (unittest.TestCase)
 BackPipCountTest: Tests of BackgammonBoard.get_pip_count. (BackBoardSetTest)
 BackPlayTest: Test backgammon play generation. (BackBoardSetTest)
@@ -187,6 +188,46 @@ class BackCheckWinTest(BackBoardSetTest):
         self.setBoard(layout = ((1, 1),), piece = 'O')
         self.board.cells[24].contents = []
         self.assertEqual(2, self.game.check_win('O'))
+
+
+class BackDefaultTest(unittest.TestCase):
+    """Tests of Backgammon.default repeating move. (TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.game = backgammon.Backgammon(self.bot, 'none')
+        self.game.player_index = 0
+
+    def testAsterisk(self):
+        """Test repeating a command with an asterisk."""
+        self.game.default('13 7 * 2')
+        self.assertEqual(['13 7', '13 7'], self.bot.held_inputs)
+
+    def testError(self):
+        """Test getting an error without any repeat syntax."""
+        self.game.default('Sit!')
+        self.assertEqual(['I do not understand that move.\n'], self.bot.errors)
+
+    def testNoOpenError(self):
+        """Test getting an error with no open parenthesis."""
+        self.game.default('13 7 4)')
+        self.assertEqual(['I do not understand that move.\n'], self.bot.errors)
+
+    def testNoOpenHeld(self):
+        """Test not holding anything with no open parenthesis."""
+        self.game.default('13 7 4)')
+        self.assertEqual([], self.bot.held_inputs)
+
+    def testParentheses(self):
+        """Test repeating a command with parentheses."""
+        self.game.default('spam (4)')
+        self.assertEqual(['spam', 'spam', 'spam', 'spam'], self.bot.held_inputs)
+
+    def testSaveHeld(self):
+        """Test keeping the player's current held inputs."""
+        self.bot.held_inputs = ['eggs']
+        self.game.default('spam * 3')
+        self.assertEqual(['spam', 'spam', 'spam', 'eggs'], self.bot.held_inputs)
 
 
 class BackMoveTest(unittest.TestCase):
