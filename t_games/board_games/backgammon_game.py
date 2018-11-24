@@ -1038,14 +1038,20 @@ class Backgammon(game.Game):
                 # Remove the correct roll.
                 elif roll in self.rolls:
                     self.rolls.remove(roll)
+                elif (piece == 'X' and bear < max(points)) or (piece == 'O' and bear > min(points)):
+                    # Warn for over roll with an under piece.
+                    player.error('You must clear the pieces above the {} point first.'.format(roll))
+                    break
                 elif roll < max(self.rolls):
                     self.rolls.remove(max(self.rolls))
                 else:
                     # Warn for no valid roll.
-                    player.error('There is no valid move for the {} point.'.format(roll))
-                    continue
+                    player.error('You need a higher roll to bear from the {} point.'.format(roll))
+                    break
                 # Bear off the piece
                 self.board.move(bear, OUT)
+                if not self.board.cells[bear]:
+                    points.remove(bear)
         # Continue the turn if there are still rolls to move.
         return self.rolls
 

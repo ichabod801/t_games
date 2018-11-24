@@ -292,11 +292,50 @@ class BackDoBearOTest(unittest.TestCase):
         check = [2, 2, 0, 2, 0, 0]
         self.assertEqual(check, [len(self.game.board.cells[point]) for point in range(24, 18, -1)])
 
+    def testOverBear(self):
+        """Test bearing with higher numbers than needed."""
+        self.game.rolls = [6, 5]
+        self.game.do_bear('4 4')
+        self.assertEqual([], self.game.board.cells[21].contents)
+
+    def testPartialBear(self):
+        """Test bearing valid point before an invalid point."""
+        self.game.rolls = [4, 3]
+        self.game.do_bear('4 2')
+        check = [2, 2, 0, 1, 0, 0]
+        self.assertEqual(check, [len(self.game.board.cells[point]) for point in range(24, 18, -1)])
+
     def testSingleBear(self):
         """Test bearing off one piece."""
         self.game.rolls = [4, 1]
         self.game.do_bear('1')
         self.assertEqual(['O'], self.game.board.cells[24].contents)
+
+    def testUnderBearError(self):
+        """Test the error from bearing with higher number and higher pieces."""
+        self.game.rolls = [6, 5]
+        self.game.do_bear('2 2')
+        self.assertEqual(['You must clear the pieces above the 2 point first.\n'], self.game.bot.errors)
+
+    def testUnderBearPieces(self):
+        """Test the error from bearing with higher number and higher pieces."""
+        self.game.rolls = [6, 5]
+        self.game.do_bear('2 2')
+        check = [2, 2, 0, 2, 0, 0]
+        self.assertEqual(check, [len(self.game.board.cells[point]) for point in range(24, 18, -1)])
+
+    def testUnderRollError(self):
+        """Test the error from bearing with higher number and higher pieces."""
+        self.game.rolls = [3, 2]
+        self.game.do_bear('4 4')
+        self.assertEqual(['You need a higher roll to bear from the 4 point.\n'], self.game.bot.errors)
+
+    def testUnderRollPieces(self):
+        """Test the error from bearing with higher number and higher pieces."""
+        self.game.rolls = [3, 2]
+        self.game.do_bear('4 4')
+        check = [2, 2, 0, 2, 0, 0]
+        self.assertEqual(check, [len(self.game.board.cells[point]) for point in range(24, 18, -1)])
 
 
 class BackDoBearXTest(unittest.TestCase):
@@ -369,11 +408,47 @@ class BackDoBearXTest(unittest.TestCase):
         self.game.do_bear('3')
         self.assertEqual([2, 2, 0, 2, 0, 0], [len(self.game.board.cells[point]) for point in range(1, 7)])
 
+    def testOverBear(self):
+        """Test bearing with higher numbers than needed."""
+        self.game.rolls = [6, 5]
+        self.game.do_bear('4 4')
+        self.assertEqual([], self.game.board.cells[4].contents)
+
+    def testPartialBear(self):
+        """Test bearing valid point before an invalid point."""
+        self.game.rolls = [4, 3]
+        self.game.do_bear('4 2')
+        self.assertEqual([2, 2, 0, 1, 0, 0], [len(self.game.board.cells[point]) for point in range(1, 7)])
+
     def testSingleBear(self):
         """Test bearing off one piece."""
         self.game.rolls = [4, 1]
         self.game.do_bear('1')
         self.assertEqual(['X'], self.game.board.cells[1].contents)
+
+    def testUnderBearError(self):
+        """Test the error from bearing with higher number and higher pieces."""
+        self.game.rolls = [6, 5]
+        self.game.do_bear('2 2')
+        self.assertEqual(['You must clear the pieces above the 2 point first.\n'], self.bot.errors)
+
+    def testUnderBearPieces(self):
+        """Test the error from bearing with higher number and higher pieces."""
+        self.game.rolls = [6, 5]
+        self.game.do_bear('2 2')
+        self.assertEqual([2, 2, 0, 2, 0, 0], [len(self.game.board.cells[point]) for point in range(1, 7)])
+
+    def testUnderRollError(self):
+        """Test the error from bearing with higher number and higher pieces."""
+        self.game.rolls = [3, 2]
+        self.game.do_bear('4 4')
+        self.assertEqual(['You need a higher roll to bear from the 4 point.\n'], self.bot.errors)
+
+    def testUnderRollPieces(self):
+        """Test the error from bearing with higher number and higher pieces."""
+        self.game.rolls = [3, 2]
+        self.game.do_bear('4 4')
+        self.assertEqual([2, 2, 0, 2, 0, 0], [len(self.game.board.cells[point]) for point in range(1, 7)])
 
     def testWordBearError(self):
         """Test the error from bearing off with a word instead of a number."""
