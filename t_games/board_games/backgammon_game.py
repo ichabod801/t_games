@@ -1069,7 +1069,7 @@ class Backgammon(game.Game):
         try:
             needed_roll = int(argument)
         except ValueError:
-            player.error('Invalid argument to the enter command: {}.'.format(argument))
+            player.error('Invalid argument to the enter command: {!r}.'.format(argument))
             return True
         point = needed_roll
         if piece == 'X':

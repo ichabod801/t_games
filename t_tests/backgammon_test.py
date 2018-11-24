@@ -14,7 +14,10 @@ BackAutoBearTest: Tests of Backgammon.auto_bear. (unittest.TestCase)
 BackBoardSetTest: A test case that can set up a board. (unittest.TestCase)
 BackCheckWinTest: Tests of Backgammon.check_win. (BackBoardSetTest)
 BackDefaultTest: Tests of Backgammon.default repeating move. (TestCase)
-BackDoBearTest: Tests of the bear command in Backgammon. (unittest.TestCase)
+BackDoBearOTest: Tests of the bear command for O pieces. (unittest.TestCase)
+BackDoBearOTest: Tests of the bear command for X pieces. (unittest.TestCase)
+BackDoEnterTestO: Tests of the enter command for O pieces. (unittest.TestCase)
+BackDoEnterTestX: Tests of the enter command for X pieces. (unittest.TestCase)
 BackMoveTest: Test movement on a BackgammonBoard. (unittest.TestCase)
 BackPipCountTest: Tests of BackgammonBoard.get_pip_count. (BackBoardSetTest)
 BackPlayTest: Test backgammon play generation. (BackBoardSetTest)
@@ -239,6 +242,7 @@ class BackDoBearOTest(unittest.TestCase):
         self.game = backgammon.Backgammon(self.bot, 'none')
         self.game.layout = ((4, 2), (2, 2), (1, 2))
         self.game.players[1] = unitility.AutoBot()
+        self.game.players[1].name = 'Evil {}'.format(self.bot.name)
         self.game.set_up()
         self.game.player_index = self.game.players.index(self.game.bot)
 
@@ -461,6 +465,159 @@ class BackDoBearXTest(unittest.TestCase):
         self.game.rolls = [4, 1]
         self.game.do_bear('one')
         self.assertEqual([2, 2, 0, 2, 0, 0], [len(self.game.board.cells[point]) for point in range(1, 7)])
+
+
+class BackDoEnterTestO(unittest.TestCase):
+    """Tests of the enter command for O pieces in Backgammon."""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.game = backgammon.Backgammon(self.bot, 'none')
+        self.game.layout = ((1, 2), (2, 1), (4, 2), (20, 1))
+        self.game.players[1] = unitility.AutoBot()
+        self.game.players[1].name = 'Evil {}'.format(self.bot.name)
+        self.game.set_up()
+        self.game.player_index = self.game.players.index(self.game.bot)
+        self.game.board.cells[BAR].contents = ['O']
+
+    def testEnterBlockedBar(self):
+        """Test the bar after trying to enter a blocked point."""
+        self.game.rolls = [4, 1]
+        self.game.do_enter('4')
+        self.assertEqual(['O'], self.game.board.cells[BAR].contents)
+
+    def testEnterBlockedError(self):
+        """Test the error from trying to enter a blocked point."""
+        self.game.rolls = [4, 1]
+        self.game.do_enter('4')
+        self.assertEqual(['That point is blocked.\n'], self.game.bot.errors)
+
+    def testEnterCaptureBar(self):
+        """Test removing an O piece from the bar when entering a point with an X."""
+        self.game.rolls = [2, 1]
+        self.game.do_enter('2')
+        self.assertEqual(['X'], self.game.board.cells[BAR].contents)
+
+    def testEnterCaptureHome(self):
+        """Test putting an O piece on the board when entering a point with an X."""
+        self.game.rolls = [2, 1]
+        self.game.do_enter('2')
+        self.assertEqual(['O'], self.game.board.cells[5].contents)
+
+    def testEnterEmptyBar(self):
+        """Test removing an O piece from the bar when entering an empty space."""
+        self.game.rolls = [6, 1]
+        self.game.do_enter('6')
+        self.assertEqual([], self.game.board.cells[BAR].contents)
+
+    def testEnterEmptyHome(self):
+        """Test putting an O piece on the board when entering an empty space."""
+        self.game.rolls = [6, 1]
+        self.game.do_enter('6')
+        self.assertEqual(['O'], self.game.board.cells[6].contents)
+
+    def testEnterMineBar(self):
+        """Test removing an O piece from the bar when entering a point with an O."""
+        self.game.rolls = [6, 5]
+        self.game.do_enter('5')
+        self.assertEqual([], self.game.board.cells[BAR].contents)
+
+    def testEnterMineHome(self):
+        """Test putting an O piece on the board when entering a point with an O."""
+        self.game.rolls = [6, 5]
+        self.game.do_enter('5')
+        self.assertEqual(['O', 'O'], self.game.board.cells[5].contents)
+
+    def testEnterNoCaptureError(self):
+        """Test the error from trying to enter without a piece on the bar."""
+        self.game.rolls = [6, 1]
+        self.game.board.cells[BAR].contents = []
+        self.game.do_enter('6')
+        self.assertEqual(['You do not have a piece on the bar.\n'], self.game.bot.errors)
+
+    def testEnterNoRollBar(self):
+        """Test the bar after trying to enter without the required roll."""
+        self.game.rolls = [4, 1]
+        self.game.do_enter('6')
+        self.assertEqual(['O'], self.game.board.cells[BAR].contents)
+
+    def testEnterNoRollError(self):
+        """Test the error from trying to enter without the required roll."""
+        self.game.rolls = [4, 1]
+        self.game.do_enter('6')
+        self.assertEqual(['You need to roll a 6 to enter on that point.\n'], self.game.bot.errors)
+
+    def testEnterWordBar(self):
+        """Test the bar after trying to enter with invalid input."""
+        self.game.rolls = [5, 6]
+        self.game.do_enter('six')
+        self.assertEqual(['O'], self.game.board.cells[BAR].contents)
+
+    def testEnterWordError(self):
+        """Test the error from trying to enter with invalid input."""
+        self.game.rolls = [5, 6]
+        self.game.do_enter('six')
+        self.assertEqual(["Invalid argument to the enter command: 'six'.\n"], self.game.bot.errors)
+
+
+class BackDoEnterTestX(unittest.TestCase):
+    """Tests of the enter command for X pieces in Backgammon."""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.game = backgammon.Backgammon(self.bot, 'none')
+        self.game.layout = ((1, 2), (2, 1), (4, 2), (20, 1))
+        self.game.set_up()
+        self.game.player_index = self.game.players.index(self.bot)
+        self.game.board.cells[BAR].contents = ['X']
+
+    def testEnterBlockedBar(self):
+        """Test the bar after trying to enter a blocked point."""
+        self.game.rolls = [4, 1]
+        self.game.do_enter('4')
+        self.assertEqual(['X'], self.game.board.cells[BAR].contents)
+
+    def testEnterBlockedError(self):
+        """Test the error from trying to enter a blocked point."""
+        self.game.rolls = [4, 1]
+        self.game.do_enter('4')
+        self.assertEqual(['That point is blocked.\n'], self.bot.errors)
+
+    def testEnterCaptureBar(self):
+        """Test removing an X piece from the bar when entering a point with an O."""
+        self.game.rolls = [2, 1]
+        self.game.do_enter('2')
+        self.assertEqual(['O'], self.game.board.cells[BAR].contents)
+
+    def testEnterCaptureHome(self):
+        """Test putting an X piece on the board when entering a point with an O."""
+        self.game.rolls = [2, 1]
+        self.game.do_enter('2')
+        self.assertEqual(['X'], self.game.board.cells[20].contents)
+
+    def testEnterEmptyBar(self):
+        """Test removing an X piece from the bar when entering an empty space."""
+        self.game.rolls = [6, 1]
+        self.game.do_enter('6')
+        self.assertEqual([], self.game.board.cells[BAR].contents)
+
+    def testEnterEmptyHome(self):
+        """Test putting an X piece on the board when entering an empty space."""
+        self.game.rolls = [6, 1]
+        self.game.do_enter('6')
+        self.assertEqual(['X'], self.game.board.cells[19].contents)
+
+    def testEnterMineBar(self):
+        """Test removing an X piece from the bar when entering a point with an X."""
+        self.game.rolls = [6, 5]
+        self.game.do_enter('5')
+        self.assertEqual([], self.game.board.cells[BAR].contents)
+
+    def testEnterMineHome(self):
+        """Test putting an X piece on the board when entering a point with an X."""
+        self.game.rolls = [6, 5]
+        self.game.do_enter('5')
+        self.assertEqual(['X', 'X'], self.game.board.cells[20].contents)
 
 
 class BackMoveTest(unittest.TestCase):
