@@ -18,6 +18,7 @@ BackDoBearOTest: Tests of the bear command for O pieces. (unittest.TestCase)
 BackDoBearOTest: Tests of the bear command for X pieces. (unittest.TestCase)
 BackDoEnterTestO: Tests of the enter command for O pieces. (unittest.TestCase)
 BackDoEnterTestX: Tests of the enter command for X pieces. (unittest.TestCase)
+BackDoubleTest: Test handling of doubling requests. (unittest.TestCase)
 BackMoveTest: Test movement on a BackgammonBoard. (unittest.TestCase)
 BackPipCountTest: Tests of BackgammonBoard.get_pip_count. (BackBoardSetTest)
 BackPlayTest: Test backgammon play generation. (BackBoardSetTest)
@@ -702,6 +703,72 @@ class BackDoEnterTestX(unittest.TestCase):
         self.game.rolls = [6, 5]
         self.game.do_enter('5')
         self.assertEqual([6], self.game.rolls)
+
+
+class BackDoubleTest(unittest.TestCase):
+    """Test handling of doubling requests in Backgammon. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot_x = unitility.AutoBot()
+        self.game = backgammon.Backgammon(self.bot_x, 'none')
+        self.bot_o = unitility.AutoBot()
+        if self.bot_x.name == self.bot_o.name:
+            self.bot_o.name = 'Evil {}'.format(self.bot_x.name)
+        self.game.players[1] = self.bot_o
+        self.game.set_up()
+        self.game.player_index = self.game.players.index(self.bot_x)
+
+    def testDontAsk(self):
+        """Test not asking a player for doubling."""
+        self.game.doubling_status = 'O'
+        self.assertTrue(self.game.double(self.bot_x, 'X'))
+
+    def testDoubleDouble(self):
+        """Test doubling the die."""
+        self.bot_x.replies = ['Yes']
+        self.bot_o.replies = ['1']
+        self.game.double(self.bot_x, 'X')
+        self.assertEqual(2, self.game.doubling_die)
+
+    def testDoubleEightDouble(self):
+        """Test doubling an already doubled die."""
+        self.bot_x.replies = ['Yes']
+        self.bot_o.replies = ['1']
+        self.game.doubling_die = 8
+        self.game.double(self.bot_x, 'X')
+        self.assertEqual(16, self.game.doubling_die)
+
+    def testDoubleMessage(self):
+        """Test the message from doubling the die."""
+        self.bot_x.replies = ['Yes']
+        self.bot_o.replies = ['1']
+        self.game.double(self.bot_x, 'X')
+        check = '\n{} accepts the double, the doubling die is now at 2.\n'.format(self.bot_o.name)
+        self.assertEqual(check, self.bot_x.info[1])
+
+    def testDoubleReturn(self):
+        """Test return value from doubling the die."""
+        self.bot_x.replies = ['Yes']
+        self.bot_o.replies = ['1']
+        self.assertTrue(self.game.double(self.bot_x, 'X'))
+
+    def testDoubleStatus(self):
+        """Test status after doubling the die."""
+        self.bot_x.replies = ['Yes']
+        self.bot_o.replies = ['1']
+        self.game.double(self.bot_x, 'X')
+        self.assertEqual('O', self.game.doubling_status)
+
+    def testNoDoubleDouble(self):
+        """Test the player not doubling not doubling."""
+        self.bot_x.replies = ['No']
+        self.game.double(self.bot_x, 'X')
+        self.assertEqual(1, self.game.doubling_die)
+
+    def testNoDoubleReturn(self):
+        """Test continuing the turn after the player not doubling."""
+        self.bot_x.replies = ['No']
+        self.assertTrue(self.game.double(self.bot_x, 'X'))
 
 
 class BackMoveTest(unittest.TestCase):

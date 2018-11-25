@@ -1151,7 +1151,7 @@ class Backgammon(game.Game):
             # Ask for a double.
             query = '\nWould you like to double the stakes from {} to {} (return to roll)? '
             double = player.ask(query.format(self.doubling_die, self.doubling_die *2))
-            if double not in utility.YES:
+            if double.lower() not in utility.YES:
                 return True
             # See if the opponent accepts.
             opponent = self.players[1 - self.player_index]
@@ -1161,7 +1161,7 @@ class Backgammon(game.Game):
             if accept.lower() in utility.YES:
                 # Process acceptance
                 self.doubling_die *= 2
-                self.doubling_status = {'X': 'O', 'O': 'X'}[piece]
+                self.doubling_status = 'O' if piece == 'X' else 'X'
                 message = '\n{} accepts the double, the doubling die is now at {}.'
                 player.tell(message.format(opponent.name, self.doubling_die))
             else:
