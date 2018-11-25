@@ -552,6 +552,12 @@ class BackDoEnterTestO(unittest.TestCase):
         self.game.do_enter('2')
         self.assertEqual(['O'], self.game.board.cells[5].contents)
 
+    def testEnterCaptureRolls(self):
+        """Test the rolls after entering an O piece on a point with an X."""
+        self.game.rolls = [2, 1]
+        self.game.do_enter('2')
+        self.assertEqual([1], self.game.rolls)
+
     def testEnterEmptyBar(self):
         """Test removing an O piece from the bar when entering an empty space."""
         self.game.rolls = [6, 1]
@@ -564,6 +570,12 @@ class BackDoEnterTestO(unittest.TestCase):
         self.game.do_enter('6')
         self.assertEqual(['O'], self.game.board.cells[6].contents)
 
+    def testEnterEmptyRolls(self):
+        """Test the rolls after entering an O piece to an empty space."""
+        self.game.rolls = [6, 1]
+        self.game.do_enter('6')
+        self.assertEqual([1], self.game.rolls)
+
     def testEnterMineBar(self):
         """Test removing an O piece from the bar when entering a point with an O."""
         self.game.rolls = [6, 5]
@@ -575,6 +587,12 @@ class BackDoEnterTestO(unittest.TestCase):
         self.game.rolls = [6, 5]
         self.game.do_enter('5')
         self.assertEqual(['O', 'O'], self.game.board.cells[5].contents)
+
+    def testEnterMineRolls(self):
+        """Test the rolls after entering an O piece on a point with an O."""
+        self.game.rolls = [6, 5]
+        self.game.do_enter('5')
+        self.assertEqual([6], self.game.rolls)
 
     def testEnterNoCaptureError(self):
         """Test the error from trying to enter without a piece on the bar."""
@@ -643,6 +661,12 @@ class BackDoEnterTestX(unittest.TestCase):
         self.game.do_enter('2')
         self.assertEqual(['X'], self.game.board.cells[20].contents)
 
+    def testEnterCaptureRolls(self):
+        """Test the rolls after entering an O piece on a point with an X."""
+        self.game.rolls = [2, 1]
+        self.game.do_enter('2')
+        self.assertEqual([1], self.game.rolls)
+
     def testEnterEmptyBar(self):
         """Test removing an X piece from the bar when entering an empty space."""
         self.game.rolls = [6, 1]
@@ -655,6 +679,12 @@ class BackDoEnterTestX(unittest.TestCase):
         self.game.do_enter('6')
         self.assertEqual(['X'], self.game.board.cells[19].contents)
 
+    def testEnterEmptyRolls(self):
+        """Test the rolls after entering an X piece to an empty space."""
+        self.game.rolls = [6, 1]
+        self.game.do_enter('6')
+        self.assertEqual([1], self.game.rolls)
+
     def testEnterMineBar(self):
         """Test removing an X piece from the bar when entering a point with an X."""
         self.game.rolls = [6, 5]
@@ -666,6 +696,12 @@ class BackDoEnterTestX(unittest.TestCase):
         self.game.rolls = [6, 5]
         self.game.do_enter('5')
         self.assertEqual(['X', 'X'], self.game.board.cells[20].contents)
+
+    def testEnterMineRolls(self):
+        """Test the rolls after entering an X piece on a point with an X."""
+        self.game.rolls = [6, 5]
+        self.game.do_enter('5')
+        self.assertEqual([6], self.game.rolls)
 
 
 class BackMoveTest(unittest.TestCase):
