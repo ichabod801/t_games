@@ -268,6 +268,12 @@ class BackDoBearOTest(unittest.TestCase):
         check = (['O'], ['O'])
         self.assertEqual(check, (self.game.board.cells[21].contents, self.game.board.cells[21].contents))
 
+    def testBasicBearRolls(self):
+        """Test the rolls after bearing off two O's with exact rolls."""
+        self.game.rolls = [4, 2]
+        self.game.do_bear('4 2')
+        self.assertEqual([], self.game.rolls)
+
     def testHomelessBearError(self):
         """Test the error from trying to bear an O with pieces outside O's home."""
         self.game.rolls = [4, 2]
@@ -302,6 +308,12 @@ class BackDoBearOTest(unittest.TestCase):
         self.game.do_bear('4 4')
         self.assertEqual([], self.game.board.cells[21].contents)
 
+    def testOverBearRolls(self):
+        """Test the rolls after bearing with higher numbers than needed."""
+        self.game.rolls = [6, 5]
+        self.game.do_bear('4 4')
+        self.assertEqual([], self.game.rolls)
+
     def testPartialBear(self):
         """Test bearing valid point before an invalid point."""
         self.game.rolls = [4, 3]
@@ -309,11 +321,23 @@ class BackDoBearOTest(unittest.TestCase):
         check = [2, 2, 0, 1, 0, 0]
         self.assertEqual(check, [len(self.game.board.cells[point]) for point in range(24, 18, -1)])
 
+    def testPartialBearRolls(self):
+        """Test the rolls afer bearing valid point before an invalid point."""
+        self.game.rolls = [4, 3]
+        self.game.do_bear('4 2')
+        self.assertEqual([3], self.game.rolls)
+
     def testSingleBear(self):
         """Test bearing off one piece."""
         self.game.rolls = [4, 1]
         self.game.do_bear('1')
         self.assertEqual(['O'], self.game.board.cells[24].contents)
+
+    def testSingleBearRolls(self):
+        """Test the rolls after bearing off one piece."""
+        self.game.rolls = [4, 1]
+        self.game.do_bear('1')
+        self.assertEqual([4], self.game.rolls)
 
     def testUnderBearError(self):
         """Test the error from bearing with higher number and higher pieces."""
@@ -380,6 +404,12 @@ class BackDoBearXTest(unittest.TestCase):
         check = (['X'], ['X'])
         self.assertEqual(check, (self.game.board.cells[4].contents, self.game.board.cells[4].contents))
 
+    def testBasicBearRolls(self):
+        """Test the rolls after bearing off two O's with exact rolls."""
+        self.game.rolls = [4, 2]
+        self.game.do_bear('4 2')
+        self.assertEqual([], self.game.rolls)
+
     def testBearOff(self):
         """Test bearing with the off word."""
         self.game.rolls = [4, 2]
@@ -418,17 +448,35 @@ class BackDoBearXTest(unittest.TestCase):
         self.game.do_bear('4 4')
         self.assertEqual([], self.game.board.cells[4].contents)
 
+    def testOverBearRolls(self):
+        """Test the rolls after bearing with higher numbers than needed."""
+        self.game.rolls = [6, 5]
+        self.game.do_bear('4 4')
+        self.assertEqual([], self.game.rolls)
+
     def testPartialBear(self):
         """Test bearing valid point before an invalid point."""
         self.game.rolls = [4, 3]
         self.game.do_bear('4 2')
         self.assertEqual([2, 2, 0, 1, 0, 0], [len(self.game.board.cells[point]) for point in range(1, 7)])
 
+    def testPartialBearRolls(self):
+        """Test the rolls afer bearing valid point before an invalid point."""
+        self.game.rolls = [4, 3]
+        self.game.do_bear('4 2')
+        self.assertEqual([3], self.game.rolls)
+
     def testSingleBear(self):
         """Test bearing off one piece."""
         self.game.rolls = [4, 1]
         self.game.do_bear('1')
         self.assertEqual(['X'], self.game.board.cells[1].contents)
+
+    def testSingleBearRolls(self):
+        """Test the rolls after bearing off one piece."""
+        self.game.rolls = [4, 1]
+        self.game.do_bear('1')
+        self.assertEqual([4], self.game.rolls)
 
     def testUnderBearError(self):
         """Test the error from bearing with higher number and higher pieces."""
