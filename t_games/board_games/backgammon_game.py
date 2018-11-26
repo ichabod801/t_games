@@ -1179,8 +1179,10 @@ class Backgammon(game.Game):
                 # Update the human on the match status.
                 match_score = self.scores[self.human.name], self.scores[self.bot.name]
                 self.human.tell('\nThe match score is now {} to {}.'.format(*match_score))
-                if self.force_end:
-                    self.human.tell('You {} the match.'.format(self.force_end))
+                if self.force_end == 'win':
+                    self.human.tell('You won the match. :)'.format(self.force_end))
+                elif self.force_end:
+                    self.human.tell('You lost the match. :(')
                 else:
                     self.human.ask('Press Enter to continue: ')
                 return False
