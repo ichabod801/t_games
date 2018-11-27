@@ -19,6 +19,7 @@ BackDoBearOTest: Tests of the bear command for X pieces. (unittest.TestCase)
 BackDoEnterTestO: Tests of the enter command for O pieces. (unittest.TestCase)
 BackDoEnterTestX: Tests of the enter command for X pieces. (unittest.TestCase)
 BackDoubleTest: Test handling of doubling requests. (unittest.TestCase)
+BackGameOverTest: Test checking for Backgammon game end/final score. (TestCase)
 BackMoveTest: Test movement on a BackgammonBoard. (unittest.TestCase)
 BackPipCountTest: Tests of BackgammonBoard.get_pip_count. (BackBoardSetTest)
 BackPlayTest: Test backgammon play generation. (BackBoardSetTest)
@@ -853,6 +854,114 @@ class BackDoubleTest(unittest.TestCase):
         self.game.match = 4
         self.game.double(self.bot_x, 'X')
         self.assertEqual('You won the match. :)\n', self.bot_x.info[-1])
+
+
+class BackGameOverTest(unittest.TestCase):
+    """Test checking for Backgammon game end and final score. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.game = backgammon.Backgammon(self.bot, 'none')
+        self.game.set_up()
+        self.game.scores = {player.name: 0 for player in self.game.players}
+        self.game.win_loss_draw = [0, 0, 0]
+
+    def testContinueContinue(self):
+        """Test a human game continue w/l/d record."""
+        self.game.game_over()
+        self.assertEqual([0, 0, 0], self.game.win_loss_draw)
+
+    def testContinueMessage(self):
+        """Test a human game continue message."""
+        self.game.game_over()
+        self.assertEqual(1, len(self.bot.info))
+
+    def testContinueResult(self):
+        """Test a human game continue result."""
+        self.assertFalse(self.game.game_over())
+
+    def testContinueScore(self):
+        """Test a human game continue score."""
+        self.game.game_over()
+        self.assertEqual(0, self.game.scores[self.game.bot.name])
+
+    def testLoseLose(self):
+        """Test a human game loss w/l/d record."""
+        self.game.board.cells[OUT].contents = ['O'] * 15 + ['X']
+        self.game.game_over()
+        self.assertEqual([0, 1, 0], self.game.win_loss_draw)
+
+    def testLoseMessage(self):
+        """Test a human game loss message."""
+        self.game.board.cells[OUT].contents = ['O'] * 15 + ['X']
+        self.game.game_over()
+        self.assertEqual('\nYou lose. :(\n', self.bot.info[1])
+
+    def testLoseResult(self):
+        """Test a human game loss result."""
+        self.game.board.cells[OUT].contents = ['O'] * 15 + ['X']
+        self.assertTrue(self.game.game_over())
+
+    def testLoseScore(self):
+        """Test a human game loss score."""
+        self.game.board.cells[OUT].contents = ['O'] * 15 + ['X']
+        self.game.game_over()
+        self.assertEqual(1, self.game.scores[self.game.bot.name])
+
+    def testMatchWinMessage(self):
+        """Test a human game win message."""
+        self.game.board.cells[OUT].contents = ['X'] * 15
+        self.game.match = 4
+        self.game.scores[self.bot.name] = 1
+        self.game.game_over()
+        check = ['\nBackgammon!\n', '\nYou win!\n', 'The match score is 4 to 0.\n']
+        self.assertEqual(check, self.bot.info[1:])
+
+    def tesMatchWinResult(self):
+        """Test a human game win result."""
+        self.game.board.cells[OUT].contents = ['X'] * 15
+        self.game.match = 4
+        self.game.scores[self.bot.name] = 1
+        self.assertTrue(self.game.game_over())
+
+    def tesMatchWinScore(self):
+        """Test a human game win score."""
+        self.game.board.cells[OUT].contents = ['X'] * 15
+        self.game.match = 4
+        self.game.scores[self.bot.name] = 1
+        self.game.game_over()
+        self.assertEqual(3, self.game.scores[self.bot.name])
+
+    def testMatchWinWin(self):
+        """Test a human game win w/l/d record."""
+        self.game.board.cells[OUT].contents = ['X'] * 15
+        self.game.match = 4
+        self.game.scores[self.bot.name] = 1
+        self.game.game_over()
+        self.assertEqual([1, 0, 0], self.game.win_loss_draw)
+
+    def testWinMessage(self):
+        """Test a human game win message."""
+        self.game.board.cells[OUT].contents = ['X'] * 15 + ['O']
+        self.game.game_over()
+        self.assertEqual('\nYou win!\n', self.bot.info[1])
+
+    def testWinResult(self):
+        """Test a human game win result."""
+        self.game.board.cells[OUT].contents = ['X'] * 15 + ['O']
+        self.assertTrue(self.game.game_over())
+
+    def testWinScore(self):
+        """Test a human game win score."""
+        self.game.board.cells[OUT].contents = ['X'] * 15 + ['O']
+        self.game.game_over()
+        self.assertEqual(1, self.game.scores[self.bot.name])
+
+    def testWinWin(self):
+        """Test a human game win w/l/d record."""
+        self.game.board.cells[OUT].contents = ['X'] * 15 + ['O']
+        self.game.game_over()
+        self.assertEqual([1, 0, 0], self.game.win_loss_draw)
 
 
 class BackMoveTest(unittest.TestCase):
