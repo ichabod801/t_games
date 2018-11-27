@@ -20,6 +20,8 @@ BackDoEnterTestO: Tests of the enter command for O pieces. (unittest.TestCase)
 BackDoEnterTestX: Tests of the enter command for X pieces. (unittest.TestCase)
 BackDoubleTest: Test handling of doubling requests. (unittest.TestCase)
 BackGameOverTest: Test checking for Backgammon game end/final score. (TestCase)
+BackGetRollsTest: Test getting the rolls from the dice. (unittest.TestCase)
+BackGetStartTest: Tests of getting the start of a move. (unittest.TestCase)
 BackMoveTest: Test movement on a BackgammonBoard. (unittest.TestCase)
 BackPipCountTest: Tests of BackgammonBoard.get_pip_count. (BackBoardSetTest)
 BackPlayTest: Test backgammon play generation. (BackBoardSetTest)
@@ -1024,7 +1026,7 @@ class BackGameOverTest(unittest.TestCase):
 
 
 class BackGetRollsTest(unittest.TestCase):
-    """Test getting the rolls from the dice."""
+    """Test getting the rolls from the dice. (unittest.TestCase)"""
 
     def setUp(self):
         self.bot = unitility.AutoBot()
@@ -1048,6 +1050,73 @@ class BackGetRollsTest(unittest.TestCase):
         self.game.dice.values = [3, 4]
         self.game.get_rolls()
         self.assertEqual([3, 4], self.game.rolls)
+
+
+class BackGetStartTest(unittest.TestCase):
+    """Tests of getting the start of a move. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.game = backgammon.Backgammon(self.bot, 'none')
+        self.game.bot = unitility.AutoBot()
+        self.game.players[1] = self.game.bot
+        if self.bot.name == self.game.bot.name:
+            self.game.bot.name = 'Evil {}'.format(self.bot.name)
+        self.game.set_up()
+
+    def testAmbiguousError(self):
+        """Test an ambiguous end point's error."""
+        self.game.rolls = [4, 2]
+        self.game.get_start(4, -1, self.bot, 'X')
+        self.assertEqual(['That move is ambiguous.\n'], self.bot.errors)
+
+    def testAmbiguousReturn(self):
+        """Test an ambiguous end point's return value."""
+        self.game.rolls = [6, 1]
+        self.assertEqual(-99, self.game.get_start(18, 1, self.game.bot, 'O'))
+
+    def testBarO(self):
+        """Test a starting point on the bar for O."""
+        self.game.rolls = [6, 5]
+        self.game.board.cells[BAR].contents = ['O']
+        self.assertEqual(BAR, self.game.get_start(11, 1, self.game.bot, 'O'))
+
+    def testBarX(self):
+        """Test a starting point on the bar for X."""
+        self.game.rolls = [6, 5]
+        self.game.board.cells[BAR].contents = ['X']
+        self.assertEqual(BAR, self.game.get_start(20, -1, self.bot, 'X'))
+
+    def testDoubles(self):
+        """Test gettig the start using three of four doubles."""
+        self.game.rolls = [5, 5, 5, 5]
+        self.assertEqual(1, self.game.get_start(16, 1, self.game.bot, 'O'))
+
+    def testHighStart(self):
+        """Test getting the start using the high die."""
+        self.game.rolls = [6, 2]
+        self.assertEqual(12, self.game.get_start(18, 1, self.game.bot, 'O'))
+
+    def testInvalidError(self):
+        """Test an invalid end point's error message."""
+        self.game.rolls = [6, 6, 6, 6]
+        self.game.get_start(9, -1, self.bot, 'X')
+        self.assertEqual(['There is no legal move to that point.\n'], self.bot.errors)
+
+    def testInvalidReturn(self):
+        """Test an invalid end point's return value."""
+        self.game.rolls = [1, 2]
+        self.assertEqual(-99, self.game.get_start(23, 1, self.game.bot, 'O'))
+
+    def testLowStart(self):
+        """Test getting the start using the low die."""
+        self.game.rolls = [1, 4]
+        self.assertEqual(8, self.game.get_start(7, -1, self.bot, 'X'))
+
+    def testSumStart(self):
+        """Test getting the start using the sum of the dice."""
+        self.game.rolls = [3, 1]
+        self.assertEqual(24, self.game.get_start(21, -1, self.bot, 'X'))
 
 
 class BackMoveTest(unittest.TestCase):
