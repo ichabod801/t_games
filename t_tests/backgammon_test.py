@@ -1023,6 +1023,33 @@ class BackGameOverTest(unittest.TestCase):
         self.assertEqual([1, 0, 0], self.game.win_loss_draw)
 
 
+class BackGetRollsTest(unittest.TestCase):
+    """Test getting the rolls from the dice."""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.game = backgammon.Backgammon(self.bot, 'none')
+        self.game.set_up()
+
+    def testDoubles(self):
+        """Test getting rolls with the both dice equal."""
+        self.game.dice.values = [6, 6]
+        self.game.get_rolls()
+        self.assertEqual([6, 6, 6, 6], self.game.rolls)
+
+    def testHighLow(self):
+        """Test getting rolls with the high die first."""
+        self.game.dice.values = [6, 1]
+        self.game.get_rolls()
+        self.assertEqual([6, 1], self.game.rolls)
+
+    def testLowHigh(self):
+        """Test getting rolls with the low die first."""
+        self.game.dice.values = [3, 4]
+        self.game.get_rolls()
+        self.assertEqual([3, 4], self.game.rolls)
+
+
 class BackMoveTest(unittest.TestCase):
     """Test movement on a BackgammonBoard. (TestCase)"""
     # Most of this should be covered by board_test.LineBoardTest.
