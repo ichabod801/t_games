@@ -908,6 +908,65 @@ class BackGameOverTest(unittest.TestCase):
         self.game.game_over()
         self.assertEqual(1, self.game.scores[self.game.bot.name])
 
+    def testMatchContinueContinue(self):
+        """Test a human game continue w/l/d record."""
+        self.game.board.cells[OUT].contents = ['O'] * 15 + ['X']
+        self.game.match = 4
+        self.game.game_over()
+        self.assertEqual([0, 0, 0], self.game.win_loss_draw)
+
+    def testMatchContinueMessage(self):
+        """Test a human game continue message."""
+        self.game.board.cells[OUT].contents = ['O'] * 15 + ['X']
+        self.game.match = 4
+        self.game.game_over()
+        self.assertEqual(['\nYou lose. :(\n', 'The match score is 0 to 1.\n'], self.bot.info[1:])
+
+    def testMatchContinueResult(self):
+        """Test a human game continue result."""
+        self.game.board.cells[OUT].contents = ['O'] * 15 + ['X']
+        self.game.match = 4
+        self.assertFalse(self.game.game_over())
+
+    def testMatchContinueScore(self):
+        """Test a human game continue score."""
+        self.game.board.cells[OUT].contents = ['O'] * 15 + ['X']
+        self.game.match = 4
+        self.game.game_over()
+        self.assertEqual(1, self.game.scores[self.game.bot.name])
+
+    def testMatchLoseLose(self):
+        """Test a human game loss w/l/d record."""
+        self.game.board.cells[OUT].contents = ['O'] * 15
+        self.game.match = 4
+        self.game.scores[self.game.bot.name] = 1
+        self.game.game_over()
+        self.assertEqual([0, 1, 0], self.game.win_loss_draw)
+
+    def testMatchLoseMessage(self):
+        """Test a human game loss message."""
+        self.game.board.cells[OUT].contents = ['O'] * 15
+        self.game.match = 4
+        self.game.scores[self.game.bot.name] = 1
+        self.game.game_over()
+        check = ['\nBackgammon!\n', '\nYou lose. :(\n', 'The match score is 0 to 4.\n']
+        self.assertEqual(check, self.bot.info[1:])
+
+    def testMatchLoseResult(self):
+        """Test a human game loss result."""
+        self.game.board.cells[OUT].contents = ['O'] * 15
+        self.game.match = 4
+        self.game.scores[self.game.bot.name] = 1
+        self.assertTrue(self.game.game_over())
+
+    def testMatchLoseScore(self):
+        """Test a human game loss score."""
+        self.game.board.cells[OUT].contents = ['O'] * 15
+        self.game.match = 4
+        self.game.scores[self.game.bot.name] = 1
+        self.game.game_over()
+        self.assertEqual(4, self.game.scores[self.game.bot.name])
+
     def testMatchWinMessage(self):
         """Test a human game win message."""
         self.game.board.cells[OUT].contents = ['X'] * 15
