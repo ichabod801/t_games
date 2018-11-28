@@ -22,10 +22,13 @@ BackDoubleTest: Test handling of doubling requests. (unittest.TestCase)
 BackGameOverTest: Test checking for Backgammon game end/final score. (TestCase)
 BackGetRollsTest: Test getting the rolls from the dice. (unittest.TestCase)
 BackGetStartTest: Tests of getting the start of a move. (unittest.TestCase)
+BackGetTotalsTest: Test totalling dice in Backgammon. (unittest.TestCase)
 BackMoveTest: Test movement on a BackgammonBoard. (unittest.TestCase)
 BackPipCountTest: Tests of BackgammonBoard.get_pip_count. (BackBoardSetTest)
 BackPlayTest: Test backgammon play generation. (BackBoardSetTest)
 BackPrintTest: Test printing a backgammon board. (unittest.TestCase)
+BackSetUpTest: Tests of setting up the board. (unittest.TestCase)
+BackValidateMoveTest: Test validating moves in Backgammon. (unittest.TestCase)
 
 Functions:
 make_play: Make a BackgammonPlay from a list as tuples. (BackgammonPlay)
@@ -1442,7 +1445,7 @@ class BackPrintTest(unittest.TestCase):
 
 
 class BackSetUpTest(unittest.TestCase):
-    """Tests of setting up the board."""
+    """Tests of setting up the board. (unittest.TestCase)"""
 
     def setUp(self):
         self.board = backgammon.BackgammonBoard()
@@ -1462,6 +1465,107 @@ class BackSetUpTest(unittest.TestCase):
     def testLowCross(self):
         """Test pieces being placed on the low half of the board."""
         self.assertEqual(['O'] * 3, self.board.cells[17].contents)
+
+
+class BackValidateMoveTest(unittest.TestCase):
+    """Test validating moves in Backgammon. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.game = backgammon.Backgammon(self.bot, 'none')
+        self.game.bot = unitility.AutoBot()
+        self.game.players[1] = self.game.bot
+        if self.bot.name == self.game.bot.name:
+            self.game.bot.name = 'Evil {}'.format(self.bot.name)
+        self.game.set_up()
+
+    def legalPlays(self, player_piece):
+        """
+        Get the legal plays. (set)
+
+        Parameters:
+        player_piece: The piece to get legal plays for. (str)
+        """
+        legal_plays = self.game.board.get_plays(player_piece, self.game.rolls)
+        legal_moves = set()
+        for play in legal_plays:
+            for move in play:
+                legal_moves.add(move)
+        return legal_moves
+
+    def testBarError(self):
+        """Test the error from a piece on the bar blocking a move."""
+        self.game.rolls = [1, 4]
+        self.game.board.cells[BAR].contents = ['X']
+        self.game.validate_move(13, 8, -1, self.legalPlays('X'), self.bot, 'X')
+        check = ['You must re-enter your piece on the bar before making any other move.\n']
+        self.assertEqual(check, self.bot.errors)
+
+    def testBarReturn(self):
+        """Test the return value from a piece on the bar blocking a move."""
+        self.game.rolls = [1, 4]
+        self.game.board.cells[BAR].contents = ['X']
+        self.assertEqual([], self.game.validate_move(13, 7, -1, self.legalPlays('X'), self.bot, 'X'))
+
+    def testBlockedOneError(self):
+        """Test the error from a one-die move being blocked."""
+        self.game.rolls = [5, 3]
+        self.game.validate_move(1, 6, 1, self.legalPlays('O'), self.game.bot, 'O')
+        self.assertEqual(['That move is blocked.\n'], self.game.bot.errors)
+
+    def testBlockedOneReturn(self):
+        """Test the return value from a one-die move being blocked."""
+        self.game.rolls = [5, 3]
+        self.assertEqual([], self.game.validate_move(1, 6, 1, self.legalPlays('O'), self.game.bot, 'O'))
+
+    def testBlockedTwoError(self):
+        """Test the error from a two-die move being blocked."""
+        self.game.rolls = [1, 1, 1, 1]
+        self.game.validate_move(13, 11, -1, self.legalPlays('X'), self.bot, 'X')
+        self.assertEqual(['That move is blocked.\n'], self.bot.errors)
+
+    def testBlockedTwoReturn(self):
+        """Test the return value from a two-die move being blocked."""
+        self.game.rolls = [1, 1, 1, 1]
+        self.assertEqual([], self.game.validate_move(13, 11, -1, self.legalPlays('X'), self.bot, 'X'))
+
+    def testNoPieceError(self):
+        """Test the error from having no piece on the start point."""
+        self.game.rolls = [5]
+        self.game.validate_move(18, 13, -1, self.legalPlays('X'), self.bot, 'X')
+        self.assertEqual(['You do not have a piece on that starting point.\n'], self.bot.errors)
+
+    def testNoPieceReturn(self):
+        """Test the return value from having no piece on the start point."""
+        self.game.rolls = [5]
+        self.assertEqual([], self.game.validate_move(18, 13, -1, self.legalPlays('X'), self.bot, 'X'))
+
+    def testNoRollError(self):
+        """Test the error from not having a roll matching the move."""
+        self.game.rolls = [2, 3]
+        self.game.validate_move(12, 18, 1, self.legalPlays('O'), self.game.bot, 'O')
+        self.assertEqual(['You do not have a die roll matching that move.\n'], self.game.bot.errors)
+
+    def testNoRollReturn(self):
+        """Test the return value from not having a roll matching the move."""
+        self.game.rolls = [2, 3]
+        self.assertEqual([], self.game.validate_move(12, 18, 1, self.legalPlays('O'), self.game.bot, 'O'))
+
+    def testNotMaxError(self):
+        """Test the error from not making the maximum possible move."""
+        self.game.board.clear()
+        self.game.board.set_up(((18, 2), (12, 2), (7, 1), (3, 2)))
+        self.game.rolls = [6, 1]
+        self.game.validate_move(18, 19, 1, self.legalPlays('O'), self.game.bot, 'O')
+        check = ['That move would not allow for the maximum possible play.\n']
+        self.assertEqual(check, self.game.bot.errors)
+
+    def testNotMaxReturn(self):
+        """Test the error from not making the maximum possible move."""
+        self.game.board.clear()
+        self.game.board.set_up(((18, 2), (12, 2), (7, 1), (3, 2)))
+        self.game.rolls = [6, 1]
+        self.assertEqual([], self.game.validate_move(18, 19, 1, self.legalPlays('O'), self.game.bot, 'O'))
 
 
 def make_play(moves):

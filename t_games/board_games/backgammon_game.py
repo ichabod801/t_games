@@ -1305,7 +1305,7 @@ class Backgammon(game.Game):
         move = player.ask_int_list('\nWhat is your move? ', low = 1, high = 24, valid_lens = [1, 2])
         if isinstance(move, str):
             return self.handle_cmd(move)
-        direction = {'X': -1, 'O': 1}[player_piece]
+        direction = -1 if player_piece == 'X' else 1
         # Convert moves with just the end point.
         if len(move) == 1:
             start, end = self.get_start(move[0], direction, player, player_piece), move[0]
