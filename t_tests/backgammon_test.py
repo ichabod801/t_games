@@ -1119,6 +1119,34 @@ class BackGetStartTest(unittest.TestCase):
         self.assertEqual(24, self.game.get_start(21, -1, self.bot, 'X'))
 
 
+class BackGetTotalsTest(unittest.TestCase):
+    """Test totalling dice in Backgammon. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.game = backgammon.Backgammon(self.bot, 'none')
+
+    def testOne(self):
+        """Test the totals for a single die."""
+        self.game.rolls = [5]
+        self.assertEqual({5: [5]}, self.game.get_totals())
+
+    def testTwo(self):
+        """Test the totals for two dice."""
+        self.game.rolls = [2, 3]
+        self.assertEqual({2: [2], 3: [3], 5: [2, 3]}, self.game.get_totals())
+
+    def testThree(self):
+        """Test the totals for three dice."""
+        self.game.rolls = [3, 3, 3]
+        self.assertEqual({3: [3], 6: [3, 3], 9: [3, 3, 3]}, self.game.get_totals())
+
+    def testFour(self):
+        """Test the totals for four dice."""
+        self.game.rolls = [4, 4, 4, 4]
+        self.assertEqual({4: [4], 8: [4, 4], 12: [4, 4, 4], 16: [4, 4, 4, 4]}, self.game.get_totals())
+
+
 class BackMoveTest(unittest.TestCase):
     """Test movement on a BackgammonBoard. (TestCase)"""
     # Most of this should be covered by board_test.LineBoardTest.
