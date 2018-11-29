@@ -1587,6 +1587,30 @@ class BackValidateMoveTest(unittest.TestCase):
         self.game.rolls = [5, 2]
         self.assertEqual([], self.game.validate_move(13, 11, -1, self.legalPlays('X'), self.bot, 'X'))
 
+    def testValidOne(self):
+        """Test a valid move using one die."""
+        self.game.rolls = [4, 3]
+        steps = self.game.validate_move(19, 23, 1, self.legalPlays('O'), self.game.bot, 'O')
+        self.assertEqual((4,), steps)
+
+    def testValidTwo(self):
+        """Test a valid move using two dice."""
+        self.game.rolls = [1, 2]
+        steps = self.game.validate_move(13, 10, -1, self.legalPlays('X'), self.bot, 'X')
+        self.assertEqual((2, 1), steps)
+
+    def testValidThree(self):
+        """Test a valid move using three dice."""
+        self.game.rolls = [2, 2, 2, 2]
+        steps = self.game.validate_move(1, 7, 1, self.legalPlays('O'), self.game.bot, 'O')
+        self.assertEqual((2, 2, 2), steps)
+
+    def testValidFour(self):
+        """Test a valid move using four dice."""
+        self.game.rolls = [1, 1, 1, 1]
+        steps = self.game.validate_move(24, 20, -1, self.legalPlays('X'), self.bot, 'X')
+        self.assertEqual((1, 1, 1, 1), steps)
+
 
 def make_play(moves):
     """

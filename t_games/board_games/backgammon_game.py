@@ -1319,7 +1319,7 @@ class Backgammon(game.Game):
                 return self.do_enter(end)
         else:
             start, end = move
-        # Check for valid move.
+        # Check for valid move and get the steps to take.
         rolls = self.validate_move(start, end, direction, legal_moves, player, player_piece)
         if rolls:
             # Make each step of the roll.
@@ -1377,6 +1377,9 @@ class Backgammon(game.Game):
     def validate_move(self, start, end, direction, legal_moves, player, player_piece):
         """
         Check for a valid move. (bool)
+
+        The return value is the steps to take, in terms of which die values/number of
+        points to using in sequence.
 
         Parameters:
         start: The starting point for the move. (int)
