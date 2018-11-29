@@ -1551,21 +1551,41 @@ class BackValidateMoveTest(unittest.TestCase):
         self.game.rolls = [2, 3]
         self.assertEqual([], self.game.validate_move(12, 18, 1, self.legalPlays('O'), self.game.bot, 'O'))
 
-    def testNotMaxError(self):
-        """Test the error from not making the maximum possible move."""
+    def testNotBothError(self):
+        """Test the error from not using both dice."""
         self.game.board.clear()
-        self.game.board.set_up(((18, 2), (12, 2), (7, 1), (3, 2)))
+        self.game.board.set_up(((15, 2), (7, 1), (3, 2)))
+        self.game.board.cells[16].contents = ['X', 'X']
         self.game.rolls = [6, 1]
         self.game.validate_move(18, 19, 1, self.legalPlays('O'), self.game.bot, 'O')
         check = ['That move would not allow for the maximum possible play.\n']
         self.assertEqual(check, self.game.bot.errors)
 
-    def testNotMaxReturn(self):
-        """Test the error from not making the maximum possible move."""
+    def testNotBothReturn(self):
+        """Test the return value from not using both dice."""
         self.game.board.clear()
-        self.game.board.set_up(((18, 2), (12, 2), (7, 1), (3, 2)))
+        self.game.board.set_up(((15, 2), (7, 1), (3, 2)))
+        self.game.board.cells[16].contents = ['X', 'X']
         self.game.rolls = [6, 1]
         self.assertEqual([], self.game.validate_move(18, 19, 1, self.legalPlays('O'), self.game.bot, 'O'))
+
+    def testNotMaxError(self):
+        """Test the error from not making the maximum possible move."""
+        self.game.board.clear()
+        self.game.board.cells[6].contents = ['O', 'O']
+        self.game.board.cells[13].contents = ['X']
+        self.game.rolls = [5, 2]
+        self.game.validate_move(13, 11, -1, self.legalPlays('X'), self.bot, 'X')
+        check = ['That move would not allow for the maximum possible play.\n']
+        self.assertEqual(check, self.bot.errors)
+
+    def testNotMaxReturn(self):
+        """Test the return value from not making the maximum possible move."""
+        self.game.board.clear()
+        self.game.board.cells[6].contents = ['O', 'O']
+        self.game.board.cells[13].contents = ['X']
+        self.game.rolls = [5, 2]
+        self.assertEqual([], self.game.validate_move(13, 11, -1, self.legalPlays('X'), self.bot, 'X'))
 
 
 def make_play(moves):
