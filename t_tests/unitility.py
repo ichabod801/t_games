@@ -16,11 +16,13 @@ Make a test case of playing the game with bots. (unittest.Testcase)
 """
 
 
+import itertools
 import sys
 import unittest
 
 import t_games.game as game
 import t_games.player as player
+import t_games.utility as utility
 
 
 class AutoBot(player.Bot):
@@ -433,11 +435,12 @@ def bot_test(game, bots, rounds, n_bots):
         def testSomeBots(self):
             test_bots = bot_classes
             self.game.tournament(test_bots, self.rounds)
+            assertTrue(1)
         bot_text = utility.oxford([bot.__class__.__name__ for bot in bot_classes])
         testSomeBots.__doc__ = 'Bot test of {}.'.format(bot_text)
     # Add the tests to the class
     for num_bots in n_bots:
         for group_index, bot_classes in enumerate(itertools.combinations(bots, num_bots)):
             new_test = make_bot_test(bot_classes)
-            setattr(BotTest, 'test{}Bots_{:03}'.format(num_bots, group_index))
+            setattr(BotTest, 'test{}Bots_{:03}'.format(num_bots, group_index + 1), new_test)
     return BotTest

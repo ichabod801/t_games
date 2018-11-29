@@ -131,6 +131,12 @@ class BackBoardSetTest(unittest.TestCase):
             self.board.move(start, end)
 
 
+BackBotTest = unitility.bot_test(backgammon.Backgammon, [backgammon.BackgammonBot,
+    backgammon.AdditiveBot, backgammon.PubEvalBot], 4, [2])
+print(isinstance(BackBotTest, unittest.TestCase))
+print(dir(BackBotTest))
+
+
 class BackCheckWinTest(BackBoardSetTest):
     """Tests of Backgammon.check_win. (unittest.TestCase)"""
 
