@@ -133,8 +133,6 @@ class BackBoardSetTest(unittest.TestCase):
 
 BackBotTest = unitility.bot_test(backgammon.Backgammon, [backgammon.BackgammonBot,
     backgammon.AdditiveBot, backgammon.PubEvalBot], 4, [2])
-print(isinstance(BackBotTest, unittest.TestCase))
-print(dir(BackBotTest))
 
 
 class BackCheckWinTest(BackBoardSetTest):

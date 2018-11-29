@@ -428,19 +428,20 @@ def bot_test(game, bots, rounds, n_bots):
     class BotTest(unittest.TestCase):
         """Tests of the bots in {}.""".format(game.name)
         def setUp(self):
-            self.game = game
+            self.bot = AutoBot()
+            self.game = game(self.bot, 'none')
             self.rounds = rounds
     # A function for adding a test for a specific set of bots.
     def make_bot_test(bot_classes):
         def testSomeBots(self):
-            test_bots = bot_classes
-            self.game.tournament(test_bots, self.rounds)
-            assertTrue(1)
+            self.game.tournament([bot() for bot in bot_classes], self.rounds)
+            self.assertTrue(1)
         bot_text = utility.oxford([bot.__class__.__name__ for bot in bot_classes])
         testSomeBots.__doc__ = 'Bot test of {}.'.format(bot_text)
+        return testSomeBots
     # Add the tests to the class
     for num_bots in n_bots:
         for group_index, bot_classes in enumerate(itertools.combinations(bots, num_bots)):
             new_test = make_bot_test(bot_classes)
-            setattr(BotTest, 'test{}Bots_{:03}'.format(num_bots, group_index + 1), new_test)
+            setattr(BotTest, 'testBots{}_{:03}'.format(num_bots, group_index + 1), new_test)
     return BotTest
