@@ -746,7 +746,10 @@ class PubEvalBot(BackgammonBot):
                 left.append(abs(men))
             elif men > 0:
                 right.append(men)
-        race = max(left) > min(right)
+        try:
+            race = max(left) > min(right)
+        except ValueError:
+            race = True
         return self.pub_eval(race, position)
 
     def get_position(self, board):
