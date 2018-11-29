@@ -10,10 +10,14 @@ ProtoObject: An object whose attributes can be defined w/ __init__. (object)
 ProtoStdIn: A programatically controlled stdin. (object)
 ProtoStdOut: A locally stored stdout. (object)
 TestGame: A Game sub-class for testing purposes. (game.Game)
+
+Functions:
+Make a test case of playing the game with bots. (unittest.Testcase)
 """
 
 
 import sys
+import unittest
 
 import t_games.game as game
 import t_games.player as player
@@ -403,3 +407,37 @@ class TestGame(game.Game):
     def set_up(self):
         """Do any necessary pre-game processing. (None)"""
         self.all_set = True
+
+
+def bot_test(game, bots, rounds, n_bots):
+    """
+    Make a test case of playing the game with bots. (unittest.Testcase)
+
+    For every number of bots in n_bots, every combination of that many bots from
+    the bots parameter is run in a tournament for the specified number of rounds.
+
+    Parameters:
+    game: The game to play. (game.Game)
+    bots: The bots to play the game. (list of player.Bot)
+    rounds: The number of rounds to play each test. (int)
+    n_bots: The valid numbers of bots. (list of int)
+    """
+    # A test framework to put the individual tournaments into.
+    class BotTest(unittest.TestCase):
+        """Tests of the bots in {}.""".format(game.name)
+        def setUp(self):
+            self.game = game
+            self.rounds = rounds
+    # A function for adding a test for a specific set of bots.
+    def make_bot_test(bot_classes):
+        def testSomeBots(self):
+            test_bots = bot_classes
+            self.game.tournament(test_bots, self.rounds)
+        bot_text = utility.oxford([bot.__class__.__name__ for bot in bot_classes])
+        testSomeBots.__doc__ = 'Bot test of {}.'.format(bot_text)
+    # Add the tests to the class
+    for num_bots in n_bots:
+        for group_index, bot_classes in enumerate(itertools.combinations(bots, num_bots)):
+            new_test = make_bot_test(bot_classes)
+            setattr(BotTest, 'test{}Bots_{:03}'.format(num_bots, group_index))
+    return BotTest
