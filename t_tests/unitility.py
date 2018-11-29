@@ -411,7 +411,7 @@ class TestGame(game.Game):
         self.all_set = True
 
 
-def bot_test(game, bots, rounds, n_bots):
+def bot_test(game, bots, rounds, n_bots, options = 'none'):
     """
     Make a test case of playing the game with bots. (unittest.Testcase)
 
@@ -423,13 +423,14 @@ def bot_test(game, bots, rounds, n_bots):
     bots: The bots to play the game. (list of player.Bot)
     rounds: The number of rounds to play each test. (int)
     n_bots: The valid numbers of bots. (list of int)
+    options: The options passed to the game. (str)
     """
     # A test framework to put the individual tournaments into.
     class BotTest(unittest.TestCase):
         """Tests of the bots in {}.""".format(game.name)
         def setUp(self):
             self.bot = AutoBot()
-            self.game = game(self.bot, 'none')
+            self.game = game(self.bot, options)
             self.rounds = rounds
     # A function for adding a test for a specific set of bots.
     def make_bot_test(bot_classes):
