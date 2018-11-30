@@ -437,7 +437,7 @@ def bot_test(game, bot_classes, rounds, n_bots, options = 'none', bot_params = [
     def make_bot_test(bots):
         def testSomeBots(self):
             self.game.tournament(bots, self.rounds)
-            self.assertTrue(1)
+            #self.assertTrue(1)
         bot_text = utility.oxford([bot.__class__.__name__ for bot in bots])
         testSomeBots.__doc__ = 'Bot test of {}.'.format(bot_text)
         return testSomeBots
