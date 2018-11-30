@@ -12,6 +12,8 @@ START_TEXT_X: The starting text from the 'X' player's perspective. (str)
 Classes:
 BackAutoBearTest: Tests of Backgammon.auto_bear. (unittest.TestCase)
 BackBoardSetTest: A test case that can set up a board. (unittest.TestCase)
+BackBotTest: A test case of bots playing Backgammon. (unittest.TestCase)
+BackBotMatchTest: A test case of bots playing match Backgammon. (TestCase)
 BackCheckWinTest: Tests of Backgammon.check_win. (BackBoardSetTest)
 BackDefaultTest: Tests of Backgammon.default repeating move. (TestCase)
 BackDoBearOTest: Tests of the bear command for O pieces. (unittest.TestCase)
@@ -133,6 +135,10 @@ class BackBoardSetTest(unittest.TestCase):
 
 BackBotTest = unitility.bot_test(backgammon.Backgammon, [backgammon.BackgammonBot,
     backgammon.AdditiveBot, backgammon.PubEvalBot], 4, [2])
+
+
+BackBotMatchTest = unitility.bot_test(backgammon.Backgammon, [backgammon.BackgammonBot,
+    backgammon.AdditiveBot, backgammon.PubEvalBot], 1, [2], options = 'match = 4')
 
 
 class BackCheckWinTest(BackBoardSetTest):

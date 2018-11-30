@@ -235,9 +235,9 @@ class BackgammonBot(player.Bot):
                 board = self.game.board
                 features, points = self.describe_board(board)
                 my_points = points[self.piece]
-                foe_points = points[{'X': 'O', 'O': 'X'}[self.piece]]
+                foe_points = points['X' if self.piece == 'O' else 'O']
                 # Make end of game moves.
-                if max(my_points) + max(foe_points) <= 24 and not board.cells[BAR]:
+                if max(my_points + [0]) + max(foe_points + [0]) <= 24 and not board.cells[BAR]:
                     self.held_moves = self.get_endgame(board, my_points)
                 else:
                     # Evaluate all the legal plays.
@@ -662,15 +662,13 @@ class PubEvalBot(BackgammonBot):
             return ''
         # Respond to being able to double.
         elif prompt.startswith('\nWould you like to double the stakes'):
-            features, points = self.describe_board(self.game.board)
-            if self.eval_board(features, 'accept') > 25:
+            if self.eval_board(self.game.board.copy()) > 25:
                 return '1'
             else:
                 return '0'
         # Respond to doubling requests.
-        elif prompt.startswith('Your opponent wants to double'):
-            features, points = self.describe_board(self.game.board)
-            if self.eval_board(features, 'accept') < -25:
+        elif prompt.startswith('\nYour opponent wants to double'):
+            if self.eval_board(self.game.board.copy()) < -25:
                 return '1'
             else:
                 return '0'
@@ -679,7 +677,7 @@ class PubEvalBot(BackgammonBot):
             return 'Bazinga'
         # Raise an error for any other question.
         else:
-            raise ValueError('Unexpected question to BackgammonBot: {}'.format(prompt))
+            raise ValueError('Unexpected question to PubEvalBot: {}'.format(prompt))
 
     def ask_int_list(self, prompt, low = None, high = None, valid = [], valid_lens = [], default = None,
         cmd = True):
