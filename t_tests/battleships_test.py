@@ -5,7 +5,8 @@ Unit testing of t_games/board_games/battleships_game.py
 
 Classes:
 GameOverTest: Tests of Battleships.game_over. (unittest.TestCase)
-SeaBoardTest: Tests of a player's Battleships' board. (unittest.TestCase)
+SeaBoardAdjTest: Test of adjacent squares on a Battleships' board. (TestCase)
+SeaBoardTextTest: Tests of text versions of a Battleships' board. (TestCase)
 """
 
 
@@ -103,8 +104,52 @@ class GameOverTest(unittest.TestCase):
         self.assertEqual(17, self.game.scores[self.bot.name])
 
 
-class SeaBoardTest(unittest.TestCase):
-    """Tests of a player's Battleships' board. (unittest.TestCase)"""
+class SeaBoardAdjTest(unittest.TestCase):
+    """Test of adjacent squares on a Battleships' board. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot(['r'] * 5)
+        self.board = battleships.SeaBoard(self.bot)
+
+    def testBottom(self):
+        """Test adjacent squares of a square on the bottom."""
+        self.assertEqual(['B1', 'A0', 'A2'], self.board.adjacent_squares('A1'))
+
+    def testBottomLeft(self):
+        """Test adjacent squares of a square on the bottom left."""
+        self.assertEqual(['B0', 'A1'], self.board.adjacent_squares('A0'))
+
+    def testLeft(self):
+        """Test adjacent squares of a square on the left."""
+        self.assertEqual(['D0', 'F0', 'E1'], self.board.adjacent_squares('E0'))
+
+    def testLeftTop(self):
+        """Test adjacent squares of a square on the left top."""
+        self.assertEqual(['I0', 'J1'], self.board.adjacent_squares('J0'))
+
+    def testMiddle(self):
+        """Test adjacent squares of a square in the middle."""
+        self.assertEqual(['B4', 'D4', 'C3', 'C5'], self.board.adjacent_squares('C4'))
+
+    def testRight(self):
+        """Test adjacent squares of a square on the right."""
+        self.assertEqual(['F9', 'H9', 'G8'], self.board.adjacent_squares('G9'))
+
+    def testRightBottom(self):
+        """Test adjacent squares of a square on the right bottom."""
+        self.assertEqual(['I0', 'J1'], self.board.adjacent_squares('J0'))
+
+    def testTop(self):
+        """Test adjacent squares of a square on the top."""
+        self.assertEqual(['I5', 'J4', 'J6'], self.board.adjacent_squares('J5'))
+
+    def testTopRight(self):
+        """Test adjacent squares of a square on the top right."""
+        self.assertEqual(['I9', 'J8'], self.board.adjacent_squares('J9'))
+
+
+class SeaBoardTextTest(unittest.TestCase):
+    """Tests of text versions of a Battleships' board. (unittest.TestCase)"""
 
     def setUp(self):
         self.bot = battleships.BattleBot()
