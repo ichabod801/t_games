@@ -411,7 +411,7 @@ class TestGame(game.Game):
         self.all_set = True
 
 
-def bot_test(game, bots, rounds, n_bots, options = 'none'):
+def bot_test(game, bot_classes, rounds, n_bots, options = 'none', bot_params = []):
     """
     Make a test case of playing the game with bots. (unittest.Testcase)
 
@@ -420,10 +420,11 @@ def bot_test(game, bots, rounds, n_bots, options = 'none'):
 
     Parameters:
     game: The game to play. (game.Game)
-    bots: The bots to play the game. (list of player.Bot)
+    bot_classes: The bot classes to play the game. (list of type)
     rounds: The number of rounds to play each test. (int)
     n_bots: The valid numbers of bots. (list of int)
     options: The options passed to the game. (str)
+    bot_params: The parameters to pass to the bot initializations. (list of tuple)
     """
     # A test framework to put the individual tournaments into.
     class BotTest(unittest.TestCase):
@@ -433,16 +434,20 @@ def bot_test(game, bots, rounds, n_bots, options = 'none'):
             self.game = game(self.bot, options)
             self.rounds = rounds
     # A function for adding a test for a specific set of bots.
-    def make_bot_test(bot_classes):
+    def make_bot_test(bots):
         def testSomeBots(self):
-            self.game.tournament([bot() for bot in bot_classes], self.rounds)
+            self.game.tournament(bots, self.rounds)
             self.assertTrue(1)
-        bot_text = utility.oxford([bot.__class__.__name__ for bot in bot_classes])
+        bot_text = utility.oxford([bot.__class__.__name__ for bot in bots])
         testSomeBots.__doc__ = 'Bot test of {}.'.format(bot_text)
         return testSomeBots
+    # Instantiate the bots.
+    if not bot_params:
+        bot_params = [()] * len(bot_classes)
+    bots = [bot_class(*params) for bot_class, params in zip(bot_classes, bot_params)]
     # Add the tests to the class
     for num_bots in n_bots:
-        for group_index, bot_classes in enumerate(itertools.combinations(bots, num_bots)):
-            new_test = make_bot_test(bot_classes)
+        for group_index, test_bots in enumerate(itertools.combinations(bots, num_bots)):
+            new_test = make_bot_test(list(test_bots))
             setattr(BotTest, 'testBots{}_{:03}'.format(num_bots, group_index + 1), new_test)
     return BotTest
