@@ -903,7 +903,8 @@ class Backgammon(game.Game):
         piece: The piece to bear off. (str)
         """
         # Assume the turn will continue.
-        go = True
+        unchanged = object()
+        go = unchanged
         # Get the rolls needed for the points the player is on.
         player_points = [point for point, cell in self.board.cells.items() if piece in cell]
         if piece == 'O':
@@ -930,8 +931,8 @@ class Backgammon(game.Game):
                     if not player_points:
                         break
                 go = self.rolls
-        # Warn if no successful moves were made ('is' to distinguish from rolls left).
-        if go is True:
+        # Warn if no successful moves were made.
+        if go is unchanged:
             player.error('There are no pieces that can be auto-built.')
         return go
 
