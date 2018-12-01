@@ -9,6 +9,7 @@ SeaBoardAdjTest: Test of adjacent squares on a Battleships' board. (TestCase)
 SeaBoardFireTest: Test of firing on a Battleships' board. (unittest.TestCase)
 SeaBoardMakeShipTest: Test getting ship squares from end points. (TestCase)
 SeaBoardPlaceRandomTest: Test generating a random ship. (unittest.TestCase)
+SeaBoardPlaceShipsTest: Test placing ships on the board. (unittest.TestCase)
 SeaBoardTextTest: Tests of text versions of a Battleships' board. (TestCase)
 """
 
@@ -270,6 +271,67 @@ class SeaBoardPlaceRandomTest(unittest.TestCase):
             self.invalid_squares.remove(square)
             check = [('B4', 'B6'), ('B5', 'B7'), ('B6', 'B8')]
         self.assertIn(self.board.place_random(3, self.invalid_squares), check)
+
+
+class SeaBoardPlaceShipsTest(unittest.TestCase):
+    """Test placing ships on the board. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+
+    def testHorizontalFiveFleet(self):
+        """Test placing a horizontal five square ship in the fleet."""
+        self.bot.replies = ['i6 i2', 'g6 g3', 'e6 e4', 'c4 c2', 'a7 a8']
+        board = battleships.SeaBoard(self.bot)
+        self.assertEqual(('Carrier', ['I2', 'I3', 'I4', 'I5', 'I6']), board.fleet[0])
+
+    def testHorizontalFourFleet(self):
+        """Test placing a horizontal four square ship in the fleet."""
+        self.bot.replies = ['i6 i2', 'g6 g3', 'e6 e4', 'c4 c2', 'a7 a8']
+        board = battleships.SeaBoard(self.bot)
+        self.assertEqual(('Battleship', ['G3', 'G4', 'G5', 'G6']), board.fleet[1])
+
+    def testHorizontalThreeFleet(self):
+        """Test placing a horizontal three square ship in the fleet."""
+        self.bot.replies = ['i6 i2', 'g6 g3', 'e6 e4', 'c4 c2', 'a7 a8']
+        board = battleships.SeaBoard(self.bot)
+        self.assertEqual(('Cruiser', ['E4', 'E5', 'E6']), board.fleet[2])
+
+    def testHorizontalTwoFleet(self):
+        """Test placing a horizontal two square ship in the fleet."""
+        self.bot.replies = ['i6 i2', 'g6 g3', 'e6 e4', 'c4 c2', 'a7 a8']
+        board = battleships.SeaBoard(self.bot)
+        self.assertEqual(('Destroyer', ['A7', 'A8']), board.fleet[4])
+
+    def testOneFleet(self):
+        """Test placing a horizontal one square ship in the fleet."""
+        self.bot.replies = ['i6 i2', 'g6 g3', 'e6 e4', 'c4 c3', 'd8 d9', 'a8', 'f8']
+        board = battleships.SeaBoard(self.bot, inventory_name = 'bednar')
+        self.assertEqual(('Submarine', ['A8']), board.fleet[5])
+
+    def testVerticalFiveFleet(self):
+        """Test placing a vertical five square ship in the fleet."""
+        self.bot.replies = ['A1 e1', 'g3 D3', 'e5 g5', 'I7 G7', 'I9 j9']
+        board = battleships.SeaBoard(self.bot)
+        self.assertEqual(('Carrier', ['A1', 'B1', 'C1', 'D1', 'E1']), board.fleet[0])
+
+    def testVerticalFourFleet(self):
+        """Test placing a vertical four square ship in the fleet."""
+        self.bot.replies = ['A1 e1', 'g3 D3', 'e5 g5', 'I7 G7', 'I9 j9']
+        board = battleships.SeaBoard(self.bot)
+        self.assertEqual(('Battleship', ['D3', 'E3', 'F3', 'G3']), board.fleet[1])
+
+    def testVerticalThreeFleet(self):
+        """Test placing a vertical three square ship in the fleet."""
+        self.bot.replies = ['A1 e1', 'g3 D3', 'e5 g5', 'I7 G7', 'I9 j9']
+        board = battleships.SeaBoard(self.bot)
+        self.assertEqual(('Submarine', ['G7', 'H7', 'I7']), board.fleet[3])
+
+    def testVerticalTwoFleet(self):
+        """Test placing a vertical two square ship in the fleet."""
+        self.bot.replies = ['A1 e1', 'g3 D3', 'e5 g5', 'I7 G7', 'I9 j9']
+        board = battleships.SeaBoard(self.bot)
+        self.assertEqual(('Destroyer', ['I9', 'J9']), board.fleet[4])
 
 
 class SeaBoardTextTest(unittest.TestCase):
