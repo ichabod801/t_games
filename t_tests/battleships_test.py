@@ -6,6 +6,7 @@ Unit testing of t_games/board_games/battleships_game.py
 Classes:
 GameOverTest: Tests of Battleships.game_over. (unittest.TestCase)
 SeaBoardAdjTest: Test of adjacent squares on a Battleships' board. (TestCase)
+SeaBoardFireTest: Test of firing on a Battleships' board. (unittest.TestCase)
 SeaBoardTextTest: Tests of text versions of a Battleships' board. (TestCase)
 """
 
@@ -146,6 +147,59 @@ class SeaBoardAdjTest(unittest.TestCase):
     def testTopRight(self):
         """Test adjacent squares of a square on the top right."""
         self.assertEqual(['I9', 'J8'], self.board.adjacent_squares('J9'))
+
+
+class SeaBoardFireTest(unittest.TestCase):
+    """Test of firing on a Battleships' board. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot(['J0 J4', 'H0 H3', 'F0 F2', 'D0 D2', 'B0 B1'])
+        self.board = battleships.SeaBoard(self.bot)
+        self.foe = unitility.AutoBot()
+
+    def testHitHit(self):
+        """Test a basic hit getting recorded."""
+        self.board.fire('J0', self.foe)
+        self.assertIn('J0', self.board.hits)
+
+    def testHitMessage(self):
+        """Test notification of a basic hit."""
+        self.board.fire('H1', self.foe)
+        self.assertEqual(['You hit.\n'], self.foe.info)
+
+    def testHitRemoval(self):
+        """Test a basic hit being marked on the ship."""
+        self.board.fire('F2', self.foe)
+        self.assertNotIn('F2', self.board.fleet[2][1])
+
+    def testMissMessage(self):
+        """Test notification of a basic miss."""
+        self.board.fire('C4', self.foe)
+        self.assertEqual(['You missed.\n'], self.foe.info)
+
+    def testMissMiss(self):
+        """Test a basic miss being recorded."""
+        self.board.fire('J9', self.foe)
+        self.assertEqual({'J9'}, self.board.misses)
+
+    def testSinkFleet(self):
+        """Test updating a fleet when all ships are sunk."""
+        for square in 'J0 J1 J2 J3 J4 H0 H1 H2 H3 F0 F1 F2 D0 D1 D2 B0 B1'.split():
+            self.board.fire(square, self.foe)
+        self.assertEqual([], self.board.fleet)
+
+    def testSinkMessageFoe(self):
+        """Test notifying the attacker of a sunk ship."""
+        self.board.fire('B0', self.foe)
+        self.board.fire('B1', self.foe)
+        self.assertEqual(['You hit.\n', 'You hit.\n', 'You sank a destroyer.\n'], self.foe.info)
+
+    def testSinkMessagePlayer(self):
+        """Test notifying the owner of a sunk ship."""
+        self.board.fire('D0', self.foe)
+        self.board.fire('D1', self.foe)
+        self.board.fire('D2', self.foe)
+        self.assertEqual(['Your submarine has been sunk.\n'], self.bot.info[5:])
 
 
 class SeaBoardTextTest(unittest.TestCase):

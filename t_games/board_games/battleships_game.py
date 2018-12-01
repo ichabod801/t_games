@@ -603,8 +603,8 @@ class SeaBoard(object):
                 # Check for sinking the ship.
                 squares.remove(square)
                 if not squares:
-                    self.player.tell('Your {} has been sunk.'.format(ship))
-                    foe.tell('You sank a {}.'.format(ship))
+                    self.player.tell('Your {} has been sunk.'.format(ship.lower()))
+                    foe.tell('You sank a {}.'.format(ship.lower()))
                     # Check for sinking the fleet (an empty fleet is a flag for Battleships.game_over).
                     fleet_squares = sum([squares for ship, squares in self.fleet], [])
                     if not fleet_squares:
