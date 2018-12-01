@@ -7,6 +7,7 @@ Classes:
 GameOverTest: Tests of Battleships.game_over. (unittest.TestCase)
 SeaBoardAdjTest: Test of adjacent squares on a Battleships' board. (TestCase)
 SeaBoardFireTest: Test of firing on a Battleships' board. (unittest.TestCase)
+SeaBoardMakeShipTest: Test getting ship squares from end points. (TestCase)
 SeaBoardTextTest: Tests of text versions of a Battleships' board. (TestCase)
 """
 
@@ -200,6 +201,38 @@ class SeaBoardFireTest(unittest.TestCase):
         self.board.fire('D1', self.foe)
         self.board.fire('D2', self.foe)
         self.assertEqual(['Your submarine has been sunk.\n'], self.bot.info[5:])
+
+
+class SeaBoardMakeShipTest(unittest.TestCase):
+    """Test getting the ship squares from the end points. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot(['J0 J4', 'H0 H3', 'F0 F2', 'D0 D2', 'B0 B1'])
+        self.board = battleships.SeaBoard(self.bot)
+
+    def testDown(self):
+        """Test making a ship going down."""
+        self.assertEqual(['H0', 'H1', 'H2', 'H3', 'H4', 'H5'], self.board.make_ship('H5', 'H0'))
+
+    def testLeft(self):
+        """Test making a ship going to the left."""
+        self.assertEqual(['E5', 'E6', 'E7', 'E8', 'E9'], self.board.make_ship('E9', 'E5'))
+
+    def testNegative(self):
+        """Test failing to make a ship with a negative slope."""
+        self.assertEqual([], self.board.make_ship('D6', 'A3'))
+
+    def testPositive(self):
+        """Test failing to make a ship with a positive slope."""
+        self.assertEqual([], self.board.make_ship('B3', 'F7'))
+
+    def testRight(self):
+        """Test making a ship going to the right."""
+        self.assertEqual(['D6', 'D7', 'D8', 'D9'], self.board.make_ship('D6', 'D9'))
+
+    def testUp(self):
+        """Test maing a ship going up."""
+        self.assertEqual(['A7', 'B7', 'C7'], self.board.make_ship('A7', 'C7'))
 
 
 class SeaBoardTextTest(unittest.TestCase):
