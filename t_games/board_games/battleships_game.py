@@ -762,34 +762,6 @@ class SeaBoard(object):
         return '\n'.join(lines)
 
 
-def test():
-    """Basic testing of the board object. (None)"""
-    # Test ship creation.
-    board = SeaBoard()
-    print('B3 to B7', board.make_ship('B3', 'B7'))
-    print('C5 to F5', board.make_ship('C5', 'F5'))
-    print('B3 to F5', board.make_ship('B3', 'F5'))
-    # Test adjacent squares.
-    print('adj E5', board.adjacent_squares('E5'))
-    print('adj A5', board.adjacent_squares('A5'))
-    print('adj J5', board.adjacent_squares('J5'))
-    print('adj E0', board.adjacent_squares('E0'))
-    print('adj E9', board.adjacent_squares('E9'))
-    print('adj A0', board.adjacent_squares('A0'))
-    # Test ship placement.
-    craig = BattleBot('Craig')
-    board = SeaBoard(craig, inventory = 'Ichabod')
-    board.place_ships()
-    print(board.show())
-    # Test firing shots.
-    sarah = player.Player('Sarah')
-    for shot in range(30):
-        square = random.choice(board.letters) + random.choice(board.numbers)
-        board.fire(square, sarah)
-    print(board.show(to = 'foe'))
-    print(board.show())
-
-
 if __name__ == '__main__':
     # Play the game without the interface.
     try:

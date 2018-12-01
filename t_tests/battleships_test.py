@@ -21,6 +21,11 @@ import t_games.board_games.battleships_game as battleships
 import t_tests.unitility as unitility
 
 
+BOARD_LINES = ['', ' 0123456789', 'JOXXOO./...J', 'I//...X....I', 'H..../X.../H', 'G.../.X../.G',
+    'F../..X./O.F', 'E./..../.O.E', 'D/OOO./..O.D', 'C..../..../C', 'B.../.OO./.B', 'A../..../..A',
+     ' 0123456789']
+
+
 class GameOverTest(unittest.TestCase):
     """Tests of Battleships.game_over. (unittest.TestCase)"""
 
@@ -398,13 +403,13 @@ class SeaBoardTextTest(unittest.TestCase):
     """Tests of text versions of a Battleships' board. (unittest.TestCase)"""
 
     def setUp(self):
-        self.bot = battleships.BattleBot()
+        self.bot = unitility.AutoBot(['j0 j4', 'i5 f5', 'd1 d3', 'f8 d8', 'b5 b6'])
         self.bot.name = 'Ramius'
         self.board = battleships.SeaBoard(self.bot)
 
     def testRepr(self):
         """Test the computer readable representaiton of a starting SeaBoard."""
-        self.assertEqual('<SeaBoard for <BattleBot Ramius> with 0 of 17 hits>', repr(self.board))
+        self.assertEqual('<SeaBoard for <AutoBot Ramius> with 0 of 17 hits>', repr(self.board))
 
     def testReprHit(self):
         """Test the computer readable representaiton of a SeaBoard with some hits."""
@@ -413,7 +418,7 @@ class SeaBoardTextTest(unittest.TestCase):
         for square in squares[:-1]:
             self.board.fire(square, unitility.AutoBot())
         # Check the repr.
-        self.assertEqual('<SeaBoard for <BattleBot Ramius> with 4 of 17 hits>', repr(self.board))
+        self.assertEqual('<SeaBoard for <AutoBot Ramius> with 4 of 17 hits>', repr(self.board))
 
     def testReprSunk(self):
         """Test the computer readable representaiton of a SeaBoard with a ship sunk."""
@@ -422,7 +427,19 @@ class SeaBoardTextTest(unittest.TestCase):
         for square in squares[:]:
             self.board.fire(square, unitility.AutoBot())
         # Check the repr.
-        self.assertEqual('<SeaBoard for <BattleBot Ramius> with 5 of 17 hits>', repr(self.board))
+        self.assertEqual('<SeaBoard for <AutoBot Ramius> with 5 of 17 hits>', repr(self.board))
+
+    def testShowFoe(self):
+        """Test the player's view of their own board."""
+        self.board.hits = set('J2 J1 I5 H5 G5 F5'.split())
+        self.board.misses = set('J6 I0 I1 H4 H9 G3 G8 F2 F7 E1 E6 D0 D5 C4 C9 B3 B8 A2 A7'.split())
+        self.assertEqual('\n'.join(BOARD_LINES).replace('O', '.'), self.board.show(to = 'foe'))
+
+    def testShowFriend(self):
+        """Test the player's view of their own board."""
+        self.board.hits = set('J2 J1 I5 H5 G5 F5'.split())
+        self.board.misses = set('J6 I0 I1 H4 H9 G3 G8 F2 F7 E1 E6 D0 D5 C4 C9 B3 B8 A2 A7'.split())
+        self.assertEqual('\n'.join(BOARD_LINES), self.board.show())
 
 
 if __name__ == '__main__':
