@@ -279,6 +279,12 @@ class SeaBoardPlaceShipsTest(unittest.TestCase):
     def setUp(self):
         self.bot = unitility.AutoBot()
 
+    def testDiagonal(self):
+        """Test the error from entering a diagonal ship."""
+        self.bot.replies = ['i6 i2', 'g6 g3', 'e6 c4', 'e6 e4', 'c4 c2', 'a7 a8']
+        board = battleships.SeaBoard(self.bot)
+        self.assertEqual(['Ships must be horizontal or vertical.\n'], self.bot.errors)
+
     def testHorizontalFiveFleet(self):
         """Test placing a horizontal five square ship in the fleet."""
         self.bot.replies = ['i6 i2', 'g6 g3', 'e6 e4', 'c4 c2', 'a7 a8']
@@ -303,11 +309,41 @@ class SeaBoardPlaceShipsTest(unittest.TestCase):
         board = battleships.SeaBoard(self.bot)
         self.assertEqual(('Destroyer', ['A7', 'A8']), board.fleet[4])
 
+    def testInvalidFirstSquare(self):
+        """Test the error from entering an invalid start square."""
+        self.bot.replies = ['k1 g1', 'A1 e1', 'g3 D3', 'e5 g5', 'I7 G7', 'I9 j9']
+        board = battleships.SeaBoard(self.bot)
+        self.assertEqual(['Please enter a start and end square.\n'], self.bot.errors)
+
+    def testInvalidLength(self):
+        """Test the error from entering a ship of the wrong size."""
+        self.bot.replies = ['i6 i2', 'g6 g3', 'e6 e4', 'c4 c1', 'c4 c2', 'a7 a8']
+        board = battleships.SeaBoard(self.bot)
+        self.assertEqual(['Submarines must be 3 squares long.\n'], self.bot.errors)
+
+    def testInvalidSecondSquare(self):
+        """Test the error from entering an invalid end square."""
+        self.bot.replies = ['A1 ea', 'A1 e1', 'g3 D3', 'e5 g5', 'I7 G7', 'I9 j9']
+        board = battleships.SeaBoard(self.bot)
+        self.assertEqual(['Please enter a start and end square.\n'], self.bot.errors)
+
+    def testOneError(self):
+        """Test the error from giving two squares for a one square ship."""
+        self.bot.replies = ['i6 i2', 'g6 g3', 'e6 e4', 'c4 c3', 'd8 d9', 'a8 a9', 'a8', 'f8']
+        board = battleships.SeaBoard(self.bot, inventory_name = 'bednar')
+        self.assertEqual(['You must enter one square for a submarine.\n'], self.bot.errors)
+
     def testOneFleet(self):
         """Test placing a horizontal one square ship in the fleet."""
         self.bot.replies = ['i6 i2', 'g6 g3', 'e6 e4', 'c4 c3', 'd8 d9', 'a8', 'f8']
         board = battleships.SeaBoard(self.bot, inventory_name = 'bednar')
         self.assertEqual(('Submarine', ['A8']), board.fleet[5])
+
+    def testTwoError(self):
+        """Test the error from giving one square for a three square ship."""
+        self.bot.replies = ['A1 e1', 'g3 D3', 'e5', 'e5 g5', 'I7 G7', 'I9 j9']
+        board = battleships.SeaBoard(self.bot)
+        self.assertEqual(['Please enter a start and end square.\n'], self.bot.errors)
 
     def testVerticalFiveFleet(self):
         """Test placing a vertical five square ship in the fleet."""
