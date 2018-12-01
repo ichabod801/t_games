@@ -279,6 +279,24 @@ class SeaBoardPlaceShipsTest(unittest.TestCase):
     def setUp(self):
         self.bot = unitility.AutoBot()
 
+    def testCollisionCross(self):
+        """Test the error from a ship crossing another ship."""
+        self.bot.replies = ['i6 i2', 'g6 g3', 'e6 e4', 'e6 c6', 'c4 c2', 'a7 a8']
+        board = battleships.SeaBoard(self.bot)
+        self.assertEqual(['That ship is adjacent to or overlaps another ship.\n'], self.bot.errors)
+
+    def testCollisionEnd(self):
+        """Test the error from a ship touching the end of another ship."""
+        self.bot.replies = ['i6 i2', 'g6 g3', 'g2 g0', 'e6 e4', 'c4 c2', 'a7 a8']
+        board = battleships.SeaBoard(self.bot)
+        self.assertEqual(['That ship is adjacent to or overlaps another ship.\n'], self.bot.errors)
+
+    def testCollisonSide(self):
+        """Test the error from a ship touching the side of another ship."""
+        self.bot.replies = ['i6 i2', 'h4 e4', 'g6 g3', 'e6 e4', 'c4 c2', 'a7 a8']
+        board = battleships.SeaBoard(self.bot)
+        self.assertEqual(['That ship is adjacent to or overlaps another ship.\n'], self.bot.errors)
+
     def testDiagonal(self):
         """Test the error from entering a diagonal ship."""
         self.bot.replies = ['i6 i2', 'g6 g3', 'e6 c4', 'e6 e4', 'c4 c2', 'a7 a8']
@@ -332,6 +350,12 @@ class SeaBoardPlaceShipsTest(unittest.TestCase):
         self.bot.replies = ['i6 i2', 'g6 g3', 'e6 e4', 'c4 c3', 'd8 d9', 'a8 a9', 'a8', 'f8']
         board = battleships.SeaBoard(self.bot, inventory_name = 'bednar')
         self.assertEqual(['You must enter one square for a submarine.\n'], self.bot.errors)
+
+    def testNoCollisionCorner(self):
+        """Test no error when ships touch at the corner."""
+        self.bot.replies = ['A1 e1', 'g3 D3', 'e5 g5', 'I7 G7', 'j8 j9']
+        board = battleships.SeaBoard(self.bot)
+        self.assertEqual([], self.bot.errors)
 
     def testOneFleet(self):
         """Test placing a horizontal one square ship in the fleet."""
