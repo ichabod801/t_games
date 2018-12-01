@@ -12,6 +12,7 @@ SeaBoardTextTest: Tests of text versions of a Battleships' board. (TestCase)
 """
 
 
+import itertools
 import unittest
 
 import t_games.board_games.battleships_game as battleships
@@ -233,6 +234,21 @@ class SeaBoardMakeShipTest(unittest.TestCase):
     def testUp(self):
         """Test maing a ship going up."""
         self.assertEqual(['A7', 'B7', 'C7'], self.board.make_ship('A7', 'C7'))
+
+
+class SeaBoardPlaceRandomTest(unittest.TestCase):
+    """Test generating a random ship."""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot(['J0 J4', 'H0 H3', 'F0 F2', 'D0 D2', 'B0 B1'])
+        self.board = battleships.SeaBoard(self.bot)
+        self.invalid_squares = [''.join(chars) for chars in itertools.product('ABCDEDFGHIJ', '0123456789')]
+
+    def testHorizontalFive(self):
+        """Test generating a random horizontal five space ship."""
+        for square in 'I7 I6 I5 I4 I3':
+            self.invalid_squares.remove(square)
+        self.assertEqual(('I3', 'I7'), self.board.place_random(5, self.invalid_squares))
 
 
 class SeaBoardTextTest(unittest.TestCase):
