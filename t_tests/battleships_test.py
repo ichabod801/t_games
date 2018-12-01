@@ -8,6 +8,7 @@ GameOverTest: Tests of Battleships.game_over. (unittest.TestCase)
 SeaBoardAdjTest: Test of adjacent squares on a Battleships' board. (TestCase)
 SeaBoardFireTest: Test of firing on a Battleships' board. (unittest.TestCase)
 SeaBoardMakeShipTest: Test getting ship squares from end points. (TestCase)
+SeaBoardPlaceRandomTest: Test generating a random ship. (unittest.TestCase)
 SeaBoardTextTest: Tests of text versions of a Battleships' board. (TestCase)
 """
 
@@ -237,7 +238,7 @@ class SeaBoardMakeShipTest(unittest.TestCase):
 
 
 class SeaBoardPlaceRandomTest(unittest.TestCase):
-    """Test generating a random ship."""
+    """Test generating a random ship. (unittest.TestCase)"""
 
     def setUp(self):
         self.bot = unitility.AutoBot(['J0 J4', 'H0 H3', 'F0 F2', 'D0 D2', 'B0 B1'])
@@ -246,9 +247,29 @@ class SeaBoardPlaceRandomTest(unittest.TestCase):
 
     def testHorizontalFive(self):
         """Test generating a random horizontal five space ship."""
-        for square in 'I7 I6 I5 I4 I3':
+        for square in 'I7 I6 I5 I4 I3'.split():
             self.invalid_squares.remove(square)
         self.assertEqual(('I3', 'I7'), self.board.place_random(5, self.invalid_squares))
+
+    def testHorizontalThree(self):
+        """Test generating a random horizontal three space ship."""
+        for square in 'I7 I6 I5 I4 I3'.split():
+            self.invalid_squares.remove(square)
+            check = [('I5', 'I7'), ('I4', 'I6'), ('I3', 'I5')]
+        self.assertIn(self.board.place_random(3, self.invalid_squares), check)
+
+    def testVerticalFive(self):
+        """Test generating a random horizontal five space ship."""
+        for square in 'F0 F1 F2 F3 F4'.split():
+            self.invalid_squares.remove(square)
+        self.assertEqual(('F0', 'F4'), self.board.place_random(5, self.invalid_squares))
+
+    def testVerticalThree(self):
+        """Test generating a random vertical three space ship."""
+        for square in 'B4 B5 B6 B7 B8'.split():
+            self.invalid_squares.remove(square)
+            check = [('B4', 'B6'), ('B5', 'B7'), ('B6', 'B8')]
+        self.assertIn(self.board.place_random(3, self.invalid_squares), check)
 
 
 class SeaBoardTextTest(unittest.TestCase):
