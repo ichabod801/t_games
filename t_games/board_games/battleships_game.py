@@ -284,6 +284,7 @@ class Battleships(game.Game):
 
     def set_up(self):
         """Set up a board for each player. (None)"""
+        self.bot = [player for player in self.players if player.name != self.human.name][0]
         self.boards = {self.bot.name: SeaBoard(self.bot, self.inventory_name)}
         self.boards[self.human.name] = SeaBoard(self.human, self.inventory_name)
 
@@ -495,7 +496,7 @@ class SmarterBot(BattleBot):
         self.add_line(random.randrange(10))
         # Set up tracking the sizes of remaining enemy ships.
         self.target_sizes = []
-        for size, count in self.game.boards[self.name].inventory.values():
+        for size, count in INVENTORIES[self.game.inventory_name].values():
             self.target_sizes.extend([size] * count)
 
     def tell(self, text):

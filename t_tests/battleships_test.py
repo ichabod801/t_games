@@ -4,6 +4,7 @@ battleships_test.py
 Unit testing of t_games/board_games/battleships_game.py
 
 Classes:
+BotTest: Tests of Battleships bots. (unittest.TestCase)
 GameOverTest: Tests of Battleships.game_over. (unittest.TestCase)
 SeaBoardAdjTest: Test of adjacent squares on a Battleships' board. (TestCase)
 SeaBoardFireTest: Test of firing on a Battleships' board. (unittest.TestCase)
@@ -24,6 +25,10 @@ import t_tests.unitility as unitility
 BOARD_LINES = ['', ' 0123456789', 'JOXXOO./...J', 'I//...X....I', 'H..../X.../H', 'G.../.X../.G',
     'F../..X./O.F', 'E./..../.O.E', 'D/OOO./..O.D', 'C..../..../C', 'B.../.OO./.B', 'A../..../..A',
      ' 0123456789']
+
+
+BotTest = unitility.bot_test(battleships.Battleships, [battleships.BattleBot, battleships.SmarterBot], 10,
+    [2])
 
 
 class GameOverTest(unittest.TestCase):
