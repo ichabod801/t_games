@@ -52,6 +52,7 @@ GrailQuest: A game of Quest for the Grail. (game.Game)
 
 import datetime
 import random
+import time
 
 import t_games.game as game
 import t_games.utility as utility
@@ -126,7 +127,7 @@ the words 'type twang'. The faster you type 'twang' and hit the return key, the
 better luck you'll have with your bow and arrow.
 
 Signed,
-Richard M. Nixon
+Donald J. Trump
 """
 
 SACKED_CREDITS = """
@@ -176,13 +177,15 @@ class GrailQuest(game.Game):
     """
 
     aka = ['I seek the Holy Grail!', 'qftg']
-    aliases = {'castle': 'stop', 's': 'stop'}
+    aliases = {'castle': 'stop', 'h': 'hunt', 's': 'stop'}
     categories = ['Adventure Games']
-    diseases = ['measles', 'dysentery', 'typhoid', 'cholera', 'spamitis']
     credits = CREDITS
     credits_order = [CREDITS, MOOSE_CREDITS, SACKED_CREDITS, SACKER_CREDITS, MOOSER_CREDITS,
         SACKEST_CREDITS, LLAMA_CREDITS, FINAL_CREDITS]
-    forts = ['Castle of Camelot', 'Swamp Castle', 'Castle Anthrax', 'Spam Castle', 'Catapult Castle']
+    diseases = ['measles', 'dysentery', 'typhoid', 'cholera', 'spamitis']
+    eat_map = {'p': 1, 'poorly': 1, '1': 1, 'm': 2, 'moderately': 2, '2': 2, 'w': 3, 'well': 3, '3': 3}
+    castles = ['the Castle of Camelot', 'Swamp Castle', 'Castle Anthrax', 'Spam Castle', 'Catapult Castle',
+        'Spam Castle']
     name = 'Quest for the Grail'
 
     def do_credits(self):
@@ -198,11 +201,33 @@ class GrailQuest(game.Game):
             self.force_end = 'loss'
             return False
 
+    def do_hunt(self):
+        """
+        Hunt for food. (h)
+
+        You need to have at least 40 arrows to hunt.
+        """
+        if self.arrows < 40:
+            self.human.error('Tough, you need more arrows to go hunting.')
+            return True
+        shot = self.get_twang()
+        if shot < 0.141414:
+            self.human.tell('RIGHT BETWEEN THE EYES! You got a big one!')
+            self.spam += random.randint(52, 57)
+            self.arrows -= random.randint(10, 13)
+        elif random.random() < shot:
+            self.human.tell('Sorry, no luck today.')
+        else:
+            self.human.tell('Nice shot, right through the neck. Feats tonight!')
+            self.spam += 48 - int(2 * shot)
+            self.arrows -= 10 - int(3 * shot)
+        self.mileage -= 45
+
     def do_stop(self):
         """
         Stop at a castle to buy things. (s, castle)
         """
-        if not self.fort_option:
+        if not self.castle_option:
             self.human.tell('The castle you thought you could get to turned out to only be a model.')
             return True
         else:
@@ -211,6 +236,28 @@ class GrailQuest(game.Game):
             self.purchases(modifier)
             self.mileage -= 45
             return False
+
+    def eat(self):
+        """Give the player a choice of how much food to eat. (None)"""
+        options = '\nDo you wish to eat:\n    (1) Poorly\n    (2) Moderately\n    (3) or Well? '
+        while True:
+            choice = self.human.ask(options).lower()
+            if choice in self.eat_map:
+                meal = 8 + 5 * self.eat_map(choice)
+                if meal < self.spam:
+                    self.spam -= meal
+                    break
+                else:
+                    self.human.error("You can't eat that well.")
+            else:
+                self.human.error('Please, sir. We only serve the options on the menu.')
+
+    def get_twang(self):
+        """Get the time taken to type twang as a percentage of the max allowed. (float)"""
+        start = time.time()
+        self.human.ask('Type twang: ')
+        taken = time.time() - start
+        return min(self.max_twang / 7, 1)
 
     def purchases(self, modifier = None):
         """Make purchases. (None)"""
@@ -266,7 +313,7 @@ class GrailQuest(game.Game):
             self.human.tell('You better do some hunting or buy food soon!')
         if self.coconuts < 11:
             self.human.tell('Your steeds have just about beaten those coconuts to death.')
-        if self.fort_option:
+        if self.castle_option:
             self.human.tell('You can see a castle in the distance.')
         self.show_status()
         # Check for medical issues.
@@ -291,8 +338,9 @@ class GrailQuest(game.Game):
         # Get the player's action.
         action = self.human.ask('\nWhat would you like to do? ')
         go = self.handle_cmd(action)
-        if not go and not self.force_end:
-            self.fort_option = not self.fort_option
+        if not go and not self.force_end and not self.death:
+            self.eat()
+            self.castle_option = not self.castle_option
 
     def set_up(self):
         """Set up the game. (None)"""
@@ -307,9 +355,10 @@ class GrailQuest(game.Game):
         # Set tracking variables.
         self.date = datetime.date(932, 4, 12)
         self.fortnight = datetime.timedelta(days = 14)
-        self.fort_option = True
-        self.fort_index = 0
+        self.castle_option = True
+        self.castle_index = 0
         self.gold = 700
+        self.max_twang = 5
         self.mileage = 0
         self.illness = False
         self.injury = False
