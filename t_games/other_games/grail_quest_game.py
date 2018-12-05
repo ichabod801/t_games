@@ -150,6 +150,14 @@ The credits have been completed in an entirely different style at great
 expense and at the last minute.
 """
 
+TACTICS = """
+What are your tactics:
+    1) Charge,
+    2) Run away,
+    3) Wander past whistling innocently,
+    4) or Build a defensible wooden badger?
+"""
+
 
 class GrailQuest(game.Game):
     """
@@ -187,6 +195,26 @@ class GrailQuest(game.Game):
     castles = ['the Castle of Camelot', 'Swamp Castle', 'Castle Anthrax', 'Spam Castle', 'Catapult Castle',
         'Spam Castle']
     name = 'Quest for the Grail'
+    tactics_map = {'1': 'charge', '2': 'run', '3': 'continue', '4': 'defend', 'b': 'defend',
+        'build': 'defend', 'badger': 'defend', 'c': 'charge' 'r': 'run', 'w': 'continue',
+        'wander': 'continue', 'whistle': 'continue'}
+
+    def check_hazards(self):
+        """Check for hazardous events along the way."""
+        # Where in the nine hells did he get this formula from?
+        mileage_mod = (self.mileage / 100.0 - 4) ** 2
+        if random.random() * 10 <= (mileage_mod + 72) / (mileage_mod + 12) - 1:
+            self.riders()
+
+    def default(self, text):
+        """
+        Handle unrecognized commands. (bool)
+
+        Parameters:
+        text: The raw text input by the user. (str)
+        """
+        self.human.error("Stop it, that's just silly.")
+        return True
 
     def do_credits(self):
         """
@@ -340,7 +368,57 @@ class GrailQuest(game.Game):
         go = self.handle_cmd(action)
         if not go and not self.force_end and not self.death:
             self.eat()
+            self.mileage += 200 + (self.steeds + self.coconuts - 220) // 5 + random.randrange(10)
+            self.check_hazards()
             self.castle_option = not self.castle_option
+
+    def riders(self):
+        """Handle riders. (None)"""
+        # Warn the player of riders.
+        self.human.tell('\nYou see riders ahead.')
+        hostile = random.random() < 0.8
+        if hostile:
+            self.human.tell('They appear hostile.')
+        # Get the player's tactics.
+        while True:
+            raw_tactics = self.human.ask(TACTICS.rstrip())
+            tactics = raw_tactics.lower().split()[0]
+            if tactics in self.tactics_map:
+                break
+            self.human.error('Oh, the old {!r}, eh? Not this time boyo.'.format(raw_tactics))
+        tactics = self.tactics_map[tactics]
+        # Check for actual hostility.
+        if random.random() < 0.2:
+            hostile = not hostile
+        if hostile:
+            if tactics == 'run':
+                self.mileage += 20
+                self.miscellaneous = max(self.miscellaneous - 15, 0)
+                self.arrows = max(self.arrows - 150, 0)
+                self.steeds = max(self.steeds - 36, 0)
+                self.coconuts = max(self.coconuts - 4, 0)
+            elif tactics == 'charge':
+                self.arrows = min(self.speed - int(speed * 40) - 80, 0)
+                self.rider_combat()
+            elif tactics == 'defend':
+                self.arrows =
+        else:
+
+    def rider_combat(self):
+        """Shoot it out with the riders."""
+        speed = self.get_twang()
+        if speed < 1 and self.arrows:
+            self.human.tell('Nice shooting, you drove them off.')
+        elif speed > 4:
+            self.human.tell('Lousy shooting. You got run through with a sword.')
+            self.human.tell("You'll have to see Brother Maynard about that.")
+            injury = True
+        else:
+            self.human.tell('Oh, come on. Just take a typing class.')
+        if not self.arrows:
+            self.human.tell('You ran out of arrows and got massacred.')
+            self.death = 'riders'
+
 
     def set_up(self):
         """Set up the game. (None)"""
