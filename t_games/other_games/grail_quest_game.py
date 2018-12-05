@@ -205,6 +205,24 @@ class GrailQuest(game.Game):
         mileage_mod = (self.mileage / 100.0 - 4) ** 2
         if random.random() * 10 <= (mileage_mod + 72) / (mileage_mod + 12) - 1:
             self.riders()
+        # Check for other events.
+        event_check = random.random()
+        if event_check < 0.06:
+            self.human.tell('One of your coconunts breaks. You lose time and supplies fixing it.')
+            self.mileage -= 15 + random.randrange(5)
+            self.miscellaneous -= 15
+        elif event_check < 0.11:
+            self.human.tell('One of your steeds was shot by an arrow with a plot device tied to it.')
+            self.human.tell('This will slow you down the rest of your trip.')
+            self.mileage -= 25
+            self.steeds -= 20
+        elif event_check < 0.13:
+            self.human.tell('Sir Gallahad broke his arm trying to rescue a cat.')
+            self.human.tell('You had to stop and use supplies to make a sling.')
+            self.mileage -= 5 + random.randrange(4)
+            self.miscellaneous -= 2 + random.randrange(3)
+        if self.miscellaneous < 1:
+            self.miscellaneous = 0
 
     def default(self, text):
         """
@@ -350,7 +368,7 @@ class GrailQuest(game.Game):
         elif self.illness or self.injury:
             bill = 20
         if bill:
-            warnings.append("The apothecary's bill is {} gold.".format(bill))
+            warnings.append("Brother Maynard requests a donation of {} gold.".format(bill))
             self.injury = False
             self.illness = False
         if warnings:
@@ -398,26 +416,47 @@ class GrailQuest(game.Game):
                 self.steeds = max(self.steeds - 36, 0)
                 self.coconuts = max(self.coconuts - 4, 0)
             elif tactics == 'charge':
+                speed = self.get_twang()
                 self.arrows = min(self.speed - int(speed * 40) - 80, 0)
-                self.rider_combat()
+                self.rider_combat(speed)
             elif tactics == 'defend':
-                self.arrows =
+                speed = self.get_twang()
+                self.arrows = min(self.speed - int(speed * 30) - 80, 0)
+                self.miscellaneous = max(self.miscellaneous - 15, 0)
+                self.rider.combat(speed)
+            elif tactics == 'continue':
+                if random.random() < 0.8:
+                    self.arrows = min(self.arrows - 150, 0)
+                    self.miscellaneous = max(self.miscellaneous - 15, 0)
+                else:
+                    self.human.tell('The riders did not attack.')
+            # Check for casualties.
+            if not self.arrows:
+                self.human.tell('You ran out of arrows and got massacred.')
+                self.death = 'riders'
         else:
+            if tactics == 'run':
+                self.mileage += 15
+                self.steeds = max(self.steeds - 10, 0)
+            elif tactics == 'attack':
+                self.mileage -= 5
+                self.bullets = max(self.bullets - 100, 0)
+            elif tactics == 'defend':
+                self.mileage -= 20
+            self.human.tell('The riders were friendly.')
 
-    def rider_combat(self):
-        """Shoot it out with the riders."""
-        speed = self.get_twang()
+    def rider_combat(self, speed):
+        """
+        Shoot it out with the riders. (bool)
+        """
         if speed < 1 and self.arrows:
             self.human.tell('Nice shooting, you drove them off.')
         elif speed > 4:
             self.human.tell('Lousy shooting. You got run through with a sword.')
             self.human.tell("You'll have to see Brother Maynard about that.")
-            injury = True
+            self.injury = True
         else:
             self.human.tell('Oh, come on. Just take a typing class.')
-        if not self.arrows:
-            self.human.tell('You ran out of arrows and got massacred.')
-            self.death = 'riders'
 
 
     def set_up(self):
