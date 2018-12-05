@@ -196,7 +196,7 @@ class GrailQuest(game.Game):
         'Spam Castle']
     name = 'Quest for the Grail'
     tactics_map = {'1': 'charge', '2': 'run', '3': 'continue', '4': 'defend', 'b': 'defend',
-        'build': 'defend', 'badger': 'defend', 'c': 'charge' 'r': 'run', 'w': 'continue',
+        'build': 'defend', 'badger': 'defend', 'c': 'charge', 'r': 'run', 'w': 'continue',
         'wander': 'continue', 'whistle': 'continue'}
 
     def check_hazards(self):
@@ -221,8 +221,43 @@ class GrailQuest(game.Game):
             self.human.tell('You had to stop and use supplies to make a sling.')
             self.mileage -= 5 + random.randrange(4)
             self.miscellaneous -= 2 + random.randrange(3)
+        elif event_check < 0.15:
+            self.human.tell('A steed wanders off looking for coconuts dropped by sparrows.')
+            self.human.tell('You have to spend time looking for it.')
+            self.mileage -= 17
+        elif event_check < 0.17:
+            self.human.tell("Sir Bedevere wanders off looking for a sheep's bladder.")
+            self.human.tell('You have to spend time looking for him.')
+            self.mileage -= 10
+        elif event_check < 0.22:
+            self.human.tell('The water is contaminated by some lovely filth.')
+            self.human.tell('You spend time finding a clean spring.')
+            self.mileage -= 2 + random.randrange(10)
+        elif event_check < 0.32:
+            if self.mileage > 950:
+                self.human.tell('Brrrr! Cold weather!')
+                if self.clothing > 22 + random.randrange(4):
+                    self.human.tell('You have enough clothing.')
+                elif self.mistrels:
+                    self.human.tell('You are forced to eat the minstrels to survive.')
+                    self.minstrels = False
+                else:
+                    self.human.tell("You don't have enough clothing.")
+                    self.illness_check()
+            else:
+                self.human.tell('Someone tells a God joke and he sends heavy rains after you.')
+                self.human.tell('You lose time and supplies.')
+                self.spam -= 10
+                self.arrows -= 500
+                self.miscellaneous -= 15
+                self.mileage -= 5 + random.randrange(10)
+        # Rest negative values.
         if self.miscellaneous < 1:
             self.miscellaneous = 0
+        if self.spam < 1:
+            self.spam = 0
+        if self.arrows < 1:
+            self.arrows = 0
 
     def default(self, text):
         """
@@ -289,7 +324,8 @@ class GrailQuest(game.Game):
         while True:
             choice = self.human.ask(options).lower()
             if choice in self.eat_map:
-                meal = 8 + 5 * self.eat_map(choice)
+                self.eating_choice = self.eat_map(choice)
+                meal = 8 + 5 * self.eating_choice
                 if meal < self.spam:
                     self.spam -= meal
                     break
@@ -304,6 +340,10 @@ class GrailQuest(game.Game):
         self.human.ask('Type twang: ')
         taken = time.time() - start
         return min(self.max_twang / 7, 1)
+
+    def illness_check(self):
+        """See if the player gets sick. (None)"""
+
 
     def purchases(self, modifier = None):
         """Make purchases. (None)"""
@@ -469,11 +509,13 @@ class GrailQuest(game.Game):
         self.miscellaneous = 0
         self.spam = 0
         self.steeds = 0
+        self.minstrels = False
         # Set tracking variables.
         self.date = datetime.date(932, 4, 12)
         self.fortnight = datetime.timedelta(days = 14)
         self.castle_option = True
         self.castle_index = 0
+        self.eating_choice = 0
         self.gold = 700
         self.max_twang = 5
         self.mileage = 0
