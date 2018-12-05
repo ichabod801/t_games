@@ -343,7 +343,20 @@ class GrailQuest(game.Game):
 
     def illness_check(self):
         """See if the player gets sick. (None)"""
-
+        if random.randint(1, 100) < 10 + 35 * (self.eating_choice - 1):
+            self.human.tell('You have contracted a mild illness. You have to use some medicine.')
+            self.mileage -= 5
+            self.miscellaneous -= 2
+        elif random.randint(1, 100) < 40 / 4 ** (self.eating_choice - 1):
+            self.human.tell('You have contracted a serious illness. You have to use some medicine.')
+            self.mileage -= 5
+            self.miscellaneous -= 5
+        else:
+            self.human.tell('You must stop for medical attention.')
+            self.miscellaneous -= 10
+            self.illness = True
+        if self.miscellaneous < 1:
+            self.death = 'illness'
 
     def purchases(self, modifier = None):
         """Make purchases. (None)"""
