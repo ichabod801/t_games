@@ -216,7 +216,7 @@ class GrailQuest(game.Game):
         if speed > 1 or self.arrows < 1:
             self.human.tell('You got shot in the leg and they took one of your steeds.')
             self.human.tell('You better let Brother Maynard look at that.')
-            self.injury = 'bandits'
+            self.injury = 'an attack by bandits'
             self.miscellaneous -= 5
             self.steeds -= 20
         else:
@@ -389,6 +389,18 @@ class GrailQuest(game.Game):
         self.miscellaneous -= random.randrange(8) + 3
         self.mileage -= 15
 
+    def game_over(self):
+        """Check for the end of the game (death or success). (bool)"""
+        if self.mileage >= 2040 or self.turns > 17:
+            self.win_loss_draw = [1, 0, 0]
+            self.victory()
+        elif self.death:
+            self.win_loss_draw = [0, 1, 0]
+            self.obituary()
+        else:
+            return False
+        return True
+
     def get_twang(self):
         """Get the time taken to type twang as a percentage of the max allowed. (float)"""
         start = time.time()
@@ -436,6 +448,39 @@ class GrailQuest(game.Game):
             self.illness = True
         if self.miscellaneous < 1:
             self.death = 'illness'
+
+    def mountains(self):
+        """Check for passing through mountain ranges. (None)"""
+        if self.mileage > 950:
+            mileage_mod = ((self.mileage / 100 - 15) ** 2 + 72) / ((self.mileage / 100 - 15) ** 2 + 12)
+            if random.random() * 10 <= 9 - mileage_mod:
+                self.human.tell('You have entered rugged mountains.')
+                if random.random() < 0.1:
+                    self.human.tell('You got lost, and spent valuable time trying to find the trail.')
+                    self.mileage -= 60
+                elif random.random < 0.11:
+                    self.human.tell('One of your steeds fell, losing time and supplies.')
+                    self.mileage = max(self.mileage - 20 - random.randrange(30), 0)
+                    self.arrows = max(self.arrows - 200, 0)
+                else:
+                    self.human.tell('The going gets slow.')
+                    self.mileage -= 45 + random.randint(5)
+                if not self.black_mountains:
+                    self.black_mountains = True
+                    if random.random() < 0.2:
+                        self.human.tell('You made it safely through the Black Mountains.')
+                        if self.mileage < 1700 or self.mount_etna:
+                            if self.mileage < 950:
+                                self.black_moutains_mileage = True
+                    elif:
+                        self.human.tell('Blizzard in the Black Mountains, time and supplies lost.')
+                        self.blizzard = True
+                        self.spam = max(self.spam - 25, 0)
+                        self.miscellaneous = max(self.miscellaneous - 10, 0)
+                        self.arrows = max(self.arrows - 300, 0)
+                        self.mileage -= 30 + random.randrange(40)
+                        if self.clothing < 18 + random.randrange(2):
+                            self.illness_check()
 
     def peasants(self):
         """Handle the peasants hazard."""
@@ -526,7 +571,7 @@ class GrailQuest(game.Game):
             if self.illness:
                 self.death = 'illness'
             else:
-                self.death = 'injury'
+                self.death = self.injury
             return False
         else:
             self.gold -= bill
@@ -538,6 +583,8 @@ class GrailQuest(game.Game):
             self.mileage += 200 + (self.steeds + self.coconuts - 220) // 5 + random.randrange(10)
             self.check_hazards()
             self.castle_option = not self.castle_option
+            self.date += self.fortnight
+        return go and not self.death
 
     def riders(self):
         """Handle riders. (None)"""
@@ -582,7 +629,7 @@ class GrailQuest(game.Game):
             # Check for casualties.
             if not self.arrows:
                 self.human.tell('You ran out of arrows and got massacred.')
-                self.death = 'riders'
+                self.death = 'an attack by riders'
         else:
             if tactics == 'run':
                 self.mileage += 15
@@ -603,7 +650,7 @@ class GrailQuest(game.Game):
         elif speed > 4:
             self.human.tell('Lousy shooting. You got run through with a sword.')
             self.human.tell("You'll have to see Brother Maynard about that.")
-            self.injury = True
+            self.injury = 'an attack by riders'
         else:
             self.human.tell('Oh, come on. Just take a typing class.')
 
@@ -614,19 +661,6 @@ class GrailQuest(game.Game):
         self.spam -= 30
         self.clothing -= 20
         self.mileage -= 20 + random.randrange(20)
-
-    def steed_shot(self):
-        """Handle the steed getting shot hazard. (None)"""
-        self.human.tell('One of your steeds was shot by an arrow with a plot device tied to it.')
-        self.human.tell('This will slow you down the rest of your trip.')
-        self.mileage -= 25
-        self.steeds -= 20
-
-    def steed_wanders(self):
-        """Handle a steed wandering off hazard. (None)"""
-        self.human.tell('A steed wanders off looking for coconuts dropped by sparrows.')
-        self.human.tell('You have to spend time looking for it.')
-        self.mileage -= 17
 
     def set_up(self):
         """Set up the game. (None)"""
@@ -649,9 +683,12 @@ class GrailQuest(game.Game):
         self.max_twang = 5
         self.mileage = 0
         self.illness = False
-        self.injury = False
+        self.injury = ''
         self.death = ''
         self.felt_better = False
+        self.blizzard = False
+        self.black_moutains = False
+        self.mount_etna = False
 
     def show_status(self):
         """Show the current consumables. (None)"""
@@ -664,3 +701,16 @@ class GrailQuest(game.Game):
         self.human.tell('{} gold pieces worth of miscellaneous supplies,'.format(self.miscellaneous))
         self.human.tell('{} coconuts, and'.format(self.coconuts))
         self.huamn.tell('{} pieces of gold.'.format(self.gold))
+
+    def steed_shot(self):
+        """Handle the steed getting shot hazard. (None)"""
+        self.human.tell('One of your steeds was shot by an arrow with a plot device tied to it.')
+        self.human.tell('This will slow you down the rest of your trip.')
+        self.mileage -= 25
+        self.steeds -= 20
+
+    def steed_wanders(self):
+        """Handle a steed wandering off hazard. (None)"""
+        self.human.tell('A steed wanders off looking for coconuts dropped by sparrows.')
+        self.human.tell('You have to spend time looking for it.')
+        self.mileage -= 17
