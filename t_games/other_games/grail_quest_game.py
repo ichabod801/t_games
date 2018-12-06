@@ -191,7 +191,7 @@ class GrailQuest(game.Game):
     credits = CREDITS
     credits_order = [CREDITS, MOOSE_CREDITS, SACKED_CREDITS, SACKER_CREDITS, MOOSER_CREDITS,
         SACKEST_CREDITS, LLAMA_CREDITS, FINAL_CREDITS]
-    diseases = ['measles', 'dysentery', 'typhoid', 'cholera', 'spamitis']
+    diseases = ['measles', 'dysentery', 'typhoid', 'cholera', 'spamitis', 'pneumonia']
     eat_map = {'p': 1, 'poorly': 1, '1': 1, 'm': 2, 'moderately': 2, '2': 2, 'w': 3, 'well': 3, '3': 3}
     castles = ['the Castle of Camelot', 'Swamp Castle', 'Castle Anthrax', 'Spam Castle', 'Catapult Castle',
         'Spam Castle']
@@ -357,6 +357,10 @@ class GrailQuest(game.Game):
         if not self.castle_option:
             self.human.tell('The castle you thought you could get to turned out to only be a model.')
             return True
+        elif random.random() < 0.05:
+            self.human.tell('A very rude Frenchman refuses to allow you into the castle.')
+            self.castle_option = False
+            return True
         else:
             self.human.tell('\nWelcome to {}!'.format(self.castles))
             modifier = random.random() / 2 + 0.5
@@ -481,6 +485,22 @@ class GrailQuest(game.Game):
                         self.mileage -= 30 + random.randrange(40)
                         if self.clothing < 18 + random.randrange(2):
                             self.illness_check()
+
+    def obituary(self):
+        """Tell the player they are dead, in case they didn't notice. (None)"""
+        if self.death == 'illness':
+            self.death = random.choice(diseases)
+        self.human.tell('\nYou died from {}.'.format(self.death))
+        self.human.tell('There are a few formalities we must go through.')
+        answer = self.human.ask('Would you like a minister? ')
+        answer = self.human.ask('Would you like a fancy funeral? ')
+        if answer.lower() in utility.YES and self.gold < 200:
+            self.human.tell("Too bad, you can't afford one.")
+        answer = self.human.ask('Would you like use to inform your next of kin? ')
+        self.human.tell('\nWe thank you for this information and we are sorry you did not')
+        self.human.tell('manage to find the Holy Grail. Better luck next time.')
+        self.human.tell('\n                 Sincerely,')
+        self.human.tell('                 Holy Grail Manufacturing and Distribution, Inc.')
 
     def peasants(self):
         """Handle the peasants hazard."""
@@ -687,13 +707,12 @@ class GrailQuest(game.Game):
         self.death = ''
         self.felt_better = False
         self.blizzard = False
-        self.black_moutains = False
+        self.black_mountains = False
         self.mount_etna = False
+        self.historian = False
 
-    def show_status(self):
+    def show_inventory(self):
         """Show the current consumables. (None)"""
-        self.human.tell('\nToday is {}.'.format(self.date))
-        self.human.tell('\nYou have travelled {} miles.'.format(self.mileage))
         self.human.tell('You have:')
         self.human.tell('{} cans of spam,'.format(self.spam))
         self.human.tell('{} arrows,'.format(self.arrows))
@@ -701,6 +720,12 @@ class GrailQuest(game.Game):
         self.human.tell('{} gold pieces worth of miscellaneous supplies,'.format(self.miscellaneous))
         self.human.tell('{} coconuts, and'.format(self.coconuts))
         self.huamn.tell('{} pieces of gold.'.format(self.gold))
+
+    def show_status(self):
+        """Show the current game status."""
+        self.human.tell('\nToday is {}.'.format(self.date))
+        self.human.tell('\nYou have travelled {} miles.'.format(self.mileage))
+        self.show_inventory()
 
     def steed_shot(self):
         """Handle the steed getting shot hazard. (None)"""
@@ -714,3 +739,20 @@ class GrailQuest(game.Game):
         self.human.tell('A steed wanders off looking for coconuts dropped by sparrows.')
         self.human.tell('You have to spend time looking for it.')
         self.mileage -= 17
+
+    def victory(self):
+        """Display the victory text. (None)"""
+        if self.historian:
+            self.human.tell('\nThe police are waiting for you at the Holy Grail, and arrest you')
+            self.human.tell('for the wanton murder of an innocent historian.')
+            self.win_loss_draw = [0, 1, 0]
+        else:
+            self.human.tell('\nCongratulations! You found the Holy Grail!')
+            self.human.tell('Be sure to read all warnings and directions. May not be legal in all states.')
+            self.human.tell('Hand wash only, do not put in the microwave.\n')
+            self.show_inventory()
+            if self.mileage < 2040:
+                self.scores[self.human.name] = 1
+            else:
+                self.scores[self.human.name] = 20 - self.turns
+
