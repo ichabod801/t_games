@@ -251,6 +251,62 @@ class GrailQuest(game.Game):
                 self.arrows -= 500
                 self.miscellaneous -= 15
                 self.mileage -= 5 + random.randrange(10)
+        elif event_check < 0.35:
+            self.human.tell('Bandits attack!')
+            speed = self.get_twang()
+            self.arrows -= int(speed * 20)
+            if self.arrows < 1:
+                self.human.tell('You ran out of arrows. They got plenty of gold.')
+                self.gold = int(self.gold / 3)
+            if speed > 1 or self.arrows < 1:
+                self.human.tell('You got shot in the leg and they took one of your steeds.')
+                self.human.tell('You better let Brother Maynard look at that.')
+                self.injury = 'bandits'
+                self.miscellaneous -= 5
+                self.steeds -= 20
+            else:
+                self.human.tell("Smoothest sword in the isles, you got 'em!")
+        elif event_check < 0.37:
+            self.human.tell('There was a fire in your wagon, and you lost spam and supplies.')
+            self.food -= 40
+            self.arrows -= 400
+            self.miscellaneous -= random.randrange(8) + 3
+            self.mileage -= 15
+        elif event_check < 0.42:
+            self.human.tell('You get lost in heavy fog.')
+            self.mileage -= 10 + random.randrange(5)
+        elif event_check < 0.44:
+            self.human.tell('You kill a poisonous bunny rabbit after it bites you.')
+            self.arrows -= 10
+            self.miscellaneous -= 5
+            if self.miscellaneous < 1:
+                self.human.tell('You die from a rabbit bite because you have no medicine.')
+                self.death = 'rabbit'
+        elif event_check < 0.54:
+            self.human.tell('One of your steeds loses his baggage fording a river.')
+            self.human.tell('Spam and clothing are lost.')
+            self.spam -= 30
+            self.clothing -= 20
+            self.mileage -= 20 + random.randrange(20)
+        elif event_check < 0.64:
+            self.human.tell('Strange beasts attack!')
+            speed = self.get_twang()
+            if self.arrows < 40:
+                self.human.tell('You were low on arrows and the beasts overpowered you.')
+                if random.random() < 0.05:
+                    self.human.tell('But the programmer suffers a brain aneurysm before you get injured.')
+                else:
+                    self.death = 'a strange beast attack'
+            elif speed < 3:
+                self.human.tell('Fine shooting, sir knight. They did not get much.')
+            else:
+                self.human.tell('Slow with your steel. They got at your food and clothes.')
+            self.arrows -= int(20 * speed)
+            self.clothing -= int(4 * speed)
+            self.spam -= int(8 * speed)
+        elif event_check < 0.69:
+            self.cold_weather()
+        elif event_check < 0.95:
         # Rest negative values.
         if self.miscellaneous < 1:
             self.miscellaneous = 0
@@ -258,6 +314,8 @@ class GrailQuest(game.Game):
             self.spam = 0
         if self.arrows < 1:
             self.arrows = 0
+        if self.clothing < 1:
+            self.clothing = 0
 
     def default(self, text):
         """
