@@ -180,6 +180,7 @@ class GrailQuest(game.Game):
     steeds: The quality of the steeds. (int)
 
     Overridden Methods:
+    default
     do_credits
     set_up
     """
@@ -194,10 +195,69 @@ class GrailQuest(game.Game):
     eat_map = {'p': 1, 'poorly': 1, '1': 1, 'm': 2, 'moderately': 2, '2': 2, 'w': 3, 'well': 3, '3': 3}
     castles = ['the Castle of Camelot', 'Swamp Castle', 'Castle Anthrax', 'Spam Castle', 'Catapult Castle',
         'Spam Castle']
+    hazards = ((0.06, 'broken_coconuts'), (0.11, 'steed_shot'), (0.13, 'cat_rescue'),
+        (0.15, 'steed_wanders'), (0.17, 'bedevere_wanders'), (0.22, 'contaminated_water'),
+        (0.32, 'heavy_rain'), (0.35, 'bandit_attack'), (0.37, 'enchanter'), (0.42, 'heavy_fog'),
+        (0.44, 'poisonous_bunny'), (0.54, 'river_fording'), (0.64, 'cave_beast'), (0.69, 'cold_weather'),
+        (0.95, 'hail_storm'))
     name = 'Quest for the Grail'
     tactics_map = {'1': 'charge', '2': 'run', '3': 'continue', '4': 'defend', 'b': 'defend',
         'build': 'defend', 'badger': 'defend', 'c': 'charge', 'r': 'run', 'w': 'continue',
         'wander': 'continue', 'whistle': 'continue'}
+
+    def bandit_attack(self):
+        """Handle the bandit attack hazard. (None)"""
+        self.human.tell('Bandits attack!')
+        speed = self.get_twang()
+        self.arrows -= int(speed * 20)
+        if self.arrows < 1:
+            self.human.tell('You ran out of arrows. They got plenty of gold.')
+            self.gold = int(self.gold / 3)
+        if speed > 1 or self.arrows < 1:
+            self.human.tell('You got shot in the leg and they took one of your steeds.')
+            self.human.tell('You better let Brother Maynard look at that.')
+            self.injury = 'bandits'
+            self.miscellaneous -= 5
+            self.steeds -= 20
+        else:
+            self.human.tell("Smoothest sword in the isles, you got 'em!")
+
+    def bedevere_wanders(self):
+        """Handle the peripatetic Sir Bedevere hazard. (None)"""
+        self.human.tell("Sir Bedevere wanders off in search of a sheep's bladder.")
+        self.human.tell('You lose time searching for him.')
+        self.mileage -= 10
+
+    def broken_coconuts(self):
+        """Handle broken coconuts hazard. (None)"""
+        self.human.tell('One of your coconunts breaks. You lose time and supplies fixing it.')
+        self.mileage -= 15 + random.randrange(5)
+        self.miscellaneous -= 15
+
+    def cave_beast(self):
+        """Handle the cave beast hazard. (None)"""
+        self.human.tell('A cave beast attacks!')
+        speed = self.get_twang()
+        if self.arrows < 40:
+            self.human.tell('You were low on arrows and the beast overpowered you.')
+            if random.random() < 0.05:
+                self.human.tell('But the programmer suffers a brain aneurysm before you get injured.')
+            else:
+                self.death = 'a cave beast attack'
+        elif speed < 3:
+            self.human.tell('Fine shooting, sir knight. They did not get much.')
+        else:
+            self.human.tell('Slow with your steel. They got at your food and clothes.')
+        self.arrows -= int(20 * speed)
+        self.clothing -= int(4 * speed)
+        self.spam -= int(8 * speed)
+
+    def cat_rescue(self):
+        """Handle the cat rescue hazard. (None)"""
+        self.human.tell('Sir Gallahad broke his arm trying to rescue a cat.')
+        self.human.tell('You had to stop and use supplies to make a sling.')
+        self.mileage -= 5 + random.randrange(4)
+        self.miscellaneous -= 2 + random.randrange(3)
 
     def check_hazards(self):
         """Check for hazardous events along the way."""
@@ -207,106 +267,16 @@ class GrailQuest(game.Game):
             self.riders()
         # Check for other events.
         event_check = random.random()
-        if event_check < 0.06:
-            self.human.tell('One of your coconunts breaks. You lose time and supplies fixing it.')
-            self.mileage -= 15 + random.randrange(5)
-            self.miscellaneous -= 15
-        elif event_check < 0.11:
-            self.human.tell('One of your steeds was shot by an arrow with a plot device tied to it.')
-            self.human.tell('This will slow you down the rest of your trip.')
-            self.mileage -= 25
-            self.steeds -= 20
-        elif event_check < 0.13:
-            self.human.tell('Sir Gallahad broke his arm trying to rescue a cat.')
-            self.human.tell('You had to stop and use supplies to make a sling.')
-            self.mileage -= 5 + random.randrange(4)
-            self.miscellaneous -= 2 + random.randrange(3)
-        elif event_check < 0.15:
-            self.human.tell('A steed wanders off looking for coconuts dropped by sparrows.')
-            self.human.tell('You have to spend time looking for it.')
-            self.mileage -= 17
-        elif event_check < 0.17:
-            self.human.tell("Sir Bedevere wanders off looking for a sheep's bladder.")
-            self.human.tell('You have to spend time looking for him.')
-            self.mileage -= 10
-        elif event_check < 0.22:
-            self.human.tell('The water is contaminated by some lovely filth.')
-            self.human.tell('You spend time finding a clean spring.')
-            self.mileage -= 2 + random.randrange(10)
-        elif event_check < 0.32:
-            if self.mileage > 950:
-                self.human.tell('Brrrr! Cold weather!')
-                if self.clothing > 22 + random.randrange(4):
-                    self.human.tell('You have enough clothing.')
-                elif self.mistrels:
-                    self.human.tell('You are forced to eat the minstrels to survive.')
-                    self.minstrels = False
-                else:
-                    self.human.tell("You don't have enough clothing.")
-                    self.illness_check()
+        for cumulative_probability, hazard_name in self.hazards:
+            if event_check < cumulative_probability:
+                getattr(self, hazard_name)()
+                break
+        else:
+            if random.random() < 1 - (self.eating - 1) * 0.25:
+                self.illness_check()
             else:
-                self.human.tell('Someone tells a God joke and he sends heavy rains after you.')
-                self.human.tell('You lose time and supplies.')
-                self.spam -= 10
-                self.arrows -= 500
-                self.miscellaneous -= 15
-                self.mileage -= 5 + random.randrange(10)
-        elif event_check < 0.35:
-            self.human.tell('Bandits attack!')
-            speed = self.get_twang()
-            self.arrows -= int(speed * 20)
-            if self.arrows < 1:
-                self.human.tell('You ran out of arrows. They got plenty of gold.')
-                self.gold = int(self.gold / 3)
-            if speed > 1 or self.arrows < 1:
-                self.human.tell('You got shot in the leg and they took one of your steeds.')
-                self.human.tell('You better let Brother Maynard look at that.')
-                self.injury = 'bandits'
-                self.miscellaneous -= 5
-                self.steeds -= 20
-            else:
-                self.human.tell("Smoothest sword in the isles, you got 'em!")
-        elif event_check < 0.37:
-            self.human.tell('There was a fire in your wagon, and you lost spam and supplies.')
-            self.food -= 40
-            self.arrows -= 400
-            self.miscellaneous -= random.randrange(8) + 3
-            self.mileage -= 15
-        elif event_check < 0.42:
-            self.human.tell('You get lost in heavy fog.')
-            self.mileage -= 10 + random.randrange(5)
-        elif event_check < 0.44:
-            self.human.tell('You kill a poisonous bunny rabbit after it bites you.')
-            self.arrows -= 10
-            self.miscellaneous -= 5
-            if self.miscellaneous < 1:
-                self.human.tell('You die from a rabbit bite because you have no medicine.')
-                self.death = 'rabbit'
-        elif event_check < 0.54:
-            self.human.tell('One of your steeds loses his baggage fording a river.')
-            self.human.tell('Spam and clothing are lost.')
-            self.spam -= 30
-            self.clothing -= 20
-            self.mileage -= 20 + random.randrange(20)
-        elif event_check < 0.64:
-            self.human.tell('Strange beasts attack!')
-            speed = self.get_twang()
-            if self.arrows < 40:
-                self.human.tell('You were low on arrows and the beasts overpowered you.')
-                if random.random() < 0.05:
-                    self.human.tell('But the programmer suffers a brain aneurysm before you get injured.')
-                else:
-                    self.death = 'a strange beast attack'
-            elif speed < 3:
-                self.human.tell('Fine shooting, sir knight. They did not get much.')
-            else:
-                self.human.tell('Slow with your steel. They got at your food and clothes.')
-            self.arrows -= int(20 * speed)
-            self.clothing -= int(4 * speed)
-            self.spam -= int(8 * speed)
-        elif event_check < 0.69:
-            self.cold_weather()
-        elif event_check < 0.95:
+                self.peasants()
+        self.mountains()
         # Rest negative values.
         if self.miscellaneous < 1:
             self.miscellaneous = 0
@@ -316,6 +286,24 @@ class GrailQuest(game.Game):
             self.arrows = 0
         if self.clothing < 1:
             self.clothing = 0
+
+    def cold_weather():
+        """Handle cold weather. (None)"""
+        self.human.tell('Brrrr! Cold weather!')
+        if self.clothing > 22 + random.randrange(4):
+            self.human.tell('You have enough clothing.')
+        elif self.mistrels:
+            self.human.tell('You are forced to eat the minstrels to survive.')
+            self.minstrels = False
+        else:
+            self.human.tell("You don't have enough clothing.")
+            self.illness_check()
+
+    def contanminated_water(self):
+        """Handle the contaminated water hazard. (None)"""
+        self.human.tell('The water is contaminated by some lovely filth.')
+        self.human.tell('You spend time finding a clean spring.')
+        self.mileage -= 2 + random.randrange(10)
 
     def default(self, text):
         """
@@ -392,12 +380,45 @@ class GrailQuest(game.Game):
             else:
                 self.human.error('Please, sir. We only serve the options on the menu.')
 
+    def enchanter(self):
+        """Handle the enchanter hazard. (None)"""
+        self.human.tell('An enchanter named Fred (no relation) caught one of your steeds on fire.')
+        self.human.tell('You lost spam and supplies.')
+        self.food -= 40
+        self.arrows -= 400
+        self.miscellaneous -= random.randrange(8) + 3
+        self.mileage -= 15
+
     def get_twang(self):
         """Get the time taken to type twang as a percentage of the max allowed. (float)"""
         start = time.time()
         self.human.ask('Type twang: ')
         taken = time.time() - start
         return min(self.max_twang / 7, 1)
+
+    def hail_storm(self):
+        """Handle the hail storm hazard. (None)"""
+        self.human.tell('Hail storm damages your supplies.')
+        self.mileage -= 5 + random.randrange(10)
+        self.arrows -= 200
+        self.miscellaneous -= 4 + random.randrange(3)
+
+    def heavy_fog(self):
+        """Handle the heavy fog hazard. (None)"""
+        self.human.tell('You get lost in heavy fog.')
+        self.mileage -= 10 + random.randrange(5)
+
+    def heavy_rain(self):
+        """Handle the heavy rain hazard. (None)"""
+        if self.mileage > 950:
+            self.cold_weather()
+        else:
+            self.human.tell('Someone tells a God joke and he sends heavy rains after you.')
+            self.human.tell('You lose time and supplies.')
+            self.spam -= 10
+            self.arrows -= 500
+            self.miscellaneous -= 15
+            self.mileage -= 5 + random.randrange(10)
 
     def illness_check(self):
         """See if the player gets sick. (None)"""
@@ -415,6 +436,23 @@ class GrailQuest(game.Game):
             self.illness = True
         if self.miscellaneous < 1:
             self.death = 'illness'
+
+    def peasants(self):
+        """Handle the peasants hazard."""
+        self.human.tell('Some helpful peasants take time out of their busy day mucking filth and')
+        self.human.tell('discussing anarcho-syndicalist communes to help you find some spam.')
+        self.spam += 14
+        self.human.tell('As you leave you hear one of them muttering something about fairy tale')
+        self.human.tell('junkets at tax-payer expense for worthless political appointees.')
+
+    def poisonous_bunny(self):
+        """Handle the poisonous bunny hazard."""
+        self.human.tell('You kill a poisonous bunny rabbit after it bites you.')
+        self.arrows -= 10
+        self.miscellaneous -= 5
+        if self.miscellaneous < 1:
+            self.human.tell('You die from a rabbit bite because you have no medicine.')
+            self.death = 'poisonous rabbit bite'
 
     def purchases(self, modifier = None):
         """Make purchases. (None)"""
@@ -569,6 +607,26 @@ class GrailQuest(game.Game):
         else:
             self.human.tell('Oh, come on. Just take a typing class.')
 
+    def river_fording(self):
+        """Handle the river fording hazard. (None)"""
+        self.human.tell('One of your steeds loses his baggage fording a river.')
+        self.human.tell('Spam and clothing are lost.')
+        self.spam -= 30
+        self.clothing -= 20
+        self.mileage -= 20 + random.randrange(20)
+
+    def steed_shot(self):
+        """Handle the steed getting shot hazard. (None)"""
+        self.human.tell('One of your steeds was shot by an arrow with a plot device tied to it.')
+        self.human.tell('This will slow you down the rest of your trip.')
+        self.mileage -= 25
+        self.steeds -= 20
+
+    def steed_wanders(self):
+        """Handle a steed wandering off hazard. (None)"""
+        self.human.tell('A steed wanders off looking for coconuts dropped by sparrows.')
+        self.human.tell('You have to spend time looking for it.')
+        self.mileage -= 17
 
     def set_up(self):
         """Set up the game. (None)"""
