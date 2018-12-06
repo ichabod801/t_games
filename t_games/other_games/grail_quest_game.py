@@ -186,7 +186,7 @@ class GrailQuest(game.Game):
     """
 
     aka = ['I seek the Holy Grail!', 'qftg']
-    aliases = {'castle': 'stop', 'h': 'hunt', 's': 'stop'}
+    aliases = {'c': 'continue', 'castle': 'stop', 'h': 'hunt', 's': 'stop'}
     categories = ['Adventure Games']
     credits = CREDITS
     credits_order = [CREDITS, MOOSE_CREDITS, SACKED_CREDITS, SACKER_CREDITS, MOOSER_CREDITS,
@@ -218,7 +218,8 @@ class GrailQuest(game.Game):
             self.human.tell('You better let Brother Maynard look at that.')
             self.injury = 'an attack by bandits'
             self.miscellaneous -= 5
-            self.steeds -= 20
+            self.steeds -= 18
+            self.coconuts -= 2
         else:
             self.human.tell("Smoothest sword in the isles, you got 'em!")
 
@@ -272,11 +273,12 @@ class GrailQuest(game.Game):
                 getattr(self, hazard_name)()
                 break
         else:
-            if random.random() < 1 - (self.eating - 1) * 0.25:
+            if random.random() < 1 - (self.eating_choice - 1) * 0.25:
                 self.illness_check()
             else:
                 self.peasants()
         self.mountains()
+        self.human.ask('Press Enter to continue: ')
         # Rest negative values.
         if self.miscellaneous < 1:
             self.miscellaneous = 0
@@ -315,7 +317,13 @@ class GrailQuest(game.Game):
         self.human.error("Stop it, that's just silly.")
         return True
 
-    def do_credits(self):
+    def do_continue(self, arguments):
+        """
+        Continue on for maximum speed. (bool)
+        """
+        return False
+
+    def do_credits(self, arguments):
         """
         Show the credits for the game.
         """
@@ -328,7 +336,7 @@ class GrailQuest(game.Game):
             self.force_end = 'loss'
             return False
 
-    def do_hunt(self):
+    def do_hunt(self, arguments):
         """
         Hunt for food. (h)
 
@@ -350,7 +358,7 @@ class GrailQuest(game.Game):
             self.arrows -= 10 - int(3 * shot)
         self.mileage -= 45
 
-    def do_stop(self):
+    def do_stop(self, arguments):
         """
         Stop at a castle to buy things. (s, castle)
         """
@@ -374,7 +382,7 @@ class GrailQuest(game.Game):
         while True:
             choice = self.human.ask(options).lower()
             if choice in self.eat_map:
-                self.eating_choice = self.eat_map(choice)
+                self.eating_choice = self.eat_map[choice]
                 meal = 8 + 5 * self.eating_choice
                 if meal < self.spam:
                     self.spam -= meal
@@ -386,7 +394,7 @@ class GrailQuest(game.Game):
 
     def enchanter(self):
         """Handle the enchanter hazard. (None)"""
-        self.human.tell('An enchanter named Fred (no relation) caught one of your steeds on fire.')
+        self.human.tell('An enchanter named Fred (no relation) set one of your steeds on fire.')
         self.human.tell('You lost spam and supplies.')
         self.food -= 40
         self.arrows -= 400
@@ -476,7 +484,7 @@ class GrailQuest(game.Game):
                         if self.mileage < 1700 or self.mount_etna:
                             if self.mileage < 950:
                                 self.black_moutains_mileage = True
-                    elif:
+                    else:
                         self.human.tell('Blizzard in the Black Mountains, time and supplies lost.')
                         self.blizzard = True
                         self.spam = max(self.spam - 25, 0)
@@ -523,34 +531,37 @@ class GrailQuest(game.Game):
         """Make purchases. (None)"""
         if modifier is None:
             self.human.tell(INITIAL_PURCHASES)
-            modifier = 1
             # Purchase steeds.
             query = 'How much would you like to spend on steeds? '
-            self.steeds = self.human.ask_int(query, min = 180, max = 270, cmd = False)
+            self.steeds = self.human.ask_int(query, low = 180, high = 270, cmd = False)
             self.gold -= self.steeds
         # Purchase coconuts.
         query = 'How much would you like to spend on coconuts? '
-        new_coconuts = self.human.ask_int(query, min = 20, max = 30, cmd = False)
+        if modifier is None:
+            new_coconuts = self.human.ask_int(query, low = 20, high = 30, cmd = False)
+            modifier = 1
+        else:
+            new_coconuts = self.human.ask_int(query, low = 0, high = 3, cmd = False)
         self.gold -= new_coconuts
         self.coconuts += int(new_coconuts * modifier)
         # Purchase spam.
         query = 'How much would you like to spend on spam? '
-        new_spam = self.human.ask_int(query, min = 0, max = self.gold, cmd = False)
+        new_spam = self.human.ask_int(query, low = 0, high = self.gold, cmd = False)
         self.gold -= new_spam
         self.spam += int(new_spam * modifier)
         # Purchase arrows.
         query = 'How much would you like to spend on arrows? '
-        new_arrows = self.human.ask_int(query, min = 0, max = self.gold, cmd = False)
+        new_arrows = self.human.ask_int(query, low = 0, high = self.gold, cmd = False)
         self.gold -= new_arrows
         self.arrows += int(new_arrows * modifier * 50)
         # Purchase clothing.
         query = 'How much would you like to spend on clothing? '
-        new_clothing = self.human.ask_int(query, min = 0, max = self.gold, cmd = False)
+        new_clothing = self.human.ask_int(query, low = 0, high = self.gold, cmd = False)
         self.gold -= new_clothing
         self.clothing += int(new_clothing * modifier)
         # Purchase miscellaneous supplies.
         query = 'How much would you like to spend on miscellaneous supplies? '
-        new_miscellaneous = self.human.ask_int(query, min = 0, max = self.gold, cmd = False)
+        new_miscellaneous = self.human.ask_int(query, low = 0, high = self.gold, cmd = False)
         self.gold -= new_miscellaneous
         self.miscellaneous = int(new_miscellaneous * modifier)
         # Inform the player of the balance.
@@ -563,9 +574,6 @@ class GrailQuest(game.Game):
         Parameters:
         player: The player whose turn it is. (player.Player)
         """
-        # Check for initial purchases.
-        if not self.turns:
-            self.purchases()
         # Update the date.
         self.human.tell('\n{}'.format(self.date).replace(' 0', ' '))
         # Update the user.
@@ -577,17 +585,17 @@ class GrailQuest(game.Game):
             self.human.tell('You can see a castle in the distance.')
         self.show_status()
         # Check for medical issues.
+        bill = 0
         if self.illness and self.injury:
             bill = 40
         elif self.illness or self.injury:
             bill = 20
         if bill:
-            warnings.append("Brother Maynard requests a donation of {} gold.".format(bill))
+            self.human.tell("Brother Maynard requests a donation of {} gold.".format(bill))
             self.injury = False
             self.illness = False
-        if warnings:
-            self.human.tell('', '\n'.join(warnings))
         if bill > self.gold:
+            self.human.tell("Unfortunately, you don't have enough money to pay him.")
             if self.illness:
                 self.death = 'illness'
             else:
@@ -615,7 +623,7 @@ class GrailQuest(game.Game):
             self.human.tell('They appear hostile.')
         # Get the player's tactics.
         while True:
-            raw_tactics = self.human.ask(TACTICS.rstrip())
+            raw_tactics = self.human.ask(TACTICS.rstrip() + ' ')
             tactics = raw_tactics.lower().split()[0]
             if tactics in self.tactics_map:
                 break
@@ -653,7 +661,8 @@ class GrailQuest(game.Game):
         else:
             if tactics == 'run':
                 self.mileage += 15
-                self.steeds = max(self.steeds - 10, 0)
+                self.steeds = max(self.steeds - 9, 0)
+                self.coconuts = max(self.coconuts - 1, 0)
             elif tactics == 'attack':
                 self.mileage -= 5
                 self.bullets = max(self.bullets - 100, 0)
@@ -687,7 +696,7 @@ class GrailQuest(game.Game):
         self.credits_index = 0
         # Set purchasables.
         self.arrows = 0
-        self.clothes = 0
+        self.clothing = 0
         self.coconuts = 0
         self.miscellaneous = 0
         self.spam = 0
@@ -710,6 +719,7 @@ class GrailQuest(game.Game):
         self.black_mountains = False
         self.mount_etna = False
         self.historian = False
+        self.purchases()
 
     def show_inventory(self):
         """Show the current consumables. (None)"""
@@ -719,7 +729,7 @@ class GrailQuest(game.Game):
         self.human.tell('{} gold pieces worth of clothing,'.format(self.clothing))
         self.human.tell('{} gold pieces worth of miscellaneous supplies,'.format(self.miscellaneous))
         self.human.tell('{} coconuts, and'.format(self.coconuts))
-        self.huamn.tell('{} pieces of gold.'.format(self.gold))
+        self.human.tell('{} pieces of gold.'.format(self.gold))
 
     def show_status(self):
         """Show the current game status."""
@@ -732,7 +742,8 @@ class GrailQuest(game.Game):
         self.human.tell('One of your steeds was shot by an arrow with a plot device tied to it.')
         self.human.tell('This will slow you down the rest of your trip.')
         self.mileage -= 25
-        self.steeds -= 20
+        self.steeds -= 18
+        self.coconuts -= 2
 
     def steed_wanders(self):
         """Handle a steed wandering off hazard. (None)"""
