@@ -209,11 +209,11 @@ class GrailQuest(game.Game):
         """Handle the bandit attack hazard. (None)"""
         self.human.tell('Bandits attack!')
         speed = self.get_twang()
-        self.arrows -= int(speed * 20)
+        self.arrows -= int(speed * 140)
         if self.arrows < 1:
             self.human.tell('You ran out of arrows. They got plenty of gold.')
             self.gold = int(self.gold / 3)
-        if speed > 1 or self.arrows < 1:
+        if speed > 0.15 or self.arrows < 1:
             self.human.tell('You got shot in the leg and they took one of your steeds.')
             self.human.tell('You better let Brother Maynard look at that.')
             self.injury = 'an attack by bandits'
@@ -245,13 +245,13 @@ class GrailQuest(game.Game):
                 self.human.tell('But the programmer suffers a brain aneurysm before you get injured.')
             else:
                 self.death = 'a cave beast attack'
-        elif speed < 3:
+        elif speed < 0.45:
             self.human.tell('Fine shooting, sir knight. They did not get much.')
         else:
             self.human.tell('Slow with your steel. They got at your food and clothes.')
-        self.arrows -= int(20 * speed)
-        self.clothing -= int(4 * speed)
-        self.spam -= int(8 * speed)
+        self.arrows -= int(140 * speed)
+        self.clothing -= int(30 * speed)
+        self.spam -= int(55 * speed)
 
     def cat_rescue(self):
         """Handle the cat rescue hazard. (None)"""
@@ -642,11 +642,11 @@ class GrailQuest(game.Game):
                 self.coconuts = max(self.coconuts - 4, 0)
             elif tactics == 'charge':
                 speed = self.get_twang()
-                self.arrows = min(speed - int(speed * 40) - 80, 0)
+                self.arrows = min(self.arrows - int(speed * 275) - 80, 0)
                 self.rider_combat(speed)
             elif tactics == 'defend':
                 speed = self.get_twang()
-                self.arrows = min(speed - int(speed * 30) - 80, 0)
+                self.arrows = min(self.arrows - int(speed * 200) - 80, 0)
                 self.miscellaneous = max(self.miscellaneous - 15, 0)
                 self.rider.combat(speed)
             elif tactics == 'continue':
@@ -675,14 +675,14 @@ class GrailQuest(game.Game):
         """
         Shoot it out with the riders. (bool)
         """
-        if speed < 1 and self.arrows:
+        if speed < 0.15 and self.arrows:
             self.human.tell('Nice shooting, you drove them off.')
-        elif speed > 4:
+        elif speed > 0.6:
             self.human.tell('Lousy shooting. You got run through with a sword.')
             self.human.tell("You'll have to see Brother Maynard about that.")
             self.injury = 'an attack by riders'
         else:
-            self.human.tell('Oh, come on. Just take a typing class.')
+            self.human.tell('Kind of slow, there, but you manage.')
 
     def river_fording(self):
         """Handle the river fording hazard. (None)"""
