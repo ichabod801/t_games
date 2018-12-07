@@ -200,6 +200,8 @@ class GrailQuest(game.Game):
         (0.32, 'heavy_rain'), (0.35, 'bandit_attack'), (0.37, 'enchanter'), (0.42, 'heavy_fog'),
         (0.44, 'poisonous_bunny'), (0.54, 'river_fording'), (0.64, 'cave_beast'), (0.69, 'cold_weather'),
         (0.95, 'hail_storm'))
+    months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September',
+        'October', 'November', 'December']
     name = 'Quest for the Grail'
     tactics_map = {'1': 'charge', '2': 'run', '3': 'continue', '4': 'defend', 'b': 'defend',
         'build': 'defend', 'badger': 'defend', 'c': 'charge', 'r': 'run', 'w': 'continue',
@@ -290,12 +292,12 @@ class GrailQuest(game.Game):
         if self.clothing < 1:
             self.clothing = 0
 
-    def cold_weather():
+    def cold_weather(self):
         """Handle cold weather. (None)"""
         self.human.tell('Brrrr! Cold weather!')
         if self.clothing > 22 + random.randrange(4):
             self.human.tell('You have enough clothing.')
-        elif self.mistrels:
+        elif self.minstrels:
             self.human.tell('You are forced to eat the minstrels to survive.')
             self.minstrels = False
         else:
@@ -307,6 +309,26 @@ class GrailQuest(game.Game):
         self.human.tell('The water is contaminated by some lovely filth.')
         self.human.tell('You spend time finding a clean spring.')
         self.mileage -= 2 + random.randrange(10)
+
+    def date_format(self):
+        """
+        Format the current date. (str)
+
+        Needed because date.strftime doesn't work before 1900.
+        """
+        digit = self.date.day % 10
+        if self.date.day in (11, 12, 13):
+            ordinal = 'th'
+        elif digit == 1:
+            ordinal = 'st'
+        elif digit == 2:
+            ordinal = 'nd'
+        elif digit == 3:
+            ordinal = 'rd'
+        else:
+            ordinal = 'th'
+        parts = (self.months[self.date.month], self.date.day, ordinal, self.date.year)
+        return '{} {}{}, {} A.D.'.format(*parts)
 
     def default(self, text):
         """
@@ -371,7 +393,7 @@ class GrailQuest(game.Game):
             self.castle_option = False
             return True
         else:
-            self.human.tell('\nWelcome to {}!'.format(self.castles))
+            self.human.tell('\nWelcome to {}!'.format(self.castles[self.castle_index]))
             modifier = random.random() / 2 + 0.5
             self.purchases(modifier)
             self.mileage -= 45
@@ -379,6 +401,9 @@ class GrailQuest(game.Game):
 
     def eat(self):
         """Give the player a choice of how much food to eat. (None)"""
+        if self.spam < 13:
+            self.death = 'starvation'
+            return False
         options = '\nDo you wish to eat:\n    (1) Poorly\n    (2) Moderately\n    (3) or Well? '
         while True:
             choice = self.human.ask(options).lower()
@@ -395,7 +420,7 @@ class GrailQuest(game.Game):
 
     def enchanter(self):
         """Handle the enchanter hazard. (None)"""
-        self.human.tell('An enchanter named Fred (no relation) set one of your steeds on fire.')
+        self.human.tell('An enchanter named Fred (no relation) sets one of your steeds on fire.')
         self.human.tell('You lost spam and supplies.')
         self.food -= 40
         self.arrows -= 400
@@ -419,7 +444,7 @@ class GrailQuest(game.Game):
         start = time.time()
         self.human.ask('Type twang: ')
         taken = time.time() - start
-        return min((self.max_twang - taken) / 7, 1)
+        return min(1 - (self.max_twang - taken) / 7, 1)
 
     def hail_storm(self):
         """Handle the hail storm hazard. (None)"""
@@ -471,13 +496,13 @@ class GrailQuest(game.Game):
                 if random.random() < 0.1:
                     self.human.tell('You got lost, and spent valuable time trying to find the trail.')
                     self.mileage -= 60
-                elif random.random < 0.11:
+                elif random.random() < 0.11:
                     self.human.tell('One of your steeds fell, losing time and supplies.')
                     self.mileage = max(self.mileage - 20 - random.randrange(30), 0)
                     self.arrows = max(self.arrows - 200, 0)
                 else:
                     self.human.tell('The going gets slow.')
-                    self.mileage -= 45 + random.randint(5)
+                    self.mileage -= 45 + random.randrange(5)
                 if not self.black_mountains:
                     self.black_mountains = True
                     if random.random() < 0.2:
@@ -564,7 +589,7 @@ class GrailQuest(game.Game):
         query = 'How much would you like to spend on miscellaneous supplies? '
         new_miscellaneous = self.human.ask_int(query, low = 0, high = self.gold, cmd = False)
         self.gold -= new_miscellaneous
-        self.miscellaneous = int(new_miscellaneous * modifier)
+        self.miscellaneous += int(new_miscellaneous * modifier)
         # Inform the player of the balance.
         self.human.tell('After all of your purchases, you have {} pieces of gold left.'.format(self.gold))
 
@@ -575,8 +600,6 @@ class GrailQuest(game.Game):
         Parameters:
         player: The player whose turn it is. (player.Player)
         """
-        # Update the date.
-        self.human.tell('\n{}'.format(self.date).replace(' 0', ' '))
         # Update the user.
         if self.spam < 12:
             self.human.tell('You better do some hunting or buy food soon!')
@@ -593,17 +616,17 @@ class GrailQuest(game.Game):
             bill = 20
         if bill:
             self.human.tell("Brother Maynard requests a donation of {} gold.".format(bill))
-            self.injury = False
-            self.illness = False
-        if bill > self.gold:
-            self.human.tell("Unfortunately, you don't have enough money to pay him.")
-            if self.illness:
-                self.death = 'illness'
+            if bill > self.gold:
+                self.human.tell("Unfortunately, you don't have enough money to pay him.")
+                if self.illness:
+                    self.death = 'illness'
+                else:
+                    self.death = self.injury
+                return False
             else:
-                self.death = self.injury
-            return False
-        else:
-            self.gold -= bill
+                self.gold -= bill
+                self.injury = False
+                self.illness = False
         # Get the player's action.
         action = self.human.ask('\nWhat would you like to do? ')
         go = self.handle_cmd(action)
@@ -734,7 +757,7 @@ class GrailQuest(game.Game):
 
     def show_status(self):
         """Show the current game status."""
-        self.human.tell('\nToday is {}.'.format(self.date))
+        self.human.tell('\nToday is {}'.format(self.date_format()))
         self.human.tell('\nYou have travelled {} miles.'.format(self.mileage))
         self.show_inventory()
 
