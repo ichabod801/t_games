@@ -304,7 +304,7 @@ class GrailQuest(game.Game):
             self.human.tell("You don't have enough clothing.")
             self.illness_check()
 
-    def contanminated_water(self):
+    def contaminated_water(self):
         """Handle the contaminated water hazard. (None)"""
         self.human.tell('The water is contaminated by some lovely filth.')
         self.human.tell('You spend time finding a clean spring.')
@@ -369,7 +369,7 @@ class GrailQuest(game.Game):
             self.human.error('Tough, you need more arrows to go hunting.')
             return True
         shot = self.get_twang()
-        if shot < 0.141414:
+        if shot < 0.15:
             self.human.tell('RIGHT BETWEEN THE EYES! You got a big one!')
             self.spam += random.randint(52, 57)
             self.arrows -= random.randint(10, 13)
@@ -402,6 +402,7 @@ class GrailQuest(game.Game):
     def eat(self):
         """Give the player a choice of how much food to eat. (None)"""
         if self.spam < 13:
+            self.human.tell('You run out of spam.')
             self.death = 'starvation'
             return False
         options = '\nDo you wish to eat:\n    (1) Poorly\n    (2) Moderately\n    (3) or Well? '
@@ -444,6 +445,7 @@ class GrailQuest(game.Game):
         start = time.time()
         self.human.ask('Type twang: ')
         taken = time.time() - start
+        print(taken, 1 - (self.max_twang - taken) / 7)
         return min(1 - (self.max_twang - taken) / 7, 1)
 
     def hail_storm(self):
@@ -552,6 +554,8 @@ class GrailQuest(game.Game):
         if self.miscellaneous < 1:
             self.human.tell('You die from a rabbit bite because you have no medicine.')
             self.death = 'poisonous rabbit bite'
+        else:
+            self.human.tell('You have to use some supplies to stop the venom.')
 
     def purchases(self, modifier = None):
         """Make purchases. (None)"""
@@ -733,7 +737,7 @@ class GrailQuest(game.Game):
         self.castle_index = 0
         self.eating_choice = 0
         self.gold = 700
-        self.max_twang = 5
+        self.max_twang = 7
         self.mileage = 0
         self.illness = False
         self.injury = ''
