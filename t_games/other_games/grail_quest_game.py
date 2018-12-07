@@ -262,6 +262,7 @@ class GrailQuest(game.Game):
 
     def check_hazards(self):
         """Check for hazardous events along the way."""
+        self.human.tell()
         # Where in the nine hells did he get this formula from?
         mileage_mod = (self.mileage / 100.0 - 4) ** 2
         if random.random() * 10 <= (mileage_mod + 72) / (mileage_mod + 12) - 1:
@@ -418,7 +419,7 @@ class GrailQuest(game.Game):
         start = time.time()
         self.human.ask('Type twang: ')
         taken = time.time() - start
-        return min(self.max_twang / 7, 1)
+        return min((self.max_twang - taken) / 7, 1)
 
     def hail_storm(self):
         """Handle the hail storm hazard. (None)"""
@@ -641,11 +642,11 @@ class GrailQuest(game.Game):
                 self.coconuts = max(self.coconuts - 4, 0)
             elif tactics == 'charge':
                 speed = self.get_twang()
-                self.arrows = min(self.speed - int(speed * 40) - 80, 0)
+                self.arrows = min(speed - int(speed * 40) - 80, 0)
                 self.rider_combat(speed)
             elif tactics == 'defend':
                 speed = self.get_twang()
-                self.arrows = min(self.speed - int(speed * 30) - 80, 0)
+                self.arrows = min(speed - int(speed * 30) - 80, 0)
                 self.miscellaneous = max(self.miscellaneous - 15, 0)
                 self.rider.combat(speed)
             elif tactics == 'continue':
