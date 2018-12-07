@@ -642,16 +642,16 @@ class GrailQuest(game.Game):
                 self.coconuts = max(self.coconuts - 4, 0)
             elif tactics == 'charge':
                 speed = self.get_twang()
-                self.arrows = min(self.arrows - int(speed * 275) - 80, 0)
+                self.arrows = max(self.arrows - int(speed * 275) - 80, 0)
                 self.rider_combat(speed)
             elif tactics == 'defend':
                 speed = self.get_twang()
-                self.arrows = min(self.arrows - int(speed * 200) - 80, 0)
+                self.arrows = max(self.arrows - int(speed * 200) - 80, 0)
                 self.miscellaneous = max(self.miscellaneous - 15, 0)
                 self.rider.combat(speed)
             elif tactics == 'continue':
                 if random.random() < 0.8:
-                    self.arrows = min(self.arrows - 150, 0)
+                    self.arrows = max(self.arrows - 150, 0)
                     self.miscellaneous = max(self.miscellaneous - 15, 0)
                 else:
                     self.human.tell('The riders did not attack.')
