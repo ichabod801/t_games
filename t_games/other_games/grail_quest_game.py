@@ -489,7 +489,6 @@ class GrailQuest(game.Game):
         start = time.time()
         self.human.ask('Type twang: ')
         taken = time.time() - start
-        print(taken, taken / self.max_twang)
         # Return the percentage of the maximum.
         return min(taken / self.max_twang, 1)
 
@@ -674,35 +673,35 @@ class GrailQuest(game.Game):
             self.human.tell(INITIAL_PURCHASES)
             # Purchase steeds.
             query = 'How much would you like to spend on steeds? '
-            self.steeds = self.human.ask_int(query, low = 180, high = 270, cmd = False)
+            self.steeds = self.human.ask_int(query, low = 180, high = 270, default = 0, cmd = False)
             self.gold -= self.steeds
         # Purchase coconuts.
         query = 'How much would you like to spend on coconuts? '
         if modifier is None:
-            new_coconuts = self.human.ask_int(query, low = 20, high = 30, cmd = False)
+            new_coconuts = self.human.ask_int(query, low = 20, high = 30, default = 0, cmd = False)
             modifier = 1
         else:
-            new_coconuts = self.human.ask_int(query, low = 0, high = 3, cmd = False)
+            new_coconuts = self.human.ask_int(query, low = 0, high = 3, default = 0, cmd = False)
         self.gold -= new_coconuts
         self.coconuts += int(new_coconuts * modifier)
         # Purchase spam.
         query = 'How much would you like to spend on spam? '
-        new_spam = self.human.ask_int(query, low = 0, high = self.gold, cmd = False)
+        new_spam = self.human.ask_int(query, low = 0, high = self.gold, default = 0, cmd = False)
         self.gold -= new_spam
         self.spam += int(new_spam * modifier)
         # Purchase arrows.
         query = 'How much would you like to spend on arrows? '
-        new_arrows = self.human.ask_int(query, low = 0, high = self.gold, cmd = False)
+        new_arrows = self.human.ask_int(query, low = 0, high = self.gold, default = 0, cmd = False)
         self.gold -= new_arrows
         self.arrows += int(new_arrows * modifier * 50)
         # Purchase clothing.
         query = 'How much would you like to spend on clothing? '
-        new_clothing = self.human.ask_int(query, low = 0, high = self.gold, cmd = False)
+        new_clothing = self.human.ask_int(query, low = 0, high = self.gold, default = 0, cmd = False)
         self.gold -= new_clothing
         self.clothing += int(new_clothing * modifier)
         # Purchase miscellaneous supplies.
         query = 'How much would you like to spend on miscellaneous supplies? '
-        new_miscellaneous = self.human.ask_int(query, low = 0, high = self.gold, cmd = False)
+        new_miscellaneous = self.human.ask_int(query, low = 0, high = self.gold, default = 0, cmd = False)
         self.gold -= new_miscellaneous
         self.miscellaneous += int(new_miscellaneous * modifier)
         # Inform the player of the balance.
@@ -735,7 +734,8 @@ class GrailQuest(game.Game):
         while True:
             raw_tactics = self.human.ask(TACTICS.rstrip() + ' ')
             tactics = raw_tactics.lower().split()[0]
-            if tactics in self.tactics_map:
+            tactics = self.tactics_map.get(tactics, tactics)
+            if tactics in ('charge', 'run', 'continue', 'defend'):
                 break
             self.human.error('Oh, the old {!r} trick, eh? Not this time boyo.'.format(raw_tactics))
         tactics = self.tactics_map[tactics]
