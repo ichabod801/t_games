@@ -136,7 +136,13 @@ class GrailQuest(game.Game):
     Note: the film starts in 932 AD
 
     Class Attributes:
-    credits_order: The various credits texts in the order to show them. (list of str)
+    credits_order: The various credits texts in the order to show. (list of str)
+    diseases: The diseases you can catch. (list of str)
+    eat_map: Eating responses and their integer value. (dict of str: int)
+    castles: The castles you can go to. (list of str)
+    hazards: The probabilities and names of the hazards. (list of float, str)
+    months: The names of the months of the year. (list of str)
+    tactics_map: The tactics aliases with the name in the code. (dict of str: str)
 
     Attributes:
     arrows: The number of arrows left. (int)
@@ -148,6 +154,21 @@ class GrailQuest(game.Game):
     miscellaneous: The quality of the miscellaneous goods. (int)
     spam: The amount of spam left. (int)
     steeds: The quality of the steeds. (int)
+
+    Methods:
+    bandit_attack: Handle the bandit attack hazard. (None)
+    bedevere_wanders: Handle the peripatetic Sir Bedevere hazard. (None)
+    broken_coconuts: Handle broken coconuts hazard. (None)
+    cave_beast: Handle the cave beast hazard. (None)
+    cat_rescue: Handle the cat rescue hazard. (None)
+    check_hazards: Check for hazardous events along the way. (None)
+    cold_weather: Handle cold weather. (None)
+    contaminated_water: Handle the contaminated water hazard. (None)
+    date_format: Format the current date. (str)
+    do_continue: Continue on for maximum speed. (bool)
+    do_hunt: Hunt for food. (bool)
+    do_stop: Stop at a castle to buy things. (bool)
+    eat: Give the player a choice of how much food to eat. (None)
 
     Overridden Methods:
     default
@@ -164,7 +185,7 @@ class GrailQuest(game.Game):
     diseases = ['measles', 'dysentery', 'typhoid', 'cholera', 'spamitis', 'pneumonia']
     eat_map = {'p': 1, 'poorly': 1, '1': 1, 'm': 2, 'moderately': 2, '2': 2, 'w': 3, 'well': 3, '3': 3}
     castles = ['the Castle of Camelot', 'Swamp Castle', 'Castle Anthrax', 'Spam Castle', 'Catapult Castle',
-        'Spam Castle']
+        'Spam Castle', 'the Castle of Ultimate Darkness', 'Doune Castle', 'Castle Stalker']
     hazards = ((0.06, 'broken_coconuts'), (0.11, 'steed_shot'), (0.13, 'cat_rescue'),
         (0.15, 'steed_wanders'), (0.17, 'bedevere_wanders'), (0.22, 'contaminated_water'),
         (0.32, 'heavy_rain'), (0.35, 'bandit_attack'), (0.37, 'enchanter'), (0.42, 'heavy_fog'),
@@ -179,12 +200,15 @@ class GrailQuest(game.Game):
 
     def bandit_attack(self):
         """Handle the bandit attack hazard. (None)"""
+        # Shoot the arrows.
         self.human.tell('Bandits attack!')
         speed = self.get_twang()
         self.arrows -= int(speed * 140)
+        # Check for remaining arrows.
         if self.arrows < 1:
             self.human.tell('You ran out of arrows. They got plenty of gold.')
             self.gold = int(self.gold / 3)
+        # Handle bad shots.
         if speed > 0.15 or self.arrows < 1:
             self.human.tell('You got shot in the leg and they took one of your steeds.')
             self.human.tell('You better let Brother Maynard look at that.')
@@ -192,6 +216,7 @@ class GrailQuest(game.Game):
             self.miscellaneous -= 5
             self.steeds -= 18
             self.coconuts -= 2
+        # Handle good shots.
         else:
             self.human.tell("Smoothest sword in the isles, you got 'em!")
 
@@ -211,16 +236,20 @@ class GrailQuest(game.Game):
         """Handle the cave beast hazard. (None)"""
         self.human.tell('A cave beast attacks!')
         speed = self.get_twang()
+        # Check for arrows.
         if self.arrows < 40:
             self.human.tell('You were low on arrows and the beast overpowered you.')
+            # Check for brain aneurysm.
             if random.random() < 0.05:
                 self.human.tell('But the programmer suffers a brain aneurysm before you get injured.')
             else:
                 self.death = 'a cave beast attack'
+        # Otherwise base result on speed.
         elif speed < 0.45:
             self.human.tell('Fine shooting, sir knight. They did not get much.')
         else:
             self.human.tell('Slow with your steel. They got at your food and clothes.')
+        # Update consumables.
         self.arrows -= int(140 * speed)
         self.clothing -= int(30 * speed)
         self.spam -= int(55 * speed)
@@ -233,7 +262,7 @@ class GrailQuest(game.Game):
         self.miscellaneous -= 2 + random.randrange(3)
 
     def check_hazards(self):
-        """Check for hazardous events along the way."""
+        """Check for hazardous events along the way. (None)"""
         self.human.tell()
         # Where in the nine hells did he get this formula from?
         mileage_mod = (self.mileage / 100.0 - 4) ** 2
@@ -246,10 +275,12 @@ class GrailQuest(game.Game):
                 getattr(self, hazard_name)()
                 break
         else:
+            # If no other events, either illness or peasants.
             if random.random() < 1 - (self.eating_choice - 1) * 0.25:
                 self.illness_check()
             else:
                 self.peasants()
+        # Check for mountains.
         self.mountains()
         self.human.ask('Press Enter to continue: ')
         # Rest negative values.
@@ -265,11 +296,14 @@ class GrailQuest(game.Game):
     def cold_weather(self):
         """Handle cold weather. (None)"""
         self.human.tell('Brrrr! Cold weather!')
+        # Check for clothing.
         if self.clothing > 22 + random.randrange(4):
             self.human.tell('You have enough clothing.')
+        # Check for minstrels.
         elif self.minstrels:
             self.human.tell('You are forced to eat the minstrels to survive.')
             self.minstrels = False
+        # Otherwise freeze.
         else:
             self.human.tell("You don't have enough clothing.")
             self.illness_check()
@@ -286,6 +320,7 @@ class GrailQuest(game.Game):
 
         Needed because date.strftime doesn't work before 1900.
         """
+        # Get the ordinal for the day of the month.
         digit = self.date.day % 10
         if self.date.day in (11, 12, 13):
             ordinal = 'th'
@@ -297,6 +332,7 @@ class GrailQuest(game.Game):
             ordinal = 'rd'
         else:
             ordinal = 'th'
+        # Format the date as text.
         parts = (self.months[self.date.month], self.date.day, ordinal, self.date.year)
         return '{} {}{}, {} A.D.'.format(*parts)
 
@@ -312,7 +348,7 @@ class GrailQuest(game.Game):
 
     def do_continue(self, arguments):
         """
-        Continue on for maximum speed. (bool)
+        Continue on for maximum speed. (c)
         """
         return False
 
@@ -321,10 +357,12 @@ class GrailQuest(game.Game):
         Show the credits for the game.
         """
         try:
+            # Show the next set of credits.
             print(self.credits_order[self.credits_index].rstrip())
             self.credits_index += 1
             return True
         except IndexError:
+            # If no more credits, end the game.
             print("Sorry, sir. The movie's over. You'll have to leave.")
             self.force_end = 'loss'
             return False
@@ -335,14 +373,17 @@ class GrailQuest(game.Game):
 
         You need to have at least 40 arrows to hunt.
         """
+        # Check for sufficient arrows.
         if self.arrows < 40:
             self.human.error('Tough, you need more arrows to go hunting.')
             return True
         shot = self.get_twang()
+        # Really fast gets the food.
         if shot < 0.15:
             self.human.tell('RIGHT BETWEEN THE EYES! You got a big one!')
             self.spam += random.randint(52, 57)
             self.arrows -= random.randint(10, 13)
+        # Otherwise how fast you are determines your chance of getting food.
         elif random.random() < shot:
             self.human.tell('Sorry, no luck today.')
         else:
@@ -355,13 +396,17 @@ class GrailQuest(game.Game):
         """
         Stop at a castle to buy things. (s, castle)
         """
+        # Check for the castle command being invalid
         if not self.castle_option:
             self.human.tell('The castle you thought you could get to turned out to only be a model.')
             return True
+        # Check for a frenchman.
         elif random.random() < 0.05:
             self.human.tell('A very rude Frenchman refuses to allow you into the castle.')
+            # But makes sure tomorrow allows another castle (this will get reversed).
             self.castle_option = False
             return True
+        # Enjoy storming the castle!
         else:
             self.human.tell('\nWelcome to {}!'.format(self.castles[self.castle_index]))
             modifier = random.random() / 2 + 0.5
@@ -371,14 +416,17 @@ class GrailQuest(game.Game):
 
     def eat(self):
         """Give the player a choice of how much food to eat. (None)"""
+        # Check for starvation.
         if self.spam < 13:
             self.human.tell('You run out of spam.')
             self.death = 'starvation'
             return False
+        # Get the user's choice.
         options = '\nDo you wish to eat:\n    (1) Poorly\n    (2) Moderately\n    (3) or Well? '
         while True:
             choice = self.human.ask(options).lower()
             if choice in self.eat_map:
+                # Convert the choice to integer and process it.
                 self.eating_choice = self.eat_map[choice]
                 meal = 8 + 5 * self.eating_choice
                 if meal < self.spam:
