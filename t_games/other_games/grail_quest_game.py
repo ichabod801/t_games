@@ -286,7 +286,6 @@ class GrailQuest(game.Game):
 
     def check_hazards(self):
         """Check for hazardous events along the way. (None)"""
-        self.human.tell()
         # Where in the nine hells did he get this formula from?
         mileage_mod = (self.mileage / 100.0 - 4) ** 2
         if random.random() * 10 <= (mileage_mod + 72) / (mileage_mod + 12) - 1:
@@ -295,6 +294,7 @@ class GrailQuest(game.Game):
         event_check = random.random()
         for cumulative_probability, hazard_name in self.hazards:
             if event_check < cumulative_probability:
+                self.human.tell()
                 getattr(self, hazard_name)()
                 break
         else:
@@ -466,7 +466,7 @@ class GrailQuest(game.Game):
         self.human.tell('An enchanter named Fred (no relation) sets one of your steeds on fire.')
         self.human.tell('You lost spam and supplies.')
         # Update the consumables.
-        self.food -= 40
+        self.spam -= 40
         self.arrows -= 400
         self.miscellaneous -= random.randrange(8) + 3
         self.mileage -= 15
@@ -534,7 +534,7 @@ class GrailQuest(game.Game):
             self.miscellaneous -= 5
         # If the illness is not easily treatable, you get one needing Brother Maynard's attention.
         else:
-            self.human.tell('You must stop for medical attention.')
+            self.human.tell('You get extremely ill and must stop for medical attention.')
             self.miscellaneous -= 10
             self.illness = 'illness'
         # If you don't have enough medicine, Brother Maynard will have to treat it.
@@ -548,7 +548,7 @@ class GrailQuest(game.Game):
             mileage_mod = ((self.mileage / 100 - 15) ** 2 + 72) / ((self.mileage / 100 - 15) ** 2 + 12)
             # Check for mountains
             if random.random() * 10 <= 9 - mileage_mod:
-                self.human.tell('You have entered rugged mountains.')
+                self.human.tell('\nYou have entered rugged mountains.')
                 # Check for getting lost.
                 if random.random() < 0.1:
                     self.human.tell('You got lost, and spent valuable time trying to find the trail.')
@@ -585,7 +585,7 @@ class GrailQuest(game.Game):
         """Tell the player they are dead, in case they didn't notice. (None)"""
         # List the cause of death.
         if self.death == 'illness':
-            self.death = random.choice(diseases)
+            self.death = random.choice(self.diseases)
         self.human.tell('\nYou died from {}.'.format(self.death))
         # Ask a few meaningless questions.
         self.human.tell('There are a few formalities we must go through.')
@@ -602,11 +602,52 @@ class GrailQuest(game.Game):
 
     def peasants(self):
         """Handle the peasants hazard. (None)"""
-        self.human.tell('Some helpful peasants take time out of their busy day mucking filth and')
+        self.human.tell('\nSome helpful peasants take time out of their busy day mucking filth and')
         self.human.tell('discussing anarcho-syndicalist communes to help you find some spam.')
         self.spam += 14
         self.human.tell('As you leave you hear one of them muttering something about fairy tale')
         self.human.tell('junkets at tax-payer expense for worthless political appointees.')
+
+    def player_action(self, player):
+        """
+        Handle a player's action during a turn. (bool)
+
+        Parameters:
+        player: The player whose turn it is. (player.Player)
+        """
+        self.show_status()
+        # Check for medical issues.
+        bill = 0
+        if self.illness and self.injury:
+            bill = 40
+        elif self.illness or self.injury:
+            bill = 20
+        if bill:
+            self.human.tell("Brother Maynard requests a donation of {} gold.".format(bill))
+            if bill > self.gold:
+                # If you can't pay the bill, you die. How medieval. Or American.
+                self.human.tell("Unfortunately, you don't have enough money to pay him.")
+                if self.illness:
+                    self.death = 'illness'
+                else:
+                    self.death = self.injury
+                return False
+            else:
+                # Pay the bill and reset the tracking variables.
+                self.gold -= bill
+                self.injury = False
+                self.illness = False
+        # Get the player's action.
+        action = self.human.ask('\nWhat would you like to do (stop/continue/hunt)? ')
+        go = self.handle_cmd(action)
+        if not go and not self.force_end and not self.death:
+            # Handle the end of the turn.
+            self.eat()
+            self.mileage += 200 + (self.steeds + self.coconuts - 220) // 5 + random.randrange(10)
+            self.check_hazards()
+            self.castle_option = not self.castle_option
+            self.date += self.fortnight
+        return go and not self.death
 
     def poisonous_bunny(self):
         """Handle the poisonous bunny hazard. (None)"""
@@ -665,55 +706,7 @@ class GrailQuest(game.Game):
         self.gold -= new_miscellaneous
         self.miscellaneous += int(new_miscellaneous * modifier)
         # Inform the player of the balance.
-        self.human.tell('After all of your purchases, you have {} pieces of gold left.'.format(self.gold))
-
-    def player_action(self, player):
-        """
-        Handle a player's action during a turn. (bool)
-
-        Parameters:
-        player: The player whose turn it is. (player.Player)
-        """
-        # Update the user.
-        if self.spam < 12:
-            self.human.tell('You better do some hunting or buy food soon!')
-        if self.coconuts < 11:
-            self.human.tell('Your steeds have just about beaten those coconuts to death.')
-        if self.castle_option:
-            self.human.tell('You can see a castle in the distance.')
-        self.show_status()
-        # Check for medical issues.
-        bill = 0
-        if self.illness and self.injury:
-            bill = 40
-        elif self.illness or self.injury:
-            bill = 20
-        if bill:
-            self.human.tell("Brother Maynard requests a donation of {} gold.".format(bill))
-            if bill > self.gold:
-                # If you can't pay the bill, you die. How medieval. Or American.
-                self.human.tell("Unfortunately, you don't have enough money to pay him.")
-                if self.illness:
-                    self.death = 'illness'
-                else:
-                    self.death = self.injury
-                return False
-            else:
-                # Pay the bill and reset the tracking variables.
-                self.gold -= bill
-                self.injury = False
-                self.illness = False
-        # Get the player's action.
-        action = self.human.ask('\nWhat would you like to do (stop/continue/hunt)? ')
-        go = self.handle_cmd(action)
-        if not go and not self.force_end and not self.death:
-            # Handle the end of the turn.
-            self.eat()
-            self.mileage += 200 + (self.steeds + self.coconuts - 220) // 5 + random.randrange(10)
-            self.check_hazards()
-            self.castle_option = not self.castle_option
-            self.date += self.fortnight
-        return go and not self.death
+        self.human.tell('\nAfter your purchases, you have {} pieces of gold left.'.format(self.gold))
 
     def rider_combat(self, speed):
         """
@@ -862,8 +855,18 @@ class GrailQuest(game.Game):
 
     def show_status(self):
         """Show the current game status. (None)"""
+        # Show the date.
         self.human.tell('\nToday is {}'.format(self.date_format()))
-        self.human.tell('\nYou have travelled {} miles.'.format(self.mileage))
+        # Show any warnings.
+        if self.spam < 12:
+            self.human.tell('You better do some hunting or buy food soon!')
+        if self.coconuts < 11:
+            self.human.tell('Your steeds have just about beaten those coconuts to death.')
+        if self.castle_option:
+            self.human.tell('You can see a castle in the distance.')
+        # Show the distance travelled.
+        self.human.tell('You have travelled {} miles.\n'.format(self.mileage))
+        # Show the available supplies.
         self.show_inventory()
 
     def steed_shot(self):
