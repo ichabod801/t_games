@@ -290,6 +290,8 @@ class GrailQuest(game.Game):
         mileage_mod = (self.mileage / 100.0 - 4) ** 2
         if random.random() * 10 <= (mileage_mod + 72) / (mileage_mod + 12) - 1:
             self.riders()
+            if self.death:
+                return None
         # Check for other events.
         event_check = random.random()
         for cumulative_probability, hazard_name in self.hazards:
