@@ -660,7 +660,7 @@ class GrailQuest(game.Game):
         # If there is not enough medicine, you die.
         if self.miscellaneous < 1:
             self.human.tell('You die from a rabbit bite because you have no medicine.')
-            self.death = 'poisonous rabbit bite'
+            self.death = 'a poisonous rabbit bite'
         else:
             self.human.tell('You have to use some supplies to stop the venom.')
 
