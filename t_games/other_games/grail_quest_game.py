@@ -614,7 +614,6 @@ class GrailQuest(game.Game):
         Parameters:
         player: The player whose turn it is. (player.Player)
         """
-        self.show_status()
         # Check for medical issues.
         bill = 0
         if self.illness and self.injury:
@@ -622,7 +621,7 @@ class GrailQuest(game.Game):
         elif self.illness or self.injury:
             bill = 20
         if bill:
-            self.human.tell("Brother Maynard requests a donation of {} gold.".format(bill))
+            self.human.tell("\nBrother Maynard requests a donation of {} gold.".format(bill))
             if bill > self.gold:
                 # If you can't pay the bill, you die. How medieval. Or American.
                 self.human.tell("Unfortunately, you don't have enough money to pay him.")
@@ -637,6 +636,7 @@ class GrailQuest(game.Game):
                 self.injury = False
                 self.illness = False
         # Get the player's action.
+        self.show_status()
         action = self.human.ask('\nWhat would you like to do (stop/continue/hunt)? ')
         go = self.handle_cmd(action)
         if not go and not self.force_end and not self.death:
@@ -738,7 +738,6 @@ class GrailQuest(game.Game):
             if tactics in ('charge', 'run', 'continue', 'defend'):
                 break
             self.human.error('Oh, the old {!r} trick, eh? Not this time boyo.'.format(raw_tactics))
-        tactics = self.tactics_map[tactics]
         # Check for actual hostility.
         if random.random() < 0.2:
             hostile = not hostile
@@ -792,7 +791,7 @@ class GrailQuest(game.Game):
             speed = self.get_twang()
             self.arrows = max(self.arrows - int(speed * 200) - 80, 0)
             self.miscellaneous = max(self.miscellaneous - 15, 0)
-            self.rider.combat(speed)
+            self.rider_combat(speed)
         # Handle continuing on (running away withotu steed loss).
         elif tactics == 'continue':
             if random.random() < 0.8:
