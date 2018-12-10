@@ -10,13 +10,19 @@ ProtoObject: An object whose attributes can be defined w/ __init__. (object)
 ProtoStdIn: A programatically controlled stdin. (object)
 ProtoStdOut: A locally stored stdout. (object)
 TestGame: A Game sub-class for testing purposes. (game.Game)
+
+Functions:
+Make a test case of playing the game with bots. (unittest.Testcase)
 """
 
 
+import itertools
 import sys
+import unittest
 
 import t_games.game as game
 import t_games.player as player
+import t_games.utility as utility
 
 
 class AutoBot(player.Bot):
@@ -403,3 +409,44 @@ class TestGame(game.Game):
     def set_up(self):
         """Do any necessary pre-game processing. (None)"""
         self.all_set = True
+
+
+def bot_test(game, bot_classes, rounds, n_bots, options = 'none', bot_params = []):
+    """
+    Make a test case of playing the game with bots. (unittest.Testcase)
+
+    For every number of bots in n_bots, every combination of that many bots from
+    the bots parameter is run in a tournament for the specified number of rounds.
+
+    Parameters:
+    game: The game to play. (game.Game)
+    bot_classes: The bot classes to play the game. (list of type)
+    rounds: The number of rounds to play each test. (int)
+    n_bots: The valid numbers of bots. (list of int)
+    options: The options passed to the game. (str)
+    bot_params: The parameters to pass to the bot initializations. (list of tuple)
+    """
+    # A test framework to put the individual tournaments into.
+    class BotTest(unittest.TestCase):
+        """Tests of the bots in {}.""".format(game.name)
+        def setUp(self):
+            self.bot = AutoBot()
+            self.game = game(self.bot, options)
+            self.rounds = rounds
+    # A function for adding a test for a specific set of bots.
+    def make_bot_test(bots):
+        def testSomeBots(self):
+            self.game.tournament(bots, self.rounds)
+        bot_text = utility.oxford([bot.__class__.__name__ for bot in bots])
+        testSomeBots.__doc__ = 'Bot test of {}.'.format(bot_text)
+        return testSomeBots
+    # Instantiate the bots.
+    if not bot_params:
+        bot_params = [()] * len(bot_classes)
+    bots = [bot_class(*params) for bot_class, params in zip(bot_classes, bot_params)]
+    # Add the tests to the class
+    for num_bots in n_bots:
+        for group_index, test_bots in enumerate(itertools.combinations(bots, num_bots)):
+            new_test = make_bot_test(list(test_bots))
+            setattr(BotTest, 'testBots{}_{:03}'.format(num_bots, group_index + 1), new_test)
+    return BotTest

@@ -284,6 +284,7 @@ class Battleships(game.Game):
 
     def set_up(self):
         """Set up a board for each player. (None)"""
+        self.bot = [player for player in self.players if player.name != self.human.name][0]
         self.boards = {self.bot.name: SeaBoard(self.bot, self.inventory_name)}
         self.boards[self.human.name] = SeaBoard(self.human, self.inventory_name)
 
@@ -495,7 +496,7 @@ class SmarterBot(BattleBot):
         self.add_line(random.randrange(10))
         # Set up tracking the sizes of remaining enemy ships.
         self.target_sizes = []
-        for size, count in self.game.boards[self.name].inventory.values():
+        for size, count in INVENTORIES[self.game.inventory_name].values():
             self.target_sizes.extend([size] * count)
 
     def tell(self, text):
@@ -603,8 +604,8 @@ class SeaBoard(object):
                 # Check for sinking the ship.
                 squares.remove(square)
                 if not squares:
-                    self.player.tell('Your {} has been sunk.'.format(ship))
-                    foe.tell('You sank a {}.'.format(ship))
+                    self.player.tell('Your {} has been sunk.'.format(ship.lower()))
+                    foe.tell('You sank a {}.'.format(ship.lower()))
                     # Check for sinking the fleet (an empty fleet is a flag for Battleships.game_over).
                     fleet_squares = sum([squares for ship, squares in self.fleet], [])
                     if not fleet_squares:
@@ -714,7 +715,7 @@ class SeaBoard(object):
                         continue
                     # Check for the correct size of ship.
                     elif len(ship_squares) != size:
-                        self.player.error('{}s must be {} squares long.'.format(ship.lower(), size))
+                        self.player.error('{}s must be {} squares long.'.format(ship, size))
                         continue
                     # Check for adjacent or overlapping ships.
                     for square in ship_squares:
@@ -760,34 +761,6 @@ class SeaBoard(object):
         # End with an axis label.
         lines.append(' 0123456789')
         return '\n'.join(lines)
-
-
-def test():
-    """Basic testing of the board object. (None)"""
-    # Test ship creation.
-    board = SeaBoard()
-    print('B3 to B7', board.make_ship('B3', 'B7'))
-    print('C5 to F5', board.make_ship('C5', 'F5'))
-    print('B3 to F5', board.make_ship('B3', 'F5'))
-    # Test adjacent squares.
-    print('adj E5', board.adjacent_squares('E5'))
-    print('adj A5', board.adjacent_squares('A5'))
-    print('adj J5', board.adjacent_squares('J5'))
-    print('adj E0', board.adjacent_squares('E0'))
-    print('adj E9', board.adjacent_squares('E9'))
-    print('adj A0', board.adjacent_squares('A0'))
-    # Test ship placement.
-    craig = BattleBot('Craig')
-    board = SeaBoard(craig, inventory = 'Ichabod')
-    board.place_ships()
-    print(board.show())
-    # Test firing shots.
-    sarah = player.Player('Sarah')
-    for shot in range(30):
-        square = random.choice(board.letters) + random.choice(board.numbers)
-        board.fire(square, sarah)
-    print(board.show(to = 'foe'))
-    print(board.show())
 
 
 if __name__ == '__main__':
