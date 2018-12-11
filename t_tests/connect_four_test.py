@@ -5,9 +5,11 @@ Automated testing for connect_four_game.py.
 
 Classes:
 ABFindShortsTest: Tests of finding two or three pieces in a row. (TestCase)
+BoardCheckWinTest: Tests of C4Board.check_win. (unittest.TestCase)
 """
 
 
+import random
 import unittest
 
 import t_games.board as board
@@ -55,6 +57,200 @@ class ABFindShortsTest(unittest.TestCase):
     def testThreeVertical(self):
         """Test detecting a vertical three length short."""
         self.assertIn(((3, 0), (3, 1), (3, 2)), self.shorts[1])
+
+
+class BoardCheckWinTest(unittest.TestCase):
+    """Tests of C4Board.check_win. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.board = connect_four.C4Board(pieces = ['X', 'O'])
+
+    def testHorizontalLeft(self):
+        """Test detecting a horizontal win touching the left edge."""
+        row = random.randint(1, 6)
+        for col in range(1, 5):
+            self.board.place((col, row), 'X')
+        self.assertEqual('X', self.board.check_win())
+
+    def testHorizontalMiddle(self):
+        """Test detecting a horizontal win not touching an edge."""
+        row = random.randint(1, 6)
+        start = random.randint(2, 3)
+        for col in range(start, start + 4):
+            self.board.place((col, row), 'O')
+        self.assertEqual('O', self.board.check_win())
+
+    def testHorizontalRight(self):
+        """Test detecting a horizontal win touching the right edge."""
+        row = random.randint(1, 6)
+        for col in range(4, 8):
+            self.board.place((col, row), 'X')
+        self.assertEqual('X', self.board.check_win())
+
+    def testNegativeHigh(self):
+        """Test a negative slope win touching the top edge."""
+        col = random.randint(2, 3)
+        row = 6
+        for delta in range(4):
+            self.board.place((col + delta, row - delta), 'O')
+        self.assertEqual('O', self.board.check_win())
+
+    def testNegativeHighRight(self):
+        """Test a negative slope win touching the top right corner."""
+        col = 4
+        row = 6
+        for delta in range(4):
+            self.board.place((col + delta, row - delta), 'X')
+        self.assertEqual('X', self.board.check_win())
+
+    def testNegativeLeft(self):
+        """Test a negative slope win touching the left edge."""
+        col = 1
+        row = 5
+        for delta in range(4):
+            self.board.place((col + delta, row - delta), 'O')
+        self.assertEqual('O', self.board.check_win())
+
+    def testNegativeLeftHigh(self):
+        """Test a negative slope win touching the top left corner."""
+        col = 1
+        row = 6
+        for delta in range(4):
+            self.board.place((col + delta, row - delta), 'X')
+        self.assertEqual('X', self.board.check_win())
+
+    def testNegativeLow(self):
+        """Test a negative slope win touching the bottom edge."""
+        col = random.randint(2, 3)
+        row = 4
+        for delta in range(4):
+            self.board.place((col + delta, row - delta), 'O')
+        self.assertEqual('O', self.board.check_win())
+
+    def testNegativeLowLeft(self):
+        """Test a negative slope win touching the bottom left corner."""
+        col = 1
+        row = 4
+        for delta in range(4):
+            self.board.place((col + delta, row - delta), 'X')
+        self.assertEqual('X', self.board.check_win())
+
+    def testNegativeMiddle(self):
+        """Test a negative slope win touching not touching an edge."""
+        col = random.randint(2, 3)
+        row = 5
+        for delta in range(4):
+            self.board.place((col + delta, row - delta), 'O')
+        self.assertEqual('O', self.board.check_win())
+
+    def testNegativeRight(self):
+        """Test a negative slope win touching the right edge."""
+        col = 4
+        row = 5
+        for delta in range(4):
+            self.board.place((col + delta, row - delta), 'X')
+        self.assertEqual('X', self.board.check_win())
+
+    def testNegativeRightLow(self):
+        """Test a negative slope win touching the bottom right corner."""
+        col = 4
+        row = 4
+        for delta in range(4):
+            self.board.place((col + delta, row - delta), 'O')
+        self.assertEqual('O', self.board.check_win())
+
+    def testPositiveHigh(self):
+        """Test a positive slope win touching the top edge."""
+        col = random.randint(2, 3)
+        row = 3
+        for delta in range(4):
+            self.board.place((col + delta, row + delta), 'X')
+        self.assertEqual('X', self.board.check_win())
+
+    def testPositiveHighRight(self):
+        """Test a positive slope win touching the top right corner."""
+        col = 4
+        row = 3
+        for delta in range(4):
+            self.board.place((col + delta, row + delta), 'O')
+        self.assertEqual('O', self.board.check_win())
+
+    def testPositiveLeft(self):
+        """Test a positive slope win touching the left edge."""
+        col = 1
+        row = 2
+        for delta in range(4):
+            self.board.place((col + delta, row + delta), 'X')
+        self.assertEqual('X', self.board.check_win())
+
+    def testPositiveLeftHigh(self):
+        """Test a positive slope win touching the top left corner."""
+        col = 1
+        row = 3
+        for delta in range(4):
+            self.board.place((col + delta, row + delta), 'O')
+        self.assertEqual('O', self.board.check_win())
+
+    def testPositiveLow(self):
+        """Test a positive slope win touching the bottom edge."""
+        col = random.randint(2, 3)
+        row = 1
+        for delta in range(4):
+            self.board.place((col + delta, row + delta), 'X')
+        self.assertEqual('X', self.board.check_win())
+
+    def testPositiveLowLeft(self):
+        """Test a positive slope win touching the bottom left corner."""
+        col = 1
+        row = 1
+        for delta in range(4):
+            self.board.place((col + delta, row + delta), 'O')
+        self.assertEqual('O', self.board.check_win())
+
+    def testPositiveMiddle(self):
+        """Test a positive slope win touching not touching an edge."""
+        col = random.randint(2, 3)
+        row = 2
+        for delta in range(4):
+            self.board.place((col + delta, row + delta), 'X')
+        self.assertEqual('X', self.board.check_win())
+
+    def testPositiveRight(self):
+        """Test a positive slope win touching the right edge."""
+        col = 4
+        row = 2
+        for delta in range(4):
+            self.board.place((col + delta, row + delta), 'O')
+        self.assertEqual('O', self.board.check_win())
+
+    def testPositiveRightLow(self):
+        """Test a positive slope win touching the bottom right corner."""
+        col = 4
+        row = 1
+        for delta in range(4):
+            self.board.place((col + delta, row + delta), 'X')
+        self.assertEqual('X', self.board.check_win())
+
+    def testVerticalHigh(self):
+        """Test detecting a vertical win touching the top edge."""
+        col = random.randint(1, 7)
+        for row in range(3, 7):
+            self.board.place((col, row), 'O')
+        self.assertEqual('O', self.board.check_win())
+
+    def testVerticalLow(self):
+        """Test detecting a vertical win touching the bottom edge."""
+        col = random.randint(1, 7)
+        for row in range(1, 5):
+            self.board.place((col, row), 'X')
+        self.assertEqual('X', self.board.check_win())
+
+    def testVerticalMiddle(self):
+        """Test detecting a vertical win not touching an edge."""
+        col = random.randint(1, 7)
+        for row in range(2, 6):
+            self.board.place((col, row), 'O')
+        self.assertEqual('O', self.board.check_win())
 
 
 if __name__ == '__main__':
