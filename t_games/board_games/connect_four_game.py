@@ -383,7 +383,7 @@ class C4Board(board.DimBoard):
             played = set([cell.location for cell in self.cells.values() if cell.contents == piece])
             # check against the winning positions
             for win in self.wins:
-                if len(win.intersection(played)) == 4:
+                if win <= played:
                     winners.append(piece)
                     break
         # Check for a draw.
