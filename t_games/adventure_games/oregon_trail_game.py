@@ -147,7 +147,7 @@ class GrailQuest(game.Game):
         (0.95, 'hail_storm'))
     months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September',
         'October', 'November', 'December']
-    name = 'Quest for the Grail'
+    name = 'Oregon Trail'
     tactics_map = {'1': 'attack', '2': 'retreat', '3': 'continue', '4': 'circle', 'a': 'attack',
         'r': 'retreat', 'c': 'continue', 'w': 'circle'}
 
