@@ -298,7 +298,7 @@ class GrailQuest(game.Game):
             return True
         # Enjoy storming the fort!
         else:
-            modifier = random.random() / 2 + 0.5
+            modifier = (1 - self.fort_mod) + random.random() * self.fort_mod
             self.purchases(modifier)
             self.mileage -= 45
             return False
@@ -662,6 +662,16 @@ class GrailQuest(game.Game):
         self.clothing -= 20
         self.mileage -= 20 + random.randrange(20)
 
+    def set_options(self):
+        """Set up the possible options for the game."""
+        self.option_set.add_option('money', ['m', '$'], int, 700, check = lambda x: 400 <= x <= 1000,
+            question = 'How much money would you like to start with (return for 700)? ',
+            error_text = 'Your starting funds must be from $400 to $1000.')
+        self.option_set.add_option('max-bang', ['mb'], int, 7, valid = range(4, 10),
+            question = 'How hard should it be to shoot (lower is harder, return for 7)? ')
+        self.option_set.add_option('fort-mod', ['fm'], float, 2, check = lambda x: 0 <= x <= 1,
+            question = 'What is the maximum forts can stiff you (%, return for 0.5)? ')
+
     def set_up(self):
         """Set up the game. (None)"""
         # Set purchasables.
@@ -675,8 +685,6 @@ class GrailQuest(game.Game):
         self.fortnight = datetime.timedelta(days = 14)
         self.fort_option = True
         self.eating_choice = 0
-        self.money = 700
-        self.max_bang = 7
         self.mileage = 0
         self.illness = False
         self.injury = ''
