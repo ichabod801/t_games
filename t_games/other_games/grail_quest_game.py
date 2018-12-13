@@ -30,7 +30,7 @@ Python Programming: Craig "Ichabod" O'Brien
 INITIAL_PURCHASES = """
 You have $700 to spend on the following items:
 
-    * Oxen: You can spend 200 to 300 gold on your steeds. The more you spend,
+    * Oxen: You can spend $200 to $300 on your oxen. The more you spend,
       the faster you'll go, because you have better animals.
     * Food: The more you have, the less chance there is of getting sick.
     * Bullets: $1 buys a box of 50 bullets. You will need bullets for
@@ -47,7 +47,7 @@ Missouri to the Oregon City. You family of five will complete the quest in five
 to six months -- if you make it alive.
 
 At the beginning you will need to provision for the trip. You can spend all of
-your money at the start of the quest, or you can save some of your gold to
+your money at the start of the quest, or you can save some of your money to
 spend at forts along the way when you run low on supplies. However, items
 cost more at the forts. You can also go hunting along the way to get more
 food.
@@ -463,8 +463,7 @@ class GrailQuest(game.Game):
         self.human.tell('One of your oxen injures its leg.')
         self.human.tell('This will slow you down the rest of your trip.')
         self.mileage -= 25
-        self.oxen -= 18
-        self.coconuts -= 2
+        self.oxen -= 20
 
     def oxen_wanders(self):
         """Handle an ox wandering off hazard. (None)"""
@@ -506,7 +505,7 @@ class GrailQuest(game.Game):
         if not go and not self.force_end and not self.death:
             # Handle the end of the turn.
             self.eat()
-            self.mileage += 200 + (self.oxen + self.coconuts - 220) // 5 + random.randrange(10)
+            self.mileage += 200 + (self.oxen - 220) // 5 + random.randrange(10)
             self.check_hazards()
             self.fort_option = not self.fort_option
             self.date += self.fortnight
@@ -614,8 +613,7 @@ class GrailQuest(game.Game):
         # Any tactics besides walking on past are a loss.
         if tactics == 'retreat':
             self.mileage += 15
-            self.oxen = max(self.oxen - 9, 0)
-            self.coconuts = max(self.coconuts - 1, 0)
+            self.oxen = max(self.oxen - 10, 0)
         elif tactics == 'attack':
             self.mileage -= 5
             self.bullets = max(self.bullets - 100, 0)
@@ -635,8 +633,7 @@ class GrailQuest(game.Game):
             self.mileage += 20
             self.miscellaneous = max(self.miscellaneous - 15, 0)
             self.bullets = max(self.bullets - 150, 0)
-            self.oxen = max(self.oxen - 36, 0)
-            self.coconuts = max(self.coconuts - 4, 0)
+            self.oxen = max(self.oxen - 40, 0)
         # Handle charging (losses based on speed)
         elif tactics == 'attack':
             speed = self.get_bang()
@@ -693,8 +690,8 @@ class GrailQuest(game.Game):
         self.human.tell('You have:')
         self.human.tell('{} cans of food,'.format(self.food))
         self.human.tell('{} bullets,'.format(self.bullets))
-        self.human.tell('{} gold pieces worth of clothing,'.format(self.clothing))
-        self.human.tell('{} gold pieces worth of miscellaneous supplies, and'.format(self.miscellaneous))
+        self.human.tell('{} dollars worth of clothing,'.format(self.clothing))
+        self.human.tell('{} dollars worth of miscellaneous supplies, and'.format(self.miscellaneous))
         self.human.tell('${}.'.format(self.money))
 
     def show_status(self):
@@ -744,8 +741,7 @@ class GrailQuest(game.Game):
         # Check for bullets.
         if self.bullets < 40:
             self.human.tell('You were low on bullets and the wolves overpowered you.')
-            else:
-                self.death = 'a wolf attack'
+            self.death = 'a wolf attack'
         # Otherwise base result on speed.
         elif speed < 0.45:
             self.human.tell("Nice shootin' pardner. They did not get much.")
