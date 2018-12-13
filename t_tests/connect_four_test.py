@@ -3,9 +3,13 @@ connect_four_test.py
 
 Automated testing for connect_four_game.py.
 
+Constants:
+C4Bots: The bot classes used in testing. (list of player.Bot)
+
 Classes:
 ABFindShortsTest: Tests of finding two or three pieces in a row. (TestCase)
 BoardCheckWinTest: Tests of C4Board.check_win. (unittest.TestCase)
+C4BotTest: Tests of the ConnectFour bots. (unittest.TestCase)
 """
 
 
@@ -15,6 +19,9 @@ import unittest
 import t_games.board as board
 import t_games.board_games.connect_four_game as connect_four
 import t_tests.unitility as unitility
+
+
+C4Bots = [connect_four.C4BotAlphaBeta, connect_four.C4BotGamma, connect_four.C4BotGamma]
 
 
 class ABFindShortsTest(unittest.TestCase):
@@ -251,6 +258,9 @@ class BoardCheckWinTest(unittest.TestCase):
         for row in range(2, 6):
             self.board.place((col, row), 'O')
         self.assertEqual('O', self.board.check_win())
+
+
+C4BotTest = unitility.bot_test(connect_four.ConnectFour, C4Bots, 4, [2], bot_params = [(), (), (8,)])
 
 
 if __name__ == '__main__':
