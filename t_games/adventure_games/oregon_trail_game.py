@@ -269,18 +269,18 @@ class OregonTrail(game.Game):
         """
         # Check/play the gipf game.
         game, losses = self.gipf_check(arguments, ('oregon trail',))
-        if game != 'invalid-game' and self.gipfed:
+        if game != 'invalid-game' and len(self.gipfed) > 1:
             if not losses:
-                self.human.tell('\nAliens grab your oxen in a tractor beam, but they cannot shake ofg the')
+                self.human.tell('\nAliens grab your oxen in a tractor beam, but they cannot shake off the')
                 self.human.tell('wagons or your desparate family. They eventually drop you back on the')
                 self.human.tell('trail 108 miles ahead of your previous location.')
                 self.mileage += 108
         elif game != 'invalid-game':
             if not losses:
-                self.human.tell('\nA wrinkled and bony Cheyenne indian approaches you at night, and')
-                self.human.tell('starts telling a tale of the Coyote. The rest of the night is a confused')
-                self.human.tell('rush of images and sounds, and you wake up groggy and 180 miles west of')
-                self.human.tell('where you were.')
+                self.human.tell('\nA wrinkled and bony Cheyenne indian approaches you at night, and starts')
+                self.human.tell('telling a tale of the Coyote. The rest of the night is a confused rush')
+                self.human.tell('of images and sounds, and you wake up groggy and 180 miles west of where')
+                self.human.tell('you were.')
                 self.mileage += 180
         else:
             self.human.tell("Well, y'all'd just have to ask the Pawnee 'bout that one.")

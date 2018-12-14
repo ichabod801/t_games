@@ -368,7 +368,7 @@ class Game(OtherCmd):
                 losses = 1
             # Handle gipfing to the trail.
             if game.name == 'Oregon Trail':
-                argument = random.choice(game_names)
+                argument = random.choice(game_names[:-1])
             return argument, losses
         # Return dummy results for incorrect games.
         else:
