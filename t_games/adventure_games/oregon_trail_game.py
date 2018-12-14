@@ -201,7 +201,8 @@ class OregonTrail(game.Game):
                 getattr(self, hazard_name)()
                 break
         else:
-            # If no other events, either illness or peasants.
+            # If no other events, either illness or indians.
+            self.human.tell()
             if random.random() < 1 - (self.eating_choice - 1) * 0.25:
                 self.illness_check()
             else:
@@ -365,7 +366,7 @@ class OregonTrail(game.Game):
         """Get the time taken to type bang as a percentage of the max. (float)"""
         # Get the time.
         start = time.time()
-        self.human.ask('Type bang: ')
+        self.human.ask('\nTYPE BANG: ')
         taken = time.time() - start
         # Return the percentage of the maximum.
         return min(taken / self.max_bang, 1)
@@ -688,6 +689,7 @@ class OregonTrail(game.Game):
     def set_options(self):
         """Set up the possible options for the game."""
         self.option_set.add_option('money', ['m', '$'], int, 700, check = lambda x: 400 <= x <= 1000,
+            target = 'starting_money',
             question = 'How much money would you like to start with (return for 700)? ',
             error_text = 'Your starting funds must be from $400 to $1000.')
         self.option_set.add_option('max-bang', ['mb'], int, 7, valid = range(4, 10),
@@ -709,6 +711,7 @@ class OregonTrail(game.Game):
         self.fort_option = True
         self.eating_choice = 0
         self.mileage = 0
+        self.money = self.starting_money
         self.illness = False
         self.injury = ''
         self.death = ''
