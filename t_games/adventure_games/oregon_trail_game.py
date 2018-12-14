@@ -263,6 +263,27 @@ class GrailQuest(game.Game):
         """
         return False
 
+    def do_gipf(self, arguments):
+        """
+        Yeah, just go two blocks up and take a right. You can't miss it.
+        """
+        # Check/play the gipf game.
+        game, losses = self.gipf_check(arguments, ('Oregon Trail',))
+        if game != 'invalid-game' and self.gipfed:
+            if not losses:
+                self.human.tell('Aliens grab your oxen in a tractor beam, but they cannot shake of the')
+                self.human.tell('wagons or your desparate family. They eventually drop you back on the')
+                self.human.tell('trail 108 miles ahead of your previous location.')
+                self.mileage += 108
+        elif game != 'invalid-game':
+            if not losses:
+                self.human.tell('A wrinkled and bony Cheyenne indian approaches you at night, and offers')
+                self.human.tell('a strange root for the stew. The rest of the night is a confused rush')
+                self.human.tell('of images and sounds, and you wake up 180 miles west of where you were.')
+                self.mileage += 180
+        else:
+            self.human.tell("Well, y'all'd just have to ask the Pawnee 'bout that one.")
+
     def do_hunt(self, arguments):
         """
         Hunt for food. (h)
