@@ -69,7 +69,7 @@ What are your tactics:
 """
 
 
-class GrailQuest(game.Game):
+class OregonTrail(game.Game):
     """
     A game of travelling the Oregon Trail. (game.Game)
 
@@ -268,21 +268,23 @@ class GrailQuest(game.Game):
         Yeah, just go two blocks up and take a right. You can't miss it.
         """
         # Check/play the gipf game.
-        game, losses = self.gipf_check(arguments, ('Oregon Trail',))
+        game, losses = self.gipf_check(arguments, ('oregon trail',))
         if game != 'invalid-game' and self.gipfed:
             if not losses:
-                self.human.tell('Aliens grab your oxen in a tractor beam, but they cannot shake of the')
+                self.human.tell('\nAliens grab your oxen in a tractor beam, but they cannot shake ofg the')
                 self.human.tell('wagons or your desparate family. They eventually drop you back on the')
                 self.human.tell('trail 108 miles ahead of your previous location.')
                 self.mileage += 108
         elif game != 'invalid-game':
             if not losses:
-                self.human.tell('A wrinkled and bony Cheyenne indian approaches you at night, and offers')
-                self.human.tell('a strange root for the stew. The rest of the night is a confused rush')
-                self.human.tell('of images and sounds, and you wake up 180 miles west of where you were.')
+                self.human.tell('\nA wrinkled and bony Cheyenne indian approaches you at night, and')
+                self.human.tell('starts telling a tale of the Coyote. The rest of the night is a confused')
+                self.human.tell('rush of images and sounds, and you wake up groggy and 180 miles west of')
+                self.human.tell('where you were.')
                 self.mileage += 180
         else:
             self.human.tell("Well, y'all'd just have to ask the Pawnee 'bout that one.")
+        return True
 
     def do_hunt(self, arguments):
         """
@@ -406,12 +408,12 @@ class GrailQuest(game.Game):
             self.human.tell('You have contracted a serious illness. You have to use some medicine.')
             self.mileage -= 5
             self.miscellaneous -= 5
-        # If the illness is not easily treatable, you get one needing Brother Maynard's attention.
+        # If the illness is not easily treatable, you get one needing Doc Blanchard's attention.
         else:
             self.human.tell('You get extremely ill and must stop for medical attention.')
             self.miscellaneous -= 10
             self.illness = 'illness'
-        # If you don't have enough medicine, Brother Maynard will have to treat it.
+        # If you don't have enough medicine, Doc Blanchard will have to treat it.
         if self.miscellaneous < 1:
             self.death = 'illness'
 
@@ -505,10 +507,10 @@ class GrailQuest(game.Game):
         elif self.illness or self.injury:
             bill = 20
         if bill:
-            self.human.tell("\nBrother Maynard requests a donation of ${}.".format(bill))
+            self.human.tell("\nThe doctor's bill is ${}.".format(bill))
             if bill > self.money:
                 # If you can't pay the bill, you die. How medieval. Or American.
-                self.human.tell("Unfortunately, you don't have enough money to pay him.")
+                self.human.tell("Unfortunately, you don't have enough money to pay them.")
                 if self.illness:
                     self.death = 'illness'
                 else:
@@ -690,7 +692,7 @@ class GrailQuest(game.Game):
             error_text = 'Your starting funds must be from $400 to $1000.')
         self.option_set.add_option('max-bang', ['mb'], int, 7, valid = range(4, 10),
             question = 'How hard should it be to shoot (lower is harder, return for 7)? ')
-        self.option_set.add_option('fort-mod', ['fm'], float, 2, check = lambda x: 0 <= x <= 1,
+        self.option_set.add_option('fort-mod', ['fm'], float, 0.5, check = lambda x: 0 <= x <= 1,
             question = 'What is the maximum forts can stiff you (%, return for 0.5)? ')
 
     def set_up(self):

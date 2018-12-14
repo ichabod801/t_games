@@ -332,12 +332,19 @@ class Game(OtherCmd):
         game_name: The names of the games to check. (list of str)
         """
         # Get the possible games and their aliases.
-        if self.name == 'Oregon Trail' and not len(self.gipfed) < 3:
-            test = ['Test Games']
-            games = {name: game for name, game in self.interface.games.items if game.categories != test}
+        if self.name == 'Oregon Trail':
+            game_names = ()
+            if len(self.gipfed) < 2:
+                all_games = self.interface.games.items()
+                games = {name: game for name, game in all_games if game.categories != ['Test Games']}
+                del games['oregon trail']
+                del games['ortr']
+            else:
+                games = {}
         else:
             games = {game_name: self.interface.games[game_name] for game_name in game_names}
-            games['Oregon Trail'] = self.interface.games['Oregon Trail']
+            games['oregon trail'] = self.interface.games['oregon trail']
+            game_names += ('oregon trail',)
         for game_name in game_names:
             games.update({alias.lower(): games[game_name] for alias in games[game_name].aka})
         # Find the correct game.
