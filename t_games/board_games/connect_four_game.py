@@ -383,7 +383,7 @@ class C4Board(board.DimBoard):
             played = set([cell.location for cell in self.cells.values() if cell.contents == piece])
             # check against the winning positions
             for win in self.wins:
-                if len(win.intersection(played)) == 4:
+                if win <= played:
                     winners.append(piece)
                     break
         # Check for a draw.
@@ -597,21 +597,7 @@ class ConnectFour(game.Game):
         else:
             self.bot = C4BotGamma(depth = 8, taken_names = [self.human.name])
         self.players = [self.human, self.bot]
-        # get symbols
         self.symbols = []
-        if not self.symbols and not self.option_set.errors:
-            for player in self.players:
-                invalid = ''.join(self.symbols)
-                while True:
-                    symbol = player.ask('\nWhat symbol would you like to use? ').strip()
-                    # Check for unused, single-character symbol
-                    if symbol in invalid:
-                        player.tell('That symbol is already being used by another player.')
-                    elif len(symbol) > 1:
-                        player.error('One character only, please.')
-                    else:
-                        break
-                self.symbols.append(symbol)
 
     def set_options(self):
         """Define the options for the game. (None)"""
@@ -653,6 +639,20 @@ class ConnectFour(game.Game):
 
     def set_up(self):
         """Set up the game. (None)"""
+        # Make sure you have the symbols.
+        if not self.symbols:
+            for player in self.players:
+                invalid = ''.join(self.symbols)
+                while True:
+                    symbol = player.ask('\nWhat symbol would you like to use? ').strip()
+                    # Check for unused, single-character symbol
+                    if symbol in invalid:
+                        player.tell('That symbol is already being used by another player.')
+                    elif len(symbol) > 1:
+                        player.error('One character only, please.')
+                    else:
+                        break
+                self.symbols.append(symbol)
         # shuffle players and symbols
         saved_players = self.players[:]
         random.shuffle(self.players)
