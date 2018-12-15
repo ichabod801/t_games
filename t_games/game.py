@@ -344,7 +344,19 @@ class Game(OtherCmd):
         game_name: The names of the games to check. (list of str)
         """
         # Get the possible games and their aliases.
-        games = {game_name: self.interface.games[game_name] for game_name in game_names}
+        if self.name == 'Oregon Trail':
+            game_names = ()
+            if len(self.gipfed) < 2:
+                all_games = self.interface.games.items()
+                games = {name: game for name, game in all_games if game.categories != ['Test Games']}
+                del games['oregon trail']
+                del games['ortr']
+            else:
+                games = {}
+        else:
+            games = {game_name: self.interface.games[game_name] for game_name in game_names}
+            games['oregon trail'] = self.interface.games['oregon trail']
+            game_names += ('oregon trail',)
         for game_name in game_names:
             games.update({alias.lower(): games[game_name] for alias in games[game_name].aka})
         # Find the correct game.
@@ -366,6 +378,9 @@ class Game(OtherCmd):
                 losses = 0
             elif not results[0]:
                 losses = 1
+            # Handle gipfing to the trail.
+            if game.name == 'Oregon Trail':
+                argument = random.choice(game_names[:-1])
             return argument, losses
         # Return dummy results for incorrect games.
         else:
