@@ -260,7 +260,7 @@ class BoardCheckWinTest(unittest.TestCase):
         self.assertEqual('O', self.board.check_win())
 
 
-C4BotTest = unitility.bot_test(connect_four.ConnectFour, C4Bots, 4, [2], bot_params = [(), (), (8,)])
+C4BotTest = unitility.bot_test(connect_four.ConnectFour, C4Bots, 1, [2], bot_params = [(), (), (8,)])
 
 
 if __name__ == '__main__':

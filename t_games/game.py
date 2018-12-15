@@ -20,12 +20,14 @@ load_games: Load all of the games defined locally. (tuple of dict)
 from __future__ import division, print_function
 
 import glob
+import io
 import itertools
 import math
 import operator
 import os
 import random
 import re
+import sys
 
 import t_games.options as options
 from t_games.other_cmd import OtherCmd
@@ -86,6 +88,7 @@ class Game(OtherCmd):
     play: Play the game. (list of int)
     player_action: Handle a player's turn or other player actions. (bool)
     set_options: Define the options for the game. (bool)
+    set_players: Reset/change the list of players. (None)
     set_up: Handle any pre-game tasks. (None)
     tournament: Run a tournament of the game. (dict)
 
@@ -451,6 +454,27 @@ class Game(OtherCmd):
         """Define the options for the game. (None)"""
         pass
 
+    def set_players(self, players):
+        """
+        Reset/change the list of players. (player.Player)
+
+        This is used in tournament play to specify the players in the game. The
+        return value is the current human player.
+
+        Parameters:
+        players: The new players for the game. (list of player.Player)
+        """
+        # Set the players.
+        self.players = players
+        for player in self.players:
+            player.game = self
+        # Set specific references to players.
+        human_hold = self.human
+        self.human = self.players[0]
+        if hasattr(self, 'bot') and len(self.players) == 2:
+            self.bot = self.players[1]
+        return human_hold
+
     def set_up(self):
         """Handle any pre-game tasks. (None)"""
         pass
@@ -463,27 +487,28 @@ class Game(OtherCmd):
         players: The players in the tournament. (list of player.Player)
         rounds: The number of rounds to play. (int)
         """
-        # Set up the players.
-        self.players = players
-        for player in self.players:
-            player.game = self
-        # Set one of the players to be the human.
-        human_hold = self.human
-        self.human = self.players[0]
-        # Set up results tracking.
-        score_tracking = {player.name: [] for player in self.players}
-        place_tracking = {player.name: [] for player in self.players}
-        # Run the tournament.
-        for game_index in range(rounds):
-            # Run the game.
-            results = self.play()
-            # Track the results.
-            rankings = sorted(self.scores.values(), reverse = True)
-            for player, score in self.scores.items():
-                score_tracking[player].append(score)
-                place_tracking[player].append(rankings.index(score) + 1)
-        # Clean up.
-        self.human = human_hold
+        # Mute the output.
+        save_stdout = sys.stdout
+        sys.stdout = io.BytesIO()
+        try:
+            # Set up the players.
+            human_hold = self.set_players(players)
+            # Set up results tracking.
+            score_tracking = {player.name: [] for player in self.players}
+            place_tracking = {player.name: [] for player in self.players}
+            # Run the tournament.
+            for game_index in range(rounds):
+                # Run the game.
+                results = self.play()
+                # Track the results.
+                rankings = sorted(self.scores.values(), reverse = True)
+                for player, score in self.scores.items():
+                    score_tracking[player].append(score)
+                    place_tracking[player].append(rankings.index(score) + 1)
+        finally:
+            # Clean up.
+            self.human = human_hold
+            sys.stdout = save_stdout
         return {'scores': score_tracking, 'places': place_tracking}
 
 
