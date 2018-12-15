@@ -7,6 +7,7 @@ Constants:
 CREDITS: The credits for the game. (str)
 INITIAL_PURCHASES: The text shown before making the initial purchases. (str)
 RULES: The rules of the game. (str)
+TACTICS: The possible tactics options against riders. (str)
 
 Classes:
 OregonTrail: A game of travelling the Oregon Trail. (game.Game)
@@ -74,7 +75,6 @@ class OregonTrail(game.Game):
     A game of travelling the Oregon Trail. (game.Game)
 
     Class Attributes:
-    credits_order: The various credits texts in the order to show. (list of str)
     diseases: The diseases you can catch. (list of str)
     eat_map: Eating responses and their integer value. (dict of str: int)
     hazards: The probabilities and names of the hazards. (list of float, str)
@@ -85,12 +85,15 @@ class OregonTrail(game.Game):
     bullets: The number of bullets left. (int)
     clothes: The quality of the clothing. (int)
     food: The amount of food left. (int)
+    fort_mod: The maximum fort discount. (float)
     fort_option: A flag for a fort being near enough to visit. (bool)
+    max_bang: The maximum time for typing bang. (int)
     mileage: The total miles travelled. (int)
     miscellaneous: The quality of the miscellaneous goods. (int)
     money: How much money the player has left. (int)
     oxen: The quality of the oxen. (int)
     south_pass: A flag for passing through the South Pass. (bool)
+    starting_money: How much money the player starts with. (int)
 
     Methods:
     bandit_attack: Handle the bandit attack hazard. (None)
@@ -108,10 +111,12 @@ class OregonTrail(game.Game):
     hail_storm: Handle the hail storm hazard. (None)
     heavy_fog: Handle the heavy fog hazard. (None)
     heavy_rain: Handle the heavy rain hazard. (None)
-    indians: Handle the indians hazard. (None)
     illness_check: Determine how bad an illness is. (None)
+    indians: Handle the indians hazard. (None)
     mountains: Check for passing through mountain ranges. (None)
     obituary: Tell the player they are dead, in case they didn't notice. (None)
+    oxen_injury: Handle the oxen injury hazard. (None)
+    oxen_wanders: Handle an ox wandering off hazard. (None)
     poisonous_snake: Handle the poisonous snake hazard. (None)
     purchases: Allow the user to make purchases. (None)
     rider_combat: Shoot it out with the riders. (bool)
@@ -122,8 +127,6 @@ class OregonTrail(game.Game):
     show_inventory: Show the current consumables. (None)
     show_status: Show the current game status. (None)
     son_wanders: Handle the peripatetic son hazard. (None)
-    steed_shot: Handle the steed getting shot hazard. (None)
-    steed_wanders: Handle a steed wandering off hazard. (None)
     victory: Display the victory text. (None)
     wagon_fire: Handle the wagon fire hazard. (None)
     wild_animals: Handle the wild animals hazard. (None)
@@ -131,6 +134,7 @@ class OregonTrail(game.Game):
     Overridden Methods:
     game_over
     player_action
+    set_options
     set_up
     """
 
@@ -187,6 +191,7 @@ class OregonTrail(game.Game):
 
     def check_hazards(self):
         """Check for hazardous events along the way. (None)"""
+        # Check for riders.
         # Where in the nine hells did he get this formula from?
         mileage_mod = (self.mileage / 100.0 - 4) ** 2
         if random.random() * 10 <= (mileage_mod + 72) / (mileage_mod + 12) - 1:
@@ -210,7 +215,7 @@ class OregonTrail(game.Game):
         # Check for mountains.
         self.mountains()
         self.human.ask('Press Enter to continue: ')
-        # Rest negative values.
+        # Reset negative values.
         if self.miscellaneous < 1:
             self.miscellaneous = 0
         if self.food < 1:
@@ -262,6 +267,7 @@ class OregonTrail(game.Game):
         """
         Continue on for maximum speed. (c)
         """
+        # Go straight to the end of the turn.
         return False
 
     def do_gipf(self, arguments):
@@ -270,12 +276,14 @@ class OregonTrail(game.Game):
         """
         # Check/play the gipf game.
         game, losses = self.gipf_check(arguments, ('oregon trail',))
+        # Winning the second time gives 108 miles.
         if game != 'invalid-game' and len(self.gipfed) > 1:
             if not losses:
                 self.human.tell('\nAliens grab your oxen in a tractor beam, but they cannot shake off the')
                 self.human.tell('wagons or your desparate family. They eventually drop you back on the')
                 self.human.tell('trail 108 miles ahead of your previous location.')
                 self.mileage += 108
+        # Winning the second time gives 180 miles.
         elif game != 'invalid-game':
             if not losses:
                 self.human.tell('\nA wrinkled and bony Cheyenne indian approaches you at night, and starts')
@@ -283,8 +291,10 @@ class OregonTrail(game.Game):
                 self.human.tell('of images and sounds, and you wake up groggy and 180 miles west of where')
                 self.human.tell('you were.')
                 self.mileage += 180
+        # Otherwise I'm confused.
         else:
             self.human.tell("Well, y'all'd just have to ask the Pawnee 'bout that one.")
+        # Continue with the turn.
         return True
 
     def do_hunt(self, arguments):
@@ -364,10 +374,16 @@ class OregonTrail(game.Game):
 
     def get_bang(self):
         """Get the time taken to type bang as a percentage of the max. (float)"""
+        # Check for cheating.
+        if self.human.held_inputs and self.human.held_inputs[0].lower() == 'bang':
+            self.flags |= 2
         # Get the time.
         start = time.time()
-        self.human.ask('\nTYPE BANG: ')
+        bang = self.human.ask('\nTYPE BANG: ')
         taken = time.time() - start
+        # Check for the correct word
+        if bang.lower() != 'bang':
+            taken = self.max_bang
         # Return the percentage of the maximum.
         return min(taken / self.max_bang, 1)
 
@@ -593,6 +609,7 @@ class OregonTrail(game.Game):
         Parameters:
         speed: How fast the user typed 'bang'. (float)
         """
+        # Faster is better.
         if speed < 0.15 and self.bullets:
             self.human.tell('Nice shooting, you drove them off.')
         elif speed > 0.6:
@@ -786,3 +803,13 @@ class OregonTrail(game.Game):
         self.clothing -= int(30 * speed)
         self.food -= int(55 * speed)
 
+
+if __name__ == '__main__':
+    # Play the game without the interface.
+    try:
+        input = raw_input
+    except NameError:
+        pass
+    name = input('What is your name? ')
+    oregon_trail = OregonTrail(player.Humanoid(name), '')
+    oregon_trail.play()
