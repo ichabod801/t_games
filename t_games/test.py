@@ -47,6 +47,7 @@ class Test(object):
         """
         self.human.held_inputs = held_inputs
         self.menu.menu()
+        return self.human.results[self.human.session_index:]
 
 
 # Test some text games. (None)

@@ -367,9 +367,9 @@ class Interface(other_cmd.OtherCmd):
                 elif choice == 'Quit':
                     if self.human.session_index < len(self.human.results):
                         self.do_stats('session / cheat xyzzy gipf')
-                        self.human.tell('\nThanks for playing! Come back soon!')
+                        self.human.tell('\nThanks for playing! Come back soon!\n')
                     else:
-                        self.human.tell('\nYou no play. Me feel sad. :(')
+                        self.human.tell('\nYou no play. Me feel sad. :(\n')
                     break
                 # Assume anything else is a game to play.
                 else:
