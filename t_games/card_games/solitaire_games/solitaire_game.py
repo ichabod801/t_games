@@ -795,7 +795,7 @@ class Solitaire(game.Game):
         elif deal_num == 0:
             deal_num = random.randint(1, 1000000)
             self.human.tell('The random deal number is {}.'.format(deal_num))
-        else:
+        if deal_num:
             self.option_set.settings_text += ' deal-num={}'.format(deal_num)
         self.deck.shuffle(number = deal_num)
         # Initialize the variable game locations
@@ -1445,10 +1445,13 @@ class MultiSolitaire(Solitaire):
             self.option_set.settings_text = self.option_set.settings_text[:(deal_text_index - 1)]
         if self.raw_options.lower() != 'none':
             prompt = '\nEnter the deal number, or return for a random deal: '
-            deal_num = self.human.ask_int(prompt, low = 1, default = -1, cmd = False)
+            deal_num = self.human.ask_int(prompt, low = 0, default = -1, cmd = False)
         if deal_num == -1:
             deal_num = None
-        else:
+        elif deal_num == 0:
+            deal_num = random.randint(1, 1000000)
+            self.human.tell('The random deal number is {}.'.format(deal_num))
+        if deal_num:
             self.option_set.settings_text += ' deal-num={}'.format(deal_num)
         self.deck.shuffle(number = deal_num)
         # Initialize the piles of piles.
