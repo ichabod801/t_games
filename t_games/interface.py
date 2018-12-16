@@ -322,6 +322,11 @@ class Interface(other_cmd.OtherCmd):
                 relevant = [result for result in self.human.results if result[0] == game]
                 stats = Statistics(relevant, options = options)
                 self.human.tell(stats)
+        # Handle the session statistics.
+        elif arguments.lower() == 'session':
+            session_results = self.human.results[self.human.session_index:]
+            session_stats = Statistics(session_results, 'all', 'Session Statistics')
+            self.human.tell(session_stats)
         # Show an error for invalid game names.
         else:
             self.human.error("I don't know that game.")
@@ -360,6 +365,11 @@ class Interface(other_cmd.OtherCmd):
                     self.focus = self.previous.pop()
                     self.titles.pop()
                 elif choice == 'Quit':
+                    if self.human.session_index < len(self.human.results):
+                        self.do_stats('session / cheat xyzzy gipf')
+                        self.human.tell('\nThanks for playing! Come back soon!')
+                    else:
+                        self.human.tell('\nYou no play. Me feel sad. :(')
                     break
                 # Assume anything else is a game to play.
                 else:

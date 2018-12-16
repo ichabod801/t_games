@@ -369,6 +369,7 @@ class Human(Humanoid):
     folder_name: The local file with the player's data. (str)
     quest: The player's quest. (str)
     results: The results of games played. (list of list)
+    session_index: The number of games played before this session. (int)
 
     Methods:
     load_results: Load the player's history of play. (None)
@@ -420,6 +421,8 @@ class Human(Humanoid):
             for line in player_data:
                 results = line.strip().split(',')
                 self.results.append(results[:1] + [int(x) for x in results[1:-1]] + results[-1:])
+        self.session_index = len(self.results)
+        self.fire_index = self.session_index
 
     def load_shortcuts(self):
         """Load the player's interface shortcuts. (None)"""
