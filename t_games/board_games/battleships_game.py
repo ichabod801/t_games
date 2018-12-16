@@ -679,7 +679,7 @@ class SeaBoard(object):
     def place_ships(self):
         """Get the placement of the ships from the player. (None)"""
         # Get the available ships sorted by size.
-        ships = sorted(self.inventory.items(), key = lambda ship: ship[1][0], reverse = True)
+        ships = sorted(self.inventory.items(), key = lambda ship: (ship[1][0], ship[0]), reverse = True)
         # Set up the tracking variables.
         invalid_squares = set()
         self.fleet = []

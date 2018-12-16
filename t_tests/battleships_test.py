@@ -213,7 +213,7 @@ class SeaBoardFireTest(unittest.TestCase):
         self.board.fire('D0', self.foe)
         self.board.fire('D1', self.foe)
         self.board.fire('D2', self.foe)
-        self.assertEqual(['Your submarine has been sunk.\n'], self.bot.info[5:])
+        self.assertEqual(['Your cruiser has been sunk.\n'], self.bot.info[5:])
 
 
 class SeaBoardMakeShipTest(unittest.TestCase):
@@ -329,7 +329,7 @@ class SeaBoardPlaceShipsTest(unittest.TestCase):
         """Test placing a horizontal three square ship in the fleet."""
         self.bot.replies = ['i6 i2', 'g6 g3', 'e6 e4', 'c4 c2', 'a7 a8']
         board = battleships.SeaBoard(self.bot)
-        self.assertEqual(('Cruiser', ['E4', 'E5', 'E6']), board.fleet[2])
+        self.assertEqual(('Submarine', ['E4', 'E5', 'E6']), board.fleet[2])
 
     def testHorizontalTwoFleet(self):
         """Test placing a horizontal two square ship in the fleet."""
@@ -347,7 +347,7 @@ class SeaBoardPlaceShipsTest(unittest.TestCase):
         """Test the error from entering a ship of the wrong size."""
         self.bot.replies = ['i6 i2', 'g6 g3', 'e6 e4', 'c4 c1', 'c4 c2', 'a7 a8']
         board = battleships.SeaBoard(self.bot)
-        self.assertEqual(['Submarines must be 3 squares long.\n'], self.bot.errors)
+        self.assertEqual(['Cruisers must be 3 squares long.\n'], self.bot.errors)
 
     def testInvalidSecondSquare(self):
         """Test the error from entering an invalid end square."""
@@ -395,7 +395,7 @@ class SeaBoardPlaceShipsTest(unittest.TestCase):
         """Test placing a vertical three square ship in the fleet."""
         self.bot.replies = ['A1 e1', 'g3 D3', 'e5 g5', 'I7 G7', 'I9 j9']
         board = battleships.SeaBoard(self.bot)
-        self.assertEqual(('Submarine', ['G7', 'H7', 'I7']), board.fleet[3])
+        self.assertEqual(('Cruiser', ['G7', 'H7', 'I7']), board.fleet[3])
 
     def testVerticalTwoFleet(self):
         """Test placing a vertical two square ship in the fleet."""
