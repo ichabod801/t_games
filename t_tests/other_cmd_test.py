@@ -4,6 +4,7 @@ other_cmd_test.py
 Unit testing of t_games/other_cmd.py.
 
 Classes:
+OtherCmdCmdTest: Tests of actually handling other commands. (unittest.TestCase)
 OtherCmdDebugTest: Tests of debugging with a text command handler. (TestCase)
 OtherCmdHelpTest: Tests of help text from a command handler. (TestCase)
 OtherCmdShortcutTest: Tests of setting shortcuts. (unittest.TestCase)
@@ -72,7 +73,7 @@ class OtherCmdDebugTest(unittest.TestCase):
     def testSelf(self):
         """Test that self in debugging references the other_cmd instance."""
         self.cmd_handler.do_debug('id(self)')
-        self.assertEqual(str(id(self.cmd_handler)), self.bot.info[0].strip())
+        self.assertEqual(repr(id(self.cmd_handler)), self.bot.info[0].strip())
 
     def testTurnContinuation(self):
         """Test that debugging does not end the turn."""
