@@ -73,6 +73,9 @@ class Pyramid(solitaire.Solitaire):
     reserve_rows: The number of cards in each reserve pile. (int)
     standard_turn: A flag for using the default turning rules. (bool)
 
+    Methods:
+    is_empty: Check that there are no face up cards not in the foundation. (bool)
+
     Overridden Methods:
     do_turn
     find_foundation
