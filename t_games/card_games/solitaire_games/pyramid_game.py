@@ -98,12 +98,13 @@ class Pyramid(solitaire.Solitaire):
         If no argument is given, auto will play cards as long as it can. If a card
         rank is given as an argument, auto will on play cards up to and including that
         rank. If the pyramid and waste are cleared (and any reserve or free cells),
-        auto will sort all of the cards in the stock.
+        auto will sort all of the cards in the stock (except with the standard-turn
+        option).
         """
         # Do the normal auto sort.
         super(Pyramid, self).do_auto(max_rank)
         # Check for sorting the stock.
-        if self.is_empty():
+        if not self.standard_turn and self.is_empty():
             self.sort_stock()
         return False
 
@@ -146,7 +147,9 @@ class Pyramid(solitaire.Solitaire):
         Turn cards from the stock into the waste. (t)
 
         In Pyramid, cards in the waste are sorted to the foundation before the next
-        card is turned over from the stock.
+        card is turned over from the stock. If the only cards left are in the stock,
+        they will all be sorted instead of turned over into the waste (except with
+        the standard-turn option).
         """
         # Store current move tracking.
         count_hold = self.move_count
