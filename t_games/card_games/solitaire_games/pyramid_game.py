@@ -73,6 +73,9 @@ class Pyramid(solitaire.Solitaire):
     reserve_rows: The number of cards in each reserve pile. (int)
     standard_turn: A flag for using the default turning rules. (bool)
 
+    Methods:
+    is_empty: Check that there are no face up cards not in the foundation. (bool)
+
     Overridden Methods:
     do_turn
     find_foundation
@@ -90,6 +93,23 @@ class Pyramid(solitaire.Solitaire):
     name = 'Pyramid'
     num_options = 8
     rules = RULES
+
+    def do_auto(self, max_rank):
+        """
+        Automatically play cards to the foundations. (a)
+
+        If no argument is given, auto will play cards as long as it can. If a card
+        rank is given as an argument, auto will on play cards up to and including that
+        rank. If the pyramid and waste are cleared (and any reserve or free cells),
+        auto will sort all of the cards in the stock (except with the standard-turn
+        option).
+        """
+        # Do the normal auto sort.
+        super(Pyramid, self).do_auto(max_rank)
+        # Check for sorting the stock.
+        if not self.standard_turn and self.is_empty():
+            self.sort_stock()
+        return False
 
     def do_gipf(self, arguments):
         """
@@ -130,19 +150,25 @@ class Pyramid(solitaire.Solitaire):
         Turn cards from the stock into the waste. (t)
 
         In Pyramid, cards in the waste are sorted to the foundation before the next
-        card is turned over from the stock.
+        card is turned over from the stock. If the only cards left are in the stock,
+        they will all be sorted instead of turned over into the waste (except with
+        the standard-turn option).
         """
         # Store current move tracking.
         count_hold = self.move_count
         # Move the current waste card to the foundation.
         if self.waste:
             self.transfer(self.waste[:], self.foundations[0])
-        # Do the turn as normal.
-        super(Pyramid, self).do_turn(arguments)
-        # Update the undo and move tracking.
-        for move in self.moves[-self.options['turn-count']:]:
-            move[-2] += 1
-        self.move_count = count_hold + 1
+        # Check for autosorting the stock.
+        if not self.standard_turn and self.is_empty():
+            self.sort_stock()
+        # Otherwise, do the turn as normal.
+        else:
+            super(Pyramid, self).do_turn(arguments)
+            # Update the undo and move tracking.
+            for move in self.moves[-self.options['turn-count']:]:
+                move[-2] += 1
+            self.move_count = count_hold + 1
 
     def find_foundation(self, card):
         """
@@ -174,6 +200,10 @@ class Pyramid(solitaire.Solitaire):
         # Apply the standard turn rules.
         if self.standard_turn:
             self.do_turn = super(Pyramid, self).do_turn
+
+    def is_empty(self):
+        """Check that there are no face up cards not in the foundation. (bool)"""
+        return not any(self.tableau) and not any(self.reserve) and not self.cells and not self.waste
 
     def reserve_text(self):
         """Generate text for the reserve piles. (str)"""
@@ -241,6 +271,11 @@ class Pyramid(solitaire.Solitaire):
             question = 'How reserve piles should there be (0-8, return for 0)? ')
         self.option_set.add_option('reserve-rows', ['rr'], int, default = 1, valid = range(4),
             question = 'How many reserve rows should there be (0-3, return for 1)? ')
+
+    def sort_stock(self):
+        """Sort the stock. (self)"""
+        for card in self.stock[:]:
+            self.transfer([card], self.foundations[0])
 
     def tableau_text(self):
         """Generate the text representation of the tableau piles. (str)"""
