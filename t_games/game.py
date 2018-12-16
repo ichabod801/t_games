@@ -197,7 +197,7 @@ class Game(OtherCmd):
         self.force_end = 'loss'
         self.win_loss_draw = [0, max(len(self.players) - 1, 1), 0]
         if arguments.lower() in ('!', 'quit', 'q'):
-            self.human.held_inputs = ['!']
+            self.human.held_inputs = ['!!']
         return False
 
     def do_quit_quit(self, arguments):
