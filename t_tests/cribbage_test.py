@@ -5,6 +5,7 @@ Automated testing of cribbage_game.py.
 
 Classes:
 ScoreHandTest: Test scoring cribbage hands. (unittest.TestCase)
+ScorePeggingTest: Test scoring cribbage plays. (unittest.TestCase)
 """
 
 
@@ -96,6 +97,27 @@ class ScoreHandTest(unittest.TestCase):
         self.game.hands = {'The Crib': []}
         self.assertEqual(0, self.game.score_flush(hand))
 
+    def testMaximum(self):
+        """Test scoring the best possible hand)."""
+        hand = [crib.CribCard(*card) for card in ('5D', '5C', '5H', 'JS')]
+        self.game.starter = crib.CribCard(*'5S')
+        self.game.double_pairs = False
+        self.assertEqual(29, self.game.score_one_hand(hand, 'Bob'))
+
+    def testNob(self):
+        """Test scoring his nob (jack of the starter suit)."""
+        hand = [crib.CribCard(*card) for card in ('AS', '3C', '7S', 'JS')]
+        self.game.starter = crib.CribCard(*'9S')
+        self.game.double_pairs = False
+        self.assertEqual(1, self.game.score_one_hand(hand, 'Bob'))
+
+    def testNothing(self):
+        """Test scoring a worthless hand."""
+        hand = [crib.CribCard(*card) for card in ('4S', '7C', '9S', 'QS')]
+        self.game.starter = crib.CribCard(*'TS')
+        self.game.double_pairs = False
+        self.assertEqual(0, self.game.score_one_hand(hand, 'Bob'))
+
     def testPairDouble(self):
         """Test scoring three of a kind with doubled pairs."""
         hand = [crib.CribCard(*card) for card in ('AD', '3C', '8H', '8S', '8C')]
@@ -162,6 +184,11 @@ class ScoreHandTest(unittest.TestCase):
         """Test scoring a three card run four times."""
         hand = [crib.CribCard(*card) for card in ('5C', '7D', '6H', '6C', '7S')]
         self.assertEqual([(3, 4)], self.game.score_runs(hand))
+
+
+class ScorePeggingTest(unittest.TestCase):
+    """Test scoring cribbage plays. (unittest.TestCase)"""
+    pass
 
 
 if __name__ == '__main__':
