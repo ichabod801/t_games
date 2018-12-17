@@ -594,7 +594,6 @@ class Cribbage(game.Game):
             names = names[-2:] + names[:-2]
         for name in names:
             self.human.tell()
-            hand_score = 0
             # Score the crib to the dealer.
             if name == 'The Crib':
                 cards = self.hands['The Crib'].cards
@@ -604,46 +603,7 @@ class Cribbage(game.Game):
                 cards = self.hands[name].cards + self.in_play[name].cards
                 message = "Now scoring {}'s hand: {} + {}"
             self.human.tell(message.format(name, ', '.join([str(card) for card in cards]), self.starter))
-            # Check for flushes. (four in hand or five with starter)
-            suit_score = self.score_flush(cards)
-            if suit_score:
-                hand_score += suit_score
-                message = '{} scores {} points for a {}-card flush.'
-                self.human.tell(message.format(name, suit_score, utility.number_word(suit_score)))
-            # Check for his nobs (jack of suit of starter)
-            nob = CribCard('J', self.starter.suit)
-            if nob in cards:
-                hand_score += 1
-                self.human.tell('{} scores one for his nob.'.format(name))
-            # Add the starter for the scoring categories below.
-            cards.append(self.starter)
-            # Check for fifteens.
-            fifteens = self.score_fifteens(cards)
-            if fifteens:
-                hand_score += 2 * fifteens
-                # Update the user.
-                plural_15 = utility.number_plural(fifteens, 'combination')
-                message = '{} scores {} for {} adding to 15.'
-                self.human.tell(message.format(name, 2 * fifteens, plural_15))
-            # Check for pairs.
-            rank_data = self.score_pairs(cards)
-            for rank, count, pair_score in rank_data:
-                hand_score += pair_score
-                # Update the user.
-                rank_name = CribCard.rank_names[CribCard.ranks.index(rank)].lower()
-                if rank_name == 'six':
-                    rank_name = 'sixe'
-                message = '{} scores {} for getting {} {}s.'
-                self.human.tell(message.format(name, pair_score, utility.number_word(count), rank_name))
-            # Check for runs.
-            for run_length, run_count in self.score_runs(cards):
-                hand_score += run_length * run_count
-                # Update the user.
-                if run_count == 1:
-                    message = '{0} scored {1} points for a {1} card run.'
-                else:
-                    message = '{0} scored {3} points for {2} runs of length {1}.'
-                self.human.tell(message.format(name, run_length, run_count, run_length * run_count))
+            hand_score = self.score_one_hand(cards, name)
             # Announce and record total.
             self.human.tell('{} scored a total of {} points for this hand.'.format(name, hand_score))
             self.add_points(name, hand_score)
@@ -653,6 +613,57 @@ class Cribbage(game.Game):
                 self.human.ask(ENTER_TEXT)
         self.double_pairs = False
         return False
+
+    def score_one_hand(self, cards, name):
+        """
+        Scoer a single hand after a round of play. (int)
+
+        Parameters:
+        cards: The cards in the hand. (list of CribCard)
+        name: The name of the player who's hand it is. (str)
+        """
+        hand_score = 0
+        # Check for flushes. (four in hand or five with starter)
+        suit_score = self.score_flush(cards)
+        if suit_score:
+            hand_score += suit_score
+            message = '{} scores {} points for a {}-card flush.'
+            self.human.tell(message.format(name, suit_score, utility.number_word(suit_score)))
+        # Check for his nobs (jack of suit of starter)
+        nob = CribCard('J', self.starter.suit)
+        if nob in cards:
+            hand_score += 1
+            self.human.tell('{} scores one for his nob.'.format(name))
+        # Add the starter for the scoring categories below.
+        cards.append(self.starter)
+        # Check for fifteens.
+        fifteens = self.score_fifteens(cards)
+        if fifteens:
+            hand_score += 2 * fifteens
+            # Update the user.
+            plural_15 = utility.number_plural(fifteens, 'combination')
+            message = '{} scores {} for {} adding to 15.'
+            self.human.tell(message.format(name, 2 * fifteens, plural_15))
+        # Check for pairs.
+        rank_data = self.score_pairs(cards)
+        for rank, count, pair_score in rank_data:
+            hand_score += pair_score
+            # Update the user.
+            rank_name = CribCard.rank_names[CribCard.ranks.index(rank)].lower()
+            if rank_name == 'six':
+                rank_name = 'sixe'
+            message = '{} scores {} for getting {} {}s.'
+            self.human.tell(message.format(name, pair_score, utility.number_word(count), rank_name))
+        # Check for runs.
+        for run_length, run_count in self.score_runs(cards):
+            hand_score += run_length * run_count
+            # Update the user.
+            if run_count == 1:
+                message = '{0} scored {1} points for a {1} card run.'
+            else:
+                message = '{0} scored {3} points for {2} runs of length {1}.'
+            self.human.tell(message.format(name, run_length, run_count, run_length * run_count))
+        return hand_score
 
     def score_pairs(self, cards):
         """
