@@ -174,7 +174,7 @@ class Crazy8Bot(player.Bot):
         # Get the recent plays.
         self.plays = self.game.history[-len(self.game.players):]
 
-    def tell(self, text):
+    def tell(self, text = ''):
         """
         Give information to the player. (None)
 
