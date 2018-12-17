@@ -667,18 +667,18 @@ class Fireball(Game):
         dice_count = len(fire_results)
         if not dice_count:
             return False
-        sides = len(set(result[0] for result in fire_results))
+        sides = len(set(result[0] for result in fire_results)) * 2 + 2
         pool = dice.Pool([sides] * dice_count)
         # Get the bonus to the roll.
         all_categories = set()
         for result in fire_results:
-            categories = self.interface.games[result[0]].categories
+            categories = self.interface.games[result[0].lower()].categories
             all_categories.add(tuple(categories))
         bonus = len(all_categories)
         # Get the damage.
         pool.roll()
         damage = sum(pool) + bonus
-        self.human.tell('You did {} {} of damage.'.format(damage, utility.plural(damage, 'point')))
+        self.human.tell('\nYou did {} {} of damage.'.format(damage, utility.plural(damage, 'point')))
         self.scores[self.human.name] = damage
         # Check for a win.
         expected = (sides / 2.0 + 0.5) * dice_count
@@ -692,8 +692,8 @@ class Fireball(Game):
         else:
             self.human.tell('You failed to destroy {}.'.format(self.target))
             self.win_loss_draw[1] = 1
-        # Mark the fire results as used.
-        self.human.fire_index = len(self.human.results)
+        # Mark the fire results as used (+1 to include itself).
+        self.human.fire_index = len(self.human.results) + 1
 
     def handle_options(self):
         """Handle the specified game options. (None)"""
