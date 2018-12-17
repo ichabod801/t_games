@@ -360,10 +360,11 @@ class Interface(other_cmd.OtherCmd):
                     self.previous.append(self.focus)
                     self.focus = self.focus['sub-categories'][choice[:-9]]
                     self.titles.append(choice[:-9])
-                # Check for special choices.
+                # Check for backing up.
                 elif choice == 'Previous Menu':
                     self.focus = self.previous.pop()
                     self.titles.pop()
+                # Check for quiting.
                 elif choice == 'Quit':
                     if self.human.session_index < len(self.human.results):
                         self.do_stats('session / cheat xyzzy gipf')
