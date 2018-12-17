@@ -29,6 +29,7 @@ import random
 import re
 import sys
 
+import t_games.dice as dice
 import t_games.options as options
 from t_games.other_cmd import OtherCmd
 from t_games.player import Player
@@ -141,7 +142,8 @@ class Game(OtherCmd):
             if hasattr(cls, 'help_text'):
                 self.help_text.update(cls.help_text)
         # Introduce yourself.
-        self.human.tell('\nWelcome to a game of {}, {}.'.format(self.name, self.human.name))
+        if self.name != 'Fireball':
+            self.human.tell('\nWelcome to a game of {}, {}.'.format(self.name, self.human.name))
         # Define and process the game options.
         self.option_set = options.OptionSet(self)
         self.set_options()
@@ -540,9 +542,9 @@ class Flip(Game):
     player_action
     """
 
-    credits = 'Design and programming by Craig "Ichabod" O''Brien'
+    credits = '\nDesign and programming by Craig "Ichabod" O''Brien'
     name = 'Flip'
-    rules = 'Whoever gets two more heads than their opponent wins.'
+    rules = '\nWhoever gets two more heads than their opponent wins.'
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
@@ -637,6 +639,71 @@ class FlipBot(Player):
             self.game.human.tell(args[0].replace('You', self.name).replace('have', 'has'))
 
 
+class Fireball(Game):
+    """
+    A game of blowing things up. (Game)
+    """
+
+    credits = '\nDesign and programming by Craig "Ichabod" O''Brien.'
+    name = 'Fireball'
+    rules = '\nPlay more games.'
+
+    def game_over(self):
+        """Declare the end of the game."""
+        if not self.scores[self.human.name]:
+            self.win_loss_draw[1] = 1
+            self.human.tell('Ping.')
+        return True
+
+    def player_action(self, player):
+        """
+        Determine the damage. (bool)
+
+        Parameters:
+        player: The player whose turn it is. (Player)
+        """
+        # Get the dice parameters (end the game if there are no dice).
+        fire_results = self.human.results[self.human.fire_index:]
+        dice_count = len(fire_results)
+        if not dice_count:
+            return False
+        sides = len(set(result[0] for result in fire_results))
+        pool = dice.Pool([sides] * dice_count)
+        # Get the bonus to the roll.
+        all_categories = set()
+        for result in fire_results:
+            categories = self.interface.games[result[0]].categories
+            all_categories.add(tuple(categories))
+        bonus = len(all_categories)
+        # Get the damage.
+        pool.roll()
+        damage = sum(pool) + bonus
+        self.human.tell('You did {} {} of damage.'.format(damage, utility.plural(damage, 'point')))
+        self.scores[self.human.name] = damage
+        # Check for a win.
+        expected = (sides / 2.0 + 0.5) * dice_count
+        percent = damage / expected
+        if percent > 1:
+            self.human.tell('You completely destroyed {}.'.format(self.target))
+            self.win_loss_draw[0] = 1
+        elif percent >= 0.95:
+            self.human.tell('You almost destroyed {}.'.format(self.target))
+            self.win_loss_draw[2] = 1
+        else:
+            self.human.tell('You failed to destroy {}.'.format(self.target))
+            self.win_loss_draw[1] = 1
+        # Mark the fire results as used.
+        self.human.fire_index = len(self.human.results)
+
+    def handle_options(self):
+        """Handle the specified game options. (None)"""
+        if not self.raw_options:
+            self.target = 'your target'
+        else:
+            self.target = raw_options
+            self.option_set.settings_text = raw_options
+
+
 class Sorter(Game):
     """
     A test game of sorting a sequence. (Game)
@@ -653,10 +720,10 @@ class Sorter(Game):
     set_up
     """
 
-    credits = 'Design and programming by Craig "Ichabod" O''Brien.'
+    credits = '\nDesign and programming by Craig "Ichabod" O''Brien.'
     name = 'Sorter'
     num_options = 1
-    rules = 'Each turn, swap two numbers. If you can sort the list with a minimum of swaps, you win.'
+    rules = '\nEach turn, swap two numbers. If you can sort the list with a minimum of swaps, you win.'
 
     def game_over(self):
         """Check for the game being over. (bool)"""
