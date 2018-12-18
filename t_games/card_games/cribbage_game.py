@@ -748,7 +748,7 @@ class Cribbage(game.Game):
             if self.double_pairs:
                 pair_score *= 2
             points += pair_score
-            text = '{} scores {} for getting {} cards of the same rank.'
+            text = '{} scores {} points for getting {} cards of the same rank.'
             message.append(text.format(player.name, pair_score, utility.number_word(rank_count)))
         # Check for runs.
         run_count = 0
@@ -760,7 +760,7 @@ class Cribbage(game.Game):
         # Score any runs.
         if run_count:
             points += run_count
-            text = '{} scores {} for getting a {}-card straight.'
+            text = '{} scores {} points for getting a {}-card straight.'
             message.append(text.format(player.name, run_count, utility.number_word(run_count)))
         # Check for a total of 31.
         elif next_total == 31:

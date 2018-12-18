@@ -188,7 +188,77 @@ class ScoreHandTest(unittest.TestCase):
 
 class ScorePeggingTest(unittest.TestCase):
     """Test scoring cribbage plays. (unittest.TestCase)"""
-    pass
+
+    def setUp(self):
+        self.human = unitility.AutoBot([5, 23, 108, 801])
+        self.game = crib.Cribbage(self.human, 'none')
+        self.game.set_up()
+
+    def testFifteen(self):
+        """Test pegging to 15."""
+        cards = ('5C',)
+        self.game.in_play['Play Sequence'].cards = [crib.CribCard(*card) for card in cards]
+        self.game.card_total = 5
+        message = '{} scores 2 points for reaching 15.'.format(self.human.name)
+        self.assertEqual((2, message), self.game.score_sequence(self.human, crib.CribCard(*'JS')))
+
+    def testFourKind(self):
+        """Test pegging four of a kind."""
+        cards = ('6C', '6D', '6H')
+        self.game.in_play['Play Sequence'].cards = [crib.CribCard(*card) for card in cards]
+        message = '{} scores 12 points for getting four cards of the same rank.'.format(self.human.name)
+        self.assertEqual((12, message), self.game.score_sequence(self.human, crib.CribCard(*'6S')))
+
+    def testNothing(self):
+        """Test pegging nothing."""
+        cards = ('4H', '2C', '3D')
+        self.game.in_play['Play Sequence'].cards = [crib.CribCard(*card) for card in cards]
+        self.game.card_total = 9
+        self.assertEqual((0, ''), self.game.score_sequence(self.human, crib.CribCard(*'7S')))
+
+    def testPair(self):
+        """Test pegging a pair."""
+        cards = ('6C',)
+        self.game.in_play['Play Sequence'].cards = [crib.CribCard(*card) for card in cards]
+        message = '{} scores 2 points for getting two cards of the same rank.'.format(self.human.name)
+        self.assertEqual((2, message), self.game.score_sequence(self.human, crib.CribCard(*'6S')))
+
+    def testStraightFive(self):
+        """Test pegging a five card straight."""
+        cards = ('4H', '2C', '5S', '3D')
+        self.game.in_play['Play Sequence'].cards = [crib.CribCard(*card) for card in cards]
+        message = '{} scores 5 points for getting a five-card straight.'.format(self.human.name)
+        self.assertEqual((5, message), self.game.score_sequence(self.human, crib.CribCard(*'6C')))
+
+    def testStraightFour(self):
+        """Test pegging a four card straight."""
+        cards = ('4H', '2C', '3D')
+        self.game.in_play['Play Sequence'].cards = [crib.CribCard(*card) for card in cards]
+        message = '{} scores 4 points for getting a four-card straight.'.format(self.human.name)
+        self.assertEqual((4, message), self.game.score_sequence(self.human, crib.CribCard(*'5S')))
+
+    def testStraightThree(self):
+        """Test pegging a four card straight."""
+        cards = ('2C', '3D')
+        self.game.in_play['Play Sequence'].cards = [crib.CribCard(*card) for card in cards]
+        message = '{} scores 3 points for getting a three-card straight.'.format(self.human.name)
+        self.assertEqual((3, message), self.game.score_sequence(self.human, crib.CribCard(*'4H')))
+
+    def testThirtyOne(self):
+        """Test pegging to 31."""
+        cards = ('4H', '2C', '5S', '3D', 'QC')
+        self.game.in_play['Play Sequence'].cards = [crib.CribCard(*card) for card in cards]
+        self.game.card_total = 24
+        message = '\nThe count has reached 31.\n{} scores 2 points for reaching 31.'
+        message = message.format(self.human.name)
+        self.assertEqual((2, message), self.game.score_sequence(self.human, crib.CribCard(*'7C')))
+
+    def testTrip(self):
+        """Test pegging three of a kind."""
+        cards = ('6C', '6D')
+        self.game.in_play['Play Sequence'].cards = [crib.CribCard(*card) for card in cards]
+        message = '{} scores 6 points for getting three cards of the same rank.'.format(self.human.name)
+        self.assertEqual((6, message), self.game.score_sequence(self.human, crib.CribCard(*'6S')))
 
 
 if __name__ == '__main__':
