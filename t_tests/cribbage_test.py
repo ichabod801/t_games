@@ -4,6 +4,10 @@ cribbage_test.py
 Automated testing of cribbage_game.py.
 
 Classes:
+CribBotsFourTest: Bot test of the partnership game. (unittest.TestCase)
+CribBotsFiveTest: Bot test of the five-card game. (unittest.TestCase)
+CribBotsSevenTest: Bot test of the seven-card game. (unittest.TestCase)
+CribBotsThreeTest: Bot test of the three player game. (unittest.TestCase)
 CribBotsTest: Bot test of the basic game. (unittest.TestCase)
 ScoreHandTest: Test scoring cribbage hands. (unittest.TestCase)
 ScorePeggingTest: Test scoring cribbage plays. (unittest.TestCase)
@@ -16,7 +20,19 @@ import t_games.card_games.cribbage_game as crib
 import t_tests.unitility as unitility
 
 
+CribBotsFourTest = unitility.bot_test(crib.Cribbage, [crib.CribBot] * 4, 2, [4], 'four-partners')
+
+
+CribBotsFiveTest = unitility.bot_test(crib.Cribbage, [crib.CribBot, crib.CribBot], 4, [2], 'five-card')
+
+
+CribBotsSevenTest = unitility.bot_test(crib.Cribbage, [crib.CribBot, crib.CribBot], 4, [2], 'seven-card')
+
+
 CribBotsTest = unitility.bot_test(crib.Cribbage, [crib.CribBot, crib.CribBot], 4, [2])
+
+
+CribBotsThreeTest = unitility.bot_test(crib.Cribbage, [crib.CribBot] * 3, 3, [3], 'three-solo')
 
 
 class ScoreHandTest(unittest.TestCase):
