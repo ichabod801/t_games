@@ -642,10 +642,16 @@ class FlipBot(Player):
 class Fireball(Game):
     """
     A game of blowing things up. (Game)
+
+    Overridden Methods:
+    game_over
+    handle_options
+    player_turn
     """
 
     credits = '\nDesign and programming by Craig "Ichabod" O''Brien.'
     name = 'Fireball'
+    num_options = 1
     rules = '\nPlay more games.'
 
     def game_over(self):
@@ -654,9 +660,19 @@ class Fireball(Game):
         if not self.scores[self.human.name]:
             self.win_loss_draw[1] = 1
             self.human.tell('\nPing.')
+        # Skip play again and counting this game.
         self.human.held_inputs = ['n'] + self.human.held_inputs
         self.human.fire_index = len(self.human.results) + 1
         return True
+
+    def handle_options(self):
+        """Handle the specified game options. (None)"""
+        # The one option is the target.
+        if not self.raw_options:
+            self.target = 'your target'
+        else:
+            self.target = self.raw_options
+            self.option_set.settings_text = self.raw_options
 
     def player_action(self, player):
         """
@@ -686,6 +702,7 @@ class Fireball(Game):
         # Check for a win.
         expected = (sides / 2.0 + 0.5) * dice_count
         percent = damage / expected
+        # Output results.
         if percent > 1:
             self.human.tell('You completely destroyed {}.'.format(self.target))
             self.win_loss_draw[0] = 1
@@ -695,14 +712,6 @@ class Fireball(Game):
         else:
             self.human.tell('You failed to destroy {}.'.format(self.target))
             self.win_loss_draw[1] = 1
-
-    def handle_options(self):
-        """Handle the specified game options. (None)"""
-        if not self.raw_options:
-            self.target = 'your target'
-        else:
-            self.target = self.raw_options
-            self.option_set.settings_text = self.raw_options
 
 
 class Sorter(Game):
