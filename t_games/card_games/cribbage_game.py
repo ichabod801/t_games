@@ -359,8 +359,6 @@ class Cribbage(game.Game):
         for bot in range(self.n_bots):
             self.players.append(bot_class(taken_names))
             taken_names.append(self.players[-1].name)
-        # Set up teams.
-        self.teams = {player.name: [player.name] for player in self.players}
         # Warn user for trying to make a team with an odd number of players.
         if self.partners and len(self.players) % 2:
             warning = 'Invalid number of players for the partners option: {}.'
@@ -870,8 +868,9 @@ class Cribbage(game.Game):
                 else:
                     break
             self.dealer_index = -1
+        # Set up teams.
+        self.teams = {player.name: [player.name] for player in self.players}
         if self.partners:
-            # Set up the teams.
             num_teams = len(self.players) // 2
             for player_index, player in enumerate(self.players[:num_teams]):
                 team_mate = self.players[player_index + num_teams]
@@ -1043,7 +1042,7 @@ class CribBot(player.Bot):
         score += sum([run_length * run_count for run_length, run_count in self.game.score_runs(cards)])
         return score
 
-    def tell(self, message):
+    def tell(self, message = ''):
         """
         The the bot some information. (None)
 

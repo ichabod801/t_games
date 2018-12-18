@@ -504,7 +504,7 @@ class Game(OtherCmd):
         """
         # Mute the output.
         save_stdout = sys.stdout
-        sys.stdout = io.BytesIO()
+        sys.stdout = io.StringIO()
         try:
             # Set up the players.
             human_hold = self.set_players(players)

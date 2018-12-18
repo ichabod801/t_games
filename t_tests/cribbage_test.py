@@ -4,6 +4,7 @@ cribbage_test.py
 Automated testing of cribbage_game.py.
 
 Classes:
+CribBotsTest: Bot test of the basic game. (unittest.TestCase)
 ScoreHandTest: Test scoring cribbage hands. (unittest.TestCase)
 ScorePeggingTest: Test scoring cribbage plays. (unittest.TestCase)
 """
@@ -13,6 +14,9 @@ import unittest
 
 import t_games.card_games.cribbage_game as crib
 import t_tests.unitility as unitility
+
+
+CribBotsTest = unitility.bot_test(crib.Cribbage, [crib.CribBot, crib.CribBot], 4, [2])
 
 
 class ScoreHandTest(unittest.TestCase):
