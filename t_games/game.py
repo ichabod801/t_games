@@ -653,6 +653,8 @@ class Fireball(Game):
         if not self.scores[self.human.name]:
             self.win_loss_draw[1] = 1
             self.human.tell('Ping.')
+        self.human.held_inputs = ['n'] + self.human.held_inputs
+        self.human.fire_index = len(self.human.results) + 1
         return True
 
     def player_action(self, player):
@@ -692,16 +694,14 @@ class Fireball(Game):
         else:
             self.human.tell('You failed to destroy {}.'.format(self.target))
             self.win_loss_draw[1] = 1
-        # Mark the fire results as used (+1 to include itself).
-        self.human.fire_index = len(self.human.results) + 1
 
     def handle_options(self):
         """Handle the specified game options. (None)"""
         if not self.raw_options:
             self.target = 'your target'
         else:
-            self.target = raw_options
-            self.option_set.settings_text = raw_options
+            self.target = self.raw_options
+            self.option_set.settings_text = self.raw_options
 
 
 class Sorter(Game):
