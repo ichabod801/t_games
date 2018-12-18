@@ -650,9 +650,10 @@ class Fireball(Game):
 
     def game_over(self):
         """Declare the end of the game."""
+        # Check for no games as a loss.
         if not self.scores[self.human.name]:
             self.win_loss_draw[1] = 1
-            self.human.tell('Ping.')
+            self.human.tell('\nPing.')
         self.human.held_inputs = ['n'] + self.human.held_inputs
         self.human.fire_index = len(self.human.results) + 1
         return True
