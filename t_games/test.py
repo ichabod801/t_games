@@ -40,13 +40,16 @@ class Test(object):
 
     def __call__(self, held_inputs = []):
         """
-        Test t_games when called. (None)
+        Test t_games when called. (list of lists)
+
+        The return value is a list of results from the games played.
 
         Parameters:
         held_inputs: The commands for the player to start with. (list of str)
         """
         self.human.held_inputs = held_inputs
         self.menu.menu()
+        return self.human.results[self.human.session_index:]
 
 
 # Test some text games. (None)
