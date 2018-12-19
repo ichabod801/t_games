@@ -67,9 +67,7 @@ class Thoughtful(solitaire.Solitaire):
         undo = 0
         while end_pile < self.options['num-reserve']:
             # Move the next card to the stack needing one.
-            print(start_pile, end_pile)
             self.transfer([self.reserve[end_pile][0]], self.reserve[start_pile], undo_ndx = undo)
-            print(self.reserve[start_pile], self.reserve[end_pile])
             # Update the undo count so it's treated as one move.
             undo += 1
             # Update the end pile.
@@ -78,8 +76,11 @@ class Thoughtful(solitaire.Solitaire):
             # Update the start pile if necessary.
             if len(self.reserve[start_pile]) == 3:
                 start_pile += 1
+                # Start pile and end pile can't be the same pile, it will reverse itself infinitely.
                 if start_pile == end_pile:
                     end_pile += 1
+                    while end_pile < self.options['num-reserve'] and not self.reserve[end_pile]:
+                        end_pile += 1
         # Unblock the reserve
         self.blocked_index = -1
 
