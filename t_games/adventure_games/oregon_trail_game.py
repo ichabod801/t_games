@@ -29,7 +29,7 @@ Python Programming: Craig "Ichabod" O'Brien
 """
 
 INITIAL_PURCHASES = """
-You have $700 to spend on the following items:
+You have ${} to spend on the following items:
 
     * Oxen: You can spend $200 to $300 on your oxen. The more you spend,
       the faster you'll go, because you have better animals.
@@ -152,6 +152,7 @@ class OregonTrail(game.Game):
     months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September',
         'October', 'November', 'December']
     name = 'Oregon Trail'
+    num_options = 3
     tactics_map = {'1': 'attack', '2': 'retreat', '3': 'continue', '4': 'circle', 'a': 'attack',
         'r': 'retreat', 'c': 'continue', 'w': 'circle'}
 
@@ -573,7 +574,7 @@ class OregonTrail(game.Game):
         modifier: The fort cost modifier. (float or None)
         """
         if modifier is None:
-            self.human.tell(INITIAL_PURCHASES)
+            self.human.tell(INITIAL_PURCHASES.format(self.starting_money))
             # Purchase steeds.
             query = 'How much would you like to spend on steeds? '
             self.oxen = self.human.ask_int(query, low = 200, high = 300, default = 0, cmd = False)
