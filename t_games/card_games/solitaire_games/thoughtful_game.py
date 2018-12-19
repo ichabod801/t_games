@@ -35,9 +35,19 @@ class Thoughtful(solitaire.Solitaire):
     """
     A game of Thoughtful Solitaire. (Solitaire)
 
+    Attributes:
+    blocked_index: The index of the rightmost blocked reserve pile. (int)
+
+    Methods:
+    turn_transfer: Move a card while undoing a turn move. (None)
+
     Overridden Methods:
+    do_turn
+    reserve_text
     set_checkers
     set_options
+    set_up
+    transfer
     """
 
     aka = ['Thoughtful', 'ThSo']
@@ -131,10 +141,35 @@ class Thoughtful(solitaire.Solitaire):
         up: A flag for the cards being face up. (bool)
         undo_ndx: Nominally how many undos there are to do. (int)
         """
-        if move_stack[0].game_location in self.reserve:
-            next_block = self.reserve.index(move_stack[0].game_location) - 1
+        if new_location in self.reserve and not track:
+            self.turn_transfer(move_stack, new_location)
+            short_indexes = [index for index, pile in enumerate(self.reserve) if len(pile) < 3]
+            if short_indexes and short_indexes[0] != self.options['num-reserve'] - 1:
+                self.blocked_index = short_indexes[0]
         else:
-            next_block = self.blocked_index
-        super(Thoughtful, self).transfer(move_stack, new_location, track, up, undo_ndx)
-        # !! if blocked_index is empy, it needs to move back.
-        self.blocked_index = next_block
+            if move_stack[0].game_location in self.reserve:
+                next_block = self.reserve.index(move_stack[0].game_location) - 1
+            else:
+                next_block = self.blocked_index
+            super(Thoughtful, self).transfer(move_stack, new_location, track, up, undo_ndx)
+            self.blocked_index = next_block
+
+    def turn_transfer(self, move_stack, new_location):
+        """
+        Move a card while undoing a turn move. (None)
+
+        This version prepends the card to the new_location rather than appending it.
+
+        Parameters:
+        move_stack: The stack of cards to move. (list of Card)
+        new_location: The new game location for the cards. (list of Card)
+        """
+        # Record the move.
+        old_location = move_stack[0].game_location
+        # Move the cards.
+        for card in move_stack:
+            old_location.remove(card)
+            new_location.insert(0, card)
+        # Reset location tracking.
+        for card in move_stack:
+            card.game_location = new_location
