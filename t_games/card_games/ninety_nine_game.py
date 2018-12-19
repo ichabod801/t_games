@@ -55,12 +55,12 @@ The tokens command will show you how many tokens each player has left.
 Options:
 99=: The ranks that take the total to 99. It can be one rank or multiple ranks
     separated by slashes. (default is 9)
-chicago: Equivalent to zero=4/9 skip=9 99=K minus=T plus-minus=.
+chicago: Equivalent to zero=4/9 skip=9 99=K minus=T plus-minus=!
 easy= (e=): How many easy bots you will play against. (default = 2)
 face=: The ranks that have their face value. This is used to reset default
     non-face values. Face cards will have a value of 10.
 jokers= (j=): The number of jokers in the deck. Their default value is 99.
-joker-rules: Equivalent to zero=9/k reverse=k jokers=2 99=x skip=.
+joker-rules: Equivalent to zero=9/k reverse=k jokers=2 99=x skip=!
 medium= (m=): How many medium bots you will play against. (default = 2)
 minus= (-=): The ranks that have their value negated. It can be one rank or
     multiple ranks separated by slashes.
@@ -363,8 +363,8 @@ class NinetyNine(game.Game):
         def is_rank_list(ranks):
             return all(rank in cards.Card.ranks for rank in ranks)
         # Set the groups.
-        self.option_set.add_group('joker-rules', 'zero=9/k reverse=k jokers=2 99=x skip=')
-        self.option_set.add_group('chicago', 'zero=4/9 skip=9 99=K minus=T plus-minus=')
+        self.option_set.add_group('joker-rules', 'zero=9/k reverse=k jokers=2 99=x skip=!')
+        self.option_set.add_group('chicago', 'zero=4/9 skip=9 99=K minus=T plus-minus=!')
         # Set the bot options.
         self.option_set.add_option('easy', ['e'], converter = int, default = 2, valid = range(1, 11),
             question = 'How many easy bots do you want to play against (return for 2)? ')
@@ -452,7 +452,7 @@ class Bot99(player.Bot):
                     possibles.append((99, card))
         return possibles
 
-    def tell(self, text):
+    def tell(self, text = ''):
         """
         Give information to the player. (None)
 

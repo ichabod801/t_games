@@ -20,7 +20,10 @@ load_games: Load all of the games defined locally. (tuple of dict)
 from __future__ import division, print_function
 
 import glob
-import io
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 import itertools
 import math
 import operator
@@ -506,7 +509,7 @@ class Game(OtherCmd):
         """
         # Mute the output.
         save_stdout = sys.stdout
-        sys.stdout = io.BytesIO()
+        sys.stdout = StringIO()
         try:
             # Set up the players.
             human_hold = self.set_players(players)
