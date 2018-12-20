@@ -3,7 +3,16 @@ yacht_test.py
 
 Unit testing of t_games/dice_games/yacht_game.py.
 
+Constants:
+TEST_BOTS: The bots (bachts) for test Yacht. (list of type)
+
 Classes:
+BachtBaseTest: Tests of Yacht bots with no options. (unittest.TestCase)
+BachtCheerioTest: Tests of Yacht bots with the cheerio option. (TestCase)
+BachtGeneralTest: Tests of Yacht bots with the general option. (TestCase)
+BachtHindenbergTest: Tests of Yacht bots with the hindenberg option. (TestCase)
+BachtYachtzeeTest: Tests of Yacht bots with the yachtzee option. (TestCase)
+BachtYamTest: Tests of Yacht bots with the yam option. (unittest.TestCase)
 ScoreCategoryTest: Tests of score categories. (unittest.TestCase)
 ScoreFunctionsTest: Tests of scoring functions. (unittest.TestCase)
 """
@@ -13,6 +22,27 @@ import unittest
 
 import t_tests.unitility as unitility
 import t_games.dice_games.yacht_game as yacht
+
+
+TEST_BOTS = [yacht.Bacht, yacht.Bachter] * 2
+
+
+BachtBaseTest = unitility.bot_test(yacht.Yacht, TEST_BOTS, 5, [3, 4])
+
+
+BachtCheerioTest = unitility.bot_test(yacht.Yacht, TEST_BOTS, 5, [3, 4], 'cheerio')
+
+
+BachtGeneralTest = unitility.bot_test(yacht.Yacht, TEST_BOTS, 5, [3, 4], 'general')
+
+
+BachtHindenbergTest = unitility.bot_test(yacht.Yacht, TEST_BOTS, 5, [3, 4], 'hindenberg')
+
+
+BachtYachtzeeTest = unitility.bot_test(yacht.Yacht, TEST_BOTS, 5, [3, 4], 'yachtzee')
+
+
+BachtYamTest = unitility.bot_test(yacht.Yacht, TEST_BOTS, 5, [3, 4], 'yam')
 
 
 class ScoreCategoryTest(unittest.TestCase):
