@@ -3,13 +3,17 @@ liars_dice_test.py
 
 Unit testing for dice_games/liars_dice_game.py
 
+Constants:
+TEST_BOTS: The bot classes to use in the bot tests. (list of type)
+
 Classes:
-OneSixAdjustTest: Test adjusting counts for ones counting as sixes.
-OneWildAdjustTest: Test adjusting counts for ones wild.
-OneSixeScoreTest: Test of calling poker hands with ones counting as sixes.
-PokerScoreTest: Tests of calling poker hands on dice.
-PokerTextTest: Tests of converting poker hands to text.
-ValidateClaimTest: Test validating that the new claim is better than the old.
+LyingBotTest: Test the bots for the default game of Liar's Dice. (TestCase)
+OneSixAdjustTest: Test adjusting counts for ones counting as sixes. (TestCase)
+OneWildAdjustTest: Test adjusting counts for ones wild. (unittest.TestCase)
+OneSixeScoreTest: Test of calling hands with ones counting as sixes. (TestCase)
+PokerScoreTest: Tests of calling poker hands on dice. (unittest.TestCase)
+PokerTextTest: Tests of converting poker hands to text. (unittest.TestCase)
+ValidateClaimTest: Test validating that the new claim is better. (TestCase)
 
 Function:
 by_count: Crate a counts dictionary for testing. (collections.defaultdict)
@@ -24,8 +28,14 @@ import t_games.dice_games.liars_dice_game as liar
 import t_games.player as player
 
 
+TEST_BOTS = [liar.ABBot, liar.Challenger, liar.Liar, liar.DoubleTrouble, liar.Challenger, liar.Liar]
+
+
+LyingBotTest = unitility.bot_test(liar.LiarsDice, TEST_BOTS, 2, [4, 5])
+
+
 class OneSixAdjustTest(unittest.TestCase):
-    """Test adjusting counts for ones counting as sixes. (TestCase)"""
+    """Test adjusting counts for ones counting as sixes. (unittest.TestCase)"""
 
     def setUp(self):
         """Set up the tests."""
@@ -82,7 +92,7 @@ class OneSixAdjustTest(unittest.TestCase):
 
 
 class OneWildAdjustTest(unittest.TestCase):
-    """Test adjusting counts for ones wild. (TestCase)"""
+    """Test adjusting counts for ones wild. (unittest.TestCase)"""
 
     def setUp(self):
         """Set up the tests."""
@@ -162,7 +172,7 @@ class OneWildAdjustTest(unittest.TestCase):
 
 
 class OneSixScoreTest(unittest.TestCase):
-    """Test of calling poker hands with ones counting as sixes. (TestCase)"""
+    """Test of calling poker hands with ones counting as sixes. (unittest.TestCase)"""
 
     def setUp(self):
         """Set up the tests."""
@@ -450,7 +460,7 @@ class PokerTextTest(unittest.TestCase):
 
 
 class ValidateClaimTest(unittest.TestCase):
-    """Test validating that the new claim is better than the old. (TestCase)"""
+    """Test validating that the new claim is better than the old. (unittest.TestCase)"""
 
     def setUp(self):
         self.player = unitility.AutoBot()
