@@ -253,19 +253,6 @@ def straight(dice):
     return 0
 
 
-def straight_low(dice):
-    """
-    Score a low straight category. (int)
-
-    Parameters:
-    dice: The dice roll to score. (int)
-    """
-    if 1 in dice.values:
-        return straight(dice)
-    else:
-        return 0
-
-
 def straight_high(dice):
     """
     Score a high straight category. (int)
@@ -279,11 +266,24 @@ def straight_high(dice):
         return 0
 
 
+def straight_low(dice):
+    """
+    Score a low straight category. (int)
+
+    Parameters:
+    dice: The dice roll to score. (int)
+    """
+    if 1 in dice.values:
+        return straight(dice)
+    else:
+        return 0
+
+
 def straight_wild(dice):
     """
     Score a straight category with twos wild. (int)
 
-    Twos in a wild straight can count as ones or sixes.
+    Ones in a wild straight can count as twos or sixes.
 
     Parameters:
     dice: The dice roll to score. (int)
@@ -292,7 +292,7 @@ def straight_wild(dice):
     if not score:
         values = sorted(dice.values)
         if values in ([1, 1, 3, 4, 5], [1, 3, 4, 5, 6]):
-            score = sum(values)
+            score = sum(values) + 1
     return score
 
 
