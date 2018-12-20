@@ -7,7 +7,10 @@ Constants:
 TEST_BOTS: The bot classes to use in the bot tests. (list of type)
 
 Classes:
+LyingBotBetTest: Test the bots for the betting game of Liar's Dice. (TestCase)
+LyingBotSixTest: Test the bots for the one-six game of Liar's Dice. (TestCase)
 LyingBotTest: Test the bots for the default game of Liar's Dice. (TestCase)
+LyingBotWildTest: Test the bots for the one-wild game of Liar's Dice. (TestCase)
 OneSixAdjustTest: Test adjusting counts for ones counting as sixes. (TestCase)
 OneWildAdjustTest: Test adjusting counts for ones wild. (unittest.TestCase)
 OneSixeScoreTest: Test of calling hands with ones counting as sixes. (TestCase)
@@ -31,7 +34,16 @@ import t_games.player as player
 TEST_BOTS = [liar.ABBot, liar.Challenger, liar.Liar, liar.DoubleTrouble, liar.Challenger, liar.Liar]
 
 
+LyingBotBetTest = unitility.bot_test(liar.LiarsDice, TEST_BOTS, 2, [4, 5], 'betting')
+
+
+LyingBotSixTest = unitility.bot_test(liar.LiarsDice, TEST_BOTS, 2, [4, 5], 'one-six')
+
+
 LyingBotTest = unitility.bot_test(liar.LiarsDice, TEST_BOTS, 2, [4, 5])
+
+
+LyingBotWildTest = unitility.bot_test(liar.LiarsDice, TEST_BOTS, 2, [4, 5], 'one-wild')
 
 
 class OneSixAdjustTest(unittest.TestCase):
