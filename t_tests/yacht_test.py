@@ -11,7 +11,7 @@ BachtBaseTest: Tests of Yacht bots with no options. (unittest.TestCase)
 BachtCheerioTest: Tests of Yacht bots with the cheerio option. (TestCase)
 BachtGeneralTest: Tests of Yacht bots with the general option. (TestCase)
 BachtHindenbergTest: Tests of Yacht bots with the hindenberg option. (TestCase)
-BachtYachtzeeTest: Tests of Yacht bots with the yachtzee option. (TestCase)
+BachtYahtzeeTest: Tests of Yacht bots with the yahtzee option. (TestCase)
 BachtYamTest: Tests of Yacht bots with the yam option. (unittest.TestCase)
 ScoreCategoryTest: Tests of score categories. (unittest.TestCase)
 ScoreFunctionsTest: Tests of scoring functions. (unittest.TestCase)
@@ -39,7 +39,7 @@ BachtGeneralTest = unitility.bot_test(yacht.Yacht, TEST_BOTS, 5, [3, 4], 'genera
 BachtHindenbergTest = unitility.bot_test(yacht.Yacht, TEST_BOTS, 5, [3, 4], 'hindenberg')
 
 
-BachtYachtzeeTest = unitility.bot_test(yacht.Yacht, TEST_BOTS, 5, [3, 4], 'yachtzee')
+BachtYahtzeeTest = unitility.bot_test(yacht.Yacht, TEST_BOTS, 5, [3, 4], 'yahtzee')
 
 
 BachtYamTest = unitility.bot_test(yacht.Yacht, TEST_BOTS, 5, [3, 4], 'yam')
