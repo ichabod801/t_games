@@ -443,7 +443,11 @@ def bot_test(game, bot_classes, rounds, n_bots, options = 'none', bot_params = [
     # Instantiate the bots.
     if not bot_params:
         bot_params = [()] * len(bot_classes)
-    bots = [bot_class(*params) for bot_class, params in zip(bot_classes, bot_params)]
+    bots = []
+    taken_names = []
+    for bot_class, params in zip(bot_classes, bot_params):
+        bots.append(bot_class(*params, taken_names = taken_names))
+        taken_names.append(bots[-1].name)
     # Add the tests to the class
     for num_bots in n_bots:
         for group_index, test_bots in enumerate(itertools.combinations(bots, num_bots)):
