@@ -203,7 +203,7 @@ class ABBot(player.Bot):
         # If no possible claims based on rerolls, assume rolled all five dice.
         if not possible:
             rolls = itertools.product(range(1, 7), repeat = 5)
-            possible = [self.game.poker_score(kept + list(roll)) for roll in rolls]
+            possible = [self.game.poker_score(list(roll)) for roll in rolls]
             possible = [score for score in possible if score > claim_score]
         # Pick something close to an improvement.
         possible.sort()
@@ -316,7 +316,10 @@ class Challenger(ABBot):
             # Decide about the risk.
             my_score = self.game.scores[self.name]
             total_score = sum(self.game.scores.values())
-            challenge_chance = random.random() < my_score / (total_score - my_score)
+            try:
+                challenge_chance = random.random() < my_score / (total_score - my_score)
+            except ZeroDivisionError:
+                challenge_chance = True
             # Make determination.
             if current_score[0] == 7:
                 challenge = 'yes'
