@@ -39,6 +39,7 @@ deal_free: Fill the free cells with the last cards dealt. (None)
 deal_klondike: Deal deal a triangle in the tableau. (None)
 deal_n: Create a dealer that deals n cards onto the tableau. (function)
 deal_one_row: Deal one card face up to each tableau pile. (None)
+deal_open: Turn all of the tableau cards face up. (None)
 deal_pyramid: Deal a pyramid of cards. (None)
 deal_queens_out: Discard the queensl (None)
 deal_rank_foundations: Deal a specific rank to the foundations. (None)
@@ -58,7 +59,8 @@ lane_one: Check moving one card at a time into a lane. (str)
 lane_reserve: Lane only from the reserve (str)
 lane_reserve_waste: Check only laning cards from the reserve. (str)
 lane_suit: Check moving only stacks of the same suit to empty lanes. (str)
---------------------------------------------------------------------------
+lane_unblocked: Cards may not be moved from blocked reserve piles. (str)
+------------------------------------------------------------------------
 match_adjacent: Allow matching of cards are in adjacent tableau piles. (str)
 match_none: Disallow any match moves. (str)
 match_pairs: Allow matching cards of the same rank. (str)
@@ -82,6 +84,7 @@ sort_no_reserve: Sort non-starters only when the reserve is empty. (str)
 sort_none: No sorting is allowed. (str)
 sort_pyramid: Sorting of blocked cards in a pyramid layout is banned. (str)
 sort_rank: Sort starting with a specific rank. (str)
+sort_unblocked: Do not sort cards from blocked reserve piles. (str)
 sort_up: Sort sequentially up in rank. (str)
 sort_up_down: Sort a card up or down, depending on the foundation. (str)
 """
@@ -201,6 +204,24 @@ def build_suit(game, mover, target, moving_stack):
         if card.suit != suit:
             error = 'Only stacks of the same suit may be moved together.'
             break
+    return error
+
+
+def build_unblocked(game, mover, target, moving_stack):
+    """
+    Do not build from blocked reserve piles. (str)
+
+    Parameters:
+    game: The game being played. (Solitaire)
+    mover: The card being moved. (TrackingCard)
+    target: The card being moved to. (TrackingCard)
+    moving_stack: The stack the mover is the base of. (list of TrackingCard)
+    """
+    error = ''
+    # Check that the card isn't in a blocked reserve pile.
+    pile = mover.game_location
+    if pile in game.reserve and game.reserve.index(pile) <= game.blocked_index:
+        error = 'You cannot build cards from blocked reserve piles.'
     return error
 
 
@@ -368,6 +389,18 @@ def deal_one_row(game):
     """
     for stack in game.tableau:
         game.deck.deal(stack, True)
+
+
+def deal_open(game):
+    """
+    Turn all of the tableau cards face up. (None)
+
+    Parameters:
+    game: The game to deal cards for. (Solitaire)
+    """
+    for stack in game.tableau:
+        for card in stack:
+            card.up = True
 
 
 def deal_pyramid(game):
@@ -655,6 +688,23 @@ def lane_suit(game, card, moving_stack):
         if other_card.suit != suit:
             error = 'Only stacks of the same suit may be moved to empty lanes.'
             break
+    return error
+
+
+def lane_unblocked(game, card, moving_stack):
+    """
+    Cards may not be moved from blocked reserve piles. (str)
+
+    Parameters:
+    game: The game being played. (Solitaire)
+    card: The card to move into the lane. (TrackingCard)
+    moving_stack: The stack the mover is the base of. (list of TrackingCard)
+    """
+    error = ''
+    # Check that the card isn't in a blocked reserve pile.
+    pile = moving_stack[0].game_location
+    if pile in game.reserve and game.reserve.index(pile) <= game.blocked_index:
+        error = 'You cannot lane cards from blocked reserve piles.'
     return error
 
 
@@ -1043,6 +1093,23 @@ def sort_rank(game, card, foundation):
     if not foundation and card.rank != game.foundation_rank:
         rank_name = card.rank_names[card.rank_num].lower()
         error = 'Only {}s can be sorted to empty foundations.'.format(rank_name)
+    return error
+
+
+def sort_unblocked(game, card, foundation):
+    """
+    Do not sort cards from blocked reserve piles. (str)
+
+    Parameters:
+    game: The game being played. (Solitiaire)
+    card: The card to be sorted. (TrackingCard)
+    foundation: The target foundation. (list of TrackingCard)
+    """
+    error = ''
+    # Check that the card isn't in a blocked reserve pile.
+    pile = card.game_location
+    if pile in game.reserve and game.reserve.index(pile) <= game.blocked_index:
+        error = 'You cannot sort cards from blocked reserve piles.'
     return error
 
 
