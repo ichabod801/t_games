@@ -57,6 +57,7 @@ class Thoughtful(solitaire.Solitaire):
     aka = ['Thoughtful', 'ThSo']
     credits = CREDITS
     name = 'Thoughtful Solitaire'
+    num_options = 1
     rules = RULES
 
     def do_turn(self, arguments):
@@ -96,19 +97,23 @@ class Thoughtful(solitaire.Solitaire):
                     end_pile += 1
                     while end_pile < self.options['num-reserve'] and not self.reserve[end_pile]:
                         end_pile += 1
-        # how to deal with turns that don't move anything?
-        # you have to be able to do it, and it has to change the blocked_index.
+        # Check for no cards to move.
         if start_moves == len(self.moves):
+            # Find the rightmost pile.
             pile_index = -1
             try:
                 while not self.reserve[pile_index]:
                     pile_index = -1
+            # Watch out for an empty reserve.
             except IndexError:
                 self.human.error('There is nothing to turn.')
                 return True
+            # Move that card onto itself (it goes to turn_transfer, so gets put on the bottom).
             self.transfer([self.reserve[pile_index][0]], self.reserve[pile_index])
-        self.blocked_index = -1
-        self.blocked_history[-1] = -1
+        # Reset to no blocked piles.
+        if self.blocked:
+            self.blocked_index = -1
+            self.blocked_history[-1] = -1
 
     def do_undo(self, arguments):
         """
@@ -118,11 +123,13 @@ class Thoughtful(solitaire.Solitaire):
         argument is given, that many moves are undone.
         """
         super(Thoughtful, self).do_undo(arguments)
-        self.blocked_history = self.blocked_history[:len(self.moves)]
-        if self.blocked_history:
-            self.blocked_index = self.blocked_history[-1]
-        else:
-            self.blocked_index = -1
+        if self.blocked:
+            # Reset the blocked history and the blocked pile.
+            self.blocked_history = self.blocked_history[:len(self.moves)]
+            if self.blocked_history:
+                self.blocked_index = self.blocked_history[-1]
+            else:
+                self.blocked_index = -1
 
     def reserve_text(self):
         """Generate text for the reserve piles. (str)"""
@@ -133,7 +140,7 @@ class Thoughtful(solitaire.Solitaire):
         for pile_index, pile in enumerate(self.reserve):
             for card_index, card in enumerate(pile):
                 reserve_lines[card_index][pile_index] = str(card)
-        if self.blocked_index != -1:
+        if self.blocked and self.blocked_index != -1:
             reserve_lines.append(['XX'] * (self.blocked_index + 1))
         # Format and return as a string.
         return '\n'.join(['{}'.format(' '.join(line)) for line in reserve_lines])
@@ -152,10 +159,13 @@ class Thoughtful(solitaire.Solitaire):
     def set_options(self):
         """Define the options for the game. (None)"""
         self.options = {'num-reserve': 8}
+        self.option_set.add_option('unblocked', ['u'], default = True, value = False, target = 'blocked',
+            question = 'Should indexes to the left of that reserve pile used be blocked? bool')
 
     def set_up(self):
         """Set up the game. (None)"""
         super(Thoughtful, self).set_up()
+        # Set up tracking for the blocked pile.
         self.blocked_index = -1
         self.blocked_history = []
 
@@ -177,10 +187,12 @@ class Thoughtful(solitaire.Solitaire):
             self.turn_transfer(move_stack, new_location)
         else:
             super(Thoughtful, self).transfer(move_stack, new_location, track, up, undo_ndx)
-            if track:
+            # Update and record the blocked pile for this turn.
+            if track and self.blocked:
                 # Check by id() to avoid matching empty lists across areas.
                 if not undo_ndx and id(old_location) in [id(pile) for pile in self.reserve]:
                     self.blocked_index = self.reserve.index(old_location) - 1
+                # Move the block back after emptying a reserve pile. (!! not working)
                 while self.blocked_index > -1 and not self.reserve[self.blocked_index]:
                     self.blocked_index -= 1
                 self.blocked_history.append(self.blocked_index)
