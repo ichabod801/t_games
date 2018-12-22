@@ -60,6 +60,7 @@ class Thoughtful(solitaire.Solitaire):
     """
 
     aka = ['Thoughtful', 'ThSo']
+    categories = ['Card Games', 'Solitaire Games', 'Open Games']
     credits = CREDITS
     name = 'Thoughtful Solitaire'
     num_options = 1
