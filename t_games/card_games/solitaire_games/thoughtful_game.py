@@ -1,6 +1,10 @@
 """
 thoughtful_game.py
 
+Okay: When you undo a move, you want the blocked index to revert to what it was
+before that move was made. So you want the blocked index at the same point as
+a given move to be the one after that move was made.
+
 Classes:
 Thoughtful: A game of Thoughtful Solitaire. (solitaire.Solitaire)
 """
@@ -62,6 +66,7 @@ class Thoughtful(solitaire.Solitaire):
         This command takes no arguments. The cards in the reserved are moved left from
         the bottom up until all piles (except maybe the last one) have three cards.
         """
+        start_moves = len(self.moves)
         # Get the first pile needing cards.
         for pile_index, pile in enumerate(self.reserve):
             if len(pile) < 3:
@@ -71,8 +76,8 @@ class Thoughtful(solitaire.Solitaire):
         end_pile = start_pile + 1
         for pile_index, pile in enumerate(self.reserve[end_pile:], start = end_pile):
             if pile:
+                end_pile = pile_index
                 break
-        end_pile = pile_index
         # Loop through the remaining cards.
         undo = 0
         while end_pile < self.options['num-reserve']:
@@ -91,8 +96,33 @@ class Thoughtful(solitaire.Solitaire):
                     end_pile += 1
                     while end_pile < self.options['num-reserve'] and not self.reserve[end_pile]:
                         end_pile += 1
-        # Unblock the reserve
+        # how to deal with turns that don't move anything?
+        # you have to be able to do it, and it has to change the blocked_index.
+        if start_moves == len(self.moves):
+            pile_index = -1
+            try:
+                while not self.reserve[pile_index]:
+                    pile_index = -1
+            except IndexError:
+                self.human.error('There is nothing to turn.')
+                return True
+            self.transfer([self.reserve[pile_index][0]], self.reserve[pile_index])
         self.blocked_index = -1
+        self.blocked_history[-1] = -1
+
+    def do_undo(self, arguments):
+        """
+        Undo one or more previous moves. (u)
+
+        If this command is called with no arguments, one move is undone. If an integer
+        argument is given, that many moves are undone.
+        """
+        super(Thoughtful, self).do_undo(arguments)
+        self.blocked_history = self.blocked_history[:len(self.moves)]
+        if self.blocked_history:
+            self.blocked_index = self.blocked_history[-1]
+        else:
+            self.blocked_index = -1
 
     def reserve_text(self):
         """Generate text for the reserve piles. (str)"""
@@ -127,6 +157,7 @@ class Thoughtful(solitaire.Solitaire):
         """Set up the game. (None)"""
         super(Thoughtful, self).set_up()
         self.blocked_index = -1
+        self.blocked_history = []
 
     def transfer(self, move_stack, new_location, track = True, up = True, undo_ndx = 0):
         """
@@ -141,18 +172,18 @@ class Thoughtful(solitaire.Solitaire):
         up: A flag for the cards being face up. (bool)
         undo_ndx: Nominally how many undos there are to do. (int)
         """
-        if new_location in self.reserve and not track:
+        old_location = move_stack[0].game_location
+        if new_location in self.reserve and old_location in self.reserve and not track:
             self.turn_transfer(move_stack, new_location)
-            short_indexes = [index for index, pile in enumerate(self.reserve) if len(pile) < 3]
-            if short_indexes and short_indexes[0] != self.options['num-reserve'] - 1:
-                self.blocked_index = short_indexes[0]
         else:
-            if move_stack[0].game_location in self.reserve:
-                next_block = self.reserve.index(move_stack[0].game_location) - 1
-            else:
-                next_block = self.blocked_index
             super(Thoughtful, self).transfer(move_stack, new_location, track, up, undo_ndx)
-            self.blocked_index = next_block
+            if track:
+                # Check by id() to avoid matching empty lists across areas.
+                if not undo_ndx and id(old_location) in [id(pile) for pile in self.reserve]:
+                    self.blocked_index = self.reserve.index(old_location) - 1
+                while self.blocked_index > -1 and not self.reserve[self.blocked_index]:
+                    self.blocked_index -= 1
+                self.blocked_history.append(self.blocked_index)
 
     def turn_transfer(self, move_stack, new_location):
         """

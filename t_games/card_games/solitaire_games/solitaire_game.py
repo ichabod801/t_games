@@ -504,7 +504,7 @@ class Solitaire(game.Game):
                 if flip:
                     old_location[-1].up = False
                 # Move the cards back.
-                self.transfer(move_stack, old_location, track = False)
+                self.transfer(move_stack, old_location, track = False, undo_ndx = undo_index)
                 # Handle flipping the undone card(s) back down.
                 if force_down:
                     for card in move_stack:
