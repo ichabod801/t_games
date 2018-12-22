@@ -23,6 +23,7 @@ excel_column: Convert a number into a Excel style column header. (str)
 
 import os
 import random
+import re
 from string import ascii_uppercase
 
 import t_games.full_credits as full_credits
@@ -281,6 +282,9 @@ class Interface(other_cmd.OtherCmd):
         stats command is a game name or an alias for a game, stats will be given for
         that game. If 'all' is given as the argument to the stats command, stats will
         be shown for all games.
+
+        Options to the stats command (given after a slash) can be used to filter the
+        results
         """
         # Process the arguments.
         arguments, slash, options = arguments.partition('/')
@@ -665,6 +669,16 @@ class Statistics(object):
         results: The game results to filter. (list of lists)
         options: The user provided options, including any filters. (str)
         """
+        # parse filters
+        new_options = []
+        for option in options:
+            if new_options and (option == ':' or option.startswith(':') or new_options[-1].endswith(':')):
+                new_options[-1] += option
+            elif new_options and (option == '=' or option.startswith('=') or new_options[-1].endswith('=')):
+                new_options[-1] += option
+            else:
+                new_options.append(option)
+        options = new_options
         # Do the predefined filters.
         if 'cheat' not in options:
             results = [result for result in results if not result[6] & 2]
@@ -672,6 +686,39 @@ class Statistics(object):
             results = [result for result in results if not result[6] & 8]
         if 'xyzzy' not in options:
             results = [result for result in results if not result[6] & 128]
+        # Do the option filters.
+        if 'clean' in options:
+            results = [result for result in results if not result[-1]]
+        else:
+            # Filter for specific option settings.
+            opt_filters = [option for option in options if option[:4] in ('opt:', 'opt!')]
+            for opt_filter in opt_filters:
+                filter_type, option = opt_filter.split(':')
+                if filter_type == 'opt':
+                    results = [result for result in results if option in result[-1].split()]
+                else:
+                    results = [result for result in results if option not in result[-1].split()]
+            # Filter for options by name.
+            name_filters = [option for option in options if option[:9] in ('opt-name:', 'opt-name!')]
+            for name_filter in name_filters:
+                filter_type, name = name_filter.split(':')
+                regex = re.compile('\\b{}\\b'.format(name))
+                if filter_type == 'opt-name':
+                    results = [result for result in results if regex.search(result[-1])]
+                else:
+                    results = [result for result in results if not regex.search(result[-1])]
+        # Do the flag filters.
+        flag_filters = [option for option in options if option[:5] in ('flag:', 'flag!')]
+        for flag_filter in flag_filters:
+            filter_type, flags = flag_filter.split(':')
+            try:
+                flags = int(flags)
+            except ValueError:
+                continue
+            if filter_type == 'flag':
+                results = [result for result in results if result[-2] & flags]
+            else:
+                results = [result for result in results if not (result[-2] & flags)]
         # Return the filtered data.
         return results
 
