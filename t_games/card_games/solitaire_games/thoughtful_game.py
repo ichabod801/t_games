@@ -1,9 +1,9 @@
 """
 thoughtful_game.py
 
-Okay: When you undo a move, you want the blocked index to revert to what it was
-before that move was made. So you want the blocked index at the same point as
-a given move to be the one after that move was made.
+Constants:
+CREDITS: The credits for Thoughtful Solitaire. (str)
+RULES: The rules of Thoughtful Solitaire. (str)
 
 Classes:
 Thoughtful: A game of Thoughtful Solitaire. (solitaire.Solitaire)
@@ -32,6 +32,9 @@ However, once you pull a card from a reserve pile, all the reserve piles to the
 left of that reserve pile will be blocked (as indicated by an XX at the bottom
 of the pile). They can be unblocked with the turn command. This simulates going
 through the stock three cards at a time as in normal Klondike.
+
+Options:
+unblocked (u): There are no blocked reserve piles.
 """
 
 
@@ -40,6 +43,7 @@ class Thoughtful(solitaire.Solitaire):
     A game of Thoughtful Solitaire. (Solitaire)
 
     Attributes:
+    blocked_history: The value of blocked_index after each move. (list of int)
     blocked_index: The index of the rightmost blocked reserve pile. (int)
 
     Methods:
@@ -47,6 +51,7 @@ class Thoughtful(solitaire.Solitaire):
 
     Overridden Methods:
     do_turn
+    do_undo
     reserve_text
     set_checkers
     set_options
@@ -64,9 +69,10 @@ class Thoughtful(solitaire.Solitaire):
         """
         Turn cards from the stock into the waste. (t)
 
-        This command takes no arguments. The cards in the reserved are moved left from
+        This command takes no arguments. The cards in the reserve are moved left from
         the bottom up until all piles (except maybe the last one) have three cards.
         """
+        # Track if any moves are actually made.
         start_moves = len(self.moves)
         # Get the first pile needing cards.
         for pile_index, pile in enumerate(self.reserve):
@@ -153,7 +159,7 @@ class Thoughtful(solitaire.Solitaire):
         self.lane_checkers = [solitaire.lane_king, solitaire.lane_unblocked]
         self.pair_checkers = [solitaire.pair_down, solitaire.pair_alt_color]
         self.sort_checkers = [solitaire.sort_ace, solitaire.sort_up, solitaire.sort_unblocked]
-        # Set the dealers (deal_reserve_n won't match Klondike deal, make new dealer?)
+        # Set the dealers.
         self.dealers = [solitaire.deal_klondike, solitaire.deal_reserve_n(24, True), solitaire.deal_open]
 
     def set_options(self):
@@ -182,6 +188,7 @@ class Thoughtful(solitaire.Solitaire):
         up: A flag for the cards being face up. (bool)
         undo_ndx: Nominally how many undos there are to do. (int)
         """
+        # Check for undoing turns.
         old_location = move_stack[0].game_location
         if new_location in self.reserve and old_location in self.reserve and not track:
             self.turn_transfer(move_stack, new_location)
@@ -189,9 +196,10 @@ class Thoughtful(solitaire.Solitaire):
             super(Thoughtful, self).transfer(move_stack, new_location, track, up, undo_ndx)
             # Update and record the blocked pile for this turn.
             if track and self.blocked:
-                # Check by id() to avoid matching empty lists across areas.
-                if not undo_ndx and id(old_location) in [id(pile) for pile in self.reserve]:
-                    self.blocked_index = self.reserve.index(old_location) - 1
+                # Check by id() to avoid matching empty lists that aren't the same pile.
+                pile_ids = [id(pile) for pile in self.reserve]
+                if not undo_ndx and id(old_location) in pile_ids:
+                    self.blocked_index = pile_ids.index(id(old_location)) - 1
                 # Move the block back after emptying a reserve pile.
                 while self.blocked_index > -1 and not self.reserve[self.blocked_index + 1]:
                     self.blocked_index -= 1
@@ -216,3 +224,15 @@ class Thoughtful(solitaire.Solitaire):
         # Reset location tracking.
         for card in move_stack:
             card.game_location = new_location
+
+
+if __name__ == '__main__':
+    # Play the game without the full interface.
+    import t_games.player as player
+    try:
+        input = raw_input
+    except NameError:
+        pass
+    name = input('What is your name? ')
+    thought = Thoughtful(player.Humanoid(name), '')
+    thought.play()
