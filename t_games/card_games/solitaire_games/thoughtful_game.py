@@ -192,8 +192,8 @@ class Thoughtful(solitaire.Solitaire):
                 # Check by id() to avoid matching empty lists across areas.
                 if not undo_ndx and id(old_location) in [id(pile) for pile in self.reserve]:
                     self.blocked_index = self.reserve.index(old_location) - 1
-                # Move the block back after emptying a reserve pile. (!! not working)
-                while self.blocked_index > -1 and not self.reserve[self.blocked_index]:
+                # Move the block back after emptying a reserve pile.
+                while self.blocked_index > -1 and not self.reserve[self.blocked_index + 1]:
                     self.blocked_index -= 1
                 self.blocked_history.append(self.blocked_index)
 
