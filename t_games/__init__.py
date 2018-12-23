@@ -16,9 +16,6 @@ FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
 details.
 
 See <http://www.gnu.org/licenses/> for details on this license (GPLv3).
-
-Functions:
-play: Play some text games. (None)
 """
 
 from __future__ import print_function
