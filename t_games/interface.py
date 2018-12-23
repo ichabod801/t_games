@@ -284,7 +284,13 @@ class Interface(other_cmd.OtherCmd):
         be shown for all games.
 
         Options to the stats command (given after a slash) can be used to filter the
-        results
+        results. The format for filtering options is type:value. The filter types are:
+            * flags: Include only games with the given flags set (flags:3).
+            * flags!: Exclude any games with the given flags set (flags!:3).
+            * opt: Include only games using the given option setting (opt:bar=2).
+            * opt!: Exclude any games using the given option setting (opt!:bar=2).
+            * opt-name: Include only games using the given option (opt-name:bar).
+            * opt-name!: Exclude any games using the given option (opt-name!:bar).
         """
         # Process the arguments.
         arguments, slash, options = arguments.partition('/')
