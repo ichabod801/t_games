@@ -291,6 +291,12 @@ class Interface(other_cmd.OtherCmd):
             * opt!: Exclude any games using the given option setting (opt!:bar=2).
             * opt-name: Include only games using the given option (opt-name:bar).
             * opt-name!: Exclude any games using the given option (opt-name!:bar).
+
+        Game options using in statistics filtering options must be the full name. You
+        may not use option aliases.
+
+        You may also use the 'clean' filter, which only includes games using the
+        default option settings.
         """
         # Process the arguments.
         arguments, slash, options = arguments.partition('/')
@@ -598,7 +604,7 @@ class Statistics(object):
         """Human readable text representation. (str)"""
         # Check for empty results.
         if not self.results['overall']:
-            return 'N/A'
+            return '\nNo statistics are available for those settings.'
         # Set up the output
         lines = ['', self.title, '-' * len(self.title)]
         # Add the win-loss-draw numbers.
