@@ -22,11 +22,14 @@ For the reasoning behind the existence of this file, see the wiki.
 Functions:
 _move_one_size: Calculate maximum stack under "move one" rules. (int)
 ---------------------------------------------------------------------
+build_alt_color_one: Movers must be a different color than the targets. (str)
 build_down: Check that only stacks of descending ranks are moved. (str)
+build_down_one: Check that the moving card is one less than the target. (str)
 build_none: No building is allowed. (str)
 build_one: Build moving one card at a time. (str)
 build_reserve: Build only from the reserve. (str)
 build_suit: Check that only stacks of the same suit are moved. (str)
+build_suit_one: You can only build on cards of the same suit. (str)
 build_whole: Check that only complete tableau stacks are moved. (str)
 -------------------------------------------------
 deal_aces: Deal the aces onto the tableau. (None)
@@ -48,6 +51,7 @@ deal_selective: Deal tableau cards with selection of foundation rank. (None)
 deal_start_foundation: Deal an initial foundation card. (None)
 deal_stock_all: Move the rest of the deck into the stock. (None)
 deal_twos: Deal the twos onto the tableau. (None)
+deal_yukon: Deal the cards face up on the tableau, except the first pile. (None)
 flip_random: Flip random tableau cards face down. (None)
 --------------------------------------------------------
 free_pyramid: Allow freeing cards open below and to the right. (str)
@@ -121,6 +125,24 @@ def _move_one_size(game, to_lane = False):
 ################## Define build checkers. ##################
 
 
+def build_alt_color_one(self, mover, target, moving_stack):
+    """
+    Movers must be a different color than the targets. (str)
+
+    Parameters:
+    game: The game buing played. (Solitaire)
+    mover: The card to move. (TrackingCard)
+    target: The destination card. (TrackingCard)
+    moving_stack: The stack the mover is the base of. (list of TrackingCard)
+    """
+    error = ''
+    # Check for different colors.
+    if mover.color == target.color:
+        error = 'The {} is not the opposite color of the {}'
+        error = error.format(mover.name, target.name)
+    return error
+
+
 def build_down(game, mover, target, moving_stack):
     """
     Check that only stacks of descending ranks are moved. (str)
@@ -137,6 +159,23 @@ def build_down(game, mover, target, moving_stack):
         if not next_card.below(card):
             error = 'Only stacks of descending rank may be moved together.'
             break
+    return error
+
+
+def build_down_one(game, mover, target, moving_stack):
+    """
+    Check that the moving card is one less than the target card. (str)
+
+    Parameters:
+    game: The game being played. (Solitaire)
+    mover: The card being moved. (TrackingCard)
+    target: The card being moved to. (TrackingCard)
+    moving_stack: The stack the mover is the base of. (list of TrackingCard)
+    """
+    error = ''
+    # Check the mover being one less than the target.
+    if not mover.below(target):
+        error = 'The {} is not one lower than the {}.'.format(mover.name, target.name)
     return error
 
 
@@ -189,7 +228,7 @@ def build_reserve(game, mover, target, moving_stack):
 
 def build_suit(game, mover, target, moving_stack):
     """
-    Check that only stacks of the same suit are moved. (str)
+    You can only build on cards of the same suit. (str)
 
     Parameters:
     game: The game being played. (Solitaire)
@@ -204,6 +243,23 @@ def build_suit(game, mover, target, moving_stack):
         if card.suit != suit:
             error = 'Only stacks of the same suit may be moved together.'
             break
+    return error
+
+
+def build_suit_one(game, mover, target, moving_stack):
+    """
+    Check that the moving card is the same suit as the target card. (str)
+
+    Parameters:
+    game: The game being played. (Solitaire)
+    mover: The card being moved. (TrackingCard)
+    target: The card being moved to. (TrackingCard)
+    moving_stack: The stack the mover is the base of. (list of TrackingCard)
+    """
+    error = ''
+    # Check the mover being the same suit as the target.
+    if mover.suit != target.suit:
+        error = 'The {} is not the same suit as the {}.'.format(mover.name, target.name)
     return error
 
 
@@ -356,8 +412,8 @@ def deal_klondike(game):
     game: The game to deal the cards for. (Solitaire)
     """
     for card_index in range(len(game.tableau)):
-        for tableau_index in range(card_index, len(game.tableau)):
-            game.deck.deal(game.tableau[tableau_index], up = card_index == tableau_index)
+        for pile_index, pile in enumerate(game.tableau[card_index:], card_index):
+            game.deck.deal(pile, up = card_index == pile_index)
 
 
 def deal_n(n, up = True):
@@ -537,6 +593,20 @@ def deal_twos(game):
             next_index = (next_index + 1) % len(game.tableau)
 
 
+def deal_yukon(game):
+    """
+    Deal the cards face up on the tableau, except the first pile. (None)
+
+    Parameters:
+    game: The game to deal the cards for. (Solitaire)
+    """
+    while game.deck.cards:
+        for pile in game.tableau[1:]:
+            game.deck.deal(pile)
+            if not game.deck.cards:
+                break
+
+
 def flip_random(game):
     """
     Flip random tableau cards face down. (None)
@@ -566,7 +636,8 @@ def free_pyramid(game, card):
             error = 'The {} is blocked by the {}.'.format(card, game.tableau[pile_index + 1][-1])
     return error
 
-# Define lane checkers.
+
+################## Define lane checkers. ##################
 
 
 def lane_down(game, card, moving_stack):

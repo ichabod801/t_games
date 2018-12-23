@@ -42,6 +42,9 @@ EASY_FREE = [164, 892, 1012, 1081, 1150, 1529, 2508, 2514, 3178, 3225, 3250, 492
     59641, 59974, 60306, 61047, 61206, 61556, 62090, 62487, 62799, 63249, 63675, 63880]
 
 RULES = """
+The cards are dealt in a triangle of seven piles, the first pile having one
+card, and each pile to the right having one more card.
+
 Cards on the tableau are built down in rank and alternating in color. Cards
 are sorted to the foundations up in suit from the ace. Empty tableau piles may
 be filled with a king or a stack starting with a king.
