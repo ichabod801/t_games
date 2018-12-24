@@ -358,7 +358,7 @@ class Klondike(solitaire.Solitaire):
         self.options = {}
         # Set the deal option.
         self.option_set.add_option('piles', ['p'], action = 'key=num-tableau', target = self.options,
-            default = 7, converter = int, question = 'How many tableau piles should their be?')
+            default = 7, converter = int, question = 'How many tableau piles should their be? ')
         # Set the play options.
         self.option_set.add_option('switch-one', ['s1'], target = 'switched', value = False, default = True,
             question = 'Should you be able to switch to one card at a time for one last pass? bool')
