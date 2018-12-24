@@ -4,7 +4,8 @@ craps_test.py
 Unit testing of t_games/gambling_games/craps_game.py
 
 Classes:
-CrapsBetTest: A test of the class for bets in Craps. (unittest.TestCase)
+CrapsBetResolveTest: Testing the resolution of bets in Craps. (unittest.TestCase)
+CrapsBetTextTest: A test of the text versions of bets in Craps. (unittest.TestCase)
 """
 
 
@@ -14,8 +15,88 @@ import t_games.gambling_games.craps_game as craps
 import unitility
 
 
-class CrapsBetTest(unittest.TestCase):
-    """A test of the class for bets in Craps. (unittest.TestCase)"""
+class CrapsBetResolveTest(unittest.TestCase):
+    """Testing the resolution of bets in Craps. (unittest.TestCase)"""
+
+    def setDice(self, values):
+        """
+        Set the values of the dice for testing. (None)
+
+        Parameters:
+        values: The values to set the dice to. (list of int)
+        """
+        for die, value in zip(self.dice, values):
+            die.value = value
+        self.dice.values = values
+
+    def setUp(self):
+        self.player = unitility.AutoBot()
+        self.game = craps.Craps(self.player, 'none')
+        self.game.point = 8
+        self.dice = craps.dice.Pool()
+
+    def testHardWayLoseNoPoint(self):
+        """Test losing a hard way bet with no point. (self)"""
+        bet = craps.HardWayBet(self.player, 'hard 4', 8)
+        bet.set_wager(5)
+        self.setDice([5, 3])
+        self.assertEqual(-5, bet.resolve(self.dice))
+
+    def testHardWayLoseSeven(self):
+        """Test losing a hard way bet with a seven. (self)"""
+        bet = craps.HardWayBet(self.player, 'hard 4', 8)
+        bet.set_wager(5)
+        self.setDice([5, 2])
+        self.assertEqual(-5, bet.resolve(self.dice))
+
+    def testHardWayLoseTarget(self):
+        """Test losing a hard way bet with the target number. (self)"""
+        bet = craps.HardWayBet(self.player, 'hard 4', 8)
+        bet.set_wager(5)
+        self.setDice([5, 3])
+        self.assertEqual(-5, bet.resolve(self.dice))
+
+    def testHardWayStay(self):
+        """Test a hard way bet staying active. (self)"""
+        bet = craps.HardWayBet(self.player, 'hard 4', 4)
+        bet.set_wager(5)
+        self.setDice([1, 4])
+        self.assertEqual(0, bet.resolve(self.dice))
+
+    def testHardWayStayLazy(self):
+        """Test a hard way bet staying active while lazy. (self)"""
+        bet = craps.HardWayBet(self.player, 'hard 4', 4)
+        bet.set_wager(5)
+        self.game.point = 0
+        self.game.lazy_hard = True
+        self.setDice([1, 3])
+        self.assertEqual(0, bet.resolve(self.dice))
+
+    def testHardWayWin(self):
+        """Test winning a hard way bet. (self)"""
+        bet = craps.HardWayBet(self.player, 'hard 4', 4)
+        bet.set_wager(5)
+        self.setDice([2, 2])
+        self.assertEqual(35, bet.resolve(self.dice))
+
+    def testHardWayWinBig(self):
+        """Test winning a hard way bet with larger payout. (self)"""
+        bet = craps.HardWayBet(self.player, 'hard 4', 6)
+        bet.set_wager(5)
+        self.setDice([3, 3])
+        self.assertEqual(45, bet.resolve(self.dice))
+
+    def testHardWayWinNoPoint(self):
+        """Test winning a hard way bet with no point. (self)"""
+        bet = craps.HardWayBet(self.player, 'hard 4', 4)
+        bet.set_wager(5)
+        self.game.point = 0
+        self.setDice([2, 2])
+        self.assertEqual(35, bet.resolve(self.dice))
+
+
+class CrapsBetTextTest(unittest.TestCase):
+    """A test of text versions of the bets in Craps. (unittest.TestCase)"""
 
     def setUp(self):
         self.player = unitility.AutoBot()
