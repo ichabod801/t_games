@@ -70,14 +70,11 @@ class Gargantua(solitaire.MultiSolitaire):
     def set_options(self):
         """Define the options for the game. (None)"""
         self.options = {'max-passes': 2, 'num-foundations': 8, 'turn-count': 1}
-        # Set the deal option.
         self.option_set.add_option('piles', ['p'], action = 'key=num-tableau', target = self.options,
             default = 9, converter = int, question = 'How many tableau piles should their be? ')
-        # Set the play options.
         self.option_set.add_option('max-passes', ['mp'], action = 'key=max-passes', target = self.options,
         	default = 2, converter = int, question = 'How many time can you go through the stock? ')
-        # Set the option group.
-        self.option_set.add_group('harp', 'max-passes=2')
+        self.option_set.add_group('harp', 'max-passes=4')
 
 
 if __name__ == '__main__':
