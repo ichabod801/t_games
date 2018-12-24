@@ -85,6 +85,120 @@ class CrapsBetResolveTest(unittest.TestCase):
         self.setDice([3, 4])
         self.assertEqual(5, bet.resolve(self.dice))
 
+    def testDontComeLose(self):
+        """Test losing a don't come bet. (self)"""
+        bet = craps.DontComeBet(self.player, "don't come", 9)
+        bet.set_wager(5)
+        self.setDice([3, 4])
+        self.assertEqual(5, bet.resolve(self.dice))
+
+    def testDontComeLoseNoPoint(self):
+        """Test losing a don't come bet with no point. (self)"""
+        bet = craps.DontComeBet(self.player, "don't come", 0)
+        bet.set_wager(5)
+        self.setDice([1, 2])
+        self.assertEqual(5, bet.resolve(self.dice))
+
+    def testDontComeSetNoPoint(self):
+        """Test a don't come bet setting it's number with no point. (self)"""
+        bet = craps.DontComeBet(self.player, "don't come", 0)
+        bet.set_wager(5)
+        self.setDice([1, 4])
+        bet.resolve(self.dice)
+        self.assertEqual(5, bet.number)
+
+    def testDontComeStay(self):
+        """Test a don't come bet staying. (self)"""
+        bet = craps.DontComeBet(self.player, "don't come", 9)
+        bet.set_wager(5)
+        self.setDice([2, 3])
+        self.assertEqual(0, bet.resolve(self.dice))
+
+    def testDontComeStayNoPoint(self):
+        """Test a don't come bet staying with no point. (self)"""
+        bet = craps.DontComeBet(self.player, "don't come", 0)
+        bet.set_wager(5)
+        self.setDice([2, 3])
+        self.assertEqual(0, bet.resolve(self.dice))
+
+    def testDontComeStay(self):
+        """Test a don't come bet staying on box cars. (self)"""
+        bet = craps.DontComeBet(self.player, "don't come", 9)
+        bet.set_wager(5)
+        self.setDice([6, 6])
+        self.assertEqual(0, bet.resolve(self.dice))
+
+    def testDontComeWin(self):
+        """Test wining a don't come bet. (self)"""
+        bet = craps.DontComeBet(self.player, "don't come", 9)
+        bet.set_wager(5)
+        self.setDice([4, 5])
+        self.assertEqual(-5, bet.resolve(self.dice))
+
+    def testDontComeWinNoPoint(self):
+        """Test wining a don't come bet with no point. (self)"""
+        bet = craps.DontComeBet(self.player, "don't come", 0)
+        bet.set_wager(5)
+        self.setDice([3, 4])
+        self.assertEqual(-5, bet.resolve(self.dice))
+
+    def testDontPassLose(self):
+        """Test losing a don't pass bet. (self)"""
+        bet = craps.DontPassBet(self.player, "don't pass", 9)
+        bet.set_wager(5)
+        self.setDice([3, 4])
+        self.assertEqual(5, bet.resolve(self.dice))
+
+    def testDontPassLoseNoPoint(self):
+        """Test losing a don't pass bet with no point. (self)"""
+        bet = craps.DontPassBet(self.player, "don't pass", 0)
+        bet.set_wager(5)
+        self.setDice([1, 2])
+        self.assertEqual(5, bet.resolve(self.dice))
+
+    def testDontPassSetNoPoint(self):
+        """Test a don't pass bet setting it's number with no point. (self)"""
+        bet = craps.DontPassBet(self.player, "don't pass", 0)
+        bet.set_wager(5)
+        self.setDice([1, 4])
+        bet.resolve(self.dice)
+        self.assertEqual(5, bet.number)
+
+    def testDontPassStay(self):
+        """Test a don't pass bet staying. (self)"""
+        bet = craps.DontPassBet(self.player, "don't pass", 9)
+        bet.set_wager(5)
+        self.setDice([2, 3])
+        self.assertEqual(0, bet.resolve(self.dice))
+
+    def testDontPassStayNoPoint(self):
+        """Test a don't pass bet staying with no point. (self)"""
+        bet = craps.DontPassBet(self.player, "don't pass", 0)
+        bet.set_wager(5)
+        self.setDice([2, 3])
+        self.assertEqual(0, bet.resolve(self.dice))
+
+    def testDontPassStay(self):
+        """Test a don't pass bet staying on box cars. (self)"""
+        bet = craps.DontPassBet(self.player, "don't pass", 9)
+        bet.set_wager(5)
+        self.setDice([6, 6])
+        self.assertEqual(0, bet.resolve(self.dice))
+
+    def testDontPassWin(self):
+        """Test wining a don't pass bet. (self)"""
+        bet = craps.DontPassBet(self.player, "don't pass", 9)
+        bet.set_wager(5)
+        self.setDice([4, 5])
+        self.assertEqual(-5, bet.resolve(self.dice))
+
+    def testDontPassWinNoPoint(self):
+        """Test wining a don't pass bet with no point. (self)"""
+        bet = craps.DontPassBet(self.player, "don't pass", 0)
+        bet.set_wager(5)
+        self.setDice([3, 4])
+        self.assertEqual(-5, bet.resolve(self.dice))
+
     def testHardWayLoseNoPoint(self):
         """Test losing a hard way bet with no point. (self)"""
         bet = craps.HardWayBet(self.player, 'hard 4', 8)
