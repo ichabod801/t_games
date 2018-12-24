@@ -1154,7 +1154,7 @@ class PlaceBet(CrapsBet):
         if sum(roll) == self.number:
             result = self.payout
         elif sum(roll) == 7:
-            result = -1 * self.payout
+            result = -1 * self.wager
         # Reverse payouts for lay bets.
         if self.match_text == 'lay':
             result *= -1
