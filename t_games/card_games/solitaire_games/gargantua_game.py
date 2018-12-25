@@ -51,7 +51,7 @@ class Gargantua(solitaire.MultiSolitaire):
     """
 
     aka = ['Double Klondike', 'Jumbo', 'Garg']
-    categories = ['Card Games', 'Solitaire Games', 'Closed Games']
+    categories = ['Card Games', 'Solitaire Games', 'Finding Games']
     credits = CREDITS
     name = 'Gargantua'
     num_options = 2

@@ -57,7 +57,7 @@ class MonteCarlo(solitaire.Solitaire):
     """
 
     aka = ['Weddings', 'MoCa']
-    categories = ['Card Games', 'Solitaire Games', 'Closed Games']
+    categories = ['Card Games', 'Solitaire Games', 'Matching Games']
     credits = CREDITS
     name = 'Monte Carlo'
     num_options = 2

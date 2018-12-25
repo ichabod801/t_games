@@ -70,7 +70,7 @@ class FortyThieves(solitaire.MultiSolitaire):
     """
 
     aka = ['Big Forty', 'Le Cadran', 'Napoleon at St Helena', 'Roosevelt at San Juan', 'FoTh']
-    categories = ['Card Games', 'Solitaire Games', 'Closed Games']
+    categories = ['Card Games', 'Solitaire Games', 'Digging Games']
     credits = CREDITS
     name = 'Forty Thieves'
     num_options = 7

@@ -54,7 +54,7 @@ class Quadrille(solitaire.Solitaire):
     """
 
     aka = ['Captive Queens', 'La Francaise', 'Partners', 'Quad']
-    categories = ['Card Games', 'Solitaire Games', 'Closed Games']
+    categories = ['Card Games', 'Solitaire Games', 'Revealing Games']
     credits = CREDITS
     name = 'Quadrille'
     rules = RULES

@@ -88,7 +88,7 @@ class Pyramid(solitaire.Solitaire):
     """
 
     aka = ['Pyra']
-    categories = ['Card Games', 'Solitaire Games', 'Closed Games']
+    categories = ['Card Games', 'Solitaire Games', 'Matching Games']
     credits = CREDITS
     name = 'Pyramid'
     num_options = 8

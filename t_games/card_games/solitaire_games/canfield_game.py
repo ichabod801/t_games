@@ -83,7 +83,7 @@ class Canfield(solitaire.Solitaire):
     """
 
     aka = ['Demon', 'Canf']
-    categories = ['Card Games', 'Solitaire Games', 'Closed Games']
+    categories = ['Card Games', 'Solitaire Games', 'Digging Games']
     credits = CREDITS
     name = 'Canfield'
     num_options = 10

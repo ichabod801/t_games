@@ -45,7 +45,7 @@ class Strategy(solitaire.Solitaire):
 
     aka = ['Stra']
     credits = CREDITS
-    categories = ['Card Games', 'Solitaire Games', 'Hybrid Games']
+    categories = ['Card Games', 'Solitaire Games', 'Revealing Games']
     name = 'Strategy'
     num_options = 1
     rules = RULES

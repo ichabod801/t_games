@@ -48,7 +48,7 @@ class Yukon(solitaire.Solitaire):
     """
 
     aka = []
-    categories = ['Card Games', 'Solitaire Games', 'Closed Games']
+    categories = ['Card Games', 'Solitaire Games', 'Building Games']
     credits = CREDITS
     name = 'Yukon'
     num_options = 2
