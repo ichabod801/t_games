@@ -158,7 +158,7 @@ class Mate(game.Game):
 
     def set_up(self):
         """Set up the game. (None)"""
-        self.players = [self.human, MateBot(taken_names = [self.human.name])]
+        self.players = [self.human, MateAttackBot(taken_names = [self.human.name])]
         for player in self.players:
             player.game = self
         self.dice = {}
@@ -171,6 +171,10 @@ class MateBot(player.Bot):
     A bot player for the game of Mate. (player.Bot)
 
     The base MateBot just plays randomly.
+
+    Methods:
+    choose_attacker: Choose the column to attack with. (int)
+    choose_target: Choose the column to attack. (int)
 
     Overridden Methods:
     ask_int
@@ -212,3 +216,38 @@ class MateBot(player.Bot):
         valid: The columns that can be attacked. (list of int)
         """
         return random.choice(valid)
+
+
+class MateAttackBot(MateBot):
+    """
+    A bot that goes after the biggest target. (MateBot)
+
+    Overridden Methods:
+    choose_attacker
+    choose_target
+    """
+
+    def choose_attacker(self):
+        """Choose the column to attack with. (int)"""
+        moves = self.game.get_moves(self)
+        moves = [(target, attacker) for attacker, target in moves]
+        human_values = self.game.dice[self.game.human.name].values
+        my_values = self.game.dice[self.name].values
+        pieces = [(human_values[target], my_values[attacker]) for target, attacker in moves]
+        values = [(self.game.points[target], self.game.points[attacker]) for target, attacker in pieces]
+        valued_moves = list(zip(values, moves))
+        valued_moves.sort(reverse = True)
+        max_valued = [move for value, move in valued_moves if value == valued_moves[0][0]]
+        self.target, self.attacker = max_valued[0]
+        return self.attacker
+
+    def choose_target(self, valid):
+        """
+        Choose the column to attack. (int)
+
+        Parameters:
+        valid: The columns that can be attacked. (list of int)
+        """
+        return self.target
+
+
