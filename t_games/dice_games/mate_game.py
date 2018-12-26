@@ -136,6 +136,10 @@ class Mate(game.Game):
                     valid.append([attacker, attacker + attack])
         return valid
 
+    def handle_options(self):
+        """Handle the option settings for the game. (None)"""
+        self.players = [self.human, MateDefendBot(taken_names = [self.human.name])]
+
     def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
@@ -158,7 +162,6 @@ class Mate(game.Game):
 
     def set_up(self):
         """Set up the game. (None)"""
-        self.players = [self.human, MateDefendBot(taken_names = [self.human.name])]
         for player in self.players:
             player.game = self
         self.dice = {}
