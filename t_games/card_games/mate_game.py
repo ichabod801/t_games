@@ -158,7 +158,7 @@ class Mate(game.Game):
 
     def set_up(self):
         """Set up the game. (None)"""
-        self.players = [self.human, MateAttackBot(taken_names = [self.human.name])]
+        self.players = [self.human, MateDefendBot(taken_names = [self.human.name])]
         for player in self.players:
             player.game = self
         self.dice = {}
@@ -229,13 +229,7 @@ class MateAttackBot(MateBot):
 
     def choose_attacker(self):
         """Choose the column to attack with. (int)"""
-        moves = self.game.get_moves(self)
-        moves = [(target, attacker) for attacker, target in moves]
-        human_values = self.game.dice[self.game.human.name].values
-        my_values = self.game.dice[self.name].values
-        pieces = [(human_values[target], my_values[attacker]) for target, attacker in moves]
-        values = [(self.game.points[target], self.game.points[attacker]) for target, attacker in pieces]
-        valued_moves = list(zip(values, moves))
+        valued_moves = self.value_moves()
         valued_moves.sort(reverse = True)
         max_valued = [move for value, move in valued_moves if value == valued_moves[0][0]]
         self.target, self.attacker = max_valued[0]
@@ -250,4 +244,26 @@ class MateAttackBot(MateBot):
         """
         return self.target
 
+    def value_moves(self):
+        moves = self.game.get_moves(self)
+        moves = [(target, attacker) for attacker, target in moves]
+        human_values = self.game.dice[self.game.human.name].values
+        my_values = self.game.dice[self.name].values
+        pieces = [(human_values[target], my_values[attacker]) for target, attacker in moves]
+        values = [(self.game.points[target], self.game.points[attacker]) for target, attacker in pieces]
+        return list(zip(values, moves))
 
+
+class MateDefendBot(MateAttackBot):
+    """
+    A bot that removes it's biggest piece. (MateAttackBot)
+
+    Overridden Methods:
+    value_moves
+    """
+
+    def value_moves(self):
+        """Determine a value for each possible move. (list of tuple)"""
+        attacker_moves = super(MateDefendBot, self).value_moves()
+        valued_moves = [((points[1], points[0]), move) for points, move in attacker_moves]
+        return valued_moves
