@@ -1476,6 +1476,8 @@ class OverBot(CrapsBot):
             return self.last_act
         elif prompt.startswith('You are the shooter.'):
             return '{} needs a new pair of shoes!'.format(self.name)
+        elif prompt.startswith('Press enter'):
+            return ''
         else:
             raise player.BotError('Unexpected question to CrapsBot: {!r}'.format(prompt))
 
@@ -1547,7 +1549,7 @@ class Randy(CrapsBot):
                         break
                 else:
                     self.last_act = random.choice(('pass', "don't pass"))
-            # Make an odds bet haflt the time.
+            # Make an odds bet half the time.
             elif oddsable and random.random() > 0.5:
                 self.last_act = "{} odds {}".format(oddsable[0].match_text, oddsable[0].number)
             # Make a random bet if there is a point.
@@ -1576,8 +1578,10 @@ class Randy(CrapsBot):
             return self.last_act
         elif prompt.startswith('You are the shooter.'):
             return '{} needs a new pair of shoes!'.format(self.name)
+        elif prompt.startswith('Press enter'):
+            return ''
         else:
-            raise player.BotError('Unexpected question to CrapsBot: {!r}'.format(prompt))
+            raise player.BotError('Unexpected question to Randy: {!r}'.format(prompt))
 
     def ask_int(self, *args, **kwargs):
         """
