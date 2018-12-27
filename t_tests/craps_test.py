@@ -35,6 +35,27 @@ class CrapsBetResolveTest(unittest.TestCase):
         self.game.point = 8
         self.dice = craps.dice.Pool()
 
+    def testBuyBetLose(self):
+        """Test losing a buy bet."""
+        bet = craps.BuyBet(self.player, 'buy', 10)
+        bet.set_wager(6)
+        self.setDice([3, 4])
+        self.assertEqual(-12, bet.resolve(self.dice))
+
+    def testBuyBetStay(self):
+        """Test a buy bet staying."""
+        bet = craps.BuyBet(self.player, 'buy', 9)
+        bet.set_wager(6)
+        self.setDice([3, 2])
+        self.assertEqual(0, bet.resolve(self.dice))
+
+    def testBuyBetWin(self):
+        """Test winning a buy bet."""
+        bet = craps.BuyBet(self.player, 'buy', 9)
+        bet.set_wager(6)
+        self.setDice([5, 4])
+        self.assertEqual(9, bet.resolve(self.dice))
+
     def testComeLose(self):
         """Test losing a Come bet."""
         bet = craps.ComeBet(self.player, 'Come', 9)
@@ -277,7 +298,7 @@ class CrapsBetResolveTest(unittest.TestCase):
         bet = craps.LayBet(self.player, 'lay', 6)
         bet.set_wager(6)
         self.setDice([5, 2])
-        self.assertEqual(6, bet.resolve(self.dice))
+        self.assertEqual(5, bet.resolve(self.dice))
 
     def testPassLose(self):
         """Test losing a pass bet."""
@@ -332,9 +353,9 @@ class CrapsBetResolveTest(unittest.TestCase):
     def testPlaceBetLose(self):
         """Test losing a place bet."""
         bet = craps.PlaceBet(self.player, 'place 9', 9)
-        bet.set_wager(6)
+        bet.set_wager(5)
         self.setDice([5, 2])
-        self.assertEqual(-6, bet.resolve(self.dice))
+        self.assertEqual(-7, bet.resolve(self.dice))
 
     def testPlaceBetStay(self):
         """Test a place bet staying."""
