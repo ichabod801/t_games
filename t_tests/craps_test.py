@@ -371,6 +371,27 @@ class CrapsBetResolveTest(unittest.TestCase):
         self.setDice([4, 2])
         self.assertEqual(7, bet.resolve(self.dice))
 
+    def testPropLose(self):
+        """Test losing a proposition bet."""
+        bet = craps.PropositionBet(self.player, 'horn')
+        bet.set_wager(8)
+        self.setDice([6, 2])
+        self.assertEqual(-8, bet.resolve(self.dice))
+
+    def testPropSpecialOdds(self):
+        """Test winning a proposition bet with special odds."""
+        bet = craps.PropositionBet(self.player, 'field')
+        bet.set_wager(8)
+        self.setDice([1, 1])
+        self.assertEqual(16, bet.resolve(self.dice))
+
+    def testPropWin(self):
+        """Test winning a proposition bet."""
+        bet = craps.PropositionBet(self.player, 'craps')
+        bet.set_wager(8)
+        self.setDice([1, 2])
+        self.assertEqual(56, bet.resolve(self.dice))
+
 
 class CrapsBetTextTest(unittest.TestCase):
     """A test of text versions of the bets in Craps. (unittest.TestCase)"""
