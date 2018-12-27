@@ -6,13 +6,14 @@ Unit testing of t_games/gambling_games/craps_game.py
 Classes:
 CrapsBetResolveTest: Testing the resolution of bets in Craps. (unittest.TestCase)
 CrapsBetTextTest: A test of the text versions of bets in Craps. (unittest.TestCase)
+CrapsBotTest: A test of the Craps bots. (unittest.TestCase)
 """
 
 
 import unittest
 
 import t_games.gambling_games.craps_game as craps
-import unitility
+import t_tests.unitility as unitility
 
 
 class CrapsBetResolveTest(unittest.TestCase):
@@ -478,6 +479,9 @@ class CrapsBetTextTest(unittest.TestCase):
         bet = craps.PropositionBet(self.player, '11')
         bet.wager = 122
         self.assertEqual('<PropositionBet (Yo) for 122 bucks>', repr(bet))
+
+
+#CrapsBotTest = unitility.bot_test(craps.Craps, [craps.Randy], 1, [1])
 
 
 if __name__ == '__main__':
