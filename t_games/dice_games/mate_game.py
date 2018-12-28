@@ -277,10 +277,18 @@ class MateBot(player.Bot):
         prompt: The question being asked of the player. (str)
         """
         if prompt == '\nWhat is your move? ':
+            # Get the move.
             attacker = self.choose_attacker()
             moves = self.game.get_moves(self)
             valid_targets = [move[1] for move in moves if move[0] == attacker]
             target = self.choose_target(valid_targets)
+            # Show the move.
+            attacker_name = self.game.dice[self.name].values[attacker]
+            foe = self.game.players[1 - self.game.players.index(self)]
+            target_name = self.game.dice[foe.name].values[target]
+            fields = (self.name, target_name, target, attacker_name, attacker)
+            self.game.human.tell('\n{} takes your {} ({}) with their {} ({}).'.format(*fields))
+            # Make the move.
             return 'take {} {}'.format(target, attacker)
         else:
             raise BotError('Unexpected question asked of {}: {!r}.'.format(self.__class__.name, prompt))
