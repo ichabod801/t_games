@@ -69,11 +69,13 @@ class Mate(game.Game):
     set_up
     """
 
+    aliases = {'t': 'take', 'x': 'take', 'takes': 'take'}
     attacks = {'Pawn': (0,), 'Knight': (-3, -2, 2, 3), 'Bishop': (-1, 1),
         'Rook': (-1, 0, 1), 'Queen': tuple(range(-5, 6))}
     categories = ['Dice Games']
     name = 'Mate'
     sides = ('Pawn', 'Pawn', 'Knight', 'Bishop', 'Rook', 'Queen')
+    piece_aliases = {'p': 'pawn', 'n': 'knight', 'k': 'knight', 'b': 'bishop', 'r': 'rook', 'q': 'queen'}
     points = {'Pawn': 1, 'Knight': 2, 'Bishop': 2, 'Rook': 3, 'Queen': 5}
 
     def __str__(self):
@@ -99,6 +101,74 @@ class Mate(game.Game):
         """
         text = ['{}: {:<8}'.format(column, die.value) for column, die in enumerate(pool)]
         return ''.join(text)
+
+    def default(self, text):
+        """
+        Handle unrecognized commands. (bool)
+
+        Parameters:
+        text: The raw text input by the user. (str)
+        """
+        words = line.replace('the', '').replace('teh', '').split()
+        if len(words) == 2:
+            return self.do_turn('{1} {0}'.format(*words))
+        else:
+            self.players[self.player_index].error('I do not understand the move {!r}.'.format(text))
+            return False
+
+    def do_take(self, arguments):
+        """
+        Take an opponent's piece. (takes, t, x)
+
+        This can be done as 'take defender with attacker', or as 'attacker takes
+        defender'. Attacker and defender can be column names or piece names. If you use
+        piece names that are ambiguous, you will be asked to clarify which columns
+        those pieces are in.
+        """
+        # Get the players
+        attacker = self.players[self.player_index]
+        defender = self.players[1 - self.player_index]
+        # Clean the arguments.
+        for filler in ('with', 'w', 'w/', 'the', 'teh'):
+            arguments = arguments.replace(filler, '')
+        # Parse out the two pieces
+        try:
+            attack_piece, target_piece = arguments.split()
+        except ValueError:
+            attacker.error('Invalid arguments to the take command: {!r}.'.format(arguments))
+            return False
+        # Identify the two pieces
+        attack_indexes = self.piece_indexes(attack_piece, self.dice[attacker.name].values)
+        if not attack_indexes:
+            attacker.error('Invalid attack piece specification: {!r}'.format(attack_piece))
+            return False
+        target_indexes = self.piece_indexes(target_piece, self.dice[defender.name].values)
+        if not target_index:
+            attacker.error('Invalid target piece specification: {!r}'.format(target_piece))
+            return False
+        # Confirm valid move.
+        moves = self.get_moves(attacker)
+        possible = [move for move in moves if move[0] in attack_indexes and move[1] in target_indexes]
+        if not possible:
+            attacker.error('There is no legal move matching {!r}.'.format(arguments))
+        # Narrow the move as needed.
+        if len(possible) > 1:
+            valid_attackers = set([move[0] for move in possible])
+            if len(valid_attackers) > 1:
+                query = 'Which {} did you mean to attack with? '.format(attack_piece)
+                narrow = attacker.ask_int(query, valid = valid_attackers, cmd = False)
+                possible = [move for move in possible if move[0] == narrow]
+            if len(possible) > 1:
+                valid_targets = set([move[1] for move in possilbe])
+                query = 'Which {} did you mean to target? '.format(target_piece)
+                narrow = attacker.ask_int(query, valid = valid_targets, cmd = False)
+                possible = [move for move in possible if move[1] == narrow]
+        # Score the move.
+        attack_index, target_index = possible[0]
+        self.scores[attacker.name] += self.points[self.dice[defender.name].values[target_index]]
+        # Reroll the dice.
+        self.dice[attacker.name].roll(attack_index)
+        self.dice[defender.name].roll(target_index)
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
@@ -140,6 +210,20 @@ class Mate(game.Game):
         """Handle the option settings for the game. (None)"""
         self.players = [self.human, MateDefendBot(taken_names = [self.human.name])]
 
+    def piece_indexes(self, piece, values):
+        """
+        Determine where a user specified piece could be. (list of int)
+
+        Parameters:
+        piece: The user's piece specification. (str)
+        values: The values of the appropriate dice. (list of str)
+        """
+        if piece.isdigit():
+            return [int(piece)]
+        else:
+            name = self.piece_aliases.get(piece.lower(), 'null')
+            return [index for index, value in enumerate(values) if value == name]
+
     def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
@@ -149,16 +233,17 @@ class Mate(game.Game):
         """
         player.tell(self)
         # Get the player's move.
-        valid_pairs = self.get_moves(player)
-        attack_choice = player.ask_int('\nEnter the column of your attacking piece: ', low = 0, high = 4)
-        valid_targets = [target for attacker, target in valid_pairs if attacker == attack_choice]
-        target_choice = player.ask_int('Enter the column of your target: ', valid = valid_targets)
-        # Score the move.
-        foe = self.players[1 - self.player_index]
-        self.scores[player.name] += self.points[self.dice[foe.name].values[target_choice]]
-        # Reroll the dice.
-        self.dice[player.name].roll(attack_choice)
-        self.dice[foe.name].roll(target_choice)
+        move = player.ask('What is your move? ')
+        words = move.lower().split()
+        # Handle the alternate syntax.
+        if words[1] in ('take', 'takes', 't', 'x'):
+            words = words[2:] + words[0]
+            return self.do_take(' '.join(words))
+        elif words[0] in ('the', 'teh') and words[2] in ('take', 'takes', 't', 'x'):
+            words = words[3:] + words[:2]
+            return self.do_take(' '.join(words))
+        else:
+            return self.handle_cmd(move)
 
     def set_up(self):
         """Set up the game. (None)"""
