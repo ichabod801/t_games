@@ -109,9 +109,9 @@ class Mate(game.Game):
         Parameters:
         text: The raw text input by the user. (str)
         """
-        words = line.replace('the', '').replace('teh', '').split()
+        words = text.replace('the', '').replace('teh', '').split()
         if len(words) == 2:
-            return self.do_turn('{1} {0}'.format(*words))
+            return self.do_take('{} {}'.format(*words))
         else:
             self.players[self.player_index].error('I do not understand the move {!r}.'.format(text))
             return False
@@ -129,28 +129,29 @@ class Mate(game.Game):
         attacker = self.players[self.player_index]
         defender = self.players[1 - self.player_index]
         # Clean the arguments.
-        for filler in ('with', 'w', 'w/', 'the', 'teh'):
-            arguments = arguments.replace(filler, '')
+        words = [word for word in arguments.split() if word not in ('with', 'w', 'w/', 'the', 'teh', 'a')]
+        arguments = ' '.join(words)
         # Parse out the two pieces
         try:
-            attack_piece, target_piece = arguments.split()
+            target_piece, attack_piece = arguments.split()
         except ValueError:
             attacker.error('Invalid arguments to the take command: {!r}.'.format(arguments))
-            return False
+            return True
         # Identify the two pieces
         attack_indexes = self.piece_indexes(attack_piece, self.dice[attacker.name].values)
         if not attack_indexes:
             attacker.error('Invalid attack piece specification: {!r}'.format(attack_piece))
-            return False
+            return True
         target_indexes = self.piece_indexes(target_piece, self.dice[defender.name].values)
-        if not target_index:
+        if not target_indexes:
             attacker.error('Invalid target piece specification: {!r}'.format(target_piece))
-            return False
+            return True
         # Confirm valid move.
         moves = self.get_moves(attacker)
         possible = [move for move in moves if move[0] in attack_indexes and move[1] in target_indexes]
         if not possible:
             attacker.error('There is no legal move matching {!r}.'.format(arguments))
+            return True
         # Narrow the move as needed.
         if len(possible) > 1:
             valid_attackers = set([move[0] for move in possible])
@@ -159,7 +160,7 @@ class Mate(game.Game):
                 narrow = attacker.ask_int(query, valid = valid_attackers, cmd = False)
                 possible = [move for move in possible if move[0] == narrow]
             if len(possible) > 1:
-                valid_targets = set([move[1] for move in possilbe])
+                valid_targets = set([move[1] for move in possible])
                 query = 'Which {} did you mean to target? '.format(target_piece)
                 narrow = attacker.ask_int(query, valid = valid_targets, cmd = False)
                 possible = [move for move in possible if move[1] == narrow]
@@ -221,8 +222,8 @@ class Mate(game.Game):
         if piece.isdigit():
             return [int(piece)]
         else:
-            name = self.piece_aliases.get(piece.lower(), 'null')
-            return [index for index, value in enumerate(values) if value == name]
+            name = self.piece_aliases.get(piece.lower(), piece.lower())
+            return [index for index, value in enumerate(values) if value.lower() == name]
 
     def player_action(self, player):
         """
@@ -233,11 +234,11 @@ class Mate(game.Game):
         """
         player.tell(self)
         # Get the player's move.
-        move = player.ask('What is your move? ')
+        move = player.ask('\nWhat is your move? ')
         words = move.lower().split()
         # Handle the alternate syntax.
         if words[1] in ('take', 'takes', 't', 'x'):
-            words = words[2:] + words[0]
+            words = words[2:] + words[:1]
             return self.do_take(' '.join(words))
         elif words[0] in ('the', 'teh') and words[2] in ('take', 'takes', 't', 'x'):
             words = words[3:] + words[:2]
@@ -268,26 +269,19 @@ class MateBot(player.Bot):
     ask_int
     """
 
-    def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
+    def ask(self, prompt):
         """
-        Get an integer response from the human. (int)
+        Get information from the player. (str)
 
         Parameters:
-        prompt: The question asking for the interger. (str)
-        low: The lowest acceptable value for the integer. (int or None)
-        high: The highest acceptable value for the integer. (int or None)
-        valid: The valid values for the integer. (container of int)
-        default: The default choice. (int or None)
-        cmd: A flag for returning commands for processing. (bool)
+        prompt: The question being asked of the player. (str)
         """
-        if prompt.endswith('attacking piece: '):
-            return self.choose_attacker()
-        elif prompt.endswith('your target: '):
-            target = self.choose_target(valid)
-            values = (self.name, self.game.dice[self.game.human.name].values[target], target)
-            values += (self.game.dice[self.name].values[self.attacker], self.attacker)
-            self.game.human.tell('\n{} takes your {} ({}) with their {} ({}).'.format(*values))
-            return target
+        if prompt == '\nWhat is your move? ':
+            attacker = self.choose_attacker()
+            moves = self.game.get_moves(self)
+            valid_targets = [move[1] for move in moves if move[0] == attacker]
+            target = self.choose_target(valid_targets)
+            return 'take {} {}'.format(target, attacker)
         else:
             raise BotError('Unexpected question asked of {}: {!r}.'.format(self.__class__.name, prompt))
 
