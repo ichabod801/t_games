@@ -45,8 +45,15 @@ own pieces (the attacker) and the column of an opponent's piece (the captured
 piece). If the entry is valid, the player scores points equal to the opponent's
 piece, and both dice are rerolled.
 
-The first player to 64 points wins the game. If the score is tied at 64 or
-higher, two more turns are played.
+Each player gets the same number of turns. The highest score after any score
+is 64 or more wins. If the score is tied at 64 or higher, two more turns are
+played (each).
+
+Options:
+bot-level (bl): Set the difficulty of the bot. Can be stupid (s), easy (e), or
+    medium (m).
+one-pawn (1p): Have only one pawn on each die instead of two.
+win= (w=): How many points it takes to win (defaults to 64).
 """
 
 
@@ -74,6 +81,7 @@ class Mate(game.Game):
         'Rook': (-1, 0, 1), 'Queen': tuple(range(-5, 6))}
     categories = ['Dice Games']
     name = 'Mate'
+    num_options = 3
     sides = ('Pawn', 'Pawn', 'Knight', 'Bishop', 'Rook', 'Queen')
     piece_aliases = {'p': 'pawn', 'n': 'knight', 'k': 'knight', 'b': 'bishop', 'r': 'rook', 'q': 'queen'}
     points = {'Pawn': 1, 'Knight': 2, 'Bishop': 2, 'Rook': 3, 'Queen': 5}
@@ -173,16 +181,24 @@ class Mate(game.Game):
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
+        # Ensure an even number of turns.
+        if self.turns % 2:
+            return False
+        # Get the scores.
         if self.players[self.player_index] == self.human:
             bot = self.players[1 - self.player_index]
         else:
             bot = self.players[self.player_index]
         bot_score = self.scores[bot.name]
         human_score = self.scores[self.human.name]
-        if bot_score == human_score and bot_score >= 64:
+        # Check for a win.
+        if self.turns_left:
+            self.turns_left -= 1
+            return False
+        elif bot_score == human_score and bot_score >= self.win:
             self.turns_left = 2
             return False
-        elif bot_score < 64 and human_score < 64:
+        elif bot_score < self.win and human_score < self.win:
             return False
         elif bot_score > human_score:
             self.human.tell('You lose, {} to {}. :('.format(human_score, bot_score))
@@ -209,7 +225,16 @@ class Mate(game.Game):
 
     def handle_options(self):
         """Handle the option settings for the game. (None)"""
-        self.players = [self.human, MateDefendBot(taken_names = [self.human.name])]
+        super(Mate, self).handle_options()
+        if self.one_pawn:
+            self.sides = self.sides[1:]
+        if self.bot_level in ('m', 'medium'):
+            self.bot = MateDefendBot(taken_names = [self.human.name])
+        elif self.bot_level in ('e', 'easy'):
+            self.bot = MateAttackBot(taken_names = [self.human.name])
+        else:
+            self.bot = MateBot(taken_names = [self.human.name])
+        self.players = [self.human, self.bot]
 
     def piece_indexes(self, piece, values):
         """
@@ -246,6 +271,16 @@ class Mate(game.Game):
         else:
             return self.handle_cmd(move)
 
+    def set_options(self):
+        """Set the allowed options for the game. (None)"""
+        self.option_set.add_option('win', ['w'], int, default = 64,
+            question = 'How many points should it take to win (return for 64)? ')
+        self.option_set.add_option('one-pawn', ['1p'],
+            question = 'Should there only be one pawn on the dice (return for two)? bool')
+        self.option_set.add_option('bot-level', ['bl'], default = 'medium',
+            valid = ('s', 'stupid', 'e', 'easy', 'm', 'medium'),
+            question = 'How hard should the bot be (stupid, easy, or medium, return for medium? ')
+
     def set_up(self):
         """Set up the game. (None)"""
         for player in self.players:
@@ -253,6 +288,7 @@ class Mate(game.Game):
         self.dice = {}
         for player in self.players:
             self.dice[player.name] = dice.Pool([self.sides for die in range(5)])
+        self.turns_left = 0
 
 
 class MateBot(player.Bot):

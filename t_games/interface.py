@@ -424,7 +424,7 @@ class Interface(other_cmd.OtherCmd):
             stats_options = ' '.join(stats_options)
             self.do_stats('{} / {}'.format(self.game.name, stats_options))
             if stats_options:
-                message = '\nStatistics were calculated with the folloing options: {}.'
+                message = '\nStatistics were calculated with the following options: {}.'
                 self.human.tell(message.format(stats_options))
             # See if they want to play again.
             again = self.human.ask('\nWould you like to play again? ').strip().lower()
