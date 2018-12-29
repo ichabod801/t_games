@@ -226,6 +226,7 @@ class Solitaire(game.Game):
                         break
         # handle determination
         if error and show_error:
+            self.human.error()
             self.human.error(error)
         return not error
 
@@ -307,7 +308,7 @@ class Solitaire(game.Game):
         elif max_rank in self.deck.ranks:
             max_rank = self.deck.ranks.index(max_rank)
         else:
-            self.human.error('There was an error: the rank specified is not in the deck.')
+            self.human.error('\nThere was an error: the rank specified is not in the deck.')
             return True
         # Loop until there are no sortable cards.
         while True:
@@ -356,7 +357,7 @@ class Solitaire(game.Game):
         # Parse the arguments.
         card_arguments = self.deck.card_re.findall(arguments.upper())
         if len(card_arguments) != 2:
-            self.human.error('Invalid arguments to build command: {!r}.'.format(arguments))
+            self.human.error('\nInvalid arguments to build command: {!r}.'.format(arguments))
             return True
         mover, target = card_arguments
         # Get the details on all the cards.
@@ -379,7 +380,7 @@ class Solitaire(game.Game):
         # Parse the arguments.
         card_arguments = self.deck.card_re.findall(card.upper())
         if len(card_arguments) != 1:
-            self.human.error('Invalid arguments to build command: {!r}.'.format(arguments))
+            self.human.error('\nInvalid arguments to free command: {!r}.'.format(arguments))
             return True
         # Get the details on the card to be freed.
         card = self.deck.find(card_arguments[0])
@@ -398,7 +399,7 @@ class Solitaire(game.Game):
         """
         # Get the card and the cards to be moved.
         if not self.deck.card_re.match(card):
-            self.human.error('Invalid card passed to lane command: {!r}.'.format(card))
+            self.human.error('\nInvalid card passed to lane command: {!r}.'.format(card))
             return True
         card = self.deck.find(card)
         moving_stack = self.super_stack(card)
@@ -418,7 +419,7 @@ class Solitaire(game.Game):
         # Get the card and the card to be matched.
         cards = self.deck.card_re.findall(cards)
         if len(cards) != 2:
-            self.human.error('You must provide two valid cards to the match command.')
+            self.human.error('\nYou must provide two valid cards to the match command.')
             return True
         # Check for validity and match.
         cards = [self.deck.find(card) for card in cards]
@@ -434,7 +435,7 @@ class Solitaire(game.Game):
         """
         # Get the card to sort.
         if not self.deck.card_re.match(card):
-            self.human.error('Invalid card passed to sort command: {!r}.'.format(card))
+            self.human.error('\nInvalid card passed to sort command: {!r}.'.format(card))
             return True
         card = self.deck.find(card)
         # Check for validity and sort.
@@ -469,10 +470,10 @@ class Solitaire(game.Game):
             return False
         # Warn on invalid turn attempts.
         elif self.stock or self.waste:
-            self.human.error('You may not make any more passes through the stock.')
+            self.human.error('\nYou may not make any more passes through the stock.')
             return True
         else:
-            self.human.error('There are no more cards to turn.')
+            self.human.error('\nThere are no more cards to turn.')
             return True
 
     def do_undo(self, num_moves):
@@ -517,7 +518,7 @@ class Solitaire(game.Game):
                     self.move_count -= 1
             # Stop if there's nothing to undo.
             else:
-                self.human.error('There are no moves to undo.')
+                self.human.error('\nThere are no moves to undo.')
                 break
         # End the turn if a move was undone.
         return not moves_undone
@@ -564,6 +565,7 @@ class Solitaire(game.Game):
                     break
         # Handle determination.
         if error and show_error:
+            self.human.error()
             self.human.error(error)
         return not error
 
@@ -685,6 +687,7 @@ class Solitaire(game.Game):
                     break
         # Warn the user of any errors.
         if error and show_error:
+            self.human.error()
             self.human.error(error)
         return not error
 
@@ -716,6 +719,7 @@ class Solitaire(game.Game):
                     break
         # Warn the user of any errors.
         if error and show_error:
+            self.human.error()
             self.human.error(error)
         return not error
 
@@ -850,6 +854,7 @@ class Solitaire(game.Game):
                     break
         # Warn the user of any errors.
         if error and show_error:
+            self.human.error()
             self.human.error(error)
         return not error
 
@@ -1024,7 +1029,7 @@ class MultiSolitaire(Solitaire):
                 else:
                     # Warn the user of bad specifications.
                     new_move = None
-                    self.human.error('There is no alternate move matching that specification.')
+                    self.human.error('\nThere is no alternate move matching that specification.')
             else:
                 new_move = self.alt_moves.pop()
             if new_move:
@@ -1036,7 +1041,7 @@ class MultiSolitaire(Solitaire):
                 return False
         else:
             # Warn the user of invalid plays.
-            self.human.error('The last move is not alternatable.')
+            self.human.error('\nThe last move is not alternatable.')
             return True
 
     def do_auto(self, max_rank):
@@ -1054,7 +1059,7 @@ class MultiSolitaire(Solitaire):
         elif max_rank in self.deck.ranks:
             max_rank = self.deck.ranks.index(max_rank)
         else:
-            self.human.error('There was an error: the rank specified is not in the deck.')
+            self.human.error('\nThere was an error: the rank specified is not in the deck.')
             return True
         # Loop until there are no sortable cards
         while True:
@@ -1108,7 +1113,7 @@ class MultiSolitaire(Solitaire):
         # Parse the arguments.
         card_arguments = self.deck.card_re.findall(arguments.upper())
         if len(card_arguments) != 2:
-            self.human.error('Invalid arguments to build command: {!r}.'.format(arguments))
+            self.human.error('\nInvalid arguments to build command: {!r}.'.format(arguments))
             return True
         mover, target = card_arguments
         # Get the details on both cards.
@@ -1139,7 +1144,7 @@ class MultiSolitaire(Solitaire):
         # Parse the arguments.
         card_arguments = self.deck.card_re.findall(card.upper())
         if len(card_arguments) != 1:
-            self.human.error('Invalid arguments to build command: {!r}.'.format(arguments))
+            self.human.error('\nInvalid arguments to free command: {!r}.'.format(arguments))
             return True
         # Get the details on the card to be freed.
         cards = self.deck.find(card_arguments[0])
@@ -1164,7 +1169,7 @@ class MultiSolitaire(Solitaire):
         """
         # Get the card and the cards to be moved.
         if not self.deck.card_re.match(card_text):
-            self.human.error('Invalid card passed to lane command: {!r}.'.format(card))
+            self.human.error('\nInvalid card passed to lane command: {!r}.'.format(card))
             return True
         cards = self.deck.find(card_text)
         self.alt_moves = []
@@ -1192,7 +1197,7 @@ class MultiSolitaire(Solitaire):
         card_words = self.deck.card_re.findall(card_text)
         # Check for a valid number of cards.
         if len(card_words) != 2:
-            self.human.error('You must provide two valid cards to the match command.')
+            self.human.error('\nYou must provide two valid cards to the match command.')
             return True
         # Check the actual cards.
         cards = [self.deck.find(card) for card in card_words]
@@ -1220,7 +1225,7 @@ class MultiSolitaire(Solitaire):
         """
         # Get the cards.
         if not self.deck.card_re.match(card_text):
-            self.human.error('Invalid card passed to sort command: {!r}.'.format(card))
+            self.human.error('\nInvalid card passed to sort command: {!r}.'.format(card))
             return True
         cards = self.deck.find(card_text)
         # Check the cards for sortability.
@@ -1410,17 +1415,17 @@ class MultiSolitaire(Solitaire):
         if movers:
             if targets:
                 # Warn the user if there are no valid two-card moves.
-                message = 'There are no valid moves for {} {:a} onto {:a}.'
+                message = '\nThere are no valid moves for {} {:a} onto {:a}.'
                 self.human.error(message.format(move_type, movers[0], targets[0]))
             elif targets is None:
                 # Warn the user if there are no valid one-card moves.
-                self.human.error('There are no valid moves for {} {:a}.'.format(move_type, movers[0]))
+                self.human.error('\nThere are no valid moves for {} {:a}.'.format(move_type, movers[0]))
             else:
                 # Warn the user if the target card can't be found.
-                self.human.error('There is no card matching {!r}.'.format(card_arguments[1].upper()))
+                self.human.error('\nThere is no card matching {!r}.'.format(card_arguments[1].upper()))
         else:
             # Warn the user if the moving card can't be found.
-            self.human.error('There is no card matching {!r}.'.format(card_arguments[0].upper()))
+            self.human.error('\nThere is no card matching {!r}.'.format(card_arguments[0].upper()))
 
     def set_solitaire(self):
         """
