@@ -57,6 +57,20 @@ class Gargantua(solitaire.MultiSolitaire):
     num_options = 2
     rules = RULES
 
+    def do_gipf(self, arguments):
+        """
+        Gargantua decidedly dislikes miniscule linguistic particulates.
+        """
+        game, losses = self.gipf_check(arguments, ('mate',))
+        # Mate turns all of the aces face up.
+        if game == 'mate':
+            for card in self.deck.in_play:
+                if card.rank == 'A':
+                    card.up = True
+        # Otherwise I'm confused.
+        else:
+            self.human.tell("Gargantua decidedly dislikes miniscule linguistic particulates.")
+
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
         super(Gargantua, self).set_checkers()
