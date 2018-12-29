@@ -70,6 +70,7 @@ class Gargantua(solitaire.MultiSolitaire):
         # Otherwise I'm confused.
         else:
             self.human.tell("Gargantua decidedly dislikes miniscule linguistic particulates.")
+        return True
 
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
