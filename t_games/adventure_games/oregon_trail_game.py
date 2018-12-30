@@ -1,7 +1,10 @@
 """
-grail_quest_game.py
+oregon_trail_game.py
 
-An Oregon Trail style game based on Monty Python and the Holy Grail.
+A Python version of the classic Oregon Trail game.
+
+Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for the game. (str)

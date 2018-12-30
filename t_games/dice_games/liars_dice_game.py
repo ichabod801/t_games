@@ -3,6 +3,9 @@ liars_dice_game.py
 
 A game of Liar's Dice.
 
+Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Constants:
 CREDITS: The credits for Liar's Dice. (str)
 RULES: The rules for Liar's Dice. (str)

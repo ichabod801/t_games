@@ -1,6 +1,11 @@
 """
 thoughtful_game.py
 
+A game of Thoughtful Solitaire (open Klondike).
+
+Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Constants:
 CREDITS: The credits for Thoughtful Solitaire. (str)
 RULES: The rules of Thoughtful Solitaire. (str)

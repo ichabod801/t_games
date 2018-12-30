@@ -3,6 +3,9 @@ unitility.py
 
 Utility classes and functions for unit testing.
 
+Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Classes:
 AutoBot: A programmatically controlled bot. (player.Bot)
 MockRandom: A fake random module for testing with random numbers. (object)
