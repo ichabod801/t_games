@@ -134,11 +134,20 @@ class SolitaireDice(game.Game):
         """
         I don't understand.
         """
-        game, losses = self.gipf_check(arguments, ('freecell',))
+        game, losses = self.gipf_check(arguments, ('freecell', 'gargantua'))
         # Freecell gives you a free ride no matter what the roll is.
         if game == 'freecell':
             if not losses:
                 self.free_free = True
+        # Gargantua lets you change one die to a six.
+        elif game == 'gargantua':
+            if not losses:
+                self.human.tell('Your roll is:', ', '.join([str(x) for x in self.roll]))
+                query = 'Which value would you like to change to a six? '
+                to_six = self.human.ask_int(query, valid = set(self.roll))
+                self.roll.remove(to_six)
+                self.roll.append(6)
+                return True
         # Otherwise I'm confused.
         else:
             self.human.tell("I don't understand.")

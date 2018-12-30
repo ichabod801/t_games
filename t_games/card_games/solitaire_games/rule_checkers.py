@@ -19,6 +19,9 @@ concerned).
 
 For the reasoning behind the existence of this file, see the wiki.
 
+Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Functions:
 _move_one_size: Calculate maximum stack under "move one" rules. (int)
 ---------------------------------------------------------------------

@@ -3,6 +3,9 @@ mate_game.py
 
 A game of Mate.
 
+Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Constants:
 CREDITS: The credits for Mate. (str)
 RULES: The rules of Mate. (str)
@@ -61,18 +64,29 @@ class Mate(game.Game):
     """
     A game of Mate. (game.Game)
 
+    Class Attributes:
+    attacks: The attack of the various pieces. (dict of str: tuple of int)
+    sides: The sides of a Mate die. (tuple of str)
+    piece_aliases: Alternate names for the pieces. (dict of str: str)
+    points: The values of the pieces. (dict of str: int)
+
     Attributes:
     dice: The dice for each player, keyed by player name. (dict of str: dice.Pool)
     turns_left: The number of turns left after a winning tie. (int)
 
     Methods:
     dice_line: Show a player's dice with their columns. (str)
+    do_take: Take an opponent's piece. (bool)
     get_moves: Determine the valid moves for a given player. (self)
+    piece_indexes: Determine where a user specified piece could be. (list of int)
 
     Overridden Methods:
     __str__
+    default
     game_over
+    handle_options
     player_action
+    set_options
     set_up
     """
 
@@ -88,10 +102,12 @@ class Mate(game.Game):
 
     def __str__(self):
         """Human readable text representation. (str)"""
+        # Get the correct player viewpoint.
         if self.players[self.player_index] == self.human:
             bot = self.players[1 - self.player_index]
         else:
             bot = self.players[self.player_index]
+        # Show the scores, columns and dice.
         lines = ['']
         lines.append('{}: {}'.format(bot.name, self.scores[bot.name]))
         lines.append(self.dice_line(self.dice[bot.name]))
@@ -117,12 +133,40 @@ class Mate(game.Game):
         Parameters:
         text: The raw text input by the user. (str)
         """
+        # Check for a possible take move.
         words = text.replace('the', '').replace('teh', '').split()
         if len(words) == 2:
             return self.do_take('{} {}'.format(*words))
         else:
+            # Otherwise give an error.
             self.players[self.player_index].error('I do not understand the move {!r}.'.format(text))
             return False
+
+    def do_gipf(self, arguments):
+        """
+        That capture can only be done en passant.
+        """
+        game, losses = self.gipf_check(arguments, ('yukon',))
+        player = self.players[self.player_index]
+        # Mate turns all of the aces face up.
+        if game == 'yukon':
+            # Get a pawn move as a queen.
+            pawn_indexes = []
+            for index, value in enumerate(self.dice[player.name].values):
+                if value == 'Pawn':
+                    pawn_indexes.append(index)
+            player.tell(self)
+            pawn = player.ask_int('\nChoose a column you have a pawn in: ', valid = pawn_indexes)
+            target = player.ask_int('Choose any column to attack: ', valid = range(5))
+            # Make the move.
+            defender = self.players[1 - self.player_index]
+            self.scores[player.name] += self.points[self.dice[defender.name].values[target]]
+            self.dice[player.name].roll(pawn)
+            self.dice[defender.name].roll(target)
+        # Otherwise I'm confused.
+        else:
+            self.human.tell("That capture can only be done en passant.")
+            return True
 
     def do_take(self, arguments):
         """
@@ -191,7 +235,7 @@ class Mate(game.Game):
             bot = self.players[self.player_index]
         bot_score = self.scores[bot.name]
         human_score = self.scores[self.human.name]
-        # Check for a win.
+        # Check for a continuing play.
         if self.turns_left:
             self.turns_left -= 1
             return False
@@ -200,6 +244,7 @@ class Mate(game.Game):
             return False
         elif bot_score < self.win and human_score < self.win:
             return False
+        # Determine the winner.
         elif bot_score > human_score:
             self.human.tell('You lose, {} to {}. :('.format(human_score, bot_score))
             self.win_loss_draw = [0, 1, 0]
@@ -244,8 +289,10 @@ class Mate(game.Game):
         piece: The user's piece specification. (str)
         values: The values of the appropriate dice. (list of str)
         """
+        # Check for integers.
         if piece.isdigit():
             return [int(piece)]
+        # Check strings using aliases.
         else:
             name = self.piece_aliases.get(piece.lower(), piece.lower())
             return [index for index, value in enumerate(values) if value.lower() == name]
@@ -269,25 +316,29 @@ class Mate(game.Game):
             words = words[3:] + words[:2]
             return self.do_take(' '.join(words))
         else:
+            # Handle other commands
             return self.handle_cmd(move)
 
     def set_options(self):
         """Set the allowed options for the game. (None)"""
-        self.option_set.add_option('win', ['w'], int, default = 64,
-            question = 'How many points should it take to win (return for 64)? ')
-        self.option_set.add_option('one-pawn', ['1p'],
-            question = 'Should there only be one pawn on the dice (return for two)? bool')
         self.option_set.add_option('bot-level', ['bl'], default = 'medium',
             valid = ('s', 'stupid', 'e', 'easy', 'm', 'medium'),
             question = 'How hard should the bot be (stupid, easy, or medium, return for medium? ')
+        self.option_set.add_option('one-pawn', ['1p'],
+            question = 'Should there only be one pawn on the dice (return for two)? bool')
+        self.option_set.add_option('win', ['w'], int, default = 64,
+            question = 'How many points should it take to win (return for 64)? ')
 
     def set_up(self):
         """Set up the game. (None)"""
+        # Link to the players.
         for player in self.players:
             player.game = self
+        # Set up the dice.
         self.dice = {}
         for player in self.players:
             self.dice[player.name] = dice.Pool([self.sides for die in range(5)])
+        # Set up end of game tracking.
         self.turns_left = 0
 
 
@@ -371,8 +422,11 @@ class MateAttackBot(MateBot):
         return self.target
 
     def value_moves(self):
+        """Value moves by highest points, ties broken by biggest attacker. (list of tuple)"""
+        # Get the reversed moves.
         moves = self.game.get_moves(self)
         moves = [(target, attacker) for attacker, target in moves]
+        # Add the values.
         human_values = self.game.dice[self.game.human.name].values
         my_values = self.game.dice[self.name].values
         pieces = [(human_values[target], my_values[attacker]) for target, attacker in moves]
@@ -389,7 +443,19 @@ class MateDefendBot(MateAttackBot):
     """
 
     def value_moves(self):
-        """Determine a value for each possible move. (list of tuple)"""
+        """Value moves by biggest attacker, then highest points. (list of tuple)"""
         attacker_moves = super(MateDefendBot, self).value_moves()
         valued_moves = [((points[1], points[0]), move) for points, move in attacker_moves]
         return valued_moves
+
+
+if __name__ == '__main__':
+    # Play the game without the full interface.
+    import t_games.player as player
+    try:
+        input = raw_input
+    except NameError:
+        pass
+    name = input('What is your name? ')
+    mate = Mate(player.Humanoid(name), '')
+    mate.play()
