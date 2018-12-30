@@ -54,6 +54,42 @@ class Yukon(solitaire.Solitaire):
     num_options = 2
     rules = RULES
 
+    def do_gipf(self, arguments):
+        """
+        That is not one of the eleven words for snow.
+        """
+        game, losses = self.gipf_check(arguments, ('klondike',))
+        # Mate turns all of the aces face up.
+        if game == 'klondike':
+            if not losses:
+                player = self.players[self.player_index]
+                player.tell(self)
+                player.tell()
+                # Get the mover
+                while True:
+                    mover = player.ask('Pick a tableau card to move, with two cards on top of it: ')
+                    mover = self.deck.find(mover)
+                    location = mover.game_location
+                    if location in self.tableau and mover == location[-3] and mover.up:
+                        moving_stack = location[-3:]
+                        break
+                    error = 'The {} is not on the tableau with two cards on top of it.'
+                    player.error(error.format(mover.name))
+                # Get the target.
+                while True:
+                    target = player.ask('Pick a tableau card to move those three cards to: ')
+                    target = self.deck.find(target)
+                    location = target.game_location
+                    if location in self.tableau and target == location[-1]:
+                        break
+                    player.error('The {} is not on top of a tableau stack.'.format(target.name))
+                # Make the move.
+                self.transfer(moving_stack, location)
+        # Otherwise I'm confused.
+        else:
+            self.human.tell("That is not one of the eleven words for snow.")
+        return True
+
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
         super(Yukon, self).set_checkers()

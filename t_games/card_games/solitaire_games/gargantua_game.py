@@ -64,9 +64,10 @@ class Gargantua(solitaire.MultiSolitaire):
         game, losses = self.gipf_check(arguments, ('mate',))
         # Mate turns all of the aces face up.
         if game == 'mate':
-            for card in self.deck.in_play:
-                if card.rank == 'A':
-                    card.up = True
+            if not losses:
+                for card in self.deck.in_play:
+                    if card.rank == 'A':
+                        card.up = True
         # Otherwise I'm confused.
         else:
             self.human.tell("Gargantua decidedly dislikes miniscule linguistic particulates.")
