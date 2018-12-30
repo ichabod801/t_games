@@ -11,7 +11,7 @@ DodecahedronTest: Test of a dungeon of caves. (unittest.TestCase)
 
 import unittest
 
-import t_games.other_games.wumpus_game as wumpus
+import t_games.adventure_games.wumpus_game as wumpus
 
 
 class CaveTest(unittest.TestCase):
