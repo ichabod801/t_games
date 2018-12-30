@@ -691,29 +691,34 @@ class Cribbage(game.Game):
         Parameters:
         cards: The cards to score. (int)
         """
-        # Check for pairs or adjacent ranks.
+        # Get the numeric ranks of the cards.
         ranks = sorted([CribCard.ranks.index(card.rank) for card in cards])
-        diffs = [second - first for first, second in zip(ranks, ranks[1:])]
-        run = []
-        for diff in diffs:
-            if diff < 2:
-                run.append(diff)
-            elif len(run) > 1:
-                break
-            else:
-                run = []
-        # Record any runs that occurred.
+        # Loop through consecutive pairs of ranks.
         run_data = []
-        if len(run) > 1 and run.count(1) > 1:
-            # Check pair count to determine the number of runs.
-            pairs = [index for index, diff in enumerate(run) if diff == 0]
-            run_count = [1, 2, 4][len(pairs)]
-            # Adjust for three of a kind as opposed to two pair.
-            if len(pairs) == 2 and pairs[1] - pairs[0] == 1:
-                run_count = 3
-            # Update the score.
-            run_length = run.count(1) + 1
-            run_data.append((run_length, run_count))
+        run = []
+        run_count, count_mod = 1, 1
+        for first, second in zip(ranks, ranks[1:]):
+            # Check the difference
+            diff = second - first
+            if diff < 2:
+                # Track the run, accounting for duplicates.
+                if diff or (run and run[-1]):
+                    run.append(diff)
+                if diff:
+                    run_count *= count_mod
+                    count_mod = 1
+                else:
+                    count_mod += 1
+            else:
+                # Store any completed runs.
+                if len(run) > 1:
+                    run_data.append((run.count(1) + 1, run_count * count_mod))
+                # Reset run tracking.
+                run = []
+                run_count, count_mod = 1, 1
+        # Catch any final run.
+        if len(run) > 1:
+            run_data.append((run.count(1) + 1, run_count * count_mod))
         return run_data
 
     def score_sequence(self, player, card):
