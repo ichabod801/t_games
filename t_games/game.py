@@ -363,8 +363,9 @@ class Game(OtherCmd):
                 games = {}
         else:
             games = {game_name: self.interface.games[game_name] for game_name in game_names}
-            games['oregon trail'] = self.interface.games['oregon trail']
-            game_names += ('oregon trail',)
+            if 'oregon trail' in self.interface.games:
+                games['oregon trail'] = self.interface.games['oregon trail']
+                game_names += ('oregon trail',)
         for game_name in game_names:
             games.update({alias.lower(): games[game_name] for alias in games[game_name].aka})
         # Find the correct game.

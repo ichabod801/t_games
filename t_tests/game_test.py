@@ -73,12 +73,12 @@ class GameCommandTest(unittest.TestCase):
     def testQuitQuit(self):
         """Test quit quit command."""
         self.game.do_quit('quit')
-        self.assertEqual(['!'], self.bot.held_inputs)
+        self.assertEqual(['!!'], self.bot.held_inputs)
 
     def testQuitWithQuit(self):
         """Test quit command with quit argument."""
         self.game.do_quit('quit')
-        self.assertEqual(['!'], self.bot.held_inputs)
+        self.assertEqual(['!!'], self.bot.held_inputs)
 
     def testRPNFlip(self):
         """Test flipping a coin with the rpn command."""
