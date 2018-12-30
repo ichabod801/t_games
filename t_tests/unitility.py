@@ -65,6 +65,8 @@ class AutoBot(player.Bot):
         self.results = []
         # Method call tracking.
         self.all_set, self.all_done = False, False
+        # Humanoid attributes.
+        self.session_index = 0
 
     def ask(self, prompt):
         """

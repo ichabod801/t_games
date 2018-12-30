@@ -242,14 +242,15 @@ class InterfaceGameTest(unittest.TestCase):
 
     def testCategoryParent(self):
         """Test category_games with a sub-category."""
-        check = ['Bisley', 'Canfield', 'Crazy Eights', 'Cribbage', 'Forty Thieves', 'FreeCell', 'Klondike']
-        check += ['Monte Carlo', 'Ninety-Nine', 'Pyramid', 'Quadrille', 'Spider', 'Strategy']
+        check = ['Bisley', 'Canfield', 'Crazy Eights', 'Cribbage', 'Forty Thieves', 'FreeCell']
+        check += ['Gargantua', 'Klondike', 'Monte Carlo', 'Ninety-Nine', 'Pyramid', 'Quadrille']
+        check += ['Spider', 'Strategy', 'Thoughtful Solitaire', 'Yukon']
         self.interface.focus = self.interface.categories['sub-categories']['Card Games']
         self.assertEqual(check, sorted([game.name for game in self.interface.category_games()]))
 
     def testCategoryTerminal(self):
         """Test category_games with a terminal category."""
-        check = ["Liar's Dice", 'Pig', 'Solitaire Dice', 'Yacht']
+        check = ["Liar's Dice", 'Mate', 'Pig', 'Solitaire Dice', 'Yacht']
         self.interface.focus = self.interface.categories['sub-categories']['Dice Games']
         self.assertEqual(check, sorted([game.name for game in self.interface.category_games()]))
 
@@ -279,14 +280,14 @@ class InterfaceMenuTest(unittest.TestCase):
     def testPlay(self):
         """Test playing a game."""
         self.interface.play_game = unitility.ProtoObject()
-        self.bot.replies = ['C', 'B', '!']
+        self.bot.replies = ['D', 'C', '!']
         self.interface.menu()
         self.assertEqual((self.interface.games['pig'], ''), self.interface.play_game.args)
 
     def testPlayOptions(self):
         """Test playing a game with options."""
         self.interface.play_game = unitility.ProtoObject()
-        self.bot.replies = ['C', 'B / satan', '!']
+        self.bot.replies = ['D', 'C / satan', '!']
         self.interface.menu()
         self.assertEqual((self.interface.games['pig'], 'satan'), self.interface.play_game.args)
 
@@ -298,13 +299,13 @@ class InterfaceMenuTest(unittest.TestCase):
 
     def testPreviousComplicatedFocus(self):
         """Test focus complicated movement through the menu."""
-        self.bot.replies = ['C', '<', 'B', 'A', '<', '!']
+        self.bot.replies = ['D', '<', 'C', 'A', '<', '!']
         self.interface.menu()
         self.assertEqual(self.interface.categories['sub-categories']['Card Games'], self.interface.focus)
 
     def testPreviousComplicatedPrevious(self):
         """Test move history complicated movement through the menu."""
-        self.bot.replies = ['C', '<', 'B', 'A', '<', '!']
+        self.bot.replies = ['D', '<', 'C', 'A', '<', '!']
         self.interface.menu()
         self.assertEqual([self.interface.categories], self.interface.previous)
 
@@ -316,13 +317,13 @@ class InterfaceMenuTest(unittest.TestCase):
 
     def testPreviousTwice(self):
         """Test moving back to the main menu after two moves."""
-        self.bot.replies = ['B', 'A', '<', '<', '!']
+        self.bot.replies = ['C', 'A', '<', '<', '!']
         self.interface.menu()
         self.assertEqual(self.interface.categories, self.interface.focus)
 
     def testSubCategory(self):
         """Test moving to a sub-category."""
-        self.bot.replies = ['C', '!']
+        self.bot.replies = ['D', '!']
         self.interface.menu()
         self.assertEqual(self.interface.categories['sub-categories']['Dice Games'], self.interface.focus)
 
@@ -345,21 +346,21 @@ class InterfacePlayGameTest(unittest.TestCase):
         """Test playing a game with cheating."""
         self.bot.replies = ["& setattr(self, 'flags', 2)", 'win' 'n', '!']
         self.interface.play_game(unitility.TestGame, '')
-        check = '\nStatistics were calculated with the folloing options: cheat.\n'
+        check = '\nStatistics were calculated with the following options: cheat.\n'
         self.assertIn(check, self.bot.info)
 
     def testGipf(self):
         """Test playing a game with gipfing."""
         self.bot.replies = ["& setattr(self, 'flags', 8)", 'win' 'n', '!']
         self.interface.play_game(unitility.TestGame, '')
-        check = '\nStatistics were calculated with the folloing options: gipf.\n'
+        check = '\nStatistics were calculated with the following options: gipf.\n'
         self.assertIn(check, self.bot.info)
 
     def testMultiFilter(self):
         """Test playing a game with multiple statistics blocks."""
         self.bot.replies = ["& setattr(self, 'flags', 130)", 'win' 'n', '!']
         self.interface.play_game(unitility.TestGame, 'cheat xyzzy')
-        check = '\nStatistics were calculated with the folloing options: cheat xyzzy.\n'
+        check = '\nStatistics were calculated with the following options: cheat xyzzy.\n'
         self.assertIn(check, self.bot.info)
 
     def testNoFilter(self):
@@ -383,7 +384,7 @@ class InterfacePlayGameTest(unittest.TestCase):
         """Test playing a game with xyzzy."""
         self.bot.replies = ["& setattr(self, 'flags', 128)", 'win' 'n', '!']
         self.interface.play_game(unitility.TestGame, '')
-        check = '\nStatistics were calculated with the folloing options: xyzzy.\n'
+        check = '\nStatistics were calculated with the following options: xyzzy.\n'
         self.assertIn(check, self.bot.info)
 
 
@@ -556,7 +557,7 @@ class StatisticsStringTest(unittest.TestCase):
     def testEmpty(self):
         """Test the output for no statistics."""
         stats = interface.Statistics([])
-        self.assertEqual('N/A', str(stats))
+        self.assertEqual('\nNo statistics are available for those settings.', str(stats))
 
     def testGameRecord(self):
         """Test the game win/loss/draw output."""
