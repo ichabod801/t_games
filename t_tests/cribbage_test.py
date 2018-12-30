@@ -190,20 +190,40 @@ class ScoreHandTest(unittest.TestCase):
         hand = [crib.CribCard(*card) for card in ('8D', '6C', '5H', '7S', 'JC')]
         self.assertEqual([(4, 1)], self.game.score_runs(hand))
 
-    def testRunFourTwice(self):
+    def testRunFourTwo(self):
         """Test scoring a four card run twice."""
         hand = [crib.CribCard(*card) for card in ('8D', '6C', '5H', '7S', '5C')]
         self.assertEqual([(4, 2)], self.game.score_runs(hand))
+
+    def testRunFourFour(self):
+        """Test scoring a four card run four times."""
+        hand = [crib.CribCard(*card) for card in ('8D', '6C', '5H', '7S', '5C', '8S')]
+        self.assertEqual([(4, 4)], self.game.score_runs(hand))
 
     def testRunThree(self):
         """Test scoring a three card run."""
         hand = [crib.CribCard(*card) for card in ('5C', 'AD', '6H', '9C', '7S')]
         self.assertEqual([(3, 1)], self.game.score_runs(hand))
 
+    def testRunThreeEight(self):
+        """Test scoring a three card run eight times."""
+        hand = [crib.CribCard(*card) for card in ('5C', '7D', '6H', '6C', '7S', '5D')]
+        self.assertEqual([(3, 8)], self.game.score_runs(hand))
+
     def testRunThreeFour(self):
         """Test scoring a three card run four times."""
-        hand = [crib.CribCard(*card) for card in ('5C', '7D', '6H', '6C', '7S')]
+        hand = [crib.CribCard(*card) for card in ('7H', '5C', '7D', '6H', '7C', '7S')]
         self.assertEqual([(3, 4)], self.game.score_runs(hand))
+
+    def testRunThreeSix(self):
+        """Test scoring a three card run six times."""
+        hand = [crib.CribCard(*card) for card in ('5C', '7D', '6H', '6C', '7S', '7H')]
+        self.assertEqual([(3, 6)], self.game.score_runs(hand))
+
+    def testRunThreeTwice(self):
+        """Test scoring two three card runs."""
+        hand = [crib.CribCard(*card) for card in ('5C', '7D', 'TH', '6C', 'QS', 'JH')]
+        self.assertEqual([(3, 1), (3, 1)], self.game.score_runs(hand))
 
 
 class ScorePeggingTest(unittest.TestCase):
