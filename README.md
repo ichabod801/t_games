@@ -21,7 +21,7 @@ None. The t_games system is designed to run in base Pyton, in either 2.7 or the 
 
 ### Contributing
 
-The t_games project is not yet ready for contributions, but will be by the end of the year.
+The t_games project is currently looking for people to playtest it looking for bugs before the final release. If you are interested in being invovled, send an email to t_admin at xenomind dot com.
 
 ### Versioning
 
