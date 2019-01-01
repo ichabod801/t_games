@@ -489,6 +489,8 @@ class Tester(Human):
             os.mkdir(self.folder_name)
             with open(os.path.join(self.folder_name, 'results.txt'), 'w') as player_data:
                 player_data.write('')
+            with open(os.path.join(self.folder_name, 'shortcuts.txt'), 'w') as player_data:
+                player_data.write('')
         # Load any previous testing data.
         self.load_results()
         self.load_shortcuts()
