@@ -32,11 +32,11 @@ import random
 import re
 import sys
 
-import t_games.dice as dice
-import t_games.options as options
-from t_games.other_cmd import OtherCmd
-from t_games.player import Player
-import t_games.utility as utility
+from . import dice
+from . import options
+from .other_cmd import OtherCmd
+from .player import Player
+from . import utility
 
 
 class Game(OtherCmd):

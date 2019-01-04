@@ -29,7 +29,7 @@ import random
 import re
 import string
 
-import t_games.utility as utility
+from . import utility
 
 
 # Convert 2.7 input to raw_input

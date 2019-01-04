@@ -25,7 +25,7 @@ import collections
 import random
 import re
 
-import t_games.utility as utility
+from . import utility
 
 
 class Card(object):

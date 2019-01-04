@@ -17,7 +17,7 @@ import functools
 import itertools
 import random
 
-import t_games.utility as utility
+from . import utility
 
 
 @functools.total_ordering

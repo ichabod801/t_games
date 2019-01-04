@@ -18,14 +18,13 @@ details.
 See <http://www.gnu.org/licenses/> for details on this license (GPLv3).
 """
 
-from __future__ import print_function
 
-import t_games.dice as dice
-import t_games.game as game
-import t_games.interface as interface
-import t_games.player as player
-from t_games.play import play
-from t_games.test import test
+from . import board
+from . import cards
+from . import dice
+
+from .interface import Interface
+from .play import play
 
 
 if __name__ == '__main__':

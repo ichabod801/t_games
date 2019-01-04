@@ -17,7 +17,8 @@ upper: Convert a string to upper case. (str)
 
 
 import collections
-import t_games.utility as utility
+
+from . import utility
 
 
 class AllRange(object):

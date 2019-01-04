@@ -16,8 +16,8 @@ test: Test some text games. (None)
 
 from __future__ import print_function
 
-import t_games.interface as interface
-import t_games.player as player
+from . import interface
+from . import player
 
 
 class Test(object):

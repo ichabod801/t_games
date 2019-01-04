@@ -26,11 +26,11 @@ import random
 import re
 from string import ascii_uppercase
 
-import t_games.full_credits as full_credits
-import t_games.game as game
-import t_games.other_cmd as other_cmd
-import t_games.player as player
-import t_games.utility as utility
+from . import full_credits
+from . import game
+from . import other_cmd
+from . import player
+from . import utility
 
 
 # General help for the interface.
