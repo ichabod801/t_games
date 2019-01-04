@@ -18,9 +18,9 @@ BlackjackHand: A hand of Blackjack. (cards.Hand)
 """
 
 
-import t_games.cards as cards
-import t_games.game as game
-import t_games.utility as utility
+from .. import cards
+from .. import game
+from .. import utility
 
 
 CREDITS = """
@@ -908,15 +908,3 @@ class BlackjackHand(cards.Hand):
         new_hand.was_split = True
         # Return the new hand.
         return new_hand
-
-
-if __name__ == '__main__':
-    # Play Blackjack without the full interface.
-    import t_games.player as player
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    blackjack = Blackjack(player.Humanoid(name), '')
-    print(blackjack.play())

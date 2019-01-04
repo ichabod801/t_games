@@ -23,8 +23,8 @@ import os
 import random
 import re
 
-import t_games.game as game
-import t_games.utility as utility
+from .. import game
+from .. import utility
 
 
 BODY_PARTS = 'O|/\\/\\'
@@ -369,14 +369,3 @@ class Hangman(game.Game):
         self.incorrect = 0
         self.word_length = 0
         self.foul = False
-
-
-if __name__ == '__main__':
-    # Play Hangman without the full interface.
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    hanger = Hangman(player.Humanoid(name), '')
-    hanger.play()

@@ -41,10 +41,10 @@ import math
 import random
 import re
 
-import t_games.dice as dice
-import t_games.game as game
-import t_games.player as player
-import t_games.utility as utility
+from .. import dice
+from .. import game
+from .. import player
+from .. import utility
 
 
 BUY_ODDS = {4: (2, 1), 5: (3, 2), 6: (6, 5), 8: (6, 5), 9: (3, 2), 10: (2, 1)}
@@ -1599,15 +1599,3 @@ class Randy(CrapsBot):
         # Track making the bet.
         self.last_act = 'wager'
         return wager
-
-
-if __name__ == '__main__':
-    # Play Craps without the full interface.
-    import t_games.player as player
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    craps = Craps(player.Humanoid(name), '')
-    print(craps.play())

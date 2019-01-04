@@ -23,10 +23,10 @@ import bisect
 import os
 import random
 
-import t_games.game as game
-import t_games.options as options
-import t_games.player as player
-import t_games.utility as utility
+from .. import game
+from .. import options
+from .. import player
+from .. import utility
 
 
 CREDITS = """
@@ -413,14 +413,3 @@ class RPS(game.Game):
         # Set the tracking variables.
         self.moves = {player.name: '' for player in self.players}
         self.loss_draw = False
-
-
-if __name__ == '__main__':
-    # Play Rock-Paper-Scissors without the full interface.
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    rps = RPS(player.Humanoid(name), '')
-    rps.play()

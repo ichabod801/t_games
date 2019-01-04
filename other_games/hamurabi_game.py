@@ -19,8 +19,8 @@ Hamurabi: A game of Humurabi. (game.Game)
 
 import random
 
-import t_games.game as game
-import t_games.utility as utility
+from .. import game
+from .. import utility
 
 
 CREDITS = """
@@ -432,14 +432,3 @@ class Hamurabi(game.Game):
         status += 'Land is trading at {} bushels per acre.\n'.format(self.acre_cost)
         # Tell the human.
         self.human.tell(status)
-
-
-if __name__ == '__main__':
-    # Play Hamurabi without the full interface.
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    hamurabi = Hamurabi(player.Humanoid(name), '')
-    hamurabi.play()

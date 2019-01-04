@@ -18,8 +18,8 @@ import random
 import re
 import time
 
-import t_games.game as game
-import t_games.utility as utility
+from .. import game
+from .. import utility
 
 
 CREDITS = """
@@ -1353,15 +1353,3 @@ class Roulette(game.Game):
         self.scores = {self.human.name: self.stake}
         self.bets = []
         self.forced_spin = []
-
-
-if __name__ == '__main__':
-    # Play Roulette without the full interface.
-    import t_games.player as player
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    roulette = Roulette(player.Humanoid(name), '')
-    roulette.play()
