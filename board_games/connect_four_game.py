@@ -25,10 +25,10 @@ from __future__ import print_function
 import random
 import string
 
-import t_games.board as board
-import t_games.game as game
-import t_games.player as player
-import t_games.utility as utility
+from .. import board
+from .. import game
+from .. import player
+from .. import utility
 
 
 CREDITS = """
@@ -664,14 +664,3 @@ class ConnectFour(game.Game):
         # reset the bot
         self.bot.set_up()
         self.bot_random = False
-
-
-if __name__ == '__main__':
-    # Play the game without the interface.
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    connect_four = ConnectFour(player.Humanoid(name), '')
-    connect_four.play()

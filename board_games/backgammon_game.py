@@ -38,12 +38,12 @@ from __future__ import print_function
 import itertools
 import random
 
-import t_games.board as board
-import t_games.dice as dice
-import t_games.game as game
-import t_games.options as options
-import t_games.player as player
-import t_games.utility as utility
+from .. import board
+from .. import dice
+from .. import game
+from .. import options
+from .. import player
+from .. import utility
 
 
 BAR = -1
@@ -1970,14 +1970,3 @@ class BackgammonPlay(object):
     def next_move(self):
         """Return a move to make. (tuple)"""
         return self.moves.pop(0)
-
-
-if __name__ == '__main__':
-    # Play the game without the interface.
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    game = Backgammon(player.Humanoid(name), '')
-    game.play()

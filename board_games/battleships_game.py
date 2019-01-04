@@ -26,9 +26,9 @@ test: Basic testing of the board object. (None)
 import random
 import re
 
-import t_games.game as game
-import t_games.options as options
-import t_games.player as player
+from .. import game
+from .. import options
+from .. import player
 
 
 CREDITS = """
@@ -761,14 +761,3 @@ class SeaBoard(object):
         # End with an axis label.
         lines.append(' 0123456789')
         return '\n'.join(lines)
-
-
-if __name__ == '__main__':
-    # Play the game without the interface.
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    game = Battleships(player.Humanoid(name), '')
-    game.play()

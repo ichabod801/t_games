@@ -21,8 +21,8 @@ import datetime
 import random
 import time
 
-import t_games.game as game
-import t_games.utility as utility
+from .. import game
+from .. import utility
 
 
 CREDITS = """
@@ -806,14 +806,3 @@ class OregonTrail(game.Game):
         self.bullets -= int(140 * speed)
         self.clothing -= int(30 * speed)
         self.food -= int(55 * speed)
-
-
-if __name__ == '__main__':
-    # Play the game without the interface.
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    oregon_trail = OregonTrail(player.Humanoid(name), '')
-    oregon_trail.play()

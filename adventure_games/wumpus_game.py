@@ -25,7 +25,7 @@ Wumpus: A game of Hunt the Wumpus. (game.Game)
 
 import random
 
-import t_games.game as game
+from .. import game
 
 
 ADJACENT = [(4, 5, 1), (0, 6, 2), (1, 7, 3), (2, 8, 4), (3, 9, 0),
@@ -505,15 +505,3 @@ class Wumpus(game.Game):
                     self.human.tell("You feel a cool draft.")
                 result = ''
             break
-
-
-if __name__ == '__main__':
-    # Play Hunt the Wumpus without the full interface.
-    import t_games.player as player
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    wumpus = Wumpus(player.Humanoid(name), '')
-    wumpus.play()
