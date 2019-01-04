@@ -15,7 +15,7 @@ FortyThieves: A game of Forty Thieves. (solitaire.Solitaire)
 """
 
 
-import t_games.card_games.solitaire_games.solitaire_game as solitaire
+from . import solitaire_game as solitaire
 
 
 CREDITS = """
@@ -180,15 +180,3 @@ class FortyThieves(solitaire.MultiSolitaire):
         # Generate the waste text.
         stock_text += ' '.join(str(card) for card in self.waste)
         return stock_text
-
-
-if __name__ == '__main__':
-    # Play the game without the full interface.
-    import tgames.player as player
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    forty = FortyThieves(player.Humanoid(name), '')
-    forty.play()

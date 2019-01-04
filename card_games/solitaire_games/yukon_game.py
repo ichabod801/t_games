@@ -15,7 +15,7 @@ Yukon: A game of Yukon.
 """
 
 
-import t_games.card_games.solitaire_games.solitaire_game as solitaire
+from . import solitaire_game as solitaire
 
 
 CREDITS = """
@@ -111,15 +111,3 @@ class Yukon(solitaire.Solitaire):
             default = 7, converter = int, question = 'How many tableau piles should their be?')
         self.option_set.add_option('suits', ['s', 'russian'],
             question = 'Should building be done by suits instead of alternating colors? bool')
-
-
-if __name__ == '__main__':
-    # Play the game without the full interface.
-    import t_games.player as player
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    yukon = Yukon(player.Humanoid(name), '')
-    yukon.play()

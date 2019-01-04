@@ -15,8 +15,8 @@ Canfield: A game of Canfield. (Solitaire)
 """
 
 
-import t_games.options as options
-import t_games.card_games.solitaire_games.solitaire_game as solitaire
+from ... import options
+from . import solitaire_game as solitaire
 
 
 CREDITS = """
@@ -193,15 +193,3 @@ class Canfield(solitaire.Solitaire):
     def superior_text(self):
         """Generate text for the reserve in the superior variant. (str)"""
         return ' '.join([str(card) for card in self.reserve[0]])
-
-
-if __name__ == '__main__':
-    # Play the game without the full interface.
-    import t_games.player as player
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    canfield = Canfield(player.Humanoid(name), '')
-    canfield.play()

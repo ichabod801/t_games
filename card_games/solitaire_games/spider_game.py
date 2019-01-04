@@ -15,8 +15,8 @@ Spider: A game of Spider. (solitaire.MultiSolitaire)
 """
 
 
-import t_games.cards as cards
-import t_games.card_games.solitaire_games.solitaire_game as solitaire
+from ... import cards
+from . import solitaire_game as solitaire
 
 
 # # The credits for Spider.
@@ -191,15 +191,3 @@ class Spider(solitaire.MultiSolitaire):
         # Set the play options.
         self.option_set.add_option('relaxed-turn', ['relaxed', 'rt'],
             question = 'Should you be able to turn over cards with empty lanes? bool')
-
-
-if __name__ == '__main__':
-    # Play the game without the full interface.
-    import t_games.player as player
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    spider = Spider(player.Humanoid(name), '')
-    spider.play()

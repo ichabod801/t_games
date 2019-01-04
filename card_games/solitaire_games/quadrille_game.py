@@ -17,7 +17,7 @@ Quadrille: A game of Quadrille. (solitaire.Solitaire)
 
 import time
 
-import t_games.card_games.solitaire_games.solitaire_game as solitaire
+from . import solitaire_game as solitaire
 
 
 # The credits for Quadrille.
@@ -176,15 +176,3 @@ class Quadrille(solitaire.Solitaire):
         """Set the available game options."""
         self.options = {'num-foundations': 8, 'num-reserve': 4, 'turn-count': 1, 'max-passes': 3,
             'wrap-ranks': True}
-
-
-if __name__ == '__main__':
-    # Play the game without the full interface.
-    import t_games.player as player
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    quad = Quadrille(player.Humanoid(name), '')
-    quad.play()

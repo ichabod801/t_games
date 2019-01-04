@@ -21,11 +21,11 @@ from __future__ import division
 
 import random
 
-import t_games.cards as cards
-import t_games.game as game
-import t_games.options as options
-import t_games.player as player
-import t_games.utility as utility
+from .. import cards
+from .. import game
+from .. import options
+from .. import player
+from .. import utility
 
 
 # The credits for Crazy Eights.
@@ -807,14 +807,3 @@ class CrazyEights(game.Game):
             player.error('That is not a valid play.')
             return True
         return False
-
-
-if __name__ == '__main__':
-    # Play the game without the interface.
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    crazy_eights = CrazyEights(player.Humanoid(name), 'change-match')
-    crazy_eights.play()

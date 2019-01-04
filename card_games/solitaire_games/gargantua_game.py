@@ -15,7 +15,7 @@ Gargantua: A game of Gargantua. (solitaire.Solitaire)
 """
 
 
-import t_games.card_games.solitaire_games.solitaire_game as solitaire
+from . import solitaire_game as solitaire
 
 
 CREDITS = """
@@ -91,15 +91,3 @@ class Gargantua(solitaire.MultiSolitaire):
         self.option_set.add_option('max-passes', ['mp'], action = 'key=max-passes', target = self.options,
         	default = 2, converter = int, question = 'How many time can you go through the stock? ')
         self.option_set.add_group('harp', 'max-passes=4')
-
-
-if __name__ == '__main__':
-    # Play the game without the full interface.
-    import t_games.player as player
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    garg = Gargantua(player.Humanoid(name), '')
-    garg.play()

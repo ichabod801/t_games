@@ -20,9 +20,9 @@ sim_test: Run a simulation with the Klonbot. (Klonbot, Klondike)
 """
 
 
-import t_games.player as player
-import t_games.card_games.solitaire_games.solitaire_game as solitaire
-import t_games.utility as utility
+from ... import player
+from ... import utility
+from . import solitaire_game as solitaire
 
 
 CREDITS = """
@@ -385,20 +385,3 @@ def sim_test(start = 1, end = 100):
         results = sim.play()
     # Return the bot and the game.
     return bot, sim
-
-
-if __name__ == '__main__':
-    # Play the game without the full interface.
-    import t_games.player as player
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    # Check for Klonbot play.
-    if name.lower() == 'sim':
-        bot, sim = sim_test()
-    else:
-        # Otherwise let the human play.
-        klondike = Klondike(player.Humanoid(name), '')
-        klondike.play()

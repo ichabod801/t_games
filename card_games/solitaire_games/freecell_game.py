@@ -18,8 +18,8 @@ FreeCell: A game of FreeCell. (Solitaire)
 
 import random
 
-import t_games.card_games.solitaire_games.solitaire_game as solitaire
-import t_games.utility as utility
+from ... import utility
+from . import solitaire_game as solitaire
 
 
 CREDITS = """
@@ -180,15 +180,3 @@ class FreeCell(solitaire.Solitaire):
             question = 'Should the kings be the only card playable to empty lanes? bool')
         self.option_set.add_option('baker', ['b'],
             question = "Should tableau cards be built by suit (Baker's Game)? bool")
-
-
-if __name__ == '__main__':
-    # Play the game without the full interface.
-    import t_games.player as player
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    freec = FreeCell(player.Humanoid(name), '')
-    freec.play()

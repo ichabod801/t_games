@@ -20,11 +20,11 @@ Bot99Medium: A better bot for Ninety-Nine. (Bot99)
 import random
 import re
 
-import t_games.cards as cards
-import t_games.game as game
-import t_games.options as options
-import t_games.player as player
-import t_games.utility as utility
+from .. import cards
+from .. import game
+from .. import options
+from .. import player
+from .. import utility
 
 
 CREDITS = """
@@ -501,14 +501,3 @@ class Bot99Medium(Bot99):
         # Pass if you can't play.
         else:
             return 'pass'
-
-
-if __name__ == '__main__':
-    # Play the game without the interface.
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    ninety_nine = NinetyNine(player.Humanoid(name), '')
-    ninety_nine.play()

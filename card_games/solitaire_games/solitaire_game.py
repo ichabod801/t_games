@@ -20,9 +20,9 @@ MultiSolitaire: A game of solitaire that uses multiple decks. (Solitaire)
 import itertools
 import random
 
-import t_games.cards as cards
-import t_games.game as game
-from t_games.card_games.solitaire_games.rule_checkers import *
+from ... import cards
+from ... import game
+from .rule_checkers import *
 
 
 HELP_TEXT = """

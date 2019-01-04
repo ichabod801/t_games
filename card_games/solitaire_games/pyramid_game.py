@@ -15,7 +15,7 @@ Pyramid: A game of Pyramid. (solitaire.Solitaire)
 """
 
 
-import t_games.card_games.solitaire_games.solitaire_game as solitaire
+from . import solitaire_game as solitaire
 
 
 # The credits for Pyramid.
@@ -295,15 +295,3 @@ class Pyramid(solitaire.Solitaire):
                 lines[-1] = '{}{}  '.format(lines[-1], card_text)
         lines = filter(lambda text: text.strip(), lines)
         return '\n'.join(lines)
-
-
-if __name__ == '__main__':
-    # Play the game without the full interface.
-    import t_games.player as player
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    pyramid = Pyramid(player.Humanoid(name), '')
-    pyramid.play()

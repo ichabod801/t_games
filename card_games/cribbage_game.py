@@ -22,10 +22,10 @@ import collections
 import itertools
 import random
 
-import t_games.cards as cards
-import t_games.game as game
-import t_games.player as player
-import t_games.utility as utility
+from .. import cards
+from .. import game
+from .. import player
+from .. import utility
 
 
 CREDITS = """
@@ -1121,14 +1121,3 @@ class CribCard(cards.Card):
         other: The integer to add to. (int)
         """
         return self.value - other
-
-
-if __name__ == '__main__':
-    # Play the game without the interface.
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    crib = Cribbage(player.Humanoid(name), '')
-    crib.play()

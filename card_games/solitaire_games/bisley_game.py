@@ -17,7 +17,7 @@ Bisley: A game of Bisley. (solitaire.Solitaire)
 
 import random
 
-import t_games.card_games.solitaire_games.solitaire_game as solitaire
+from . import solitaire_game as solitaire
 
 
 CREDITS = """
@@ -183,15 +183,3 @@ class Bisley(solitaire.Solitaire):
                     rows[-1].append('  ')
         # Return the text generated from the rows.
         return '\n'.join([' '.join(row) for row in rows])
-
-
-if __name__ == '__main__':
-    # Play the game without the full interface.
-    import t_games.player as player
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    bisley = Bisley(player.Humanoid(name), '')
-    bisley.play()

@@ -13,7 +13,7 @@ Strategy: A game of Strategy. (solitaire.Solitaire)
 """
 
 
-import t_games.card_games.solitaire_games.solitaire_game as solitaire
+from . import solitaire_game as solitaire
 
 
 CREDITS = """
@@ -122,15 +122,3 @@ class Strategy(solitaire.Solitaire):
         self.option_set.add_option('piles', ['p'], action = 'key=num-tableau', converter = int,
             default = 8, valid = range(1, 9), target = self.options,
             question = 'How many tableau piles (1-8, return for 8)? ')
-
-
-if __name__ == '__main__':
-    # Play the game without the full interface.
-    import t_games.player as player
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    strat = Strategy(player.Humanoid(name), '')
-    strat.play()

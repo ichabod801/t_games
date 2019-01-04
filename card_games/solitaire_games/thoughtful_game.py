@@ -15,7 +15,7 @@ Thoughtful: A game of Thoughtful Solitaire. (solitaire.Solitaire)
 """
 
 
-import t_games.card_games.solitaire_games.solitaire_game as solitaire
+from . import solitaire_game as solitaire
 
 
 CREDITS = """
@@ -230,15 +230,3 @@ class Thoughtful(solitaire.Solitaire):
         # Reset location tracking.
         for card in move_stack:
             card.game_location = new_location
-
-
-if __name__ == '__main__':
-    # Play the game without the full interface.
-    import t_games.player as player
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    thought = Thoughtful(player.Humanoid(name), '')
-    thought.play()

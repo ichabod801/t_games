@@ -17,7 +17,7 @@ MonteCarlo: A game of Monte Carlo. (solitaire.Solitaire)
 
 import random
 
-import t_games.card_games.solitaire_games.solitaire_game as solitaire
+from . import solitaire_game as solitaire
 
 
 # The credits for Monte Carlo.
@@ -173,15 +173,3 @@ class MonteCarlo(solitaire.Solitaire):
             else:
                 lines[-1] += '   '
         return '\n'.join(lines)
-
-
-if __name__ == '__main__':
-    # Play the game without the full interface.
-    import t_games.player as player
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    monty = MonteCarlo(player.Humanoid(name), '')
-    monte.play()
