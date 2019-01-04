@@ -17,9 +17,9 @@ Mate: A game of mate. (game.Game)
 
 import random
 
-import t_games.dice as dice
-import t_games.game as game
-import t_games.player as player
+from .. import dice
+from .. import game
+from .. import player
 
 
 CREDITS = """
@@ -447,15 +447,3 @@ class MateDefendBot(MateAttackBot):
         attacker_moves = super(MateDefendBot, self).value_moves()
         valued_moves = [((points[1], points[0]), move) for points, move in attacker_moves]
         return valued_moves
-
-
-if __name__ == '__main__':
-    # Play the game without the full interface.
-    import t_games.player as player
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    mate = Mate(player.Humanoid(name), '')
-    mate.play()

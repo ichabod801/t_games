@@ -20,8 +20,8 @@ SolitaireDice: A game of Solitaire Dice. (game.Game)
 import collections
 import re
 
-import t_games.dice as dice
-import t_games.game as game
+from .. import dice
+from .. import game
 
 
 CREDITS = """
@@ -280,15 +280,3 @@ class SolitaireDice(game.Game):
             elif total:
                 score += (min(total, 10) - 5) * value
         self.scores[player.name] = score
-
-
-if __name__ == '__main__':
-    # Play the game without the full interface.
-    import t_games.player as player
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    sodi = SolitaireDice(player.Humanoid(name), '')
-    sodi.play()

@@ -36,11 +36,11 @@ validate_score_spec: Validate a score specification. (bool)
 
 import random
 
-import t_games.dice as dice
-import t_games.game as game
-import t_games.options as options
-import t_games.player as player
-import t_games.utility as utility
+from .. import dice
+from .. import game
+from .. import options
+from .. import player
+from .. import utility
 
 
 # The credits for Yacht.
@@ -1191,14 +1191,3 @@ def valid_score_spec(score_spec):
         if len(score_spec) == 2 and score_spec[1].isdigit():
             valid = True
     return valid
-
-
-if __name__ == '__main__':
-    # Play Yacht without the full interface.
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    yacht = Yacht(player.Humanoid(name), '')
-    yacht.play()

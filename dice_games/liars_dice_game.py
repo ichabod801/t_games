@@ -25,10 +25,10 @@ import collections
 import itertools
 import random
 
-import t_games.dice as dice
-import t_games.game as game
-import t_games.player as player
-from t_games.utility import number_word, number_plural, YES
+from .. import dice
+from .. import game
+from .. import player
+from ..utility import number_word, number_plural, YES
 
 
 # The credits for Liar's Dice.
@@ -882,14 +882,3 @@ class LiarsDice(game.Game):
             message = 'Your claim of {} is not better than the previous claim of {}.'
             player.error(message.format(new_text, old_text))
             return False
-
-
-if __name__ == '__main__':
-    # Play Liar's Dice without the full interface.
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    liars = LiarsDice(player.Humanoid(name), '')
-    liars.play()

@@ -31,10 +31,10 @@ from __future__ import print_function
 
 import random
 
-import t_games.dice as dice
-import t_games.game as game
-import t_games.player as player
-import t_games.utility as utility
+from .. import dice
+from .. import game
+from .. import player
+from .. import utility
 
 
 CREDITS = """
@@ -634,14 +634,3 @@ class Pig(game.Game):
             self.die = dice.Die()
         # Set up the tracking variable.
         self.turn_score = 0
-
-
-if __name__ == '__main__':
-    # Play Pig without the full interface.
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    name = input('What is your name? ')
-    pig = Pig(player.Humanoid(name), '')
-    pig.play()
