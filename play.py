@@ -16,8 +16,12 @@ play: Play some text games. (None)
 
 from __future__ import print_function
 
-from . import interface
-from . import player
+try:
+    from . import interface
+    from . import player
+except (ValueError, ImportError):
+    from t_games import interface
+    from t_games import player
 
 
 class Play(object):
