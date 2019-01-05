@@ -20,8 +20,8 @@ ScoreFunctionsTest: Tests of scoring functions. (unittest.TestCase)
 
 import unittest
 
-import t_tests.unitility as unitility
-import t_games.dice_games.yacht_game as yacht
+from . import unitility
+from ..dice_games import yacht_game as yacht
 
 
 TEST_BOTS = [yacht.Bacht, yacht.Bachter] * 2
@@ -239,7 +239,3 @@ class ScoreFunctionsTest(unittest.TestCase):
     def testWildStraightWildLow(self):
         """Test a wild straight with a wild low straight."""
         self.scoreTest([1, 1, 5, 3, 4], yacht.straight_wild, 15)
-
-
-if __name__ == '__main__':
-    unittest.main()

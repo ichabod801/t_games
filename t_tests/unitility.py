@@ -23,9 +23,9 @@ import itertools
 import sys
 import unittest
 
-import t_games.game as game
-import t_games.player as player
-import t_games.utility as utility
+from .. import game
+from .. import player
+from .. import utility
 
 
 class AutoBot(player.Bot):

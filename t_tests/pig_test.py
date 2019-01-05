@@ -14,8 +14,8 @@ PigBotEvenTest: Test the Pig bots w/ the even-turns option. (unittest.TestCase)
 
 import unittest
 
-import t_games.dice_games.pig_game as pig
-import t_tests.unitility as unitility
+from ..dice_games import pig_game as pig
+from . import unitility
 
 
 TEST_BOTS = [pig.PigBotBasePaceRace, pig.PigBotPaceRace, pig.PigBotRolls, pig.PigBotScoringTurns,
@@ -26,7 +26,3 @@ PigBotBaseTest = unitility.bot_test(pig.Pig, TEST_BOTS, 10, [3, 4])
 
 
 PigBotEvenTest = unitility.bot_test(pig.Pig, TEST_BOTS, 10, [3, 4], 'even-turns')
-
-
-if __name__ == '__main__':
-    unittest.main()

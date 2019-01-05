@@ -17,7 +17,7 @@ StreakTest: Tests of longest streak calculations. (unittest.TestCase)
 
 import unittest
 
-import t_games.utility as utility
+from .. import utility
 
 
 class FactorialTest(unittest.TestCase):
@@ -297,7 +297,3 @@ class StreakTest(unittest.TestCase):
         """Test a longest streak of zero."""
         streaks = utility.streaks([result for result in self.results if result])
         self.assertEqual(0, streaks[2][0])
-
-
-if __name__ == '__main__':
-    unittest.main()
