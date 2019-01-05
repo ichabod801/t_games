@@ -47,7 +47,7 @@ class Play(object):
         Parameters:
         held_inputs: The commands for the player to start with. (list of str)
         """
-        if self.human is None:
+        if self.human is None or self.menu is None:
             print()
             self.human = player.Human()
             self.menu = interface.Interface(self.human)
