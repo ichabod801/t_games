@@ -24,9 +24,9 @@ import os
 import random
 import unittest
 
-import t_games.game as game
-import t_games.player as player
-import t_tests.unitility as unitility
+from .. import game
+from .. import player
+from . import unitility
 
 
 class GameCommandTest(unittest.TestCase):
@@ -620,7 +620,3 @@ class LoadGamesTest(unittest.TestCase):
     def testEasy(self):
         """Test loading an easy to get to game."""
         self.assertIn('double cranko', self.games)
-
-
-if __name__ == '__main__':
-    unittest.main()

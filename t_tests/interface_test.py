@@ -23,8 +23,8 @@ ValveTest: Tests of the RandomValve class. (unittest.TestCase)
 import itertools
 import unittest
 
-import t_games.interface as interface
-import t_tests.unitility as unitility
+from .. import interface
+from . import unitility
 
 
 TEST_CATEGORIES= {'games': [interface.game.Flip, interface.game.Sorter],
@@ -646,7 +646,3 @@ class ValveTest(unittest.TestCase):
         # Check the repr.
         check = '<RandomValve {:.4f}/{:.4f}>'.format(self.valve.p, self.valve.q)
         self.assertEqual(check, repr(self.valve))
-
-
-if __name__ == '__main__':
-    unittest.main()

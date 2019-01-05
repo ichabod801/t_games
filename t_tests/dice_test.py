@@ -14,7 +14,7 @@ ShuffleDieTest: Tests of a sampling die. (unittest.TestCase)
 
 import unittest
 
-import t_games.dice as dice
+from .. import dice
 
 
 class DieTest(unittest.TestCase):
@@ -366,7 +366,3 @@ class ShuffleDieTest(unittest.TestCase):
     def testRepr(self):
         """Test a computer readable text representation of a shuffle die."""
         self.assertEqual('<ShuffleDie {}>'.format(self.die.value), repr(self.die))
-
-
-if __name__ == '__main__':
-    unittest.main()
