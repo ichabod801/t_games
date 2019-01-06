@@ -41,9 +41,9 @@ import io
 import unittest
 import sys
 
-from ..board_games import backgammon_game as backgammon
-from .. import player
-from . import unitility
+from t_games.board_games import backgammon_game as backgammon
+from t_games import player
+from t_games.t_tests import unitility
 
 
 BAR = -1
@@ -1633,3 +1633,7 @@ def make_play(moves):
     for move in moves:
         play.add_move(*move)
     return play
+
+
+if __name__ == '__main__':
+    unittest.main()

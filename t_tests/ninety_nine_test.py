@@ -15,8 +15,8 @@ Bot99Test: Tests of Ninety Nine with no options. (unitest.TestCase)
 
 import unittest
 
-from ..card_games import ninety_nine_game as ninety9
-from . import unitility
+from t_games.card_games import ninety_nine_game as ninety9
+from t_games.t_tests import unitility
 
 
 TEST_BOTS = [ninety9.Bot99, ninety9.Bot99Medium] * 3
@@ -29,3 +29,7 @@ Bot99JokerTest = unitility.bot_test(ninety9.NinetyNine, TEST_BOTS, 4, [3, 4, 5, 
 
 
 Bot99Test = unitility.bot_test(ninety9.NinetyNine, TEST_BOTS, 4, [3, 4, 5, 6])
+
+
+if __name__ == '__main__':
+    unittest.main()

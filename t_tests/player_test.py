@@ -18,8 +18,8 @@ import random
 import sys
 import unittest
 
-from .. import player
-from . import unitility
+from t_games import player
+from t_games.t_tests import unitility
 
 
 class BotTest(unittest.TestCase):
@@ -551,3 +551,7 @@ class PlayerTextTest(unittest.TestCase):
         sys.stdin.lines = ['Buckaroo', 'Testing', 'Black']
         gamer = player.Human()
         self.assertEqual('Buckaroo', str(gamer))
+
+
+if __name__ == '__main__':
+    unittest.main()

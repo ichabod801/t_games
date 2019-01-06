@@ -15,10 +15,10 @@ TakeActionTest: Tests of OptionSet.take_action. (unittest.TestCase)
 
 import unittest
 
-from .. import game
-from .. import options
-from .. import player
-from . import unitility
+from t_games import game
+from t_games import options
+from t_games import player
+from t_games.t_tests import unitility
 
 
 class AddOptionTest(unittest.TestCase):
@@ -323,3 +323,7 @@ class TakeActionTest(unittest.TestCase):
         self.game.test = {'low': 108, 'high': 801}
         self.options.take_action({'action': 'map', 'value': self.game.test, 'target': 'test'}, 'high')
         self.assertEqual(801, self.options.settings['test'])
+
+
+if __name__ == '__main__':
+    unittest.main()

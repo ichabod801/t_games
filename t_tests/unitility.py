@@ -23,9 +23,9 @@ import itertools
 import sys
 import unittest
 
-from .. import game
-from .. import player
-from .. import utility
+from t_games import game
+from t_games import player
+from t_games import utility
 
 
 class AutoBot(player.Bot):
@@ -459,3 +459,7 @@ def bot_test(game, bot_classes, rounds, n_bots, options = 'none', bot_params = [
             new_test = make_bot_test(list(test_bots))
             setattr(BotTest, 'testBots{}_{:03}'.format(num_bots, group_index + 1), new_test)
     return BotTest
+
+
+if __name__ == '__main__':
+    unittest.main()

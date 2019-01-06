@@ -14,9 +14,9 @@ OtherCmdTextTest: Tests of text for a command handler. (unittest.TestCase)
 
 import unittest
 
-from .. import other_cmd
-from .. import player
-from .. import unitility
+from t_games import other_cmd
+from t_games import player
+from t_games.t_tests import unitility
 
 
 class OtherCmdCmdTest(unittest.TestCase):
@@ -193,3 +193,7 @@ class OtherCmdTextTest(unittest.TestCase):
     def testRepr(self):
         """Test the debugging text representation for the command handler."""
         self.assertEqual('<OtherCmd for <Bot George>>', repr(self.cmd_handler))
+
+
+if __name__ == '__main__':
+    unittest.main()

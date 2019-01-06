@@ -16,8 +16,8 @@ ScorePeggingTest: Test scoring cribbage plays. (unittest.TestCase)
 
 import unittest
 
-from ..card_games import cribbage_game as crib
-from . unitility
+from t_games.card_games import cribbage_game as crib
+from t_games.t_tests import unitility
 
 
 CribBotsFourTest = unitility.bot_test(crib.Cribbage, [crib.CribBot] * 4, 2, [4], 'four-partners')
@@ -299,3 +299,7 @@ class ScorePeggingTest(unittest.TestCase):
         self.game.in_play['Play Sequence'].cards = [crib.CribCard(*card) for card in cards]
         message = '{} scores 6 points for getting three cards of the same rank.'.format(self.human.name)
         self.assertEqual((6, message), self.game.score_sequence(self.human, crib.CribCard(*'6S')))
+
+
+if __name__ == '__main__':
+    unittest.main()

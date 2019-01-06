@@ -17,9 +17,9 @@ import collections
 import random
 import unittest
 
-from .. import cards
-from ..card_games.solitaire_games import solitaire_game as solitaire
-from . import unitility
+from t_games import cards
+from t_games.card_games.solitaire_games import solitaire_game as solitaire
+from t_games.t_tests import unitility
 
 
 class CardTest(unittest.TestCase):
@@ -1072,3 +1072,7 @@ class TrackingDeckTest(unittest.TestCase):
         """Test the human readable text representation at the start."""
         check = 'Deck of cards with 52 cards, plus 0 cards in play and 0 cards discarded'
         self.assertEqual(check, str(self.deck))
+
+
+if __name__ == '__main__':
+    unittest.main()

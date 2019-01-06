@@ -12,8 +12,8 @@ CrapsBotTest: A test of the Craps bots. (unittest.TestCase)
 
 import unittest
 
-from ..gambling_games import craps_game as craps
-from . import unitility
+from t_games.gambling_games import craps_game as craps
+from t_games.t_tests import unitility
 
 
 class CrapsBetResolveTest(unittest.TestCase):
@@ -482,3 +482,7 @@ class CrapsBetTextTest(unittest.TestCase):
 
 
 #CrapsBotTest = unitility.bot_test(craps.Craps, [craps.Randy], 1, [1])
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -16,9 +16,9 @@ C4BotTest: Tests of the ConnectFour bots. (unittest.TestCase)
 import random
 import unittest
 
-from .. import board
-from ..board_games import connect_four_game as connect_four
-from . import unitility
+from t_games import board
+from t_games.board_games import connect_four_game as connect_four
+from t_games.t_tests import unitility
 
 
 C4Bots = [connect_four.C4BotAlphaBeta, connect_four.C4BotGamma, connect_four.C4BotGamma]
@@ -261,3 +261,7 @@ class BoardCheckWinTest(unittest.TestCase):
 
 
 C4BotTest = unitility.bot_test(connect_four.ConnectFour, C4Bots, 1, [2], bot_params = [(), (), (8,)])
+
+
+if __name__ == '__main__':
+    unittest.main()

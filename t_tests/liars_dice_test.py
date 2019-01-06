@@ -26,9 +26,9 @@ by_count: Crate a counts dictionary for testing. (collections.defaultdict)
 import collections
 import unittest
 
-from ..dice_games import liars_dice_game as liar
-from .. import player
-from . import unitility
+from t_games.dice_games import liars_dice_game as liar
+from t_games import player
+from t_games.t_tests import unitility
 
 
 TEST_BOTS = [liar.ABBot, liar.Challenger, liar.Liar, liar.DoubleTrouble, liar.Challenger, liar.Liar]
@@ -731,3 +731,7 @@ def by_count(values):
     for value in set(values):
         counts[values.count(value)].append(value)
     return counts
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -18,8 +18,8 @@ SeaBoardTextTest: Tests of text versions of a Battleships' board. (TestCase)
 import itertools
 import unittest
 
-from ..board_games import battleships_game as battleships
-from . import unitility
+from t_games.board_games import battleships_game as battleships
+from t_games.t_tests import unitility
 
 
 BOARD_LINES = ['', ' 0123456789', 'JOXXOO./...J', 'I//...X....I', 'H..../X.../H', 'G.../.X../.G',
@@ -445,3 +445,7 @@ class SeaBoardTextTest(unittest.TestCase):
         self.board.hits = set('J2 J1 I5 H5 G5 F5'.split())
         self.board.misses = set('J6 I0 I1 H4 H9 G3 G8 F2 F7 E1 E6 D0 D5 C4 C9 B3 B8 A2 A7'.split())
         self.assertEqual('\n'.join(BOARD_LINES), self.board.show())
+
+
+if __name__ == '__main__':
+    unittest.main()

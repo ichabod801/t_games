@@ -24,9 +24,9 @@ import os
 import random
 import unittest
 
-from .. import game
-from .. import player
-from . import unitility
+from t_games import game
+from t_games import player
+from t_games.t_tests import unitility
 
 
 class GameCommandTest(unittest.TestCase):
@@ -604,19 +604,5 @@ class GameXyzzyHelpTest(unittest.TestCase):
         self.assertEqual(1, len(self.bot.info))
 
 
-class LoadGamesTest(unittest.TestCase):
-    """Tests of the load_games function. (unittest.TestCase)"""
-
-    def setUp(self):
-        self.loc_hold = game.utility.LOC
-        game.utility.LOC = os.path.dirname(os.path.abspath(__file__)) + '\\m_games'
-        #print(game.utility.LOC)
-        self.games, self.categories = game.load_games()
-
-    def tearDown(self):
-        game.utility.LOC = self.loc_hold
-
-    @unittest.skip('Implementation problems.')
-    def testEasy(self):
-        """Test loading an easy to get to game."""
-        self.assertIn('double cranko', self.games)
+if __name__ == '__main__':
+    unittest.main()

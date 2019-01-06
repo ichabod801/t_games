@@ -11,7 +11,7 @@ DodecahedronTest: Test of a dungeon of caves. (unittest.TestCase)
 
 import unittest
 
-from ..adventure_games import wumpus_game as wumpus
+from t_games.adventure_games import wumpus_game as wumpus
 
 
 class CaveTest(unittest.TestCase):
@@ -58,3 +58,7 @@ class DodecahedronTest(unittest.TestCase):
         """Test the debugging text of a system of caves after a wumpus move."""
         self.dungeon.move_wumpus()
         self.assertEqual(self.correctRepr(), repr(self.dungeon))
+
+
+if __name__ == '__main__':
+    unittest.main()

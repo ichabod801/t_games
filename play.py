@@ -77,36 +77,13 @@ class Play(object):
             self.human = player.Tester()
             self.menu = interface.Interface(self.human)
         elif action in ('p', 'play') and not isinstance(self.human, player.Human):
+            print()
             self.human = player.Human()
             self.menu = interface.Interface(self.human)
         # Play the requested game.
-        self.human.tell()
         self.human.held_inputs = held_inputs
         self.menu.menu()
         return self.human.results[self.human.session_index:]
-
-    def auto_test(self, test_files = []):
-        """
-        Run automated testing on the t_games system. (None)
-
-        If not test files are specified, all test files are run.
-
-        Parameters:
-        test_files: The names of the test files to run. (list of str)
-        """
-        if test_files:
-            parsed_files = []
-            for file_name in test_files:
-                if file_name.endswith('_test.py'):
-                    parsed_files.append(file_name)
-                elif file_name.endswith('_test'):
-                    parsed_files.append('{}.py'.format(file_name))
-                else:
-                    parsed_files.append('{}_test.py'.format(file_name))
-            test_suite = unittest.defaultTestLoader.loadTestsFromNames(parsed_files)
-        else:
-            test_suite = unittest.defaultTestLoader.discover('t_tests', pattern = '*_test.py')
-        unittest.TextTestRunner(verbosity = 1).run(test_suite)
 
 
 # Test some text games. (None)

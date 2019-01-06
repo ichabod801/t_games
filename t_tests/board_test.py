@@ -15,7 +15,7 @@ MultiCellTest: Tests of the multi-cell class. (TestCase)
 
 import unittest
 
-from .. import board
+from t_games import board
 
 
 class BoardTest(unittest.TestCase):
@@ -650,3 +650,7 @@ class MultiCellTest(unittest.TestCase):
         """Test the string of an empty MultiCell."""
         self.cell.contents = []
         self.assertEqual(' ', str(self.cell))
+
+
+if __name__ == '__main__':
+    unittest.main()
