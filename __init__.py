@@ -24,7 +24,7 @@ from . import cards
 from . import dice
 
 from .interface import Interface
-from .play import play
+from .play import auto_test, play, test
 
 
 if __name__ == '__main__':
