@@ -17,7 +17,8 @@ test: Play t_games with a default player. (list of lists)
 
 from __future__ import print_function
 
-import unittest
+import getopt
+import sys
 
 try:
     # Standard imports.
@@ -113,4 +114,15 @@ test = Test()
 
 
 if __name__ == '__main__':
-    play()
+    # Get any options.
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 't')
+    except getopt.GetoptError as err:
+        print(err)
+        sys.exit(2)
+    # Check for testing.
+    if ('-t', '') in opts:
+        play_function = test
+    else:
+        play_function = play
+    play_function(args)
