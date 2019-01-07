@@ -40,11 +40,14 @@ except (ValueError, ImportError):
 
 class Play(object):
     """
-    An object for saving state when testing. (object)
+    An object for saving state when playing. (object)
 
     Attributes:
     human: The player. (player.Human)
     menu: The t_games interface object. (interface.Interface)
+
+    Methods:
+    reset: Set the player and the interface. (None)
 
     Overridden Methods:
     __init__
@@ -70,46 +73,43 @@ class Play(object):
         held_inputs: The commands for the player to start with. (list of str)
         action: The action to take. (str)
         """
-        # Handle the action type.
-        if action.lower() in ('a', 'auto'):
-            return self.auto_test(held_inputs)
-        if action in ('t', 'test') and not isinstance(self.human, player.Tester):
-            self.human = player.Tester()
-            self.menu = interface.Interface(self.human)
-        elif action in ('p', 'play') and not isinstance(self.human, player.Human):
-            print()
-            self.human = player.Human()
-            self.menu = interface.Interface(self.human)
+        if self.human is None or self.menu is None:
+            self.reset()
         # Play the requested game.
         self.human.held_inputs = held_inputs
         self.menu.menu()
-        return self.human.results[self.human.session_index:]
+        # Handle the results
+        results = self.human.results[self.human.session_index:]
+        self.human.session_index = len(self.human.results)
+        return results
+
+    def reset(self):
+        """Set the player and the interface. (None)"""
+        print()
+        self.human = player.Human()
+        self.menu = interface.Interface(self.human)
 
 
-# Test some text games. (None)
+# Play some text games.
 play = Play()
 
-def auto_test(test_files = []):
+
+class Test(Play):
     """
-    Run automated testing on the t_games system. (None)
+    An object for saving state when playing. (object)
 
-    If not test files are specified, all test files are run.
-
-    Parameters:
-    test_files: The names of the test files to run. (list of str)
+    Overridden Methods:
+    reset
     """
-    play.auto_test(test_files)
 
-def test(held_inputs = []):
-    """
-    Play t_games with a default player. (list of lists)
+    def reset(self):
+        """Set the player and the interface. (None)"""
+        self.human = player.Tester()
+        self.menu = interface.Interface(self.human)
 
-    The return value is a list of results from the games played.
 
-    Parameters:
-    held_inputs: The commands for the player to start with. (list of str)
-    """
-    return play(held_inputs, action = 'test')
+# Test some games
+test = Test()
 
 
 if __name__ == '__main__':
