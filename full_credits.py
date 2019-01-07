@@ -24,7 +24,7 @@ CREDITS_DATA = [('Interface Programming', """Craig "Ichabod" O'Brien"""),
         Gerry Tesauro"""),
     ('Bot Programming', """Craig "Ichabod" O'Brien"""),
     ('Documentation', """wma, Craig O'Brien"""),
-    ('Play Testing', """Craig "Ichabod" O'Brien"""),
+    ('Play Testing', """Micah Page, Craig O'Brien"""),
     ('Special Thanks', """Guido van Rossum; python-forum.io, github.com, Wikipedia, pagat.com;
         Alan Beale, Kris Burm, Matt Groening, David Parlett""")]
 
