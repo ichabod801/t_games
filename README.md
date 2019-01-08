@@ -4,12 +4,14 @@ The t_games project is a suite of text games to play on a command-line interface
 
 ### Getting Started
 
-Simply download the files into a folder in your Python path, and use the play function:
+Simply download the files and use the play function:
 
 ```python
 import t_games
 t_games.play()
 ```
+
+If you download the files to a folder in your Python path, you should be able to do this from any location. Otherwise you will need to be in the parent folder of the t_games folder (2.7 or 3.0+) or the t_games folder itself (3.0+ only).
 
 Alternatively, you can go to the folder you downloaded them into and run `python play.py`.
 
