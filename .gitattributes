@@ -1,4 +1,5 @@
 # Don't export tests
+t_tests/ export-ignore
 t_tests/* export-ignore
 
 # Don't export github files
