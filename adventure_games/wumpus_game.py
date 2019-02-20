@@ -419,11 +419,16 @@ class Wumpus(game.Game):
         elif move in ('r', 'right'):
             self.dodec.move('R')
         # Check for shooting an arrow.
-        elif move.split()[0] in ('s', 'shoot'):
-            self.shoot(move.split()[1])
-        # Check for other commands.
         else:
-            return self.handle_cmd(move)
+            words = move.split()
+            if words and words[0] in ('s', 'shoot'):
+                if len(words) == 2:
+                    self.shoot(move.split()[1])
+                else:
+                    player.error('The shoot command takes one and only one parameter.')
+            # Check for other commands.
+            else:
+                return self.handle_cmd(move)
         # Set the current (losing) score.
         self.scores[self.human.name] = -self.turns
 

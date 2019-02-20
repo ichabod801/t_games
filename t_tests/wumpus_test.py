@@ -6,12 +6,14 @@ Unit testing of t_games/other_games/wumpus_game.py
 Classes:
 CaveTest: Tests of caves in the dungeon. (unittest.TestCase)
 DodecahedronTest: Test of a dungeon of caves. (unittest.TestCase)
+WumpusTest: Test the interface for Hunt the Wumpus. (unittest.TestCase)
 """
 
 
 import unittest
 
 from t_games.adventure_games import wumpus_game as wumpus
+import unitility as unitility
 
 
 class CaveTest(unittest.TestCase):
@@ -58,6 +60,19 @@ class DodecahedronTest(unittest.TestCase):
         """Test the debugging text of a system of caves after a wumpus move."""
         self.dungeon.move_wumpus()
         self.assertEqual(self.correctRepr(), repr(self.dungeon))
+
+
+class WumpusTest(unittest.TestCase):
+    """Test the interface for Hunt the Wumpus. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.bot = unitility.AutoBot()
+        self.game = wumpus.Wumpus(self.bot, 'none')
+
+    def testBlank(self):
+        self.bot.replies = ['', '!']
+        self.game.play()
+        self.assertEqual(["\nI do not recognize the command ''.\n"], self.bot.errors)
 
 
 if __name__ == '__main__':
