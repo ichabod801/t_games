@@ -92,10 +92,6 @@ class Die(object):
         else:
             return NotImplemented
 
-    def __hash__(self):
-        """Hash value. (int)"""
-        return hash(self.value)
-
     def __lt__(self, other):
         """
         Ordering (less than) testing. (bool)
