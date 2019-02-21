@@ -95,14 +95,13 @@ Neighbors of Zero/Voisins du Zero: Nine bets covering 17 numbers around zero
 Neighbors: The neighbors bet with a number specified bets on that number and
     the two numbers on either side on the wheel. [1]
 Niner: Bet on a number and the four numbers on either side on the wheel. [1]
-Orphans: Bet on numbers not in Neighbors of Zero or Third of the Wheel. [0]
-Prime: Bet on all of the primes except 2. Twins can be used insted of
-    excluding two (it excludes 2 and 23). [2]
+Orphans: Bet on numbers not in Neighbors of Zero or Third of the Wheel. [0F]
+Prime: Bet on the prime numbers. Twins can be used to exclude 2 and 23. [0]
 Seven: Bet on a number and the three numbers on either side on the wheel. [1]
 Snake: A bet on the zig-zag of red numbers from 1 to 34. [0]
 Third of the Wheel/Le Tiers du Cylindre: Bet on a specific third of the wheel
     on the French layout. If made with '5-8-10-11', those numbers are doubled
-    up. If made with 'gioco Ferrari', 8, 11, 12, and 30 are doubled up. [0]
+    up. If made with 'gioco Ferrari', 8, 11, 12, and 30 are doubled up. [0F]
 Zero Game/Zero Spiel/Jeu Zero: Bet on zero and six numbers near it on the
     French layout. [0F]
 
@@ -699,6 +698,7 @@ class Roulette(game.Game):
         # Otherwise I'm confused.
         else:
             self.human.error("That bet is not available on this layout.")
+        return True
 
     def do_high(self, arguments):
         """
@@ -857,7 +857,7 @@ class Roulette(game.Game):
         if bet * 5 > self.scores[self.human.name]:
             self.human.error('You do not have enough money for the full bet.')
         elif self.layout != 'french':
-            self.human.error('You can only make that be on the French layout.')
+            self.human.error('You can only make that bet on the French layout.')
         elif numbers:
             # Make the bet.
             self.bets.append(('single bet on 1', ['1'], bet))
@@ -870,36 +870,36 @@ class Roulette(game.Game):
 
     def do_prime(self, arguments):
         """
-        Make a bet on all but two prime numbers.
+        Make a bet on the prime numbers.
 
-        The first two arguments to the prime command should be two prime numbers less
-        than 36 (separated by a dash). Those two prime numbers are excluded, and the
-        bet is on the remaining nine numbers. The primes less than 36 are 2, 3, 5, 7,
-        11, 13, 17, 19, 23, 29, and 31. Instead of entering two prime numbers, you may
-        enter 'twins' to exclude 2 and 23, making the bet on the twin prims under 36.
+        This bets is on the prime numbers on the board: 2, 3, 5, 7, 11, 13, 17, 19, 23,
+        29, and 31. The bet can be done as 'prime twins' to exclude 2 and 23. The bet
+        includes a splt bet on 2-3 and single bets on the other primes, or just single
+        bets if the twins option is selected.
 
-        The second argument to the prime command should be the amount to bet.
+        The argument to the prime command should be the amount to bet on each of the
+        individual bets.
         """
         # Check for betting on twin primes.
+        primes = ['2', '3', '5', '7', '11', '13', '17', '19', '23', '29', '31']
+        bet_mod = 10
         if arguments.lower().startswith('twins'):
-            arguments = arguments.lower().replace('twins', '2-23')
-        # Check the bet and two numbers.
-        numbers, bet = self.check_bet(arguments)
-        if numbers and self.check_two_numbers(numbers, 'split'):
-            # Get the primes and the two to remove.
-            low, high = sorted([int(x) for x in numbers.split('-')])
-            primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]
-            # Check the numbers are prime.
-            if low in primes and high in primes and low != high:
-                # Remove the specified numbers.
-                primes.remove(low)
-                primes.remove(high)
-                # Make the bet.
-                self.scores[self.human.name] -= bet
-                self.bets.append(('prime bet excluding {}'.format(numbers), primes, bet))
-            else:
-                # Warn the user of invalid input.
-                self.human.error('{} and {} are not distinct prime numbers.'.format(low, high))
+            arguments = arguments[6:]
+            primes.remove('2')
+            primes.remove('23')
+            bet_mod = 9
+        # Check the bet.
+        numbers, bet = self.check_bet('prime {}'.format(arguments))
+        if bet * bet_mod > self.scores[self.human.name]:
+            self.human.error('You do not have nough money for the full bet.')
+        elif numbers:
+            # Make the bet.
+            if bet_mod == 10:
+                self.bets.append(('split bet on 2-3', ['2', '3'], bet))
+                primes = primes[2:]
+            for prime in primes:
+                self.bets.append(('single bet on {}'.format(prime), [prime], bet))
+            self.scores[self.human.name] -= bet_mod * bet
         return True
 
     def do_quit(self, argument):
@@ -984,7 +984,10 @@ class Roulette(game.Game):
         numbers.
         """
         number, bet = self.check_bet(arguments)
-        self.neighborhood(number, 7, bet)
+        if number:
+            # Make the bet.
+            self.neighborhood(number, 7, bet)
+        return True
 
     def do_snake(self, arguments):
         """
@@ -1026,6 +1029,7 @@ class Roulette(game.Game):
         self.human.tell('The winning number is {}.'.format(winner))
         # Pay any winning bets.
         self.pay_out(winner)
+        return False
 
     def do_split(self, arguments):
         """
