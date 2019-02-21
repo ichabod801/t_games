@@ -95,14 +95,14 @@ Neighbors of Zero/Voisins du Zero: Nine bets covering 17 numbers around zero
 Neighbors: The neighbors bet with a number specified bets on that number and
     the two numbers on either side on the wheel. [1]
 Niner: Bet on a number and the four numbers on either side on the wheel. [1]
-Orphans: Bet on numbers not in Neighbors of Zero or Third of the Wheel. [0]
+Orphans: Bet on numbers not in Neighbors of Zero or Third of the Wheel. [0F]
 Prime: Bet on all of the primes except 2. Twins can be used insted of
     excluding two (it excludes 2 and 23). [2]
 Seven: Bet on a number and the three numbers on either side on the wheel. [1]
 Snake: A bet on the zig-zag of red numbers from 1 to 34. [0]
 Third of the Wheel/Le Tiers du Cylindre: Bet on a specific third of the wheel
     on the French layout. If made with '5-8-10-11', those numbers are doubled
-    up. If made with 'gioco Ferrari', 8, 11, 12, and 30 are doubled up. [0]
+    up. If made with 'gioco Ferrari', 8, 11, 12, and 30 are doubled up. [0F]
 Zero Game/Zero Spiel/Jeu Zero: Bet on zero and six numbers near it on the
     French layout. [0F]
 
@@ -699,6 +699,7 @@ class Roulette(game.Game):
         # Otherwise I'm confused.
         else:
             self.human.error("That bet is not available on this layout.")
+        return True
 
     def do_high(self, arguments):
         """
@@ -857,7 +858,7 @@ class Roulette(game.Game):
         if bet * 5 > self.scores[self.human.name]:
             self.human.error('You do not have enough money for the full bet.')
         elif self.layout != 'french':
-            self.human.error('You can only make that be on the French layout.')
+            self.human.error('You can only make that bet on the French layout.')
         elif numbers:
             # Make the bet.
             self.bets.append(('single bet on 1', ['1'], bet))
@@ -984,7 +985,10 @@ class Roulette(game.Game):
         numbers.
         """
         number, bet = self.check_bet(arguments)
-        self.neighborhood(number, 7, bet)
+        if number:
+            # Make the bet.
+            self.neighborhood(number, 7, bet)
+        return True
 
     def do_snake(self, arguments):
         """
@@ -1026,6 +1030,7 @@ class Roulette(game.Game):
         self.human.tell('The winning number is {}.'.format(winner))
         # Pay any winning bets.
         self.pay_out(winner)
+        return False
 
     def do_split(self, arguments):
         """
