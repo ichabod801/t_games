@@ -39,7 +39,6 @@ class Die(object):
     __init__
     __add__
     __eq__
-    __hash__
     __lt__
     __radd__
     __repr__
