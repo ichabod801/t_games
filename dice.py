@@ -39,7 +39,6 @@ class Die(object):
     __init__
     __add__
     __eq__
-    __hash__
     __lt__
     __radd__
     __repr__
@@ -91,10 +90,6 @@ class Die(object):
             return self.value == other
         else:
             return NotImplemented
-
-    def __hash__(self):
-        """Hash value. (int)"""
-        return hash(self.value)
 
     def __lt__(self, other):
         """
