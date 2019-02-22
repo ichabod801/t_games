@@ -225,6 +225,26 @@ class ScoreHandTest(unittest.TestCase):
         hand = [crib.CribCard(*card) for card in ('5C', '7D', 'TH', '6C', 'QS', 'JH')]
         self.assertEqual([(3, 1), (3, 1)], self.game.score_runs(hand))
 
+    def testRunTwo(self):
+        """Test not scoring a two card run."""
+        hand = [crib.CribCard(*card) for card in ('5C', '2D', 'TH', '6C', 'QS', '8H')]
+        self.assertEqual([], self.game.score_runs(hand))
+
+    def testRunTwoTwoHigh(self):
+        """Test not scoring a two card run two times on the high side."""
+        hand = [crib.CribCard(*card) for card in ('5C', '2D', 'TH', '6C', '6S', '8H')]
+        self.assertEqual([], self.game.score_runs(hand))
+
+    def testRunTwoTwoLow(self):
+        """Test not scoring a two card run two times on the low side."""
+        hand = [crib.CribCard(*card) for card in ('5C', '2D', 'TH', '6C', 'QS', '5H')]
+        self.assertEqual([], self.game.score_runs(hand))
+
+    def testRunTwoTwice(self):
+        """Test not scoring two two card run."""
+        hand = [crib.CribCard(*card) for card in ('5C', '2D', 'TH', '6C', 'QS', '9H')]
+        self.assertEqual([], self.game.score_runs(hand))
+
 
 class ScorePeggingTest(unittest.TestCase):
     """Test scoring cribbage plays. (unittest.TestCase)"""

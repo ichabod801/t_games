@@ -702,9 +702,8 @@ class Cribbage(game.Game):
             diff = second - first
             if diff < 2:
                 # Track the run, accounting for duplicates.
-                if diff or (run and run[-1]):
-                    run.append(diff)
                 if diff:
+                    run.append(diff)
                     run_count *= count_mod
                     count_mod = 1
                 else:
@@ -712,13 +711,13 @@ class Cribbage(game.Game):
             else:
                 # Store any completed runs.
                 if len(run) > 1:
-                    run_data.append((run.count(1) + 1, run_count * count_mod))
+                    run_data.append((len(run) + 1, run_count * count_mod))
                 # Reset run tracking.
                 run = []
                 run_count, count_mod = 1, 1
         # Catch any final run.
         if len(run) > 1:
-            run_data.append((run.count(1) + 1, run_count * count_mod))
+            run_data.append((len(run) + 1, run_count * count_mod))
         return run_data
 
     def score_sequence(self, player, card):
