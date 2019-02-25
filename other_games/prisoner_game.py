@@ -8,6 +8,7 @@ CREDITS: The credits for Priosoner's Dilemma.
 RULES: The rules for Prisoner's Dilemma.
 
 Classes:
+PrisonerBot: A bot template for the Iterated Prisoner's Dilemma. (player.Bot)
 PrisonersDilemma: A game of the Interated Prisoner's Dilemma. (game.Game)
 """
 
@@ -52,13 +53,133 @@ temptation= (t=): The temptation score. It must be higher than the reward
 """
 
 
+class PrisonerBot(player.Bot):
+    """
+    A bot template for the Iterated Prisoner's Dilemma. (player.Bot)
+
+    Methods:
+    get_move: Make a move in the game. (str)
+
+    Overridden Methods:
+    ask
+    set_up
+    tell
+    """
+
+    def ask(self, query):
+        """
+        Answer a question to the player. (str)
+
+        Parameters:
+        query: The question asked of the player. (str)
+        """
+        if query.startswith('What is your move'):
+            return self.get_move(query[26:-2])
+        else:
+            player.BotError('Unexpected move asked of {}: {!r}'.format(self.__class__.__name__, query))
+
+    def get_move(self, foe_name):
+        """
+        Make a move in the game. (str)
+
+        Parameters:
+        foe_name: The name of the player to make a move against.
+        """
+        return random.choice(('cooperate', 'defect'))
+
+    def set_up(self):
+        """Set up the bot."""
+        self.history = {player.name: [] for player in self.game.players}
+        del self.history[self.name]
+
+    def tell(self, *args, **kwargs):
+        """Give the player some information. (None)"""
+        if 'chose to' in args[0]:
+            middle = args[0].index(' chose to ')
+            foe_name = args[0][:middle]
+            if 'cooperate' in args[0]:
+                self.history[foe_name].append('cooperate')
+            else:
+                self.history[foe_name].append('defect')
+
+
+class AlwaysCooperate(PrisonerBot):
+    """
+    A prisoner that always cooperates. (PrisonerBot)
+
+    Overridden Methods:
+    get_move
+    """
+
+    def get_move(self, foe_name):
+        """
+        Make a move in the game. (str)
+
+        Parameters:
+        foe_name: The name of the player to make a move against.
+        """
+        return 'cooperate'
+
+
+class AlwaysDefect(PrisonerBot):
+    """
+    A prisoner that always defects. (PrisonerBot)
+
+    Overridden Methods:
+    get_move
+    """
+
+    def get_move(self, foe_name):
+        """
+        Make a move in the game. (str)
+
+        Parameters:
+        foe_name: The name of the player to make a move against.
+        """
+        return 'defect'
+
+
+class TitForTat(PrisonerBot):
+    """
+    A player that repeats its foe's last move. (PrisonerBot)
+
+    If the foe has not been met yet, Tit for Tat defects.
+
+    Overridden Methods:
+    get_move
+    """
+
+    def get_move(self, foe_name):
+        """
+        Make a move in the game. (str)
+
+        Parameters:
+        foe_name: The name of the player to make a move against.
+        """
+        if self.history[foe_name]:
+            return self.history[foe_name][-1]
+        else:
+            return 'defect'
+
+
 class PrisonersDilemma(game.Game):
     """
     A game of the Interated Prisoner's Dilemma. (game.Game)
+
+    Class Attributes:
+    move_alaises: Different names for the possible moves. (dict of str: str)
+
+    Overridden Methods:
+    game_over
+    handle_options
+    player_action
+    set_options
     """
 
+    categories = ['Other Games']
     credits = CREDITS
     move_aliases = {'c': 'cooperate', 'd': 'defect'}
+    name = "Prisoner's Dilemma"
     num_options = 4
     rules = RULES
 
