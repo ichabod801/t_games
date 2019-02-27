@@ -16,6 +16,7 @@ PrisonersDilemma: A game of the Interated Prisoner's Dilemma. (game.Game)
 
 
 import itertools
+import random
 
 from .. import game
 from .. import player
@@ -77,7 +78,10 @@ class PrisonerBot(player.Bot):
         query: The question asked of the player. (str)
         """
         if query.startswith('What is your move'):
-            return self.get_move(query[26:-2])
+            foe_name = query[26:-2]
+            last_move = self.get_move(foe_name)
+            self.history['Me vs. {}'.format(foe_name)].append(last_move)
+            return last_move
         else:
             player.BotError('Unexpected move asked of {}: {!r}'.format(self.__class__.__name__, query))
 
@@ -93,6 +97,7 @@ class PrisonerBot(player.Bot):
     def set_up(self):
         """Set up the bot."""
         self.history = {player.name: [] for player in self.game.players}
+        self.history.update({'Me vs. {}'.format(player.name): [] for player in self.game.players})
         del self.history[self.name]
 
     def tell(self, *args, **kwargs):
@@ -132,7 +137,7 @@ class PrisonerIntBot(PrisonerBot):
     tell
     """
 
-    def __init__(self, taken_names = [], initial = '', tits = ['c'], tats = 0, prob_nice = 0.5):
+    def __init__(self, tits = ['c'], tats = 0, prob_nice = 0.5, taken_names = [], initial = ''):
         """
         Set up the strategy for the bot.
 
@@ -143,7 +148,7 @@ class PrisonerIntBot(PrisonerBot):
         tats: How many defects it takes for the bot to retaliate. (int)
         prob_nice: If not retaliating, how like the bot is to cooperate. (float)
         """
-        super(MasterPrisonerBot, self).__init__(self, taken_names, initials)
+        super(PrisonerIntBot, self).__init__(taken_names, initial)
         self.tits = tits
         self.tats = tats
         self.prob_nice = prob_nice
@@ -158,7 +163,7 @@ class PrisonerIntBot(PrisonerBot):
         """
         if self.current_tits:
             return self.current_tits.pop()
-        elif self.tats and self.history[foe_name][-self.tats] == ['defect'] * self.tats:
+        elif self.tats and self.history[foe_name][-self.tats:] == ['defect'] * self.tats:
             self.tits = current_tits
             return self.current_tits.pop()
         elif random.random() < self.prob_nice:
@@ -173,7 +178,7 @@ class PrisonerIntBot(PrisonerBot):
         del self.history[self.name]
 
 
-class PrisonerMethodBot(player.Bot):
+class PrisonerMethodBot(PrisonerBot):
     """
     A bot template for the Iterated Prisoner's Dilemma. (player.Bot)
 
@@ -182,6 +187,8 @@ class PrisonerMethodBot(player.Bot):
     Hard Majority: defect, unless opponent coopeartes more than defects.
     Remorseful Prober: Naive prober, but tries to break defection chain (not clear how)
     Soft Grudger: tits = 4 + 2 cooperates, tats = 1, prob_nice = 1
+
+    http://www.prisoners-dilemma.com/strategies.html
 
     If tits and tats can be methods, you can accomodate a lot of strategies. So one
     that is integer based, and one that is method based with subclasses
