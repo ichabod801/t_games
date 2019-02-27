@@ -16,6 +16,7 @@ PrisonersDilemma: A game of the Interated Prisoner's Dilemma. (game.Game)
 import itertools
 
 from .. import game
+from .. import player
 
 
 CREDITS = """
@@ -185,11 +186,29 @@ class PrisonersDilemma(game.Game):
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
-        return self.turns == self.num_turns
+        if self.turns == self.num_turns:
+            scores = [(score, player) for player, score in self.scores.items()]
+            scores.sort(reverse = True)
+            human_score = self.scores[self.human.name]
+            result_index = 1
+            self.human.tell('\nFinal Scores:')
+            for score, name in scores:
+                self.human.tell('{}: {}'.format(score, name))
+                if name == self.human.name:
+                    continue
+                if score > human_score:
+                    self.win_loss_draw[1] += 1
+                elif score < human_score:
+                    self.win_loss_draw[0] += 1
+                else:
+                    self.win_loss_draw[2] += 1
+            return True
+        else:
+            return False
 
     def handle_options(self):
         """Handle the game options from the user. (None)"""
-        super(PrisonersDilemma, self).handle_options(self)
+        self.option_set.handle_settings(self.raw_options)
 
     def player_action(self, player):
         """
@@ -207,13 +226,13 @@ class PrisonersDilemma(game.Game):
             queries.reverse()
             for player, query in zip(sub_players, queries):
                 while True:
-                    move = player_1.ask(query).lower()
-                    move = move_aliases.get(move_1, move_1)
+                    move = player.ask(query).lower()
+                    move = self.move_aliases.get(move, move)
                     if move in ('cooperate', 'defect'):
                         break
                     else:
-                        self.handle_cmd(move_1)
-            moves.append(move)
+                        self.handle_cmd(move)
+                moves.append(move)
             # Get the scoring results.
             if moves == ['cooperate', 'cooperate']:
                 round_scores = [self.points['punishment'], self.points['punishment']]
@@ -235,15 +254,18 @@ class PrisonersDilemma(game.Game):
     def set_options(self):
         """Set the possible game options. (None)"""
         self.points = {}
+        self.option_set.default_bots = [(TitForTat, ()), (AlwaysCooperate, ()), (AlwaysDefect, ())]
         self.option_set.add_option('sucker', ['s'], int, default = 0, action = 'key=sucker',
             target = self.points,
             question = 'How much should the sucker bet be worth (return for 0)? ')
-        self.option_set.add_option('sucker', ['s'], int, default = 0, action = 'key=sucker',
+        self.option_set.add_option('punishment', ['p'], int, default = 1, action = 'key=punishment',
             target = self.points,
             question = 'How much should the punishment be worth (return for 1)? ')
-        self.option_set.add_option('sucker', ['s'], int, default = 0, action = 'key=sucker',
+        self.option_set.add_option('reward', ['r'], int, default = 2, action = 'key=reward',
             target = self.points,
             question = 'How much should the reward be worth (return for 2)? ')
-        self.option_set.add_option('sucker', ['s'], int, default = 0, action = 'key=sucker',
+        self.option_set.add_option('temptation', ['t'], int, default = 3, action = 'key=temptation',
             target = self.points,
             question = 'How much should the temptation be worth (return for 3)? ')
+        self.option_set.add_option('num-turns', ['nt'], int, default = 10,
+            question = 'How many turns should be played (return for 10)? ')
