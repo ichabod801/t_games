@@ -3,6 +3,8 @@ prisoners_game.py
 
 An implementation of the Iterated Prisoner's Dilemma.
 
+Need tit for two tats (two bads before reaction), and suspsicious tit for tat (nastry first move)
+
 Constants:
 CREDITS: The credits for Priosoner's Dilemma.
 RULES: The rules for Prisoner's Dilemma.
@@ -27,8 +29,8 @@ Bot Design: Anatol Rapoport
 
 RULES = """
 Each turn, you and your opponent make the choice to cooperate or defect. If
-both players cooperate, they both score the punishment. If they both defect,
-they both score the reward. If one defects and the other cooperates, the
+both players cooperate, they both score the reward. If they both defect,
+they both score the punishment. If one defects and the other cooperates, the
 cooperator scores the sucker bet, while the defecter wins the temptation. The
 standard scores are:
 
@@ -104,13 +106,48 @@ class PrisonerBot(player.Bot):
                 self.history[foe_name].append('defect')
 
 
-class AlwaysCooperate(PrisonerBot):
+class PrisonerIntBot(PrisonerBot):
     """
-    A prisoner that always cooperates. (PrisonerBot)
+    A bot template for the Iterated Prisoner's Dilemma. (player.Bot)
+
+    What attributes are needed for a broad coverage of strategies
+
+    AllC: prob_nice = 0
+    AllD: prob_nice = 1
+    Rand: prob_nice = 0.5
+    TFT: tits = ['c'], tats = 1, prob_nice = 1
+    TF2T: tits = 1, tats = 2, prob_nice = 1
+    2TFT: tits = 2, tats = 2, prob_nice = 1
+    Naive Prober: tits = 1, tats = 1, prob_nice = .95 (prob_nice is high, but not 1)
+
+    If tits and tats can be methods, you can accomodate a lot of strategies. So one
+    that is integer based, and one that is method based with subclasses
+
+    Methods:
+    get_move: Make a move in the game. (str)
 
     Overridden Methods:
-    get_move
+    ask
+    set_up
+    tell
     """
+
+    def __init__(self, taken_names = [], initial = '', tits = ['c'], tats = 0, prob_nice = 0.5):
+        """
+        Set up the strategy for the bot.
+
+        Parameters:
+        taken_names: Names already used by a player. (list of str)
+        initial: The first letter of the bot's name. (str)
+        tits: How many times the bot retaliates. (int)
+        tats: How many defects it takes for the bot to retaliate. (int)
+        prob_nice: If not retaliating, how like the bot is to cooperate. (float)
+        """
+        super(MasterPrisonerBot, self).__init__(self, taken_names, initials)
+        self.tits = tits
+        self.tats = tats
+        self.prob_nice = prob_nice
+        self.current_tits = []
 
     def get_move(self, foe_name):
         """
@@ -119,16 +156,58 @@ class AlwaysCooperate(PrisonerBot):
         Parameters:
         foe_name: The name of the player to make a move against.
         """
-        return 'cooperate'
+        if self.current_tits:
+            return self.current_tits.pop()
+        elif self.tats and self.history[foe_name][-self.tats] == ['defect'] * self.tats:
+            self.tits = current_tits
+            return self.current_tits.pop()
+        elif random.random() < self.prob_nice:
+            return 'cooperate'
+        else:
+            return 'defect'
+
+    def set_up(self):
+        """Set up the bot."""
+        super(PrisonerIntBot, self).set_up()
+        self.history = {player.name: [] for player in self.game.players}
+        del self.history[self.name]
 
 
-class AlwaysDefect(PrisonerBot):
+class PrisonerMethodBot(player.Bot):
     """
-    A prisoner that always defects. (PrisonerBot)
+    A bot template for the Iterated Prisoner's Dilemma. (player.Bot)
+
+    Pavlov: cooperate, flip unless reward or temptation. ???
+    Soft Majority: cooperate, unless opponent defects more than cooperates.
+    Hard Majority: defect, unless opponent coopeartes more than defects.
+    Remorseful Prober: Naive prober, but tries to break defection chain (not clear how)
+    Soft Grudger: tits = 4 + 2 cooperates, tats = 1, prob_nice = 1
+
+    If tits and tats can be methods, you can accomodate a lot of strategies. So one
+    that is integer based, and one that is method based with subclasses
+
+    Methods:
+    get_move: Make a move in the game. (str)
 
     Overridden Methods:
-    get_move
+    ask
+    set_up
+    tell
     """
+
+    def __init__(self, taken_names = [], initial = '', prob_nice = 0.5):
+        """
+        Set up the strategy for the bot.
+
+        Parameters:
+        taken_names: Names already used by a player. (list of str)
+        initial: The first letter of the bot's name. (str)
+        tits: How many times the bot retaliates. (int)
+        tats: How many defects it takes for the bot to retaliate. (int)
+        prob_nice: If not retaliating, how like the bot is to cooperate. (float)
+        """
+        super(MasterPrisonerBot, self).__init__(self, taken_names, initials)
+        self.prob_nice = prob_nice
 
     def get_move(self, foe_name):
         """
@@ -137,30 +216,59 @@ class AlwaysDefect(PrisonerBot):
         Parameters:
         foe_name: The name of the player to make a move against.
         """
+        if self.tat():
+            return self.tit()
+        elif random.random() < self.prob_nice:
+            return 'cooperate'
+        else:
+            return 'defect'
+
+    def tat(self, foe_name):
+        """Decide whether or not to retailiate. (bool)"""
+        return False
+
+    def tit(self):
+        """Decide how to retailiate. (str)"""
         return 'defect'
 
 
-class TitForTat(PrisonerBot):
+class GradualBot(PrisonerMethodBot):
     """
-    A player that repeats its foe's last move. (PrisonerBot)
-
-    If the foe has not been met yet, Tit for Tat defects.
+    Retailiate more and more after each retailiation. (PrisonerMethodBot)
 
     Overridden Methods:
-    get_move
+    tat
     """
 
-    def get_move(self, foe_name):
-        """
-        Make a move in the game. (str)
+    def set_up(self):
+        """Set up the bot for play. (None)"""
+        self.retailiations = 0
+        self.tits = []
 
-        Parameters:
-        foe_name: The name of the player to make a move against.
-        """
-        if self.history[foe_name]:
-            return self.history[foe_name][-1]
-        else:
-            return 'defect'
+    def tat(self, foe_name):
+        """Decide whether or not to retailiate. (bool)"""
+        retaliate = self.history[foe_name][-1] == 'defect'
+        if retaliate and not self.tits:
+            self.retaliations += 1
+            self.tits = ['c', 'c'] + ['d'] * self.retaliations
+        return retaliate or self.tits
+
+    def tit(self):
+        """Decide how to retailiate. (str)"""
+        return self.tits.pop()
+
+
+class GrimBot(PrisonerMethodBot):
+    """
+    Retaliate forever after any provocation. (PrisonerMethodBot)
+
+    Overridden Methods:
+    tat
+    """
+
+    def tat(self, foe_name):
+        """Decide whether or not to retailiate. (bool)"""
+        return 'defect' in self.history[foe_name]
 
 
 class PrisonersDilemma(game.Game):
@@ -235,13 +343,13 @@ class PrisonersDilemma(game.Game):
                 moves.append(move)
             # Get the scoring results.
             if moves == ['cooperate', 'cooperate']:
-                round_scores = [self.points['punishment'], self.points['punishment']]
-            elif moves == ['cooperate', 'defect']:
-                round_scores = [self.points['temptation'], self.points['sucker']]
-            elif moves == ['defect', 'cooperate']:
-                round_scores = [self.points['sucker'], self.points['temptation']]
-            elif moves == ['defect', 'defect']:
                 round_scores = [self.points['reward'], self.points['reward']]
+            elif moves == ['cooperate', 'defect']:
+                round_scores = [self.points['sucker'], self.points['temptation']]
+            elif moves == ['defect', 'cooperate']:
+                round_scores = [self.points['temptation'], self.points['sucker']]
+            elif moves == ['defect', 'defect']:
+                round_scores = [self.points['punishment'], self.points['punishment']]
             # Score the points and inform the players
             for player, round_score in zip(sub_players, round_scores):
                 self.scores[player.name] += round_score
@@ -254,7 +362,8 @@ class PrisonersDilemma(game.Game):
     def set_options(self):
         """Set the possible game options. (None)"""
         self.points = {}
-        self.option_set.default_bots = [(TitForTat, ()), (AlwaysCooperate, ()), (AlwaysDefect, ())]
+        bots = [(PrisonerIntBot, (1, 1)), (PrisonerIntBot, (0, 0, 1)), (PrisonerIntBot, (0, 0, 0))]
+        self.option_set.default_bots = bots
         self.option_set.add_option('sucker', ['s'], int, default = 0, action = 'key=sucker',
             target = self.points,
             question = 'How much should the sucker bet be worth (return for 0)? ')
