@@ -54,6 +54,12 @@ reward= (r=): The reward score. It must be higher than the punishment score.
 sucker= (s=): The sucker bet score. It must be lower than the punishment score.
 temptation= (t=): The temptation score. It must be higher than the reward
     score.
+
+Bot Options:
+all-co (ac): Add an Always Cooperate bot.
+all-def (ad): Add an Always Defect bot.
+random (rd): Add a Random bot.
+tit-tat (tt): Add a Tit For Tat bot.
 """
 
 
@@ -111,7 +117,7 @@ class PrisonerBot(player.Bot):
                 self.history[foe_name].append('defect')
 
 
-class PrisonerIntBot(PrisonerBot):
+class PrisonerNumBot(PrisonerBot):
     """
     A bot template for the Iterated Prisoner's Dilemma. (player.Bot)
 
@@ -120,7 +126,7 @@ class PrisonerIntBot(PrisonerBot):
     AllC: prob_nice = 0
     AllD: prob_nice = 1
     Rand: prob_nice = 0.5
-    TFT: tits = ['c'], tats = 1, prob_nice = 1
+    TFT: tits = ['d'], tats = 1, prob_nice = 1
     TF2T: tits = 1, tats = 2, prob_nice = 1
     2TFT: tits = 2, tats = 2, prob_nice = 1
     Naive Prober: tits = 1, tats = 1, prob_nice = .95 (prob_nice is high, but not 1)
@@ -137,7 +143,7 @@ class PrisonerIntBot(PrisonerBot):
     tell
     """
 
-    def __init__(self, tits = ['c'], tats = 0, prob_nice = 0.5, taken_names = [], initial = ''):
+    def __init__(self, tits = ['d'], tats = 0, prob_nice = 0.5, taken_names = [], initial = ''):
         """
         Set up the strategy for the bot.
 
@@ -148,7 +154,7 @@ class PrisonerIntBot(PrisonerBot):
         tats: How many defects it takes for the bot to retaliate. (int)
         prob_nice: If not retaliating, how like the bot is to cooperate. (float)
         """
-        super(PrisonerIntBot, self).__init__(taken_names, initial)
+        super(PrisonerNumBot, self).__init__(taken_names, initial)
         self.tits = tits
         self.tats = tats
         self.prob_nice = prob_nice
@@ -196,7 +202,7 @@ class PrisonerMethodBot(PrisonerBot):
     tell
     """
 
-    def __init__(self, taken_names = [], initial = '', prob_nice = 0.5):
+    def __init__(self, prob_nice = 1, taken_names = [], initial = ''):
         """
         Set up the strategy for the bot.
 
@@ -207,7 +213,7 @@ class PrisonerMethodBot(PrisonerBot):
         tats: How many defects it takes for the bot to retaliate. (int)
         prob_nice: If not retaliating, how like the bot is to cooperate. (float)
         """
-        super(MasterPrisonerBot, self).__init__(self, taken_names, initials)
+        super(PrisonerMethodBot, self).__init__(taken_names, initial)
         self.prob_nice = prob_nice
 
     def get_move(self, foe_name):
@@ -217,7 +223,7 @@ class PrisonerMethodBot(PrisonerBot):
         Parameters:
         foe_name: The name of the player to make a move against.
         """
-        if self.tat():
+        if self.tat(foe_name):
             return self.tit()
         elif random.random() < self.prob_nice:
             return 'cooperate'
@@ -226,7 +232,7 @@ class PrisonerMethodBot(PrisonerBot):
 
     def tat(self, foe_name):
         """Decide whether or not to retailiate. (bool)"""
-        return False
+        return 'defect' in self.history[foe_name]
 
     def tit(self):
         """Decide how to retailiate. (str)"""
@@ -243,12 +249,13 @@ class GradualBot(PrisonerMethodBot):
 
     def set_up(self):
         """Set up the bot for play. (None)"""
-        self.retailiations = 0
+        super(GradualBot, self).set_up()
+        self.retaliations = 0
         self.tits = []
 
     def tat(self, foe_name):
         """Decide whether or not to retailiate. (bool)"""
-        retaliate = self.history[foe_name][-1] == 'defect'
+        retaliate = self.history[foe_name] and self.history[foe_name][-1] == 'defect'
         if retaliate and not self.tits:
             self.retaliations += 1
             self.tits = ['c', 'c'] + ['d'] * self.retaliations
@@ -257,19 +264,6 @@ class GradualBot(PrisonerMethodBot):
     def tit(self):
         """Decide how to retailiate. (str)"""
         return self.tits.pop()
-
-
-class GrimBot(PrisonerMethodBot):
-    """
-    Retaliate forever after any provocation. (PrisonerMethodBot)
-
-    Overridden Methods:
-    tat
-    """
-
-    def tat(self, foe_name):
-        """Decide whether or not to retailiate. (bool)"""
-        return 'defect' in self.history[foe_name]
 
 
 class PrisonersDilemma(game.Game):
@@ -286,6 +280,8 @@ class PrisonersDilemma(game.Game):
     set_options
     """
 
+    aka = ['prdi']
+    bot_classes = {'num-bot': PrisonerNumBot, 'meth-bot': PrisonerMethodBot, 'gradual': GradualBot}
     categories = ['Other Games']
     credits = CREDITS
     move_aliases = {'c': 'cooperate', 'd': 'defect'}
@@ -362,9 +358,19 @@ class PrisonersDilemma(game.Game):
 
     def set_options(self):
         """Set the possible game options. (None)"""
-        self.points = {}
-        bots = [(PrisonerIntBot, (['d'], 1, 1)), (PrisonerIntBot, ([], 0, 1)), (PrisonerIntBot, ([], 0, 0))]
+        # Set the bot options
+        bots = [(PrisonerNumBot, (['d'], 1, 1)), (PrisonerNumBot, ([], 0, 1)), (PrisonerNumBot, ([], 0, 0))]
         self.option_set.default_bots = bots
+        self.option_set.add_option('all-co', ['ac'], action = 'bot', target = 'num-bot',
+            value = ([], 0, 1), default = None)
+        self.option_set.add_option('all-def', ['ad'], action = 'bot', target = 'num-bot',
+            value = ([], 0, 0), default = None)
+        self.option_set.add_option('gradual', ['gl'], action = 'bot', target = 'gradual', default = None)
+        self.option_set.add_option('grim', ['gm'], action = 'bot', target = 'meth-bot', default = None)
+        self.option_set.add_option('tit-tat', ['tt'], action = 'bot', target = 'num-bot',
+            value = (['d'], 1, 0), default = None)
+        # Set the score options.
+        self.points = {}
         self.option_set.add_option('sucker', ['s'], int, default = 0, action = 'key=sucker',
             target = self.points,
             question = 'How much should the sucker bet be worth (return for 0)? ')
@@ -377,5 +383,6 @@ class PrisonersDilemma(game.Game):
         self.option_set.add_option('temptation', ['t'], int, default = 3, action = 'key=temptation',
             target = self.points,
             question = 'How much should the temptation be worth (return for 3)? ')
+        # Set the turn options
         self.option_set.add_option('num-turns', ['nt'], int, default = 10,
             question = 'How many turns should be played (return for 10)? ')
