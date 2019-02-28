@@ -164,18 +164,12 @@ class PrisonerIntBot(PrisonerBot):
         if self.current_tits:
             return self.current_tits.pop()
         elif self.tats and self.history[foe_name][-self.tats:] == ['defect'] * self.tats:
-            self.tits = current_tits
+            self.current_tits = self.tits[:]
             return self.current_tits.pop()
         elif random.random() < self.prob_nice:
             return 'cooperate'
         else:
             return 'defect'
-
-    def set_up(self):
-        """Set up the bot."""
-        super(PrisonerIntBot, self).set_up()
-        self.history = {player.name: [] for player in self.game.players}
-        del self.history[self.name]
 
 
 class PrisonerMethodBot(PrisonerBot):
@@ -369,7 +363,7 @@ class PrisonersDilemma(game.Game):
     def set_options(self):
         """Set the possible game options. (None)"""
         self.points = {}
-        bots = [(PrisonerIntBot, (1, 1)), (PrisonerIntBot, (0, 0, 1)), (PrisonerIntBot, (0, 0, 0))]
+        bots = [(PrisonerIntBot, (['d'], 1, 1)), (PrisonerIntBot, ([], 0, 1)), (PrisonerIntBot, ([], 0, 0))]
         self.option_set.default_bots = bots
         self.option_set.add_option('sucker', ['s'], int, default = 0, action = 'key=sucker',
             target = self.points,
