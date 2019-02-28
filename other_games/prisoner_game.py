@@ -11,6 +11,10 @@ RULES: The rules for Prisoner's Dilemma.
 
 Classes:
 PrisonerBot: A bot template for the Iterated Prisoner's Dilemma. (player.Bot)
+PrisonerNumBot: An IPD bot set on simple parameters. (PrisonerBot)
+PrisonerMethodBot: An IPD Bot based on overriding methods. (PrisonerBot)
+GradualBot: Retailiate n times after the nth retailiation. (PrisonerMethodBot)
+PavlovBot: Repeats the last choice if he got a bad result (PrisonerMethodBot)
 PrisonersDilemma: A game of the Interated Prisoner's Dilemma. (game.Game)
 """
 
@@ -58,8 +62,14 @@ temptation= (t=): The temptation score. It must be higher than the reward
 Bot Options:
 all-co (ac): Add an Always Cooperate bot.
 all-def (ad): Add an Always Defect bot.
+gradual (gl): Tit for Tat, but n tits for nth tat, with cool down.
+grim (gm): Retaliates forever after a single defect.
+naive-prober (np): Add a Naive Prober bot (Tit for Tat with occasional
+    defection)
 random (rd): Add a Random bot.
-tit-tat (tt): Add a Tit For Tat bot.
+tit-tat (tt): Add a Tit for Tat bot.
+tit-2tat (t2): Add a Tit for Two Tats bot.
+2tit-tat (2t): Add a Two Tits for Tat bot.
 """
 
 
@@ -119,20 +129,7 @@ class PrisonerBot(player.Bot):
 
 class PrisonerNumBot(PrisonerBot):
     """
-    A bot template for the Iterated Prisoner's Dilemma. (player.Bot)
-
-    What attributes are needed for a broad coverage of strategies
-
-    AllC: prob_nice = 0
-    AllD: prob_nice = 1
-    Rand: prob_nice = 0.5
-    TFT: tits = ['d'], tats = 1, prob_nice = 1
-    TF2T: tits = 1, tats = 2, prob_nice = 1
-    2TFT: tits = 2, tats = 2, prob_nice = 1
-    Naive Prober: tits = 1, tats = 1, prob_nice = .95 (prob_nice is high, but not 1)
-
-    If tits and tats can be methods, you can accomodate a lot of strategies. So one
-    that is integer based, and one that is method based with subclasses
+    An IPD bot set on simple parameters. (PrisonerBot)
 
     Methods:
     get_move: Make a move in the game. (str)
@@ -180,9 +177,11 @@ class PrisonerNumBot(PrisonerBot):
 
 class PrisonerMethodBot(PrisonerBot):
     """
-    A bot template for the Iterated Prisoner's Dilemma. (player.Bot)
+    An IPD Bot based on overriding methods. (PrisonerBot)
 
-    Pavlov: cooperate, flip unless reward or temptation. ???
+    The base bot for this class is the Grim bot, which retaliates forever after any
+    defection.
+
     Soft Majority: cooperate, unless opponent defects more than cooperates.
     Hard Majority: defect, unless opponent coopeartes more than defects.
     Remorseful Prober: Naive prober, but tries to break defection chain (not clear how)
@@ -195,6 +194,8 @@ class PrisonerMethodBot(PrisonerBot):
 
     Methods:
     get_move: Make a move in the game. (str)
+    tat: Decide whether or not to retailiate. (bool)
+    tit: Decide how to retailiate. (str)
 
     Overridden Methods:
     ask
@@ -241,10 +242,14 @@ class PrisonerMethodBot(PrisonerBot):
 
 class GradualBot(PrisonerMethodBot):
     """
-    Retailiate more and more after each retailiation. (PrisonerMethodBot)
+    Retailiate n times after the nth retailiation. (PrisonerMethodBot)
+
+    It follows retaliation with two cooperates to cool things down.
 
     Overridden Methods:
+    set_up
     tat
+    tit
     """
 
     def set_up(self):
@@ -266,6 +271,33 @@ class GradualBot(PrisonerMethodBot):
         return self.tits.pop()
 
 
+class PavlovBot(PrisonerMethodBot):
+    """
+    Repeats the last choice unless he got a bad result (PrisonerMethodBot)
+
+    Overridden Methods:
+    tat
+    tit
+    """
+
+    def tat(self, foe_name):
+        """Decide whether or not to retailiate. (bool)"""
+        try:
+            # Switch the move on a bad result.
+            last_move = [self.history['Me vs. {}'.format(foe_name)][-1], self.history[foe_name][-1]]
+            if last_move in (('cooperate', 'defect'), ('defect', 'defect')):
+                self.next_move = 'cooperate' if self.next_move == 'defect' else 'defect'
+        except IndexError:
+            # Cooperate initially
+            self.next_move = 'cooperate'
+        # Always use "retaliate" to get the next move.
+        return True
+
+    def tit(self):
+        """Decide how to retailiate. (str)"""
+        return self.next_move
+
+
 class PrisonersDilemma(game.Game):
     """
     A game of the Interated Prisoner's Dilemma. (game.Game)
@@ -281,7 +313,8 @@ class PrisonersDilemma(game.Game):
     """
 
     aka = ['prdi']
-    bot_classes = {'num-bot': PrisonerNumBot, 'meth-bot': PrisonerMethodBot, 'gradual': GradualBot}
+    bot_classes = {'num-bot': PrisonerNumBot, 'meth-bot': PrisonerMethodBot, 'gradual': GradualBot,
+        'pavlov': PavlovBot}
     categories = ['Other Games']
     credits = CREDITS
     move_aliases = {'c': 'cooperate', 'd': 'defect'}
@@ -367,8 +400,16 @@ class PrisonersDilemma(game.Game):
             value = ([], 0, 0), default = None)
         self.option_set.add_option('gradual', ['gl'], action = 'bot', target = 'gradual', default = None)
         self.option_set.add_option('grim', ['gm'], action = 'bot', target = 'meth-bot', default = None)
+        self.option_set.add_option('naive-probe', ['np'], action = 'bot', target = 'num-bot',
+            value = (['d'], 1, 0.95), default = None)
+        self.option_set.add_option('pavlov', ['pv'], action = 'bot', target = 'pavlov', default = None)
+        self.option_set.add_option('random', ['rd'], action = 'bot', target = 'num-bot', default = None)
         self.option_set.add_option('tit-tat', ['tt'], action = 'bot', target = 'num-bot',
             value = (['d'], 1, 0), default = None)
+        self.option_set.add_option('tit-2tat', ['t2'], action = 'bot', target = 'num-bot',
+            value = (['d'], 2, 0), default = None)
+        self.option_set.add_option('2tit-tat', ['2t'], action = 'bot', target = 'num-bot',
+            value = (['d', 'd'], 1, 0), default = None)
         # Set the score options.
         self.points = {}
         self.option_set.add_option('sucker', ['s'], int, default = 0, action = 'key=sucker',
