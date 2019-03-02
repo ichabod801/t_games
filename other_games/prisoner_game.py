@@ -12,6 +12,7 @@ RULES: The rules for Prisoner's Dilemma.
 Classes:
 PrisonerBot: A bot template for the Iterated Prisoner's Dilemma. (player.Bot)
 PrisonerNumBot: An IPD bot set on simple parameters. (PrisonerBot)
+RemorsefulBot: An IPD bot that regrets provoking it's foe. (PrisonerNumBot)
 PrisonerMethodBot: An IPD Bot based on overriding methods. (PrisonerBot)
 GradualBot: Retailiate n times after the nth retailiation. (PrisonerMethodBot)
 PavlovBot: Repeats the last choice if he got a bad result (PrisonerMethodBot)
@@ -29,7 +30,9 @@ from .. import player
 CREDITS = """
 Game Design: Merrill Flood and Melvin Dresher
 Game Programming: Craig "Ichabod" O'Brien
-Bot Design: Anatol Rapoport
+Bot Design: Robert Axelrod, B. Beaufils, S. Braver, K. Deb, J. Delahaye, James
+    Friedman, J. Komorita, David Kraines, Vivian Kraines, S. Mittal, Mathieu Our,
+    Anatol Rapoport, J. Sheposh
 """
 
 RULES = """
@@ -64,9 +67,20 @@ all-co (ac): Add an Always Cooperate bot.
 all-def (ad): Add an Always Defect bot.
 gradual (gl): Tit for Tat, but n tits for nth tat, with cool down.
 grim (gm): Retaliates forever after a single defect.
+hard-majr (hm): Defects on a majority of defects, otherwise cooperates.
 naive-prober (np): Add a Naive Prober bot (Tit for Tat with occasional
     defection)
+prober (pb): Starts with d, c, c. Defects forever if foe cooperates second and
+    third move, otherwise plays Tit for Tat.
+prober2 (p2: Starts with d, c, c. Cooperates forever if foe plays d, c second
+    and third move, otherwise plays Tit for Tat.
+prober3 (p2: Starts with d, c. Defects forever if foe plays c on the second
+    move, otherwise plays Tit for Tat.
 random (rd): Add a Random bot.
+remorse-probe (rp): Add a Remorseful Prober Bot (like Naive Prober, but
+    cooperates after probing)
+soft-grudge (sg): Retailiates four times, followed by two cooperations.
+soft-majr (sm): Cooperates on a majority of cooperations, otherwise defects.
 tit-tat (tt): Add a Tit for Tat bot.
 tit-2tat (t2): Add a Tit for Two Tats bot.
 2tit-tat (2t): Add a Two Tits for Tat bot.
@@ -127,6 +141,44 @@ class PrisonerBot(player.Bot):
                 self.history[foe_name].append('defect')
 
 
+class MajorityBot(PrisonerBot):
+    """
+    An IPD bot that decides based on majoryities of foe moves. (PrisonerBot)
+
+    Overridden Methods:
+    get_move
+    """
+
+    def __init__(self, move = 'cooperate', majority = 'cooperate', taken_names = [], initial = ''):
+        """
+        Set up the strategy for the bot.
+
+        Parameters:
+        move: The move to make on a majority. (str)
+        majority: The majority to check. (str)
+        taken_names: Names already used by a player. (list of str)
+        initial: The first letter of the bot's name. (str)
+        """
+        super(PrisonerNumBot, self).__init__(taken_names, initial)
+        self.move = move
+        self.majority = majority
+        self.other = 'cooperate' if move == 'defect' else 'defect'
+
+    def get_move(self, foe_name):
+        """
+        Make a move in the game. (str)
+
+        Parameters:
+        foe_name: The name of the player to make a move against.
+        """
+        count = self.history[foe_name].count(self.majority)
+        other_count = len(self.history[foe_name] - count)
+        if count >= other_count:
+            return self.move
+        else:
+            return self.other
+
+
 class PrisonerNumBot(PrisonerBot):
     """
     An IPD bot set on simple parameters. (PrisonerBot)
@@ -142,14 +194,14 @@ class PrisonerNumBot(PrisonerBot):
 
     def __init__(self, tits = ['d'], tats = 0, prob_nice = 0.5, taken_names = [], initial = ''):
         """
-        Set up the strategy for the bot.
+        Set up the strategy for the bot. (None)
 
         Parameters:
-        taken_names: Names already used by a player. (list of str)
-        initial: The first letter of the bot's name. (str)
         tits: How many times the bot retaliates. (int)
         tats: How many defects it takes for the bot to retaliate. (int)
         prob_nice: If not retaliating, how like the bot is to cooperate. (float)
+        taken_names: Names already used by a player. (list of str)
+        initial: The first letter of the bot's name. (str)
         """
         super(PrisonerNumBot, self).__init__(taken_names, initial)
         self.tits = tits
@@ -175,6 +227,51 @@ class PrisonerNumBot(PrisonerBot):
             return 'defect'
 
 
+class ProbeBot(PrisonerNumBot):
+    """
+    An IPD bot that guesses foe's strategy. (PrisonerNumBot)
+    """
+
+    def __init__(self, start = ['d', 'c', 'c'], mask = ['dc', 'c', 'c'], prob_nice = 0, remorse = False,
+        taken_names = [], initial = ''):
+        """
+        Set up the strategy for the bot. (None)
+
+        Parameters:
+        start: The bot's initial plays, or probe. (list of str)
+        mask: What the bot is looking for. (list of str)
+        prob_nice: If not retaliating, how like the bot is to cooperate. (float)
+        remorse: A flag for regretting random probes. (bool)
+        taken_names: Names already used by a player. (list of str)
+        initial: The first letter of the bot's name. (str)
+        """
+        super(ProbeBot, self).__init__(prob_nice = prob_nice, taken_names = taken_names, initial = initial)
+        self.start = start
+        self.mask = mask
+        self.remorse = remorse and prob_nice < 1
+
+    def get_move(self, foe_name):
+        """
+        Make a move in the game. (str)
+
+        Parameters:
+        foe_name: The name of the player to make a move against.
+        """
+        responses = len(self.history[foe_name])
+        if len(self.start) > responses:
+            move = super(ProbeBot, self).get_move(foe_name)
+            if self.remorse and move == 'defect' and self.history[foe_name][-1] == 'cooperate':
+                self.current_tits = ['cooperate', 'cooperate']
+        else:
+            move = self.start[responses]
+            if responses + 1 == len(self.start):
+                check = [move[0] in target for move, target in zip(self.history[foe_name], self.mask)]
+                if not all(check):
+                    self.tats = 1
+                    self.prob_nice = 1
+        return move
+
+
 class PrisonerMethodBot(PrisonerBot):
     """
     An IPD Bot based on overriding methods. (PrisonerBot)
@@ -182,12 +279,8 @@ class PrisonerMethodBot(PrisonerBot):
     The base bot for this class is the Grim bot, which retaliates forever after any
     defection.
 
-    Soft Majority: cooperate, unless opponent defects more than cooperates.
-    Hard Majority: defect, unless opponent coopeartes more than defects.
-    Remorseful Prober: Naive prober, but tries to break defection chain (not clear how)
-    Soft Grudger: tits = 4 + 2 cooperates, tats = 1, prob_nice = 1
-
     http://www.prisoners-dilemma.com/strategies.html
+    http://www.iterated-prisoners-dilemma.info/prisoners-dilemma-strategies.shtml
 
     If tits and tats can be methods, you can accomodate a lot of strategies. So one
     that is integer based, and one that is method based with subclasses
@@ -238,6 +331,20 @@ class PrisonerMethodBot(PrisonerBot):
     def tit(self):
         """Decide how to retailiate. (str)"""
         return 'defect'
+
+
+class FirmButFairBot(PrisonerMethodBot):
+    """
+    Retaliate after sucker bet. (PrisonerMethodBot)
+
+    Overridden Methods:
+    tat
+    """
+
+    def tat(self, foe_name):
+        """Decide whether or not to retailiate. (bool)"""
+        last_move = [self.history['Me vs. {}'.format(foe_name)][-1], self.history[foe_name][-1]]
+        return last_move == ['cooperate', 'defect']
 
 
 class GradualBot(PrisonerMethodBot):
@@ -313,8 +420,8 @@ class PrisonersDilemma(game.Game):
     """
 
     aka = ['prdi']
-    bot_classes = {'num-bot': PrisonerNumBot, 'meth-bot': PrisonerMethodBot, 'gradual': GradualBot,
-        'pavlov': PavlovBot}
+    bot_classes = {'num-bot': PrisonerNumBot, 'meth-bot': PrisonerMethodBot, 'firm': FirmButFairBot,
+        'gradual': GradualBot, 'majority': MajorityBot, 'pavlov': PavlovBot, 'probe': ProbeBot}
     categories = ['Other Games']
     credits = CREDITS
     move_aliases = {'c': 'cooperate', 'd': 'defect'}
@@ -400,10 +507,23 @@ class PrisonersDilemma(game.Game):
             value = ([], 0, 0), default = None)
         self.option_set.add_option('gradual', ['gl'], action = 'bot', target = 'gradual', default = None)
         self.option_set.add_option('grim', ['gm'], action = 'bot', target = 'meth-bot', default = None)
+        self.option_set.add_option('hard-majr', ['hm'], action = 'bot', target = 'majority',
+            value = ('defect', 'defect'), default = None)
         self.option_set.add_option('naive-probe', ['np'], action = 'bot', target = 'num-bot',
-            value = (['d'], 1, 0.95), default = None)
+            value = (['d'], 1, 0.90), default = None)
         self.option_set.add_option('pavlov', ['pv'], action = 'bot', target = 'pavlov', default = None)
+        self.option_set.add_option('prober', ['pb'], action = 'bot', target = 'probe',
+            value = True, default = None)
+        self.option_set.add_option('prober2', ['p2'], action = 'bot', target = 'probe',
+            value = (['d', 'c', 'c'], ['dc', 'd', 'c'], 1), default = None)
+        self.option_set.add_option('prober3', ['p3'], action = 'bot', target = 'probe',
+            value = (['d', 'c'], ['dc', 'c']), default = None)
         self.option_set.add_option('random', ['rd'], action = 'bot', target = 'num-bot', default = None)
+        self.option_set.add_option('remorse-probe', ['rp'], action = 'bot', target = 'probe',
+            value = ([], [], 0.90, True), default = None)
+        self.option_set.add_option('soft-grudge', ['sg'], action = 'bot', target = 'num-bot',
+            value = (['d', 'd', 'd', 'd', 'c', 'c'], 1, 1), default = None)
+        self.option_set.add_option('soft-majr', ['sm'], action = 'bot', target = 'majority', default = None)
         self.option_set.add_option('tit-tat', ['tt'], action = 'bot', target = 'num-bot',
             value = (['d'], 1, 0), default = None)
         self.option_set.add_option('tit-2tat', ['t2'], action = 'bot', target = 'num-bot',
