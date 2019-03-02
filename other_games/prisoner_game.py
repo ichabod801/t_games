@@ -258,7 +258,7 @@ class ProbeBot(PrisonerNumBot):
         foe_name: The name of the player to make a move against.
         """
         responses = len(self.history[foe_name])
-        if len(self.start) > responses:
+        if len(self.start) <= responses:
             move = super(ProbeBot, self).get_move(foe_name)
             if self.remorse and move == 'defect' and self.history[foe_name][-1] == 'cooperate':
                 self.current_tits = ['cooperate', 'cooperate']
