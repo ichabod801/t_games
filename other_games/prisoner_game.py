@@ -159,7 +159,7 @@ class MajorityBot(PrisonerBot):
         taken_names: Names already used by a player. (list of str)
         initial: The first letter of the bot's name. (str)
         """
-        super(PrisonerNumBot, self).__init__(taken_names, initial)
+        super(MajorityBot, self).__init__(taken_names, initial)
         self.move = move
         self.majority = majority
         self.other = 'cooperate' if move == 'defect' else 'defect'
@@ -172,7 +172,7 @@ class MajorityBot(PrisonerBot):
         foe_name: The name of the player to make a move against.
         """
         count = self.history[foe_name].count(self.majority)
-        other_count = len(self.history[foe_name] - count)
+        other_count = len(self.history[foe_name]) - count
         if count >= other_count:
             return self.move
         else:
