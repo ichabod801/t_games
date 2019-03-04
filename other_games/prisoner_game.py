@@ -72,9 +72,9 @@ naive-prober (np): Add a Naive Prober bot (Tit for Tat with occasional
     defection)
 prober (pb): Starts with d, c, c. Defects forever if foe cooperates second and
     third move, otherwise plays Tit for Tat.
-prober2 (p2: Starts with d, c, c. Cooperates forever if foe plays d, c second
+prober2 (p2): Starts with d, c, c. Cooperates forever if foe plays d, c second
     and third move, otherwise plays Tit for Tat.
-prober3 (p2: Starts with d, c. Defects forever if foe plays c on the second
+prober3 (p3): Starts with d, c. Defects forever if foe plays c on the second
     move, otherwise plays Tit for Tat.
 random (rd): Add a Random bot.
 remorse-probe (rp): Add a Remorseful Prober Bot (like Naive Prober, but
@@ -258,17 +258,17 @@ class ProbeBot(PrisonerNumBot):
         foe_name: The name of the player to make a move against.
         """
         responses = len(self.history[foe_name])
+        if responses == len(self.start):
+            check = [move[0] in target for move, target in zip(self.history[foe_name], self.mask)]
+            if not all(check):
+                self.tats = 1
+                self.prob_nice = 1
         if len(self.start) <= responses:
             move = super(ProbeBot, self).get_move(foe_name)
             if self.remorse and move == 'defect' and self.history[foe_name][-1] == 'cooperate':
                 self.current_tits = ['cooperate', 'cooperate']
         else:
             move = self.start[responses]
-            if responses + 1 == len(self.start):
-                check = [move[0] in target for move, target in zip(self.history[foe_name], self.mask)]
-                if not all(check):
-                    self.tats = 1
-                    self.prob_nice = 1
         return move
 
 
@@ -278,9 +278,6 @@ class PrisonerMethodBot(PrisonerBot):
 
     The base bot for this class is the Grim bot, which retaliates forever after any
     defection.
-
-    http://www.prisoners-dilemma.com/strategies.html
-    http://www.iterated-prisoners-dilemma.info/prisoners-dilemma-strategies.shtml
 
     If tits and tats can be methods, you can accomodate a lot of strategies. So one
     that is integer based, and one that is method based with subclasses
@@ -454,6 +451,15 @@ class PrisonersDilemma(game.Game):
     def handle_options(self):
         """Handle the game options from the user. (None)"""
         self.option_set.handle_settings(self.raw_options)
+        if self.points['sucker'] >= self.points['punishment']:
+            self.human.tell('The sucker bet must be less than the punishement.')
+            self.option_set.errors.append('Sucker bet too high.')
+        if self.points['punishment'] >= self.points['reward']:
+            self.human.tell('The punishment must be less than the reward.')
+            self.option_set.errors.append('Punishment too high.')
+        if self.points['reward'] >= self.points['temptation']:
+            self.human.tell('The reward must be less than the temptation.')
+            self.option_set.errors.append('Reward too high.')
 
     def player_action(self, player):
         """
