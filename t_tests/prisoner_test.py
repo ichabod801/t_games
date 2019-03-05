@@ -6,6 +6,7 @@ AllCooperateTest: Tests of an always cooperate bot. (unittest.TestCase)
 AllDefectTest: Tests of an always defect bot. (unittest.TestCase)
 GradualTest: Tests of a gradual bot. (unittest.TestCase)
 MajorityHardTest: Tests of the hard-majr bot. (unittest.TestCase)
+NaiveProbeTest: Tests of the naive-probe bot. (unittest.TestCase)
 PrisonerMethodTest: Tests of the PrisonerMethodBot. (unittest.TestCase)
 """
 
@@ -157,10 +158,104 @@ class NaiveProbeTest(unittest.TestCase):
     """Tests of the naive-probe bot. (unittest.TestCase)"""
 
     def setUp(self):
+        # Set up a random module you can manipulate.
+        self.random_hold = prisoner.random
+        self.mock_random = unitility.MockRandom([0.5, 0.6, 0.7, 0.95, 0.1, 0.2, 0.3, 0.4])
+        prisoner.random = self.mock_random
+        # Set up the game and the bot.
         self.human = unitility.AutoBot()
-        self.game = prisoner.PrisonersDilemma(self.human, 'hard-majr')
+        self.game = prisoner.PrisonersDilemma(self.human, 'naive-probe')
         self.bot = [player for player in self.game.players if player != self.human][0]
         self.bot.set_up()
+
+    def tearDown(self):
+        prisoner.random = self.random_hold
+
+    def testCooperate(self):
+        """Test naive-probe's response to cooperation."""
+        self.bot.history = {self.human.name: ['cooperate']}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+    def testDefect(self):
+        """Test naive-probe's response to defection."""
+        self.bot.history = {self.human.name: ['defect']}
+        self.assertEqual('d', self.bot.get_move(self.human.name))
+
+    def testDefectRandom(self):
+        """Test naive-probe's random defection."""
+        self.bot.history = {self.human.name: ['cooperate'] * 10}
+        for turn in range(4):
+            self.bot.get_move(self.human.name)
+        self.assertEqual('defect', self.bot.get_move(self.human.name))
+
+    def testInitial(self):
+        """Test naive-probe's initial move."""
+        self.bot.history = {self.human.name: []}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+
+class PavlovTest(unittest.TestCase):
+    """Test of the PavlovBot. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.human = unitility.AutoBot()
+        self.game = prisoner.PrisonersDilemma(self.human, 'pavlov')
+        self.bot = [player for player in self.game.players if player != self.human][0]
+        self.bot.set_up()
+        self.me_key = 'Me vs. {}'.format(self.human.name)
+
+    def testCCC(self):
+        """Test grim's response to reward after cooperation."""
+        self.bot.next_move = 'cooperate'
+        self.bot.history = {self.me_key: ['cooperate'], self.human.name: ['cooperate']}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+    def testCCD(self):
+        """Test grim's response to sucker bet after cooperation."""
+        self.bot.next_move = 'cooperate'
+        self.bot.history = {self.me_key: ['cooperate'], self.human.name: ['defect']}
+        self.assertEqual('defect', self.bot.get_move(self.human.name))
+
+    def testCDC(self):
+        """Test grim's response to temptation after cooperation."""
+        self.bot.next_move = 'cooperate'
+        self.bot.history = {self.me_key: ['defect'], self.human.name: ['cooperate']}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+    def testCDD(self):
+        """Test grim's response to punishment after cooperation."""
+        self.bot.next_move = 'cooperate'
+        self.bot.history = {self.me_key: ['defect'], self.human.name: ['defect']}
+        self.assertEqual('defect', self.bot.get_move(self.human.name))
+
+    def testDCC(self):
+        """Test grim's response to reward after defection."""
+        self.bot.next_move = 'defect'
+        self.bot.history = {self.me_key: ['cooperate'], self.human.name: ['cooperate']}
+        self.assertEqual('defect', self.bot.get_move(self.human.name))
+
+    def testDCD(self):
+        """Test grim's response to sucker bet after defection."""
+        self.bot.next_move = 'defect'
+        self.bot.history = {self.me_key: ['cooperate'], self.human.name: ['defect']}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+    def testDDC(self):
+        """Test grim's response to temptation after defection."""
+        self.bot.next_move = 'defect'
+        self.bot.history = {self.me_key: ['defect'], self.human.name: ['cooperate']}
+        self.assertEqual('defect', self.bot.get_move(self.human.name))
+
+    def testDDD(self):
+        """Test grim's response to punishment after defection."""
+        self.bot.next_move = 'defect'
+        self.bot.history = {self.me_key: ['defect'], self.human.name: ['defect']}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+    def testInitial(self):
+        """Test grim's initial move."""
+        self.bot.history = {self.human.name: []}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
 
 
 class PrisonerMethodTest(unittest.TestCase):
