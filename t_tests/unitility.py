@@ -201,7 +201,7 @@ class MockRandom(object):
         self.values = values
 
     def choice(self, seq):
-        """Fanke choice function. (object)"""
+        """Fake choice function. (object)"""
         return seq[self.values.pop()]
 
     def push(self, values):

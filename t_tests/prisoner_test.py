@@ -4,7 +4,9 @@ prisoner_test.py
 Classes:
 AllCooperateTest: Tests of an always cooperate bot. (unittest.TestCase)
 AllDefectTest: Tests of an always defect bot. (unittest.TestCase)
-Gradual: Tests of a gradual bot. (unittest.TestCase)
+GradualTest: Tests of a gradual bot. (unittest.TestCase)
+MajorityHardTest: Tests of the hard-majr bot. (unittest.TestCase)
+PrisonerMethodTest: Tests of the PrisonerMethodBot. (unittest.TestCase)
 """
 
 
@@ -107,6 +109,86 @@ class GradualTest(unittest.TestCase):
 
     def testInitial(self):
         """Test all-def's initial move."""
+        self.bot.history = {self.human.name: []}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+
+class MajorityHardTest(unittest.TestCase):
+    """Tests of the hard-majr bot. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.human = unitility.AutoBot()
+        self.game = prisoner.PrisonersDilemma(self.human, 'hard-majr')
+        self.bot = [player for player in self.game.players if player != self.human][0]
+        self.bot.set_up()
+
+    def testCooperate(self):
+        """Test hard-majr's response to cooperation."""
+        self.bot.history = {self.human.name: ['cooperate']}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+    def testDefect(self):
+        """Test hard-majr's response to defection."""
+        self.bot.history = {self.human.name: ['defect']}
+        self.assertEqual('defect', self.bot.get_move(self.human.name))
+
+    def testEven(self):
+        """Test hard-majr's response to an even history."""
+        self.bot.history = {self.human.name: ['cooperate', 'cooperate', 'defect', 'defect']}
+        self.assertEqual('defect', self.bot.get_move(self.human.name))
+
+    def testInitial(self):
+        """Test hard-majr's initial move."""
+        self.bot.history = {self.human.name: []}
+        self.assertEqual('defect', self.bot.get_move(self.human.name))
+
+    def testMajorityDefect(self):
+        """Test hard-majr's response to mostly defections."""
+        self.bot.history = {self.human.name: ['defect', 'cooperate', 'cooperate', 'defect', 'defect']}
+        self.assertEqual('defect', self.bot.get_move(self.human.name))
+
+    def testMajorityCooperate(self):
+        """Test hard-majr's response to mostly cooperations."""
+        self.bot.history = {self.human.name: ['defect', 'cooperate', 'cooperate', 'defect', 'cooperate']}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+
+class NaiveProbeTest(unittest.TestCase):
+    """Tests of the naive-probe bot. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.human = unitility.AutoBot()
+        self.game = prisoner.PrisonersDilemma(self.human, 'hard-majr')
+        self.bot = [player for player in self.game.players if player != self.human][0]
+        self.bot.set_up()
+
+
+class PrisonerMethodTest(unittest.TestCase):
+    """Tests of the PrisonerMethodBot. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.human = unitility.AutoBot()
+        self.game = prisoner.PrisonersDilemma(self.human, 'grim')
+        self.bot = [player for player in self.game.players if player != self.human][0]
+        self.bot.set_up()
+
+    def testCooperate(self):
+        """Test grim's response to cooperation."""
+        self.bot.history = {self.human.name: ['cooperate']}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+    def testDefect(self):
+        """Test grim's response to defection."""
+        self.bot.history = {self.human.name: ['defect']}
+        self.assertEqual('defect', self.bot.get_move(self.human.name))
+
+    def testDefectAny(self):
+        """Test grim's response to a single, old defection."""
+        self.bot.history = {self.human.name: ['defect', 'cooperate', 'cooperate', 'cooperate']}
+        self.assertEqual('defect', self.bot.get_move(self.human.name))
+
+    def testInitial(self):
+        """Test grim's initial move."""
         self.bot.history = {self.human.name: []}
         self.assertEqual('cooperate', self.bot.get_move(self.human.name))
 
