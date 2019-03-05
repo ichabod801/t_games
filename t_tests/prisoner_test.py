@@ -87,6 +87,24 @@ class GradualTest(unittest.TestCase):
         bot_check = ['d', 'c', 'c']
         self.assertEqual(bot_check, bot_moves)
 
+    def testDefectCount(self):
+        """Test all-def's updating retaliations."""
+        self.bot.history = {self.human.name: ['defect']}
+        self.bot.get_move(self.human.name)
+        self.assertEqual(1, self.bot.retaliations)
+
+    def testDefectTwo(self):
+        """Test all-def's response to the second defection."""
+        self.bot.history = {self.human.name: []}
+        self.bot.retaliations = 1
+        human_moves = ['defect', 'cooperate', 'defect', 'cooperate']
+        bot_moves = []
+        for human_move in human_moves:
+            self.bot.history[self.human.name].append(human_move)
+            bot_moves.append(self.bot.get_move(self.human.name))
+        bot_check = ['d', 'd', 'c', 'c']
+        self.assertEqual(bot_check, bot_moves)
+
     def testInitial(self):
         """Test all-def's initial move."""
         self.bot.history = {self.human.name: []}
