@@ -1219,7 +1219,31 @@ class Backgammon(game.Game):
         if self.rolls[0] == self.rolls[1]:
             self.rolls.extend(self.rolls)
 
-    def get_start(self, end, direction, player, player_piece):
+    def get_start(self, end, legal_moves, direction, player, player_piece):
+        """
+        Get the start of a move only specified by the end. (int)
+
+        Parameters:
+        end: The end of the move (int)
+        legal_moves: The legal moves the player has. (set of tuple)
+        direction: The direction of the move. (int)
+        player: The player moving. (player.Player)
+        player_piece: The symbol for the player moving. (str)
+        """
+        possible = [move for move in legal_moves if move[1] == end]
+        # !!need to check each possible for invalid start, and update the start.
+        # Only return valid single moves.
+        if len(possible) == 1:
+            return possible[0]
+        # Warn the user about invalid moves.
+        elif len(possible) > 1:
+            player.error('That move is ambiguous.')
+            return -99
+        else:
+            player.error('There is no legal move to that point.')
+            return -99
+
+    def get_start_old(self, end, direction, player, player_piece):
         """
         Get the start of a move only specified by the end. (int)
 
