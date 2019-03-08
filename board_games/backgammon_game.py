@@ -316,7 +316,10 @@ class BackgammonBot(player.Bot):
                         if offset < 7:
                             direct_hits[piece] += 1
                         if offset > 1:
-                            indirect_hits[piece] += 1
+                            for die in range(1, offset - 1):
+                                subcell = board.offset(blot, die * foe_direction)
+                                if subcell.contents[:2] != [self.piece, self.piece]:
+                                    indirect_hits[piece] += 1
         return direct_hits, indirect_hits
 
     def describe_board(self, board):
