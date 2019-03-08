@@ -1219,31 +1219,7 @@ class Backgammon(game.Game):
         if self.rolls[0] == self.rolls[1]:
             self.rolls.extend(self.rolls)
 
-    def get_start(self, end, legal_moves, direction, player, player_piece):
-        """
-        Get the start of a move only specified by the end. (int)
-
-        Parameters:
-        end: The end of the move (int)
-        legal_moves: The legal moves the player has. (set of tuple)
-        direction: The direction of the move. (int)
-        player: The player moving. (player.Player)
-        player_piece: The symbol for the player moving. (str)
-        """
-        possible = [move for move in legal_moves if move[1] == end]
-        # !!need to check each possible for invalid start, and update the start.
-        # Only return valid single moves.
-        if len(possible) == 1:
-            return possible[0]
-        # Warn the user about invalid moves.
-        elif len(possible) > 1:
-            player.error('That move is ambiguous.')
-            return -99
-        else:
-            player.error('There is no legal move to that point.')
-            return -99
-
-    def get_start_old(self, end, direction, player, player_piece):
+    def get_start(self, end, direction, player, player_piece):
         """
         Get the start of a move only specified by the end. (int)
 
@@ -1260,7 +1236,18 @@ class Backgammon(game.Game):
             start = end - maybe * direction
             # Check for valid standard move.
             if start in self.board.cells and player_piece in self.board.cells[start]:
-                possible.append(start)
+                # Check for blocked move, checking all possible move orders.
+                for move_order in itertools.permutations(all_totals[maybe]):
+                    point = start
+                    # Check each step for being blocked.
+                    for roll in move_order:
+                        point += roll * direction
+                        point_pieces = self.board.cells[point].contents
+                        if point_pieces and point_pieces[0] != player_piece and len(point_pieces) > 1:
+                            break
+                    else:
+                        possible.append(start)
+                        break
             # Check for valid enter move.
             if (start == 25 and direction == -1) or (start == 0 and direction == 1):
                 if player_piece in self.board.cells[BAR]:
@@ -1283,11 +1270,11 @@ class Backgammon(game.Game):
         num_rolls = len(self.rolls)
         if num_rolls > 1:
             if self.rolls[0] == self.rolls[1]:
-                # Add the sum of two dice.
+                # Add the multiples of paired dice.
                 for count in range(2, num_rolls + 1):
                     totals[self.rolls[0] * count] = [self.rolls[0]] * count
             else:
-                # Add the multiples of paired dice.
+                # Add the sum of two dice.
                 totals[sum(self.rolls)] = self.rolls[:]
         return totals
 
