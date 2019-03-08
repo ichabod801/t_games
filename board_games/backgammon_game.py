@@ -316,6 +316,7 @@ class BackgammonBot(player.Bot):
                         if offset < 7:
                             direct_hits[piece] += 1
                         if offset > 1:
+                            # Only count indirect hits that aren't blocked.
                             for die in range(1, offset - 1):
                                 subcell = board.offset(blot, die * foe_direction)
                                 if subcell.contents[:2] != [self.piece, self.piece]:
@@ -334,7 +335,7 @@ class BackgammonBot(player.Bot):
             * The difference in the number of pieces born off the board.
             * The difference in the number of blots.
             * The difference in direct hits to blots.
-            * The difference in indirect hits to blots.
+            * The difference in probability of indirect hits to blots.
             * The difference in pip count.
             * The difference in the farthest piece from being born off.
             * The difference in the number of controlled points.
