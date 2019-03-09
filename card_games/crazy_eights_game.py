@@ -365,7 +365,8 @@ class CrazyEights(game.Game):
 
     def do_gipf(self, arguments):
         """
-        I'm sorry, I quit gipfing for Lent.
+        Strategy allows you to play one rank above or below the current rank. Spider
+        (hah!) allows you to play any card, but it doesn't change the suit to play.
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('strategy', 'spider'))

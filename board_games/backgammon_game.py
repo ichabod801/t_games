@@ -1100,7 +1100,7 @@ class Backgammon(game.Game):
 
     def do_gipf(self, arguments):
         """
-        I'm sorry, I didn't catch that.
+        Connect Four allows you to move a piece vertically.
         """
         game, losses = self.gipf_check(arguments, ('connect four',))
         # Check for Connect Four edge.

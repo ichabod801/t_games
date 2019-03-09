@@ -102,7 +102,7 @@ class FreeCell(solitaire.Solitaire):
 
     def do_gipf(self, arguments):
         """
-        There are no valid moves for the gipf of spades.
+        Hamurabi allows building a free cell card on any tableau pile.
         """
         game, losses = self.gipf_check(arguments, ('hamurabi',))
         # Hamurabi allows building a free cell card on any tableau pile.

@@ -326,7 +326,7 @@ class RPS(game.Game):
 
     def do_gipf(self, arguments):
         """
-        No thank you.
+        Forty Thieves makes your next loss a draw.
         """
         game, losses = self.gipf_check(arguments, ('forty thieves',))
         go = True

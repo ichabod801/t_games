@@ -59,7 +59,7 @@ class Gargantua(solitaire.MultiSolitaire):
 
     def do_gipf(self, arguments):
         """
-        Gargantua decidedly dislikes miniscule linguistic particulates.
+        Mate turns all of the aces face up.
         """
         game, losses = self.gipf_check(arguments, ('mate',))
         # Mate turns all of the aces face up.

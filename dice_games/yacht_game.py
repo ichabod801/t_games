@@ -801,7 +801,7 @@ class Yacht(game.Game):
 
     def do_gipf(self, arguments):
         """
-        No hablo Ingles.
+        Rock Paper Scissors lets you change one die to a three.
         """
         # Check the game and play it if valid.
         game, losses = self.gipf_check(arguments, ('rock-paper-scissors',))
