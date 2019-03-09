@@ -94,7 +94,7 @@ class Quadrille(solitaire.Solitaire):
 
     def do_gipf(self, arguments):
         """
-        I don't know that dance.
+        Yacht gives you an extra pass through the deck.
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('yacht',))

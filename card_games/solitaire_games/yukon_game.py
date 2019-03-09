@@ -56,10 +56,10 @@ class Yukon(solitaire.Solitaire):
 
     def do_gipf(self, arguments):
         """
-        That is not one of the eleven words for snow.
+        Klondike allows you to move the top three cards of any pile onto any open card.
         """
         game, losses = self.gipf_check(arguments, ('klondike',))
-        # Mate turns all of the aces face up.
+        # Klondike lets you move any three onto anything.
         if game == 'klondike':
             if not losses:
                 player = self.players[self.player_index]

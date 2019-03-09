@@ -144,11 +144,11 @@ class Mate(game.Game):
 
     def do_gipf(self, arguments):
         """
-        That capture can only be done en passant.
+        Yukon allows a pawn to take any piece.
         """
         game, losses = self.gipf_check(arguments, ('yukon',))
         player = self.players[self.player_index]
-        # Mate turns all of the aces face up.
+        # Yukon allows a pawn to take any piece.
         if game == 'yukon':
             # Get a pawn move as a queen.
             pawn_indexes = []

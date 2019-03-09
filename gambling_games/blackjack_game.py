@@ -275,7 +275,7 @@ class Blackjack(game.Game):
 
     def do_gipf(self, arguments):
         """
-        ValueError: gipf
+        Ninety-Nine stops the dealer from drawing this round.
         """
         game, losses = self.gipf_check(arguments, ('ninety-nine',))
         # A Ninety-Nine win stops the dealer from drawing this round.
