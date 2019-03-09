@@ -1100,10 +1100,16 @@ class BackGetStartTest(unittest.TestCase):
         self.game.board.cells[BAR].contents = ['X']
         self.assertEqual(BAR, self.game.get_start(20, -1, self.bot, 'X'))
 
+    def testBlockUnambiguous(self):
+        """Test a blocked move making a starting point unambiguous."""
+        self.game.rolls = [1, 1, 1, 1]
+        self.game.board.cells[11] = ['X', 'X']
+        self.assertEqual(11, self.game.get_start(10, -1, self.bot, 'X'))
+
     def testDoubles(self):
         """Test gettig the start using three of four doubles."""
-        self.game.rolls = [5, 5, 5, 5]
-        self.assertEqual(1, self.game.get_start(16, 1, self.game.bot, 'O'))
+        self.game.rolls = [3, 3, 3, 3]
+        self.assertEqual(1, self.game.get_start(10, 1, self.game.bot, 'O'))
 
     def testHighStart(self):
         """Test getting the start using the high die."""
