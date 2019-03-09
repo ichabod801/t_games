@@ -91,7 +91,7 @@ class Canfield(solitaire.Solitaire):
 
     def do_gipf(self, arguments):
         """
-        I'm sorry, I don't speak Flemish.
+        Blackjack allows you to build a jack onto anything.
         """
         game, losses = self.gipf_check(arguments, ('blackjack',))
         # Blackjack allows building a jack on anything.

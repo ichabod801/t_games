@@ -253,7 +253,9 @@ class Cribbage(game.Game):
 
     def do_gipf(self, arguments):
         """
-        I'm sorry, sir, but that is simply not acceptable in this venue.
+        Backgammon makes pairs score four points each for one round. Craps allows you
+        to discard any one card and get a replacement from the deck. Crazy Eights skips
+        the next player's discard.
         """
         game, losses = self.gipf_check(arguments, ('backgammon', 'craps', 'crazy eights'))
         # Backgammon doubles the score for pairs.

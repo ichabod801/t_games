@@ -78,7 +78,7 @@ class FortyThieves(solitaire.MultiSolitaire):
 
     def do_gipf(self, arguments):
         """
-        I'm sorry, I quit gipfing for Lent.
+        Freecell lets you build the top waste card on any tableau pile.
         """
         game, losses = self.gipf_check(arguments, ('freecell',))
         # Freecell allows building the top waste card on any tableau pile.
