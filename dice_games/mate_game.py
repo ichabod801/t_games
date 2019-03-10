@@ -136,7 +136,7 @@ class Mate(game.Game):
         # Check for a possible take move.
         words = text.replace('the', '').replace('teh', '').split()
         if len(words) == 2:
-            return self.do_take('{} {}'.format(*words))
+            return self.do_take('{1} {0}'.format(*words))
         else:
             # Otherwise give an error.
             self.players[self.player_index].error('I do not understand the move {!r}.'.format(text))
