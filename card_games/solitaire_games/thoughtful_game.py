@@ -93,7 +93,7 @@ class Thoughtful(solitaire.Solitaire):
                 break
         # Loop through the remaining cards.
         undo = 0
-        while end_pile < self.options['num-reserve']:
+        while end_pile and end_pile < self.options['num-reserve']:
             # Move the next card to the stack needing one.
             self.transfer([self.reserve[end_pile][0]], self.reserve[start_pile], undo_ndx = undo)
             # Update the undo count so it's treated as one move.
@@ -115,7 +115,7 @@ class Thoughtful(solitaire.Solitaire):
             pile_index = -1
             try:
                 while not self.reserve[pile_index]:
-                    pile_index = -1
+                    pile_index -= 1
             # Watch out for an empty reserve.
             except IndexError:
                 self.human.error('There is nothing to turn.')
