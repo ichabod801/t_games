@@ -325,7 +325,8 @@ class Wumpus(game.Game):
 
     def do_gipf(self, argument):
         """
-        You're hunting a wumpus, not a gipf.
+        Battleships forces the wumpus to move. Hangman gives you directions to the
+        nearest pit. Pig summons the giant bats.
         """
         # Check the argument.
         game, losses = self.gipf_check(argument, ('battleships', 'hangman', 'pig'))

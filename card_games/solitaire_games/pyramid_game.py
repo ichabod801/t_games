@@ -116,7 +116,8 @@ class Pyramid(solitaire.Solitaire):
 
     def do_gipf(self, arguments):
         """
-        No, it's Giza. Gee-zah.
+        Monte Carlo slides all the cards to the left to fill in any gaps. Spider (hah!)
+        sorts any unblocked cards.
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('monte carlo', 'spider'))

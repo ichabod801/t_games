@@ -138,7 +138,7 @@ class Hangman(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Tamsk.
+        Craps gives you a random letter.
         """
         game, losses = self.gipf_check(arguments, ('craps',))
         go = True

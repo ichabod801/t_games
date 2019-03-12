@@ -127,7 +127,8 @@ class Spider(solitaire.MultiSolitaire):
 
     def do_gipf(self, arguments):
         """
-        Only the spider crawls the web.
+        Bisley allows your next build to be up or down one rank. Freecell lets you move
+        a stack regardless of suit.
         """
         game, losses = self.gipf_check(arguments, ('bisley', 'freecell'))
         # Winning Bisley gets you an up or down build.

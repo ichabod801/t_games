@@ -68,7 +68,7 @@ class MonteCarlo(solitaire.Solitaire):
 
     def do_gipf(self, arguments):
         """
-        But reality is just a simulation, so does gipfing really matter?
+        Quadrille allows you to match non-adjacent cards. Craps randomizes the tableau.
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('quadrille', 'craps'))

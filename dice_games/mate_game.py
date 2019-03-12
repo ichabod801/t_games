@@ -94,11 +94,13 @@ class Mate(game.Game):
     attacks = {'Pawn': (0,), 'Knight': (-3, -2, 2, 3), 'Bishop': (-1, 1),
         'Rook': (-1, 0, 1), 'Queen': tuple(range(-5, 6))}
     categories = ['Dice Games']
+    credits = CREDITS
     name = 'Mate'
     num_options = 3
     sides = ('Pawn', 'Pawn', 'Knight', 'Bishop', 'Rook', 'Queen')
     piece_aliases = {'p': 'pawn', 'n': 'knight', 'k': 'knight', 'b': 'bishop', 'r': 'rook', 'q': 'queen'}
     points = {'Pawn': 1, 'Knight': 2, 'Bishop': 2, 'Rook': 3, 'Queen': 5}
+    rules = RULES
 
     def __str__(self):
         """Human readable text representation. (str)"""
@@ -136,7 +138,7 @@ class Mate(game.Game):
         # Check for a possible take move.
         words = text.replace('the', '').replace('teh', '').split()
         if len(words) == 2:
-            return self.do_take('{} {}'.format(*words))
+            return self.do_take('{1} {0}'.format(*words))
         else:
             # Otherwise give an error.
             self.players[self.player_index].error('I do not understand the move {!r}.'.format(text))
@@ -144,11 +146,11 @@ class Mate(game.Game):
 
     def do_gipf(self, arguments):
         """
-        That capture can only be done en passant.
+        Yukon allows a pawn to take any piece.
         """
         game, losses = self.gipf_check(arguments, ('yukon',))
         player = self.players[self.player_index]
-        # Mate turns all of the aces face up.
+        # Yukon allows a pawn to take any piece.
         if game == 'yukon':
             # Get a pawn move as a queen.
             pawn_indexes = []
@@ -309,10 +311,10 @@ class Mate(game.Game):
         move = player.ask('\nWhat is your move? ')
         words = move.lower().split()
         # Handle the alternate syntax.
-        if words[1] in ('take', 'takes', 't', 'x'):
+        if len(words) == 3 and words[1] in ('take', 'takes', 't', 'x'):
             words = words[2:] + words[:1]
             return self.do_take(' '.join(words))
-        elif words[0] in ('the', 'teh') and words[2] in ('take', 'takes', 't', 'x'):
+        elif len(words) == 4 and words[0] in ('the', 'teh') and words[2] in ('take', 'takes', 't', 'x'):
             words = words[3:] + words[:2]
             return self.do_take(' '.join(words))
         else:

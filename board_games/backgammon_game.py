@@ -316,7 +316,11 @@ class BackgammonBot(player.Bot):
                         if offset < 7:
                             direct_hits[piece] += 1
                         if offset > 1:
-                            indirect_hits[piece] += 1
+                            # Only count indirect hits that aren't blocked.
+                            for die in range(1, offset - 1):
+                                subcell = board.offset(blot, die * foe_direction)
+                                if subcell.contents[:2] != [self.piece, self.piece]:
+                                    indirect_hits[piece] += 1
         return direct_hits, indirect_hits
 
     def describe_board(self, board):
@@ -331,7 +335,7 @@ class BackgammonBot(player.Bot):
             * The difference in the number of pieces born off the board.
             * The difference in the number of blots.
             * The difference in direct hits to blots.
-            * The difference in indirect hits to blots.
+            * The difference in probability of indirect hits to blots.
             * The difference in pip count.
             * The difference in the farthest piece from being born off.
             * The difference in the number of controlled points.
@@ -1096,7 +1100,7 @@ class Backgammon(game.Game):
 
     def do_gipf(self, arguments):
         """
-        I'm sorry, I didn't catch that.
+        Connect Four allows you to move a piece vertically.
         """
         game, losses = self.gipf_check(arguments, ('connect four',))
         # Check for Connect Four edge.
@@ -1236,7 +1240,18 @@ class Backgammon(game.Game):
             start = end - maybe * direction
             # Check for valid standard move.
             if start in self.board.cells and player_piece in self.board.cells[start]:
-                possible.append(start)
+                # Check for blocked move, checking all possible move orders.
+                for move_order in itertools.permutations(all_totals[maybe]):
+                    point = start
+                    # Check each step for being blocked.
+                    for roll in move_order:
+                        point += roll * direction
+                        point_pieces = self.board.cells[point].contents
+                        if point_pieces and point_pieces[0] != player_piece and len(point_pieces) > 1:
+                            break
+                    else:
+                        possible.append(start)
+                        break
             # Check for valid enter move.
             if (start == 25 and direction == -1) or (start == 0 and direction == 1):
                 if player_piece in self.board.cells[BAR]:
@@ -1259,11 +1274,11 @@ class Backgammon(game.Game):
         num_rolls = len(self.rolls)
         if num_rolls > 1:
             if self.rolls[0] == self.rolls[1]:
-                # Add the sum of two dice.
+                # Add the multiples of paired dice.
                 for count in range(2, num_rolls + 1):
                     totals[self.rolls[0] * count] = [self.rolls[0]] * count
             else:
-                # Add the multiples of paired dice.
+                # Add the sum of two dice.
                 totals[sum(self.rolls)] = self.rolls[:]
         return totals
 

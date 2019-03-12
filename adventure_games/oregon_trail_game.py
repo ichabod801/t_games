@@ -276,7 +276,8 @@ class OregonTrail(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Yeah, just go two blocks up and take a right. You can't miss it.
+        You can gipf to any two games from Oregon Trail, each on moving you forward
+        over 100 miles. Note that you can also gipf to Oregon Trail from any game.
         """
         # Check/play the gipf game.
         game, losses = self.gipf_check(arguments, ('oregon trail',))

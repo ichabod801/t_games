@@ -132,7 +132,7 @@ class SolitaireDice(game.Game):
 
     def do_gipf(self, arguments):
         """
-        I don't understand.
+        Freecell gives you a free ride. Gargantua lets you change one die into a six.
         """
         game, losses = self.gipf_check(arguments, ('freecell', 'gargantua'))
         # Freecell gives you a free ride no matter what the roll is.
