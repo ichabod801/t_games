@@ -85,15 +85,20 @@ class Thoughtful(solitaire.Solitaire):
             if len(pile) < 3:
                 start_pile = pile_index
                 break
+        else:
+            start_pile = len(self.reserve) - 1
         # Get the first pile to the right with cards.
         end_pile = start_pile + 1
         for pile_index, pile in enumerate(self.reserve[end_pile:], start = end_pile):
             if pile:
                 end_pile = pile_index
                 break
+        else:
+            # Catch no cards to move.
+            end_pile = 0
         # Loop through the remaining cards.
         undo = 0
-        while end_pile < self.options['num-reserve']:
+        while end_pile and end_pile < self.options['num-reserve']:
             # Move the next card to the stack needing one.
             self.transfer([self.reserve[end_pile][0]], self.reserve[start_pile], undo_ndx = undo)
             # Update the undo count so it's treated as one move.
@@ -115,15 +120,15 @@ class Thoughtful(solitaire.Solitaire):
             pile_index = -1
             try:
                 while not self.reserve[pile_index]:
-                    pile_index = -1
+                    pile_index -= 1
             # Watch out for an empty reserve.
             except IndexError:
                 self.human.error('There is nothing to turn.')
                 return True
             # Move that card onto itself (it goes to turn_transfer, so gets put on the bottom).
-            self.transfer([self.reserve[pile_index][0]], self.reserve[pile_index])
+            #self.transfer([self.reserve[pile_index][0]], self.reserve[pile_index])
         # Reset to no blocked piles.
-        if self.blocked:
+        if self.blocked and self.blocked_history:
             self.blocked_index = -1
             self.blocked_history[-1] = -1
 
