@@ -23,7 +23,23 @@ class TurnTest(unittest.TestCase):
         self.game.scores = {}
         self.game.set_up()
 
-    #@unittest.skip('Isolating infinite loop.')
+    def shift_reserve(self, reserve):
+        """
+        Shift the cards over in the way a turn should.
+
+        Parameters:
+        reserve: The reserve to shift. (list of list of TrackingCard)
+        """
+        reserve = sum(reserve, [])
+        start = 0
+        piles = []
+        while start < len(reserve):
+            piles.append(reserve[start:(start + 3)])
+            start += 3
+        while len(piles) < self.game.options['num-reserve']:
+            piles.append([])
+        return piles
+
     def testBlankEnd(self):
         """Test turning with an empty pile at the end."""
         check = self.game.reserve[-2][:]
@@ -50,6 +66,21 @@ class TurnTest(unittest.TestCase):
         check = self.game.reserve[-1][:]
         self.game.do_turn('')
         self.assertEqual(check, self.game.reserve[-2])
+
+    def testEmpty(self):
+        """Test turning with an empty reserve."""
+        for pile_index, pile in enumerate(self.game.reserve):
+            while pile:
+                self.game.transfer(pile[-1:], self.game.tableau[pile_index % len(self.game.tableau)])
+        check = [[] for pile in range(self.game.options['num-reserve'])]
+        self.game.do_turn('')
+        self.assertEqual(check, self.game.reserve)
+
+    def testFull(self):
+        """Test turning with a full reserve."""
+        check = [pile[:] for pile in self.game.reserve]
+        self.game.do_turn('')
+        self.assertEqual(check, self.game.reserve)
 
     def testOneEnd(self):
         """Test turning with one card missing at the end."""
