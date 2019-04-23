@@ -204,57 +204,32 @@ class PavlovTest(unittest.TestCase):
         self.bot.set_up()
         self.me_key = 'Me vs. {}'.format(self.human.name)
 
-    def testCCC(self):
-        """Test grim's response to reward after cooperation."""
+    def testCC(self):
+        """Test pavlov's response to reward."""
         self.bot.next_move = 'cooperate'
         self.bot.history = {self.me_key: ['cooperate'], self.human.name: ['cooperate']}
         self.assertEqual('cooperate', self.bot.get_move(self.human.name))
 
-    def testCCD(self):
-        """Test grim's response to sucker bet after cooperation."""
+    def testCD(self):
+        """Test pavlov's response to sucker bet."""
         self.bot.next_move = 'cooperate'
         self.bot.history = {self.me_key: ['cooperate'], self.human.name: ['defect']}
         self.assertEqual('defect', self.bot.get_move(self.human.name))
 
-    def testCDC(self):
-        """Test grim's response to temptation after cooperation."""
-        self.bot.next_move = 'cooperate'
-        self.bot.history = {self.me_key: ['defect'], self.human.name: ['cooperate']}
-        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
-
-    def testCDD(self):
-        """Test grim's response to punishment after cooperation."""
-        self.bot.next_move = 'cooperate'
-        self.bot.history = {self.me_key: ['defect'], self.human.name: ['defect']}
-        self.assertEqual('defect', self.bot.get_move(self.human.name))
-
-    def testDCC(self):
-        """Test grim's response to reward after defection."""
-        self.bot.next_move = 'defect'
-        self.bot.history = {self.me_key: ['cooperate'], self.human.name: ['cooperate']}
-        self.assertEqual('defect', self.bot.get_move(self.human.name))
-
-    def testDCD(self):
-        """Test grim's response to sucker bet after defection."""
-        self.bot.next_move = 'defect'
-        self.bot.history = {self.me_key: ['cooperate'], self.human.name: ['defect']}
-        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
-
-    def testDDC(self):
-        """Test grim's response to temptation after defection."""
+    def testDC(self):
+        """Test pavlov's response to temptation."""
         self.bot.next_move = 'defect'
         self.bot.history = {self.me_key: ['defect'], self.human.name: ['cooperate']}
         self.assertEqual('defect', self.bot.get_move(self.human.name))
 
-    def testDDD(self):
-        """Test grim's response to punishment after defection."""
+    def testDD(self):
+        """Test pavlov's response to punishment."""
         self.bot.next_move = 'defect'
         self.bot.history = {self.me_key: ['defect'], self.human.name: ['defect']}
         self.assertEqual('cooperate', self.bot.get_move(self.human.name))
 
     def testInitial(self):
         """Test grim's initial move."""
-        self.bot.history = {self.human.name: []}
         self.assertEqual('cooperate', self.bot.get_move(self.human.name))
 
 

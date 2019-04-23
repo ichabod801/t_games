@@ -388,7 +388,7 @@ class PavlovBot(PrisonerMethodBot):
         """Decide whether or not to retailiate. (bool)"""
         try:
             # Switch the move on a bad result.
-            last_move = [self.history['Me vs. {}'.format(foe_name)][-1], self.history[foe_name][-1]]
+            last_move = (self.history['Me vs. {}'.format(foe_name)][-1], self.history[foe_name][-1])
             if last_move in (('cooperate', 'defect'), ('defect', 'defect')):
                 self.next_move = 'cooperate' if self.next_move == 'defect' else 'defect'
         except IndexError:
