@@ -1,12 +1,29 @@
 """
 prisoner_test.py
 
+to test:
+prober (pb): Starts with d, c, c. Defects forever if foe cooperates second and
+    third move, otherwise plays Tit for Tat.
+prober2 (p2): Starts with d, c, c. Cooperates forever if foe plays d, c second
+    and third move, otherwise plays Tit for Tat.
+prober3 (p3): Starts with d, c. Defects forever if foe plays c on the second
+    move, otherwise plays Tit for Tat.
+random (rd): Add a Random bot.
+remorse-probe (rp): Add a Remorseful Prober Bot (like Naive Prober, but
+    cooperates after probing)
+soft-grudge (sg): Retailiates four times, followed by two cooperations.
+soft-majr (sm): Cooperates on a majority of cooperations, otherwise defects.
+tit-tat (tt): Add a Tit for Tat bot.
+tit-2tat (t2): Add a Tit for Two Tats bot.
+2tit-tat (2t): Add a Two Tits for Tat bot.
+
 Classes:
 AllCooperateTest: Tests of an always cooperate bot. (unittest.TestCase)
 AllDefectTest: Tests of an always defect bot. (unittest.TestCase)
 GradualTest: Tests of a gradual bot. (unittest.TestCase)
 MajorityHardTest: Tests of the hard-majr bot. (unittest.TestCase)
 NaiveProbeTest: Tests of the naive-probe bot. (unittest.TestCase)
+PavlovTest: Test of the PavlovBot. (unittest.TestCase)
 PrisonerMethodTest: Tests of the PrisonerMethodBot. (unittest.TestCase)
 """
 
@@ -260,6 +277,41 @@ class PrisonerMethodTest(unittest.TestCase):
     def testInitial(self):
         """Test grim's initial move."""
         self.bot.history = {self.human.name: []}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+
+class TitForTatTest(unittest.TestCase):
+    """Test of the Tit for Tat bot. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.human = unitility.AutoBot()
+        self.game = prisoner.PrisonersDilemma(self.human, 'tit-tat')
+        self.bot = [player for player in self.game.players if player != self.human][0]
+        self.bot.set_up()
+        self.me_key = 'Me vs. {}'.format(self.human.name)
+
+    def testCC(self):
+        """Test tit for tat's response to reward."""
+        self.bot.history = {self.me_key: ['cooperate'], self.human.name: ['cooperate']}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+    def testCD(self):
+        """Test tit for tat's response to sucker bet."""
+        self.bot.history = {self.me_key: ['cooperate'], self.human.name: ['defect']}
+        self.assertEqual('d', self.bot.get_move(self.human.name))
+
+    def testDC(self):
+        """Test tit for tat's response to temptation."""
+        self.bot.history = {self.me_key: ['defect'], self.human.name: ['cooperate']}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+    def testDD(self):
+        """Test tit for tat's response to punishment."""
+        self.bot.history = {self.me_key: ['defect'], self.human.name: ['defect']}
+        self.assertEqual('d', self.bot.get_move(self.human.name))
+
+    def testInitial(self):
+        """Test grim's initial move."""
         self.assertEqual('cooperate', self.bot.get_move(self.human.name))
 
 

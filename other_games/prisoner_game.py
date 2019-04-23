@@ -70,6 +70,8 @@ grim (gm): Retaliates forever after a single defect.
 hard-majr (hm): Defects on a majority of defects, otherwise cooperates.
 naive-prober (np): Add a Naive Prober bot (Tit for Tat with occasional
     defection)
+pavlov (pv): Add a Pavlov bot (changes his move when he score poorly, keeps it
+    otherwise)
 prober (pb): Starts with d, c, c. Defects forever if foe cooperates second and
     third move, otherwise plays Tit for Tat.
 prober2 (p2): Starts with d, c, c. Cooperates forever if foe plays d, c second
@@ -531,11 +533,11 @@ class PrisonersDilemma(game.Game):
             value = (['d', 'd', 'd', 'd', 'c', 'c'], 1, 1), default = None)
         self.option_set.add_option('soft-majr', ['sm'], action = 'bot', target = 'majority', default = None)
         self.option_set.add_option('tit-tat', ['tt'], action = 'bot', target = 'num-bot',
-            value = (['d'], 1, 0), default = None)
+            value = (['d'], 1, 1), default = None)
         self.option_set.add_option('tit-2tat', ['t2'], action = 'bot', target = 'num-bot',
-            value = (['d'], 2, 0), default = None)
+            value = (['d'], 2, 1), default = None)
         self.option_set.add_option('2tit-tat', ['2t'], action = 'bot', target = 'num-bot',
-            value = (['d', 'd'], 1, 0), default = None)
+            value = (['d', 'd'], 1, 1), default = None)
         # Set the score options.
         self.points = {}
         self.option_set.add_option('sucker', ['s'], int, default = 0, action = 'key=sucker',
