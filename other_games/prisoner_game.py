@@ -74,9 +74,9 @@ pavlov (pv): Add a Pavlov bot (changes his move when he score poorly, keeps it
     otherwise)
 prober (pb): Starts with d, c, c. Defects forever if foe cooperates second and
     third move, otherwise plays Tit for Tat.
-prober2 (p2): Starts with d, c, c. Cooperates forever if foe plays d, c second
+prober-2 (p2): Starts with d, c, c. Cooperates forever if foe plays d, c second
     and third move, otherwise plays Tit for Tat.
-prober3 (p3): Starts with d, c. Defects forever if foe plays c on the second
+prober-3 (p3): Starts with d, c. Defects forever if foe plays c on the second
     move, otherwise plays Tit for Tat.
 random (rd): Add a Random bot.
 remorse-probe (rp): Add a Remorseful Prober Bot (like Naive Prober, but
@@ -522,9 +522,9 @@ class PrisonersDilemma(game.Game):
         self.option_set.add_option('pavlov', ['pv'], action = 'bot', target = 'pavlov', default = None)
         self.option_set.add_option('prober', ['pb'], action = 'bot', target = 'probe',
             value = True, default = None)
-        self.option_set.add_option('prober2', ['p2'], action = 'bot', target = 'probe',
+        self.option_set.add_option('prober-2', ['p2'], action = 'bot', target = 'probe',
             value = (['d', 'c', 'c'], ['dc', 'd', 'c'], 1), default = None)
-        self.option_set.add_option('prober3', ['p3'], action = 'bot', target = 'probe',
+        self.option_set.add_option('prober-3', ['p3'], action = 'bot', target = 'probe',
             value = (['d', 'c'], ['dc', 'c']), default = None)
         self.option_set.add_option('random', ['rd'], action = 'bot', target = 'num-bot', default = None)
         self.option_set.add_option('remorse-probe', ['rp'], action = 'bot', target = 'probe',
