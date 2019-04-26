@@ -79,8 +79,6 @@ prober-2 (p2): Starts with d, c, c. Cooperates forever if foe plays d, c second
 prober-3 (p3): Starts with d, c. Defects forever if foe plays c on the second
     move, otherwise plays Tit for Tat.
 random (rd): Add a Random bot.
-remorse-probe (rp): Add a Remorseful Prober Bot (like Naive Prober, but
-    cooperates after probing)
 soft-grudge (sg): Retailiates four times, followed by two cooperations.
 soft-majr (sm): Cooperates on a majority of cooperations, otherwise defects.
 tit-tat (tt): Add a Tit for Tat bot.
@@ -186,6 +184,7 @@ class PrisonerNumBot(PrisonerBot):
     An IPD bot set on simple parameters. (PrisonerBot)
 
     Methods:
+    be_nice: Generate a 'nice' move. (str)
     get_move: Make a move in the game. (str)
 
     Overridden Methods:
@@ -211,6 +210,10 @@ class PrisonerNumBot(PrisonerBot):
         self.prob_nice = prob_nice
         self.current_tits = []
 
+    def be_nice(self):
+        """Generate a 'nice' move. (str)"""
+        return 'cooperate'
+
     def get_move(self, foe_name):
         """
         Make a move in the game. (str)
@@ -224,7 +227,7 @@ class PrisonerNumBot(PrisonerBot):
             self.current_tits = self.tits[:]
             return self.current_tits.pop()
         elif random.random() < self.prob_nice:
-            return 'cooperate'
+            return self.be_nice()
         else:
             return 'defect'
 
@@ -267,8 +270,12 @@ class ProbeBot(PrisonerNumBot):
                 self.prob_nice = 1
         if len(self.start) <= responses:
             move = super(ProbeBot, self).get_move(foe_name)
-            if self.remorse and move == 'defect' and self.history[foe_name][-1] == 'cooperate':
-                self.current_tits = ['cooperate', 'cooperate']
+            if self.remorse:
+                mine_two_back = self.history['Me vs. {}'.format(foe_name)][-2][0]
+                his_last = self.history[foe_name][-1][0] if self.history[foe_name] else 'x'
+                if mine_two_back == 'd' and his_last == 'd':
+                    move = 'cooperate'
+                    self.current_tits = ['cooperate']
         else:
             move = self.start[responses]
         return move
@@ -527,8 +534,6 @@ class PrisonersDilemma(game.Game):
         self.option_set.add_option('prober-3', ['p3'], action = 'bot', target = 'probe',
             value = (['d', 'c'], ['dc', 'c']), default = None)
         self.option_set.add_option('random', ['rd'], action = 'bot', target = 'num-bot', default = None)
-        self.option_set.add_option('remorse-probe', ['rp'], action = 'bot', target = 'probe',
-            value = ([], [], 0.90, True), default = None)
         self.option_set.add_option('soft-grudge', ['sg'], action = 'bot', target = 'num-bot',
             value = (['d', 'd', 'd', 'd', 'c', 'c'], 1, 1), default = None)
         self.option_set.add_option('soft-majr', ['sm'], action = 'bot', target = 'majority', default = None)

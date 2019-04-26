@@ -2,13 +2,6 @@
 prisoner_test.py
 
 to test:
-prober (pb): Starts with d, c, c. Defects forever if foe cooperates second and
-    third move, otherwise plays Tit for Tat.
-prober2 (p2): Starts with d, c, c. Cooperates forever if foe plays d, c second
-    and third move, otherwise plays Tit for Tat.
-prober3 (p3): Starts with d, c. Defects forever if foe plays c on the second
-    move, otherwise plays Tit for Tat.
-random (rd): Add a Random bot.
 remorse-probe (rp): Add a Remorseful Prober Bot (like Naive Prober, but
     cooperates after probing)
 soft-grudge (sg): Retailiates four times, followed by two cooperations.
@@ -26,8 +19,9 @@ NaiveProbeTest: Tests of the naive-probe bot. (unittest.TestCase)
 PavlovTest: Test of the PavlovBot. (unittest.TestCase)
 PrisonerMethodTest: Tests of the PrisonerMethodBot. (unittest.TestCase)
 ProberTest: Tests of the Prober bot. (unittest.TestCase)
-Prober2Test: Tests of the Prober II bot. (unittest.TestCase)
-Prober3Tests of the Prober III bot. (unittest.TestCase)
+Prober2Test: Tests of the Prober II bot. (ProberTest)
+Prober3Tests of the Prober III bot. (ProberTest)
+RemorsefulProberTest: Tests of the remorse-probe bot. (unittest.TestCase)
 TitForTatTest: Test of the Tit for Tat bot. (unittest.TestCase)
 """
 
