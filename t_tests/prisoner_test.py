@@ -378,6 +378,48 @@ class Prober2Test(ProberTest):
         self.assertEqual(['d', 'c', 'c'], first_moves)
 
 
+class Prober3Test(ProberTest):
+    """Tests of the Prober IIO bot. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.human = unitility.AutoBot()
+        self.game = prisoner.PrisonersDilemma(self.human, 'prober-3')
+        self.bot = [player for player in self.game.players if player != self.human][0]
+        self.bot.set_up()
+
+    def testSingleCooperate(self):
+        """Test prober's response to cooperate in single response mode."""
+        self.trigger(['defect', 'cooperate'])
+        self.bot.history[self.human.name].append('cooperate')
+        self.assertEqual('d', self.bot.get_move(self.human.name)[0])
+
+    def testSingleDefect(self):
+        """Test prober's response to defect in single response mode."""
+        self.trigger(['cooperate', 'cooperate'])
+        self.bot.history[self.human.name].append('cooperate')
+        self.assertEqual('d', self.bot.get_move(self.human.name)[0])
+
+    def testTFTCooperate(self):
+        """Test prober's response to cooperate in TFT mode."""
+        self.trigger(['defect', 'defect'])
+        self.bot.history[self.human.name].append('cooperate')
+        self.assertEqual('c', self.bot.get_move(self.human.name)[0])
+
+    def testTFTDefect(self):
+        """Test prober's response to cooperate in TFT mode."""
+        self.trigger(['cooperate', 'defect'])
+        self.bot.history[self.human.name].append('defect')
+        self.assertEqual('d', self.bot.get_move(self.human.name)[0])
+
+    def testInitial(self):
+        """Test prober's initial move."""
+        first_moves = []
+        for move in range(2):
+            first_moves.append(self.bot.get_move(self.human.name)[0])
+            self.bot.history[self.human.name].append('cooperate')
+        self.assertEqual(['d', 'c'], first_moves)
+
+
 class TitForTatTest(unittest.TestCase):
     """Test of the Tit for Tat bot. (unittest.TestCase)"""
 
