@@ -2,8 +2,6 @@
 prisoner_test.py
 
 to test:
-remorse-probe (rp): Add a Remorseful Prober Bot (like Naive Prober, but
-    cooperates after probing)
 soft-grudge (sg): Retailiates four times, followed by two cooperations.
 soft-majr (sm): Cooperates on a majority of cooperations, otherwise defects.
 tit-tat (tt): Add a Tit for Tat bot.
@@ -412,6 +410,31 @@ class Prober3Test(ProberTest):
             first_moves.append(self.bot.get_move(self.human.name)[0])
             self.bot.history[self.human.name].append('cooperate')
         self.assertEqual(['d', 'c'], first_moves)
+
+
+class SoftGrudgeTest(unittest.TestCase):
+    """Tests of an always soft-grudge bot. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.human = unitility.AutoBot()
+        self.game = prisoner.PrisonersDilemma(self.human, 'soft-grudge')
+        self.bot = [player for player in self.game.players if player != self.human][0]
+
+    def testCooperate(self):
+        """Test soft-grudge's response to cooperation."""
+        self.bot.history = {self.human.name: ['cooperate']}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+    def testDefect(self):
+        """Test soft-grudge's response to defection."""
+        self.bot.history = {self.human.name: ['defect']}
+        actual = [self.bot.get_move(self.human.name)[0] for move in range(6)]
+        self.assertEqual(list('ddddcc'), actual)
+
+    def testInitial(self):
+        """Test soft-grudge's initial move."""
+        self.bot.history = {self.human.name: []}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
 
 
 class TitForTatTest(unittest.TestCase):

@@ -535,7 +535,7 @@ class PrisonersDilemma(game.Game):
             value = (['d', 'c'], ['dc', 'c']), default = None)
         self.option_set.add_option('random', ['rd'], action = 'bot', target = 'num-bot', default = None)
         self.option_set.add_option('soft-grudge', ['sg'], action = 'bot', target = 'num-bot',
-            value = (['d', 'd', 'd', 'd', 'c', 'c'], 1, 1), default = None)
+            value = (['c', 'c', 'd', 'd', 'd', 'd'], 1, 1), default = None)
         self.option_set.add_option('soft-majr', ['sm'], action = 'bot', target = 'majority', default = None)
         self.option_set.add_option('tit-tat', ['tt'], action = 'bot', target = 'num-bot',
             value = (['d'], 1, 1), default = None)
