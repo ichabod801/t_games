@@ -13,13 +13,14 @@ AllCooperateTest: Tests of an always cooperate bot. (unittest.TestCase)
 AllDefectTest: Tests of an always defect bot. (unittest.TestCase)
 GradualTest: Tests of a gradual bot. (unittest.TestCase)
 MajorityHardTest: Tests of the hard-majr bot. (unittest.TestCase)
+MajoritySoftTest: Tests of the soft-majr bot. (unittest.TestCase)
 NaiveProbeTest: Tests of the naive-probe bot. (unittest.TestCase)
 PavlovTest: Test of the PavlovBot. (unittest.TestCase)
 PrisonerMethodTest: Tests of the PrisonerMethodBot. (unittest.TestCase)
 ProberTest: Tests of the Prober bot. (unittest.TestCase)
 Prober2Test: Tests of the Prober II bot. (ProberTest)
 Prober3Tests of the Prober III bot. (ProberTest)
-RemorsefulProberTest: Tests of the remorse-probe bot. (unittest.TestCase)
+SoftGrudgeTest: Tests of an soft-grudge bot. (unittest.TestCase)
 TitForTatTest: Test of the Tit for Tat bot. (unittest.TestCase)
 """
 
@@ -163,6 +164,46 @@ class MajorityHardTest(unittest.TestCase):
 
     def testMajorityCooperate(self):
         """Test hard-majr's response to mostly cooperations."""
+        self.bot.history = {self.human.name: ['defect', 'cooperate', 'cooperate', 'defect', 'cooperate']}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+
+class MajoritySoftTest(unittest.TestCase):
+    """Tests of the soft-majr bot. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.human = unitility.AutoBot()
+        self.game = prisoner.PrisonersDilemma(self.human, 'soft-majr')
+        self.bot = [player for player in self.game.players if player != self.human][0]
+        self.bot.set_up()
+
+    def testCooperate(self):
+        """Test soft-majr's response to cooperation."""
+        self.bot.history = {self.human.name: ['cooperate']}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+    def testDefect(self):
+        """Test soft-majr's response to defection."""
+        self.bot.history = {self.human.name: ['defect']}
+        self.assertEqual('defect', self.bot.get_move(self.human.name))
+
+    def testEven(self):
+        """Test soft-majr's response to an even history."""
+        self.bot.history = {self.human.name: ['cooperate', 'cooperate', 'defect', 'defect']}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+    def testInitial(self):
+        """Test soft-majr's initial move."""
+        self.bot.history = {self.human.name: []}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+    def testMajorityDefect(self):
+        """Test soft-majr's response to mostly defections."""
+        self.bot.history = {self.human.name: ['defect', 'cooperate', 'cooperate', 'defect', 'defect']}
+        self.assertEqual('defect', self.bot.get_move(self.human.name))
+
+    def testMajorityCooperate(self):
+        """Test soft-majr's response to mostly cooperations."""
         self.bot.history = {self.human.name: ['defect', 'cooperate', 'cooperate', 'defect', 'cooperate']}
         self.assertEqual('cooperate', self.bot.get_move(self.human.name))
 
