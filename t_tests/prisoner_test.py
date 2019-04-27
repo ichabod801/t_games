@@ -2,9 +2,6 @@
 prisoner_test.py
 
 to test:
-soft-grudge (sg): Retailiates four times, followed by two cooperations.
-soft-majr (sm): Cooperates on a majority of cooperations, otherwise defects.
-tit-tat (tt): Add a Tit for Tat bot.
 tit-2tat (t2): Add a Tit for Two Tats bot.
 2tit-tat (2t): Add a Two Tits for Tat bot.
 
@@ -511,6 +508,103 @@ class TitForTatTest(unittest.TestCase):
     def testInitial(self):
         """Test grim's initial move."""
         self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+
+class TitTwoTatTest(unittest.TestCase):
+    """Test of the Tit for Two Tats bot. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.human = unitility.AutoBot()
+        self.game = prisoner.PrisonersDilemma(self.human, 'tit-2tat')
+        self.bot = [player for player in self.game.players if player != self.human][0]
+        self.bot.set_up()
+        self.me_key = 'Me vs. {}'.format(self.human.name)
+
+    def testCC(self):
+        """Test tit for two tat's response to reward."""
+        self.bot.history = {self.me_key: ['cooperate'], self.human.name: ['cooperate']}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+    def testCD(self):
+        """Test tit for two tat's response to sucker bet."""
+        self.bot.history = {self.me_key: ['cooperate'], self.human.name: ['defect']}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+    def testDC(self):
+        """Test tit for two tat's response to temptation."""
+        self.bot.history = {self.me_key: ['defect'], self.human.name: ['cooperate']}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+    def testDD(self):
+        """Test tit for two tat's response to punishment."""
+        self.bot.history = {self.me_key: ['defect'], self.human.name: ['defect']}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+    def testInitial(self):
+        """Test tit for two tat's initial move."""
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+    def testTwoTats(self):
+        """Test tit for two tat's response to two defections."""
+        self.bot.history = {self.me_key: ['cooperate', 'cooperate'], self.human.name: ['defect', 'defect']}
+        self.assertEqual('d', self.bot.get_move(self.human.name))
+
+    def testTwoTits(self):
+        """Test tit for two tat's second respons to getting triggered."""
+        self.bot.history = {self.me_key: ['cooperate', 'cooperate'], self.human.name: ['defect', 'defect']}
+        actual = [self.bot.get_move(self.human.name)]
+        self.bot.history[self.human.name].append('cooperate')
+        actual.append(self.bot.get_move(self.human.name))
+        self.assertEqual(['d', 'cooperate'], actual)
+
+
+class TwoTitTatTest(unittest.TestCase):
+    """Test of the Two Tits for Tat bot. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.human = unitility.AutoBot()
+        self.game = prisoner.PrisonersDilemma(self.human, '2tit-tat')
+        self.bot = [player for player in self.game.players if player != self.human][0]
+        self.bot.set_up()
+        self.me_key = 'Me vs. {}'.format(self.human.name)
+
+    def testCC(self):
+        """Test two tit for tat's response to reward."""
+        self.bot.history = {self.me_key: ['cooperate'], self.human.name: ['cooperate']}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+    def testCD(self):
+        """Test two tit for tat's response to sucker bet."""
+        self.bot.history = {self.me_key: ['cooperate'], self.human.name: ['defect']}
+        self.assertEqual('d', self.bot.get_move(self.human.name))
+
+    def testDC(self):
+        """Test two tit for tat's response to temptation."""
+        self.bot.history = {self.me_key: ['defect'], self.human.name: ['cooperate']}
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+    def testDD(self):
+        """Test two tit for tat's response to punishment."""
+        self.bot.history = {self.me_key: ['defect'], self.human.name: ['defect']}
+        self.assertEqual('d', self.bot.get_move(self.human.name))
+
+    def testInitial(self):
+        """Test grim's initial move."""
+        self.assertEqual('cooperate', self.bot.get_move(self.human.name))
+
+    def testTwoTats(self):
+        """Test two tit for tat's response to two defections."""
+        self.bot.history = {self.me_key: ['cooperate', 'cooperate'], self.human.name: ['defect', 'defect']}
+        self.assertEqual('d', self.bot.get_move(self.human.name))
+
+    def testTwoTits(self):
+        """Test two tit for tat's second respons to getting triggered."""
+        self.bot.history = {self.me_key: ['cooperate', 'cooperate'], self.human.name: ['defect', 'defect']}
+        actual = [self.bot.get_move(self.human.name)]
+        self.bot.history[self.human.name].append('cooperate')
+        actual.append(self.bot.get_move(self.human.name))
+        self.assertEqual(['d', 'd'], actual)
+
 
 
 if __name__ == '__main__':
