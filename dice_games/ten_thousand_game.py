@@ -77,8 +77,10 @@ force-six (f6): If you score on all six dice, you *must* roll again.
 minimum= (m=): The minimum number of points you must roll before you can score
     them.
 no-second (n2): Second chance rolls are not allowed.
+straight= (s=): The score for a straight (1-6). Defaults to 0, or no straights.
 super-strikes (ss): If you don't score three turns in a row, you loose all of
     your points.
+three-pair= (3p=): The score for three pair. Defaults to 0, no three pair.
 three-strikes (3s): If you don't score three turns in a row, you loose 500
     points.
 threes-only (3o): Only ones, fives, and three of a kind score.
@@ -165,7 +167,7 @@ class TenThousand(game.Game):
             counts = [possibles.count(value) for value in range(7)]
             if sorted(possibles) == [1, 2, 3, 4, 5, 6] and self.straight:
                 values = possibles
-            elif counts.count(2) == 3 and self.two_pair:
+            elif counts.count(2) == 3 and self.three_pair:
                 values = possibles
             else:
                 values = []
@@ -178,9 +180,9 @@ class TenThousand(game.Game):
         # Score the held dice.
         counts = [values.count(possible) for possible in range(7)]
         if values == [1, 2, 3, 4, 5, 6]:
-            held_score = self.straight_score
+            held_score = self.straight
         elif counts.count(2) == 3:
-            held_score = self.three_pair_score
+            held_score = self.three_pair
         else:
             held_score = 0
             for possible, count in enumerate(counts):
@@ -204,9 +206,9 @@ class TenThousand(game.Game):
         """
         player = self.players[self.player_index]
         # Check for having held dice.
-        if not self.held_this_turn:
+        if not (self.held_this_turn or self.new_turn):
             player.error('You must hold dice before you can roll.')
-            return False
+            return True
         # Reset the dice if they've all been rolled.
         if not filter(lambda die: not die.held, self.dice):
             self.dice.release()
@@ -243,7 +245,7 @@ class TenThousand(game.Game):
         self.held_this_turn = False
         self.turn_score = 0
         self.dice.release()
-        self.dice.roll()
+        self.new_turn = True
 
     def game_over(self):
         """Determine if the game is over. (bool)"""
@@ -255,6 +257,7 @@ class TenThousand(game.Game):
                 self.human.tell(warning.format(player, self.last_player))
                 return False
             elif player == self.last_player:
+                # !! set win loss draw
                 ranking = [(score, player) for player, score in self.scores.items()]
                 ranking.sort(reverse = True)
                 self.human.tell('{1} wins with {0} points.'.format(*ranking[0]))
@@ -272,9 +275,6 @@ class TenThousand(game.Game):
         """Handle the game options. (None)"""
         super(TenThousand, self).handle_options()
         # Check for scoring options.
-        self.straight_score = 1500
-        self.three_pair_score = 1000
-        self.win = 10000
         self.players = [self.human, TenThousandBot([self.human.name])]
 
     def player_action(self, player):
@@ -284,9 +284,27 @@ class TenThousand(game.Game):
         Parameters:
         player: The current player.
         """
+        if self.new_turn:
+            if not self.do_roll(''):
+                return False
+            self.new_turn = False
         player.tell(self)
         move = player.ask('\nWhat is your move? ')
         return self.handle_cmd(move)
+
+    def set_options(self):
+        """Set the options for the game. (None)"""
+        # Add name variants.
+        self.option_set.add_group('5000', 'w=5000')
+        self.option_set.add_group('5k', 'w=5000')
+        # Set the scoring options.
+        self.option_set.add_option('straight', ['s'], int, 0,
+            question = 'How much should a straight score (return for 0)? ')
+        self.option_set.add_option('three-pair', ['3p'], int, 0,
+            question = 'How much should three pair score (return for 0)? ')
+        # Set the end of game options.
+        self.option_set.add_option('win', ['w'], int, 10000,
+            question = 'How many points should it take to win (return for 10,000)? ')
 
     def set_up(self):
         """Set up the game. (None)"""
@@ -295,3 +313,4 @@ class TenThousand(game.Game):
         self.held_this_turn = False
         self.last_player = None
         self.must_roll = ''
+        self.new_turn = True
