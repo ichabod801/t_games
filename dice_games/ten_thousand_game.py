@@ -91,27 +91,38 @@ wild: One die has a wild. If rolled with a pair or more, it must be used to
 win= (w=): The number of points needed to win.
 """
 
-class TenThousandBot(player.Bot):
+class TenKBot(player.Bot):
 
     def ask(self, prompt):
         if prompt == '\nWhat is your move? ':
-            if self.held and self.game.turn_score > 350:
-                self.held = False
-                move = 'score'
-            elif self.held:
-                self.held = False
-                move = 'roll'
+            if self.game.held_this_turn:
+                move = self.roll_or_score()
             else:
-                self.held = True
-                move = 'hold'
-            print(self.name, move, self.game.dice, self.game.turn_score, self.game.scores[self.name])
+                move = self.hold()
             return move
 
+    def hold(self):
+        return 'hold'
+
+    def roll_or_score(self):
+        if self.game.turn_score < 350:
+            return 'roll'
+        else:
+            return 'score'
+
     def set_up(self):
-        self.held = False
+        self.bank = 0
 
     def tell(self, *args, **kwargs):
-        pass
+        if isinstance(args[0], TenThousand):
+            new_bank = self.game.turn_score
+            if new_bank == 0:
+                self.bank = new_bank
+            elif new_bank != self.bank:
+                self.game.human.tell('{} banked {} points.'.format(self.name, new_bank - self.bank))
+                self.bank = new_bank
+        else:
+            super(TenKBot, self).tell(*args, **kwargs)
 
 class TenThousand(game.Game):
     """
@@ -275,7 +286,7 @@ class TenThousand(game.Game):
         """Handle the game options. (None)"""
         super(TenThousand, self).handle_options()
         # Check for scoring options.
-        self.players = [self.human, TenThousandBot([self.human.name])]
+        self.players = [self.human, TenKBot([self.human.name])]
 
     def player_action(self, player):
         """
