@@ -230,6 +230,7 @@ class TenThousand(game.Game):
         print('\n{} rolled: {}.'.format(player.name, ', '.join([str(value) for value in values])))
         # Check for no score.
         counts = [values.count(possible) for possible in range(7)]
+        # !! counts straights/three pair even when not scoring.
         if not counts[1] and not counts[5] and counts.count(2) != 3 and max(counts) < 3:
             if values != [1, 2, 3, 4, 5, 6]:
                 player.tell('{} did not score with that roll, their turn is over.'.format(player.name))
@@ -272,8 +273,16 @@ class TenThousand(game.Game):
                 ranking = [(score, player) for player, score in self.scores.items()]
                 ranking.sort(reverse = True)
                 self.human.tell('{1} wins with {0} points.'.format(*ranking[0]))
+                human_score = self.scores[self.human.name]
+                for score, name in ranking:
+                    if score > human_score:
+                        self.win_loss_draw[1] += 1
+                    elif score == human_score and name != self.human.name:
+                        self.win_loss_draw[2] += 1
+                    elif score < human_score:
+                        self.win_loss_draw[0] += 1
                 if self.human.name != ranking[0][1]:
-                    human_rank = ranking.index((self.scores[self.human.name], self.human.name)) + 1
+                    human_rank = self.win_loss_draw[1] + 1
                     text = 'You came in {} place with {} points.'
                     rank_word = utility.number_word(human_rank, ordinal = True)
                     self.human.tell(text.format(rank_word, self.scores[self.human.name]))
