@@ -93,7 +93,7 @@ class TenThousandBot(player.Bot):
 
     def ask(self, prompt):
         if prompt == '\nWhat is your move? ':
-            if self.held and self.game.turn_score > 1500:
+            if self.held and self.game.turn_score > 350:
                 self.held = False
                 move = 'score'
             elif self.held:
@@ -125,9 +125,9 @@ class TenThousand(game.Game):
     categories = ['Dice Games']
     name = 'Ten Thousand'
 
-    combo_scores = [[0], [0, 100, 200, 1000, 2000, 4000, 8000], [0, 0, 0, 200, 400, 800, 1600],
-        [0, 0, 0, 300, 600, 1200, 2400], [0, 0, 0, 400, 800, 1600, 3200],
-        [0, 50, 100, 500, 1000, 2000, 4000], [0, 0, 0, 600, 1200, 2400, 4800]]
+    combo_scores = [[0], [0, 100, 200, 1000, 1100, 1200, 2000], [0, 0, 0, 200, 0, 0, 400],
+        [0, 0, 0, 300, 0, 0, 600], [0, 0, 0, 400, 0, 0, 800],
+        [0, 50, 100, 500, 550, 600, 1000], [0, 0, 0, 600, 0, 0, 1200]]
 
     def __str__(self):
         """Human readable text representation. (str)"""
@@ -160,11 +160,20 @@ class TenThousand(game.Game):
                 player.tell('Invalid arguments to hold command: {!r}'.format(arguments))
                 return True
         else:
-            # Hold all unheld dice if no arguments are given.
-            # !! does not check for straight/three pair
+            # Hold all scoring dice if no arguments are given.
             possibles = [die.value for die in self.dice if not die.held]
             counts = [possibles.count(value) for value in range(7)]
-            values = [value for value in possibles if value in (1, 5) or counts[value] >= 3]
+            if sorted(possibles) == [1, 2, 3, 4, 5, 6] and self.straight:
+                values = possibles
+            elif counts.count(2) == 3 and self.two_pair:
+                values = possibles
+            else:
+                values = []
+                for possible in set(possibles):
+                    for count in range(counts[possible], 0, -1):
+                        if self.combo_scores[possible][count]:
+                            values.extend([possible] * count)
+                            break
         values.sort()
         # Score the held dice.
         counts = [values.count(possible) for possible in range(7)]
