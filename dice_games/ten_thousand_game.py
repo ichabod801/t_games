@@ -230,9 +230,12 @@ class TenThousand(game.Game):
         print('\n{} rolled: {}.'.format(player.name, ', '.join([str(value) for value in values])))
         # Check for no score.
         counts = [values.count(possible) for possible in range(7)]
-        # !! counts straights/three pair even when not scoring.
-        if not counts[1] and not counts[5] and counts.count(2) != 3 and max(counts) < 3:
-            if values != [1, 2, 3, 4, 5, 6]:
+        if not counts[1] and not counts[5] and max(counts) < 3:
+            if self.straight and values == [1, 2, 3, 4, 5, 6]:
+                pass
+            if self.three_pair and counts.count(2) == 3:
+                pass
+            else:
                 player.tell('{} did not score with that roll, their turn is over.'.format(player.name))
                 self.end_turn()
                 return False
