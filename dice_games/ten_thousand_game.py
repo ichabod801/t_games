@@ -11,10 +11,13 @@ Classes:
 TenThousand: A game of TenThousand. (game.Game)
 """
 
+import random
+
 from .. import dice
 from .. import game
 from .. import player
 from .. import utility
+
 
 CREDITS = """
 Game Design: Traditional.
@@ -138,12 +141,95 @@ class GamblerBot(TenKBot):
 
     score_chance = [0.97, 0.33, 0.56, 0.72, 0.84, 0.92]
 
-    def roll_or_stop(self):
+    def roll_or_score(self):
         to_roll = len(filter(lambda die: not die.held, self.game.dice))
         if random.random() < self.score_chance[to_roll]:
             return 'roll'
         else:
             return 'score'
+
+
+class KniziaBot(TenKBot):
+    """Almost, it leaves out one tiny bit."""
+
+    def hold(self):
+        """Determine the hold command (which dice to hold). (None)"""
+        # Calculate the values used in the decision making.
+        possibles = [die.value for die in self.game.dice if not die.held]
+        counts = [possibles.count(value) for value in range(7)]
+        dice_thrown = len(possibles)
+        max_points = sum([self.game.combo_scores[possible][count] for possible, count in enumerate(counts)])
+        max_overall = max_points + self.game.turn_score
+        move = 'hold'
+        # Stop with 350 points.
+        if max_overall >= 350:
+            self.score = True
+        # For six dice, hold minimally without three of kind, and roll unless you get a bad 300.
+        elif dice_thrown == 6:
+            # Handle rerolls after scoring all six dice.
+            if self.game.turn_score > 2850:
+                self.score = True
+            elif self.game.turn_score > 1550:
+                if max_points >= 200:
+                    self.score = True
+                else:
+                    move = 'hold 1' if counts[1] else 'hold 5'
+            elif self.game.turn_score > 900:
+                if max_points >= 250 or counts[2] == 3:
+                    self.score = True
+                else:
+                    move = 'hold 1' if counts[1] else 'hold 5'
+            elif self.game.turn_score:
+                if max_points >= 300 or (counts[2] == 3 and not (counts[1] + counts[5])):
+                    self.score = True
+                else:
+                    move = 'hold 1' if counts[1] else 'hold 5'
+            # Handle initial rolls.
+            elif counts[2] == 3:
+                if counts[5] == 2:
+                    self.score = True
+            elif counts[3] != 3 and counts[1]:
+                move = 'hold {}'.format(' '.join(['1'] * counts[1]))
+            elif counts[3] != 3:
+                move = 'hold 5'
+        # For five dice, hold minimally and roll without three of a kind, score otherwise.
+        elif dice_thrown == 5:
+            if counts[2] == 3:
+                self.score = True
+            elif counts[1] == 2:
+                if counts[5]:
+                    self.score = True
+            else:
+                move = 'hold 1' if counts[1] else 'hold 5'
+        # For four dice, hold minimally unless three 2's, score on three 2's or three individual 1's.
+        elif dice_thrown == 4:
+            if counts[2] == 3:
+                self.score = True
+            if max_overall == 300:
+                if max_points == 100 and counts[1]:
+                    move = 'hold 1'
+                else:
+                    self.score = True
+            else:
+                move = 'hold 1' if counts[1] else 'hold 5'
+        # Otherwise score whatever you have, unless you have a bunch of individual fives.
+        elif (dice_thrown == 3 and max_overall == 200) or (dice_thrown == 2 and max_overall == 250):
+            move = 'hold 5'
+        else:
+            self.score = True
+        return move
+
+    def roll_or_score(self):
+        if self.score and [die for die in self.game.dice if not die.held]:
+            move = 'score'
+        else:
+            move = 'roll'
+        self.score = False
+        return move
+
+    def set_up(self):
+        super(KniziaBot, self).set_up()
+        self.score = False
 
 
 class TenThousand(game.Game):
@@ -299,7 +385,6 @@ class TenThousand(game.Game):
                 self.human.tell(warning.format(player, self.last_player))
                 return False
             elif player == self.last_player:
-                # !! set win loss draw
                 ranking = [(score, player) for player, score in self.scores.items()]
                 ranking.sort(reverse = True)
                 self.human.tell('{1} wins with {0} points.'.format(*ranking[0]))
@@ -346,7 +431,7 @@ class TenThousand(game.Game):
         self.option_set.add_group('5000', 'w=5000')
         self.option_set.add_group('5k', 'w=5000')
         # Set the bot options.
-        self.option_set.default_bots = ((TenKBot, ()), (GamblerBot, ()))
+        self.option_set.default_bots = ((TenKBot, ()), (GamblerBot, ()), (KniziaBot, ()))
         # Set the scoring options.
         self.option_set.add_option('straight', ['s'], int, 0,
             question = 'How much should a straight score (return for 0)? ')
@@ -369,3 +454,7 @@ class TenThousand(game.Game):
         self.last_player = None
         self.must_roll = ''
         self.new_turn = True
+
+    def score_dice(self, dice):
+        # !! this is really needed.
+        pass
