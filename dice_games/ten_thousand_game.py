@@ -158,7 +158,7 @@ class KniziaBot(TenKBot):
         possibles = [die.value for die in self.game.dice if not die.held]
         counts = [possibles.count(value) for value in range(7)]
         dice_thrown = len(possibles)
-        max_points = sum([self.game.combo_scores[possible][count] for possible, count in enumerate(counts)])
+        max_points = self.game.score_dice(possibles, validate = False)
         max_overall = max_points + self.game.turn_score
         move = 'hold'
         # Stop with 350 points.
@@ -302,20 +302,11 @@ class TenThousand(game.Game):
                             break
         values.sort()
         # Score the held dice.
-        counts = [values.count(possible) for possible in range(7)]
-        if values == [1, 2, 3, 4, 5, 6]:
-            held_score = self.straight
-        elif counts.count(2) == 3:
-            held_score = self.three_pair
-        else:
-            held_score = 0
-            for possible, count in enumerate(counts):
-                sub_score = self.combo_scores[possible][count]
-                if count and not sub_score:
-                    error = "{} {}'s do not score and cannot be held"
-                    player.error(error.format(utility.number_word(count), possible))
-                    return True
-                held_score += sub_score
+        held_score = self.score_dice(values)
+        if held_score == -1:
+            error = "{} {}'s do not score and cannot be held"
+            player.error(error.format(utility.number_word(count), possible))
+            return True
         # Record the score and hold the dice.
         self.dice.hold(values)
         self.turn_score += held_score
@@ -460,6 +451,23 @@ class TenThousand(game.Game):
         self.must_roll = ''
         self.new_turn = True
 
-    def score_dice(self, dice):
-        # !! this is really needed.
-        pass
+    def score_dice(self, values, validate = True):
+        counts = [values.count(possible) for possible in range(7)]
+        if values == [1, 2, 3, 4, 5, 6] and self.straight:
+            held_score = self.straight
+        elif counts.count(2) == 3 and self.three_pair:
+            held_score = self.three_pair
+        else:
+            held_score = 0
+            for possible, count in enumerate(counts):
+                sub_score = self.combo_scores[possible][count]
+                if count and not sub_score:
+                    if validate:
+                        return -1
+                    else:
+                        for sub_count in range(count, 0, -1):
+                            sub_score = self.combo_scores[possible][sub_count]
+                            if sub_score:
+                                break
+                held_score += sub_score
+        return held_score
