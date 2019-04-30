@@ -77,6 +77,8 @@ five-dice (5d): The game is played with five dice, with no six of a kind or
 force-combo (fc): If you score with three or more of a kind, you *must* roll
     again.
 force-six (f6): If you score on all six dice, you *must* roll again.
+min-grows (mg): You must roll more points as the previous scored in order to
+    score yourself.
 minimum= (m=): The minimum number of points you must roll before you can score
     them.
 no-second (n2): Second chance rolls are not allowed.
@@ -254,6 +256,8 @@ class TenThousand(game.Game):
         """Human readable text representation. (str)"""
         score_text = '\n'.join('{}: {}'.format(name, score) for name, score in self.scores.items())
         full_text = '\nScores:\n{}\n\nYou have banked {} points this turn.\nThe roll to you is {}.'
+        if self.min_grows:
+            full_text = '{}\nThe minimum turn score is {}.'.format(full_text, self.minimum)
         return full_text.format(score_text, self.turn_score, self.dice)
 
     def do_hold(self, arguments):
@@ -342,6 +346,8 @@ class TenThousand(game.Game):
             else:
                 player.tell('{} did not score with that roll, their turn is over.'.format(player.name))
                 self.end_turn()
+                if self.min_grows:
+                    self.minimum = 0
                 return False
         return True
 
@@ -360,6 +366,8 @@ class TenThousand(game.Game):
             player.error('You cannot stop the first time until you score {} points.'.format(self.entry))
         else:
             self.scores[self.players[self.player_index].name] += self.turn_score
+            if self.min_grows:
+                self.minimum = self.turn_score + 50
             self.end_turn()
             return False
         return True
@@ -436,6 +444,7 @@ class TenThousand(game.Game):
         # Set the stopping options.
         self.option_set.add_option('entry', ['e'], int, 0,
             question = 'How many points should be required to stop the first time (return for 0)? ')
+        self.option_set.add_option('min-grows', ['mg'])
         self.option_set.add_option('minimum', ['m'], int, 0,
             question = 'How many points should be required to stop in general (return for 0)? ')
         # Set the end of game options.
