@@ -265,6 +265,8 @@ class TenThousand(game.Game):
         chance to score, use the second command.
         """
         player = self.players[self.player_index]
+        possibles = [die.value for die in self.dice if not die.held]
+        counts = [possibles.count(value) for value in range(7)]
         # Process the arguments.
         if arguments.strip():
             # Split out the individual values to hold.
@@ -280,10 +282,13 @@ class TenThousand(game.Game):
             except ValueError:
                 player.tell('Invalid arguments to hold command: {!r}'.format(arguments))
                 return True
+            # Check against the unheld dice.
+            v_counts = [values.count(value) for value in range(7)]
+            if any(value > possible for value, possible in zip(v_counts, counts)):
+                player.error('You do not have those dice to hold.')
+                return True
         else:
             # Hold all scoring dice if no arguments are given.
-            possibles = [die.value for die in self.dice if not die.held]
-            counts = [possibles.count(value) for value in range(7)]
             if sorted(possibles) == [1, 2, 3, 4, 5, 6] and self.straight:
                 values = possibles
             elif counts.count(2) == 3 and self.three_pair:
@@ -312,8 +317,8 @@ class TenThousand(game.Game):
                     return True
                 held_score += sub_score
         # Record the score and hold the dice.
-        self.turn_score += held_score
         self.dice.hold(values)
+        self.turn_score += held_score
         self.held_this_turn = True
         return True
 
