@@ -95,10 +95,19 @@ class TenKBot(player.Bot):
 
     def ask(self, prompt):
         if prompt == '\nWhat is your move? ':
-            if self.game.held_this_turn:
-                move = self.roll_or_score()
-            else:
+            if not self.game.held_this_turn:
                 move = self.hold()
+            elif self.game.turn_score < self.game.minimum:
+                move = 'roll'
+            elif self.game.turn_score < self.game.entry and not self.game.scores[self.name]:
+                move = 'roll'
+            elif self.game.last_player is not None:
+                if self.game.scores[self.name] + self.game.turn_score <= max(self.game.scores.values()):
+                    move = 'roll'
+                else:
+                    move = self.roll_or_score()
+            else:
+                move = self.roll_or_score()
             return move
 
     def hold(self):
@@ -123,6 +132,19 @@ class TenKBot(player.Bot):
                 self.bank = new_bank
         else:
             super(TenKBot, self).tell(*args, **kwargs)
+
+
+class GamblerBot(TenKBot):
+
+    score_chance = [0.97, 0.33, 0.56, 0.72, 0.84, 0.92]
+
+    def roll_or_stop(self):
+        to_roll = len(filter(lambda die: not die.held, self.game.dice))
+        if random.random() < self.score_chance[to_roll]:
+            return 'roll'
+        else:
+            return 'score'
+
 
 class TenThousand(game.Game):
     """
@@ -245,10 +267,15 @@ class TenThousand(game.Game):
         """
         End the turn and score the points you rolled this turn. (s)
         """
+        player = self.players[self.player_index]
         if self.must_roll:
             player.error('You must roll again because you rolled a {}.'.format(self.must_roll))
         elif not self.turn_score:
             player.error('You cannot stop without holding some scoring dice.')
+        elif self.turn_score < self.minimum:
+            player.error('You cannot stop until you score {} points.'.format(self.minimum))
+        elif self.turn_score < self.entry and not self.scores[player.name]:
+            player.error('You cannot stop the first time until you score {} points.'.format(self.entry))
         else:
             self.scores[self.players[self.player_index].name] += self.turn_score
             self.end_turn()
@@ -297,8 +324,6 @@ class TenThousand(game.Game):
     def handle_options(self):
         """Handle the game options. (None)"""
         super(TenThousand, self).handle_options()
-        # Check for scoring options.
-        self.players = [self.human, TenKBot([self.human.name])]
 
     def player_action(self, player):
         """
@@ -320,11 +345,18 @@ class TenThousand(game.Game):
         # Add name variants.
         self.option_set.add_group('5000', 'w=5000')
         self.option_set.add_group('5k', 'w=5000')
+        # Set the bot options.
+        self.option_set.default_bots = ((TenKBot, ()), (GamblerBot, ()))
         # Set the scoring options.
         self.option_set.add_option('straight', ['s'], int, 0,
             question = 'How much should a straight score (return for 0)? ')
         self.option_set.add_option('three-pair', ['3p'], int, 0,
             question = 'How much should three pair score (return for 0)? ')
+        # Set the stopping options.
+        self.option_set.add_option('entry', ['e'], int, 0,
+            question = 'How many points should be required to stop the first time (return for 0)? ')
+        self.option_set.add_option('minimum', ['m'], int, 0,
+            question = 'How many points should be required to stop in general (return for 0)? ')
         # Set the end of game options.
         self.option_set.add_option('win', ['w'], int, 10000,
             question = 'How many points should it take to win (return for 10,000)? ')
