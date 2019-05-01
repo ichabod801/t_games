@@ -67,6 +67,8 @@ second (2): Make a second chance roll (list the dice you are trying to complete
 Options:
 add-combos (ac): Five and six of a kind are worth 300 and 400 points times the
     number rolled, respectively.
+carry-on (co): If a player fails to score, you can carry on with their points
+    and dice.
 clear-combo (cc): If your last roll scored a three or more of a kind, and you
     roll the number of that combo, you must reroll all the dice you just
     rolled.
@@ -104,6 +106,7 @@ class TenKBot(player.Bot):
     A base bot for the game of Ten Thousand. (player.Bot)
 
     Methods:
+    carry_on: Decided whether or not to carry on. (str)
     hold: Decide which dice to roll. (str)
     roll_or_score: Decide whether to roll for more or score what you've got. (str)
 
@@ -135,6 +138,12 @@ class TenKBot(player.Bot):
             else:
                 move = self.roll_or_score()
             return move
+        elif prompt.startswith('Would you like to'):
+            return self.carry_on()
+
+    def carry_on(self):
+        """Decide whether or not to carry on. (str)"""
+        return 'yes' if self.roll_or_score() == 'roll' else 'no'
 
     def hold(self):
         """Decide which dice to roll. (str)"""
@@ -164,7 +173,8 @@ class TenKBot(player.Bot):
             if new_bank == 0:
                 self.bank = new_bank
             elif new_bank != self.bank:
-                self.game.human.tell('{} banked {} points.'.format(self.name, new_bank - self.bank))
+                if new_bank > self.bank:
+                    self.game.human.tell('{} banked {} points.'.format(self.name, new_bank - self.bank))
                 self.bank = new_bank
         else:
             # Handle other tells the standard way.
@@ -182,7 +192,7 @@ class GamblerBot(TenKBot):
     roll_or_score
     """
 
-    score_chance = [0.97, 0.33, 0.56, 0.72, 0.84, 0.92]
+    score_chance = [0.97, 0.33, 0.56, 0.72, 0.84, 0.92, 0.97]
 
     def roll_or_score(self):
         """Decide whether to roll for more or score what you've got. (str)"""
@@ -201,10 +211,15 @@ class KniziaBot(TenKBot):
     programming.
 
     Overridden Methods:
+    carry_on
     hold
     roll_or_score
     set_up
     """
+
+    def carry_on(self):
+        """Decide whether or not to carry on. (str)"""
+        return '0'
 
     def hold(self):
         """Determine the hold command (which dice to hold). (None)"""
@@ -221,6 +236,7 @@ class KniziaBot(TenKBot):
         # For six dice, hold minimally without three of kind, and roll unless you get a bad 300.
         elif dice_thrown == 6:
             # Handle rerolls after scoring all six dice.
+            # !! Add handling for straights and three pair.
             if self.game.turn_score > 2850:
                 self.score = True
             elif self.game.turn_score > 1550:
@@ -229,17 +245,17 @@ class KniziaBot(TenKBot):
                 else:
                     move = 'hold 1' if counts[1] else 'hold 5'
             elif self.game.turn_score > 900:
-                if max_points >= 250 or counts[2] > 3:
+                if max_points >= 250 or counts[2] >= 3:
                     self.score = True
                 else:
                     move = 'hold 1' if counts[1] else 'hold 5'
             elif self.game.turn_score:
-                if max_points >= 300 or (counts[2] > 3 and not (counts[1] + counts[5])):
+                if max_points >= 300 or (counts[2] >= 3 and not (counts[1] + counts[5])):
                     self.score = True
                 else:
                     move = 'hold 1' if counts[1] else 'hold 5'
             # Handle initial rolls.
-            elif counts[2] > 3:
+            elif counts[2] >= 3:
                 if counts[5] == 2:
                     self.score = True
             elif counts[3] < 3 and counts[1]:
@@ -248,7 +264,7 @@ class KniziaBot(TenKBot):
                 move = 'hold 5'
         # For five dice, hold minimally and roll without three of a kind, score otherwise.
         elif dice_thrown == 5:
-            if counts[2] > 3:
+            if counts[2] >= 3:
                 self.score = True
             elif counts[1] == 2:
                 if counts[5]:
@@ -257,7 +273,7 @@ class KniziaBot(TenKBot):
                 move = 'hold 1' if counts[1] else 'hold 5'
         # For four dice, hold minimally unless three 2's, score on three 2's or three individual 1's.
         elif dice_thrown == 4:
-            if counts[2] > 3:
+            if counts[2] >= 3:
                 self.score = True
             if max_overall == 300:
                 if max_points == 100 and counts[1]:
@@ -392,13 +408,14 @@ class TenThousand(game.Game):
         """
         player = self.players[self.player_index]
         # Check for having held dice.
-        if not (self.held_this_turn or self.new_turn):
+        if not (self.held_this_turn or self.new_turn or self.must_roll):
             player.error('You must hold dice before you can roll.')
             return True
         # Reset the dice if they've all been rolled.
         if not filter(lambda die: not die.held, self.dice):
             self.dice.release()
         # Roll the dice.
+        self.must_roll = ''
         self.dice.roll()
         self.held_this_turn = False
         values = sorted([die.value for die in self.dice if not die.held])
@@ -407,6 +424,13 @@ class TenThousand(game.Game):
         roll_score = self.score_dice(values, validate = False)
         if not roll_score:
             player.tell('{} did not score with that roll, their turn is over.'.format(player.name))
+            # Check for the carry-on option.
+            if self.carry_on and player != self.last_player:
+                next_player = self.players[(self.player_index + 1) % len(self.players)]
+                query = "Would you like to carry on with {}'s points and dice? "
+                if next_player.ask(query.format(player.name)) in utility.YES:
+                    self.must_roll = "you chose to carry on {}'s roll".format(player.name)
+                    return False
             self.end_turn()
             if self.min_grows:
                 self.minimum = 0
@@ -419,9 +443,7 @@ class TenThousand(game.Game):
         """
         player = self.players[self.player_index]
         # Check for forced rolls and invalid stops.
-        if self.must_roll:
-            player.error('You must roll again because you rolled a {}.'.format(self.must_roll))
-        elif not self.turn_score:
+        if not self.turn_score:
             player.error('You cannot stop without holding some scoring dice.')
         elif self.turn_score < self.minimum:
             player.error('You cannot stop until you score {} points.'.format(self.minimum))
@@ -497,6 +519,10 @@ class TenThousand(game.Game):
             if not self.do_roll(''):
                 return False
             self.new_turn = False
+        # Make a forced roll, if necessary.
+        if self.must_roll:
+            player.tell('You must roll because {}.'.format(self.must_roll))
+            return self.do_roll('')
         # Show the game status.
         player.tell(self)
         # Get and handle the player's move.
@@ -525,6 +551,8 @@ class TenThousand(game.Game):
         # Set the end of game options.
         self.option_set.add_option('win', ['w'], int, 10000,
             question = 'How many points should it take to win (return for 10,000)? ')
+        # Set any other options.
+        self.option_set.add_option('carry-on', ['co'])
 
     def set_up(self):
         """Set up the game. (None)"""
