@@ -86,6 +86,8 @@ min-grows (mg): You must roll more points as the previous scored in order to
     score yourself.
 minimum= (m=): The minimum number of points you must roll before you can score
     them.
+no-risk (nr): If you roll no points, your turn still ends, but you score any
+    points you had rolled this turn.
 no-second (n2): Second chance rolls are not allowed.
 straight= (s=): The score for a straight (1-6). Defaults to 0, or no straights.
 super-strikes (ss): If you don't score three turns in a row, you loose all of
@@ -129,6 +131,8 @@ class TenKBot(player.Bot):
             elif self.game.turn_score < self.game.minimum:
                 move = 'roll'
             elif self.game.turn_score < self.game.entry and not self.game.scores[self.name]:
+                move = 'roll'
+            elif self.game.no_risk:
                 move = 'roll'
             elif self.game.last_player is not None:
                 if self.game.scores[self.name] + self.game.turn_score <= max(self.game.scores.values()):
@@ -196,7 +200,7 @@ class GamblerBot(TenKBot):
 
     def roll_or_score(self):
         """Decide whether to roll for more or score what you've got. (str)"""
-        to_roll = len(filter(lambda die: not die.held, self.game.dice))
+        to_roll = len([die for die in self.game.dice if die.held])
         if random.random() < self.score_chance[to_roll]:
             return 'roll'
         else:
@@ -365,7 +369,7 @@ class TenThousand(game.Game):
                 values = arguments.split()
             # Convert the values to integers.
             try:
-                values = map(int, values)
+                values = list(map(int, values))
             except ValueError:
                 player.tell('Invalid arguments to hold command: {!r}'.format(arguments))
                 return True
@@ -412,7 +416,7 @@ class TenThousand(game.Game):
             player.error('You must hold dice before you can roll.')
             return True
         # Reset the dice if they've all been rolled.
-        if not filter(lambda die: not die.held, self.dice):
+        if not [die for die in self.dice if not die.held]:
             self.dice.release()
         # Roll the dice.
         self.must_roll = ''
@@ -424,7 +428,11 @@ class TenThousand(game.Game):
         roll_score = self.score_dice(values, validate = False)
         if not roll_score:
             player.tell('{} did not score with that roll, their turn is over.'.format(player.name))
-            # Check for the carry-on option.
+            # Score anyway if the no-risk option is in effect..
+            if self.no_risk:
+                player.tell('{} scored {} points this turn.'.format(player.name, self.turn_score))
+                self.scores[player.name] += self.turn_score
+            # Let the next player keep going if the carry-on option is in effect.
             if self.carry_on and player != self.last_player:
                 next_player = self.players[(self.player_index + 1) % len(self.players)]
                 query = "Would you like to carry on with {}'s points and dice? "
@@ -548,6 +556,7 @@ class TenThousand(game.Game):
         self.option_set.add_option('min-grows', ['mg'])
         self.option_set.add_option('minimum', ['m'], int, 0,
             question = 'How many points should be required to stop in general (return for 0)? ')
+        self.option_set.add_option('no-risk', ['nr'])
         # Set the end of game options.
         self.option_set.add_option('win', ['w'], int, 10000,
             question = 'How many points should it take to win (return for 10,000)? ')
