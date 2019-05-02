@@ -238,6 +238,15 @@ class Pool(object):
         self.roll()
         self.held = 0
 
+    def __contains__(self, value):
+        """
+        Checking if the specified value has been rolled. (bool)
+
+        Parameters:
+        value: The value to check for. (object)
+        """
+        return value in self.dice
+
     def __iter__(self):
         """Iterate over the dice. (iterator)"""
         return iter(self.dice)

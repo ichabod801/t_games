@@ -341,7 +341,6 @@ class ProbabilityBot(TenKBot):
         num_dice = len([die for die in self.game.dice if not die.held])
         ev = self.chances[num_dice]['p-zero'] * -self.game.turn_score
         ev += self.chances[num_dice]['expected'] * (1 - self.chances[num_dice]['p-zero'])
-        print(ev, self.chances[num_dice])
         return 'roll' if ev > 0 else 'score'
 
     def set_up(self):
@@ -446,9 +445,15 @@ class TenThousand(game.Game):
                             values.extend([possible] * count)
                             break
         values.sort()
+        # Check for holding combos (clear-combo option).
+        if self.clear_combo:
+            for first, third in zip(values, values[2:]):
+                if first == third and first not in self.last_combo:
+                    self.last_combo.append(first)
         # Score the held dice.
         held_score = self.score_dice(values)
         if held_score == -1:
+            # !! this will cause a name error.
             error = "{} {}'s do not score and cannot be held"
             player.error(error.format(utility.number_word(count), possible))
             return True
@@ -475,6 +480,15 @@ class TenThousand(game.Game):
         # Roll the dice.
         self.must_roll = ''
         self.dice.roll()
+        # Make sure any combos have been cleared (clear-combo option).
+        if self.clear_combo and self.last_combo:
+            rolled = [die for die in self.dice if not die.held]
+            message = 'You must reroll because you matched your last combo.'
+            while any(combo in rolled for combo in self.last_combo):
+                player.tell('You rolled: {}.'.format(', '.join(map(str, rolled))))
+                player.tell(message)
+                self.dice.roll()
+            self.last_combo = []
         self.held_this_turn = False
         values = sorted([die.value for die in self.dice if not die.held])
         print('\n{} rolled: {}.'.format(player.name, ', '.join([str(value) for value in values])))
@@ -523,6 +537,7 @@ class TenThousand(game.Game):
     def end_turn(self):
         """Reset the tracking variables for the next player. (None)"""
         self.held_this_turn = False
+        self.last_combo = []
         self.turn_score = 0
         self.dice.release()
         self.new_turn = True
@@ -634,6 +649,7 @@ class TenThousand(game.Game):
         self.option_set.add_option('six-mult', ['6m'], int, 0,
             question = 'How much should the multiplier be for six of a kind (return for 0)? ')
         # Set the stopping options.
+        self.option_set.add_option('clear-combo', ['cc'])
         self.option_set.add_option('entry', ['e'], int, 0,
             question = 'How many points should be required to stop the first time (return for 0)? ')
         self.option_set.add_option('min-grows', ['mg'])
@@ -653,6 +669,7 @@ class TenThousand(game.Game):
         # Set up the tracking variables.
         self.turn_score = 0
         self.held_this_turn = False
+        self.last_combo = []
         self.last_player = None
         self.must_roll = ''
         self.new_turn = True
