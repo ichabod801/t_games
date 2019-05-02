@@ -61,46 +61,60 @@ Three Pair: Three pairs are worth 1,000 points.
 Commands:
 hold (h): Set aside scoring dice (list the dice as a parameter to the command).
 score (s): Score the points rolled this turn and end your turn.
-second (2): Make a second chance roll (list the dice you are trying to complete
-    as a parameter to this command).
 
 Options:
-add-combos (ac): Five and six of a kind are worth 300 and 400 points times the
-    number rolled, respectively.
 carry-on (co): If a player fails to score, you can carry on with their points
     and dice.
 clear-combo (cc): If your last roll scored a three or more of a kind, and you
     roll the number of that combo, you must reroll all the dice you just
     rolled.
 crash (cr): If you roll all six dice and don't score, you loose 500 points.
-drop-zero (d0): All scores listed are divided by 10.
 entry= (e=): The minimum number of points needed to get on the table.
 exact-win (ew): You must get exactly 10,000 points to win. If you do, no one
     gets a chance to beat you.
 five-dice (5d): The game is played with five dice, with no six of a kind or
     straight.
+five-kind (5k): The score for getting five of a kind, typically 2,000 or
+    4,000. If this and five-mult are 0, five of a kind is not allowed.
+five-mult (5m): The score multiplied by the die face for five of a kind,
+    typically 300 or 400. If this and five-kind are 0, five of a kind is not
+    allowed.
 force-combo (fc): If you score with three or more of a kind, you *must* roll
     again.
 force-six (f6): If you score on all six dice, you *must* roll again.
+four-kind (4k): The score for getting four of a kind. Typically 1,000 or
+    2,000. If this and four-mult are 0, four of a kind is not allowed.
+four-mult (4m): The score multiplied by the die face for four of a kind,
+    typically 200. If this and four-kind are 0, four of a kind is not allowed.
+full-house (fh): The bonus added to the three of a kind score when scoring a
+    full house. Defaults to 0, or no full houses.
 min-grows (mg): You must roll more points as the previous scored in order to
     score yourself.
 minimum= (m=): The minimum number of points you must roll before you can score
     them.
 no-risk (nr): If you roll no points, your turn still ends, but you score any
     points you had rolled this turn.
-no-second (n2): Second chance rolls are not allowed.
+second-chance (2c): You may make a second chance roll when you do not score.
+    You selected two or more just rolled dice and reroll the rest of them.
+    You must score a combo (or straight, if allowed) with the selected dice
+    in order to keep going.
+six-kind (6k): The score for getting six of a kind, typically 3,000, 6,000, or
+    10,000. If this and six-mult are 0, six of a kind is not allowed.
+six-mult (6m): The score multiplied by the die face for six of a kind,
+    typically 400 or 800. If this and six-kind are 0, six of a kind is not
+    allowed.
 straight= (s=): The score for a straight (1-6). Defaults to 0, or no straights.
 super-strikes (ss): If you don't score three turns in a row, you loose all of
     your points.
 three-pair= (3p=): The score for three pair. Defaults to 0, no three pair.
 three-strikes (3s): If you don't score three turns in a row, you loose 500
     points.
-threes-only (3o): Only ones, fives, and three of a kind score.
 train-wreck (tw): If you roll all six dice and don't score, you lose all of
     your points.
 wild: One die has a wild. If rolled with a pair or more, it must be used to
     complete the n-of-a-kind.
 win= (w=): The number of points needed to win.
+zen= (z=): The points scored if you roll all the dice and none of them score.
 """
 
 class TenKBot(player.Bot):
@@ -384,6 +398,12 @@ class TenThousand(game.Game):
                 values = possibles
             elif counts.count(2) == 3 and self.three_pair:
                 values = possibles
+            elif 3 in counts and 2 in counts and self.full_house:
+                values = [value for value in possibles if counts[value] in (2, 3)]
+                if counts[1] == 1:
+                    values.append(1)
+                elif counts[5] == 1:
+                    values.append(5)
             else:
                 values = []
                 for possible in set(possibles):
@@ -513,6 +533,21 @@ class TenThousand(game.Game):
     def handle_options(self):
         """Handle the game options. (None)"""
         super(TenThousand, self).handle_options()
+        # Handle the combo scoring.
+        kinds = [self.four_kind, self.five_kind, self.six_kind]
+        mults = [self.four_mult, self.five_mult, self.six_mult]
+        for value in range(1, 7):
+            for count, kind, mult in zip(range(4, 7), kinds, mults):
+                # Check for a set score option.
+                if kind:
+                    self.combo_scores[value][count] = kind
+                # If no set score, check for a multiplier option.
+                elif mult:
+                    # Ones multiply as tens
+                    if value == 1:
+                        self.combo_scores[value][count] = mult * 10
+                    else:
+                        self.combo_scores[value][count] = mult * value
 
     def player_action(self, player):
         """
@@ -550,6 +585,20 @@ class TenThousand(game.Game):
             question = 'How much should a straight score (return for 0)? ')
         self.option_set.add_option('three-pair', ['3p'], int, 0,
             question = 'How much should three pair score (return for 0)? ')
+        self.option_set.add_option('full-house', ['fh'], int, 0,
+            question = 'What should the bonus for a full house be (return for 0)? ')
+        self.option_set.add_option('four-kind', ['4k'], int, 0,
+            question = 'How much should four of a kind score (return for 0)? ')
+        self.option_set.add_option('four-mult', ['4m'], int, 0,
+            question = 'How much should the multiplier be for four of a kind (return for 0)? ')
+        self.option_set.add_option('five-kind', ['5k'], int, 0,
+            question = 'How much should five of a kind score (return for 0)? ')
+        self.option_set.add_option('five-mult', ['5m'], int, 0,
+            question = 'How much should the multiplier be for five of a kind (return for 0)? ')
+        self.option_set.add_option('six-kind', ['6k'], int, 0,
+            question = 'How much should six of a kind score (return for 0)? ')
+        self.option_set.add_option('six-mult', ['6m'], int, 0,
+            question = 'How much should the multiplier be for six of a kind (return for 0)? ')
         # Set the stopping options.
         self.option_set.add_option('entry', ['e'], int, 0,
             question = 'How many points should be required to stop the first time (return for 0)? ')
@@ -593,6 +642,14 @@ class TenThousand(game.Game):
         # Check for three pair.
         elif counts.count(2) == 3 and self.three_pair:
             held_score = self.three_pair
+        # Check for full house.
+        elif 3 in counts and 2 in counts and self.full_house:
+            trip_value = counts.index(3)
+            held_score = self.combo_scores[trip_value][3] + self.full_house
+            if counts[1] == 1:
+                held_score += 100
+            elif counts[5] == 1:
+                held_score += 50
         # Otherwise, score the sets.
         else:
             held_score = 0
