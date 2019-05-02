@@ -14,6 +14,10 @@ KniziaBot: A bot following Reiner Knizia's Strategy. (TenKBot)
 TenThousand: A game of TenThousand. (game.Game)
 """
 
+
+from __future__ import division
+
+import itertools
 import random
 
 from .. import dice
@@ -323,6 +327,36 @@ class KniziaBot(TenKBot):
         self.score = False
 
 
+class ProbabilityBot(TenKBot):
+    """
+    A bot using expected values. (TenKBot)
+
+    Overridden Methods:
+    roll_or_score
+    set_up
+    """
+
+    def roll_or_score(self):
+        """Decide whether to roll or to score the current points. (str)"""
+        num_dice = len([die for die in self.game.dice if not die.held])
+        ev = self.chances[num_dice]['p-zero'] * -self.game.turn_score
+        ev += self.chances[num_dice]['expected'] * (1 - self.chances[num_dice]['p-zero'])
+        print(ev, self.chances[num_dice])
+        return 'roll' if ev > 0 else 'score'
+
+    def set_up(self):
+        """Make the probablity calculations. (None)"""
+        self.chances = {}
+        for num_dice in range(1, 7):
+            rolls = itertools.product(*[range(1, 7) for die in range(num_dice)])
+            points = [self.game.score_dice(roll, False) for roll in rolls]
+            num_zero = points.count(0)
+            self.chances[num_dice] = {}
+            self.chances[num_dice]['p-zero'] = num_zero / 6 ** num_dice
+            self.chances[num_dice]['expected'] = sum(points) / (6 ** num_dice - num_zero)
+        self.chances[0] = self.chances[6]
+
+
 class TenThousand(game.Game):
     """
     A game of TenThousand. (game.Game)
@@ -579,7 +613,7 @@ class TenThousand(game.Game):
         self.option_set.add_group('5000', 'w=5000')
         self.option_set.add_group('5k', 'w=5000')
         # Set the bot options.
-        self.option_set.default_bots = ((TenKBot, ()), (GamblerBot, ()), (KniziaBot, ()))
+        self.option_set.default_bots = ((ProbabilityBot, ()), (GamblerBot, ()), (KniziaBot, ()))
         # Set the scoring options.
         self.option_set.add_option('straight', ['s'], int, 0,
             question = 'How much should a straight score (return for 0)? ')
