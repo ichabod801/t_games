@@ -10,7 +10,9 @@ RULES: The rules for TenThousand. (str)
 Classes:
 TenKBot: A base bot for the game of Ten Thousand. (player.Bot)
 GamblerBot: A bot that rolls as often as it's chance of scoring. (TenKBot)
+GeneBot: A bot for a genetic algorithm. (TenKBot)
 KniziaBot: A bot following Reiner Knizia's Strategy. (TenKBot)
+ProbabilityBot: A bot using expected values. (TenKBot)
 TenThousand: A game of TenThousand. (game.Game)
 """
 
@@ -223,6 +225,182 @@ class GamblerBot(TenKBot):
             return 'roll'
         else:
             return 'score'
+
+
+class GeneticBot(TenKBot):
+    """
+    A bot for a genetic algorithm. (TenKBot)
+
+    Class Attributes:
+    attributes: The names of the genetic attributes. (list of str)
+    ranges: The randrange parameters for each attribute. (list of tuple)
+
+    Attributes:
+    gene: The numbers defining the bot's strategy. (list of int)
+    p_zero: The probability that a random gene in 0. (float)
+
+    Methods:
+    breed: Combine genes with another bot to produce a third. (GeneticBot)
+    fill_random: Fill out the genes with random values. (None)
+
+    Overridden Methods:
+    __init__
+    hold
+    roll_or_score
+    set_up
+    """
+
+    attributes = ['min_value', 'min_behind', 'min_mod', 'min_dice', 'rolls', 'turns', 'score_and',
+        'combo_ones', 'combo_fives', 'plain_ones', 'plain_fives']
+    ranges = [(50, 801, 50), (-700, 101, 50), (500, 1301, 50), (1, 7), (1, 9), (1, 10), (2,),
+        (1, 3), (1, 3), (1, 3), (1, 3)]
+
+    def __init__(self, genes = None, p_zero = 0.5, taken_names = []):
+        """
+        Save the genetic material. (None)
+
+        Parameter:
+        gene: The numbers defining the bot's strategy. (list of int)
+        p_zero: The probability that a random gene in 0. (float)
+        """
+        super(GeneticBot, self).__init__(taken_names = taken_names)
+        self.genes = [] if genes is None else genes
+        self.p_zero = p_zero
+        if len(self.genes) < len(self.attributes):
+            self.fill_random()
+
+    def breed(self, other):
+        """
+        Combine genes with another bot to produce a third. (GeneticBot)
+
+        Parameters:
+        other: The other parent bot. (GeneticBot)
+        """
+        child = []
+        for mine, theirs in zip(self.genes, other.genes):
+            if random.random() < 0.5:
+                child.append(mine)
+            else:
+                child.append(theirs)
+        return GeneticBot(child)
+
+    def fill_random(self):
+        """Fill out the genes with random values. (None)"""
+        for parameters in self.ranges[len(self.genes):]:
+            if random.random() < self.p_zero:
+                self.genes.append(random.randrange(*parameters))
+            else:
+                self.genes.append(0)
+
+    def hold(self):
+        """Determine the hold command (which dice to hold). (str)"""
+        # Get what rolls have been made.
+        values = [die.value for die in self.game.dice if not die.held]
+        values.sort()
+        counts = [values.count(value) for value in range(7)]
+        # Find any combos in the roll.
+        combo = True
+        if values == [1, 2, 3, 4, 5, 6] and self.game.straight:
+            hold = values[:]
+        elif counts.count(2) == 3 and self.game.three_pair:
+            hold = values[:]
+        elif 2 in counts and 3 in counts and self.game.full_house:
+            if counts[1] == 1 or counts[5] == 1:
+                hold = values[:]
+            else:
+                hold = [counts.index(3)] * 3 + [counts.index(2)] * 2
+        elif max(counts) >= 3:
+            hold = []
+            combos = [(value, count) for value, count in enumerate(counts) if count >= 3]
+            for value, count in combos:
+                holdable = max([size for size in self.combo_sizes if size <= count])
+                hold.extend([value] * holdable)
+        else:
+            hold = []
+            combo = False
+        self.score_hold = []
+        # Score loose ones.
+        loose_ones = counts[1] - hold.count(1)
+        if loose_ones:
+            if combo:
+                max_ones = min(loose_ones, self.combo_ones)
+            else:
+                max_ones = min(loose_ones, self.plain_ones)
+            hold.extend([1] * max_ones)
+            if max_ones < loose_ones:
+                self.score_hold.extend([1] * (loose_ones - max_ones))
+        # Score loose fives.
+        loose_fives = counts[5] - hold.count(5)
+        if loose_fives:
+            if combo:
+                max_fives = min(loose_fives, self.combo_fives)
+            else:
+                max_fives = min(loose_fives, self.plain_fives)
+            hold.extend([5] * max_fives)
+            if max_fives < loose_fives:
+                self.score_hold.extend([5] * (loose_fives - max_fives))
+        # Make sure something is held.
+        if not hold:
+            hold = [1] if counts[1] else [5]
+            if hold[0] in self.score_hold:
+                self.score_hold.remove(hold[0])
+        # Hold 'em.
+        print(hold)
+        return 'hold {}'.format(' '.join(map(str, hold)))
+
+    def roll_or_score(self):
+        """Deicide whether to roll for more points or score what you have. (str)"""
+        # Prep tracking and general calculations.
+        score_choices = []
+        if not self.game.turn_score:
+            self.rolls_taken = 0
+        me_now = self.game.scores[self.name] + self.game.turn_score
+        best_other = max([score for name, score in self.game.scores.items() if name != self.name])
+        # Make the individual score choices.
+        if self.min_value:
+            if self.min_mod:
+                mod = 50 * round((best_other - me_now) / self.min_mod)
+            else:
+                mod = 0
+            score_choices.append(self.game.turn_score >= self.min_value + mod)
+        if self.min_behind:
+            score_choices.append(best_other - me_now <= self.min_behind)
+        if self.min_dice:
+            score_choices.append(len([die for die in self.game.dice if not die.held]) < self.min_dice)
+        if self.rolls:
+            score_choices.append(self.rolls_taken == self.rolls)
+        if self.turns and self.turns != self.scoring_turns:   # Avoid division by zero.
+            target = (self.game.win - self.game.scores[self.name]) / (self.scoring_turns - self.turns)
+            score_choices.append(self.game.turn_score >= target)
+        # Combine the score choices.
+        if self.score_and:
+            score = all(score_choices)
+        else:
+            score = any(score_choices)
+        # Determine the move and update tracking.
+        if score:
+            self.scoring_turns += 1
+            move = 'hold' if self.score_hold else 'score'
+        else:
+            self.rolls_taken += 1
+            move = 'roll'
+        print(move, self.game.dice, self.score_hold)
+        return move
+
+    def set_up(self):
+        """Store the genes in attributes."""
+        super(GeneticBot, self).set_up()
+        for attr, value in zip(self.attributes, self.genes):
+            setattr(self, attr, value)
+        self.rolls_taken = 0
+        self.scoring_turns = 0
+        self.combo_sizes = [3]
+        if self.game.four_kind or self.game.four_mult:
+            self.combo_sizes.append(4)
+        if self.game.five_kind or self.game.five_mult:
+            self.combo_sizes.append(5)
+        if self.game.six_kind or self.game.six_mult:
+            self.combo_sizes.append(6)
 
 
 class KniziaBot(TenKBot):
@@ -628,7 +806,7 @@ class TenThousand(game.Game):
         self.option_set.add_group('5000', 'w=5000')
         self.option_set.add_group('5k', 'w=5000')
         # Set the bot options.
-        self.option_set.default_bots = ((ProbabilityBot, ()), (GamblerBot, ()), (KniziaBot, ()))
+        self.option_set.default_bots = ((ProbabilityBot, ()), (GeneticBot, ()), (GeneticBot, ()))
         # Set the scoring options.
         self.option_set.add_option('straight', ['s'], int, 0,
             question = 'How much should a straight score (return for 0)? ')
