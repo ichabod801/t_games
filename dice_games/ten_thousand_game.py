@@ -74,7 +74,8 @@ carry-on (co): If a player fails to score, you can carry on with their points
 clear-combo (cc): If your last roll scored a three or more of a kind, and you
     roll the number of that combo, you must reroll all the dice you just
     rolled.
-crash (cr): If you roll all six dice and don't score, you loose 500 points.
+crash= (cr=): How many points you lose if you roll all six dice and don't
+    score. Defaults to 0, typically 500.
 entry= (e=): The minimum number of points needed to get on the table.
 exact-win (ew): You must get exactly 10,000 points to win. If you do, no one
     gets a chance to beat you.
@@ -121,6 +122,7 @@ wild: One die has a wild. If rolled with a pair or more, it must be used to
     complete the n-of-a-kind.
 win= (w=): The number of points needed to win.
 zen= (z=): The points scored if you roll all the dice and none of them score.
+    Defaults to 0, typically 500.
 """
 
 class TenKBot(player.Bot):
@@ -345,7 +347,6 @@ class GeneticBot(TenKBot):
             if hold[0] in self.score_hold:
                 self.score_hold.remove(hold[0])
         # Hold 'em.
-        print(hold)
         return 'hold {}'.format(' '.join(map(str, hold)))
 
     def roll_or_score(self):
@@ -381,10 +382,10 @@ class GeneticBot(TenKBot):
         if score:
             self.scoring_turns += 1
             move = 'hold' if self.score_hold else 'score'
+            self.score_hold = []
         else:
             self.rolls_taken += 1
             move = 'roll'
-        print(move, self.game.dice, self.score_hold)
         return move
 
     def set_up(self):
@@ -673,11 +674,28 @@ class TenThousand(game.Game):
         # Check for no score (end the turn if there isn't).
         roll_score = self.score_dice(values, validate = False)
         if not roll_score:
-            player.tell('{} did not score with that roll, their turn is over.'.format(player.name))
+            player.tell('{} did not score with that roll.'.format(player.name))
+            if not self.zen:
+                player.tell('Their turn is over.')
             # Score anyway if the no-risk option is in effect..
             if self.no_risk:
                 player.tell('{} scored {} points this turn.'.format(player.name, self.turn_score))
                 self.scores[player.name] += self.turn_score
+            # Check for failing to score on all six dice (crash/train-wreck/zen options)
+            if not [die for die in self.dice if die.held]:
+                # !! need to account for entry already happening.
+                if self.crash:
+                    player.tell('That is a crash, you lose {} points.'.format(self.crash))
+                    self.scores[player.name] = max(0, self.scores[player.name] - self.crash)
+                elif self.train_wreck:
+                    player.tell('That is a train wreck, you lose all of your points.')
+                    self.scores[player.name] = 0
+                elif self.zen:
+                    player.tell('How Zen.'.format(player.name, self.zen))
+                    self.turn_score += self.zen
+                    self.dice.hold(values)
+                    self.held_this_turn = True
+                    return True
             # Let the next player keep going if the carry-on option is in effect.
             if self.carry_on and player != self.last_player:
                 next_player = self.players[(self.player_index + 1) % len(self.players)]
@@ -806,7 +824,7 @@ class TenThousand(game.Game):
         self.option_set.add_group('5000', 'w=5000')
         self.option_set.add_group('5k', 'w=5000')
         # Set the bot options.
-        self.option_set.default_bots = ((ProbabilityBot, ()), (GeneticBot, ()), (GeneticBot, ()))
+        self.option_set.default_bots = ((ProbabilityBot, ()), (GamblerBot, ()), (GeneticBot, ()))
         # Set the scoring options.
         self.option_set.add_option('straight', ['s'], int, 0,
             question = 'How much should a straight score (return for 0)? ')
@@ -826,6 +844,12 @@ class TenThousand(game.Game):
             question = 'How much should six of a kind score (return for 0)? ')
         self.option_set.add_option('six-mult', ['6m'], int, 0,
             question = 'How much should the multiplier be for six of a kind (return for 0)? ')
+        self.option_set.add_option('crash', ['cr'], int, 0,
+            question = 'How many points should you lose for not scoring on all dice (return for 0)? ')
+        self.option_set.add_option('train-wreck', ['tw'],
+            question = 'Should you lose all of your points for not scoring on all dice? bool')
+        self.option_set.add_option('zen', ['z'], int, 0,
+            question = 'How many points should you *GAIN* for not scoring on all dice (return for 0)? ')
         # Set the stopping options.
         self.option_set.add_option('clear-combo', ['cc'])
         self.option_set.add_option('entry', ['e'], int, 0,
