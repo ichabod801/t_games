@@ -77,8 +77,6 @@ clear-combo (cc): If your last roll scored a three or more of a kind, and you
 crash= (cr=): How many points you lose if you roll all six dice and don't
     score. Defaults to 0, typically 500.
 entry= (e=): The minimum number of points needed to get on the table.
-exact-win (ew): You must get exactly 10,000 points to win. If you do, no one
-    gets a chance to beat you.
 five-dice (5d): The game is played with five dice, with no six of a kind or
     straight.
 five-kind (5k): The score for getting five of a kind, typically 2,000 or
@@ -862,18 +860,23 @@ class TenThousand(game.Game):
         self.option_set.add_option('zen', ['z'], int, 0,
             question = 'How many points should you *GAIN* for not scoring on all dice (return for 0)? ')
         # Set the stopping options.
-        self.option_set.add_option('clear-combo', ['cc'])
+        self.option_set.add_option('carry-on', ['co'],
+            question = "Should you be able to take on the previous player's failrd roll and points? bool")
+        self.option_set.add_option('clear-combo', ['cc'],
+            question = 'Should you have to reroll if you match thr last combo you scored? bool')
         self.option_set.add_option('entry', ['e'], int, 0,
             question = 'How many points should be required to stop the first time (return for 0)? ')
-        self.option_set.add_option('min-grows', ['mg'])
+        self.option_set.add_option('min-grows', ['mg']
+            question = "Should you have beat the previous player's score? bool")
         self.option_set.add_option('minimum', ['m'], int, 0,
             question = 'How many points should be required to stop in general (return for 0)? ')
-        self.option_set.add_option('no-risk', ['nr'])
+        self.option_set.add_option('no-risk', ['nr'],
+            question = 'Should you score your banked points no matter what you roll? bool')
         # Set the end of game options.
         self.option_set.add_option('win', ['w'], int, 10000,
             question = 'How many points should it take to win (return for 10,000)? ')
         # Set any other options.
-        self.option_set.add_option('carry-on', ['co'])
+
 
     def set_up(self):
         """Set up the game. (None)"""
