@@ -152,7 +152,7 @@ class TenKBot(player.Bot):
                 move = self.hold()
             elif self.game.turn_score < self.game.minimum:
                 move = 'roll'
-            elif self.game.turn_score < self.game.entry and not self.game.scores[self.name]:
+            elif self.game.turn_score < self.game.entry and not self.game.entered[self.name]:
                 move = 'roll'
             elif self.game.no_risk:
                 move = 'roll'
@@ -674,39 +674,7 @@ class TenThousand(game.Game):
         # Check for no score (end the turn if there isn't).
         roll_score = self.score_dice(values, validate = False)
         if not roll_score:
-            player.tell('{} did not score with that roll.'.format(player.name))
-            if not self.zen:
-                player.tell('Their turn is over.')
-            # Score anyway if the no-risk option is in effect..
-            if self.no_risk:
-                player.tell('{} scored {} points this turn.'.format(player.name, self.turn_score))
-                self.scores[player.name] += self.turn_score
-            # Check for failing to score on all six dice (crash/train-wreck/zen options)
-            if not [die for die in self.dice if die.held]:
-                # !! need to account for entry already happening.
-                if self.crash:
-                    player.tell('That is a crash, you lose {} points.'.format(self.crash))
-                    self.scores[player.name] = max(0, self.scores[player.name] - self.crash)
-                elif self.train_wreck:
-                    player.tell('That is a train wreck, you lose all of your points.')
-                    self.scores[player.name] = 0
-                elif self.zen:
-                    player.tell('How Zen.'.format(player.name, self.zen))
-                    self.turn_score += self.zen
-                    self.dice.hold(values)
-                    self.held_this_turn = True
-                    return True
-            # Let the next player keep going if the carry-on option is in effect.
-            if self.carry_on and player != self.last_player:
-                next_player = self.players[(self.player_index + 1) % len(self.players)]
-                query = "Would you like to carry on with {}'s points and dice? "
-                if next_player.ask(query.format(player.name)) in utility.YES:
-                    self.must_roll = "you chose to carry on {}'s roll".format(player.name)
-                    return False
-            self.end_turn()
-            if self.min_grows:
-                self.minimum = 0
-            return False
+            return self.no_score(player, values)
         return True
 
     def do_score(self, arguments):
@@ -719,11 +687,12 @@ class TenThousand(game.Game):
             player.error('You cannot stop without holding some scoring dice.')
         elif self.turn_score < self.minimum:
             player.error('You cannot stop until you score {} points.'.format(self.minimum))
-        elif self.turn_score < self.entry and not self.scores[player.name]:
+        elif self.turn_score < self.entry and not self.entered[player.name]:
             player.error('You cannot stop the first time until you score {} points.'.format(self.entry))
         else:
             # Score the dice.
             self.scores[self.players[self.player_index].name] += self.turn_score
+            self.entered[player.name] = True
             if self.min_grows:
                 self.minimum = self.turn_score + 50
             self.end_turn()
@@ -793,6 +762,48 @@ class TenThousand(game.Game):
                         self.combo_scores[value][count] = mult * 10
                     else:
                         self.combo_scores[value][count] = mult * value
+
+    def no_score(self, player, values):
+        """
+        Handle rolls that do not score. (bool)
+
+        Parameters:
+        player: The current player. (player.Player)
+        values: The faces of the unrolled dice. (list of int)
+        """
+        player.tell('{} did not score with that roll.'.format(player.name))
+        if not self.zen:
+            player.tell('Their turn is over.')
+        # Score anyway if the no-risk option is in effect..
+        if self.no_risk:
+            player.tell('{} scored {} points this turn.'.format(player.name, self.turn_score))
+            self.scores[player.name] += self.turn_score
+        # Check for failing to score on all six dice (crash/train-wreck/zen options)
+        if not [die for die in self.dice if die.held]:
+            # !! need to account for entered already happening.
+            if self.crash:
+                player.tell('That is a crash, you lose {} points.'.format(self.crash))
+                self.scores[player.name] = max(0, self.scores[player.name] - self.crash)
+            elif self.train_wreck:
+                player.tell('That is a train wreck, you lose all of your points.')
+                self.scores[player.name] = 0
+            elif self.zen:
+                player.tell('How Zen.'.format(player.name, self.zen))
+                self.turn_score += self.zen
+                self.dice.hold(values)
+                self.held_this_turn = True
+                return True
+        # Let the next player keep going if the carry-on option is in effect.
+        if self.carry_on and player != self.last_player:
+            next_player = self.players[(self.player_index + 1) % len(self.players)]
+            query = "Would you like to carry on with {}'s points and dice? "
+            if next_player.ask(query.format(player.name)) in utility.YES:
+                self.must_roll = "you chose to carry on {}'s roll".format(player.name)
+                return False
+        self.end_turn()
+        if self.min_grows:
+            self.minimum = 0
+        return False
 
     def player_action(self, player):
         """
@@ -875,6 +886,7 @@ class TenThousand(game.Game):
         self.last_player = None
         self.must_roll = ''
         self.new_turn = True
+        self.entered = {player.name: False for player in self.players}
 
     def score_dice(self, values, validate = True):
         """
