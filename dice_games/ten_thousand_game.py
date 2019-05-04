@@ -866,7 +866,7 @@ class TenThousand(game.Game):
             question = 'Should you have to reroll if you match thr last combo you scored? bool')
         self.option_set.add_option('entry', ['e'], int, 0,
             question = 'How many points should be required to stop the first time (return for 0)? ')
-        self.option_set.add_option('min-grows', ['mg']
+        self.option_set.add_option('min-grows', ['mg'],
             question = "Should you have beat the previous player's score? bool")
         self.option_set.add_option('minimum', ['m'], int, 0,
             question = 'How many points should be required to stop in general (return for 0)? ')
@@ -876,12 +876,17 @@ class TenThousand(game.Game):
         self.option_set.add_option('win', ['w'], int, 10000,
             question = 'How many points should it take to win (return for 10,000)? ')
         # Set any other options.
+        self.option_set.add_option('five-dice', ['5d'],
+            question = 'Should the game be played with five dice? bool')
 
 
     def set_up(self):
         """Set up the game. (None)"""
         # Set up the dice.
-        self.dice = dice.Pool([6] * 6)
+        if self.five_dice:
+            self.dice = dice.Pool([6] * 5)
+        else:
+            self.dice = dice.Pool([6] * 6)
         # Set up the tracking variables.
         self.turn_score = 0
         self.held_this_turn = False
