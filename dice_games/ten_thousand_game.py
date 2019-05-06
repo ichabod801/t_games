@@ -99,7 +99,7 @@ minimum= (m=): The minimum number of points you must roll before you can score
     them.
 no-risk (nr): If you roll no points, your turn still ends, but you score any
     points you had rolled this turn.
-*second-chance (2c): You may make a second chance roll when you do not score.
+second-chance (2c): You may make a second chance roll when you do not score.
     You selected two or more just rolled dice and reroll the rest of them.
     You must score a combo (or straight, if allowed) with the selected dice
     in order to keep going.
@@ -722,6 +722,7 @@ class TenThousand(game.Game):
             # Score the dice.
             self.scores[self.players[self.player_index].name] += self.turn_score
             self.entered[player.name] = True
+            self.strikes[player.name] = 0
             if self.min_grows:
                 self.minimum = self.turn_score + 50
             self.end_turn()
@@ -809,6 +810,16 @@ class TenThousand(game.Game):
         if self.no_risk:
             player.tell('{} scored {} points this turn.'.format(player.name, self.turn_score))
             self.scores[player.name] += self.turn_score
+        elif not self.zen:
+            self.strikes[player.name] += 1
+            if self.strikes[player.name] == 3:
+                self.strikes[player.name] = 0
+                if self.three_strikes:
+                    player.tell('Three strikes, you lose {} points.'.format(self.three_strikes))
+                    self.scores[player.name] -= self.three_strikes
+                elif self.super_strikes:
+                    player.tell('Three strikes, you lose all of your points.')
+                    self.scores[player.name] = 0
         # Check for failing to score on all six dice (crash/train-wreck/zen options)
         if not [die for die in self.dice if die.held]:
             if self.crash:
@@ -957,6 +968,10 @@ class TenThousand(game.Game):
             question = 'Should you lose all of your points for not scoring on all dice? bool')
         self.option_set.add_option('zen', ['z'], int, 0,
             question = 'How many points should you *GAIN* for not scoring on all dice (return for 0)? ')
+        self.option_set.add_option('three-strikes', ['3s'], int, 0,
+            question = 'How much should you lose for not scoring three times in a row (return for 0)? ')
+        self.option_set.add_option('super-strikes', ['ss'],
+            question = 'Should you lose all of your points for not scoring three times in a row? bool')
         # Set the stopping options.
         self.option_set.add_option('carry-on', ['co'],
             question = "Should you be able to take on the previous player's failrd roll and points? bool")
@@ -995,6 +1010,7 @@ class TenThousand(game.Game):
         self.must_roll = ''
         self.new_turn = True
         self.entered = {player.name: False for player in self.players}
+        self.strikes = {player.name: 0 for player in self.players}
 
     def score_dice(self, values, validate = True):
         """
