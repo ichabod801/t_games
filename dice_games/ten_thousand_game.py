@@ -99,7 +99,7 @@ minimum= (m=): The minimum number of points you must roll before you can score
     them.
 no-risk (nr): If you roll no points, your turn still ends, but you score any
     points you had rolled this turn.
-second-chance (2c): You may make a second chance roll when you do not score.
+*second-chance (2c): You may make a second chance roll when you do not score.
     You selected two or more just rolled dice and reroll the rest of them.
     You must score a combo (or straight, if allowed) with the selected dice
     in order to keep going.
@@ -109,14 +109,14 @@ six-mult (6m): The score multiplied by the die face for six of a kind,
     typically 400 or 800. If this and six-kind are 0, six of a kind is not
     allowed.
 straight= (s=): The score for a straight (1-6). Defaults to 0, or no straights.
-super-strikes (ss): If you don't score three turns in a row, you loose all of
+*super-strikes (ss): If you don't score three turns in a row, you loose all of
     your points.
 three-pair= (3p=): The score for three pair. Defaults to 0, no three pair.
-three-strikes (3s): If you don't score three turns in a row, you loose 500
+*three-strikes (3s): If you don't score three turns in a row, you loose 500
     points.
 train-wreck (tw): If you roll all six dice and don't score, you lose all of
     your points.
-wild: One die has a wild. If rolled with a pair or more, it must be used to
+*wild: One die has a wild. If rolled with a pair or more, it must be used to
     complete the n-of-a-kind.
 win= (w=): The number of points needed to win.
 zen= (z=): The points scored if you roll all the dice and none of them score.
@@ -134,6 +134,7 @@ class TenKBot(player.Bot):
 
     Overridden Methods:
     ask
+    ask_int_list
     setup
     tell
     """
@@ -164,6 +165,27 @@ class TenKBot(player.Bot):
             return move
         elif prompt.startswith('Would you like to'):
             return self.carry_on()
+        else:
+            super(TenKBot, self).ask(prompt)
+
+    def ask_int_list(self, prompt, low = None, high = None, valid = [], valid_lens = [], default = None,
+        cmd = True):
+        """
+        Get a multiple integer response from the human. (int)
+
+        Parameters:
+        prompt: The question asking for the interger. (str)
+        low: The lowest acceptable value for the integer. (list or None)
+        high: The highest acceptable value for the integer. (laist or None)
+        valid: The valid values for the integer. (list of int)
+        valid_lens: The valid numbers of values. (list of int)
+        default: The default choice. (list or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        if prompt.startswith('Which dice would'):
+            return self.second_chance()
+        else:
+            super(TenKBot, self).ask_int_list(prompt, loe, high, valid, valid_lens, default)
 
     def carry_on(self):
         """Decide whether or not to carry on. (str)"""
@@ -179,6 +201,15 @@ class TenKBot(player.Bot):
             return 'roll'
         else:
             return 'score'
+
+    def second_chance(self):
+        """Choose a pair to try to complete. (str)"""
+        values = [die.value for die in self.game.dice if not die.held]
+        pairs = [value for value in range(1, 7) if values.count(value) == 2]
+        if 1 in pairs:
+            return [1, 1]
+        else:
+            return [pairs[-1], pairs[-1]]
 
     def set_up(self):
         """Do any necessary pre-game processing. (None)"""
@@ -770,15 +801,16 @@ class TenThousand(game.Game):
         values: The faces of the unrolled dice. (list of int)
         """
         player.tell('{} did not score with that roll.'.format(player.name))
+        if self.second_chance and self.retry(player, values):
+            return True
         if not self.zen:
-            player.tell('Their turn is over.')
+            player.tell('Your turn is over.')
         # Score anyway if the no-risk option is in effect..
         if self.no_risk:
             player.tell('{} scored {} points this turn.'.format(player.name, self.turn_score))
             self.scores[player.name] += self.turn_score
         # Check for failing to score on all six dice (crash/train-wreck/zen options)
         if not [die for die in self.dice if die.held]:
-            # !! need to account for entered already happening.
             if self.crash:
                 player.tell('That is a crash, you lose {} points.'.format(self.crash))
                 self.scores[player.name] = max(0, self.scores[player.name] - self.crash)
@@ -826,6 +858,72 @@ class TenThousand(game.Game):
         move = player.ask('\nWhat is your move? ')
         return self.handle_cmd(move)
 
+    def retry(self, player, values):
+        """
+        Handle second chances for rolls that do not score. (bool)
+
+        Parameters:
+        player: The current player. (player.Player)
+        values: The faces of the unrolled dice. (list of int)
+        """
+        # Check for enough dice and a possible completion.
+        counts = [values.count(possible) for possible in range(7)]
+        straightable = self.straight and len(values) == len(self.dice)
+        if (len(values) < 3 or max(counts) == 1) and not straightable:
+            return False
+        # Check for multiple options.
+        if counts.count(2) > 1 or straightable:
+            while True:
+                keepers = player.ask_int_list('Which dice would you like to take a second chance with? ')
+                # Check for a pair or singletons.
+                if (len(keepers) == 2 and keepers[0] == keepers[1]) or (len(keepers) == len(set(keepers))):
+                    # Check for straights being legal. !! chk max # dice
+                    if keepers[0] != keepers[1] and not self.straight:
+                        player.error('You can only keep different dice if straights are allowed.')
+                    elif keepers[0] != keepers[1] and not straightable:
+                        player.error('You do not have the right dice to complete a straight.')
+                    # Check for having the dice.
+                    elif all([keepers.count(roll) <= values.count(roll) for roll in range(7)]):
+                        break
+                    else:
+                        player.error('You do not have those dice to keep.')
+                else:
+                    player.error('You can only hold back a pair or single values.')
+        elif counts.count(2):
+            keepers = [counts.index(2)] * 2
+            player.tell('Holding back a pair of {}s'.format(keepers[0]))
+        # Hold back the dice.
+        base, to_roll = [], []
+        if keepers[0] == keepers[1]:
+            for die in self.dice:
+                if die == keepers[0] and not die.held:
+                    base.append(die)
+                elif not die.held:
+                    to_roll.append(die)
+        else:
+            for die in self.dice:
+                if not (die.held or die in base):
+                    base.append(die)
+                elif not die.held:
+                    to_roll.append(die)
+        # Roll the dice.
+        for die in to_roll:
+            die.roll()
+        player.tell('You rolled: {}.'.format(', '.join(map(str, to_roll))))
+        # Check for a match.
+        if keepers[0] == keepers[1]:
+            if keepers[0] in to_roll:
+                player.tell('You matched the pair.')
+                return True
+        else:
+            new_values = [die.value for die in base + to_roll]
+            if len(set(new_values)) == len(self.dice):
+                player.tell('You completed the straight.')
+                return True
+        # Note a failed match.
+        player.tell('You failed to match the kept dice.')
+        return False
+
     def set_options(self):
         """Set the options for the game. (None)"""
         # Note that cosmic wimpout is zilch / cc cr d0 e=350 5d fc f6 m=0 ns ss tw wild w=5000
@@ -872,6 +970,8 @@ class TenThousand(game.Game):
             question = 'How many points should be required to stop in general (return for 0)? ')
         self.option_set.add_option('no-risk', ['nr'],
             question = 'Should you score your banked points no matter what you roll? bool')
+        self.option_set.add_option('second-chance', ['2c'],
+            question = 'Should you get a second chance roll after a failed roll? bool')
         # Set the end of game options.
         self.option_set.add_option('win', ['w'], int, 10000,
             question = 'How many points should it take to win (return for 10,000)? ')

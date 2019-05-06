@@ -251,6 +251,10 @@ class Pool(object):
         """Iterate over the dice. (iterator)"""
         return iter(self.dice)
 
+    def __len__(self):
+        """Return the number of dice. (int)"""
+        return len(self.dice)
+
     def __repr__(self):
         """Generate debugging text representation. (str)"""
         return '<{} {}>'.format(self.__class__.__name__, self)
