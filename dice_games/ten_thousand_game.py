@@ -109,14 +109,14 @@ six-mult (6m): The score multiplied by the die face for six of a kind,
     typically 400 or 800. If this and six-kind are 0, six of a kind is not
     allowed.
 straight= (s=): The score for a straight (1-6). Defaults to 0, or no straights.
-*super-strikes (ss): If you don't score three turns in a row, you loose all of
+super-strikes (ss): If you don't score three turns in a row, you loose all of
     your points.
 three-pair= (3p=): The score for three pair. Defaults to 0, no three pair.
-*three-strikes (3s): If you don't score three turns in a row, you loose 500
+three-strikes (3s): If you don't score three turns in a row, you loose 500
     points.
 train-wreck (tw): If you roll all six dice and don't score, you lose all of
     your points.
-*wild: One die has a wild. If rolled with a pair or more, it must be used to
+wild: One die has a wild. If rolled with a pair or more, it must be used to
     complete the n-of-a-kind.
 win= (w=): The number of points needed to win.
 zen= (z=): The points scored if you roll all the dice and none of them score.
@@ -167,6 +167,25 @@ class TenKBot(player.Bot):
             return self.carry_on()
         else:
             super(TenKBot, self).ask(prompt)
+
+    def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
+        """
+        Get an integer response from the human. (int)
+
+        Parameters:
+        prompt: The question asking for the interger. (str)
+        low: The lowest acceptable value for the integer. (int or None)
+        high: The highest acceptable value for the integer. (int or None)
+        valid: The valid values for the integer. (container of int)
+        default: The default choice. (int or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        if 1 in valid or low == 1:
+            return 1
+        elif valid:
+            return max(valid)
+        else:
+            return high
 
     def ask_int_list(self, prompt, low = None, high = None, valid = [], valid_lens = [], default = None,
         cmd = True):
@@ -688,6 +707,9 @@ class TenThousand(game.Game):
         # Roll the dice.
         self.must_roll = ''
         self.dice.roll()
+        # Handle any wilds.
+        if self.wild and -1 in self.dice:
+            self.wild_roll(player)
         # Make sure any combos have been cleared (clear-combo option).
         if self.clear_combo and self.last_combo:
             rolled = [die for die in self.dice if not die.held]
@@ -699,7 +721,7 @@ class TenThousand(game.Game):
             self.last_combo = []
         self.held_this_turn = False
         values = sorted([die.value for die in self.dice if not die.held])
-        print('\n{} rolled: {}.'.format(player.name, ', '.join([str(value) for value in values])))
+        player.tell('\n{} rolled: {}.'.format(player.name, ', '.join([str(value) for value in values])))
         # Check for no score (end the turn if there isn't).
         roll_score = self.score_dice(values, validate = False)
         if not roll_score:
@@ -780,6 +802,10 @@ class TenThousand(game.Game):
         # Handle the combo scoring.
         kinds = [self.four_kind, self.five_kind, self.six_kind]
         mults = [self.four_mult, self.five_mult, self.six_mult]
+        self.combo_sizes = [3]
+        for size, kind, mult in zip((4, 5, 6), kinds, mults):
+            if kind or mult:
+                self.combo_sizes.append(size)
         for value in range(1, 7):
             for count, kind, mult in zip(range(4, 7), kinds, mults):
                 # Check for a set score option.
@@ -792,6 +818,14 @@ class TenThousand(game.Game):
                         self.combo_scores[value][count] = mult * 10
                     else:
                         self.combo_scores[value][count] = mult * value
+        # Set up the dice.
+        if self.five_dice:
+            self.dice = dice.Pool([6] * 5)
+        else:
+            self.dice = dice.Pool([6] * 6)
+        # Set the wild.
+        if self.wild:
+            self.dice.dice[-1].sides[1] = -1
 
     def no_score(self, player, values):
         """
@@ -993,15 +1027,12 @@ class TenThousand(game.Game):
         # Set any other options.
         self.option_set.add_option('five-dice', ['5d'],
             question = 'Should the game be played with five dice? bool')
+        self.option_set.add_option('wild', ['wd'],
+            question = 'Should one die have a wild instead of a two? bool? bool')
 
 
     def set_up(self):
         """Set up the game. (None)"""
-        # Set up the dice.
-        if self.five_dice:
-            self.dice = dice.Pool([6] * 5)
-        else:
-            self.dice = dice.Pool([6] * 6)
         # Set up the tracking variables.
         self.turn_score = 0
         self.held_this_turn = False
@@ -1057,3 +1088,26 @@ class TenThousand(game.Game):
                                 break
                 held_score += sub_score
         return held_score
+
+    def wild_roll(self, player):
+        """
+        Handle a wild being rolled. (None)
+
+        Parameters:
+        player: The player who rolled the wild. (player.Player)
+        """
+        wild_die = self.dice.dice[self.dice.index(-1)]
+        values = [die.value for die in self.dice if not (die.held or die is wild_die)]
+        counts = [values.count(possible) for possible in range(7)]
+        valid = [value for value, count in enumerate(counts) if count + 1 in self.combo_sizes]
+        if len(valid) == 1:
+            wild_die.value = valid[0]
+            player.tell('You rolled a wild, which must be used as a {}.'.format(valid[0]))
+        else:
+            player.tell('You rolled a wild and {}.'.format(', '.join(map(str, values))))
+            if valid:
+                query = 'Do you want the wild to be a {}? '.format(utility.oxford(values, 'or'))
+                choice = player.ask_int(query, valid = valid)
+            else:
+                choice = player.ask_int('What do you want the wild to be? ', low = 1, high = 6)
+            wild_die.value = choice
