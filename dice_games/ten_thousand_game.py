@@ -77,6 +77,7 @@ clear-combo (cc): If your last roll scored a three or more of a kind, and you
 crash= (cr=): How many points you lose if you roll all six dice and don't
     score. Defaults to 0, typically 500.
 entry= (e=): The minimum number of points needed to get on the table.
+*explosion (ex): Rolling six 1's is too many points and you lose.
 five-dice (5d): The game is played with five dice, with no six of a kind or
     straight.
 five-kind (5k): The score for getting five of a kind, typically 2,000 or
@@ -97,6 +98,8 @@ min-grows (mg): You must roll more points as the previous scored in order to
     score yourself.
 minimum= (m=): The minimum number of points you must roll before you can score
     them.
+*must-score (ms): You have no choice in what to hold, you must hold all
+    scoring dice.
 no-risk (nr): If you roll no points, your turn still ends, but you score any
     points you had rolled this turn.
 second-chance (2c): You may make a second chance roll when you do not score.
@@ -443,6 +446,7 @@ class GeneticBot(TenKBot):
             setattr(self, attr, value)
         self.rolls_taken = 0
         self.scoring_turns = 0
+        self.score_hold = []
         self.combo_sizes = [3]
         if self.game.four_kind or self.game.four_mult:
             self.combo_sizes.append(4)
@@ -541,8 +545,11 @@ class KniziaBot(TenKBot):
     def roll_or_score(self):
         """Decide whether to roll for more or score what you've got. (str)"""
         # Score when the strategy says to, unless you have scored on all dice.
-        if self.score and [die for die in self.game.dice if not die.held]:
+        to_roll = len([die for die in self.game.dice if not die.held])
+        if self.score and to_roll:
             move = 'score'
+        elif self.game.must_score:
+            move = 'score' if self.game.turn_score >= 350 or to_roll < 2 else 'roll'
         else:
             move = 'roll'
         self.score = False
@@ -572,6 +579,7 @@ class ProbabilityBot(TenKBot):
 
     def set_up(self):
         """Make the probablity calculations. (None)"""
+        super(ProbabilityBot, self).set_up()
         self.chances = {}
         for num_dice in range(1, 7):
             rolls = itertools.product(*[range(1, 7) for die in range(num_dice)])
@@ -724,9 +732,13 @@ class TenThousand(game.Game):
         player.tell('\n{} rolled: {}.'.format(player.name, ', '.join([str(value) for value in values])))
         # Check for no score (end the turn if there isn't).
         roll_score = self.score_dice(values, validate = False)
+        go = True
         if not roll_score:
-            return self.no_score(player, values)
-        return True
+            go = self.no_score(player, values)
+        # Check for mandatory scoring.
+        if go and self.must_score:
+            self.do_hold('')
+        return go
 
     def do_score(self, arguments):
         """
@@ -978,34 +990,36 @@ class TenThousand(game.Game):
         # Set the bot options.
         self.option_set.default_bots = ((ProbabilityBot, ()), (GamblerBot, ()), (GeneticBot, ()))
         # Set the scoring options.
-        self.option_set.add_option('straight', ['s'], int, 0,
-            question = 'How much should a straight score (return for 0)? ')
-        self.option_set.add_option('three-pair', ['3p'], int, 0,
-            question = 'How much should three pair score (return for 0)? ')
-        self.option_set.add_option('full-house', ['fh'], int, 0,
-            question = 'What should the bonus for a full house be (return for 0)? ')
-        self.option_set.add_option('four-kind', ['4k'], int, 0,
-            question = 'How much should four of a kind score (return for 0)? ')
-        self.option_set.add_option('four-mult', ['4m'], int, 0,
-            question = 'How much should the multiplier be for four of a kind (return for 0)? ')
+        self.option_set.add_option('crash', ['cr'], int, 0,
+            question = 'How many points should you lose for not scoring on all dice (return for 0)? ')
         self.option_set.add_option('five-kind', ['5k'], int, 0,
             question = 'How much should five of a kind score (return for 0)? ')
         self.option_set.add_option('five-mult', ['5m'], int, 0,
             question = 'How much should the multiplier be for five of a kind (return for 0)? ')
+        self.option_set.add_option('four-kind', ['4k'], int, 0,
+            question = 'How much should four of a kind score (return for 0)? ')
+        self.option_set.add_option('four-mult', ['4m'], int, 0,
+            question = 'How much should the multiplier be for four of a kind (return for 0)? ')
+        self.option_set.add_option('full-house', ['fh'], int, 0,
+            question = 'What should the bonus for a full house be (return for 0)? ')
+        self.option_set.add_option('must-score', ['ms'],
+            question = 'Should you have to hold all scoring dice? bool')
         self.option_set.add_option('six-kind', ['6k'], int, 0,
             question = 'How much should six of a kind score (return for 0)? ')
         self.option_set.add_option('six-mult', ['6m'], int, 0,
             question = 'How much should the multiplier be for six of a kind (return for 0)? ')
-        self.option_set.add_option('crash', ['cr'], int, 0,
-            question = 'How many points should you lose for not scoring on all dice (return for 0)? ')
+        self.option_set.add_option('straight', ['s'], int, 0,
+            question = 'How much should a straight score (return for 0)? ')
+        self.option_set.add_option('super-strikes', ['ss'],
+            question = 'Should you lose all of your points for not scoring three times in a row? bool')
+        self.option_set.add_option('three-pair', ['3p'], int, 0,
+            question = 'How much should three pair score (return for 0)? ')
+        self.option_set.add_option('three-strikes', ['3s'], int, 0,
+            question = 'How much should you lose for not scoring three times in a row (return for 0)? ')
         self.option_set.add_option('train-wreck', ['tw'],
             question = 'Should you lose all of your points for not scoring on all dice? bool')
         self.option_set.add_option('zen', ['z'], int, 0,
             question = 'How many points should you *GAIN* for not scoring on all dice (return for 0)? ')
-        self.option_set.add_option('three-strikes', ['3s'], int, 0,
-            question = 'How much should you lose for not scoring three times in a row (return for 0)? ')
-        self.option_set.add_option('super-strikes', ['ss'],
-            question = 'Should you lose all of your points for not scoring three times in a row? bool')
         # Set the stopping options.
         self.option_set.add_option('carry-on', ['co'],
             question = "Should you be able to take on the previous player's failrd roll and points? bool")
