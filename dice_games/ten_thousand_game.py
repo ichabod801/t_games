@@ -77,7 +77,7 @@ clear-combo (cc): If your last roll scored a three or more of a kind, and you
 crash= (cr=): How many points you lose if you roll all six dice and don't
     score. Defaults to 0, typically 500.
 entry= (e=): The minimum number of points needed to get on the table.
-*explosion (ex): Rolling six 1's is too many points and you lose.
+explosion (ex): Rolling six 1's is too many points and you lose.
 five-dice (5d): The game is played with five dice, with no six of a kind or
     straight.
 five-kind (5k): The score for getting five of a kind, typically 2,000 or
@@ -85,20 +85,21 @@ five-kind (5k): The score for getting five of a kind, typically 2,000 or
 five-mult (5m): The score multiplied by the die face for five of a kind,
     typically 300 or 400. If this and five-kind are 0, five of a kind is not
     allowed.
-force-combo (fc): If you score with three or more of a kind, you *must* roll
+*force-combo (fc): If you score with three or more of a kind, you *must* roll
     again.
-force-six (f6): If you score on all six dice, you *must* roll again.
+*force-six (f6): If you score on all six dice, you *must* roll again.
 four-kind (4k): The score for getting four of a kind. Typically 1,000 or
     2,000. If this and four-mult are 0, four of a kind is not allowed.
 four-mult (4m): The score multiplied by the die face for four of a kind,
     typically 200. If this and four-kind are 0, four of a kind is not allowed.
 full-house (fh): The bonus added to the three of a kind score when scoring a
     full house. Defaults to 0, or no full houses.
+instant-win (iw): You win instantly if you roll six sixes.
 min-grows (mg): You must roll more points as the previous scored in order to
     score yourself.
 minimum= (m=): The minimum number of points you must roll before you can score
     them.
-*must-score (ms): You have no choice in what to hold, you must hold all
+must-score (ms): You have no choice in what to hold, you must hold all
     scoring dice.
 no-risk (nr): If you roll no points, your turn still ends, but you score any
     points you had rolled this turn.
@@ -735,6 +736,18 @@ class TenThousand(game.Game):
         go = True
         if not roll_score:
             go = self.no_score(player, values)
+        # Check for too many points.
+        if self.explosion and values == [1] * len(self.dice):
+            player.tell("You rolled {} ones. That is too many points, so you lose.".format(len(self.dice)))
+            self.scores[player.name] = 0
+            self.players.remove(player)
+            self.player_index -= 1
+            return False
+        if self.instant_win and values == [6] * len(self.dice):
+            player.tell("You rolled {} sixes. You win instantly.".format(len(self.dice)))
+            self.scores[player.name] = max(self.win, max(self.scores.values() + 50))
+            self.last_player = player
+            return False
         # Check for mandatory scoring.
         if go and self.must_score:
             self.do_hold('')
@@ -987,6 +1000,7 @@ class TenThousand(game.Game):
         # Add name variants.
         self.option_set.add_group('5000', 'w=5000')
         self.option_set.add_group('5k', 'w=5000')
+        wimpout = '5d e=350 5m=1000 wd fc cc f6 w=5000'
         # Set the bot options.
         self.option_set.default_bots = ((ProbabilityBot, ()), (GamblerBot, ()), (GeneticBot, ()))
         # Set the scoring options.
@@ -1036,6 +1050,10 @@ class TenThousand(game.Game):
         self.option_set.add_option('second-chance', ['2c'],
             question = 'Should you get a second chance roll after a failed roll? bool')
         # Set the end of game options.
+        self.option_set.add_option('explosion', ['ex'],
+            question = 'Should you lose for rolling all ones on all dice? bool')
+        self.option_set.add_option('instant-win', ['iw'],
+            question = 'Should you win instantly for rolling all sixes on all dice? bool')
         self.option_set.add_option('win', ['w'], int, 10000,
             question = 'How many points should it take to win (return for 10,000)? ')
         # Set any other options.
