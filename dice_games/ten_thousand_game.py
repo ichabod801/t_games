@@ -85,9 +85,9 @@ five-kind (5k): The score for getting five of a kind, typically 2,000 or
 five-mult (5m): The score multiplied by the die face for five of a kind,
     typically 300 or 400. If this and five-kind are 0, five of a kind is not
     allowed.
-*force-combo (fc): If you score with three or more of a kind, you *must* roll
+force-combo (fc): If you score with three or more of a kind, you *must* roll
     again.
-*force-six (f6): If you score on all six dice, you *must* roll again.
+force-six (f6): If you score on all six dice, you *must* roll again.
 four-kind (4k): The score for getting four of a kind. Typically 1,000 or
     2,000. If this and four-mult are 0, four of a kind is not allowed.
 four-mult (4m): The score multiplied by the die face for four of a kind,
@@ -459,6 +459,47 @@ class GeneticBot(TenKBot):
             self.combo_sizes.append(6)
 
 
+class BasePaceBot(GeneticBot):
+    """
+    A bot that tries to score ammount and stay close to the lead. (GeneticBot)
+
+    Overridden Methods:
+    __init__
+    """
+
+    def __init__(self, base = 250, pace = 200, taken_names = []):
+        """
+        Initialize the bot's parameters. (None)
+
+        Parameters:
+        base: The minimum points to score each round. (int)
+        pace: The minimum points behind the leader. (int)
+        taken_names: The names of other players. (list of str)
+        """
+        genes = [base, pace, 0, 0, 0, 0, 1, 2, 2, 2, 2]
+        super(BasePaceBot, self).__init__(genes, taken_names)
+
+
+class ValueBot(GeneticBot):
+    """
+    A bot that tries to score a set number of points each round. (GeneticBot)
+
+    Overridden Methods:
+    __init__
+    """
+
+    def __init__(self, value = 350, taken_names = []):
+        """
+        Initialize the bot's parameters. (None)
+
+        Parameters:
+        value: The minimum points to score each round. (int)
+        taken_names: The names of other players. (list of str)
+        """
+        genes = [value, 0, 0, 0, 0, 0, 1, 2, 2, 2, 2]
+        super(ValueBot, self).__init__(genes, taken_names)
+
+
 class KniziaBot(TenKBot):
     """
     A bot following Reiner Knizia's Strategy. (TenKBot)
@@ -702,7 +743,7 @@ class TenThousand(game.Game):
         self.turn_score += held_score
         self.held_this_turn = True
         # Check for holding all of the dice (force-six option).
-        if not [die for die in self.dice if not die.held]:
+        if self.force_six and not [die for die in self.dice if not die.held]:
             self.must_roll = 'you scored on all {} dice'.format(len(self.dice))
         return True
 
@@ -1012,7 +1053,7 @@ class TenThousand(game.Game):
         self.option_set.add_group('wimpout', wimpout)
         self.option_set.add_group('wo', wimpout)
         # Set the bot options.
-        self.option_set.default_bots = ((ProbabilityBot, ()), (GamblerBot, ()), (GeneticBot, ()))
+        self.option_set.default_bots = ((ProbabilityBot, ()), (ValueBot, ()), (BasePaceBot, ()))
         # Set the scoring options.
         self.option_set.add_option('crash', ['cr'], int, 0,
             question = 'How many points should you lose for not scoring on all dice (return for 0)? ')
