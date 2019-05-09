@@ -159,6 +159,8 @@ class TenKBot(player.Bot):
                 move = 'roll'
             elif self.game.no_risk:
                 move = 'roll'
+            elif self.game.must_roll:
+                move = 'roll'
             elif self.game.last_player is not None:
                 if self.game.scores[self.name] + self.game.turn_score <= max(self.game.scores.values()):
                     move = 'roll'
@@ -681,11 +683,13 @@ class TenThousand(game.Game):
                             values.extend([possible] * count)
                             break
         values.sort()
-        # Check for holding combos (clear-combo option).
-        if self.clear_combo:
+        # Check for holding combos (clear-combo and force-combo options).
+        if self.clear_combo or self.force_combo:
             for first, third in zip(values, values[2:]):
                 if first == third and first not in self.last_combo:
                     self.last_combo.append(first)
+                    if self.force_combo:
+                        self.must_roll = "you scored three or more {}'s".format(first)
         # Score the held dice.
         held_score = self.score_dice(values)
         if held_score == -1:
@@ -697,6 +701,9 @@ class TenThousand(game.Game):
         self.dice.hold(values)
         self.turn_score += held_score
         self.held_this_turn = True
+        # Check for holding all of the dice (force-six option).
+        if not [die for die in self.dice if not die.held]:
+            self.must_roll = 'you scored on all {} dice'.format(len(self.dice))
         return True
 
     def do_roll(self, arguments):
@@ -759,12 +766,14 @@ class TenThousand(game.Game):
         """
         player = self.players[self.player_index]
         # Check for forced rolls and invalid stops.
-        if not self.turn_score:
+        if not self.held_this_turn:
             player.error('You cannot stop without holding some scoring dice.')
         elif self.turn_score < self.minimum:
             player.error('You cannot stop until you score {} points.'.format(self.minimum))
         elif self.turn_score < self.entry and not self.entered[player.name]:
             player.error('You cannot stop the first time until you score {} points.'.format(self.entry))
+        elif self.must_roll:
+            player.error('You must roll because {}.'.format(self.must_roll))
         else:
             # Score the dice.
             self.scores[self.players[self.player_index].name] += self.turn_score
@@ -918,12 +927,11 @@ class TenThousand(game.Game):
             if not self.do_roll(''):
                 return False
             self.new_turn = False
+        # Show the game status.
+        player.tell(self)
         # Make a forced roll, if necessary.
         if self.must_roll:
             player.tell('You must roll because {}.'.format(self.must_roll))
-            return self.do_roll('')
-        # Show the game status.
-        player.tell(self)
         # Get and handle the player's move.
         move = player.ask('\nWhat is your move? ')
         return self.handle_cmd(move)
@@ -1041,6 +1049,10 @@ class TenThousand(game.Game):
             question = 'Should you have to reroll if you match thr last combo you scored? bool')
         self.option_set.add_option('entry', ['e'], int, 0,
             question = 'How many points should be required to stop the first time (return for 0)? ')
+        self.option_set.add_option('force-combo', ['fc'],
+            question = "Should you have to keep rolling after scoring three or more of a kind? bool")
+        self.option_set.add_option('force-six', ['f6'],
+            question = "Should you have to keep rolling after scoring on all of the dice? bool")
         self.option_set.add_option('min-grows', ['mg'],
             question = "Should you have beat the previous player's score? bool")
         self.option_set.add_option('minimum', ['m'], int, 0,
