@@ -1008,7 +1008,9 @@ class TenThousand(game.Game):
         # Add name variants.
         self.option_set.add_group('5000', 'w=5000')
         self.option_set.add_group('5k', 'w=5000')
-        wimpout = '5d e=350 5m=1000 wd fc cc f6 w=5000'
+        wimpout = '5d e=350 5m=1000 wd fc cc f6 w=5000 ms'
+        self.option_set.add_group('wimpout', wimpout)
+        self.option_set.add_group('wo', wimpout)
         # Set the bot options.
         self.option_set.default_bots = ((ProbabilityBot, ()), (GamblerBot, ()), (GeneticBot, ()))
         # Set the scoring options.
