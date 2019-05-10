@@ -466,8 +466,10 @@ class BasePaceBot(GeneticBot):
     Overridden Methods:
     __init__
     """
+    attributes = ['min_value', 'min_behind', 'min_mod', 'min_dice', 'rolls', 'turns', 'score_and',
+        'combo_ones', 'combo_fives', 'plain_ones', 'plain_fives']
 
-    def __init__(self, base = 250, pace = 200, taken_names = []):
+    def __init__(self, base = 300, pace = 250, taken_names = []):
         """
         Initialize the bot's parameters. (None)
 
@@ -476,8 +478,29 @@ class BasePaceBot(GeneticBot):
         pace: The minimum points behind the leader. (int)
         taken_names: The names of other players. (list of str)
         """
-        genes = [base, pace, 0, 0, 0, 0, 1, 2, 2, 2, 2]
+        genes = [base, pace, 0, 0, 0, 0, 1, 0, 0, 1, 1]
         super(BasePaceBot, self).__init__(genes, taken_names)
+
+
+class ModifierBot(GeneticBot):
+    """
+    A bot that modifies it's target score by how far it's behind. (GeneticBot)
+
+    Overridden Methods:
+    __init__
+    """
+
+    def __init__(self, base = 350, modifier = 100, taken_names = []):
+        """
+        Initialize the bot's parameters. (None)
+
+        Parameters:
+        base: The minimum points to score each round. (int)
+        modifier: The ammount behind to justify changing the base. (int)
+        taken_names: The names of other players. (list of str)
+        """
+        genes = [base, 0, modifier, 0, 0, 0, 1, 0, 0, 1, 1]
+        super(ModifierBot, self).__init__(genes, taken_names)
 
 
 class ValueBot(GeneticBot):
@@ -488,7 +511,7 @@ class ValueBot(GeneticBot):
     __init__
     """
 
-    def __init__(self, value = 350, taken_names = []):
+    def __init__(self, value = 400, taken_names = []):
         """
         Initialize the bot's parameters. (None)
 
@@ -664,6 +687,7 @@ class TenThousand(game.Game):
         [0, 0, 0, 300, 0, 0, 600], [0, 0, 0, 400, 0, 0, 800],
         [0, 50, 100, 500, 550, 600, 1000], [0, 0, 0, 600, 0, 0, 1200]]
     name = 'Ten Thousand'
+    num_options = 30
 
     def __str__(self):
         """Human readable text representation. (str)"""
@@ -1053,7 +1077,7 @@ class TenThousand(game.Game):
         self.option_set.add_group('wimpout', wimpout)
         self.option_set.add_group('wo', wimpout)
         # Set the bot options.
-        self.option_set.default_bots = ((ProbabilityBot, ()), (ValueBot, ()), (BasePaceBot, ()))
+        self.option_set.default_bots = ((ValueBot, ()), (BasePaceBot, ()), (ModifierBot, ()))
         # Set the scoring options.
         self.option_set.add_option('crash', ['cr'], int, 0,
             question = 'How many points should you lose for not scoring on all dice (return for 0)? ')
