@@ -125,6 +125,15 @@ wild: One die has a wild. If rolled with a pair or more, it must be used to
 win= (w=): The number of points needed to win.
 zen= (z=): The points scored if you roll all the dice and none of them score.
     Defaults to 0, typically 500.
+
+Bot Options:
+base-pace (bp): Add a bot that tries to stay close to the lead.
+gambler (gm): Add a bot that stops as often as it's odds of not scoring.
+knizia (kz): Add a bot using Reiner Knizia's strategy.
+mod (md): Add a bot that goes for more points the farther it is behind.
+prob (pb): Add a bot that uses expected value calculations.
+random (rd): Add a bot with a random strategy.
+value (vu): Add a bot that ties to score a set value.
 """
 
 class TenKBot(player.Bot):
@@ -490,7 +499,7 @@ class ModifierBot(GeneticBot):
     __init__
     """
 
-    def __init__(self, base = 350, modifier = 100, taken_names = []):
+    def __init__(self, base = 350, modifier = 350, taken_names = []):
         """
         Initialize the bot's parameters. (None)
 
@@ -682,6 +691,8 @@ class TenThousand(game.Game):
 
     aka = ['Zilch', 'Dice 10,000', 'Dice 10000', 'Dice 10K', 'Farkle', '10K']
     aliases = {'h': 'hold', 'r': 'roll', 's': 'score'}
+    bot_classes = {'base-pace': BasePaceBot, 'gamble': GamblerBot, 'knizia': KniziaBot, 'mod': ModifierBot,
+        'prob': ProbabilityBot, 'random': GeneticBot, 'value': ValueBot}
     categories = ['Dice Games']
     combo_scores = [[0], [0, 100, 200, 1000, 1100, 1200, 2000], [0, 0, 0, 200, 0, 0, 400],
         [0, 0, 0, 300, 0, 0, 600], [0, 0, 0, 400, 0, 0, 800],
@@ -1077,7 +1088,21 @@ class TenThousand(game.Game):
         self.option_set.add_group('wimpout', wimpout)
         self.option_set.add_group('wo', wimpout)
         # Set the bot options.
-        self.option_set.default_bots = ((ValueBot, ()), (BasePaceBot, ()), (ModifierBot, ()))
+        self.option_set.default_bots = ((ProbabilityBot, ()), (ValueBot, ()), (ModifierBot, ()))
+        self.option_set.add_option('base-pace', ['bp'],  action = 'bot', target = 'base-pace', value = (),
+            default = None)
+        self.option_set.add_option('gambler', ['gm'],  action = 'bot', target = 'gamble', value = (),
+            default = None)
+        self.option_set.add_option('knizia', ['kz'],  action = 'bot', target = 'knizia', value = (),
+            default = None)
+        self.option_set.add_option('mod', ['md'],  action = 'bot', target = 'mod', value = (),
+            default = None)
+        self.option_set.add_option('prob', ['pb'],  action = 'bot', target = 'prob', value = (),
+            default = None)
+        self.option_set.add_option('random', ['rd'],  action = 'bot', target = 'random', value = (),
+            default = None)
+        self.option_set.add_option('value', ['vu'],  action = 'bot', target = 'value', value = (),
+            default = None)
         # Set the scoring options.
         self.option_set.add_option('crash', ['cr'], int, 0,
             question = 'How many points should you lose for not scoring on all dice (return for 0)? ')
@@ -1153,6 +1178,7 @@ class TenThousand(game.Game):
         self.new_turn = True
         self.entered = {player.name: False for player in self.players}
         self.strikes = {player.name: 0 for player in self.players}
+        random.shuffle(self.players)
 
     def score_dice(self, values, validate = True):
         """
