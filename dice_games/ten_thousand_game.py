@@ -180,6 +180,8 @@ class TenKBot(player.Bot):
             return move
         elif prompt.startswith('Would you like to'):
             return self.carry_on()
+        elif prompt.startswith('Your turn is over'):
+            return 'Gorramit'
         else:
             super(TenKBot, self).ask(prompt)
 
@@ -949,7 +951,10 @@ class TenThousand(game.Game):
         if self.second_chance and self.retry(player, values):
             return True
         if not self.zen:
-            player.tell('Your turn is over.')
+            if self.fast:
+                player.tell('Your turn is over.')
+            else:
+                player.ask('Your turn is over, press Enter to contine: ')
         # Score anyway if the no-risk option is in effect..
         if self.no_risk:
             player.tell('{} scored {} points this turn.'.format(player.name, self.turn_score))
@@ -1161,6 +1166,8 @@ class TenThousand(game.Game):
         self.option_set.add_option('win', ['w'], int, 10000,
             question = 'How many points should it take to win (return for 10,000)? ')
         # Set any other options.
+        self.option_set.add_option('fast', ['fs'],
+            question = 'Should your turn end without a pause? bool')
         self.option_set.add_option('five-dice', ['5d'],
             question = 'Should the game be played with five dice? bool')
         self.option_set.add_option('wild', ['wd'],
@@ -1239,9 +1246,9 @@ class TenThousand(game.Game):
         valid = [value for value, count in enumerate(counts) if count + 1 in self.combo_sizes]
         if len(valid) == 1:
             wild_die.value = valid[0]
-            player.tell('You rolled a wild, which must be used as a {}.'.format(valid[0]))
+            player.tell('\nYou rolled a wild, which must be used as a {}.'.format(valid[0]))
         else:
-            player.tell('You rolled a wild and {}.'.format(', '.join(map(str, values))))
+            player.tell('\nYou rolled a wild and {}.'.format(', '.join(map(str, set(values)))))
             if valid:
                 query = 'Do you want the wild to be a {}? '.format(utility.oxford(values, 'or'))
                 choice = player.ask_int(query, valid = valid)
