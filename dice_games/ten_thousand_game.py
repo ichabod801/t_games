@@ -31,6 +31,7 @@ from .. import utility
 CREDITS = """
 Game Design: Traditional.
 Game Programming: Craig "Ichabod" O'Brien
+Bot Design: Reiner Knizia, Craig O'Brien
 """
 
 RULES = """
@@ -140,9 +141,13 @@ class TenKBot(player.Bot):
     """
     A base bot for the game of Ten Thousand. (player.Bot)
 
+    Attributes:
+    bank: How much the player has banked this turn. (int)
+
     Methods:
     carry_on: Decided whether or not to carry on. (str)
     hold: Decide which dice to roll. (str)
+    second_chance: Choose a pair to try to complete. (str)
     roll_or_score: Decide whether to roll for more or score what you've got. (str)
 
     Overridden Methods:
@@ -160,8 +165,10 @@ class TenKBot(player.Bot):
         prompt: The question being asked of the player. (str)
         """
         if prompt == '\nWhat is your move? ':
+            # Hold if you haven't yet.
             if not self.game.held_this_turn:
                 move = self.hold()
+            # Roll if it makes no sense not to.
             elif self.game.turn_score < self.game.minimum:
                 move = 'roll'
             elif self.game.turn_score < self.game.entry and not self.game.entered[self.name]:
@@ -170,14 +177,18 @@ class TenKBot(player.Bot):
                 move = 'roll'
             elif self.game.must_roll:
                 move = 'roll'
+            # During last licks, roll if you haven't won yet.
             elif self.game.last_player is not None:
                 if self.game.scores[self.name] + self.game.turn_score <= max(self.game.scores.values()):
                     move = 'roll'
                 else:
+                    # But maybe roll to get some distance.
                     move = self.roll_or_score()
+            # Otherwise roll or score as per the bot-specific strategy.
             else:
                 move = self.roll_or_score()
             return move
+        # Handle other situations.
         elif prompt.startswith('Would you like to'):
             return self.carry_on()
         elif prompt.startswith('Your turn is over'):
@@ -187,7 +198,7 @@ class TenKBot(player.Bot):
 
     def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
         """
-        Get an integer response from the human. (int)
+        Get an integer response from the bot. (int)
 
         Parameters:
         prompt: The question asking for the interger. (str)
@@ -197,6 +208,7 @@ class TenKBot(player.Bot):
         default: The default choice. (int or None)
         cmd: A flag for returning commands for processing. (bool)
         """
+        # Choose a number for a wild (the highest value one)
         if 1 in valid or low == 1:
             return 1
         elif valid:
@@ -218,8 +230,10 @@ class TenKBot(player.Bot):
         default: The default choice. (list or None)
         cmd: A flag for returning commands for processing. (bool)
         """
+        # Handle second chance opportunities.
         if prompt.startswith('Which dice would'):
             return self.second_chance()
+        # Everything else goes to parent class (raises an error)
         else:
             super(TenKBot, self).ask_int_list(prompt, loe, high, valid, valid_lens, default)
 
@@ -240,6 +254,7 @@ class TenKBot(player.Bot):
 
     def second_chance(self):
         """Choose a pair to try to complete. (str)"""
+        # Go for the highest scoring pair.
         values = [die.value for die in self.game.dice if not die.held]
         pairs = [value for value in range(1, 7) if values.count(value) == 2]
         if 1 in pairs:
@@ -276,6 +291,8 @@ class GamblerBot(TenKBot):
     """
     A bot that rolls as often as it's chance of scoring. (TenKBot)
 
+    !! This should be redone to calculate the chance (like ProbabilityBot).
+
     Class Attributes:
     score_chance: The probability of scoring with n dice. (list of float)
 
@@ -287,6 +304,7 @@ class GamblerBot(TenKBot):
 
     def roll_or_score(self):
         """Decide whether to roll for more or score what you've got. (str)"""
+        # Roll with a chance equal to the chance you will score.
         to_roll = len([die for die in self.game.dice if die.held])
         if random.random() < self.score_chance[to_roll]:
             return 'roll'
@@ -298,13 +316,30 @@ class GeneticBot(TenKBot):
     """
     A bot for a genetic algorithm. (TenKBot)
 
+    The gene is a list of eleven integers, corresponding to the following
+    attributes in order: min_value, min_behind, min_mod, min_dice, rolls, turns, s
+    core_and, combo_ones, combo_fives, plain_ones, plain_fives.
+
     Class Attributes:
     attributes: The names of the genetic attributes. (list of str)
     ranges: The randrange parameters for each attribute. (list of tuple)
 
     Attributes:
-    gene: The numbers defining the bot's strategy. (list of int)
+    combo_fives: How many fives to save with a combo. (int)
+    combo_ones: How many ones to save with a combo. (int)
+    genes: The numbers defining the bot's strategy. (list of int)
+    min_behind: The minimum distance behind the leader to stop at. (int)
+    min_dice: The minimum number of dice the bot will roll with. (int)
+    min_mod: How many points behind adjust min_value by 50. (int)
+    min_value: The minumum value to stop with. (int)
     p_zero: The probability that a random gene in 0. (float)
+    plain_fives: How many fives to save without a combo. (int)
+    plain_ones: How many ones to save without a combo. (int)
+    rolls: The number of rolls to make each turn. (float)
+    rolls_taken: How many rolls have been made this turn. (int)
+    score_and: A flag for combining score determinations with 'and'. (int)
+    scoring_turns: How many turns you've score on. (int)
+    turns: The number of turns to try to win the game in. (int)
 
     Methods:
     breed: Combine genes with another bot to produce a third. (GeneticBot)
@@ -330,9 +365,11 @@ class GeneticBot(TenKBot):
         gene: The numbers defining the bot's strategy. (list of int)
         p_zero: The probability that a random gene in 0. (float)
         """
+        # Store the parameters.
         super(GeneticBot, self).__init__(taken_names = taken_names)
         self.genes = [] if genes is None else genes
         self.p_zero = p_zero
+        # Fill out the genes as needed.
         if len(self.genes) < len(self.attributes):
             self.fill_random()
 
@@ -367,6 +404,7 @@ class GeneticBot(TenKBot):
         counts = [values.count(value) for value in range(7)]
         # Find any combos in the roll.
         combo = True
+        # Check for special scoring.
         if values == [1, 2, 3, 4, 5, 6] and self.game.straight:
             hold = values[:]
         elif counts.count(2) == 3 and self.game.three_pair:
@@ -376,12 +414,14 @@ class GeneticBot(TenKBot):
                 hold = values[:]
             else:
                 hold = [counts.index(3)] * 3 + [counts.index(2)] * 2
+        # Check for n-of-a-kind.
         elif max(counts) >= 3:
             hold = []
             combos = [(value, count) for value, count in enumerate(counts) if count >= 3]
             for value, count in combos:
                 holdable = max([size for size in self.combo_sizes if size <= count])
                 hold.extend([value] * holdable)
+        # Set up for holding with no combos.
         else:
             hold = []
             combo = False
@@ -434,7 +474,7 @@ class GeneticBot(TenKBot):
         if self.min_dice:
             score_choices.append(len([die for die in self.game.dice if not die.held]) < self.min_dice)
         if self.rolls:
-            score_choices.append(self.rolls_taken == self.rolls)
+            score_choices.append(self.rolls_taken >= self.rolls)
         if self.turns and self.turns != self.scoring_turns:   # Avoid division by zero.
             target = (self.game.win - self.game.scores[self.name]) / (self.scoring_turns - self.turns)
             score_choices.append(self.game.turn_score >= target)
@@ -446,6 +486,7 @@ class GeneticBot(TenKBot):
         # Determine the move and update tracking.
         if score:
             self.scoring_turns += 1
+            self.rolls_taken = 0
             move = 'hold' if self.score_hold else 'score'
             self.score_hold = []
         else:
@@ -458,9 +499,11 @@ class GeneticBot(TenKBot):
         super(GeneticBot, self).set_up()
         for attr, value in zip(self.attributes, self.genes):
             setattr(self, attr, value)
+        # Set up tracking variables.
         self.rolls_taken = 0
         self.scoring_turns = 0
         self.score_hold = []
+        # Determine which combos can be held.
         self.combo_sizes = [3]
         if self.game.four_kind or self.game.four_mult:
             self.combo_sizes.append(4)
@@ -650,6 +693,7 @@ class ProbabilityBot(TenKBot):
 
     def roll_or_score(self):
         """Decide whether to roll or to score the current points. (str)"""
+        # Calculate the expected value of the roll.
         num_dice = len([die for die in self.game.dice if not die.held])
         ev = self.chances[num_dice]['p-zero'] * -self.game.turn_score
         ev += self.chances[num_dice]['expected'] * (1 - self.chances[num_dice]['p-zero'])
@@ -658,10 +702,14 @@ class ProbabilityBot(TenKBot):
     def set_up(self):
         """Make the probablity calculations. (None)"""
         super(ProbabilityBot, self).set_up()
+        # Calculate the probabilites.
         self.chances = {}
+        # Calculate for each possible number of dice rolled.
         for num_dice in range(1, 7):
+            # Score all possible rolls.
             rolls = itertools.product(*[range(1, 7) for die in range(num_dice)])
             points = [self.game.score_dice(roll, False) for roll in rolls]
+            # Store chance of no score and average scoring roll.
             num_zero = points.count(0)
             self.chances[num_dice] = {}
             self.chances[num_dice]['p-zero'] = num_zero / 6 ** num_dice
@@ -676,11 +724,54 @@ class TenThousand(game.Game):
     Class Attributes:
     combo_scores: The scores for the basic sets of die values. (list of list of int)
 
+    Attributes:
+    carry_on: A flag for being able to take over a failed roll. (bool)
+    clear_combo: A flag for having to reroll if you match the last combo. (bool)
+    crash: How many points are lost for not scoring on any dice. (int)
+    entered: The players who have entered the game. (dict of str: bool)
+    entry: How many points are needed on the first scoring turn. (int)
+    explosion: A flag for losing when you roll a max combo of ones. (bool)
+    fast: A flag for removing end of turn warnings. (bool)
+    five_dice: A flag for using five dice instead of six. (bool)
+    five_kind: The points scored for five of a kind. (int)
+    five_mult: The points times the value of a five of a kind. (int)
+    force_combo: A flag for being forced to roll after a combo. (bool)
+    force_six: A flag for being forced to roll after scoring on all dice. (bool)
+    four_kind: The points scored for four of a kind. (int)
+    four_mult: The points times the value of a four of a kind. (int)
+    full_house: The bonus points scored by the pair in a full house. (int)
+    last_combo: The values of any combos rolled in the last roll. (list of int)
+    last_player: The player who gets the last roll. (player.Player)
+    held_this_turn: A flag for dice having been held this turn. (bool)
+    instant_win: A flag for winning when rolling a max combo of sixes. (bool)
+    min_grows: A flag for having to beat the previous players turn score. (bool)
+    minimum: The minimum number of points needed to score each turn. (int)
+    must_roll: The reason for being forced to roll the dice again. (str)
+    must_score: A flag for being forced to hold all scoring dice. (bool)
+    new_turn: A flag for this action being the start of a new turn. (bool)
+    no_risk: A flag for scoring your turn score when you roll no points. (bool)
+    second_chance: A flag for allowing second chances on failed rolls. (bool)
+    six_kind: The points scored for six of a kind. (int)
+    six_mult: The points times the value of a six of a kind. (int)
+    straight: The points scored for a six die straight. (int)
+    strikes: The number of times each player has not scored. (dict of str: int)
+    super_strikes: A flag for losing all points after three strikes. (bool)
+    three_pair: The point scored for rolling three pair. (int)
+    three_strikes: How many points you lose for not scoring three times. (int)
+    train_wreck: A flag for losing all points for not scoring on any dice. (bool)
+    wild: A flag for having one die having a wild face. (bool)
+    win: The points needed to win the game. (int)
+    zen: How many points you score for not scoring on any dice. (int)
+
     Methods:
     do_hold: Process commands to hold dice. (True)
     do_roll: Process commands to roll the dice. (bool)
     do_score: Process commands to score the points rolled this turn. (bool)
     end_turn: Reset the tracking variables for the next player. (None)
+    no_score: Handle rolls that do not score. (bool)
+    retry: Handle second chances for rolls that do not score. (bool)
+    score_dice: Calcuate the score for a set of dice. (int)
+    wild_roll: Handle a wild being rolled. (None)
 
     Overridden Methods:
     __str__
@@ -743,17 +834,20 @@ class TenThousand(game.Game):
                 return True
         else:
             # Hold all scoring dice if no arguments are given.
+            # Check for special combos.
             if sorted(possibles) == [1, 2, 3, 4, 5, 6] and self.straight:
                 values = possibles
             elif counts.count(2) == 3 and self.three_pair:
                 values = possibles
             elif 3 in counts and 2 in counts and self.full_house:
                 values = [value for value in possibles if counts[value] in (2, 3)]
+                # Check for loose 1 or 5 with three of a kind.
                 if counts[1] == 1:
                     values.append(1)
                 elif counts[5] == 1:
                     values.append(5)
             else:
+                # Otherwise, get any combos or loose dice.
                 values = []
                 for possible in set(possibles):
                     for count in range(counts[possible], 0, -1):
@@ -828,6 +922,7 @@ class TenThousand(game.Game):
             self.players.remove(player)
             self.player_index -= 1
             return False
+        # Check for an instant win.
         if self.instant_win and values == [6] * len(self.dice):
             player.tell("You rolled {} sixes. You win instantly.".format(len(self.dice)))
             self.scores[player.name] = max(self.win, max(self.scores.values() + 50))
@@ -855,6 +950,7 @@ class TenThousand(game.Game):
         else:
             # Score the dice.
             self.scores[self.players[self.player_index].name] += self.turn_score
+            # Clear the tracking variables.
             self.entered[player.name] = True
             self.strikes[player.name] = 0
             if self.min_grows:
@@ -947,9 +1043,12 @@ class TenThousand(game.Game):
         player: The current player. (player.Player)
         values: The faces of the unrolled dice. (list of int)
         """
+        # Alert the player.
         player.tell('{} did not score with that roll.'.format(player.name))
+        # Check for second chances.
         if self.second_chance and self.retry(player, values):
             return True
+        # Warn the player about the end of their turn.
         if not self.zen:
             if self.fast:
                 player.tell('Your turn is over.')
@@ -960,6 +1059,7 @@ class TenThousand(game.Game):
             player.tell('{} scored {} points this turn.'.format(player.name, self.turn_score))
             self.scores[player.name] += self.turn_score
         elif not self.zen:
+            # Record strikes and check for three strikes.
             self.strikes[player.name] += 1
             if self.strikes[player.name] == 3:
                 self.strikes[player.name] = 0
@@ -971,12 +1071,15 @@ class TenThousand(game.Game):
                     self.scores[player.name] = 0
         # Check for failing to score on all six dice (crash/train-wreck/zen options)
         if not [die for die in self.dice if die.held]:
+            # Lose some points.
             if self.crash:
                 player.tell('That is a crash, you lose {} points.'.format(self.crash))
                 self.scores[player.name] = max(0, self.scores[player.name] - self.crash)
+            # Lose all points.
             elif self.train_wreck:
                 player.tell('That is a train wreck, you lose all of your points.')
                 self.scores[player.name] = 0
+            # Score some points.
             elif self.zen:
                 player.tell('How Zen.'.format(player.name, self.zen))
                 self.turn_score += self.zen
@@ -990,6 +1093,7 @@ class TenThousand(game.Game):
             if next_player.ask(query.format(player.name)) in utility.YES:
                 self.must_roll = "you chose to carry on {}'s roll".format(player.name)
                 return False
+        # Reset for the next turn.
         self.end_turn()
         if self.min_grows:
             self.minimum = 0
@@ -1048,6 +1152,7 @@ class TenThousand(game.Game):
                         player.error('You do not have those dice to keep.')
                 else:
                     player.error('You can only hold back a pair or single values.')
+        # Make any mandatory choice.
         elif counts.count(2):
             keepers = [counts.index(2)] * 2
             player.tell('Holding back a pair of {}s'.format(keepers[0]))
@@ -1185,6 +1290,7 @@ class TenThousand(game.Game):
         self.new_turn = True
         self.entered = {player.name: False for player in self.players}
         self.strikes = {player.name: 0 for player in self.players}
+        # Randomize the turn order.
         random.shuffle(self.players)
 
     def score_dice(self, values, validate = True):
@@ -1240,13 +1346,18 @@ class TenThousand(game.Game):
         Parameters:
         player: The player who rolled the wild. (player.Player)
         """
+        # Get the wild die.
         wild_die = self.dice.dice[self.dice.index(-1)]
+        # Get data on the other dice.
         values = [die.value for die in self.dice if not (die.held or die is wild_die)]
         counts = [values.count(possible) for possible in range(7)]
+        # Find the combos.
         valid = [value for value, count in enumerate(counts) if count + 1 in self.combo_sizes]
+        # Alert the player if there is only one option.
         if len(valid) == 1:
             wild_die.value = valid[0]
             player.tell('\nYou rolled a wild, which must be used as a {}.'.format(valid[0]))
+        # If there are multiple options, have the player select one.
         else:
             player.tell('\nYou rolled a wild and {}.'.format(', '.join(map(str, set(values)))))
             if valid:
