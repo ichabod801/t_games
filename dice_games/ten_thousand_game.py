@@ -70,6 +70,7 @@ hold (h): Set aside scoring dice (list the dice as a parameter to the command).
 score (s): Score the points rolled this turn and end your turn.
 
 Options:
+5000 (5k): Equivalent to win = 5000.
 carry-on (co): If a player fails to score, you can carry on with their points
     and dice.
 clear-combo (cc): If your last roll scored a three or more of a kind, and you
@@ -95,6 +96,10 @@ four-mult (4m): The score multiplied by the die face for four of a kind,
     typically 200. If this and four-kind are 0, four of a kind is not allowed.
 full-house (fh): The bonus added to the three of a kind score when scoring a
     full house. Defaults to 0, or no full houses.
+gonzo (gz): Equivalent to three-pair=600 sstraight=1500 full-house=250
+    four_mult=200 five-mult=400 six-mult=800 three-strikes=500 train-wreck
+    carry-on clear-combo force-combo force-six entry=350 min-grows
+    second-chance explosion instant-win wild
 instant-win (iw): You win instantly if you roll six sixes.
 min-grows (mg): You must roll more points as the previous scored in order to
     score yourself.
@@ -123,6 +128,8 @@ train-wreck (tw): If you roll all six dice and don't score, you lose all of
     your points.
 wild: One die has a wild. If rolled with a pair or more, it must be used to
     complete the n-of-a-kind.
+wimpout (wo): Equivalent to five-dice entry=350 five-mult=1000 wild force-combo
+    clear-combo force-six win=5000 must-score'
 win= (w=): The number of points needed to win.
 zen= (z=): The points scored if you roll all the dice and none of them score.
     Defaults to 0, typically 500.
