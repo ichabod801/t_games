@@ -533,7 +533,7 @@ class BasePaceBot(GeneticBot):
         taken_names: The names of other players. (list of str)
         """
         genes = [base, pace, 0, 0, 0, 0, 1, 0, 0, 1, 1]
-        super(BasePaceBot, self).__init__(genes, taken_names)
+        super(BasePaceBot, self).__init__(genes, taken_names = taken_names)
 
 
 class ModifierBot(GeneticBot):
@@ -554,7 +554,7 @@ class ModifierBot(GeneticBot):
         taken_names: The names of other players. (list of str)
         """
         genes = [base, 0, modifier, 0, 0, 0, 1, 0, 0, 1, 1]
-        super(ModifierBot, self).__init__(genes, taken_names)
+        super(ModifierBot, self).__init__(genes, taken_names = taken_names)
 
 
 class ValueBot(GeneticBot):
@@ -574,7 +574,7 @@ class ValueBot(GeneticBot):
         taken_names: The names of other players. (list of str)
         """
         genes = [value, 0, 0, 0, 0, 0, 1, 2, 2, 2, 2]
-        super(ValueBot, self).__init__(genes, taken_names)
+        super(ValueBot, self).__init__(genes, taken_names = taken_names)
 
 
 class KniziaBot(TenKBot):
@@ -798,7 +798,11 @@ class TenThousand(game.Game):
         score_text = '\n'.join('{}: {}'.format(name, score) for name, score in self.scores.items())
         full_text = '\nScores:\n{}\n\nYou have banked {} points this turn.\nThe roll to you is {}.'
         if self.min_grows:
-            full_text = '{}\nThe minimum turn score is {}.'.format(full_text, self.minimum)
+            if self.entry and not self.entered[self.players[self.player_index].name]:
+                min_roll = max(self.minimum, self.entry)
+            else:
+                min_roll = self.minimum
+            full_text = '{}\nThe minimum turn score is {}.'.format(full_text, min_roll)
         return full_text.format(score_text, self.turn_score, self.dice)
 
     def do_hold(self, arguments):
@@ -901,11 +905,15 @@ class TenThousand(game.Game):
         # Make sure any combos have been cleared (clear-combo option).
         if self.clear_combo and self.last_combo:
             rolled = [die for die in self.dice if not die.held]
-            message = 'You must reroll because you matched your last combo.'
+            if self.wild and -1 in rolled:
+                self.wild_die(player)
+            message = 'You must reroll because you matched the last combo.'
             while any(combo in rolled for combo in self.last_combo):
                 player.tell('You rolled: {}.'.format(', '.join(map(str, rolled))))
                 player.tell(message)
                 self.dice.roll()
+                if self.wild and -1 in self.dice:
+                    self.wild_roll(player)
             self.last_combo = []
         self.held_this_turn = False
         values = sorted([die.value for die in self.dice if not die.held])
@@ -916,14 +924,14 @@ class TenThousand(game.Game):
         if not roll_score:
             go = self.no_score(player, values)
         # Check for too many points.
-        if self.explosion and values == [1] * len(self.dice):
+        elif self.explosion and values == [1] * len(self.dice):
             player.tell("You rolled {} ones. That is too many points, so you lose.".format(len(self.dice)))
             self.scores[player.name] = 0
             self.players.remove(player)
             self.player_index -= 1
             return False
         # Check for an instant win.
-        if self.instant_win and values == [6] * len(self.dice):
+        elif self.instant_win and values == [6] * len(self.dice):
             player.tell("You rolled {} sixes. You win instantly.".format(len(self.dice)))
             self.scores[player.name] = max(self.win, max(self.scores.values() + 50))
             self.last_player = player
@@ -931,6 +939,11 @@ class TenThousand(game.Game):
         # Check for mandatory scoring.
         if go and self.must_score:
             self.do_hold('')
+        elif not go:
+            if self.fast:
+                player.tell('Your turn is over.')
+            else:
+                player.ask('Your turn is over, press Enter to contine: ')
         return go
 
     def do_score(self, arguments):
@@ -1048,12 +1061,9 @@ class TenThousand(game.Game):
         # Check for second chances.
         if self.second_chance and self.retry(player, values):
             return True
-        # Warn the player about the end of their turn.
-        if not self.zen:
-            if self.fast:
-                player.tell('Your turn is over.')
-            else:
-                player.ask('Your turn is over, press Enter to contine: ')
+        elif self.second_chance:
+            # Recalculate value list after rolls in retry.
+            values = [die.value for die in self.dice if not die.held]
         # Score anyway if the no-risk option is in effect..
         if self.no_risk:
             player.tell('{} scored {} points this turn.'.format(player.name, self.turn_score))
@@ -1064,8 +1074,9 @@ class TenThousand(game.Game):
             if self.strikes[player.name] == 3:
                 self.strikes[player.name] = 0
                 if self.three_strikes:
-                    player.tell('Three strikes, you lose {} points.'.format(self.three_strikes))
-                    self.scores[player.name] -= self.three_strikes
+                    message = '{} gets three strikes, and loses {} points.'
+                    player.tell(message.format(player, self.three_strikes))
+                    self.scores[player.name] = max(self.scores[player.name] - self.three_strikes, 0)
                 elif self.super_strikes:
                     player.tell('Three strikes, you lose all of your points.')
                     self.scores[player.name] = 0
@@ -1092,6 +1103,7 @@ class TenThousand(game.Game):
             query = "Would you like to carry on with {}'s points and dice? "
             if next_player.ask(query.format(player.name)) in utility.YES:
                 self.must_roll = "you chose to carry on {}'s roll".format(player.name)
+                self.held_this_turn = True
                 return False
         # Reset for the next turn.
         self.end_turn()
@@ -1173,6 +1185,8 @@ class TenThousand(game.Game):
         # Roll the dice.
         for die in to_roll:
             die.roll()
+        if self.wild and -1 in self.dice:
+            self.wild_roll()
         player.tell('You rolled: {}.'.format(', '.join(map(str, to_roll))))
         # Check for a match.
         if keepers[0] == keepers[1]:
@@ -1197,6 +1211,9 @@ class TenThousand(game.Game):
         wimpout = '5d e=350 5m=1000 wd fc cc f6 w=5000 ms'
         self.option_set.add_group('wimpout', wimpout)
         self.option_set.add_group('wo', wimpout)
+        gonzo = '3p=600 s=1500 fh=250 4m=200 5m=400 6m=800 3s=500 tw co cc fc f6 e=350 mg 2c ex iw wd'
+        self.option_set.add_group('gonzo', gonzo)
+        self.option_set.add_group('gz', gonzo)
         # Set the bot options.
         self.option_set.default_bots = ((ProbabilityBot, ()), (ValueBot, ()), (ModifierBot, ()))
         self.option_set.add_option('base-pace', ['bp'],  action = 'bot', target = 'base-pace', value = (),
@@ -1359,9 +1376,9 @@ class TenThousand(game.Game):
             player.tell('\nYou rolled a wild, which must be used as a {}.'.format(valid[0]))
         # If there are multiple options, have the player select one.
         else:
-            player.tell('\nYou rolled a wild and {}.'.format(', '.join(map(str, set(values)))))
+            player.tell('\nYou rolled a wild and {}.'.format(', '.join(map(str, values))))
             if valid:
-                query = 'Do you want the wild to be a {}? '.format(utility.oxford(values, 'or'))
+                query = 'Do you want the wild to be a {}? '.format(utility.oxford(set(valid), 'or'))
                 choice = player.ask_int(query, valid = valid)
             else:
                 choice = player.ask_int('What do you want the wild to be? ', low = 1, high = 6)
