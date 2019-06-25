@@ -86,14 +86,27 @@ class Slider(game.Game):
 
     def game_over(self):
         """Determine if the puzzle is solved. (None)"""
-        current = ''.join([str(self.board.cells[location]) for location in self.board])
-        return current[:-1] == self.text
+        current = str(self.board).replace('\n', '')
+        if current[:-1] == self.text:
+            self.human.tell('You solved the puzzle!')
+            self.win_loss_draw[0] = 1
+            self.scores[self.human.name] = self.rows * self.columns - 1
+            return True
+        else:
+            return False
 
     def handle_options(self):
         """Game the options for the game. (None)"""
-        self.columns = 4
-        self.rows = 4
-        self.text = self.tiles[:(self.columns * self.rows - 1)]
+        super(Slider, self).handle_options()
+        text_len = self.columns * self.rows - 1
+        if not self.text:
+            self.text = self.tiles[:text_len]
+        elif len(self.text) < text_len:
+            self.human.error('Puzzle text padded because it is too short.')
+            self.text += self.tiles[:(len(self.text) - text_len)]
+        elif len(self.text) > text_len:
+            self.human.error('Puzzle text truncated because it is too long.')
+            self.text = self.text[:text_len]
 
     def player_action(self, player):
         """
@@ -105,6 +118,15 @@ class Slider(game.Game):
         print(self.board)
         move = player.ask('\nWhat is your move? ')
         return self.handle_cmd(move)
+
+    def set_options(self):
+        """Set up the game options. (None)"""
+        self.option_set.add_option('columns', ['c'], int, 4,
+            question = 'How many columns should the board have (return for 4)? ')
+        self.option_set.add_option('rows', ['r'], int, 4,
+            question = 'How many columns should the board have (return for 4)? ')
+        self.option_set.add_option('text', ['t'], default = '',
+            question = 'What text should the solution be (return for numbers + letters)? ')
 
     def set_up(self):
         """Set up the board for the game. (None)"""
