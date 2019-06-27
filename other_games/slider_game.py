@@ -32,9 +32,18 @@ order, with the space at the bottom right.
 
 Note that the correct order for the default game is 123456789ABCDEF.
 
-You may move tiles by the character on them using the move command (m). You may
-move the tile above the blank spot with the north command (n). Similar commands
-exist for east (e), south (s), and west (w).
+You may move tiles by the character on them using the move command (m). You can
+enter multiple tiles with the move command. Additionally, if there are no lower
+case characters in the puzzle, the argument to the move command is
+automatically capitalized. Alternatively, you may move the tile above the blank
+spot with the north command (n). Similar commands exist for east (e), south
+(s), and west (w).
+
+Options:
+columns= (c=): The number of columns in the puzzle.
+rows= (r=): The number of rows in the puzzle.
+size= (s=): The number of columns and rows in the table.
+text= (t=): The text to use in the puzzle.
 """
 
 
@@ -110,7 +119,7 @@ class Slider(game.Game):
             # Skip spaces.
             if char == ' ':
                 continue
-            # Find the cell to move.
+            # Find the cell to move. !! only search the movable tiles.
             for cell in self.board.cells.values():
                 if cell.contents == char:
                     break
@@ -163,6 +172,10 @@ class Slider(game.Game):
         """Game the options for the game. (None)"""
         # Parse the user's option choices.
         super(Slider, self).handle_options()
+        # Make size override rows and columns
+        if self.size:
+            self.rows = self.size
+            self.columns = self.size
         # Set autocapitalize.
         text_len = self.columns * self.rows - 1
         self.auto_cap = not self.text and text_len < 36
@@ -190,6 +203,8 @@ class Slider(game.Game):
             question = 'How many columns should the board have (return for 4)? ')
         self.option_set.add_option('rows', ['r'], int, 4,
             question = 'How many columns should the board have (return for 4)? ')
+        self.option_set.add_option('size', ['s'], int, 4,
+            question = 'How many columns and rows should the board have (return for 4)? ')
         self.option_set.add_option('text', ['t'], default = '',
             question = 'What text should the solution be (return for numbers + letters)? ')
 
