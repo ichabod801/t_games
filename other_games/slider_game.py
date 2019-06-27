@@ -218,16 +218,24 @@ class Slider(game.Game):
 
     def set_up(self):
         """Set up the board for the game. (None)"""
-        tiles = list(self.text)
-        random.shuffle(tiles)
         self.board = TileBoard((self.columns, self.rows))
-        # !! this can create unsolvable puzzles.
-        for location, tile in zip(self.board, tiles):
-            self.board.place(location, tile)
-        for blank_cell in self.board.cells.values():
-            if blank_cell.contents is None:
-                break
-        self.blank_cell = blank_cell
+        # Put the text into the puzzle.
+        for column in range(self.columns):
+            for row in range(self.rows):
+                if column + 1 == self.columns and row + 1 == self.rows:
+                    break
+                self.board.place((column + 1, row + 1), self.text[column * self.rows + row])
+        self.blank_cell = self.board.cells[(self.columns, self.rows)]
+        # Shuffle the puzzle (shuffling the tiles first can lead to unsolvable puzzles)
+        blanks = set([self.blank_cell.location])
+        while len(blanks) < self.columns * self.rows:
+            offset = random.choice(((-1, 0), (0, -1), (0, 1), (1, 0)))
+            target = self.blank_cell.location + offset
+            if target in self.board:
+                target_cell = self.board.cells[target]
+                self.board.move(target, self.blank_cell.location, target_cell.contents)
+                self.blank_cell = target_cell
+                blanks.add(target_cell)
 
 
 class TileBoard(board.DimBoard):
