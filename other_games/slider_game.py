@@ -119,23 +119,29 @@ class Slider(game.Game):
             # Skip spaces.
             if char == ' ':
                 continue
-            # Find the cell to move. !! only search the movable tiles.
-            for cell in self.board.cells.values():
-                if cell.contents == char:
-                    break
-            else:
-                self.human.error('{} is not a tile in the puzzle.'.format(char))
-                break
-            # Confirm the cell is next to the blank cell.
+            # Find the cell to move.
+            movers = []
+            # Only search movable squares.
             for offset in ((-1, 0), (0, -1), (0, 1), (1, 0)):
-                if self.blank_cell.location + offset == cell.location:
-                    break
-            else:
-                self.human.error('The {} tile is not next to the blank space.'.format(char))
+                try:
+                    possible = self.board.offset(self.blank_cell.location, offset)
+                except KeyError:
+                    continue
+                if char in possible:
+                    movers.append(possible)
+            # Check for illegal moves.
+            if len(movers) > 1:
+                self.human.error('The move {} is ambiguous.'.format(char))
+                break
+            elif not movers:
+                if char in self.text:
+                    self.human.error('The {} tile cannot be moved.'.format(char))
+                else:
+                    self.human.error('There is no {} tile in the puzzle.'.format(char))
                 break
             # Move the piece.
-            self.board.move(cell.location, self.blank_cell.location, char)
-            self.blank_cell = cell
+            self.board.move(movers[0].location, self.blank_cell.location, char)
+            self.blank_cell = movers[0]
             self.turns += 1
 
     def do_north(self, argument):
@@ -195,7 +201,8 @@ class Slider(game.Game):
         """
         print(self.board)
         move = player.ask('\nWhat is your move? ')
-        return self.handle_cmd(move)
+        self.handle_cmd(move)
+        return not self.force_end
 
     def set_options(self):
         """Set up the game options. (None)"""
