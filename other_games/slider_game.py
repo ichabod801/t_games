@@ -98,7 +98,7 @@ class Slider(game.Game):
             # Move the valid tile.
             self.board.move(start.location, self.blank_cell.location, start.contents)
             self.blank_cell = start
-            self.turns += 1
+            self.moves += 1
 
     def do_east(self, argument):
         """
@@ -143,7 +143,7 @@ class Slider(game.Game):
             # Move the piece.
             self.board.move(movers[0].location, self.blank_cell.location, char)
             self.blank_cell = movers[0]
-            self.turns += 1
+            self.moves += 1
 
     def do_north(self, argument):
         """
@@ -171,6 +171,7 @@ class Slider(game.Game):
             self.human.tell('You solved the puzzle!')
             self.win_loss_draw[0] = 1
             self.scores[self.human.name] = self.rows * self.columns - 1
+            self.turns = self.moves
             return True
         else:
             return False
@@ -203,7 +204,6 @@ class Slider(game.Game):
         print(self.board)
         move = player.ask('\nWhat is your move? ')
         self.handle_cmd(move)
-        return not self.force_end
 
     def set_options(self):
         """Set up the game options. (None)"""
@@ -218,6 +218,7 @@ class Slider(game.Game):
 
     def set_up(self):
         """Set up the board for the game. (None)"""
+        self.moves = 0
         self.board = TileBoard((self.columns, self.rows))
         # Put the text into the puzzle.
         for column in range(self.columns):
