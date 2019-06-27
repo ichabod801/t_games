@@ -98,6 +98,7 @@ class Slider(game.Game):
             # Move the valid tile.
             self.board.move(start.location, self.blank_cell.location, start.contents)
             self.blank_cell = start
+            self.turns += 1
 
     def do_east(self, argument):
         """
@@ -220,6 +221,7 @@ class Slider(game.Game):
         tiles = list(self.text)
         random.shuffle(tiles)
         self.board = TileBoard((self.columns, self.rows))
+        # !! this can create unsolvable puzzles.
         for location, tile in zip(self.board, tiles):
             self.board.place(location, tile)
         for blank_cell in self.board.cells.values():
