@@ -3,6 +3,10 @@ slider_game.py
 
 A classic puzzle with sliding tiles.
 
+Constants:
+CREDITS: The credits for Slider Puzzle.
+RULES: The rules to Slider Puzzle.
+
 Classes:
 Slider: A classic puzzle with sliding tiles. (game.Game)
 TileBoard: A board of sliding tiles. (board.DimBoard)
@@ -46,8 +50,19 @@ class Slider(game.Game):
     Class Attributes:
     tiles: The potential characters for tiles in the puzzle. (str)
 
+    Methods:
+    direction_move: Move a piece a given offset from the blank spot. (None)
+    do_east: Move the tile to the east of the blank spot. (None)
+    do_move: Move the specified tile. (None)
+    do_north: Move the tile to the north of the blank spot. (None)
+    do_south: Move the tile to the south of the blank spot. (None)
+    do_west: Move the tile to the west of the blank spot. (None)
+
     Overridden Methods:
+    game_over
     handle_options
+    player_action
+    set_options
     set_up
     """
 
@@ -65,11 +80,13 @@ class Slider(game.Game):
         offset: The relative coordinate of the tile to move. (tuple of int)
         direction: The name of the direction of the tile to move. (str)
         """
+        # Check for a valid tile.
         try:
             start = self.board.offset(self.blank_cell.location, offset)
         except KeyError:
             self.human.error('There is no tile {} of the blank spot.'.format(direction))
         else:
+            # Move the valid tile.
             self.board.move(start.location, self.blank_cell.location, start.contents)
             self.blank_cell = start
 
@@ -87,6 +104,8 @@ class Slider(game.Game):
         blank space. Spaces are ignored in the argument, but any invalid move stops the
         movement.
         """
+        if self.auto_cap:
+            argument = argument.upper()
         for char in argument:
             # Skip spaces.
             if char == ' ':
@@ -130,6 +149,7 @@ class Slider(game.Game):
 
     def game_over(self):
         """Determine if the puzzle is solved. (None)"""
+        # Compare the current board to the winning text.
         current = str(self.board).replace('\n', '')
         if current[:-1] == self.text:
             self.human.tell('You solved the puzzle!')
@@ -141,16 +161,17 @@ class Slider(game.Game):
 
     def handle_options(self):
         """Game the options for the game. (None)"""
+        # Parse the user's option choices.
         super(Slider, self).handle_options()
+        # Set autocapitalize.
         text_len = self.columns * self.rows - 1
-        if not self.text:
-            self.text = self.tiles[:text_len]
-        elif len(self.text) < text_len:
+        self.auto_cap = not self.text and text_len < 36
+        # Make sure the text is the right size.
+        if self.text and len(self.text) < text_len:
             self.human.error('Puzzle text padded because it is too short.')
-            self.text += self.tiles[:(len(self.text) - text_len)]
         elif len(self.text) > text_len:
             self.human.error('Puzzle text truncated because it is too long.')
-            self.text = self.text[:text_len]
+        self.text = (self.text + self.tiles)[:text_len]
 
     def player_action(self, player):
         """
