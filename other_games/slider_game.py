@@ -43,6 +43,7 @@ Options:
 columns= (c=): The number of columns in the puzzle.
 rows= (r=): The number of rows in the puzzle.
 size= (s=): The number of columns and rows in the table.
+shuffle= (sh=): The number of times to shuffle the solved puzzle before play.
 text= (t=): The text to use in the puzzle.
 """
 
@@ -207,14 +208,16 @@ class Slider(game.Game):
 
     def set_options(self):
         """Set up the game options. (None)"""
-        self.option_set.add_option('columns', ['c'], int, 4,
+        self.option_set.add_option('columns', ['c'], int, 4, check = lambda x: x > 0,
             question = 'How many columns should the board have (return for 4)? ')
-        self.option_set.add_option('rows', ['r'], int, 4,
+        self.option_set.add_option('rows', ['r'], int, 4, check = lambda x: x > 0,
             question = 'How many columns should the board have (return for 4)? ')
-        self.option_set.add_option('size', ['s'], int, 4,
+        self.option_set.add_option('size', ['s'], int, 4, check = lambda x: x > 0,
             question = 'How many columns and rows should the board have (return for 4)? ')
         self.option_set.add_option('text', ['t'], default = '',
             question = 'What text should the solution be (return for numbers + letters)? ')
+        self.option_set.add_option('shuffles', ['sh'], default = 3, check = lambda x: x > 0,
+            question = 'How many times should the puzzle be shuffled (return for 3)? ')
 
     def set_up(self):
         """Set up the board for the game. (None)"""
@@ -229,14 +232,16 @@ class Slider(game.Game):
         self.blank_cell = self.board.cells[(self.columns, self.rows)]
         # Shuffle the puzzle (shuffling the tiles first can lead to unsolvable puzzles)
         blanks = set([self.blank_cell.location])
-        while len(blanks) < self.columns * self.rows:
-            offset = random.choice(((-1, 0), (0, -1), (0, 1), (1, 0)))
-            target = self.blank_cell.location + offset
-            if target in self.board:
-                target_cell = self.board.cells[target]
-                self.board.move(target, self.blank_cell.location, target_cell.contents)
-                self.blank_cell = target_cell
-                blanks.add(target_cell)
+        for mix in range(self.shuffles):
+            while len(blanks) < self.columns * self.rows:
+                offset = random.choice(((-1, 0), (0, -1), (0, 1), (1, 0)))
+                target = self.blank_cell.location + offset
+                if target in self.board:
+                    target_cell = self.board.cells[target]
+                    self.board.move(target, self.blank_cell.location, target_cell.contents)
+                    self.blank_cell = target_cell
+                    blanks.add(target_cell)
+            blanks = set()
 
 
 class TileBoard(board.DimBoard):
