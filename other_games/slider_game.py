@@ -37,7 +37,9 @@ enter multiple tiles with the move command. Additionally, if there are no lower
 case characters in the puzzle, the argument to the move command is
 automatically capitalized. Alternatively, you may move the tile above the blank
 spot with the north command (n). Similar commands exist for east (e), south
-(s), and west (w).
+(s), and west (w). You can give a string of directional commands as an argument
+to another directional command. For example 'e nsw' would move the eastern
+tile, then the northern, southern, and western tiles.
 
 Options:
 columns= (c=): The number of columns in the puzzle.
@@ -88,13 +90,14 @@ class Slider(game.Game):
     name = 'Slider Puzzle'
     tiles = '123456789' + string.ascii_uppercase + string.ascii_lowercase
 
-    def direction_move(self, offset, direction):
+    def direction_move(self, offset, direction, argument):
         """
         Move a piece a given offset from the blank spot. (None)
 
         Parameters:
         offset: The relative coordinate of the tile to move. (tuple of int)
         direction: The name of the direction of the tile to move. (str)
+        argument: The argument to the original directional command. (str)
         """
         # Check for a valid tile.
         try:
@@ -106,12 +109,18 @@ class Slider(game.Game):
             self.board.move(start.location, self.blank_cell.location, start.contents)
             self.blank_cell = start
             self.moves += 1
+            # Do any further directional moves.
+            for char in argument.lower():
+                if char in 'ensw':
+                    self.handle_cmd(char)
+                else:
+                    break
 
     def do_east(self, argument):
         """
         Move the tile to the east of the blank spot. (e)
         """
-        self.direction_move((0, 1), 'east')
+        self.direction_move((0, 1), 'east', argument)
 
     def do_move(self, argument):
         """
@@ -156,19 +165,19 @@ class Slider(game.Game):
         """
         Move the tile to the north of the blank spot. (n)
         """
-        self.direction_move((-1, 0), 'north')
+        self.direction_move((-1, 0), 'north', argument)
 
     def do_south(self, argument):
         """
         Move the tile to the south of the blank spot. (s)
         """
-        self.direction_move((1, 0), 'south')
+        self.direction_move((1, 0), 'south', argument)
 
     def do_west(self, argument):
         """
         Move the tile to the west of the blank spot. (w)
         """
-        self.direction_move((0, -1), 'west')
+        self.direction_move((0, -1), 'west', argument)
 
     def game_over(self):
         """Determine if the puzzle is solved. (None)"""
