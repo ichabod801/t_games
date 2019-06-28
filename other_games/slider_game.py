@@ -176,6 +176,7 @@ class Slider(game.Game):
         current = str(self.board).replace('\n', '')
         if current[:-1] == self.text:
             self.human.tell('You solved the puzzle!')
+            self.human.tell('It took you {} moves to solve the puzzle.'.format(self.moves))
             self.win_loss_draw[0] = 1
             self.scores[self.human.name] = self.rows * self.columns - 1
             self.turns = self.moves
