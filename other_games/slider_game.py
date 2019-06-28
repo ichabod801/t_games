@@ -53,9 +53,15 @@ class Slider(game.Game):
     A classic puzzle with sliding tiles. (game.Game)
 
     Attributes:
+    auto_cap: A flag for capitalizing user input. (bool)
+    blank_cell: The current space that tiles can slide into. (board.BoardCell)
+    board: The "board" the puzzle is played on. (TileBoard)
     columns: The number of tiles across the puzzle. (int)
+    moves: How many moves the player has made. (int)
     rows: The number of tiles up and down the puzzle. (int)
-    text: The characters to arrange the tiles into. (str)
+    shuffles: How many times to shuffle the tiles. (int)
+    size: The number of rows and columns, if they match. (int)
+    text: The characters representing the default tiles. (str)
 
     Class Attributes:
     tiles: The potential characters for tiles in the puzzle. (str)
@@ -185,6 +191,8 @@ class Slider(game.Game):
         if self.size:
             self.rows = self.size
             self.columns = self.size
+        elif self.rows == self.columns:
+            self.size = self.rows
         # Set autocapitalize.
         text_len = self.columns * self.rows - 1
         self.auto_cap = not self.text and text_len < 36
