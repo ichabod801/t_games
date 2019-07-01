@@ -166,8 +166,8 @@ class DollarGraph(object):
         for node in self.nodes:
             neighbors = []
             for neighbor in self.edges[node]:
-                neighbors.append('{}: ({})'.format(neighbor, self.values[neighbor]))
-            text = '{}\n{}: {} {}'.format(text, node, self.values[node], ', '.join(neighbors))
+                neighbors.append('{}: {}'.format(neighbor, self.values[neighbor]))
+            text = '{}\n{}: {} ({})'.format(text, node, self.values[node], ', '.join(neighbors))
         return text
 
     def donate(self, node):
