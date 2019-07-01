@@ -30,10 +30,17 @@ take move are t and +.
 The game is won when all nodes are out of debt (that is, all nodes have a
 value of zero or more).
 
+The initial values of the graph are normally calculated by assigned random
+values from -n to n (where n is the number of nodes) to each node, and then
+randomly normalizing the values based on the genus and the ease options. The
+from-zero option starts all the values at 0, and adds or subtracts from node
+values randomly until the total based on the genus and the ease is reached.
+
 Options:
+ease= (e=): How easy the graph is to solve (1-5, defaults to 2).
+from-zero (fz, f0): Calculates the inital values from 0 (see above).
 genus= (g=): The genus of the graph (#edges - #nodes + 1).
 nodes= (n=): The number of nodes in the graph. Defaults to 5-10 at random.
-ease= (e=): How easy the graph is to solve. (1-5, defaults to 2)
 """
 
 
@@ -125,10 +132,12 @@ class DollarGame(game.Game):
             question = 'What should the genus of the graph be (return for 3)? ')
         self.option_set.add_option('ease', ['e'], int, 2, valid = (1, 2, 3, 4, 5),
             question = 'How easy should the graph be (return for 3)? ')
+        self.option_set.add_option('from-zero', ['fz', 'f0'])
 
     def set_up(self):
         """Set up the game. (None)"""
-        self.graph = DollarGraph(self.nodes, self.edges, self.total_value)
+        method = 'from-zero' if self.from_zero else 'normalize'
+        self.graph = DollarGraph(self.nodes, self.edges, self.total_value, method)
 
 class DollarGraph(object):
     """
@@ -148,7 +157,7 @@ class DollarGraph(object):
     __str__
     """
 
-    def __init__(self, nodes, edges, total_value):
+    def __init__(self, nodes, edges, total_value, value_method = 'normalize'):
         """
         Set up the graph. (None)
 
@@ -156,6 +165,7 @@ class DollarGraph(object):
         nodes: The number of nodes in the graph. (int)
         edges: The number of edges in the graph. (int)
         total_value: The total of the values in the graph. (int)
+        value_method: The method for calculating the random initial values. (str)
         """
         # Set the base attributes.
         self.nodes = (string.ascii_uppercase + string.ascii_lowercase)[:nodes]
@@ -163,7 +173,7 @@ class DollarGraph(object):
         self.edges = {char: [] for char in self.nodes}
         # Fill in the attributes.
         self.random_graph(nodes, edges)
-        self.random_values(total_value)
+        self.random_values(total_value, value_method)
 
     def __str__(self):
         """Human readable text representation. (str)"""
@@ -223,7 +233,7 @@ class DollarGraph(object):
         for node in self.nodes:
             self.edges[node].sort()
 
-    def random_values(self, total_value):
+    def random_values(self, total_value, value_method):
         """
         Populate the values of the graph. (None)
 
@@ -233,19 +243,35 @@ class DollarGraph(object):
 
         Parameters:
         total_value: The defined total of the values in the graph. (int)
+        value_method: The method for calculating the random initial values. (str)
         """
-        while True:
-            # Generate random values in the range.
-            values = [random.randint(-total_value, total_value) for value in range(len(self.nodes))]
-            # Adjust random values until the correct total value is reached.
-            mod = 1 if sum(values) < total_value else -1
-            while sum(values) != total_value:
-                value_index = random.randrange(len(self.nodes))
-                if abs(values[value_index]) < total_value:
+        if value_method == 'normalize':
+            while True:
+                # Generate random values in the range.
+                values = [random.randint(-total_value, total_value) for node in self.nodes]
+                # Adjust random values until the correct total value is reached.
+                mod = 1 if sum(values) < total_value else -1
+                while sum(values) != total_value:
+                    value_index = random.randrange(len(self.nodes))
+                    if abs(values[value_index]) < total_value:
+                        values[value_index] += mod
+                # Exit if you have an unsolved position.
+                if min(values) < 0:
+                    break
+        elif value_method == 'from-zero':
+            while True:
+                # Start with all zeros.
+                values = [0] * len(self.nodes)
+                total = 0
+                # Randomly add or subtract from a random node.
+                while total != total_value:
+                    value_index = random.randrange(len(self.nodes))
+                    mod = random.choice((-1, 1, 1))
                     values[value_index] += mod
-            # Exit if you have an unsolved position.
-            if min(values) < 0:
-                break
+                    total += mod
+                # Exit if you have an unsolved position.
+                if min(values) < 0:
+                    break
         # Set the values.
         self.values = {char: value for char, value in zip(self.nodes, values)}
 
