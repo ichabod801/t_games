@@ -65,6 +65,8 @@ class DollarGame(game.Game):
 
         Aliases: d, -
         """
+        if self.auot_cap:
+            arguments = arguments.upper()
         try:
             self.graph.donate(arguments)
             return True
@@ -77,6 +79,8 @@ class DollarGame(game.Game):
 
         Aliases: t, +
         """
+        if self.auot_cap:
+            arguments = arguments.upper()
         try:
             self.graph.take(arguments)
             return True
@@ -100,6 +104,7 @@ class DollarGame(game.Game):
             self.nodes = random.randint(5, 10)
         self.edges = self.genus + self.nodes - 1
         self.total_value = self.genus + self.ease
+        self.auto_cap = (self.nodes < 27)
 
     def player_action(self, player):
         """
@@ -114,7 +119,7 @@ class DollarGame(game.Game):
 
     def set_options(self):
         """Set up the game options. (None)"""
-        self.option_set.add_option('nodes', ['n'], int, 0, valid = range(2, 27),
+        self.option_set.add_option('nodes', ['n'], int, 0, valid = range(2, 53),
             question = 'How many nodes should be in the graph (return for 5-10 at random)? ')
         self.option_set.add_option('genus', ['g'], int, 3, check = lambda x: x > 0,
             question = 'What should the genus of the graph be (return for 3)? ')
@@ -153,7 +158,7 @@ class DollarGraph(object):
         total_value: The total of the values in the graph. (int)
         """
         # Set the base attributes.
-        self.nodes = string.ascii_uppercase[:nodes]
+        self.nodes = (string.ascii_uppercase + string.ascii_lowercase)[:nodes]
         self.values = {char: 0 for char in self.nodes}
         self.edges = {char: [] for char in self.nodes}
         # Fill in the attributes.
