@@ -3,6 +3,14 @@ dollar_game.py
 
 The Dollar Game, as specified in this Numberphile video:
 https://www.youtube.com/watch?v=U33dsEcKgeQ&t=3s
+
+Constants:
+CREDITS: The credits for the Dollar Game. (str)
+RULES: The rules of the Dollar Game. (str)
+
+Classes:
+DollarGame: A game of the Dollar Game. (game.Game)
+DollarGraph: A graph with a dollar value for each node. (object)
 """
 
 
@@ -30,6 +38,9 @@ take move are t and +.
 The game is won when all nodes are out of debt (that is, all nodes have a
 value of zero or more).
 
+See the Numberphile video (https://www.youtube.com/watch?v=U33dsEcKgeQ&t=3s)
+for more details.
+
 The initial values of the graph are normally calculated by assigned random
 values from -n to n (where n is the number of nodes) to each node, and then
 randomly normalizing the values based on the genus and the ease options. The
@@ -47,6 +58,19 @@ nodes= (n=): The number of nodes in the graph. Defaults to 5-10 at random.
 class DollarGame(game.Game):
     """
     A game of the Dollar Game. (game.Game)
+
+    The ease option minus one is added to the genus of the graph to determine
+    the total value of the graph.
+
+    Attributes:
+    auto_cap: A flag for automatically capitalizing user input. (bool)
+    ease: The ease of solving the graph. (int)
+    edges: The number of edges in the graph. (int)
+    from_zero: A flag for seeding node values starting at 0. (bool)
+    genus: The genus of the graph. (int)
+    graph: The graph the game is played on. (DollarGraph)
+    nodes: The number of nodes in the graph. (int)
+    total_value: The total of the values of the nodes in the graph. (int)
 
     Methods:
     do_donate: Donate one dollar from a node to each of it's neighbors. (bool)
@@ -110,7 +134,7 @@ class DollarGame(game.Game):
         if not self.nodes:
             self.nodes = random.randint(5, 10)
         self.edges = self.genus + self.nodes - 1
-        self.total_value = self.genus + self.ease
+        self.total_value = self.genus + self.ease - 1
         self.auto_cap = (self.nodes < 27)
 
     def player_action(self, player):
@@ -141,7 +165,7 @@ class DollarGame(game.Game):
 
 class DollarGraph(object):
     """
-    A graph with a dollar value for each node.
+    A graph with a dollar value for each node. (object)
 
     Attributes:
     edges: The neighbors of the nodes. (dict of str: list of str)
