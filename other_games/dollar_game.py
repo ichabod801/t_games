@@ -65,7 +65,7 @@ class DollarGame(game.Game):
 
         Aliases: d, -
         """
-        if self.auot_cap:
+        if self.auto_cap:
             arguments = arguments.upper()
         try:
             self.graph.donate(arguments)
@@ -79,7 +79,7 @@ class DollarGame(game.Game):
 
         Aliases: t, +
         """
-        if self.auot_cap:
+        if self.auto_cap:
             arguments = arguments.upper()
         try:
             self.graph.take(arguments)
