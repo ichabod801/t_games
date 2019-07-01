@@ -12,6 +12,31 @@ import string
 from .. import game
 
 
+CREDITS = """
+Game Design: Matt Baker
+Game Programming: Craig O'Brien, David B. Wilson
+"""
+
+RULES = """
+The game is made up of a bunch of nodes, each of which is a neighbor to one or
+more of the other nodes. Each node has a dollar value to it, which may be
+negative. Nodes with a negative dollar value are considered to be in debt.
+
+Two moves are available in the game. You can have a node donate one dollar to
+each of it's neighbors, or you can have a node take a dollar from each of its
+neighbors. The aliases for the donate move are d and -, the aliases for the
+take move are t and +.
+
+The game is won when all nodes are out of debt (that is, all nodes have a
+value of zero or more).
+
+Options:
+genus= (g=): The genus of the graph (#edges - #nodes + 1).
+nodes= (n=): The number of nodes in the graph. Defaults to 5-10 at random.
+ease= (e=): How easy the graph is to solve. (1-5, defaults to 2)
+"""
+
+
 class DollarGame(game.Game):
     """
     A game of the Dollar Game. (game.Game)
@@ -87,11 +112,11 @@ class DollarGame(game.Game):
 
     def set_options(self):
         """Set up the game options. (None)"""
-        self.option_set.add_option('nodes', ['n'], int, 0,
+        self.option_set.add_option('nodes', ['n'], int, 0, valid = range(2, 27),
             question = 'How many nodes should be in the graph (return for 5-10 at random)? ')
         self.option_set.add_option('genus', ['g'], int, 3, check = lambda x: x > 0,
             question = 'What should the genus of the graph be (return for 3)? ')
-        self.option_set.add_option('ease', ['e'], int, 3, valid = (1, 2, 3, 4, 5),
+        self.option_set.add_option('ease', ['e'], int, 2, valid = (1, 2, 3, 4, 5),
             question = 'How easy should the graph be (return for 3)? ')
 
     def set_up(self):
@@ -139,7 +164,7 @@ class DollarGraph(object):
         for node in self.nodes:
             neighbors = []
             for neighbor in self.edges[node]:
-                neighbors.append('{}: {}'.format(neighbor, self.values[neighbor]))
+                neighbors.append('{}: ({})'.format(neighbor, self.values[neighbor]))
             text = '{}\n{}: {} {}'.format(text, node, self.values[node], ', '.join(neighbors))
         return text
 
