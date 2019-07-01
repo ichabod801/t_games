@@ -13,8 +13,89 @@ from .. import game
 
 
 class DollarGame(game.Game):
-    pass
+    """
+    A game of the Dollar Game. (game.Game)
 
+    Methods:
+    do_donate: Donate one dollar from a node to each of it's neighbors. (bool)
+    do_take: Take one dollar from each of a node's neighbors. (bool)
+
+    Overridden Methods:
+    handle_options
+    player_action
+    set_options
+    set_up
+    """
+
+    aka = ['Dollar Game', 'Dollar', 'DoGa']
+    aliases = {'-': 'donate', '+': 'take', 'd': 'donate', 't': 'take'}
+    categories = ['Other Games', 'Theoretical Games']
+    name = 'The Dollar Game'
+
+    def do_donate(self, arguments):
+        """
+        Donate one dollar from a node to each of it's neighbors.
+
+        Aliases: d, -
+        """
+        try:
+            self.graph.donate(arguments)
+            return True
+        except KeyError:
+            self.human.error('{} is not a node in the graph.'.format(arguments))
+
+    def do_take(self, arguments):
+        """
+        Take one dollar from each of a node's neighbors.
+
+        Aliases: t, +
+        """
+        try:
+            self.graph.take(arguments)
+            return True
+        except KeyError:
+            self.human.error('{} is not a node in the graph.'.format(arguments))
+
+    def game_over(self):
+        """Determine if the game has been won. (bool)"""
+        if min(self.graph.values.values()) >= 0:
+            self.human.tell('You won in {} turns!'.format(self.turns))
+            self.win_loss_draw = [1, 0, 0]
+            self.scores[human.name] = self.genus - self.ease
+            return True
+        else:
+            return False
+
+    def handle_options(self):
+        """Handle the option settings for this game. (None)"""
+        if not self.nodes:
+            self.nodes = random.randint(5, 10)
+        self.edges = self.genus + self.nodes - 1
+        self.total_value = self.genus + self.ease
+
+    def player_action(self, player):
+        """
+        Handle a player's turn or other player actions. (bool)
+
+        Parameters:
+        player: The player whose turn it is. (Player)
+        """
+        print(self.graph)
+        move = self.player.ask('\nWhat is your move? ')
+        self.handle_cmd('move')
+
+    def set_options(self):
+        """Set up the game options. (None)"""
+        self.option_set.add_option('nodes', ['n'], int, 0,
+            question = 'How many nodes should be in the graph (return for 5-10 at random)? ')
+        self.option_set.add_option('genus', ['g'], int, 3, check = lambda x: x > 0,
+            question = 'What should the genus of the graph be (return for 3)? ')
+        self.option_set.add_option('ease', ['e'], int, 3, valid = (1, 2, 3, 4, 5),
+            question = 'How easy should the graph be (return for 3)? ')
+
+    def set_up(self):
+        """Set up the game. (None)"""
+        self.graph = DollarGraph(self.nodes, self.edges, self.total_value)
 
 class DollarGraph(object):
     """

@@ -428,7 +428,7 @@ class PrisonersDilemma(game.Game):
     aka = ['prdi']
     bot_classes = {'num-bot': PrisonerNumBot, 'meth-bot': PrisonerMethodBot, 'firm': FirmButFairBot,
         'gradual': GradualBot, 'majority': MajorityBot, 'pavlov': PavlovBot, 'probe': ProbeBot}
-    categories = ['Other Games']
+    categories = ['Other Games', 'Theoretical Games']
     credits = CREDITS
     move_aliases = {'c': 'cooperate', 'd': 'defect'}
     name = "Prisoner's Dilemma"
