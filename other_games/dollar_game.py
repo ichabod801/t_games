@@ -61,13 +61,14 @@ class DollarGame(game.Game):
         if min(self.graph.values.values()) >= 0:
             self.human.tell('You won in {} turns!'.format(self.turns))
             self.win_loss_draw = [1, 0, 0]
-            self.scores[human.name] = self.genus - self.ease
+            self.scores[self.human.name] = self.genus - self.ease
             return True
         else:
             return False
 
     def handle_options(self):
         """Handle the option settings for this game. (None)"""
+        super(DollarGame, self).handle_options()
         if not self.nodes:
             self.nodes = random.randint(5, 10)
         self.edges = self.genus + self.nodes - 1
@@ -81,8 +82,8 @@ class DollarGame(game.Game):
         player: The player whose turn it is. (Player)
         """
         print(self.graph)
-        move = self.player.ask('\nWhat is your move? ')
-        self.handle_cmd('move')
+        move = player.ask('\nWhat is your move? ')
+        self.handle_cmd(move)
 
     def set_options(self):
         """Set up the game options. (None)"""
