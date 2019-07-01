@@ -55,7 +55,9 @@ class DollarGame(game.Game):
     aka = ['Dollar Game', 'Dollar', 'DoGa']
     aliases = {'-': 'donate', '+': 'take', 'd': 'donate', 't': 'take'}
     categories = ['Other Games', 'Theoretical Games']
+    credits = CREDITS
     name = 'The Dollar Game'
+    rules = RULES
 
     def do_donate(self, arguments):
         """
