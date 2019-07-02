@@ -173,8 +173,10 @@ class DollarGraph(object):
     values: The dollar values of the nodes. (dict of str: int)
 
     Methods:
+    donate: Donate money from a node to its neighbors. (None)
     random_graph: Generate a random set of edges. (None)
     random_values: Populate the values of the graph. (None)
+    take: Take money from a node's neighbors. (None)
 
     Overridden Methods:
     __init__
