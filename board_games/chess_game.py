@@ -36,12 +36,10 @@ class Chess(game.Game):
     I get the basics done. Also allow for positions to be entered in FEN if I have
     time.
 
-    Note that the Sunfish board is always from the perspective of the next player,
-    with that player's pieces capitalized. So to show the board correctly to the
-    black player is standard notation, you have to swapcase it. To show it to the
-    player who is not moving, you need to reverse it.
-
-    !! I need parse and render
+    Note that the Sunfish board is always from the perspective of white. So there
+    are a lot of reversals and cases changes of the board and the moves in the code
+    for the wrapper. Also, 'if self.player_index' is frequently used as a proxy for
+    'if the current player is playing black' in those sections of the code.
 
     Class Attributes:
     castle_re: A regular expression for castling moves. (re.SRE_Pattern)
@@ -71,19 +69,29 @@ class Chess(game.Game):
 
     def __str__(self):
         """Human readable text representation. (str)"""
+        return self.board_text(self.position, self.player_index)
+
+    def board_text(self, position, black):
+        """
+        Get the text for a given position. (str)
+
+        Parameters:
+        position: The position to get the text for. (sunfish.Position)
+        black: A flag indicating the position is for the black player. (bool)
+        """
         lines = ['']
-        for row_index, row in enumerate(self.position.board.split()):
+        for row_index, row in enumerate(position.board.split()):
             if self.unicode:
                 row = [self.unicode_pieces.get(piece, piece) for piece in row]
-            if not self.player_index:
+            if not black:
                 row_index = 7 - row_index
             lines.append(' {} {}'.format(row_index + 1, ' '.join(row)))
-        if self.player_index:
+        if black:
             lines.append('   h g f e d c b a')
         else:
             lines.append('   A B C D E F G H')
         text = '\n'.join(lines)
-        if self.player_index:
+        if black:
             text = text.swapcase()
         return text
 
@@ -116,6 +124,7 @@ class Chess(game.Game):
             if self.player_index:
                 sun_move = (119 - sun_move[0], 119 - sun_move[1])
             self.position = self.position.move(sun_move)
+            player.tell(self.board_text(self.position.rotate(), self.player_index))
             return False
 
     def game_over(self):
@@ -196,7 +205,7 @@ class SunfishBot(player.Bot):
                 move_text = '{}{}'.format(sunfish.render(119 - move[0]), sunfish.render(119 - move[1]))
             else:
                 move_text = '{}{}'.format(sunfish.render(move[0]), sunfish.render(move[1]))
-            self.game.human.tell("{}'s move is {}.".format(self.name, move_text))
+            self.game.human.tell("\n{}'s move is {}.".format(self.name, move_text))
             return move_text
         else:
             return super(SunfishBot, self).ask(prompt)
@@ -204,3 +213,12 @@ class SunfishBot(player.Bot):
     def set_up(self):
         """Set up the bot for play. (str)"""
         self.searcher = sunfish.Searcher()
+
+    def tell(self, *args, **kwargs):
+        """
+        Give information to the player. (None)
+
+        Parameters:
+        The parameters are as per the built-in print function.
+        """
+        pass
