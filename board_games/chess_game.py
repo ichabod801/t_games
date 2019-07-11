@@ -13,6 +13,7 @@ Chess: A t_games wrapper for Sunfish. (game.Game)
 """
 
 
+import random
 import re
 
 from .. import game
@@ -24,6 +25,58 @@ CREDITS = """
 Game Design: Traditional
 Game Programmming: Thomas Ahle (Sunfish chess engine)
     Craig O'Brien (t_games wrapper for Sunfish)
+"""
+
+RULES = """
+Each player takes turns moving a piece, starting with the white (capitalized)
+pieces. If one piece ends in the same square as an opposing piece, the opposing
+piece is captured and removed from the board. Your king may not be moved to a
+square where it could be captured. If you have no legal moves left, you are
+checkmated, and you lose the game.
+
+Each piece moves differently:
+
+    * Pawns: Pawns can move one space straight forward without capturing, or
+      one space diagonally forward while capturing. On their first move, pawns
+      may move two space straight forward.
+    * Knights: Knights move twos square vertically and then one horizontally,
+      or two squares horizontally and then one square vertically. Knights may
+      move through other pieces, but must end on an empty or capturing square.
+    * Bishops: Bishops move any number of squares diagonally.
+    * Rooks: Rooks move any number of squares horizontally or vertically.
+    * Queens: Queens move any number of sqaures diagonally, horizontally, or
+      vertically.
+    * Kings: Kings move one square in any direction.
+
+Special moves:
+
+    * En Passant: If a pawn moves two squares on its first move and ends up
+      next to (horizontally) an opposing pawn, the opposing pawn may capture
+      it as if it had only move one space, but only if this is done
+      immediately.
+    * Promotion: If a pawn makes it all the way across the board, it becomes
+      a queen (technically it can become any piece, but this version does not
+      support that).
+    * Castling: If a king and a rook have not moved, and there are no pieces
+      between them, and none of the intervening squares are attacked, they may
+      castle. The rook moves next to the king, and the king hops over the rook
+      to the other side. This is done in the interface by moving the king two
+      squares toward the rook.
+
+Entering Moves:
+
+Each square on the board is identified by coordinates as indicated by the
+letters along the bottom and the numbers along the side. So the white king
+starts on e1. To move a piece, simply enter the square it is on and the
+square you want to move it to.
+
+Options:
+black (b): Play as black. If neither black are or white options are used, the
+    color of your pieces is determined randomly.
+unicode (uni, u): Show the unicode chess piece characters, if your terminal
+    supports them.
+white (w): Play as white. If neither black are or white options are used, the
+    color of your pieces is determined randomly.
 """
 
 
@@ -80,12 +133,12 @@ class Chess(game.Game):
         black: A flag indicating the position is for the black player. (bool)
         """
         lines = ['']
-        for row_index, row in enumerate(position.board.split()):
+        for row_index, row in enumerate(position.board.split(), start = 1):
             if self.unicode:
                 row = [self.unicode_pieces.get(piece, piece) for piece in row]
             if not black:
-                row_index = 7 - row_index
-            lines.append(' {} {}'.format(row_index + 1, ' '.join(row)))
+                row_index = 8 - row_index
+            lines.append(' {} {}'.format(row_index, ' '.join(row)))
         if black:
             lines.append('   h g f e d c b a')
         else:
@@ -143,7 +196,12 @@ class Chess(game.Game):
     def handle_options(self):
         """Handle the option settings for the game. (None)"""
         super(Chess, self).handle_options()
-        self.players = [SunfishBot(), self.human]
+        # Set up players, assuming set_up will reverse them.
+        self.players = [SunfishBot(), self.human]  # white
+        if self.black:
+            self.players.reverse()                 # black
+        elif not self.white:
+            random.shuffle(self.players)           # random
 
     def parse_move(self, text):
         """
@@ -175,7 +233,11 @@ class Chess(game.Game):
 
     def set_options(self):
         """Set the options for the game. (None)"""
+        # Set display options.
         self.option_set.add_option('unicode', ['uni', 'u'])
+        # Set piece color options.
+        self.option_set.add_option('black', ['b'])
+        self.option_set.add_option('white', ['w'])
 
     def set_up(self):
         """Set up the game. (None)"""
