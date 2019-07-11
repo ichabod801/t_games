@@ -73,6 +73,8 @@ square you want to move it to.
 Options:
 black (b): Play as black. If neither black are or white options are used, the
     color of your pieces is determined randomly.
+difficulty (d): How many tenths of a second the computer player gets to choose
+    their move (defaults to 20).
 unicode (uni, u): Show the unicode chess piece characters, if your terminal
     supports them.
 white (w): Play as white. If neither black are or white options are used, the
@@ -87,7 +89,10 @@ class Chess(game.Game):
     I want to be able to accept algebraic notation and ICCF numeric notation, in
     addition to Sunfish's use of coordinate notation. But worry about that after
     I get the basics done. Also allow for positions to be entered in FEN if I have
-    time.
+    time, and Chess960 if I can figure it out. Note that changing A1/H1 will not be
+    sufficient for Shuffle Chess. A1 especially is used for other things, like
+    parsing moves. I would need to come up with other variables just for castling.
+    I think that would go in Position, maybe with a set_shuffle method.
 
     Note that the Sunfish board is always from the perspective of white. So there
     are a lot of reversals and cases changes of the board and the moves in the code
@@ -117,6 +122,8 @@ class Chess(game.Game):
     categories = ['Board Games']
     move_re = re.compile('([a-h])?([1-8])?([bnrqk])?[ -x/]?([a-h][1-8])')
     name = 'Chess'
+    openings = {'': '',
+        'castle-test': 'r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R|w|KQkq|-|0|1'}
     unicode_pieces = {'R':'♜', 'N':'♞', 'B':'♝', 'Q':'♛', 'K':'♚', 'P':'♟',
         'r':'♖', 'n':'♘', 'b':'♗', 'q':'♕', 'k':'♔', 'p':'♙', '.':'·'}
 
@@ -176,9 +183,13 @@ class Chess(game.Game):
         else:
             if self.player_index:
                 sun_move = (119 - sun_move[0], 119 - sun_move[1])
-            self.position = self.position.move(sun_move)
-            player.tell(self.board_text(self.position.rotate(), self.player_index))
-            return False
+            if sun_move in self.position.gen_moves():
+                self.position = self.position.move(sun_move)
+                player.tell(self.board_text(self.position.rotate(), self.player_index))
+                return False
+            else:
+                player.error('{} is not a legal move.'.format(arguments))
+                return True
 
     def game_over(self):
         """Determine if the game is over or not. (bool)"""
@@ -203,6 +214,37 @@ class Chess(game.Game):
         elif not self.white:
             random.shuffle(self.players)           # random
 
+    def parse_fen(self, fen):
+        """
+        Parse a position from Forsyth-Edwards Notation to Sunfish. (sunfish.Position)
+
+        Note that since parameters in t_games can't contain spaces, this method
+        assumes the notation has pipes (|) where normal FEN would have spaces.
+
+        Parameters:
+        fen: A position in Forsyth-Edwards Notation. (str)
+        """
+        pieces, player, castling, en_passant, half_moves, moves = fen.split('|')
+        lines = ['          ', '          ']
+        for row in pieces.split('/'):
+            line = ' '
+            for square in row:
+                if square.isdigit():
+                    line = '{}{}'.format(line, '.' * int(square))
+                else:
+                    line = '{}{}'.format(line, square)
+            lines.append('{} '.format(line))
+        lines.extend(['          ', '          '])
+        board = ''.join(lines)
+        if player == 'b':
+            board = board[::-1].swapcase()
+            self.skip_white = True
+        white_castle = ('Q' in castling, 'K' in castling)
+        black_castle = ('q' in castling, 'k' in castling)
+        sun_passant = sunfish.parse(en_passant) if en_passant != '-' else 0
+        position = sunfish.Position(board, 0, white_castle, black_castle, sun_passant, 0)
+        return position
+
     def parse_move(self, text):
         """
         Parse a move into one Sunfish recognizes. (str)
@@ -210,12 +252,27 @@ class Chess(game.Game):
         Parameters:
         text: The text version of the move provided by the user. (str)
         """
-        match = self.move_re.match(text.lower())
-        groups = match.groups()
-        match_type = sum(2 ** index for index, group in enumerate(groups) if group is not None)
-        if match_type == 11:
-            start = sunfish.parse('{}{}'.format(*groups[:2]))
-            end = sunfish.parse(groups[3])
+        text = text.strip().lower()
+        match = self.move_re.match(text)
+        castle = self.castle_re.match(text)
+        if match:
+            groups = match.groups()
+            match_type = sum(2 ** index for index, group in enumerate(groups) if group is not None)
+            if match_type == 11:
+                start = sunfish.parse('{}{}'.format(*groups[:2]))
+                end = sunfish.parse(groups[3])
+                return (start, end)
+            else:
+                return None
+        elif castle:
+            if self.player_index:
+                start = 29 - self.position.board.index('k') % 10
+            else:
+                start = self.position.board.index('K')
+            if len(text) == 5:
+                end = start - 2
+            else:
+                end = start + 2
             return (start, end)
         else:
             return None
@@ -227,6 +284,9 @@ class Chess(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
+        if self.skip_white and self.player_index == 0:
+            self.skip_white = False
+            return False
         player.tell(self)
         move = player.ask('\nWhat is your move? ')
         return self.handle_cmd(move)
@@ -234,14 +294,31 @@ class Chess(game.Game):
     def set_options(self):
         """Set the options for the game. (None)"""
         # Set display options.
-        self.option_set.add_option('unicode', ['uni', 'u'])
-        # Set piece color options.
-        self.option_set.add_option('black', ['b'])
-        self.option_set.add_option('white', ['w'])
+        self.option_set.add_option('unicode', ['uni', 'u'],
+            question = 'Should the board be displayed in unicode? bool')
+        # Board options.
+        self.option_set.add_option('black', ['b'],
+            question = 'Do you want to play black? bool')
+        self.option_set.add_option('white', ['w'],
+            question = 'Do you want to play white? bool')
+        self.option_set.add_option('fen', ['f'], default = '',
+            question = 'Enter the FEN Notation for the position (return for standard start): ')
+        self.option_set.add_option('opening', ['open', 'o'], default = '', action = 'map',
+            value = self.openings,
+            question = 'Enter the opening to play (return for standard start): ')
+        # Set play options.
+        self.option_set.add_option('difficulty', ['d'], int, 20,
+            question = 'How many tenths of a second should the bot get to think (return for 20)? ')
 
     def set_up(self):
         """Set up the game. (None)"""
-        self.position = sunfish.Position(sunfish.initial, 0, (True,True), (True,True), 0, 0)
+        self.skip_white = False
+        if self.opening:
+            self.position = self.parse_fen(self.opening)
+        elif self.fen:
+            self.position = self.parse_fen(self.fen)
+        else:
+            self.position = sunfish.Position(sunfish.initial, 0, (True,True), (True,True), 0, 0)
         self.players.reverse()
 
 
@@ -262,7 +339,7 @@ class SunfishBot(player.Bot):
         prompt: The question being asked of the player. (str)
         """
         if prompt == '\nWhat is your move? ':
-            move, score = self.searcher.search(self.game.position, secs = 2)
+            move, score = self.searcher.search(self.game.position, secs = self.game.difficulty / 10.0)
             if self.game.player_index:
                 move_text = '{}{}'.format(sunfish.render(119 - move[0]), sunfish.render(119 - move[1]))
             else:
