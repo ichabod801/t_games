@@ -130,7 +130,7 @@ class Chess(game.Game):
     aliases = {'m': 'move'}
     castle_re = re.compile('o-o(-o)?')
     categories = ['Board Games']
-    move_re = re.compile('([a-h])?([1-8])?([bnrqk])?[ -x/]?([a-h][1-8])')
+    move_re = re.compile('([bnrqk])?([a-h])?([1-8])?[ -x/]?([a-h][1-8])')
     name = 'Chess'
     num_options = 3
     openings = {'': '',
@@ -286,8 +286,8 @@ class Chess(game.Game):
                     return (end + 2 * direction, end)
                 else:
                     return None
-            if match_type == 11:
-                start = sunfish.parse('{}{}'.format(*groups[:2]))
+            if match_type == 14:
+                start = sunfish.parse('{}{}'.format(*groups[1:3]))
                 end = sunfish.parse(groups[3])
                 return (start, end)
             else:
