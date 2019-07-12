@@ -10,6 +10,7 @@ CREDITS: The credits for Chess. (str)
 
 Classes:
 Chess: A t_games wrapper for Sunfish. (game.Game)
+SunfishBot: A bot for making Sunfish moves. (player.Bot)
 """
 
 
@@ -17,6 +18,7 @@ import random
 import re
 
 from .. import game
+from .. import options
 from .. import player
 import sunfish
 
@@ -73,8 +75,12 @@ square you want to move it to.
 Options:
 black (b): Play as black. If neither black are or white options are used, the
     color of your pieces is determined randomly.
-difficulty (d): How many tenths of a second the computer player gets to choose
-    their move (defaults to 20).
+difficulty= (d=): How many tenths of a second the computer player gets to
+    choose their move (defaults to 20).
+fen= (f=): The FEN for the starting position. Note that any spaces in the FEN
+    string must be replaced with pipes (|).
+opening= (o=): The opening position to start with. Options include Caro-Kann,
+    French, Indian, Italian, Pirc, Queens-Gambit, Ruy-Lopez, and Sicilian.
 unicode (uni, u): Show the unicode chess piece characters, if your terminal
     supports them.
 white (w): Play as white. If neither black are or white options are used, the
@@ -102,16 +108,20 @@ class Chess(game.Game):
     Class Attributes:
     castle_re: A regular expression for castling moves. (re.SRE_Pattern)
     move_re: A regular expression for an algebraic move. (re.SRE_Pattern)
+    openings: FEN strings for vailable starting positions. (dict of str: str)
     unicode_pieces: Translation of ascii to unicode for pieces. (dict of str: str)
 
     Methods:
+    board_text: Get the text for a given position. (str)
     do_move: Make a move in the game. (bool)
+    parse_fen: Parse a position from Forsyth-Edwards Notation. (Position)
     parse_move: Parse a move into one Sunfish recognizes. (str)
 
     Overridden Methods:
     __str__
     default
     game_over
+    handle_options
     player_action
     set_options
     set_up
@@ -123,7 +133,15 @@ class Chess(game.Game):
     move_re = re.compile('([a-h])?([1-8])?([bnrqk])?[ -x/]?([a-h][1-8])')
     name = 'Chess'
     openings = {'': '',
-        'castle-test': 'r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R|w|KQkq|-|0|1'}
+        'castle-test': 'r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R|w|KQkq|-|0|1',
+        'caro-kann': 'rnbqkbnr/ppp2ppp/2p5/3p4/3PP3/8/RNBQKBNR|w|KQkq|-|0|3',
+        'french': 'rnbqkbnr/ppp2ppp/4p3/3p4/3PP3/8/RNBQKBNR|w|KQkq|-|0|3',
+        'indian': 'rnbqkb1r/5n2/8/3P4/8/PPP1PPPP/RNBQKBNR|w|KQkq|-|0|2',
+        'italian': 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R|w|KQkq|-|0|3',
+        'pirc': 'rnbqkb1r/3p1n2/8/3PP3/2N5/PPP2PPP/R1BQKBNR|b|KQkq|-|0|3',
+        'queens-gambit': 'rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/RNBQKBNR|b|KQkq|-|0|2',
+        'ruy-lopez': 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R|w|KQkq|-|0|3',
+        'sicilian': 'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/RNBQKBNR|w|KQkq|-|0|2'}
     unicode_pieces = {'R':'♜', 'N':'♞', 'B':'♝', 'Q':'♛', 'K':'♚', 'P':'♟',
         'r':'♖', 'n':'♘', 'b':'♗', 'q':'♕', 'k':'♔', 'p':'♙', '.':'·'}
 
@@ -303,9 +321,8 @@ class Chess(game.Game):
             question = 'Do you want to play white? bool')
         self.option_set.add_option('fen', ['f'], default = '',
             question = 'Enter the FEN Notation for the position (return for standard start): ')
-        self.option_set.add_option('opening', ['open', 'o'], default = '', action = 'map',
-            value = self.openings,
-            question = 'Enter the opening to play (return for standard start): ')
+        self.option_set.add_option('opening', ['open', 'o'], str.lower, '', action = 'map',
+            value = self.openings, question = 'Enter the opening to play (return for standard start): ')
         # Set play options.
         self.option_set.add_option('difficulty', ['d'], int, 20,
             question = 'How many tenths of a second should the bot get to think (return for 20)? ')
@@ -329,6 +346,7 @@ class SunfishBot(player.Bot):
     Overridden Methods:
     ask
     set_up
+    tell
     """
 
     def ask(self, prompt):
