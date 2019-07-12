@@ -130,7 +130,7 @@ class Chess(game.Game):
     aliases = {'m': 'move'}
     castle_re = re.compile('o-o(-o)?')
     categories = ['Board Games']
-    move_re = re.compile('([bnrqk])?([a-h])?([1-8])?[ -x/]?([a-h][1-8])')
+    move_re = re.compile('([BNRQK])?([a-h])?([1-8])?[ -x/]?([a-h][1-8])')
     name = 'Chess'
     num_options = 3
     openings = {'': '',
@@ -271,7 +271,7 @@ class Chess(game.Game):
         Parameters:
         text: The text version of the move provided by the user. (str)
         """
-        text = text.strip().lower()
+        text = text.strip() # ?? unneccesary?
         match = self.move_re.match(text)
         castle = self.castle_re.match(text)
         if match:
@@ -286,7 +286,18 @@ class Chess(game.Game):
                     return (end + 2 * direction, end)
                 else:
                     return None
-            if match_type == 14:
+            elif match_type == 9:
+                piece = groups[0]
+                end = sunfish.parse(groups[3])
+                starts = []
+                for move in self.position.gen_moves():
+                    if move[1] == end and self.position.board[move[0]] == piece:
+                        starts.append(move[0])
+                if len(starts) == 1:
+                    return (starts[0], end)
+                else:
+                    return None
+            elif match_type == 14:
                 start = sunfish.parse('{}{}'.format(*groups[1:3]))
                 end = sunfish.parse(groups[3])
                 return (start, end)
