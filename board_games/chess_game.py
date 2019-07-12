@@ -181,7 +181,7 @@ class Chess(game.Game):
         Parameters:
         text: The raw text input by the user. (str)
         """
-        if self.move_re.match(text) or self.castle_re.match(text.lower()):
+        if self.move_re.match(text) or self.castle_re.match(text.lower()) or text.isdigit():
             return self.do_move(text)
         else:
             return super(Chess, self).default(text)
@@ -331,6 +331,11 @@ class Chess(game.Game):
                 end = start - 2
             else:
                 end = start + 2
+            return (start, end)
+        # Check for ICCF Numeric notation.
+        elif text.isdigit() and len(text) == 4:
+            start = sunfish.parse('{}{}'.format(' abcdefgh'[int(text[0])], text[1]))
+            end = sunfish.parse('{}{}'.format(' abcdefgh'[int(text[2])], text[3]))
             return (start, end)
         else:
             return None
