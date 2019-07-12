@@ -163,7 +163,7 @@ class Chess(game.Game):
             if self.unicode:
                 row = [self.unicode_pieces.get(piece, piece) for piece in row]
             if not black:
-                row_index = 8 - row_index
+                row_index = 9 - row_index
             lines.append(' {} {}'.format(row_index, ' '.join(row)))
         if black:
             lines.append('   h g f e d c b a')
