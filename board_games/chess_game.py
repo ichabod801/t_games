@@ -132,6 +132,7 @@ class Chess(game.Game):
     categories = ['Board Games']
     move_re = re.compile('([a-h])?([1-8])?([bnrqk])?[ -x/]?([a-h][1-8])')
     name = 'Chess'
+    num_options = 3
     openings = {'': '',
         'castle-test': 'r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R|w|KQkq|-|0|1',
         'caro-kann': 'rnbqkbnr/ppp2ppp/2p5/3p4/3PP3/8/RNBQKBNR|w|KQkq|-|0|3',
@@ -276,6 +277,15 @@ class Chess(game.Game):
         if match:
             groups = match.groups()
             match_type = sum(2 ** index for index, group in enumerate(groups) if group is not None)
+            if match_type == 8:
+                end = sunfish.parse(groups[3])
+                direction = -10 if self.player_index else 10
+                if self.position.board[end + direction] in 'pP':
+                    return (end + direction, end)
+                elif self.position.board[end + 2 * direction] in 'pP':
+                    return (end + 2 * direction, end)
+                else:
+                    return None
             if match_type == 11:
                 start = sunfish.parse('{}{}'.format(*groups[:2]))
                 end = sunfish.parse(groups[3])
