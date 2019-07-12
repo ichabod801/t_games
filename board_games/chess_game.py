@@ -181,7 +181,7 @@ class Chess(game.Game):
         Parameters:
         text: The raw text input by the user. (str)
         """
-        if self.move_re.match(text.lower()) or self.castle_re.match(text.lower()):
+        if self.move_re.match(text) or self.castle_re.match(text.lower()):
             return self.do_move(text)
         else:
             return super(Chess, self).default(text)
@@ -266,7 +266,7 @@ class Chess(game.Game):
 
     def parse_move(self, text):
         """
-        Parse a move into one Sunfish recognizes. (str)
+        Parse a move into one Sunfish recognizes. (tuple)
 
         Parameters:
         text: The text version of the move provided by the user. (str)
@@ -274,11 +274,15 @@ class Chess(game.Game):
         text = text.strip() # ?? unneccesary?
         match = self.move_re.match(text)
         castle = self.castle_re.match(text)
+        # Check for algebraic moves.
         if match:
+            # Determine what information was provided.
             groups = match.groups()
             match_type = sum(2 ** index for index, group in enumerate(groups) if group is not None)
+            # Handle single squares (pawn moves).
             if match_type == 8:
                 end = sunfish.parse(groups[3])
+                # Make sure there's a pawn that can make the move.
                 direction = -10 if self.player_index else 10
                 if self.position.board[end + direction] in 'pP':
                     return (end + direction, end)
@@ -286,23 +290,38 @@ class Chess(game.Game):
                     return (end + 2 * direction, end)
                 else:
                     return None
-            elif match_type == 9:
+            # Handle moves with a piece provided (standard algebraic).
+            elif match_type in (9, 11, 13):
                 piece = groups[0]
                 end = sunfish.parse(groups[3])
+                # Set up disambiguation.
+                if match_type == 11:
+                    column = ' abcdefgh'.index(groups[1])
+                if match_type == 13:
+                    row = 10 - int(groups[2])
+                # Find valid moves with that end and that piece.
                 starts = []
                 for move in self.position.gen_moves():
                     if move[1] == end and self.position.board[move[0]] == piece:
+                        # Match and disambiguation.
+                        if match_type == 11 and move[0] % 10 != column:
+                            continue
+                        elif match_type == 13 and move[0] // 10 != row:
+                            continue
                         starts.append(move[0])
+                # Check for ambiguous moves.
                 if len(starts) == 1:
                     return (starts[0], end)
                 else:
                     return None
+            # Handle two squares (long algebraic notation).
             elif match_type == 14:
                 start = sunfish.parse('{}{}'.format(*groups[1:3]))
                 end = sunfish.parse(groups[3])
                 return (start, end)
             else:
                 return None
+        # Check for castling moves.
         elif castle:
             if self.player_index:
                 start = 29 - self.position.board.index('k') % 10
