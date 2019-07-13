@@ -214,6 +214,7 @@ class Chess(game.Game):
         else:
             self.players[self.player_index].tell('Your draw offer was rejected.')
         if self.force_end:
+            self.human.tell('The game is a draw.')
             self.win_loss_draw = [0, 0, 1]
             self.scores[self.human.name] = 0.5
             return False
@@ -231,6 +232,7 @@ class Chess(game.Game):
         player = self.players[self.player_index]
         sun_move = self.parse_move(arguments)
         if sun_move is None:
+            # !! Needs better error messages. Have parse_move return (None, error_message).
             player.error('I do not recognize that move. Please use coordinate notation (e2e4).')
             return True
         else:
@@ -255,13 +257,14 @@ class Chess(game.Game):
 
     def game_over(self):
         """Determine if the game is over or not. (bool)"""
+        # Mate detection is not working.
         if self.position.score <= -sunfish.MATE_LOWER:
             player = self.players[self.player_index]
-            self.human.tell('{} won the game.')
+            self.human.tell('{} won the game.'.format(player.name))
             if player == self.human:
-                self.wins_loss_draw = [1, 0, 0]
+                self.win_loss_draw = [1, 0, 0]
             else:
-                self.wins_loss_draw = [0, 1, 0]
+                self.win_loss_draw = [0, 1, 0]
             return True
         else:
             return False
