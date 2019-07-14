@@ -5,8 +5,6 @@ chess_game.py
 A t_games wrapper for Sunfish by Thomas Ahle.
 (https://github.com/thomasahle/sunfish)
 
-!! needs to handle draws and stalemate.
-
 Constants:
 CREDITS: The credits for Chess. (str)
 RULES: The rules of Chess. (str)
@@ -225,15 +223,15 @@ class Chess(game.Game):
         """
         Make a move in the game.
 
-        Currently moves are only accepted in coordinate notation.
+        Moves are accepted in long algebraic notation, standard algebraic notation, or
+        ICCF numeric notation.
 
         Aliases: m
         """
         player = self.players[self.player_index]
         sun_move = self.parse_move(arguments)
-        if sun_move is None:
-            # !! Needs better error messages. Have parse_move return (None, error_message).
-            player.error('I do not recognize that move. Please use coordinate notation (e2e4).')
+        if sun_move[0] is None:
+            player.error(sun_move[1])
             return True
         else:
             if self.player_index:
@@ -249,8 +247,6 @@ class Chess(game.Game):
                 else:
                     self.history.append(self.position.rotate().board)
                 player.tell(self.board_text(self.position.rotate(), self.player_index))
-                print(self.position.score)
-                # !! check for stalemate (no legal moves)
                 return False
             else:
                 player.error('{} is not a legal move.'.format(arguments))
@@ -327,7 +323,7 @@ class Chess(game.Game):
             elif self.position.board[end + 2 * direction] in 'pP':
                 return (end + 2 * direction, end)
             else:
-                return None
+                return (None, '{} is not a legal move.'.format(groups[3]))
         # Handle moves with a piece provided (standard algebraic).
         elif match_type in (9, 11, 13):
             piece = groups[0]
@@ -351,14 +347,14 @@ class Chess(game.Game):
             if len(starts) == 1:
                 return (starts[0], end)
             else:
-                return None
+                return (None, '{} is not a legal move.'.format(text))
         # Handle two squares (long algebraic notation).
         elif match_type == 14:
             start = sunfish.parse('{}{}'.format(*groups[1:3]))
             end = sunfish.parse(groups[3])
             return (start, end)
         else:
-            return None
+            return (None, '{} is not a valid algebraic move.'.format(text))
 
     def parse_fen(self, fen):
         """
@@ -419,11 +415,13 @@ class Chess(game.Game):
             return (start, end)
         # Check for ICCF Numeric notation.
         elif text.isdigit() and len(text) == 4:
+            if '0' in text:
+                return (None, '{} is not a valid numeric move.'.format(text))
             start = sunfish.parse('{}{}'.format(' abcdefgh'[int(text[0])], text[1]))
             end = sunfish.parse('{}{}'.format(' abcdefgh'[int(text[2])], text[3]))
             return (start, end)
         else:
-            return None
+            return (None, 'I do not understand that move.')
 
     def player_action(self, player):
         """
