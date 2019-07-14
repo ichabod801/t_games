@@ -216,7 +216,7 @@ class Chess(game.Game):
         if self.force_end:
             self.human.tell('The game is a draw.')
             self.win_loss_draw = [0, 0, 1]
-            self.scores[self.human.name] = 0.5
+            self.scores[self.human.name] = 1
             return False
         else:
             return True
@@ -249,6 +249,7 @@ class Chess(game.Game):
                 else:
                     self.history.append(self.position.rotate().board)
                 player.tell(self.board_text(self.position.rotate(), self.player_index))
+                print(self.position.score)
                 # !! check for stalemate (no legal moves)
                 return False
             else:
@@ -257,17 +258,38 @@ class Chess(game.Game):
 
     def game_over(self):
         """Determine if the game is over or not. (bool)"""
-        # Mate detection is not working.
-        if self.position.score <= -sunfish.MATE_LOWER:
-            player = self.players[self.player_index]
-            self.human.tell('{} won the game.'.format(player.name))
-            if player == self.human:
-                self.win_loss_draw = [1, 0, 0]
+        # Mate detection based on position score does not seem to be working,
+        # So I programmed an old fashioned check based on Sunfish being a king-capture engine.
+        next_moves = list(self.position.gen_moves())
+        if next_moves:
+            # Check all possible opponent responses.
+            for move in next_moves:
+                next_position = self.position.move(move)
+                # Check for possible king captures after opponent's respons
+                king_square = next_position.board.index('k')
+                if not any(response[1] == king_square for response in next_position.gen_moves()):
+                    # If there is a response not leading to king capture, it is not mate.
+                    break
             else:
-                self.win_loss_draw = [0, 1, 0]
-            return True
-        else:
+                # If there is no break, there is no move avoiding king capture, so it's mate.
+                # Inform the user of mate.
+                self.human.tell('Checkmate!')
+                winner = self.players[self.player_index].name
+                self.human.tell('{} wins the game.'.format(winner))
+                # Set the results of the game.
+                if winner == self.human:
+                    self.win_loss_draw = [1, 0, 0]
+                    self.scores[self.human.name] = 2
+                else:
+                    self.win_loss_draw = [0, 1, 0]
+                return True
             return False
+        else:
+            # If your opponent has no moves, it's stalemate.
+            self.human.tell('Stalemate, the game is a draw.')
+            self.win_loss_draw = [0, 0, 1]
+            self.scores[self.human.name] = 1
+            return True
 
     def handle_options(self):
         """Handle the option settings for the game. (None)"""
