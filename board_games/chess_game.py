@@ -103,7 +103,9 @@ class Chess(game.Game):
     Attributes:
     black: A flag for the human playing the black pieces. (bool)
     difficulty: How many tenths of a second the computer has to move. (int)
+    draw_moves: The number of half-turns without a pawn move or a capture. (int)
     fen: The FEN notation for the starting position. (str)
+    history: A list of board strings for previous moves. (list of str)
     opening: The FEN notation for opening to play. (str)
     skip_white: A flag for the game starting with the black player. (bool)
     unicode: A flag for displaying the board with unicode pieces. (bool)
@@ -117,6 +119,7 @@ class Chess(game.Game):
 
     Methods:
     board_text: Get the text for a given position. (str)
+    do_draw: Ask for a draw. (bool)
     do_move: Make a move in the game. (bool)
     parse_algebraic: Parse an algebraic move into a Sunfish move. (tuple)
     parse_fen: Parse a position from Forsyth-Edwards Notation. (Position)
@@ -164,6 +167,7 @@ class Chess(game.Game):
         position: The position to get the text for. (sunfish.Position)
         black: A flag indicating the position is for the black player. (bool)
         """
+        # Get the lines of text for the board.
         lines = ['']
         for row_index, row in enumerate(position.board.split(), start = 1):
             if self.unicode:
@@ -171,11 +175,14 @@ class Chess(game.Game):
             if not black:
                 row_index = 9 - row_index
             lines.append(' {} {}'.format(row_index, ' '.join(row)))
+        # Handle the lower frame.
         if black:
             lines.append('   h g f e d c b a')
         else:
             lines.append('   A B C D E F G H')
+        # Join the lines.
         text = '\n'.join(lines)
+        # Reverse piece 'colors' for black.
         if black:
             text = text.swapcase()
         return text
@@ -187,6 +194,7 @@ class Chess(game.Game):
         Parameters:
         text: The raw text input by the user. (str)
         """
+        # Treat chess notation as a move.
         if self.move_re.match(text) or self.castle_re.match(text.lower()) or text.isdigit():
             return self.do_move(text)
         else:
@@ -203,15 +211,19 @@ class Chess(game.Game):
         Aliases: d
         """
         foe = self.players[1 - self.player_index]
+        # Check for three fold repetition.
         if self.history.count(self.position.board) >= 3:
             self.force_end = 'draw'
+        # Check for 50 move rule.
         elif self.draw_turns >= 100:
             self.force_end = 'draw'
+        # If one can't be claimed, check for an agreed draw.
         elif foe.ask('A draw has been offered, do you accept? ') in utility.YES:
             self.force_end = 'draw'
         else:
             self.players[self.player_index].tell('Your draw offer was rejected.')
         if self.force_end:
+            # Handle cases that resulted in a draw.
             self.human.tell('The game is a draw.')
             self.win_loss_draw = [0, 0, 1]
             self.scores[self.human.name] = 1
@@ -228,27 +240,36 @@ class Chess(game.Game):
 
         Aliases: m
         """
+        # Get the player and the move.
         player = self.players[self.player_index]
         sun_move = self.parse_move(arguments)
+        # Check for an error parsing the move.
         if sun_move[0] is None:
             player.error(sun_move[1])
             return True
         else:
+            # Transpose the move for black.
             if self.player_index:
                 sun_move = (119 - sun_move[0], 119 - sun_move[1])
+            # Check for a legal move.
             if sun_move in self.position.gen_moves():
+                # Update the tracking for the 50 move rule.
                 if self.position.board[sun_move[0]] != 'P' and self.position.board[sun_move[1]] != '.':
                     self.draw_turns += 1
                 else:
                     self.draw_turns = 0
+                # Make the move.
                 self.position = self.position.move(sun_move)
+                # Store the move for checking three fold repetition.
                 if self.player_index:
                     self.history.append(self.position.board)
                 else:
                     self.history.append(self.position.rotate().board)
+                # Show the player the resulting position from their perspective.
                 player.tell(self.board_text(self.position.rotate(), self.player_index))
                 return False
             else:
+                # Warn about moves that are not lega.
                 player.error('{} is not a legal move.'.format(arguments))
                 return True
 
@@ -369,8 +390,10 @@ class Chess(game.Game):
         Parameters:
         fen: A position in Forsyth-Edwards Notation. (str)
         """
+        # Parse the parts of the FEN string.
         pieces, player, castling, en_passant, half_moves, moves = fen.split('|')
-        lines = ['          ', '          ']
+        # Parse the lines of the board.
+        lines = ['         \n', '         \n']
         for row in pieces.split('/'):
             line = ' '
             for square in row:
@@ -378,16 +401,21 @@ class Chess(game.Game):
                     line = '{}{}'.format(line, '.' * int(square))
                 else:
                     line = '{}{}'.format(line, square)
-            lines.append('{} '.format(line))
-        lines.extend(['          ', '          '])
+            lines.append('{}\n'.format(line))
+        lines.extend(['         \n', '         \n'])
+        # Join the lines and correct for black to move.
         board = ''.join(lines)
         if player == 'b':
             board = board[::-1].swapcase()
             self.skip_white = True
+        # Parse the castling restrictions
         white_castle = ('Q' in castling, 'K' in castling)
         black_castle = ('q' in castling, 'k' in castling)
+        # Parse the en pasant square.
         sun_passant = sunfish.parse(en_passant) if en_passant != '-' else 0
+        # Set up the position
         position = sunfish.Position(board, 0, white_castle, black_castle, sun_passant, 0)
+        # Set the game tracking variables.
         self.draw_turns = int(half_moves)
         self.turns = int(moves) * 2
         return position
@@ -433,9 +461,11 @@ class Chess(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
+        # Handle black going first.
         if self.skip_white and self.player_index == 0:
             self.skip_white = False
             return False
+        # Show the position and handle the move.
         player.tell(self)
         move = player.ask('\nWhat is your move? ')
         return self.handle_cmd(move)
@@ -460,15 +490,19 @@ class Chess(game.Game):
 
     def set_up(self):
         """Set up the game. (None)"""
+        # Set the tracking variables.
         self.skip_white = False
         self.draw_turns = 0
+        # Set up the position
         if self.opening:
             self.position = self.parse_fen(self.opening)
         elif self.fen:
             self.position = self.parse_fen(self.fen)
         else:
             self.position = sunfish.Position(sunfish.initial, 0, (True,True), (True,True), 0, 0)
+        # Set the position history.
         self.history = [self.position.board]
+        # Reverse black and white each game.
         self.players.reverse()
 
 
@@ -489,6 +523,7 @@ class SunfishBot(player.Bot):
         Parameters:
         prompt: The question being asked of the player. (str)
         """
+        # Handle making moves.
         if prompt == '\nWhat is your move? ':
             move, score = self.searcher.search(self.game.position, secs = self.game.difficulty / 10.0)
             if self.game.player_index:
@@ -497,11 +532,13 @@ class SunfishBot(player.Bot):
                 move_text = '{}{}'.format(sunfish.render(move[0]), sunfish.render(move[1]))
             self.game.human.tell("\n{}'s move is {}.".format(self.name, move_text))
             return move_text
+        # Handle accepting draws.
         elif prompt.startswith('A draw has been offered'):
             if self.game.position.score > 50:
                 return 'da'
             else:
                 return 'nope'
+        # Handle everything else.
         else:
             return super(SunfishBot, self).ask(prompt)
 
