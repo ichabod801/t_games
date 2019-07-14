@@ -262,6 +262,7 @@ class Chess(game.Game):
         # So I programmed an old fashioned check based on Sunfish being a king-capture engine.
         next_moves = list(self.position.gen_moves())
         if next_moves:
+            print(next_moves)
             # Check all possible opponent responses.
             for move in next_moves:
                 next_position = self.position.move(move)
@@ -272,24 +273,28 @@ class Chess(game.Game):
                     break
             else:
                 # If there is no break, there is no move avoiding king capture, so it's mate.
-                # Inform the user of mate.
-                self.human.tell('Checkmate!')
-                winner = self.players[self.player_index].name
-                self.human.tell('{} wins the game.'.format(winner))
-                # Set the results of the game.
-                if winner == self.human:
-                    self.win_loss_draw = [1, 0, 0]
-                    self.scores[self.human.name] = 2
+                # Confirm mate vs. stalemate (mate means you can currently take the king).
+                stale_check = self.position.rotate()
+                king_square = stale_check.board.index('k')
+                if any(move[1] == king_square for move in stale_check.gen_moves()):
+                    # Inform the user of mate.
+                    self.human.tell('Checkmate!')
+                    winner = self.players[self.player_index]
+                    self.human.tell('{} wins the game.'.format(winner.name))
+                    # Set the results of the game.
+                    if winner == self.human:
+                        self.win_loss_draw = [1, 0, 0]
+                        self.scores[self.human.name] = 2
+                    else:
+                        self.win_loss_draw = [0, 1, 0]
+                    return True
                 else:
-                    self.win_loss_draw = [0, 1, 0]
-                return True
+                    # If no current king attack, it's stalemate.
+                    self.human.tell('Stalemate, the game is a draw.')
+                    self.win_loss_draw = [0, 0, 1]
+                    self.scores[self.human.name] = 1
+                    return True
             return False
-        else:
-            # If your opponent has no moves, it's stalemate.
-            self.human.tell('Stalemate, the game is a draw.')
-            self.win_loss_draw = [0, 0, 1]
-            self.scores[self.human.name] = 1
-            return True
 
     def handle_options(self):
         """Handle the option settings for the game. (None)"""
