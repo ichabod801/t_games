@@ -258,7 +258,6 @@ class Chess(game.Game):
         # So I programmed an old fashioned check based on Sunfish being a king-capture engine.
         next_moves = list(self.position.gen_moves())
         if next_moves:
-            print(next_moves)
             # Check all possible opponent responses.
             for move in next_moves:
                 next_position = self.position.move(move)
@@ -313,14 +312,18 @@ class Chess(game.Game):
         # Determine what information was provided.
         groups = match.groups()
         match_type = sum(2 ** index for index, group in enumerate(groups) if group is not None)
-        # Handle single squares (pawn moves). !! No disambiguation.
-        if match_type == 8:
+        # Handle single squares (pawn moves).
+        if match_type in (8, 10):
             end = sunfish.parse(groups[3])
-            # Make sure there's a pawn that can make the move.
             direction = -10 if self.player_index else 10
+            # Set up disambiguation
+            if match_type == 10:
+                column = ' abcdefgh'.index(groups[1])
+                direction = direction + column - end % 10
+            # Make sure there's a pawn that can make the move.
             if self.position.board[end + direction] in 'pP':
                 return (end + direction, end)
-            elif self.position.board[end + 2 * direction] in 'pP':
+            elif abs(direction) == 10 and self.position.board[end + 2 * direction] in 'pP':
                 return (end + 2 * direction, end)
             else:
                 return (None, '{} is not a legal move.'.format(groups[3]))
@@ -434,7 +437,6 @@ class Chess(game.Game):
             self.skip_white = False
             return False
         player.tell(self)
-        player.tell(self.position.score)
         move = player.ask('\nWhat is your move? ')
         return self.handle_cmd(move)
 
