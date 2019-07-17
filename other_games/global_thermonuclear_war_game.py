@@ -3,12 +3,17 @@ global_thermonuclear_war_game.py
 
 A game inspired by Global Thermonuclear War in the movie War Games.
 
+!! Assume a 10% starvation rate for every 100 bombs detonated.
+
+PLEASE LIST PRIMARY TARGETS:
+
 Classes:
 GlobalThermonuclearWar: A game of thermonuclear armageddon. (game.Game)
 """
 
 
 from .. import game
+from .. import player
 from .. import utility
 
 
@@ -32,7 +37,8 @@ def GlobalThermonuclearWar(game.Game):
     it either. The priority was ensuring an escalation of the conflict. Also, note
     that Israel has no allies listed only so that it will keep all of it's missiles
     until it is attacked directly or it sees the end of the world coming. It's not
-    that I think no one likes Israel or Israel hates everybody.
+    that I think no one likes Israel or Israel hates everybody. And yes, I know
+    nuclear winter is a controversial topic. It's a game, dude.
 
     Overridden Methods:
     set_options
@@ -143,3 +149,59 @@ def GlobalThermonuclearWar(game.Game):
                     self.human.tell('PLEASE CHOOSE 1 OR 2.')
                     continue
                 break
+
+class NationBot(player.Bot):
+    """
+    A bot representing one of the nuclear powers. (player.Bot)
+
+    """
+
+    def __init__(self, country, arsenal, paranoia, defense_rate, defense_missiles):
+        """
+        Set up the bot. (None)
+
+        Parameters:
+        country: The name of the country. (str)
+        arsenal: The number of nuclear missiles available. (int)
+        paranoia: The number of missiles fired that will induce paranoia. (int)
+        defense_rate: The quality of the nation's missile defenses. (float)
+        defense_missiles: The number of defensive missings available. (int)
+        """
+        super(NationBot, self).__init__()
+        self.name = country
+        self.arsenal = arsenal
+        self.paranoia = paranoia
+        self.defense_rate = defense_rate
+        self.defense_missiles = defense_missiles
+        self.arsenal_left = arsenal
+
+    def ask(self, prompt):
+        """
+        Get information from the player. (str)
+
+        Parameters:
+        prompt: The question being asked of the player. (str)
+        """
+        if not prompt:
+            if mode == 'primary':
+                target_list = self.primary_targets
+            elif mode == 'secondary':
+                target_list = self.secondary_targets
+            try:
+                return target_list.pop()
+            except IndexError:
+                return ''
+
+    def tell(self, *args, **kwargs):
+        """
+        Give information to the player. (None)
+
+        Parameters:
+        The parameters are as per the built-in print function.
+        """
+        if args[0] == '\nPLEASE LIST PRIMARY TARGETS:':
+            self.set_strategy()
+            self.get_targets()
+            self.mode = 'primary'
+        elif args[0] == '\nPLEASE LIST SECONDARY TARGETS:':
+            self.mode = 'secondary'
