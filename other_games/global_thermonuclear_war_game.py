@@ -154,6 +154,26 @@ class NationBot(player.Bot):
     """
     A bot representing one of the nuclear powers. (player.Bot)
 
+    Attributes:
+    aggressor: The power being targeted by the current strategy. (str)
+    arsenal: The starting number of nuclear missiles available. (int)
+    arsenal_left: The current number of nuclear missiles available. (int)
+    defense_rate: The quality of the nation's missile defenses. (float)
+    defense_missiles: The number of defensive missings available. (int)
+    output_mode: The target type currently being provided. (str)
+    paranoia: The number of missiles fired that will induce paranoia. (int)
+    primary_targets: The current nations to fire five missiles at. (list of str)
+    strategy: The strategy recommended by the WOPR computer. (str)
+    secondary_targets: The current nations to fire two missiles at. (list of str)
+
+    Methods:
+    get_strategy: Set the strategy for the next round of target selection. (None)
+    get_targets: Determine who to fire missiles at. (None)
+
+    Overridden Methods:
+    __init__
+    ask
+    tell
     """
 
     def __init__(self, country, arsenal, paranoia, defense_rate, defense_missiles):
@@ -167,13 +187,22 @@ class NationBot(player.Bot):
         defense_rate: The quality of the nation's missile defenses. (float)
         defense_missiles: The number of defensive missings available. (int)
         """
+        # Base bot initialization.
         super(NationBot, self).__init__()
+        # Initialize specified attributes.
         self.name = country
         self.arsenal = arsenal
         self.paranoia = paranoia
         self.defense_rate = defense_rate
         self.defense_missiles = defense_missiles
+        # Initialize derived attributes.
         self.arsenal_left = arsenal
+        # Initialize default attributes.
+        self.output_mode = ''
+        self.strategy = 'peace'
+        self.aggressor = ''
+        self.primary_targets = []
+        self.secondary_targets = []
 
     def ask(self, prompt):
         """
@@ -183,14 +212,31 @@ class NationBot(player.Bot):
         prompt: The question being asked of the player. (str)
         """
         if not prompt:
-            if mode == 'primary':
+            if self.output_mode == 'primary':
                 target_list = self.primary_targets
-            elif mode == 'secondary':
+            elif self.output_mode == 'secondary':
                 target_list = self.secondary_targets
+            else:
+                raise player.BotError('Target request to NationBot with no targets specified.')
             try:
                 return target_list.pop()
             except IndexError:
+                self.output_mode = ''
                 return ''
+        else:
+            super(NationBot, self).ask(prompt)
+
+    def get_strategy(self):
+        """Set the strategy for the next round of target selection. (None)"""
+        if not self.arsenal_left:
+            self.strategy = 'peace'
+            self.aggressor = ''
+
+    def get_targets(self):
+        """Determine who to fire missiles at. (None)"""
+        if self.strategy == 'peace':
+            self.primary_targets = []
+            self.secondary_targets = []
 
     def tell(self, *args, **kwargs):
         """
@@ -202,6 +248,6 @@ class NationBot(player.Bot):
         if args[0] == '\nPLEASE LIST PRIMARY TARGETS:':
             self.set_strategy()
             self.get_targets()
-            self.mode = 'primary'
+            self.output_mode = 'primary'
         elif args[0] == '\nPLEASE LIST SECONDARY TARGETS:':
-            self.mode = 'secondary'
+            self.output_mode = 'secondary'
