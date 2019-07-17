@@ -39,10 +39,11 @@ def GlobalThermonuclearWar(game.Game):
     set_up
     """
 
-    # Number of missiles, paranoia factor
-    powers = {'United States': (1600, 800), 'Russia': (1600, 800), 'United Kingdom': (120, 700),
-        'France': (280, 600), 'China': (140, 900), 'India': (70, 500), 'Pakistan': (70, 400),
-        'North Korea': (7, 1), 'Israel': (40, 900)}
+    # Number of missiles, paranoia factor, defense effectiveness, defensive missiles
+    powers = {'United States': (1600, 800, .8, 100), 'Russia': (1600, 800, .85, 95),
+        'United Kingdom': (120, 700, 9, 0), 'France': (280, 600, 0, 0),
+        'China': (140, 900, .8, 25), 'India': (70, 500, .7, 15), 'Pakistan': (70, 400, 0, 0),
+        'North Korea': (7, 1, 0, 0), 'Israel': (40, 900, .75, 10)}
 
     # !! make sure these names associate with the city data.
     allies = {'United States': ['United Kingdom', 'Ireland', 'Germany', 'Spain', 'Portugal', 'Saudi Arabia',
