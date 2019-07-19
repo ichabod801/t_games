@@ -14,6 +14,10 @@ GlobalThermonuclearWar: A game of thermonuclear armageddon. (game.Game)
 """
 
 
+import collections
+import itertools
+import random
+
 from .. import game
 from .. import player
 from .. import utility
@@ -104,7 +108,7 @@ def GlobalThermonuclearWar(game.Game):
             self.scores[self.human.name] = results[3]
             self.force_end = 'chess'
         # Load the country data.
-        self.countries = {}
+        self.countries = collections.defaultdict(dict)
         self.powers = []
         with open('country_data.csv') as country_data:
             num_countries = int(country_data.readline())
@@ -148,6 +152,9 @@ def GlobalThermonuclearWar(game.Game):
                     self.human.tell('PLEASE CHOOSE 1 OR 2.')
                     continue
                 break
+        # Set up the players.
+        self.players = [self.human]
+        self.players.extend(NationBot(*data) for data in self.powers if data['name'] != self.human_country)
 
 class NationBot(player.Bot):
     """
@@ -175,33 +182,29 @@ class NationBot(player.Bot):
     tell
     """
 
-    def __init__(self, country, arsenal, paranoia, defense_rate, defense_missiles):
+    def __init__(self, **kwargs):
         """
         Set up the bot. (None)
 
         Parameters:
-        country: The name of the country. (str)
-        arsenal: The number of nuclear missiles available. (int)
-        paranoia: The number of missiles fired that will induce paranoia. (int)
-        defense_rate: The quality of the nation's missile defenses. (float)
-        defense_missiles: The number of defensive missings available. (int)
+        kwargs: A country profile from self.game.powers. (dict)
         """
         # Base bot initialization.
         super(NationBot, self).__init__()
         # Initialize specified attributes.
-        self.name = country
-        self.arsenal = arsenal
-        self.paranoia = paranoia
-        self.defense_rate = defense_rate
-        self.defense_missiles = defense_missiles
+        for name, value in kwargs.items():
+            setattr(self, name, value)
         # Initialize derived attributes.
-        self.arsenal_left = arsenal
+        self.arsenal_left = self.arsenal
         # Initialize default attributes.
         self.output_mode = ''
         self.indirect_foes = []
         self.direct_foes = []
         self.primary_targets = []
         self.secondary_targets = []
+        self.capital_hits = []
+        self.largest_hits = []
+        self.num_targets = 0
 
     def ask(self, prompt):
         """
@@ -225,8 +228,35 @@ class NationBot(player.Bot):
         else:
             super(NationBot, self).ask(prompt)
 
+    def get_direct(self, foe):
+        """
+        Get a target country based on a direct attack.
+
+        Parameters:
+        foe: The country that attacked you. (str)
+        """
+        if random.random() > 0.5:
+            return foe
+        else:
+            return self.get_indirect(foe)
+
+    def get_indirect(self, foe):
+        """
+        Get a target country based on an indirect attack.
+
+        Paramters:
+        foe: The country that attacked you. (str)
+        """
+        their_allies = self.game.countries[foe]['allies']
+        targets = [ally for ally in their_allies if ally not in self.allies]
+        if targets:
+            return random.choice(targets)
+        else:
+            return foe
+
     def get_strategy(self):
         """Set the strategy for the next round of target selection. (None)"""
+        self.num_targets = 1
         for country, missiles, target, target_country, distance in self.game.missiles_flying:
             if country == self.name:
                 continue
@@ -234,22 +264,32 @@ class NationBot(player.Bot):
                 self.direct_foes.append(country)
             elif target_country in self.allies and country not in self.indirect_foes:
                 self.indirect_foes.append(country)
+            self.num_targets += 1
         self.indect_foes = [country for country in self.indirect_foes if country not in self.direct_foes]
         if self.game.missiles_launched >= self.paranoia or self.arsenal_left * 2 < self.arsenal:
             self.paranoid = True
 
     def get_targets(self):
         """Determine who to fire missiles at. (None)"""
-        targets = []
+        targets = self.direct_foes + self.indect_foes
         if self.paranoid:
-            # Choose targets
-            pass
-        for foe in self.direct_foes:
-            # Choose targets
-            pass
-        for foe in self.indirect_foes:
-            # Choose targets
-            pass
+            targets += self.enemies
+        for foe in itertools.chain(targets):
+            if foe in self.indirect_foes:
+                target_country = self.get_indirect(foe)
+            else:
+                target_country = self.get_direct(foe)
+            if target_country not in self.capital_hits:
+                self.primary_targets.append(self.game.countries[target_country]['capital'])
+                self.capital_hits.append(target_country)
+            elif target_country not in self.largest_hits:
+                self.primary_targets.append(self.game.countries[target_country]['largest'])
+                self.largest_hits.append(target_country)
+            else:
+                self.secondary_targets.append(random.choice(self.game.countries[target_country]['cities']))
+            self.num_targets -= 1
+            if not self.num_targets:
+                break
 
     def set_up(self):
         """Set up the bot's tracking variables. (None)"""
