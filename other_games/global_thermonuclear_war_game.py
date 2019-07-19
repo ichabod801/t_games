@@ -5,6 +5,8 @@ A game inspired by Global Thermonuclear War in the movie War Games.
 
 !! Assume a 10% starvation rate for every 100 bombs detonated.
 
+!! Assume a 7% failure rate for missiles. (option)
+
 PLEASE LIST PRIMARY TARGETS:
 
 Classes:
@@ -45,54 +47,6 @@ def GlobalThermonuclearWar(game.Game):
     set_up
     """
 
-    # Number of missiles, paranoia factor, defense effectiveness, defensive missiles
-    powers = {'United States': (1600, 800, .8, 100), 'Russia': (1600, 800, .85, 95),
-        'United Kingdom': (120, 700, 9, 0), 'France': (280, 600, 0, 0),
-        'China': (140, 900, .8, 25), 'India': (70, 500, .7, 15), 'Pakistan': (70, 400, 0, 0),
-        'North Korea': (7, 1, 0, 0), 'Israel': (40, 900, .75, 10)}
-
-    # !! make sure these names associate with the city data.
-    allies = {'United States': ['United Kingdom', 'Ireland', 'Germany', 'Spain', 'Portugal', 'Saudi Arabia',
-        'Mexico', 'Canada', 'Australia', 'Japan', 'Thailand', 'Israel', 'Jordan', 'Egypt', 'Kenya',
-        'Columbia', 'Pakistan', 'South Korea', 'Turkey', 'Greece', 'Estonia', 'Latvia', 'Lithuania',
-        'Poland', 'Czech Republic', 'Ukraine' 'Libya', 'Taiwan'],
-        'Russia': ['India', 'Syria', 'Brazil', 'Venezuela', 'Cuba', 'Italy', 'Germany', 'Azerbaijan',
-        'Belarus', 'Kazakhstan', 'Kyrgyzstan', 'Armenia', 'Moldova', 'Tajikstan', 'Uzbekistan',
-        'Turkmenistan', 'China', 'Indonesia', 'Iran', 'Botswana', 'Mozambique', 'Namibia', 'Sudan',
-        'Zimbabwe', 'Bolivia', 'Grenada', 'Uruguay', 'Armenia', 'Indonesia', 'Lebanon', 'Mongolia',
-        'Myanmar', 'North Korea', 'Sri Lanka'],
-        'United Kingdom': ['United States', 'Ireland', 'Canada', 'Australia', 'Chile', 'Columbia', 'Panama',
-        'Brunei', 'Israel', 'Japan', 'Kazakhstan', 'Oman', 'South Korea', 'Turkey', 'Finland', 'Poland',
-        'Germany', 'New Zealand', 'Nigeria', 'Barbados', 'Estonia', 'Latvia', 'Lithuania', 'Libya', 'India']
-        'France': ['Turkey', 'Libya', 'Egypt', 'Germany', 'Democratic Republic of the Congo', 'Chad',
-        'Niger', 'Brazil', 'Canada', 'India', 'Indonesia', 'Japan', 'South Korea', 'Qatar',
-        'Bosnia and Herzegovina', 'Greece', 'Ireland', 'Latvia'],
-        'China': ['Russia', 'Myanmar', 'North Korea', 'Pakistan', 'France', 'Italy', 'Algeria', 'Sudan',
-        'Zaire', 'Nigeria', 'Egypt', 'Zimbabwe', 'Venezuela', 'Barbados', 'Cuba', 'Australia', 'Samoa'],
-        'India': ['Russia', 'Israel', 'Afganistan', 'France', 'Bhutan', 'Bangladesh', 'South Africa',
-        'Brazil', 'Mexico', 'Japan', 'Germany', 'Indonesia', 'Brazil', 'Mongolia', 'Singapore', 'UAE',
-        'Ghana', 'Kenya', 'Lesotho', 'Mauritius', 'Morocco', 'Namibia', 'Nigeria', 'South Africa'],
-        'Pakistan': ['United States', 'Turkey', 'United Kingdom', 'China', 'Indonesia', 'Algeria',
-        'Tunisia', 'Morocco', 'Eritrea', 'Saudi Arabia', 'France'],
-        'North Korea': ['China', 'Russia'],
-        'Israel': []}
-
-    enemies = {'United States': ['Russia', 'Cuba', 'China', 'Venezuela', 'Iran', 'Syria', 'Moldova',
-        'Grenada', 'Lebanon', 'Myanmar', 'North Korea'],
-        'Russia': ['Turkey', 'Ukraine', 'United States', 'Afganistan', 'Estonia', 'Latvia', 'Lithuania',
-        'Georgia', 'Poland', 'Czech Republic', 'Japan' 'Libya', 'Pakistan', 'Chad'],
-        'United Kingdom': ['Russia', 'Argentina', 'Iran'],
-        'France': ['Madagascar', 'Comoros', 'Mauritius', 'China', 'North Korea'],
-        'China': ['Taiwan', 'United Kingdom', 'Turkey', 'Libya', 'Mongolia', 'France', 'Japan', 'Vietnam',
-        'Italy', 'Germany', 'India', 'Poland', 'United States', 'Jordan', 'Bangladesh'],
-        'India': ['Pakistan', 'United Kingdom', 'Turkey'],
-        'Pakistan': ['India', 'Afganistan', 'Israel'],
-        'North Korea': ['South Korea', 'United States', 'Turkey', 'Portugal', 'Iraq', 'Chile', 'Argentina'],
-        'Israel': ['Turkey', 'Algeria', 'Bahrain', 'Comoros', 'Djibouti', 'Iraq', 'Kuwait', 'Lebanon',
-        'Libya', 'Morocco', 'Qatar', 'Saudi Arabia', 'Somalia', 'Sudan', 'Syrian', 'Tunisia', 'UAE',
-        'Yemen', 'Afganistan', 'Bangladesh', 'Brunei', 'Indonesia', 'Iran', 'Malaysia', 'Mali', 'Niger',
-        'Pakistan']}
-
     def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
@@ -103,6 +57,38 @@ def GlobalThermonuclearWar(game.Game):
         # Check for Chess win.
         if self.force_end:
             return False
+        # Get the name of the player's country.
+        if player == self.human:
+            country = self.human_country
+        else:
+            country = player.name
+        # Get the primary targets.
+        primaries = []
+        player.tell('\nPLEASE LIST PRIMARY TARGETS:')
+        while True:
+            city = input('')
+            if city:
+                primaries.append(city)
+            else:
+                break
+        # Get the secondary targets.
+        secondaries = []
+        player.tell('\nPLEASE LIST SECONDARY TARGETS:')
+        while True:
+            city = input('')
+            if city:
+                secondaries.append(city)
+            else:
+                break
+        # Update any currently flying missiles
+        # (done here to keep missiles in play sequence so bots can tell what's been fired this round)
+        self.update_missiles(country) # !! not written
+        # Fire the missiles at the selected targets.
+        for missiles, targets in ((5, primaries), (2, secondaries)):
+            for target in targets:
+                target_country, distance = self.confirm_target(target) # !! not written
+                self.missiles_flying.append((country, missiles, target, target_country, distance))
+                self.missiles_launched += missiles
 
     def set_options(self):
         """Define the options for the game. (None)"""
@@ -112,27 +98,40 @@ def GlobalThermonuclearWar(game.Game):
     def set_up(self):
         """Set up the game. (None)"""
         # Try to play chess instead.
-        if self.human.ask("WOULDN'T YOU PREFER A GOOD GAME OF CHESS?") in utility.YES:
+        if self.human.ask("\nWOULDN'T YOU PREFER A GOOD GAME OF CHESS?") in utility.YES:
             results = self.interface.games['chess'].play('')
             self.win_loss_draw = [1, 0, 0]
             self.scores[self.human.name] = results[3]
             self.force_end = 'chess'
+        # Load the country data.
+        self.countries = {}
+        self.powers = []
+        with open('country_data.csv') as country_data:
+            num_countries = int(country_data.readline())
+            for country in range(num_countries):
+                name = country_data.readline().strip()
+                data = {'name': name, cities = []}
+                missiles, paranoia, defense, defense_missiles = country_data.readline().split(',')
+                data['missiles'] = int(missiles)
+                data['paranoia'] = int(paranoia)
+                data['defense_rate'] = int(defense)
+                data['defense_missiles'] = int(defense_missiles)
+                data['allies'] = [country.strip() for country in country_data.readline().split(,)]
+                data['enemies'] = [country.strip() for country in country_data.readline().split(,)]
+                self.countries[name] = data
+                self.powers.append(name)
         # Load the city data.
         self.cities = {}
         with open('city_data.csv') as city_data:
             city_data.readline()
             for line in city_data:
-                fields = line.split(',')
-                self.city_data[fields[0].lower()] = {'name': fields[0], 'latitude': float(fields[1]),
-                    'longitude': float(fields[2]), 'country': fields[3], 'capital': fields[4],
-                    'population': int(fields[5])}
-        # Load the country data.
-        self.countries = {}
-        with open('country_data.csv') as country_data:
-            country_data.readline()
-            for line in country_data:
-                fields = line.split(',')
-                # !! Need parsing here.
+                name, longitude, latitude, country, capital, population = line.split(',')
+                self.city_data[name.lower()] = {'name': name, 'latitude': latitude,
+                    'longitude': longitude, 'country': country, 'capital': capital,
+                    'population': int(population)}
+                self.countires[country]['cities'].append(name)
+                if capital == 'primary':
+                    self.countries[country]['capital'] = name
         # Get the country to play.
         if self.united_states:
             self.human_country = 'United States'
@@ -199,8 +198,8 @@ class NationBot(player.Bot):
         self.arsenal_left = arsenal
         # Initialize default attributes.
         self.output_mode = ''
-        self.strategy = 'peace'
-        self.aggressor = ''
+        self.indirect_foes = []
+        self.direct_foes = []
         self.primary_targets = []
         self.secondary_targets = []
 
@@ -228,15 +227,33 @@ class NationBot(player.Bot):
 
     def get_strategy(self):
         """Set the strategy for the next round of target selection. (None)"""
-        if not self.arsenal_left:
-            self.strategy = 'peace'
-            self.aggressor = ''
+        for country, missiles, target, target_country, distance in self.game.missiles_flying:
+            if country == self.name:
+                continue
+            if target_country == self.name and country not in self.direct_foes:
+                self.direct_foes.append(country)
+            elif target_country in self.allies and country not in self.indirect_foes:
+                self.indirect_foes.append(country)
+        self.indect_foes = [country for country in self.indirect_foes if country not in self.direct_foes]
+        if self.game.missiles_launched >= self.paranoia or self.arsenal_left * 2 < self.arsenal:
+            self.paranoid = True
 
     def get_targets(self):
         """Determine who to fire missiles at. (None)"""
-        if self.strategy == 'peace':
-            self.primary_targets = []
-            self.secondary_targets = []
+        targets = []
+        if self.paranoid:
+            # Choose targets
+            pass
+        for foe in self.direct_foes:
+            # Choose targets
+            pass
+        for foe in self.indirect_foes:
+            # Choose targets
+            pass
+
+    def set_up(self):
+        """Set up the bot's tracking variables. (None)"""
+        self.paranoid = False
 
     def tell(self, *args, **kwargs):
         """
