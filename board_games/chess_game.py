@@ -22,7 +22,7 @@ from .. import game
 from .. import options
 from .. import player
 from .. import utility
-import sunfish
+from . import sunfish
 
 
 CREDITS = """

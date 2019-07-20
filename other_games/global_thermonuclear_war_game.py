@@ -16,6 +16,7 @@ GlobalThermonuclearWar: A game of thermonuclear armageddon. (game.Game)
 import collections
 import itertools
 import math
+import os
 import random
 import time
 
@@ -33,7 +34,7 @@ WHICH SIDE DO YOU WANT?
 PLEASE CHOOSE ONE:  """
 
 
-def GlobalThermonuclearWar(game.Game):
+class GlobalThermonuclearWar(game.Game):
     """
     A game of thermonuclear armageddon. (game.Game)
 
@@ -52,8 +53,11 @@ def GlobalThermonuclearWar(game.Game):
     set_up
     """
 
+    categories = ['Other Games']
     earth_radius = 3957
     earth_circumference = 24881
+    name = 'Global Thermonuclear War'
+    num_options = 2
     world_population = 7700000000
 
     def confirm_target(self, raw_target):
@@ -124,27 +128,31 @@ def GlobalThermonuclearWar(game.Game):
     def load_cities(self):
         """Load the city data. (None)"""
         self.cities = {}
-        with open('city_data.csv') as city_data:
+        with open(os.path.join(utility.LOC, 'other_games', 'city_data.csv')) as city_data:
             city_data.readline()
             for line in city_data:
                 name, longitude, latitude, country, capital, population = line.split(',')
-                self.city_data[name.lower()] = {'name': name, 'latitude': latitude,
-                    'longitude': longitude, 'country': country, 'capital': capital,
+                #print(name)
+                self.cities[name.lower()] = {'name': name, 'latitude': float(latitude),
+                    'longitude': float(longitude), 'country': country, 'capital': capital,
                     'population': int(population), 'hits': 0}
-                self.countires[country]['cities'].append(name)
+                if country not in self.countries:
+                    self.countries[country] = {'name': country, 'cities': [], 'death_toll': 0}
+                self.countries[country]['cities'].append(name)
                 if capital == 'primary':
                     self.countries[country]['capital'] = name
         for country_name in self.countries:
             max_pop, max_city = 0, ''
             lat_total, long_total = 0, 0
-            for city_name in self.countries[city_name]['cities']:
-                if self.cities[city_name]['population'] > max_pop:
-                    max_pop = self.cities[city_name]['population']
+            for city_name in self.countries[country_name]['cities']:
+                city_lower = city_name.lower()
+                if self.cities[city_lower]['population'] > max_pop:
+                    max_pop = self.cities[city_lower]['population']
                     max_city = city_name
-                lat_total += self.cities[city_name]['latitude']
-                long_total += self.cities[city_name]['longitude']
+                lat_total += self.cities[city_lower]['latitude']
+                long_total += self.cities[city_lower]['longitude']
             self.countries[country_name]['largest'] = max_city
-            num_cities = len(self.countries[city_name]['cities'])
+            num_cities = len(self.countries[country_name]['cities'])
             self.countries[country_name]['latitude'] = lat_total / num_cities
             self.countries[country_name]['longitude'] = long_total / num_cities
 
@@ -152,7 +160,7 @@ def GlobalThermonuclearWar(game.Game):
         """Load the country data. (None)"""
         self.countries = collections.defaultdict(dict)
         self.powers = []
-        with open('country_data.csv') as country_data:
+        with open(os.path.join(utility.LOC, 'other_games', 'country_data.txt')) as country_data:
             num_countries = int(country_data.readline())
             for country in range(num_countries):
                 name = country_data.readline().strip()
@@ -160,10 +168,10 @@ def GlobalThermonuclearWar(game.Game):
                 missiles, paranoia, defense, defense_missiles = country_data.readline().split(',')
                 data['missiles'] = int(missiles)
                 data['paranoia'] = int(paranoia)
-                data['defense_rate'] = int(defense)
+                data['defense_rate'] = float(defense)
                 data['defense_missiles'] = int(defense_missiles)
-                data['allies'] = [country.strip() for country in country_data.readline().split(,)]
-                data['enemies'] = [country.strip() for country in country_data.readline().split(,)]
+                data['allies'] = [country.strip() for country in country_data.readline().split(',')]
+                data['enemies'] = [country.strip() for country in country_data.readline().split(',')]
                 self.countries[name] = data
                 self.powers.append(name)
 
@@ -267,7 +275,7 @@ def GlobalThermonuclearWar(game.Game):
                 self.human_country = 'Russia'
             else:
                 while True:
-                    side_num = self.human.input(CHOOSE_SIDE).strip()
+                    side_num = self.human.ask(CHOOSE_SIDE).strip()
                     if side_num == '1':
                         self.human_country = 'United States'
                     elif side_num == '2':
@@ -325,8 +333,6 @@ class NationBot(player.Bot):
         self.direct_foes = []
         self.primary_targets = []
         self.secondary_targets = []
-        self.capital_hits = []
-        self.largest_hits = []
         self.num_targets = 0
 
     def ask(self, prompt):
@@ -404,12 +410,10 @@ class NationBot(player.Bot):
                 target_country = self.get_indirect(foe)
             else:
                 target_country = self.get_direct(foe)
-            if target_country not in self.capital_hits:
+            if not self.game.cities[self.countries[target_country]['capital']]['hits']:
                 self.primary_targets.append(self.game.countries[target_country]['capital'])
-                self.capital_hits.append(target_country)
-            elif target_country not in self.largest_hits:
+            elif not self.game.cities[self.countries[target_country]['largest']]['hits']:
                 self.primary_targets.append(self.game.countries[target_country]['largest'])
-                self.largest_hits.append(target_country)
             else:
                 self.secondary_targets.append(random.choice(self.game.countries[target_country]['cities']))
             self.num_targets -= 1
@@ -433,6 +437,7 @@ class NationBot(player.Bot):
             self.output_mode = 'primary'
         elif args[0] == '\nPLEASE LIST SECONDARY TARGETS:':
             self.output_mode = 'secondary'
+
 
 def sphere_dist(point_a, point_b, radius):
     """
