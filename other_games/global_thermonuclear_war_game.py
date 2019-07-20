@@ -3,11 +3,10 @@ global_thermonuclear_war_game.py
 
 A game inspired by Global Thermonuclear War in the movie War Games.
 
-!! Assume a 10% starvation rate for every 100 bombs detonated.
-
-!! Assume a 7% failure rate for missiles. (option)
-
-PLEASE LIST PRIMARY TARGETS:
+To Do:
+End of game
+    Nuclear winter, 1% starvation rate for every 10 bombs detonated.
+Can't fire if no missiles
 
 Classes:
 GlobalThermonuclearWar: A game of thermonuclear armageddon. (game.Game)
@@ -16,7 +15,9 @@ GlobalThermonuclearWar: A game of thermonuclear armageddon. (game.Game)
 
 import collections
 import itertools
+import math
 import random
+import time
 
 from .. import game
 from .. import player
@@ -51,6 +52,121 @@ def GlobalThermonuclearWar(game.Game):
     set_up
     """
 
+    earth_radius = 3957
+    earth_circumference = 24881
+    world_population = 7700000000
+
+    def confirm_target(self, raw_target):
+        """
+        Confirm the name and distance to a target city. (tuple of str, int)
+
+        Parameters:
+        target: The target as entered by the user. (str)
+        """
+        # !! refactor (new_city method?)
+        player = self.players[self.player_index]
+        target = raw_target.lower()
+        if target in self.cities:
+            # If it's in the data, use the data.
+            confirmed = target.lower()
+            country = self.cities[confirmed]['country']
+            latitude = self.cities[confirmed]['latitude']
+            longitude = self.cities[confirmed]['longitude']
+        else:
+            # Get text distances to other city names.
+            distances = []
+            for city in self.cities:
+                if target in city:
+                    # Prioritize city names containing the target name.
+                    distances.append((0, city))
+                else:
+                    distances.append((utility.levenshtein(target, city), city))
+            # List the three closest city names as options, with an option to enter a new city.
+            distances.sort()
+            lines = ['', 'POSSIBLE MATCHES:', '']
+            for city_index, city in enumerate(distances[:3], start = 1):
+                lines.append('{}: {}'.format(city_index, self.cities[city]['name']).upper())
+            lines.extend(['4: NONE OF THE ABOVE', '', 'SELECT THE BEST MATCH:  '])
+            query = '\n'.join(lines)
+            choice = player.ask_int(query, low = 1, high = 4)
+            if choice < 4:
+                confirmed = target
+                # Get the country.
+                while True:
+                    country = player.ask('\nWHAT COUNTRY IS {} IN?  '.format(confirmed)).lower()
+                    if country.lower in self.countries or not country:
+                        break
+                    player.tell('\nI DO NOT RECOGNIZE THAT COUNTRY.')
+                    player.tell('PLEASE TRY AGAIN OR HIT ENTER TO CANCEL TARGET.')
+                # Get the city coordinates from the country.
+                latitude = self.countries[country]['latitude']
+                longitude = self.countries[country]['longitude']
+                # Get the population of the city.
+                query = '\nWHAT IS THE POPULATION OF {}?'.format(confirmed)
+                population = player.ask_int(query, low = 1, high = 1000000)
+                # Enter the new city.
+                self.cities[confirmed] = {'name': confirmed, 'population': population, 'country': country,
+                    'latitude': latitude, 'longitude': longitude, 'hits': 0}
+                self.countries[country]['cities'].append(confirmed)
+            else:
+                # Use the user's choice.
+                confirmed = distances[choice - 1]
+                country = self.cities[confirmed]['country']
+                latitude = self.cities[confirmed]['latitude']
+                longitude = self.cities[confirmed]['longitude']
+        # Calculate the distance
+        start = (self.countries[country]['latitude'], self.countries[country]['latitude'])
+        end = (latitude, longitude)
+        distance = math.ceil(sphere_dist(start, end, self.earth_radius) / self.earth_circumference * 6)
+        # Return the confirmed name and the distance.
+        return confirmed, distance
+
+    def load_cities(self):
+        """Load the city data. (None)"""
+        self.cities = {}
+        with open('city_data.csv') as city_data:
+            city_data.readline()
+            for line in city_data:
+                name, longitude, latitude, country, capital, population = line.split(',')
+                self.city_data[name.lower()] = {'name': name, 'latitude': latitude,
+                    'longitude': longitude, 'country': country, 'capital': capital,
+                    'population': int(population), 'hits': 0}
+                self.countires[country]['cities'].append(name)
+                if capital == 'primary':
+                    self.countries[country]['capital'] = name
+        for country_name in self.countries:
+            max_pop, max_city = 0, ''
+            lat_total, long_total = 0, 0
+            for city_name in self.countries[city_name]['cities']:
+                if self.cities[city_name]['population'] > max_pop:
+                    max_pop = self.cities[city_name]['population']
+                    max_city = city_name
+                lat_total += self.cities[city_name]['latitude']
+                long_total += self.cities[city_name]['longitude']
+            self.countries[country_name]['largest'] = max_city
+            num_cities = len(self.countries[city_name]['cities'])
+            self.countries[country_name]['latitude'] = lat_total / num_cities
+            self.countries[country_name]['longitude'] = long_total / num_cities
+
+    def load_countries(self):
+        """Load the country data. (None)"""
+        self.countries = collections.defaultdict(dict)
+        self.powers = []
+        with open('country_data.csv') as country_data:
+            num_countries = int(country_data.readline())
+            for country in range(num_countries):
+                name = country_data.readline().strip()
+                data = {'name': name, 'cities': [], 'death_toll': 0}
+                missiles, paranoia, defense, defense_missiles = country_data.readline().split(',')
+                data['missiles'] = int(missiles)
+                data['paranoia'] = int(paranoia)
+                data['defense_rate'] = int(defense)
+                data['defense_missiles'] = int(defense_missiles)
+                data['allies'] = [country.strip() for country in country_data.readline().split(,)]
+                data['enemies'] = [country.strip() for country in country_data.readline().split(,)]
+                self.countries[name] = data
+                self.powers.append(name)
+
     def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
@@ -66,95 +182,102 @@ def GlobalThermonuclearWar(game.Game):
             country = self.human_country
         else:
             country = player.name
-        # Get the primary targets.
-        primaries = []
-        player.tell('\nPLEASE LIST PRIMARY TARGETS:')
-        while True:
-            city = input('')
-            if city:
-                primaries.append(city)
-            else:
-                break
-        # Get the secondary targets.
-        secondaries = []
-        player.tell('\nPLEASE LIST SECONDARY TARGETS:')
-        while True:
-            city = input('')
-            if city:
-                secondaries.append(city)
-            else:
-                break
+        # Get the targets.
+        if player.arsenal_left > 0:
+            primaries = []
+            secondaries = []
+            for target_list, name in ((primaries, 'PRIMARY'), (secondaries, 'SECONDARY')):
+                player.tell('\nPLEASE LIST {} TARGETS:'.format(name))
+                while True:
+                    city = input('')
+                    if city:
+                        target_list.append(city)
+                        if player == self.human:
+                            time.sleep(1)
+                    else:
+                        break
+        else:
+            self.player.ask('\nYOU HAVE NO MISSILES LEFT. PRESS ENTER TO CONTINUE:  ')
         # Update any currently flying missiles
         # (done here to keep missiles in play sequence so bots can tell what's been fired this round)
-        self.update_missiles(country) # !! not written
+        self.update_missiles(country)
         # Fire the missiles at the selected targets.
         for missiles, targets in ((5, primaries), (2, secondaries)):
             for target in targets:
-                target_country, distance = self.confirm_target(target) # !! not written
+                target_country, distance = self.confirm_target(target)
                 self.missiles_flying.append((country, missiles, target, target_country, distance))
                 self.missiles_launched += missiles
+                player.arsenal_left -= missiles
+                if player.arsenal_left <= 0:
+                    self.player.tell('You have run out of missiles.')
+        return False
+
+    def update_missiles(self, current_country):
+        new_missiles = []
+        for country, missiles, target, target_country, distance in self.missiles_flying:
+            if country == current_country:
+                if distance == 1:
+                    hits = 0
+                    deaths = 0
+                    for shot in range(missiles):
+                        if random.random() > self.failure_rate:
+                            death_mod = max(0.01, (10 - self.cities[target]['hits']) / 10.0)
+                            death_base = int(self.cities[target]['population'] * death_mod)
+                            death_range = death_base // 10
+                            hits += 1
+                            deaths += random.randint(death_base - death_range, death_base + death_range)
+                    if hits:
+                        text = '{} IS HIT WITH {} RESULTING IN {} ESTIMATED FATALITIES.'
+                        hit_text = utility.number_plural(hits, 'missile').upper()
+                        self.human.tell(text.format(target.upper(), hit_text, deaths))
+                        time.sleep(1)
+                        self.countries[target_country]['death_toll'] += deaths
+                        self.bomb_deaths += deaths
+                        self.cities[target]['hits'] += hits
+                else:
+                    new_missiles.append((country, missiles, target, target_country, distance - 1))
+            else:
+                new_missiles.append(missile)
+        self.missiles_flying = new_missiles
 
     def set_options(self):
         """Define the options for the game. (None)"""
         self.option_set.add_option('united-states', ['us'])
         self.option_set.add_option('russia', ['r'])
+        self.option_set.add_option('failure_rate', ['fr'], float, 0.07, check = lambda fr: 0 <= fr <= 1)
 
     def set_up(self):
         """Set up the game. (None)"""
+        self.players = [self.human]
         # Try to play chess instead.
-        if self.human.ask("\nWOULDN'T YOU PREFER A GOOD GAME OF CHESS?") in utility.YES:
+        if self.human.ask("\nWOULDN'T YOU PREFER A GOOD GAME OF CHESS? ") in utility.YES:
             results = self.interface.games['chess'].play('')
             self.win_loss_draw = [1, 0, 0]
             self.scores[self.human.name] = results[3]
             self.force_end = 'chess'
-        # Load the country data.
-        self.countries = collections.defaultdict(dict)
-        self.powers = []
-        with open('country_data.csv') as country_data:
-            num_countries = int(country_data.readline())
-            for country in range(num_countries):
-                name = country_data.readline().strip()
-                data = {'name': name, cities = []}
-                missiles, paranoia, defense, defense_missiles = country_data.readline().split(',')
-                data['missiles'] = int(missiles)
-                data['paranoia'] = int(paranoia)
-                data['defense_rate'] = int(defense)
-                data['defense_missiles'] = int(defense_missiles)
-                data['allies'] = [country.strip() for country in country_data.readline().split(,)]
-                data['enemies'] = [country.strip() for country in country_data.readline().split(,)]
-                self.countries[name] = data
-                self.powers.append(name)
-        # Load the city data.
-        self.cities = {}
-        with open('city_data.csv') as city_data:
-            city_data.readline()
-            for line in city_data:
-                name, longitude, latitude, country, capital, population = line.split(',')
-                self.city_data[name.lower()] = {'name': name, 'latitude': latitude,
-                    'longitude': longitude, 'country': country, 'capital': capital,
-                    'population': int(population)}
-                self.countires[country]['cities'].append(name)
-                if capital == 'primary':
-                    self.countries[country]['capital'] = name
-        # Get the country to play.
-        if self.united_states:
-            self.human_country = 'United States'
-        elif self.russia:
-            self.human_country = 'Russia'
         else:
-            while True:
-                side_num = self.human.input(CHOOSE_SIDE).strip()
-                if side_num == '1':
-                    self.human_country = 'United States'
-                elif side_num == '2':
-                    self.human_country = 'Russia'
-                else:
-                    self.human.tell('PLEASE CHOOSE 1 OR 2.')
-                    continue
-                break
-        # Set up the players.
-        self.players = [self.human]
-        self.players.extend(NationBot(*data) for data in self.powers if data['name'] != self.human_country)
+            # Load the data.
+            self.load_countries()
+            self.load_cities()
+            self.bomb_deaths, self.winter_deaths = 0, 0
+            # Get the country to play.
+            if self.united_states:
+                self.human_country = 'United States'
+            elif self.russia:
+                self.human_country = 'Russia'
+            else:
+                while True:
+                    side_num = self.human.input(CHOOSE_SIDE).strip()
+                    if side_num == '1':
+                        self.human_country = 'United States'
+                    elif side_num == '2':
+                        self.human_country = 'Russia'
+                    else:
+                        self.human.tell('PLEASE CHOOSE 1 OR 2.')
+                        continue
+                    break
+            # Set up the players.
+            self.players.extend(NationBot(*data) for data in self.powers if data['name'] != self.human_country)
 
 class NationBot(player.Bot):
     """
@@ -221,7 +344,9 @@ class NationBot(player.Bot):
             else:
                 raise player.BotError('Target request to NationBot with no targets specified.')
             try:
-                return target_list.pop()
+                target = target_list.pop()
+                self.game.human.tell('{} launches missles at {}.'.format(self.name, target))
+                return target
             except IndexError:
                 self.output_mode = ''
                 return ''
@@ -308,3 +433,23 @@ class NationBot(player.Bot):
             self.output_mode = 'primary'
         elif args[0] == '\nPLEASE LIST SECONDARY TARGETS:':
             self.output_mode = 'secondary'
+
+def sphere_dist(point_a, point_b, radius):
+    """
+    The distance between two points on a sphere. (float)
+
+    Parameters:
+    point_a: Latitude and longitude of the first point. (tuple of float)
+    point_b: Latitude and longitude of the second point. (tuple of float)
+    radius: Radius of the sphere. (float)
+    """
+    # lambda is longitude
+    # Convert to Cartesian coordinates.
+    p1 = [math.radians(x) for x in point_a]
+    v1 = [math.cos(p1[1]) * math.cos(p1[0]), math.sin(p1[1]) * math.cos(p1[0]), math.sin(p1[0])]
+    p2 = [math.radians(x) for x in point_b]
+    v2 = [math.cos(p2[1]) * math.cos(p2[0]), math.sin(p2[1]) * math.cos(p2[0]), math.sin(p2[0])]
+    # Multiply the vectors.
+    cos_a = sum([c1 * c2 for c1, c2 in zip(v1, v2)])
+    # Return the distance.
+    return radius * math.acos(cos_a)
