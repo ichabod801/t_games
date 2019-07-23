@@ -122,7 +122,7 @@ def levenshtein(text_a, text_b):
     """
     # Initialize the matrix.
     matrix = [[0] * (len(text_a) + 1) for row in range(len(text_b) + 1)]
-    matrix[0] = list(range(text_a) + 1)
+    matrix[0] = list(range(len(text_a)) + 1)
     for y in range(len(text_b) + 1):
         matrix[y][0] = y
     # Fill the matrix of edits.

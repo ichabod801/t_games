@@ -165,15 +165,15 @@ class GlobalThermonuclearWar(game.Game):
             for country in range(num_countries):
                 name = country_data.readline().strip()
                 data = {'name': name, 'cities': [], 'death_toll': 0}
-                missiles, paranoia, defense, defense_missiles = country_data.readline().split(',')
-                data['missiles'] = int(missiles)
+                arsenal, paranoia, defense, defense_missiles = country_data.readline().split(',')
+                data['arsenal'] = int(arsenal)
                 data['paranoia'] = int(paranoia)
                 data['defense_rate'] = float(defense)
                 data['defense_missiles'] = int(defense_missiles)
                 data['allies'] = [country.strip() for country in country_data.readline().split(',')]
                 data['enemies'] = [country.strip() for country in country_data.readline().split(',')]
                 self.countries[name] = data
-                self.powers.append(name)
+                self.powers.append(data)
 
     def player_action(self, player):
         """
@@ -220,6 +220,54 @@ class GlobalThermonuclearWar(game.Game):
                     self.player.tell('You have run out of missiles.')
         return False
 
+    def set_options(self):
+        """Define the options for the game. (None)"""
+        self.option_set.add_option('united-states', ['us'])
+        self.option_set.add_option('russia', ['r'])
+        self.option_set.add_option('failure_rate', ['fr'], float, 0.07, check = lambda fr: 0 <= fr <= 1)
+
+    def set_up(self):
+        """Set up the game. (None)"""
+        self.players = [self.human]
+        # Try to play chess instead.
+        if self.human.ask("\nWOULDN'T YOU PREFER A GOOD GAME OF CHESS? ") in utility.YES:
+            results = self.interface.games['chess'].play('')
+            self.win_loss_draw = [1, 0, 0]
+            self.scores[self.human.name] = results[3]
+            self.force_end = 'chess'
+        else:
+            # Load the data.
+            self.load_countries()
+            self.load_cities()
+            # Initialize the tracking variables.
+            self.bomb_deaths, self.winter_deaths = 0, 0
+            self.missiles_flying = []
+            self.missiles_launched = 0
+            # Get the country to play.
+            if self.united_states:
+                self.human_country = 'United States'
+            elif self.russia:
+                self.human_country = 'Russia'
+            else:
+                while True:
+                    side_num = self.human.ask(CHOOSE_SIDE).strip()
+                    if side_num == '1':
+                        self.human_country = 'United States'
+                    elif side_num == '2':
+                        self.human_country = 'Russia'
+                    else:
+                        self.human.tell('PLEASE CHOOSE 1 OR 2.')
+                        continue
+                    break
+            # Set up the players.
+            for country_data in self.powers:
+                if country_data['name'] == self.human_country:
+                    for key, value in country_data.items():
+                        setattr(self.human, key, value)
+                    self.human.arsenal_left = self.human.arsenal
+                else:
+                    self.players.append(NationBot(**country_data))
+
     def update_missiles(self, current_country):
         new_missiles = []
         for country, missiles, target, target_country, distance in self.missiles_flying:
@@ -247,45 +295,6 @@ class GlobalThermonuclearWar(game.Game):
             else:
                 new_missiles.append(missile)
         self.missiles_flying = new_missiles
-
-    def set_options(self):
-        """Define the options for the game. (None)"""
-        self.option_set.add_option('united-states', ['us'])
-        self.option_set.add_option('russia', ['r'])
-        self.option_set.add_option('failure_rate', ['fr'], float, 0.07, check = lambda fr: 0 <= fr <= 1)
-
-    def set_up(self):
-        """Set up the game. (None)"""
-        self.players = [self.human]
-        # Try to play chess instead.
-        if self.human.ask("\nWOULDN'T YOU PREFER A GOOD GAME OF CHESS? ") in utility.YES:
-            results = self.interface.games['chess'].play('')
-            self.win_loss_draw = [1, 0, 0]
-            self.scores[self.human.name] = results[3]
-            self.force_end = 'chess'
-        else:
-            # Load the data.
-            self.load_countries()
-            self.load_cities()
-            self.bomb_deaths, self.winter_deaths = 0, 0
-            # Get the country to play.
-            if self.united_states:
-                self.human_country = 'United States'
-            elif self.russia:
-                self.human_country = 'Russia'
-            else:
-                while True:
-                    side_num = self.human.ask(CHOOSE_SIDE).strip()
-                    if side_num == '1':
-                        self.human_country = 'United States'
-                    elif side_num == '2':
-                        self.human_country = 'Russia'
-                    else:
-                        self.human.tell('PLEASE CHOOSE 1 OR 2.')
-                        continue
-                    break
-            # Set up the players.
-            self.players.extend(NationBot(*data) for data in self.powers if data['name'] != self.human_country)
 
 class NationBot(player.Bot):
     """
