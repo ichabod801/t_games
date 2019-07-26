@@ -200,7 +200,7 @@ class GlobalThermonuclearWar(game.Game):
         player: The player whose turn it is. (Player)
         """
         # Check for Chess win or no missiles.
-        if self.force_end or player.arsenal_left <= 0:
+        if self.force_end:
             return False
         # Get the name of the player's country.
         if player == self.human:
@@ -208,9 +208,9 @@ class GlobalThermonuclearWar(game.Game):
         else:
             country = player.name
         # Get the targets.
+        primaries = []
+        secondaries = []
         if player.arsenal_left > 0:
-            primaries = []
-            secondaries = []
             for target_list, name in ((primaries, 'PRIMARY'), (secondaries, 'SECONDARY')):
                 player.tell('\nPLEASE LIST {} TARGETS:'.format(name))
                 while True:
@@ -220,7 +220,7 @@ class GlobalThermonuclearWar(game.Game):
                     else:
                         break
         else:
-            self.player.ask('\nYOU HAVE NO MISSILES LEFT. PRESS ENTER TO CONTINUE:  ')
+            player.ask('\nYOU HAVE NO MISSILES LEFT. PRESS ENTER TO CONTINUE:  ')
         # Update any currently flying missiles
         # (done here to keep missiles in play sequence so bots can tell what's been fired this round)
         self.update_missiles(country)
@@ -389,6 +389,8 @@ class NationBot(player.Bot):
             except IndexError:
                 self.output_mode = ''
                 return ''
+        elif prompt.startswith('\nYOU HAVE NO MISSILES LEFT.'):
+            return ''
         else:
             super(NationBot, self).ask(prompt)
 
