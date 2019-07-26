@@ -185,6 +185,9 @@ class GlobalThermonuclearWar(game.Game):
                 data['defense_rate'] = float(defense)
                 data['defense_missiles'] = int(defense_missiles)
                 data['allies'] = [country.strip() for country in country_data.readline().split(',')]
+                if data['allies'] == ['']:
+                    # Clean up Israel
+                    data['allies'] = []
                 data['enemies'] = [country.strip() for country in country_data.readline().split(',')]
                 self.countries[name.lower()] = data
                 self.powers.append(data)

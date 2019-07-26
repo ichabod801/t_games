@@ -6,7 +6,7 @@ Russia, Cuba, China, Venezuela, Iran, Syria, Moldova, Grenada, Lebanon, Myanmar,
 Russia
 1600, 800, .85, 95
 India, Syria, Brazil, Venezuela, Cuba, Italy, Germany, Azerbaijan, Belarus, Kazakhstan, Kyrgyzstan, Armenia, Moldova, Uzbekistan, Turkmenistan, China, Indonesia, Iran, Botswana, Mozambique, Namibia, Sudan, Zimbabwe, Bolivia, Grenada, Uruguay, Armenia, Indonesia, Lebanon, Mongolia, Myanmar, North Korea, Sri Lanka
-Turkey, Ukraine, United States, Afganistan, Estonia, Latvia, Lithuania, Georgia, Poland, Czechia, Japan Libya, Pakistan, Chad
+Turkey, Ukraine, United States, Afganistan, Estonia, Latvia, Lithuania, Georgia, Poland, Czechia, Japan, Libya, Pakistan, Chad
 United Kingdom
 120, 700, 9, 0
 United States, Ireland, Canada, Australia, Chile, Colombia, Panama, Brunei, Israel, Japan, Kazakhstan, Oman, South Korea, Turkey, Finland, Poland, Germany, New Zealand, Nigeria, Barbados, Estonia, Latvia, Lithuania, Libya, India
@@ -34,4 +34,4 @@ South Korea, United States, Turkey, Portugal, Iraq, Chile, Argentina
 Israel
 40, 900, .75, 10
 
-Turkey, Algeria, Bahrain, Comoros, Djibouti, Iraq, Kuwait, Lebanon, Libya, Morocco, Qatar, Saudi Arabia, Somalia, Sudan, Syrian, Tunisia, United Arab Emirates, Yemen, Afganistan, Bangladesh, Brunei, Indonesia, Iran, Malaysia, Mali, Niger, Pakistan
+Turkey, Algeria, Bahrain, Comoros, Djibouti, Iraq, Kuwait, Lebanon, Libya, Morocco, Qatar, Saudi Arabia, Somalia, Sudan, Syria, Tunisia, United Arab Emirates, Yemen, Afganistan, Bangladesh, Brunei, Indonesia, Iran, Malaysia, Mali, Niger, Pakistan
