@@ -197,10 +197,10 @@ class GlobalThermonuclearWar(game.Game):
             for target_list, name in ((primaries, 'PRIMARY'), (secondaries, 'SECONDARY')):
                 player.tell('\nPLEASE LIST {} TARGETS:'.format(name))
                 while True:
-                    city = input('')
+                    city = player.ask('')
                     if city:
                         target_list.append(city)
-                        if player == self.human:
+                        if player != self.human:
                             time.sleep(1)
                     else:
                         break

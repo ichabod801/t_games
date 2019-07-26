@@ -122,14 +122,14 @@ def levenshtein(text_a, text_b):
     """
     # Initialize the matrix.
     matrix = [[0] * (len(text_a) + 1) for row in range(len(text_b) + 1)]
-    matrix[0] = list(range(len(text_a)) + 1)
+    matrix[0] = list(range(len(text_a) + 1))
     for y in range(len(text_b) + 1):
         matrix[y][0] = y
     # Fill the matrix of edits.
-    for x in range(1, len(text_a) + 1):
-        for y in range(1, len(text_b) + 1):
-            base = [matrix[x - 1][y], matrix[x][y - 1]]
-            if text_a[x - 1] == text_b[y - 1]:
+    for x in range(1, len(text_b) + 1):
+        for y in range(1, len(text_a) + 1):
+            base = [matrix[x - 1][y] + 1, matrix[x][y - 1] + 1]
+            if text_b[x - 1] == text_a[y - 1]:
                 base.append(matrix[x - 1][y - 1])
             else:
                 base.append(matrix[x - 1][y - 1] + 1)
