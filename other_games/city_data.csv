@@ -218,7 +218,7 @@ Bafoussam,5.4904,10.4099,Cameroon,admin,290768
 Bage,-31.32,-54.1,Brazil,,106098
 Baghdad,33.3386,44.3939,Iraq,primary,5054000
 Baghlan,36.1393,68.6993,Afganistan,minor,218748
-Bago,17.32,96.515,Burma,admin,284318
+Bago,17.32,96.515,Myanmar,admin,284318
 Baguio City,16.43,120.5699,Philippines,admin,447824
 Bahawalpur,29.39,71.675,Pakistan,minor,552607
 Bahia Blanca,-38.74,-62.265,Argentina,minor,281536
@@ -530,10 +530,10 @@ Carora,10.19,-70.08,Venezuela,minor,149711
 Carpina,-7.84,-35.26,Brazil,,165579
 Carrollton,32.9886,-96.9,United States,,135710
 Carson City,39.1512,-119.7474,United States,admin,57525
-Cartagena (Columbia),10.3997,-75.5144,Colombia,admin,887000
+Cartagena (Colombia),10.3997,-75.5144,Colombia,admin,887000
 Cartagena (Spain),37.6004,-0.98,Spain,,201274
 Cartago (Costa Rica),9.87,-83.93,Costa Rica,admin,196946
-Cartago (Columbia),4.75,-75.91,Colombia,minor,134827
+Cartago (Colombia),4.75,-75.91,Colombia,minor,134827
 Caruaru,-8.28,-35.98,Brazil,,242094
 Carupano,10.67,-63.23,Venezuela,minor,126293
 Cary,35.7814,-78.8167,United States,,165904
@@ -733,7 +733,7 @@ Davao,7.11,125.63,Philippines,admin,1402000
 Davenport,41.5563,-90.6052,United States,,287413
 David,8.4333,-82.4333,Panama,admin,110037
 Davie,26.079,-80.287,United States,,105149
-Dawei,14.098,98.195,Burma,admin,146212
+Dawei,14.098,98.195,Myanmar,admin,146212
 Dayr az Zawr,35.3304,40.13,Syria,admin,309141
 Dayton,39.7797,-84.1998,United States,,718169
 Debrecen,47.5305,21.63,Hungary,admin,231286
@@ -1119,7 +1119,7 @@ Higuey,18.616,-68.708,Dominican Republic,minor,123787
 Hillsboro,45.5271,-122.9358,United States,,106894
 Hims,34.73,36.72,Syria,admin,1005000
 Hindupur,13.7804,77.49,India,,168312
-Hinthada,17.6483,95.4679,Burma,,180728
+Hinthada,17.6483,95.4679,Myanmar,,180728
 Hirosaki,40.57,140.47,Japan,,174972
 Hiroshima,34.3878,132.4429,Japan,admin,2045000
 Hisar,29.17,75.725,India,,544829
@@ -1579,7 +1579,7 @@ Leon (Nicaragua),12.4356,-86.8794,Nicaragua,admin,164441
 Leon (Spain),42.58,-5.57,Spain,minor,136227
 Les Cayes,18.2004,-73.75,Haiti,admin,175457
 Leshan,29.5671,103.7333,China,,1157000
-Letpadan,17.7819,95.7415,Burma,,176571
+Letpadan,17.7819,95.7415,Myanmar,,176571
 Lewisville,33.0453,-96.9823,United States,,106021
 Lexington,38.0423,-84.4587,United States,,315939
 Lhasa,29.645,91.1,China,admin,219599
@@ -1693,7 +1693,7 @@ Magangue,9.23,-74.74,Colombia,minor,100313
 Magdeburg,52.1304,11.62,Germany,admin,229826
 Magelang,-7.4696,110.18,Indonesia,,111461
 Magnitogorsk,53.4227,58.98,Russia,,413351
-Magway,20.1445,94.9196,Burma,admin,125973
+Magway,20.1445,94.9196,Myanmar,admin,125973
 Mahabad,36.7704,45.72,Iran,,162434
 Mahajanga,-15.67,46.345,Madagascar,admin,154657
 Mahilyow,53.8985,30.3247,Belarus,admin,369200
@@ -1728,7 +1728,7 @@ Manaus,-3.1,-60,Brazil,admin,1753000
 Manbij,36.5266,37.9563,Syria,minor,120169
 Manchester (United Kingdom),53.5004,-2.248,United Kingdom,admin,2230000
 Manchester (United States),42.9848,-71.4447,United States,,160742
-Mandalay,21.97,96.085,Burma,admin,1300000
+Mandalay,21.97,96.085,Myanmar,admin,1300000
 Mandya,12.5704,76.92,India,,285034
 Mangalore,12.9,74.85,India,,776632
 Mangyshlak,43.6905,51.1417,Kazakhstan,,147443
@@ -1786,7 +1786,7 @@ Matsuyama,33.8455,132.7658,Japan,admin,533541
 Maturin,9.75,-63.17,Venezuela,admin,410972
 Mauldin,34.7864,-82.2996,United States,,132402
 Maumere,-8.6189,122.2123,Indonesia,minor,104285
-Mawlamyine,16.5004,97.67,Burma,admin,438861
+Mawlamyine,16.5004,97.67,Myanmar,admin,438861
 Maxixe,-23.866,35.3886,Mozambique,,119868
 May Pen,17.9666,-77.2333,Jamaica,admin,135142
 Maykop,44.61,40.12,Russia,admin,158451
@@ -1875,7 +1875,7 @@ Montgomery,32.347,-86.2663,United States,admin,255908
 Montpelier,44.2658,-72.5717,United States,admin,7484
 Montpellier,43.6104,3.87,France,minor,327254
 Montreal,45.5,-73.5833,Canada,,3678000
-Monywa,22.105,95.15,Burma,,226222
+Monywa,22.105,95.15,Myanmar,,226222
 Mopti,14.49,-4.18,Mali,admin,108456
 Moradabad,28.8418,78.7568,India,,787000
 Moratuwa,6.7804,79.88,Sri Lanka,,200000
@@ -1895,7 +1895,7 @@ M'sila,35.7,4.545,Algeria,admin,150000
 Muar,2.0337,102.5666,Malaysia,,191346
 Mubi,10.2703,13.27,Nigeria,minor,225705
 Mudangiang,44.575,129.59,China,minor,1244000
-Mudon,16.2618,97.7215,Burma,,152300
+Mudon,16.2618,97.7215,Myanmar,,152300
 Mufulira,-12.55,28.26,Zambia,,153624
 Mulhouse,47.7504,7.35,France,,215454
 Multan,30.2,71.455,Pakistan,minor,1522000
@@ -1917,9 +1917,9 @@ Muzaffarpur,26.1204,85.3799,India,,333200
 Mwanza,-2.52,32.93,Tanzania,admin,493944
 Mwene-Ditu,-7,23.44,Democratic Republic of the Congo,,189177
 My Tho,10.3504,106.35,Vietnam,admin,124143
-Myeik,12.4541,98.6115,Burma,,266720
-Myingyan,21.4618,95.3914,Burma,,163812
-Myitkyina,25.3596,97.3928,Burma,admin,139100
+Myeik,12.4541,98.6115,Myanmar,,266720
+Myingyan,21.4618,95.3914,Myanmar,,163812
+Myitkyina,25.3596,97.3928,Myanmar,admin,139100
 Mykolayiv,46.9677,31.9843,Ukraine,admin,510840
 Mymensingh,24.7504,90.38,Bangladesh,admin,330126
 Myrtle Beach,33.7096,-78.8843,United States,,260487
@@ -1979,7 +1979,7 @@ Navoi,40.1104,65.355,Uzbekistan,,214828
 Navsari,20.8504,72.92,India,,163000
 Nawabganj,24.5804,88.35,Bangladesh,,142361
 Nawabshah,26.2454,68.4,Pakistan,minor,229504
-Naypyidaw,19.7666,96.1186,Burma,primary,930000
+Naypyidaw,19.7666,96.1186,Myanmar,primary,930000
 Nazareth,32.704,35.2955,Israel,admin,151459
 Nazret,8.55,39.27,Ethiopia,,476892
 Ndjamena,12.1131,15.0491,Chad,primary,989000
@@ -2152,7 +2152,7 @@ Padangsidempuan,1.3887,99.2734,Indonesia,,266882
 Pagadian,7.853,123.507,Philippines,admin,159590
 Pago Pago,-14.274,-170.7046,American Samoa,primary,12576
 Pakalongan,-6.8796,109.67,Indonesia,,272000
-Pakokku,21.332,95.0866,Burma,,126938
+Pakokku,21.332,95.0866,Myanmar,,126938
 Pakxe,15.1221,105.8183,Laos,admin,102775
 Palangkaraya,-2.2096,113.91,Indonesia,admin,148289
 Palembang,-2.98,104.75,Indonesia,admin,1749000
@@ -2191,7 +2191,7 @@ Pasto,1.2136,-77.2811,Colombia,admin,382236
 Pasuruan,-7.6296,112.9,Indonesia,,500000
 Paterson,40.9147,-74.1624,United States,,148678
 Pathankot,32.2703,75.72,India,,253987
-Pathein,16.7704,94.75,Burma,admin,237089
+Pathein,16.7704,94.75,Myanmar,admin,237089
 Pathum Thani,14.0171,100.5333,Thailand,admin,154412
 Pati,-6.7415,111.0347,Indonesia,minor,122785
 Patiala,30.3204,76.385,India,,329224
@@ -2342,7 +2342,7 @@ Purnia,25.7854,87.48,India,,198453
 Putian,25.4303,119.02,China,minor,376558
 Puyang,35.7004,114.98,China,minor,666322
 Pyatigorsk,44.08,43.09,Russia,,142865
-Pyay,18.8165,95.2114,Burma,,135308
+Pyay,18.8165,95.2114,Myanmar,,135308
 Pyongyang,39.0194,125.7547,North Korea,primary,3300000
 Qairouan,35.6804,10.1,Tunisia,admin,144522
 Qaraghandy,49.885,73.115,Kazakhstan,admin,451800
@@ -2391,7 +2391,7 @@ Rampur,28.8154,79.025,India,,296418
 Rancagua,-34.17,-70.74,Chile,admin,233268
 Ranchi,23.37,85.33,India,admin,1044000
 Rancho Cucamonga,34.1247,-117.5664,United States,,177452
-Rangoon,16.7834,96.1667,Burma,primary,4088000
+Rangoon,16.7834,96.1667,Myanmar,primary,4088000
 Rangpur,25.75,89.28,Bangladesh,admin,285564
 Ras al Khaymah,25.7915,55.9428,United Arab Emirates,admin,160849
 Rashid,31.4604,30.39,Egypt,,199509
@@ -2706,7 +2706,7 @@ Siracusa,37.0704,15.29,Italy,minor,123657
 Sirjan,29.47,55.73,Iran,minor,175000
 Sirsa,29.4904,75.03,India,,181639
 Sitapur,27.63,80.75,India,,164435
-Sittwe,20.14,92.88,Burma,admin,179032
+Sittwe,20.14,92.88,Myanmar,admin,179032
 Sivas,39.7454,37.035,Turkey,admin,264022
 Skikda,36.8804,6.9,Algeria,admin,225181
 Skopje,42,21.4335,Macedonia,primary,494087
@@ -2855,8 +2855,8 @@ Tartus,34.8846,35.8866,Syria,admin,162980
 Tashkent,41.3117,69.2949,Uzbekistan,primary,2184000
 Tasikmalaya,-7.3254,108.2147,Indonesia,,271143
 Taubate,-23.0195,-45.56,Brazil,,403560
-Taunggyi,20.782,97.038,Burma,admin,160115
-Taungoo,18.9483,96.4179,Burma,,106945
+Taunggyi,20.782,97.038,Myanmar,admin,160115
+Taungoo,18.9483,96.4179,Myanmar,,106945
 Tauranga,-37.6964,176.1536,New Zealand,,121500
 Tawau,4.271,117.896,Malaysia,,306462
 Tay Ninh,11.323,106.147,Vietnam,admin,126370
@@ -3185,7 +3185,7 @@ Yanji,42.8823,129.5128,China,,488740
 Yantai,37.5304,121.4,China,,2116000
 Yaounde,3.8667,11.5167,Cameroon,primary,1611000
 Yaroslavl,57.62,39.87,Russia,admin,606730
-Yaynangyoung,20.4615,94.881,Burma,,110553
+Yaynangyoung,20.4615,94.881,Myanmar,,110553
 Yazd,31.9201,54.37,Iran,admin,477905
 Yei,4.0904,30.68,South Sudan,,185000
 Yekaterinburg,56.85,60.6,Russia,admin,1313000
