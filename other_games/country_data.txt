@@ -12,7 +12,7 @@ United Kingdom
 United States, Ireland, Canada, Australia, Chile, Colombia, Panama, Brunei, Israel, Japan, Kazakhstan, Oman, South Korea, Turkey, Finland, Poland, Germany, New Zealand, Nigeria, Barbados, Estonia, Latvia, Lithuania, Libya, India
 Russia, Argentina, Iran
 France
-280, 600, 0, 0
+180, 600, 0, 0
 Turkey, Libya, Egypt, Germany, Democratic Republic of the Congo, Chad, Niger, Brazil, Canada, India, Indonesia, Japan, South Korea, Qatar, Bosnia and Herzegovina, Greece, Ireland, Latvia
 Madagascar, Comoros, Mauritius, China, North Korea
 China

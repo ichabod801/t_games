@@ -3,6 +3,9 @@ global_thermonuclear_war_game.py
 
 A game inspired by Global Thermonuclear War in the movie War Games.
 
+!! add a command you can use to get information on cities/countries, and to
+run other commands.
+
 To Do:
 End of game
     Nuclear winter, 1% starvation rate for every 10 bombs detonated.
@@ -14,7 +17,7 @@ GlobalThermonuclearWar: A game of thermonuclear armageddon. (game.Game)
 
 
 import itertools
-from math import radians, sin, cos, acos, ceil
+from math import radians, sin, cos, acos, ceil, atan2, sqrt
 import os
 import random
 import time
@@ -47,6 +50,9 @@ class GlobalThermonuclearWar(game.Game):
     that I think no one likes Israel or Israel hates everybody. And yes, I know
     nuclear winter is a controversial topic. It's a game, dude.
 
+    !! I need a better way to handle Israel. It's firing on New York City, which
+    makes no sense.
+
     Overridden Methods:
     set_options
     set_up
@@ -54,7 +60,6 @@ class GlobalThermonuclearWar(game.Game):
 
     categories = ['Other Games']
     earth_radius = 3957
-    earth_circumference = 24881.0
     name = 'Global Thermonuclear War'
     num_options = 2
     world_population = 7700000000
@@ -122,7 +127,7 @@ class GlobalThermonuclearWar(game.Game):
         # Calculate the distance
         start = (self.countries[country.lower()]['latitude'], self.countries[country.lower()]['longitude'])
         end = (latitude, longitude)
-        distance = ceil(sphere_dist(start, end, self.earth_radius) / self.earth_circumference * 6)
+        distance = sphere_dist(start, end, self.earth_radius)
         # Return the confirmed name and the distance.
         return confirmed, distance
 
@@ -297,7 +302,7 @@ class GlobalThermonuclearWar(game.Game):
         new_missiles = []
         for country, missiles, target, target_country, distance in self.missiles_flying:
             if country == current_country:
-                if distance == 1:
+                if distance <= 1000:
                     hits = 0
                     deaths = 0
                     for shot in range(missiles):
@@ -316,7 +321,7 @@ class GlobalThermonuclearWar(game.Game):
                         self.bomb_deaths += deaths
                         self.cities[target]['hits'] += hits
                 else:
-                    new_missiles.append((country, missiles, target, target_country, distance - 1))
+                    new_missiles.append((country, missiles, target, target_country, distance - 1000))
             else:
                 new_missiles.append((country, missiles, target, target_country, distance))
         self.missiles_flying = new_missiles
@@ -489,9 +494,14 @@ def sphere_dist(point_a, point_b, radius):
     p1 = [radians(x) for x in point_a]
     #v1 = [math.cos(p1[1]) * math.cos(p1[0]), math.sin(p1[1]) * math.cos(p1[0]), math.sin(p1[0])]
     p2 = [radians(x) for x in point_b]
+    dlat = p2[0] - p1[0]
+    dlon = p2[1] - p1[1]
+    a = sin(dlat / 2) ** 2 + cos(p1[0]) * cos(p2[0]) * sin(dlon / 2) ** 2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
     #v2 = [math.cos(p2[1]) * math.cos(p2[0]), math.sin(p2[1]) * math.cos(p2[0]), math.sin(p2[0])]
     # Multiply the vectors.
     #cos_a = sum([c1 * c2 for c1, c2 in zip(v1, v2)])
-    cos_a = min(1, sin(p1[0]) * sin(p2[0]) + cos(p1[0]) * cos(p2[0]) * cos(p2[1] - p1[1]))
+    ##cos_a = min(1, sin(p1[0]) * sin(p2[0]) + cos(p1[0]) * cos(p2[0]) * cos(p2[1] - p1[1]))
     # Return the distance.
-    return radius * acos(cos_a)
+    #return radius * acos(cos_a)
+    return c * radius
