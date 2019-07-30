@@ -3,13 +3,9 @@ global_thermonuclear_war_game.py
 
 A game inspired by Global Thermonuclear War in the movie War Games.
 
-!! add a command you can use to get information on cities/countries, and to
-run other commands.
-
 To Do:
 End of game
     Nuclear winter, 1% starvation rate for every 10 bombs detonated.
-Can't fire if no missiles
 
 Classes:
 GlobalThermonuclearWar: A game of thermonuclear armageddon. (game.Game)
@@ -47,6 +43,10 @@ over 3,000 world cities. You can fire at cities not in the database, but you
 will need to tell the game which country the city is in and what it's
 population is.
 
+When entering targets, you may start a line with 'CMD:' to enter a t_games
+system command, or the data command. The data command takes a country name as
+an argument, and returns information on that country.
+
 To win, you just need to make sure that no one dies in either your country or 
 any of your allies' countries.
 
@@ -81,9 +81,11 @@ class GlobalThermonuclearWar(game.Game):
     """
 
     categories = ['Other Games']
+    credits = CREDITS
     earth_radius = 3957
     name = 'Global Thermonuclear War'
     num_options = 2
+    rules = RULES
     world_population = 7700000000
 
     def confirm_target(self, raw_target):
@@ -93,7 +95,6 @@ class GlobalThermonuclearWar(game.Game):
         Parameters:
         target: The target as entered by the user. (str)
         """
-        # !! refactor (new_city method?)
         player = self.players[self.player_index]
         target = raw_target.lower()
         if target in self.cities:
@@ -121,25 +122,7 @@ class GlobalThermonuclearWar(game.Game):
             choice = player.ask_int(query, low = 1, high = 4)
             if choice == 4:
                 confirmed = target
-                # Get the country.
-                while True:
-                    country = player.ask('\nWHAT COUNTRY IS {} IN?  '.format(confirmed.upper())).lower()
-                    if country.lower() in self.countries:
-                        break
-                    elif not country:
-                        return ('', 0)
-                    player.tell('\nI DO NOT RECOGNIZE THAT COUNTRY.')
-                    player.tell('PLEASE TRY AGAIN OR HIT ENTER TO CANCEL TARGET.')
-                # Get the city coordinates from the country.
-                latitude = self.countries[country]['latitude']
-                longitude = self.countries[country]['longitude']
-                # Get the population of the city.
-                query = '\nWHAT IS THE POPULATION OF {}?'.format(confirmed)
-                population = player.ask_int(query, low = 1, high = 1000000)
-                # Enter the new city.
-                self.cities[confirmed] = {'name': confirmed, 'population': population, 'country': country,
-                    'latitude': latitude, 'longitude': longitude, 'hits': 0}
-                self.countries[country]['cities'].append(confirmed)
+                self.new_city(target, player)
             else:
                 # Use the user's choice.
                 distance, confirmed = distances[choice - 1]
@@ -152,6 +135,25 @@ class GlobalThermonuclearWar(game.Game):
         distance = sphere_dist(start, end, self.earth_radius)
         # Return the confirmed name and the distance.
         return confirmed, distance
+        
+    def do_data(self, arguments):
+        """
+        Get data on one of the countries in the game.
+        """
+        player = self.players[self.player_index]
+        if arguments.lower() in self.countries:
+            player.tell('')
+            player.tell('data on {}:'.format(arguments).upper())
+            data = self.countries[arguments.lower()]
+            player.tell('capital: {}.'.format(data['capital']).upper())
+            player.tell('largest city: {}.'.format(data['largest']).upper())
+            player.tell('other cities: {}'.format(', '.join(data['cities'])).upper())
+            if 'allies' in data:
+                player.tell('allies: {}'.format(', '.join(data['allies'])).upper())
+                player.tell('enemies: {}'.format(', '.join(data['enemies'])).upper())
+        else:
+            player.tell('\nI DO NOT RECOGNIZE THAT COUNTRY.')     
+        return True    
 
     def game_over(self):
         """Check for the end of the world. (bool)"""
@@ -218,6 +220,34 @@ class GlobalThermonuclearWar(game.Game):
                 data['enemies'] = [country.strip() for country in country_data.readline().split(',')]
                 self.countries[name.lower()] = data
                 self.powers.append(data)
+                
+    def new_city(self, target, player):
+        """
+        Add a new city to the database. (None)
+        
+        Parameters:
+        target: The name of the city to add. (str)
+        player: The player adding the city. (player.Player)
+        """
+        # Get the country.
+        while True:
+            country = player.ask('\nWHAT COUNTRY IS {} IN?  '.format(confirmed.upper())).lower()
+            if country.lower() in self.countries:
+                break
+            elif not country:
+                return ('', 0)
+            player.tell('\nI DO NOT RECOGNIZE THAT COUNTRY.')
+            player.tell('PLEASE TRY AGAIN OR HIT ENTER TO CANCEL TARGET.')
+        # Get the city coordinates from the country.
+        latitude = self.countries[country]['latitude']
+        longitude = self.countries[country]['longitude']
+        # Get the population of the city.
+        query = '\nWHAT IS THE POPULATION OF {}?'.format(confirmed).upper()
+        population = player.ask_int(query, low = 1, high = 1000000)
+        # Enter the new city.
+        self.cities[confirmed] = {'name': target, 'population': population, 'country': country,
+            'latitude': latitude, 'longitude': longitude, 'hits': 0}
+        self.countries[country]['cities'].append(target)            
 
     def player_action(self, player):
         """
