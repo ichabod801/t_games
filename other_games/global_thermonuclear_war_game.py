@@ -35,6 +35,28 @@ WHICH SIDE DO YOU WANT?
 
 PLEASE CHOOSE ONE:  """
 
+CREDITS = """
+Game Design: Craig "Ichabod" O'Brien (based on the movie War Games)
+Game Programming: Craig "Ichabod" O'Brien
+"""
+
+RULES = """
+Each turn you can select primary targets (to fire 5 missiles at) and secondary
+targets (to fire 2 missiles at). Targets are cities. The game has a database of
+over 3,000 world cities. You can fire at cities not in the database, but you
+will need to tell the game which country the city is in and what it's
+population is.
+
+To win, you just need to make sure that no one dies in either your country or 
+any of your allies' countries.
+
+Options:
+failure-rate= (fr=): The probability a missile will fail. (0 to 0.5, default 
+    0.07)
+russia (r): Play as Russia.
+united-states (us): Play as the United States of America.
+"""
+
 
 class GlobalThermonuclearWar(game.Game):
     """
@@ -259,7 +281,7 @@ class GlobalThermonuclearWar(game.Game):
         """Define the options for the game. (None)"""
         self.option_set.add_option('united-states', ['us'])
         self.option_set.add_option('russia', ['r'])
-        self.option_set.add_option('failure_rate', ['fr'], float, 0.07, check = lambda fr: 0 <= fr <= 1)
+        self.option_set.add_option('failure_rate', ['fr'], float, 0.07, check = lambda fr: 0 <= fr < 0.5)
 
     def set_up(self):
         """Set up the game. (None)"""
