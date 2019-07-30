@@ -220,7 +220,13 @@ class GlobalThermonuclearWar(game.Game):
                 player.tell('\nPLEASE LIST {} TARGETS:'.format(name))
                 while True:
                     city = player.ask('')
-                    if city:
+                    if city.lower().startswith('cmd:'):
+                        tag, colon, command = city.partition(':')
+                        go = self.handle_cmd(command)
+                        if not go:
+                            return False
+                        player.tell('\nPLEASE LIST {} TARGETS:'.format(name))    
+                    elif city:
                         target_list.append(city)
                     else:
                         break
@@ -243,7 +249,7 @@ class GlobalThermonuclearWar(game.Game):
                 self.missiles_launched += missiles
                 player.arsenal_left -= missiles
                 if player.arsenal_left <= 0:
-                    player.tell('You have run out of missiles.')
+                    player.tell('YOU HAVE RUN OUT OF MISSILES.')
                     break
         print(self.missiles_flying)
         print(player.arsenal_left)
