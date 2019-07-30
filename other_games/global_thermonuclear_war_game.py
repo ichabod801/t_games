@@ -158,8 +158,18 @@ class GlobalThermonuclearWar(game.Game):
     def game_over(self):
         """Check for the end of the world. (bool)"""
         if self.turns >= 7 and not self.missiles_flying:
-            # !! Needs more output and nuclear winter.
-            self.human.tell('{} ESITMATED FATALITIES.'.format(self.bomb_daths))
+            # Show death tolls from bombs.
+            text = 'ESTIMATED FATALITIES FOR {}: {}'
+            for country, data in sorted(self.countries.items()):
+                if data['death_toll']:
+                   self.human.tell(text.format(country.upper(), data['death_toll']))
+            self.human.tell('TOTAL ESITMATED FATALITIES FROM BOMBS: {}.'.format(self.bomb_daths))
+            # Calcualte deaths from nuclear winter.
+            remaining = self.world_population - self.bomb_deaths
+            winter_deaths = min(remaining, int(remaining * self.missiles_launched / 1000.0))
+            self.human.tell('ESTIMATED FATALITIES FROM NUCLEAR WINTER: {}.'.format(winter_deaths))
+            self.human.tell('TOTAL ESTIMATED FATALITIES: {}.'.format(self.bomb_deaths + winter_deaths))
+            # Tell the human they lost.
             self.human.tell('WINNER:  NONE')
             self.win_loss_draw = [0, 1, 0]
             self.scores[self.human.name] = -self.bomb_deaths
