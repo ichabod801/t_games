@@ -306,7 +306,8 @@ class GlobalThermonuclearWar(game.Game):
                 target_country = self.cities[confirmed]['country']
                 if player != self.human:
                     self.human.tell('{} launches missiles at {}.'.format(player.name, target).upper())
-                    time.sleep(1)
+                    if not self.fast:
+                        time.sleep(1)
                 self.missiles_flying.append((country, missiles, confirmed, target_country, distance))
                 self.missiles_launched += missiles
                 player.arsenal_left -= missiles
@@ -319,9 +320,14 @@ class GlobalThermonuclearWar(game.Game):
 
     def set_options(self):
         """Define the options for the game. (None)"""
-        self.option_set.add_option('united-states', ['us'])
-        self.option_set.add_option('russia', ['r'])
-        self.option_set.add_option('failure_rate', ['fr'], float, 0.07, check = lambda fr: 0 <= fr < 0.5)
+        self.option_set.add_option('united-states', ['us'],
+            question = 'Would you like to play the United States? bool')
+        self.option_set.add_option('russia', ['r'],
+            question = 'Would you like to play Russia? bool')
+        self.option_set.add_option('failure_rate', ['fr'], float, 0.07, check = lambda fr: 0 <= fr < 0.5,
+            question = 'What should the missile failure rate be (return for 0.07)? ')
+        self.option_set.add_option('fast', ['f'], 
+            question = 'Would you like to remove the pauses during output? bool')            
 
     def set_up(self):
         """Set up the game. (None)"""
@@ -384,7 +390,8 @@ class GlobalThermonuclearWar(game.Game):
                         text = '{} IS HIT WITH {} RESULTING IN {} ESTIMATED FATALITIES.'
                         hit_text = utility.number_plural(hits, 'missile').upper()
                         self.human.tell(text.format(target.upper(), hit_text, deaths))
-                        time.sleep(1)
+                        if not self.fast:
+                            time.sleep(1)
                         self.countries[target_country.lower()]['death_toll'] += deaths
                         self.bomb_deaths += deaths
                         self.cities[target]['hits'] += hits
