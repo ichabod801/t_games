@@ -33,5 +33,5 @@ China, Russia
 South Korea, United States, Turkey, Portugal, Iraq, Chile, Argentina
 Israel
 40, 900, .75, 10
-
+United States, Mexico, Canada, China
 Turkey, Algeria, Bahrain, Comoros, Djibouti, Iraq, Kuwait, Lebanon, Libya, Morocco, Qatar, Saudi Arabia, Somalia, Sudan, Syria, Tunisia, United Arab Emirates, Yemen, Afganistan, Bangladesh, Brunei, Indonesia, Iran, Malaysia, Mali, Niger, Pakistan

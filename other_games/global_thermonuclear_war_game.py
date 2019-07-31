@@ -3,10 +3,6 @@ global_thermonuclear_war_game.py
 
 A game inspired by Global Thermonuclear War in the movie War Games.
 
-To Do:
-End of game
-    Nuclear winter, 1% starvation rate for every 10 bombs detonated.
-
 Classes:
 GlobalThermonuclearWar: A game of thermonuclear armageddon. (game.Game)
 """
@@ -66,14 +62,8 @@ class GlobalThermonuclearWar(game.Game):
     This is a silly game that you always lose, and I couldn't find an easy source
     for the data, so I just spent a couple days skimming foreign relations articles
     on Wikipedia. I'm sure it's wrong. I'm not seeing the point in worrying about
-    it either. The priority was ensuring an escalation of the conflict. Also, note
-    that Israel has no allies listed only so that it will keep all of it's missiles
-    until it is attacked directly or it sees the end of the world coming. It's not
-    that I think no one likes Israel or Israel hates everybody. And yes, I know
-    nuclear winter is a controversial topic. It's a game, dude.
-
-    !! I need a better way to handle Israel. It's firing on New York City, which
-    makes no sense.
+    it either. The priority was ensuring an escalation of the conflict. And yes, I 
+    know nuclear winter is a controversial topic. It's a game, dude.
 
     Overridden Methods:
     set_options
@@ -523,6 +513,7 @@ class NationBot(player.Bot):
 
     def set_strategy(self):
         """Set the strategy for the next round of target selection. (None)"""
+        # !! need to stop firing if no one else has fired in a while. Multiply num_targets?
         self.num_targets = 1
         for country, missiles, target, target_country, distance in self.game.missiles_flying:
             if country == self.name:
@@ -532,6 +523,8 @@ class NationBot(player.Bot):
             elif target_country in self.allies and country not in self.indirect_foes:
                 self.indirect_foes.append(country)
             self.num_targets += 1
+        if self.name == 'Israel':
+            self.indirect_foes = []   
         self.indect_foes = [country for country in self.indirect_foes if country not in self.direct_foes]
         if self.game.missiles_launched >= self.paranoia or self.arsenal_left * 2 < self.arsenal:
             self.paranoid = True
