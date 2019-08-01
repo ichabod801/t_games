@@ -209,7 +209,7 @@ class GlobalThermonuclearWar(game.Game):
             self.human.tell('\nTOTAL ESITMATED FATALITIES FROM BOMBS: {:,}.'.format(self.bomb_deaths))
             # Calcualte deaths from nuclear winter.
             remaining = self.world_population - self.bomb_deaths
-            winter_deaths = min(remaining, int(remaining * self.missiles_launched / 1000.0))
+            winter_deaths = min(remaining, int(remaining * self.missiles_launched / 3500.0))
             self.human.tell('ESTIMATED FATALITIES FROM NUCLEAR WINTER: {:,}.'.format(winter_deaths))
             self.human.tell('TOTAL ESTIMATED FATALITIES: {:,}.'.format(self.bomb_deaths + winter_deaths))
             # Tell the human they lost.
