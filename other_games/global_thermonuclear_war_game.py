@@ -357,6 +357,8 @@ class GlobalThermonuclearWar(game.Game):
         self.update_missiles(country)
         # Fire the missiles at the selected targets.
         for missiles, targets in ((5, primaries), (2, secondaries)):
+            if targets:
+                self.human.tell('')
             for target in targets:
                 confirmed, distance = self.confirm_target(target)
                 if not confirmed:
@@ -441,6 +443,7 @@ class GlobalThermonuclearWar(game.Game):
         current_country: The country that is taking a turn. (None)
         """
         new_missiles = []
+        needs_space = True
         # Loop through the missile data.
         for country, missiles, target, target_country, distance in self.missiles_flying:
             # Update missiles fired by the current country.
@@ -461,6 +464,9 @@ class GlobalThermonuclearWar(game.Game):
                     hits -= self.cities[target]['hits']  # Use this turn's hits for output.
                     if hits:
                         # Inform the human of the death toll from the strike.
+                        if needs_space:
+                            self.human.tell('')
+                            needs_space = False
                         text = '{} IS HIT WITH {} RESULTING IN {:,} ESTIMATED FATALITIES.'
                         hit_text = utility.number_plural(hits, 'missile').upper()
                         self.human.tell(text.format(target.upper(), hit_text, deaths))
