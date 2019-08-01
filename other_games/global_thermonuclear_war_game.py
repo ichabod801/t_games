@@ -329,8 +329,10 @@ class GlobalThermonuclearWar(game.Game):
         # Get the targets (for players with missiles, but skip the human in auto mode).
         primaries = []
         secondaries = []
-        if player.arsenal_left > 0 and (player != self.human or not self.auto):
+        if player.arsenal_left > 0:
             for target_list, name in ((primaries, 'PRIMARY'), (secondaries, 'SECONDARY')):
+                if player == self.human and self.auto:
+                    break
                 player.tell('\nPLEASE LIST {} TARGETS:'.format(name))
                 while True:
                     city = player.ask('')
@@ -338,6 +340,8 @@ class GlobalThermonuclearWar(game.Game):
                         # Handle any commands.
                         tag, colon, command = city.partition(':')
                         go = self.handle_cmd(command)
+                        if player == self.human and self.auto:
+                            break
                         if not go:
                             return False
                         player.tell('\nPLEASE LIST {} TARGETS:'.format(name))
