@@ -3,13 +3,22 @@ global_thermonuclear_war_game.py
 
 A game inspired by Global Thermonuclear War in the movie War Games.
 
+Constants:
+CHOOSE_SIDE: The input prompt for choosing a side. (str)
+CREDITS: The credits for Global Thermonuclear War. (str)
+RULES: The rules for Global Thermonuclear War. (str)
+
 Classes:
 GlobalThermonuclearWar: A game of thermonuclear armageddon. (game.Game)
+NationBot: A bot representing one of the nuclear powers. (player.Bot)
+
+Functions:
+sphere_distance: The distance between two points on a sphere. (float)
 """
 
 
 import itertools
-from math import radians, sin, cos, acos, ceil, atan2, sqrt
+import math
 import os
 import random
 import time
@@ -43,12 +52,13 @@ When entering targets, you may start a line with 'CMD:' to enter a t_games
 system command, or the data command. The data command takes a country name as
 an argument, and returns information on that country.
 
-To win, you just need to make sure that no one dies in either your country or 
+To win, you just need to make sure that no one dies in either your country or
 any of your allies' countries.
 
 Options:
-failure-rate= (fr=): The probability a missile will fail. (0 to 0.5, default 
+failure-rate= (fr=): The probability a missile will fail. (0 to 0.5, default
     0.07)
+fast (f): Eliminate pauses while displaying missile actions.
 russia (r): Play as Russia.
 united-states (us): Play as the United States of America.
 """
@@ -62,10 +72,39 @@ class GlobalThermonuclearWar(game.Game):
     This is a silly game that you always lose, and I couldn't find an easy source
     for the data, so I just spent a couple days skimming foreign relations articles
     on Wikipedia. I'm sure it's wrong. I'm not seeing the point in worrying about
-    it either. The priority was ensuring an escalation of the conflict. And yes, I 
+    it either. The priority was ensuring an escalation of the conflict. And yes, I
     know nuclear winter is a controversial topic. It's a game, dude.
 
+    Attributes:
+    auto: A flag for skipping asking for targets. (bool)
+    bomb_deaths: Direct deaths from nuclear bombs. (int)
+    cities: The data on world cities. (dict of str: dict)
+    countries: The data on the nations of the world. (dict of str: dict)
+    failure_rate: The chance of a bomb failing. (float)
+    fast: A flag for eliminated 'calculation' pauses. (bool)
+    human_country: The name of the country the human is playing. (str)
+    missiles_flying: Data on missiles fired but landed. (list of tuple)
+    missiles_launched: The total number of missiles fired. (int)
+    powers: The data on the nuclear powers. (list of dict)
+    russia: A flag for the human playing Russia. (bool)
+    united_states: A flag for the human playing the United States of America. (bool)
+
+    Class Attributes:
+    earth_radius: The radius of the earth in miles. (int)
+    world_population: The total population of the planet. (int)
+
+    Methods:
+    confirm_target: Confirm the name and distance to a city. (tuple of str, int)
+    do_auto: Turn on automatic mode. (bool)
+    do_data: Display data on one of the countries in the game. (bool)
+    load_cities: Load the city data. (None)
+    load_countries: Load the country data. (None)
+    new_city: Add a new city to the database. (None)
+    update_missiles: Update the tracking of missiles fired. (None)
+
     Overridden Methods:
+    game_over
+    player_action
     set_options
     set_up
     """
@@ -125,31 +164,35 @@ class GlobalThermonuclearWar(game.Game):
         distance = sphere_dist(start, end, self.earth_radius)
         # Return the confirmed name and the distance.
         return confirmed, distance
-        
+
     def do_auto(self, arguments):
         """
         Turn on automatic mode (does not ask for targets).
         """
         self.auto = True
-        
+        return True
+
     def do_data(self, arguments):
         """
-        Get data on one of the countries in the game.
+        Display data on one of the countries in the game.
         """
         player = self.players[self.player_index]
         if arguments.lower() in self.countries:
+            # Show the city data.
             player.tell('')
             player.tell('data on {}:'.format(arguments).upper())
             data = self.countries[arguments.lower()]
             player.tell('capital: {}.'.format(data['capital']).upper())
             player.tell('largest city: {}.'.format(data['largest']).upper())
             player.tell('other cities: {}'.format(', '.join(data['cities'])).upper())
+            # Show enemies and allies for nuclear powers.
             if 'allies' in data:
                 player.tell('allies: {}'.format(', '.join(data['allies'])).upper())
                 player.tell('enemies: {}'.format(', '.join(data['enemies'])).upper())
         else:
-            player.tell('\nI DO NOT RECOGNIZE THAT COUNTRY.')     
-        return True    
+            # Give an error message for unknown countries.
+            player.tell('\nI DO NOT RECOGNIZE THAT COUNTRY.')
+        return True
 
     def game_over(self):
         """Check for the end of the world. (bool)"""
@@ -160,9 +203,9 @@ class GlobalThermonuclearWar(game.Game):
                 if data['death_toll']:
                     self.human.tell(text.format(country.upper(), data['death_toll']))
                     if data['name'] == self.human_country:
-                        self.scores[self.human.name] -= data['death_toll']   
-                    elif data['name'] in self.countries[self.human_country.lower()]['allies']: 
-                        self.scores[self.human.name] -= data['death_toll']               
+                        self.scores[self.human.name] -= data['death_toll']
+                    elif data['name'] in self.countries[self.human_country.lower()]['allies']:
+                        self.scores[self.human.name] -= data['death_toll']
             self.human.tell('\nTOTAL ESITMATED FATALITIES FROM BOMBS: {:,}.'.format(self.bomb_deaths))
             # Calcualte deaths from nuclear winter.
             remaining = self.world_population - self.bomb_deaths
@@ -179,23 +222,30 @@ class GlobalThermonuclearWar(game.Game):
     def load_cities(self):
         """Load the city data. (None)"""
         self.cities = {}
+        # Load the city data.
         with open(os.path.join(utility.LOC, 'other_games', 'city_data.csv')) as city_data:
             city_data.readline()
             for line in city_data:
+                # Read the line for the city.
                 name, longitude, latitude, country, capital, population = line.split(',')
+                # Enter the data in the dictionary.
                 name_key, country_key = name.lower(), country.lower()
-                #print(name)
                 self.cities[name_key] = {'name': name, 'latitude': float(latitude),
                     'longitude': float(longitude), 'country': country, 'capital': capital,
                     'population': int(population), 'hits': 0}
+                # Update the city's country.
                 if country_key not in self.countries:
                     self.countries[country_key] = {'name': country, 'cities': [], 'death_toll': 0}
                 self.countries[country_key]['cities'].append(name_key)
                 if capital == 'primary':
                     self.countries[country_key]['capital'] = name_key
+        # Calculate the largest city and the country's latitude and longitude.
+        # (for simplicity's sake, missiles are fired from the 'center' of each country)
         for country_name in self.countries:
+            # Initialize the tracking variables.
             max_pop, max_city = 0, ''
             lat_total, long_total = 0, 0
+            # Update with the data for each city in the country.
             for city_name in self.countries[country_name]['cities']:
                 city_lower = city_name.lower()
                 if self.cities[city_lower]['population'] > max_pop:
@@ -203,7 +253,9 @@ class GlobalThermonuclearWar(game.Game):
                     max_city = city_name
                 lat_total += self.cities[city_lower]['latitude']
                 long_total += self.cities[city_lower]['longitude']
+            # Store the largets city.
             self.countries[country_name]['largest'] = max_city
+            # Calculate the average longitude/latitude.
             num_cities = len(self.countries[country_name]['cities'])
             self.countries[country_name]['latitude'] = lat_total / num_cities
             self.countries[country_name]['longitude'] = long_total / num_cities
@@ -212,11 +264,14 @@ class GlobalThermonuclearWar(game.Game):
         """Load the country data. (None)"""
         self.countries = {}
         self.powers = []
+        # Read the data for each country (only nuclear powers are stored explicitly).
         with open(os.path.join(utility.LOC, 'other_games', 'country_data.txt')) as country_data:
             num_countries = int(country_data.readline())
             for country in range(num_countries):
+                # Get the name and default data.
                 name = country_data.readline().strip()
                 data = {'name': name, 'cities': [], 'death_toll': 0}
+                # Read and parse the data.
                 arsenal, paranoia, defense, defense_missiles = country_data.readline().split(',')
                 data['arsenal'] = int(arsenal)
                 data['paranoia'] = int(paranoia)
@@ -224,13 +279,14 @@ class GlobalThermonuclearWar(game.Game):
                 data['defense_missiles'] = int(defense_missiles)
                 data['allies'] = [country.strip() for country in country_data.readline().split(',')]
                 data['enemies'] = [country.strip() for country in country_data.readline().split(',')]
+                # Update the data.
                 self.countries[name.lower()] = data
                 self.powers.append(data)
-                
+
     def new_city(self, target, player):
         """
         Add a new city to the database. (None)
-        
+
         Parameters:
         target: The name of the city to add. (str)
         player: The player adding the city. (player.Player)
@@ -253,7 +309,7 @@ class GlobalThermonuclearWar(game.Game):
         # Enter the new city.
         self.cities[confirmed] = {'name': target, 'population': population, 'country': country,
             'latitude': latitude, 'longitude': longitude, 'hits': 0}
-        self.countries[country]['cities'].append(target)            
+        self.countries[country]['cities'].append(target)
 
     def player_action(self, player):
         """
@@ -270,7 +326,7 @@ class GlobalThermonuclearWar(game.Game):
             country = self.human_country
         else:
             country = player.name
-        # Get the targets.
+        # Get the targets (for players with missiles, but skip the human in auto mode).
         primaries = []
         secondaries = []
         if player.arsenal_left > 0 and (player != self.human or not self.auto):
@@ -279,12 +335,14 @@ class GlobalThermonuclearWar(game.Game):
                 while True:
                     city = player.ask('')
                     if city.lower().startswith('cmd:'):
+                        # Handle any commands.
                         tag, colon, command = city.partition(':')
                         go = self.handle_cmd(command)
                         if not go:
                             return False
-                        player.tell('\nPLEASE LIST {} TARGETS:'.format(name))    
+                        player.tell('\nPLEASE LIST {} TARGETS:'.format(name))
                     elif city:
+                        # Add non-commands to the target list.
                         target_list.append(city)
                     else:
                         break
@@ -298,20 +356,22 @@ class GlobalThermonuclearWar(game.Game):
             for target in targets:
                 confirmed, distance = self.confirm_target(target)
                 if not confirmed:
+                    # Skip unrecognized cities the user didn't add.
                     continue
                 target_country = self.cities[confirmed]['country']
+                # Tell the human about foreign launches.
                 if player != self.human:
                     self.human.tell('{} launches missiles at {}.'.format(player.name, target).upper())
                     if not self.fast:
                         time.sleep(1)
+                # Update the tracking data.
                 self.missiles_flying.append((country, missiles, confirmed, target_country, distance))
                 self.missiles_launched += missiles
                 player.arsenal_left -= missiles
+                # Stop if the player is out of missiles.
                 if player.arsenal_left <= 0:
                     player.tell('YOU HAVE RUN OUT OF MISSILES.')
                     break
-        print(self.missiles_flying)
-        print(player.arsenal_left)
         return False
 
     def set_options(self):
@@ -322,8 +382,8 @@ class GlobalThermonuclearWar(game.Game):
             question = 'Would you like to play Russia? bool')
         self.option_set.add_option('failure_rate', ['fr'], float, 0.07, check = lambda fr: 0 <= fr < 0.5,
             question = 'What should the missile failure rate be (return for 0.07)? ')
-        self.option_set.add_option('fast', ['f'], 
-            question = 'Would you like to remove the pauses during output? bool')            
+        self.option_set.add_option('fast', ['f'],
+            question = 'Would you like to remove the pauses during output? bool')
 
     def set_up(self):
         """Set up the game. (None)"""
@@ -370,33 +430,49 @@ class GlobalThermonuclearWar(game.Game):
                     self.players[-1].game = self
 
     def update_missiles(self, current_country):
+        """
+        Update the tracking of missiles fired. (None)
+
+        Parameters:
+        current_country: The country that is taking a turn. (None)
+        """
         new_missiles = []
+        # Loop through the missile data.
         for country, missiles, target, target_country, distance in self.missiles_flying:
+            # Update missiles fired by the current country.
             if country == current_country:
+                # Handle missiles arriving at their target.
                 if distance <= 1000:
-                    hits = self.cities[target]['hits']
+                    # Check each missile to see if it fails.
+                    hits = self.cities[target]['hits']  # Use total hits for calculating deaths.
                     deaths = 0
                     for shot in range(missiles):
                         if random.random() > self.failure_rate:
+                            # Calculate deaths on a decreasing scale with a random factor.
                             death_mod = max(0.01, (10 - hits) / 10.0)
                             death_base = int(self.cities[target]['population'] * death_mod)
                             death_range = death_base // 10
                             hits += 1
                             deaths += random.randint(death_base - death_range, death_base + death_range)
-                    hits -= self.cities[target]['hits']
+                    hits -= self.cities[target]['hits']  # Use this turn's hits for output.
                     if hits:
+                        # Inform the human of the death toll from the strike.
                         text = '{} IS HIT WITH {} RESULTING IN {:,} ESTIMATED FATALITIES.'
                         hit_text = utility.number_plural(hits, 'missile').upper()
                         self.human.tell(text.format(target.upper(), hit_text, deaths))
                         if not self.fast:
                             time.sleep(1)
+                        # Update the tracking data.
                         self.countries[target_country.lower()]['death_toll'] += deaths
                         self.bomb_deaths += deaths
                         self.cities[target]['hits'] += hits
                 else:
+                    # Move other missiles closer to their target.
                     new_missiles.append((country, missiles, target, target_country, distance - 1000))
             else:
+                # Do not update missiles for non-current countries.
                 new_missiles.append((country, missiles, target, target_country, distance))
+        # Reset the missile data.
         self.missiles_flying = new_missiles
 
 class NationBot(player.Bot):
@@ -416,6 +492,8 @@ class NationBot(player.Bot):
     secondary_targets: The current nations to fire two missiles at. (list of str)
 
     Methods:
+    get_direct: Get a target country based on a direct attack.
+    get_indirect: Get a target country based on an indirect attack.
     get_strategy: Set the strategy for the next round of target selection. (None)
     get_targets: Determine who to fire missiles at. (None)
 
@@ -455,6 +533,7 @@ class NationBot(player.Bot):
         prompt: The question being asked of the player. (str)
         """
         if not prompt:
+            # Output targets by mode.
             if self.output_mode == 'primary':
                 target_list = self.primary_targets
             elif self.output_mode == 'secondary':
@@ -465,11 +544,14 @@ class NationBot(player.Bot):
                 target = target_list.pop()
                 return target
             except IndexError:
+                # Blank line/mode when you run out of the current target list.
                 self.output_mode = ''
                 return ''
         elif prompt.startswith('\nYOU HAVE NO MISSILES LEFT.'):
+            # Carry on.
             return ''
         else:
+            # Whoops.
             super(NationBot, self).ask(prompt)
 
     def get_direct(self, foe):
@@ -479,6 +561,7 @@ class NationBot(player.Bot):
         Parameters:
         foe: The country that attacked you. (str)
         """
+        # Mostly fire right back, but sometimes target an ally.
         if random.random() < 0.801:
             return foe
         else:
@@ -491,8 +574,10 @@ class NationBot(player.Bot):
         Paramters:
         foe: The country that attacked you. (str)
         """
+        # Get their allies that are not your allies.
         their_allies = self.game.countries[foe.lower()].get('allies', [])
         targets = [ally for ally in their_allies if ally not in self.allies]
+        # Fire on one if you can, otherwise fire right back.
         if targets:
             return random.choice(targets)
         else:
@@ -500,14 +585,18 @@ class NationBot(player.Bot):
 
     def get_targets(self):
         """Determine who to fire missiles at. (None)"""
+        # Get the combined target list.
         targets = self.direct_foes + self.indect_foes
         if self.paranoid:
             targets += self.enemies
+        # Loop through the target countries until you run out of missile you want to fire.
         for foe in itertools.chain(targets):
+            # Get an appropriate country.
             if foe in self.indirect_foes:
                 target_country = self.get_indirect(foe)
             else:
                 target_country = self.get_direct(foe)
+            # Fire on the capital, then the largest city, then on random cities.
             if not self.game.cities[self.game.countries[target_country.lower()]['capital']]['hits']:
                 self.primary_targets.append(self.game.countries[target_country.lower()]['capital'])
             elif not self.game.cities[self.game.countries[target_country.lower()]['largest']]['hits']:
@@ -515,29 +604,35 @@ class NationBot(player.Bot):
             else:
                 city = random.choice(self.game.countries[target_country.lower()]['cities'])
                 self.secondary_targets.append(city)
+            # Update desired missile count.
             self.num_targets -= 1
             if not self.num_targets:
                 break
 
     def set_strategy(self):
         """Set the strategy for the next round of target selection. (None)"""
-        # !! need to stop firing if no one else has fired in a while. Multiply num_targets?
+        # Base your strategy on what's in the air.
         self.num_targets = 1
         self.direct_foes, self.indirect_foes = [], []
         for country, missiles, target, target_country, distance in self.game.missiles_flying:
             if country == self.name:
                 continue
+            # Handle direct attacks.
             if target_country == self.name:
                 self.num_targets += 1
                 if country not in self.direct_foes:
                     self.direct_foes.append(country)
+            # Handle indirect attacks.
             elif target_country in self.allies:
                 self.num_targets += 1
                 if country not in self.indirect_foes:
                     self.indirect_foes.append(country)
+        # Israel only responds to direct attacks.
         if self.name == 'Israel':
-            self.indirect_foes = []   
+            self.indirect_foes = []
+        # Clean up indirect attacks.
         self.indect_foes = [country for country in self.indirect_foes if country not in self.direct_foes]
+        # Check for paranoia.
         if self.game.missiles_launched >= self.paranoia or self.arsenal_left * 2 < self.arsenal:
             self.paranoid = True
             self.num_targets *= 10
@@ -553,6 +648,7 @@ class NationBot(player.Bot):
         Parameters:
         The parameters are as per the built-in print function.
         """
+        # Update targets and output mode when asked for targets.
         if args[0] == '\nPLEASE LIST PRIMARY TARGETS:':
             self.set_strategy()
             self.get_targets()
@@ -572,17 +668,12 @@ def sphere_dist(point_a, point_b, radius):
     """
     # lambda is longitude
     # Convert to Cartesian coordinates.
-    p1 = [radians(x) for x in point_a]
-    #v1 = [math.cos(p1[1]) * math.cos(p1[0]), math.sin(p1[1]) * math.cos(p1[0]), math.sin(p1[0])]
-    p2 = [radians(x) for x in point_b]
+    p1 = [math.radians(x) for x in point_a]
+    p2 = [math.radians(x) for x in point_b]
+    # Get the differences in the coordinates.
     dlat = p2[0] - p1[0]
     dlon = p2[1] - p1[1]
-    a = sin(dlat / 2) ** 2 + cos(p1[0]) * cos(p2[0]) * sin(dlon / 2) ** 2
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    #v2 = [math.cos(p2[1]) * math.cos(p2[0]), math.sin(p2[1]) * math.cos(p2[0]), math.sin(p2[0])]
-    # Multiply the vectors.
-    #cos_a = sum([c1 * c2 for c1, c2 in zip(v1, v2)])
-    ##cos_a = min(1, sin(p1[0]) * sin(p2[0]) + cos(p1[0]) * cos(p2[0]) * cos(p2[1] - p1[1]))
-    # Return the distance.
-    #return radius * acos(cos_a)
+    # Calculate the arc length.
+    a = math.sin(dlat / 2) ** 2 + math.cos(p1[0]) * math.cos(p2[0]) * math.sin(dlon / 2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
     return c * radius
