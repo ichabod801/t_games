@@ -160,9 +160,9 @@ class GlobalThermonuclearWar(game.Game):
                 if data['death_toll']:
                     self.human.tell(text.format(country.upper(), data['death_toll']))
                     if data['name'] == self.human_country:
-                        self.scores[self.human_name] -= data['death_toll']   
-                    elif data['name'] in self.countries[self.human.country]['allies']: 
-                        self.scores[self.human_name] -= data['death_toll']               
+                        self.scores[self.human.name] -= data['death_toll']   
+                    elif data['name'] in self.countries[self.human_country.lower()]['allies']: 
+                        self.scores[self.human.name] -= data['death_toll']               
             self.human.tell('TOTAL ESITMATED FATALITIES FROM BOMBS: {}.'.format(self.bomb_deaths))
             # Calcualte deaths from nuclear winter.
             remaining = self.world_population - self.bomb_deaths
@@ -223,9 +223,6 @@ class GlobalThermonuclearWar(game.Game):
                 data['defense_rate'] = float(defense)
                 data['defense_missiles'] = int(defense_missiles)
                 data['allies'] = [country.strip() for country in country_data.readline().split(',')]
-                if data['allies'] == ['']:
-                    # Clean up Israel
-                    data['allies'] = []
                 data['enemies'] = [country.strip() for country in country_data.readline().split(',')]
                 self.countries[name.lower()] = data
                 self.powers.append(data)
@@ -377,7 +374,7 @@ class GlobalThermonuclearWar(game.Game):
         for country, missiles, target, target_country, distance in self.missiles_flying:
             if country == current_country:
                 if distance <= 1000:
-                    hits = 0
+                    hits = 0  # !! initialize to city hits.
                     deaths = 0
                     for shot in range(missiles):
                         if random.random() > self.failure_rate:
@@ -541,7 +538,8 @@ class NationBot(player.Bot):
             self.indirect_foes = []   
         self.indect_foes = [country for country in self.indirect_foes if country not in self.direct_foes]
         if self.game.missiles_launched >= self.paranoia or self.arsenal_left * 2 < self.arsenal:
-            self.paranoid = True   # !! not working well. continuing to fire one missile.
+            self.paranoid = True
+            self.num_targets *= 10
 
     def set_up(self):
         """Set up the bot's tracking variables. (None)"""
