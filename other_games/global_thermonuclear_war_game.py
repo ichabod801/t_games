@@ -196,7 +196,7 @@ class GlobalThermonuclearWar(game.Game):
 
     def game_over(self):
         """Check for the end of the world. (bool)"""
-        if self.turns >= 7 and not self.missiles_flying:
+        if self.turns >= 9 and not self.missiles_flying:
             # Show death tolls from bombs.
             text = 'ESTIMATED FATALITIES FOR {}: {:,}'
             for country, data in sorted(self.countries.items()):
