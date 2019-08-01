@@ -515,19 +515,23 @@ class NationBot(player.Bot):
         """Set the strategy for the next round of target selection. (None)"""
         # !! need to stop firing if no one else has fired in a while. Multiply num_targets?
         self.num_targets = 1
+        self.direct_foes, self.indirect_foes = [], []
         for country, missiles, target, target_country, distance in self.game.missiles_flying:
             if country == self.name:
                 continue
-            if target_country == self.name and country not in self.direct_foes:
-                self.direct_foes.append(country)
-            elif target_country in self.allies and country not in self.indirect_foes:
-                self.indirect_foes.append(country)
-            self.num_targets += 1
+            if target_country == self.name:
+                self.num_targets += 1
+                if country not in self.direct_foes:
+                    self.direct_foes.append(country)
+            elif target_country in self.allies:
+                self.num_targets += 1
+                if country not in self.indirect_foes:
+                    self.indirect_foes.append(country)
         if self.name == 'Israel':
             self.indirect_foes = []   
         self.indect_foes = [country for country in self.indirect_foes if country not in self.direct_foes]
         if self.game.missiles_launched >= self.paranoia or self.arsenal_left * 2 < self.arsenal:
-            self.paranoid = True
+            self.paranoid = True   # !! not working well. continuing to fire one missile.
 
     def set_up(self):
         """Set up the bot's tracking variables. (None)"""
