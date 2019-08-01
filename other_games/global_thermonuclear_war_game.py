@@ -126,6 +126,12 @@ class GlobalThermonuclearWar(game.Game):
         # Return the confirmed name and the distance.
         return confirmed, distance
         
+    def do_auto(self, arguments):
+        """
+        Turn on automatic mode (does not ask for targets).
+        """
+        self.auto = True
+        
     def do_data(self, arguments):
         """
         Get data on one of the countries in the game.
@@ -152,8 +158,12 @@ class GlobalThermonuclearWar(game.Game):
             text = 'ESTIMATED FATALITIES FOR {}: {}'
             for country, data in sorted(self.countries.items()):
                 if data['death_toll']:
-                   self.human.tell(text.format(country.upper(), data['death_toll']))
-            self.human.tell('TOTAL ESITMATED FATALITIES FROM BOMBS: {}.'.format(self.bomb_daths))
+                    self.human.tell(text.format(country.upper(), data['death_toll']))
+                    if data['name'] == self.human_country:
+                        self.scores[self.human_name] -= data['death_toll']   
+                    elif data['name'] in self.countries[self.human.country]['allies']: 
+                        self.scores[self.human_name] -= data['death_toll']               
+            self.human.tell('TOTAL ESITMATED FATALITIES FROM BOMBS: {}.'.format(self.bomb_deaths))
             # Calcualte deaths from nuclear winter.
             remaining = self.world_population - self.bomb_deaths
             winter_deaths = min(remaining, int(remaining * self.missiles_launched / 1000.0))
@@ -162,7 +172,6 @@ class GlobalThermonuclearWar(game.Game):
             # Tell the human they lost.
             self.human.tell('WINNER:  NONE')
             self.win_loss_draw = [0, 1, 0]
-            self.scores[self.human.name] = -self.bomb_deaths
             return True
         else:
             return False
@@ -267,7 +276,7 @@ class GlobalThermonuclearWar(game.Game):
         # Get the targets.
         primaries = []
         secondaries = []
-        if player.arsenal_left > 0:
+        if player.arsenal_left > 0 and (player != self.human or not self.auto):
             for target_list, name in ((primaries, 'PRIMARY'), (secondaries, 'SECONDARY')):
                 player.tell('\nPLEASE LIST {} TARGETS:'.format(name))
                 while True:
@@ -282,7 +291,7 @@ class GlobalThermonuclearWar(game.Game):
                         target_list.append(city)
                     else:
                         break
-        else:
+        elif player.arsenal_left <= 0:
             player.ask('\nYOU HAVE NO MISSILES LEFT. PRESS ENTER TO CONTINUE:  ')
         # Update any currently flying missiles
         # (done here to keep missiles in play sequence so bots can tell what's been fired this round)
@@ -322,6 +331,7 @@ class GlobalThermonuclearWar(game.Game):
     def set_up(self):
         """Set up the game. (None)"""
         self.players = [self.human]
+        self.auto = False
         # Try to play chess instead.
         if self.human.ask("\nWOULDN'T YOU PREFER A GOOD GAME OF CHESS? ") in utility.YES:
             results = self.interface.games['chess'].play('')
