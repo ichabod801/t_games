@@ -155,7 +155,7 @@ class GlobalThermonuclearWar(game.Game):
         """Check for the end of the world. (bool)"""
         if self.turns >= 7 and not self.missiles_flying:
             # Show death tolls from bombs.
-            text = 'ESTIMATED FATALITIES FOR {}: {}'
+            text = 'ESTIMATED FATALITIES FOR {}: {:,}'
             for country, data in sorted(self.countries.items()):
                 if data['death_toll']:
                     self.human.tell(text.format(country.upper(), data['death_toll']))
@@ -163,14 +163,14 @@ class GlobalThermonuclearWar(game.Game):
                         self.scores[self.human.name] -= data['death_toll']   
                     elif data['name'] in self.countries[self.human_country.lower()]['allies']: 
                         self.scores[self.human.name] -= data['death_toll']               
-            self.human.tell('TOTAL ESITMATED FATALITIES FROM BOMBS: {}.'.format(self.bomb_deaths))
+            self.human.tell('\nTOTAL ESITMATED FATALITIES FROM BOMBS: {:,}.'.format(self.bomb_deaths))
             # Calcualte deaths from nuclear winter.
             remaining = self.world_population - self.bomb_deaths
             winter_deaths = min(remaining, int(remaining * self.missiles_launched / 1000.0))
-            self.human.tell('ESTIMATED FATALITIES FROM NUCLEAR WINTER: {}.'.format(winter_deaths))
-            self.human.tell('TOTAL ESTIMATED FATALITIES: {}.'.format(self.bomb_deaths + winter_deaths))
+            self.human.tell('ESTIMATED FATALITIES FROM NUCLEAR WINTER: {:,}.'.format(winter_deaths))
+            self.human.tell('TOTAL ESTIMATED FATALITIES: {:,}.'.format(self.bomb_deaths + winter_deaths))
             # Tell the human they lost.
-            self.human.tell('WINNER:  NONE')
+            self.human.tell('\nWINNER:  NONE')
             self.win_loss_draw = [0, 1, 0]
             return True
         else:
@@ -374,7 +374,7 @@ class GlobalThermonuclearWar(game.Game):
         for country, missiles, target, target_country, distance in self.missiles_flying:
             if country == current_country:
                 if distance <= 1000:
-                    hits = 0  # !! initialize to city hits.
+                    hits = self.cities[target]['hits']
                     deaths = 0
                     for shot in range(missiles):
                         if random.random() > self.failure_rate:
@@ -383,8 +383,9 @@ class GlobalThermonuclearWar(game.Game):
                             death_range = death_base // 10
                             hits += 1
                             deaths += random.randint(death_base - death_range, death_base + death_range)
+                    hits -= self.cities[target]['hits']
                     if hits:
-                        text = '{} IS HIT WITH {} RESULTING IN {} ESTIMATED FATALITIES.'
+                        text = '{} IS HIT WITH {} RESULTING IN {:,} ESTIMATED FATALITIES.'
                         hit_text = utility.number_plural(hits, 'missile').upper()
                         self.human.tell(text.format(target.upper(), hit_text, deaths))
                         if not self.fast:
