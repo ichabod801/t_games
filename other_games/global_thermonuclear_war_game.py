@@ -198,6 +198,7 @@ class GlobalThermonuclearWar(game.Game):
         """Check for the end of the world. (bool)"""
         if self.turns >= 9 and not self.missiles_flying:
             # Show death tolls from bombs.
+            self.human.tell('')
             text = 'ESTIMATED FATALITIES FOR {}: {:,}'
             for country, data in sorted(self.countries.items()):
                 if data['death_toll']:
@@ -397,7 +398,8 @@ class GlobalThermonuclearWar(game.Game):
         self.auto = False
         # Try to play chess instead.
         if self.human.ask("\nWOULDN'T YOU PREFER A GOOD GAME OF CHESS? ") in utility.YES:
-            results = self.interface.games['chess'].play('')
+            game = self.interface.games['chess'](self.human, 'none', self.interface)
+            results = game.play()
             self.win_loss_draw = [1, 0, 0]
             self.scores[self.human.name] = results[3]
             self.force_end = 'chess'
@@ -607,6 +609,7 @@ class NationBot(player.Bot):
             else:
                 target_country = self.get_direct(foe)
             # Fire on the capital, then the largest city, then on random cities.
+            # !! prevent one city being the only target.
             if not self.game.cities[self.game.countries[target_country.lower()]['capital']]['hits']:
                 self.primary_targets.append(self.game.countries[target_country.lower()]['capital'])
             elif not self.game.cities[self.game.countries[target_country.lower()]['largest']]['hits']:
