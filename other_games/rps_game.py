@@ -327,14 +327,21 @@ class RPS(game.Game):
     def do_gipf(self, arguments):
         """
         Forty Thieves makes your next loss a draw.
+
+        Slider Puzzle makes your next draw a win.
         """
-        game, losses = self.gipf_check(arguments, ('forty thieves',))
+        game, losses = self.gipf_check(arguments, ('forty thieves', 'slider puzzle'))
         go = True
-        # Forty Thieves turns the next loss into a draw..
+        # Forty Thieves turns the next loss into a draw.
         if game == 'forty thieves':
             if not losses:
                 self.loss_draw = True
                 self.human.tell('\nYour next loss will be a draw.')
+        # Slider Puzzle turns the next draw into a win.
+        elif game == 'slider puzzle':
+            if not losses:
+                self.draw_win = True
+                self.human.tell('\nYour next draw will be a win.')
         # Otherwise I'm confused.
         else:
             self.human.tell('No thank you.')
@@ -351,8 +358,12 @@ class RPS(game.Game):
                 self.human.tell('{} beats {}, you lose.'.format(bot_move, move))
                 self.win_loss_draw[1] += 1
             # Check for a human win.
-            elif bot_move in self.wins[move]:
-                self.human.tell('{} beats {}, you win!'.format(move, bot_move))
+            elif bot_move in self.wins[move] or (self.draw_win and move == bot_move):
+                if move == bot_move:
+                    self.human.tell('You should have drawn with {}, but you win.'.format(move))
+                    self.draw_win = False
+                else:
+                    self.human.tell('{} beats {}, you win!'.format(move, bot_move))
                 self.win_loss_draw[0] += 1
             # Otherwise assume a tie.
             else:
@@ -413,3 +424,4 @@ class RPS(game.Game):
         # Set the tracking variables.
         self.moves = {player.name: '' for player in self.players}
         self.loss_draw = False
+        self.draw_win = False
