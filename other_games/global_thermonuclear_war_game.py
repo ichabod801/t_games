@@ -602,21 +602,25 @@ class NationBot(player.Bot):
         if self.paranoid:
             targets += self.enemies
         # Loop through the target countries until you run out of missile you want to fire.
-        for foe in itertools.chain(targets):
+        for foe in itertools.cycle(targets):
             # Get an appropriate country.
             if foe in self.indirect_foes:
                 target_country = self.get_indirect(foe)
             else:
                 target_country = self.get_direct(foe)
             # Fire on the capital, then the largest city, then on random cities.
-            # !! prevent one city being the only target.
-            if not self.game.cities[self.game.countries[target_country.lower()]['capital']]['hits']:
-                self.primary_targets.append(self.game.countries[target_country.lower()]['capital'])
-            elif not self.game.cities[self.game.countries[target_country.lower()]['largest']]['hits']:
-                self.primary_targets.append(self.game.countries[target_country.lower()]['largest'])
+            capital = self.game.countries[target_country.lower()]['capital']
+            largest = self.game.countries[target_country.lower()]['largest']
+            if not self.game.cities[capital]['hits'] and capital not in self.primary_targets:
+                self.primary_targets.append(capital)
+            elif not self.game.cities[largest]['hits'] and largest not in self.primary_targets:
+                self.primary_targets.append(largest)
             else:
                 city = random.choice(self.game.countries[target_country.lower()]['cities'])
-                self.secondary_targets.append(city)
+                if random.random() < 0.66:
+                    self.secondary_targets.append(city)
+                else:
+                    self.primary_targets.append(city)
             # Update desired missile count.
             self.num_targets -= 1
             if not self.num_targets:
