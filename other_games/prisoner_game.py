@@ -1,5 +1,5 @@
 """
-prisoners_game.py
+prisoner_game.py
 
 An implementation of the Iterated Prisoner's Dilemma.
 
@@ -70,7 +70,7 @@ grim (gm): Retaliates forever after a single defect.
 hard-majr (hm): Defects on a majority of defects, otherwise cooperates.
 naive-prober (np): Add a Naive Prober bot (Tit for Tat with occasional
     defection)
-pavlov (pv): Add a Pavlov bot (changes his move when he score poorly, keeps it
+pavlov (pv): Add a Pavlov bot (changes his move when he scores poorly, keeps it
     otherwise)
 prober (pb): Starts with d, c, c. Defects forever if foe cooperates second and
     third move, otherwise plays Tit for Tat.
@@ -478,6 +478,7 @@ class PrisonersDilemma(game.Game):
         Prisoner's Dilemma. That is, it does the Prisoner's Dilemma for every pair of
         players.
         """
+        self.human.tell('')
         # Check each pair of players.
         for sub_players in itertools.combinations(self.players, 2):
             # Get the moves
