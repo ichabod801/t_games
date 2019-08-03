@@ -75,6 +75,7 @@ class Slider(game.Game):
     do_north: Move the tile to the north of the blank spot. (None)
     do_south: Move the tile to the south of the blank spot. (None)
     do_west: Move the tile to the west of the blank spot. (None)
+    place_text: Put the text into the puzzle. (None)
 
     Overridden Methods:
     game_over
@@ -157,8 +158,20 @@ class Slider(game.Game):
                     cell.contents = tile
         elif game == 'thoughtful solitaire':
             if not losses:
+                # Figure out what rows are solved.
+                for row in range(1, self.rows + 1):
+                    row_text = ''
+                    for column in range(1, self.columns + 1):
+                        tile = self.board.cells[(column, row)].contents
+                        if tile is not None:
+                            row_text = '{}{}'.format(row_text, self.board.cells[(column, row)].contents)
+                        target_text = self.text[((row - 1) * self.columns):(row * self.columns)]
+                        if target_text != row_text:
+                            break
+                # Solve everything.
+                self.place_text()
+                # Mix up the rows to be left unsolved
                 pass
-                # how to cheat?
         else:
             self.human.tell('Language!')
             go = True
@@ -255,6 +268,14 @@ class Slider(game.Game):
             self.human.error('Puzzle text truncated because it is too long.')
         self.text = (self.text + self.tiles)[:text_len]
 
+    def place_text(self):
+        """Put the text into the puzzle. (None)"""
+        for column in range(self.columns):
+            for row in range(self.rows):
+                if column + 1 == self.columns and row + 1 == self.rows:
+                    break
+                self.board.place((column + 1, row + 1), self.text[column * self.rows + row])
+
     def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
@@ -283,12 +304,7 @@ class Slider(game.Game):
         """Set up the board for the game. (None)"""
         self.moves = 0
         self.board = TileBoard((self.columns, self.rows))
-        # Put the text into the puzzle.
-        for column in range(self.columns):
-            for row in range(self.rows):
-                if column + 1 == self.columns and row + 1 == self.rows:
-                    break
-                self.board.place((column + 1, row + 1), self.text[column * self.rows + row])
+        self.place_text()
         self.blank_cell = self.board.cells[(self.columns, self.rows)]
         # Shuffle the puzzle (shuffling the tiles first can lead to unsolvable puzzles)
         blanks = set([self.blank_cell.location])
