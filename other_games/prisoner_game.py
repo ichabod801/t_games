@@ -487,8 +487,8 @@ class PrisonersDilemma(game.Game):
             queries.reverse()
             for player, query in zip(sub_players, queries):
                 while True:
-                    move = player.ask(query).lower()
-                    move = self.move_aliases.get(move, move)
+                    move = player.ask(query)
+                    move = self.move_aliases.get(move.lower(), move)
                     if move in ('cooperate', 'defect'):
                         break
                     else:

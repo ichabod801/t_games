@@ -122,13 +122,55 @@ class Slider(game.Game):
         """
         self.direction_move((0, 1), 'east', argument)
 
+    def do_gipf(self, arguments):
+        """
+        Prisoner's Dilemma lets you rotate three adjacent tiles.
+
+        Thoughful Solitaire solves the next unsovled row.
+        """
+        game, losses = self.gipf_check(arguments, ("prisoner's dilemma", 'thoughtful solitaire'))
+        go = False
+        if game == "prisoner's dilemma":
+            if not losses:
+                # Get three tiles to rotate.
+                player = self.players[self.player_index]
+                player.tell(self.board)
+                while True:
+                    tiles = player.ask('\nEnter three tiles to rotate (123 -> 231): ')
+                    if self.auto_cap:
+                        tiles = tiles.upper()
+                    if len(tiles) != len(set(tiles)):
+                        player.tell('Please enter three tiles with no spaces.')
+                    elif all(char in self.text for char in tiles):
+                        break
+                    else:
+                        player.tell('Please enter valid tiles.')
+                # Find the tiles.
+                cells = []
+                for cell in self.board.cells.values():
+                    if cell.contents and cell.contents in tiles:
+                        cells.append(cell)
+                tiles = [cell.contents for cell in cells]
+                # Rotate and place the tiles.
+                tiles.append(tiles.pop(0))
+                for tile, cell in zip(tiles, cells):
+                    cell.contents = tile
+        elif game == 'thoughtful solitaire':
+            if not losses:
+                pass
+                # how to cheat?
+        else:
+            self.human.tell('Language!')
+            go = True
+        return go
+
     def do_move(self, argument):
         """
         Move the specified tile. (m)
 
-        The argument is the tile (or tiles) to move. Each on in order is moved into the
-        blank space. Spaces are ignored in the argument, but any invalid move stops the
-        movement.
+        The argument is the tile (or tiles) to move. Each one in order is moved into
+        the blank space. Spaces are ignored in the argument, but any invalid move stops
+        the movement.
         """
         if self.auto_cap:
             argument = argument.upper()
@@ -220,7 +262,7 @@ class Slider(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        print(self.board)
+        player.tell(self.board)
         move = player.ask('\nWhat is your move? ')
         self.handle_cmd(move)
 
