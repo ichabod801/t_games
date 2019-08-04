@@ -13,6 +13,7 @@ TileBoard: A board of sliding tiles. (board.DimBoard)
 """
 
 
+import itertools
 import random
 import string
 
@@ -160,18 +161,24 @@ class Slider(game.Game):
             if not losses:
                 # Figure out what rows are solved.
                 for row in range(1, self.rows + 1):
+                    # Get what the row is.
                     row_text = ''
                     for column in range(1, self.columns + 1):
                         tile = self.board.cells[(column, row)].contents
                         if tile is not None:
-                            row_text = '{}{}'.format(row_text, self.board.cells[(column, row)].contents)
-                        target_text = self.text[((row - 1) * self.columns):(row * self.columns)]
-                        if target_text != row_text:
-                            break
+                            row_text = '{}{}'.format(row_text, tile)
+                    # Compare the row to what it should be.
+                    target_text = self.text[((row - 1) * self.columns):(row * self.columns)]
+                    if target_text != row_text:
+                        break
                 # Solve everything.
                 self.place_text()
-                # Mix up the rows to be left unsolved
-                pass
+                # Mix up the rows to be left unsolved.
+                if row != self.rows:
+                    column_range = range(1, self.columns + 1)
+                    row_range = range(row + 1, self.rows + 1)
+                    row_locations = itertools.product(column_range, row_range)
+                    self.shuffle(shuffle_cells = set(board.Coordinate(pair) for pair in row_locations))
         else:
             self.human.tell('Language!')
             go = True
@@ -239,7 +246,9 @@ class Slider(game.Game):
         # Compare the current board to the winning text.
         current = str(self.board).replace('\n', '')
         if current[:-1] == self.text:
-            self.human.tell('You solved the puzzle!')
+            self.human.tell('')
+            self.human.tell(self.board)
+            self.human.tell('\nYou solved the puzzle!')
             self.human.tell('It took you {} moves to solve the puzzle.'.format(self.moves))
             self.win_loss_draw[0] = 1
             self.scores[self.human.name] = self.rows * self.columns - 1
@@ -270,11 +279,13 @@ class Slider(game.Game):
 
     def place_text(self):
         """Put the text into the puzzle. (None)"""
-        for column in range(self.columns):
-            for row in range(self.rows):
+        for row in range(self.rows):
+            for column in range(self.columns):
                 if column + 1 == self.columns and row + 1 == self.rows:
                     break
-                self.board.place((column + 1, row + 1), self.text[column * self.rows + row])
+                self.board.place((column + 1, row + 1), self.text[row * self.columns + column])
+        self.blank_cell = self.board.cells[(self.columns, self.rows)]
+        self.blank_cell.clear()
 
     def player_action(self, player):
         """
@@ -283,9 +294,10 @@ class Slider(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
+        player.tell('')
         player.tell(self.board)
         move = player.ask('\nWhat is your move? ')
-        self.handle_cmd(move)
+        return self.handle_cmd(move)
 
     def set_options(self):
         """Set up the game options. (None)"""
@@ -305,14 +317,23 @@ class Slider(game.Game):
         self.moves = 0
         self.board = TileBoard((self.columns, self.rows))
         self.place_text()
-        self.blank_cell = self.board.cells[(self.columns, self.rows)]
-        # Shuffle the puzzle (shuffling the tiles first can lead to unsolvable puzzles)
+        self.shuffle()
+
+    def shuffle(self, shuffle_cells = []):
+        """
+        Shuffle the board. (None)
+
+        Parameters:
+        shuffle_cells: The locations of the cells to shuffle. (set of board.Coordinate)
+        """
+        if not shuffle_cells:
+            shuffle_cells = set(self.board.cells.keys())
         blanks = set([self.blank_cell.location])
         for mix in range(self.shuffles):
-            while len(blanks) < self.columns * self.rows:
+            while len(blanks) < len(shuffle_cells):
                 offset = random.choice(((-1, 0), (0, -1), (0, 1), (1, 0)))
                 target = self.blank_cell.location + offset
-                if target in self.board:
+                if target in shuffle_cells:
                     target_cell = self.board.cells[target]
                     self.board.move(target, self.blank_cell.location, target_cell.contents)
                     self.blank_cell = target_cell
@@ -331,16 +352,16 @@ class TileBoard(board.DimBoard):
 
     def __str__(self):
         """Human readable text representation. (str)"""
-        text = ''
-        for column in range(self.dimensions[0]):
-            text += '\n'
-            for row in range(self.dimensions[1]):
-                text += str(self.cells[(column + 1, row + 1)])
-        return text
+        lines = []
+        for row in range(self.dimensions[1]):
+            lines.append([])
+            for column in range(self.dimensions[0]):
+                lines[-1].append(str(self.cells[(column + 1, row + 1)]))
+        return '\n'.join([''.join(line) for line in lines])
 
     def move(self, start, end, piece = None):
         """
-        Move a piece from one cell to another with displace capture. (object)
+        Move a piece from one cell to a blank cell. (object)
 
         Parameters:
         start: The location containing the piece to move. (Coordinate)
