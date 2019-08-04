@@ -435,6 +435,19 @@ class PrisonersDilemma(game.Game):
     num_options = 4
     rules = RULES
 
+    def do_gipf(self, arguments):
+        """
+        The Dollar Game lets you defect, but your opponent thinks you cooperated.
+        """
+        game, losses = self.gipf_check(arguments, ('the dollar game',))
+        if game == 'the dollar game':
+            if not losses:
+                self.human.tell('\nYour next move can be a defect your opponent thinks is cooperation.\n')
+                self.hypno = True
+        else:
+            self.human.tell("\nDude, Gipf got parole last year. I'm Gorf.")
+        return True
+
     def game_over(self):
         """Check for the end of the game. (bool)"""
         if self.turns == self.num_turns:
@@ -508,7 +521,11 @@ class PrisonersDilemma(game.Game):
                 self.scores[player.name] += round_score
                 foe_index = 1 - sub_players.index(player)
                 foe_name = sub_players[foe_index].name
-                foe_move = moves[foe_index]
+                if self.hypno and foe_name == self.human.name:
+                    foe_move = 'cooperate'
+                    self.hypno = False
+                else:
+                    foe_move = moves[foe_index]
                 player.tell('{} chose to {}.'.format(foe_name, foe_move))
         return False
 
@@ -561,3 +578,7 @@ class PrisonersDilemma(game.Game):
         # Set the turn options
         self.option_set.add_option('num-turns', ['nt'], int, default = 10,
             question = 'How many turns should be played (return for 10)? ')
+
+    def set_up(self):
+        """Set up the game. (None)"""
+        self.hypno = False
