@@ -15,6 +15,8 @@ Thoughtful: A game of Thoughtful Solitaire. (solitaire.Solitaire)
 """
 
 
+import random
+
 from . import solitaire_game as solitaire
 
 
@@ -70,6 +72,31 @@ class Thoughtful(solitaire.Solitaire):
     name = 'Thoughtful Solitaire'
     num_options = 1
     rules = RULES
+
+    def do_gipf(self, arguments):
+        """
+        Chess randomizes the largest pile in the game, ties broken randomly.
+        """
+        game, losses = self.gipf_check(arguments, ('chess',))
+        go = True
+        if game == 'chess':
+            if not losses:
+                # Find the largest piles.
+                max_size = 0
+                max_piles = []
+                for pile in self.reserve + self.tableau:
+                    size = len(pile)
+                    if size > max_size:
+                        max_size = size
+                        max_piles = [pile]
+                    elif size == max_size:
+                        max_piles.append(pile)
+                # Randomize one at random.
+                random.shuffle(random.choice(max_piles))
+                go = False
+        else:
+            self.human.tell("That's exactly what I was thinking!")
+        return go
 
     def do_turn(self, arguments):
         """

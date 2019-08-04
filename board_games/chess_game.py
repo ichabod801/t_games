@@ -5,6 +5,8 @@ chess_game.py
 A t_games wrapper for Sunfish by Thomas Ahle.
 (https://github.com/thomasahle/sunfish)
 
+# !! not handling mate again.
+
 Constants:
 CREDITS: The credits for Chess. (str)
 RULES: The rules of Chess. (str)
