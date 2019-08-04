@@ -26,7 +26,7 @@ Game Programming: Craig "Ichabod" O'Brien
 RULES = """
 Thoughtful Solitaire is an open version of Klondike, so all card are dealt face
 up. As in Klondike, you can build any card on the top of a tableau pile onto
-another tableua card this the opposite color and one rank higher. You can move
+another tableau card this the opposite color and one rank higher. You can move
 complete stacks built in that way as well. The top card of any tableau pile may
 also sorted to the foundations going up and in suit. Empty lanes may be filled
 with a king.

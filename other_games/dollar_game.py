@@ -18,6 +18,7 @@ import random
 import string
 
 from .. import game
+from .. import utility
 
 
 CREDITS = """
@@ -103,6 +104,38 @@ class DollarGame(game.Game):
             return True
         except KeyError:
             self.human.error('{} is not a node in the graph.'.format(arguments))
+
+    def do_gipf(self, arguments):
+        """
+        Thoughtful Solitaire lets you move one dollar from one node to another.
+        """
+        game, losses = self.gipf_check(arguments, ('thoughtful solitaire',))
+        go = True
+        if game == 'thoughtful solitaire':
+            if not losses:
+                print(self.graph)
+                while True:
+                    take = self.human.ask('\nWhat node would you like to take a dollar from? ')
+                    if self.auto_cap:
+                        take = take.upper()
+                    if take not in self.graph.nodes:
+                        self.human.tell('That is not a valid node.')
+                        continue
+                    give = self.human.ask('What node would you like to give a dollar to? ')
+                    if self.auto_cap:
+                        give = give.upper()
+                    if take not in self.graph.nodes:
+                        self.human.tell('That is not a valid node.')
+                        continue
+                    break
+                self.graph.values[take] -= 1
+                self.graph.values[give] += 1
+                go = True
+        else:
+            beg = self.human.ask("\nCould you gipf a dollar to a fellow American who's down on his luck?")
+            if beg in utility.YES:
+                self.human.tell('Thank you.')
+        return go
 
     def do_take(self, arguments):
         """
