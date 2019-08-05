@@ -16,8 +16,23 @@ test: Test some text games. (None)
 
 from __future__ import print_function
 
-from . import interface
-from . import player
+try:
+    # Standard imports.
+    from . import interface
+    from . import player
+except (ValueError, ImportError):
+    try:
+        # Imports for running play.py independently.
+        from t_games import interface
+        from t_games import player
+    except ImportError:
+        # Imports for running play.py from the t_games folder in 2.7.
+        import os
+        import sys
+        here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        sys.path.insert(0, here)
+        from t_games import interface
+        from t_games import player
 
 
 class Test(object):
