@@ -194,6 +194,20 @@ class GlobalThermonuclearWar(game.Game):
             player.tell('\nI DO NOT RECOGNIZE THAT COUNTRY.')
         return True
 
+    def do_gipf(self, arguments):
+        """
+        Hamurabi removes the death toll in your own country.
+        """
+        game, losses = self.gipf_check(arguments, ('hamurabi',))
+        go = True
+        if game == 'hamurabi':
+            if not losses:
+                self.countries[self.human_country.lower()]['death_toll'] = 0
+                text = '\nTHE MILITARY HAS CLASSIFIED THE CURRENT DEATH TOLL IN {}.'
+                self.human.tell(text.format(self.human_country.upper()))
+        else:
+            self.human.tell("\nI DO NOT RECOGNIZE THAT COUNTRY.")
+
     def game_over(self):
         """Check for the end of the world. (bool)"""
         if self.turns >= 9 and not self.missiles_flying:
