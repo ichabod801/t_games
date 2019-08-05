@@ -5,7 +5,7 @@ chess_game.py
 A t_games wrapper for Sunfish by Thomas Ahle.
 (https://github.com/thomasahle/sunfish)
 
-# !! not handling mate again.
+# !! not handling mate again. Maybe due to reversing during testing?
 
 Constants:
 CREDITS: The credits for Chess. (str)
@@ -232,6 +232,36 @@ class Chess(game.Game):
             return False
         else:
             return True
+
+    def do_gipf(self, arguments):
+        """
+        Global Thermonuclear War randomly destroys an enemy pawn.
+        """
+        game, losses = self.gipf_check(arguments, ('global thermonuclear war',))
+        go = True
+        if game == 'global thermonuclear war':
+            if not losses:
+                # Find the pawns.
+                board_text = self.position.board
+                pawns = []
+                start = 0
+                while True:
+                    try:
+                        next_p = board_text.index('p', start)
+                    except ValueError:
+                        break
+                    pawns.append(next_p)
+                    start = next_p + 1
+                # Change one at random.
+                target = random.choice(pawns)
+                new_board = board_text[:target] + '.' + board_text[(target + 1):]
+                # Reset the position
+                self.position = self.position._replace(board = new_board)
+        else:
+            text = "I'm sorry, but that's a violation of the Laws of Chess, section 10, subsection 8, "
+            text += "paragraph 3, line 2, as ammended by the Carlsen Convention of 1809."
+            self.human.tell(text)
+        return go
 
     def do_move(self, arguments):
         """
