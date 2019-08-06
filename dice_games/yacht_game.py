@@ -399,8 +399,8 @@ class Bacht(player.Bot):
         # Summarize the dice values.
         counts = [pending.count(value) for value in range(7)]
         ordered = sorted(counts[:], reverse = True)
-        pending_low = set([die for die in pending if die < 6])
-        pending_high = set([die for die in pending if die > 1])
+        pending_low = set([die.value for die in pending if die < 6])
+        pending_high = set([die.value for die in pending if die > 1])
         # If you have at least two pair, go for full house.
         if ordered[1] > 1:
             hold = [counts.index(ordered[0])] * ordered[0]
@@ -431,7 +431,7 @@ class Bacht(player.Bot):
         # Get local references to commonly used information.
         held = [die for die in self.game.dice if die.held]
         pending = [die for die in self.game.dice if not die.held]
-        unique_held = len(set(held))
+        unique_held = len(set([die.value for die in held]))
         # Holding one value means go for a run.
         if unique_held == 1:
             hold = [held[0]] * pending.count(held[0])
@@ -443,7 +443,7 @@ class Bacht(player.Bot):
                 hold = []
         # Holding three values means go for a straight.
         elif unique_held > 2:
-            hold = list(set([die for die in pending if die not in held]))
+            hold = list(set([die.value for die in pending if die not in held]))
             if 6 in hold and 1 in held:
                 hold.remove(6)
             elif 1 in hold and 6 in held:
@@ -570,7 +570,7 @@ class Bachter(Bacht):
                 hold = []
         # Hold for a straight.
         elif self.target == 'straight':
-            hold = list(set([die for die in pending if die not in held]))
+            hold = list(set([die.value for die in pending if die not in held]))
             if 6 in hold and 1 in held:
                 hold.remove(6)
             elif 1 in hold and 6 in held:
