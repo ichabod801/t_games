@@ -276,12 +276,45 @@ class Blackjack(game.Game):
     def do_gipf(self, arguments):
         """
         Ninety-Nine stops the dealer from drawing this round.
+
+        The Dollar Game allows you to swap out a card.
         """
-        game, losses = self.gipf_check(arguments, ('ninety-nine',))
+        game, losses = self.gipf_check(arguments, ('ninety-nine', 'the dollar game'))
         # A Ninety-Nine win stops the dealer from drawing this round.
         if game == 'ninety-nine':
             if not losses:
                 self.dealer_skip = True
+        # A Dollar Game win allows you to swap out a card.
+        if game == 'the dollar game':
+            if not losses:
+                # Get the card.
+                while True:
+                    card = self.human.ask('\nWhat card would you like to swap out? ')
+                    # Find the hand.
+                    for hand in self.player_hands:
+                        if card in hand:
+                            break
+                    else:
+                        self.human.error('You do not have that card.')
+                        continue
+                    # Make sure hand can receive cards.
+                    if hand.status != 'open':
+                        self.human.error('That hand is {}, you cannot swap card in it.'.format(hand.status))
+                        continue
+                    break
+                # Swap the card.
+                hand.discard(card)
+                hand.draw()
+                score = hand.score()
+                # Check for busted hand.
+                if score > 21:
+                    self.human.tell('You busted with {} ({}).'.format(score, hand))
+                    hand.status = 'busted'
+                    self.bets[hand_index] = 0
+                # Check for forced stand.
+                elif score == 21:
+                    hand.status = 'standing'
+                    self.human.tell('You now have 21 with {}.'.format(hand))
         # Otherwise, I'm confused.
         else:
             self.human.tell('ValueError: gipf')
