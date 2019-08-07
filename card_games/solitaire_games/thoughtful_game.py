@@ -54,6 +54,7 @@ class Thoughtful(solitaire.Solitaire):
     blocked_index: The index of the rightmost blocked reserve pile. (int)
 
     Methods:
+    card_shift: Shift a card to the top of it's pile. (None)
     turn_transfer: Move a card while undoing a turn move. (None)
 
     Overridden Methods:
@@ -73,27 +74,46 @@ class Thoughtful(solitaire.Solitaire):
     num_options = 1
     rules = RULES
 
+    def card_shift(self, piles, pile_type):
+        """
+        Shift a card to the top of it's pile. (None)
+
+        Parameters:
+        piles: The list of piles the card must be in. (list of list)
+        pile_type: The name of the piles being searched. (str)
+        """
+        # Get the card from the user.
+        print(self)
+        query = '\nWhich {} card would you like to move to the top of its stack? '.format(pile_type)
+        while True:
+            card = self.human.ask(query)
+            for pile in piles:
+                if card in pile:
+                    break
+            else:
+                # Warn the user if you can't find the card.
+                self.human.error('That card is not in the {}.'.format(pile_type))
+                continue
+            break
+        # Move the card to the top of the pile.
+        pile.append(pile.pop(pile.index(card)))
+        # Block undo past this point.
+        self.moves = []
+
     def do_gipf(self, arguments):
         """
-        Chess randomizes the largest pile in the game, ties broken randomly.
+        Chess lets you move a tableau card to the top of its pile.
+
+        Klondike lets you move a reserve card to the top of its pile.
         """
-        game, losses = self.gipf_check(arguments, ('chess',))
+        game, losses = self.gipf_check(arguments, ('chess', 'klondike'))
         go = True
         if game == 'chess':
             if not losses:
-                # Find the largest piles.
-                max_size = 0
-                max_piles = []
-                for pile in self.reserve + self.tableau:
-                    size = len(pile)
-                    if size > max_size:
-                        max_size = size
-                        max_piles = [pile]
-                    elif size == max_size:
-                        max_piles.append(pile)
-                # Randomize one at random.
-                random.shuffle(random.choice(max_piles))
-                go = False
+                self.card_shift(self.tableau, 'tableau')
+        elif game == 'klondike':
+            if not losses:
+                self.card_shift(self.reserve, 'reserve')
         else:
             self.human.tell("That's exactly what I was thinking!")
         return go

@@ -287,6 +287,7 @@ class Blackjack(game.Game):
         # A Dollar Game win allows you to swap out a card.
         if game == 'the dollar game':
             if not losses:
+                self.show_status()
                 # Get the card.
                 while True:
                     card = self.human.ask('\nWhat card would you like to swap out? ')
