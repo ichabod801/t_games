@@ -89,6 +89,7 @@ class DollarGame(game.Game):
     categories = ['Other Games', 'Theoretical Games']
     credits = CREDITS
     name = 'The Dollar Game'
+    num_options = 4
     rules = RULES
 
     def do_donate(self, arguments):

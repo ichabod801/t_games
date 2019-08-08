@@ -90,6 +90,7 @@ class Slider(game.Game):
     aliases = {'e': 'east', 'm': 'move', 'n': 'north', 's': 'south', 'w': 'west'}
     categories = ['Other Games']
     name = 'Slider Puzzle'
+    num_options = 4
     tiles = '123456789' + string.ascii_uppercase + string.ascii_lowercase
 
     def direction_move(self, offset, direction, argument):
