@@ -369,14 +369,19 @@ class Chess(game.Game):
         if match_type in (8, 10):
             end = sunfish.parse(groups[3])
             direction = -10 if self.player_index else 10
+            print('pawn', end, direction, self.position.board)
+            if self.player_index:
+                board = self.position.rotate().board
+            else:
+                board = self.position.board # works
             # Set up disambiguation
             if match_type == 10:
                 column = ' abcdefgh'.index(groups[1])
                 direction = direction + column - end % 10
             # Make sure there's a pawn that can make the move.
-            if self.position.board[end + direction] in 'pP':
+            if board[end + direction] in 'pP':
                 return (end + direction, end)
-            elif abs(direction) == 10 and self.position.board[end + 2 * direction] in 'pP':
+            elif abs(direction) == 10 and board[end + 2 * direction] in 'pP':
                 return (end + 2 * direction, end)
             else:
                 return (None, '{} is not a legal move.'.format(groups[3]))
@@ -384,6 +389,7 @@ class Chess(game.Game):
         elif match_type in (9, 11, 13):
             piece = groups[0]
             end = sunfish.parse(groups[3])
+            print('piece', piece, end, self.position.board)
             # Set up disambiguation.
             if match_type == 11:
                 column = ' abcdefgh'.index(groups[1])
@@ -391,8 +397,12 @@ class Chess(game.Game):
                 row = 10 - int(groups[2])
             # Find valid moves with that end and that piece.
             starts = []
-            for move in self.position.gen_moves():
-                if move[1] == end and self.position.board[move[0]] == piece:
+            if self.player_index:
+                position = self.position.rotate()
+            else:
+                position = self.position # works? no.
+            for move in position.gen_moves():
+                if move[1] == end and position.board[move[0]] == piece:
                     # Match and disambiguation.
                     if match_type == 11 and move[0] % 10 != column:
                         continue
@@ -408,6 +418,7 @@ class Chess(game.Game):
         elif match_type == 14:
             start = sunfish.parse('{}{}'.format(*groups[1:3]))
             end = sunfish.parse(groups[3])
+            print('two squares', start, end)
             return (start, end)
         else:
             return (None, '{} is not a valid algebraic move.'.format(text))
