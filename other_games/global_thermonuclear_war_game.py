@@ -3,6 +3,9 @@ global_thermonuclear_war_game.py
 
 A game inspired by Global Thermonuclear War in the movie War Games.
 
+Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Constants:
 CHOOSE_SIDE: The input prompt for choosing a side. (str)
 CREDITS: The credits for Global Thermonuclear War. (str)

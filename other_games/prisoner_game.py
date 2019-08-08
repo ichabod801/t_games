@@ -3,7 +3,8 @@ prisoner_game.py
 
 An implementation of the Iterated Prisoner's Dilemma.
 
-Need tit for two tats (two bads before reaction), and suspsicious tit for tat (nastry first move)
+Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Priosoner's Dilemma.

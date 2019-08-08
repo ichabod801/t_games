@@ -5,7 +5,8 @@ chess_game.py
 A t_games wrapper for Sunfish by Thomas Ahle.
 (https://github.com/thomasahle/sunfish)
 
-# !! not handling mate again. Maybe due to reversing during testing?
+Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Chess. (str)

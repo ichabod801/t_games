@@ -3,6 +3,9 @@ ten_thousand_game.py
 
 A game of Ten Thousand.
 
+Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Constants:
 CREDITS: The credits for TenThousand. (str)
 RULES: The rules for TenThousand. (str)

@@ -4,6 +4,9 @@ dollar_game.py
 The Dollar Game, as specified in this Numberphile video:
 https://www.youtube.com/watch?v=U33dsEcKgeQ&t=3s
 
+Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Constants:
 CREDITS: The credits for the Dollar Game. (str)
 RULES: The rules of the Dollar Game. (str)
