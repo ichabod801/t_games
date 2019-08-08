@@ -236,8 +236,10 @@ class Chess(game.Game):
     def do_gipf(self, arguments):
         """
         Global Thermonuclear War randomly destroys an enemy pawn.
+
+        Mate randomly upgrades one of your pawns into a knight.
         """
-        game, losses = self.gipf_check(arguments, ('global thermonuclear war',))
+        game, losses = self.gipf_check(arguments, ('global thermonuclear war', 'mate'))
         go = True
         if game == 'global thermonuclear war':
             if not losses:
@@ -255,6 +257,24 @@ class Chess(game.Game):
                 # Change one at random.
                 target = random.choice(pawns)
                 new_board = board_text[:target] + '.' + board_text[(target + 1):]
+                # Reset the position
+                self.position = self.position._replace(board = new_board)
+        elif game == 'mate':
+            if not losses:
+                # Find the pawns.
+                board_text = self.position.board
+                pawns = []
+                start = 0
+                while True:
+                    try:
+                        next_p = board_text.index('P', start)
+                    except ValueError:
+                        break
+                    pawns.append(next_p)
+                    start = next_p + 1
+                # Change one at random.
+                target = random.choice(pawns)
+                new_board = board_text[:target] + 'N' + board_text[(target + 1):]
                 # Reset the position
                 self.position = self.position._replace(board = new_board)
         else:
