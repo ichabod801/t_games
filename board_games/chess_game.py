@@ -321,7 +321,7 @@ class Chess(game.Game):
                 player.tell(self.board_text(self.position.rotate(), self.player_index))
                 return False
             else:
-                # Warn about moves that are not lega.
+                # Warn about moves that are not legal.
                 player.error('{} is not a legal move.'.format(arguments))
                 return True
 
@@ -409,7 +409,7 @@ class Chess(game.Game):
         elif match_type in (9, 11, 13):
             piece = groups[0]
             end = sunfish.parse(groups[3])
-            print('piece', piece, end, self.position.board)
+            print('piece', piece, end, match_type, self.position.board)
             # Set up disambiguation.
             if match_type == 11:
                 column = ' abcdefgh'.index(groups[1])
@@ -418,22 +418,26 @@ class Chess(game.Game):
             # Find valid moves with that end and that piece.
             starts = []
             if self.player_index:
-                position = self.position.rotate()
-            else:
-                position = self.position # works? no.
-            for move in position.gen_moves():
-                if move[1] == end and position.board[move[0]] == piece:
+                end = 119 - end
+            for move in self.position.gen_moves():
+                if move[1] == end and self.position.board[move[0]] == piece:
                     # Match and disambiguation.
                     if match_type == 11 and move[0] % 10 != column:
                         continue
                     elif match_type == 13 and move[0] // 10 != row:
                         continue
                     starts.append(move[0])
+            print(end, starts, list(self.position.gen_moves()))
             # Check for ambiguous moves.
             if len(starts) == 1:
-                return (starts[0], end)
-            else:
+                if self.player_index:
+                    return (119 - starts[0], 119 - end)
+                else:
+                    return (starts[0], end)
+            elif not starts:
                 return (None, '{} is not a legal move.'.format(text))
+            else:
+                return (None, '{} is ambiguous.'.format(text))
         # Handle two squares (long algebraic notation).
         elif match_type == 14:
             start = sunfish.parse('{}{}'.format(*groups[1:3]))
