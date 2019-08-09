@@ -387,7 +387,7 @@ class GlobalThermonuclearWar(game.Game):
                 if player != self.human:
                     self.human.tell('{} launches missiles at {}.'.format(player.name, target).upper())
                     if not self.fast:
-                        time.sleep(1)
+                        time.sleep(0.5)
                 # Update the tracking data.
                 self.missiles_flying.append((country, missiles, confirmed, target_country, distance))
                 self.missiles_launched += missiles
@@ -490,7 +490,7 @@ class GlobalThermonuclearWar(game.Game):
                         hit_text = utility.number_plural(hits, 'missile').upper()
                         self.human.tell(text.format(target.upper(), hit_text, deaths))
                         if not self.fast:
-                            time.sleep(1)
+                            time.sleep(0.5)
                         # Update the tracking data.
                         self.countries[target_country.lower()]['death_toll'] += deaths
                         self.bomb_deaths += deaths
@@ -620,6 +620,8 @@ class NationBot(player.Bot):
             targets += self.enemies
         # Loop through the target countries until you run out of missile you want to fire.
         for foe in itertools.cycle(targets):
+            if self.num_targets <= 0:
+                break
             # Get an appropriate country.
             if foe in self.indirect_foes:
                 target_country = self.get_indirect(foe)
@@ -640,19 +642,18 @@ class NationBot(player.Bot):
                     self.primary_targets.append(city)
             # Update desired missile count.
             self.num_targets -= 1
-            if not self.num_targets:
-                break
 
     def set_strategy(self):
         """Set the strategy for the next round of target selection. (None)"""
         # Base your strategy on what's in the air.
         self.num_targets = 1
+        other_missiles = len(self.game.missiles_flying)
         self.direct_foes, self.indirect_foes = [], []
         for country, missiles, target, target_country, distance in self.game.missiles_flying:
             if country == self.name:
-                continue
+                other_missiles -= 1
             # Handle direct attacks.
-            if target_country == self.name:
+            elif target_country == self.name:
                 self.num_targets += 1
                 if country not in self.direct_foes:
                     self.direct_foes.append(country)
@@ -669,7 +670,7 @@ class NationBot(player.Bot):
         # Check for paranoia.
         if self.game.missiles_launched >= self.paranoia or self.arsenal_left * 2 < self.arsenal:
             self.paranoid = True
-            self.num_targets *= 10
+            self.num_targets = other_missiles * 2 + (self.name == 'North Korea')
 
     def set_up(self):
         """Set up the bot's tracking variables. (None)"""
