@@ -474,6 +474,25 @@ class PrisonersDilemma(game.Game):
     def handle_options(self):
         """Handle the game options from the user. (None)"""
         self.option_set.handle_settings(self.raw_options)
+        # Handle default bots (three at random).
+        if len(self.players) == 1:
+            # Get the possible bots.
+            bots = []
+            for option in self.option_set.definitions:
+                if option['action'] == 'bot':
+                    bots.append((self.bot_classes[option['target']], option['value']))
+            # Get three at random.
+            bots = random.sample(bots, 3)
+            # Add them to the players.
+            taken_names = [self.human.name]
+            for bot_class, params in bots:
+                if params is True:  # That is, there were no parameters given
+                    params = []
+                elif not isinstance(params, (list, tuple)):
+                    params = [params]
+                self.players.append(bot_class(*params, taken_names = taken_names))
+                taken_names.append(self.players[-1].name)
+        # Check that the scores are valid.
         if self.points['sucker'] >= self.points['punishment']:
             self.human.tell('The sucker bet must be less than the punishement.')
             self.option_set.errors.append('Sucker bet too high.')
@@ -532,9 +551,7 @@ class PrisonersDilemma(game.Game):
 
     def set_options(self):
         """Set the possible game options. (None)"""
-        # Set the bot options
-        bots = [(PrisonerNumBot, (['d'], 1, 1)), (PrisonerNumBot, ([], 0, 1)), (PrisonerNumBot, ([], 0, 0))]
-        self.option_set.default_bots = bots
+        # Set the bot options.
         self.option_set.add_option('all-co', ['ac'], action = 'bot', target = 'num-bot',
             value = ([], 0, 1), default = None)
         self.option_set.add_option('all-def', ['ad'], action = 'bot', target = 'num-bot',
