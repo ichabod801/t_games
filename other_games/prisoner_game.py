@@ -85,6 +85,8 @@ soft-majr (sm): Cooperates on a majority of cooperations, otherwise defects.
 tit-tat (tt): Add a Tit for Tat bot.
 tit-2tat (t2): Add a Tit for Two Tats bot.
 2tit-tat (2t): Add a Two Tits for Tat bot.
+
+The default bots are three chosen at random.
 """
 
 
