@@ -121,7 +121,7 @@ class Hamurabi(game.Game):
     aka = ['The Sumer Game', 'Hamu']
     aliases = {'b': 'buy', 'f': 'feed', 'n': 'next', 'p': 'plant', 's': 'sell'}
     credits = CREDITS
-    categories = ['Other Games']
+    categories = ['Simulation Games']
     help_text = {'immigration': IMMIGRATION_HELP, 'winning': WINNING_HELP}
     name = 'Hamurabi'
     num_options = 4

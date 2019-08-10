@@ -112,7 +112,7 @@ class GlobalThermonuclearWar(game.Game):
     set_up
     """
 
-    categories = ['Other Games']
+    categories = ['Simulation Games']
     credits = CREDITS
     earth_radius = 3957
     name = 'Global Thermonuclear War'
