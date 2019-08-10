@@ -15,18 +15,19 @@ data_to_text: Convert CREDITS_DATA to formatted text. (str)
 """
 
 
-CREDITS_DATA = [('Interface Programming', """Craig "Ichabod" O'Brien"""),
-    ('Game Design', """Humans; Paul Alfille, Richard A. Canfield, Doug Dyment, Michael Keller,
-        Bernard de Marigny, Albert Morehead, Geoffrey Mott-Smith, Ned Strongin, Sid Sackson,
-        John Suckling, Howard Wexler, Gregory Yob"""),
-    ('Game Programming', """Craig "Ichabod" O'Brien"""),
-    ('Bot Design', """Roger Johnson, Reiner Knizia, Todd Neller, Craig O'Brien, Clifton Presser,
-        Gerry Tesauro"""),
+CREDITS_DATA = [('Interface Programming', """Craig O'Brien, Micah Page"""),
+    ('Game Design', """Humans; Paul Alfille, Matt Baker, Richard A. Canfield, Melvin Dresher, Doug Dyment,
+        Merrill Flood, Michael Keller, Bernard de Marigny, Albert Morehead, Geoffrey Mott-Smith,
+        Craig O'Brien, Ned Strongin, Sid Sackson, John Suckling, Howard Wexler, Gregory Yob"""),
+    ('Game Programming', """Thomas Ahle, Craig O'Brien, David B. Wilson"""),
+    ('Bot Design', """Robert Axelrod, B. Beaufils, S. Braver, K. Deb, J. Delahaye, James Friedman,
+        Roger Johnson, Reiner Knizia, J. Komorita, David Kraines, Vivian Kraines, S. Mittal, Todd Neller,
+        Craig O'Brien, Mathieu Our, Clifton Presser, Anatol Rapoport, J. Sheposh, Gerry Tesauro"""),
     ('Bot Programming', """Craig "Ichabod" O'Brien"""),
     ('Documentation', """wma, Craig O'Brien"""),
     ('Play Testing', """Doug Edmunds, Craig O'Brien, Micah Page"""),
     ('Special Thanks', """Guido van Rossum; python-forum.io, github.com, Wikipedia, pagat.com;
-        Alan Beale, Kris Burm, Matt Groening, David Parlett""")]
+        Alan Beale, Kris Burm, Matt Groening, Lawrence Lasker, Walter F. Parks, David Parlett""")]
 
 
 def data_to_text():

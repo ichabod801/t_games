@@ -112,6 +112,32 @@ def hundred_word(n):
         return word
 
 
+def levenshtein(text_a, text_b):
+    """
+    Determine the Levenshtein distance between two strings. (int)
+
+    Parameters:
+    text_a: The first string. (str)
+    text_b: The second string. (str)
+    """
+    # Initialize the matrix.
+    matrix = [[0] * (len(text_a) + 1) for row in range(len(text_b) + 1)]
+    matrix[0] = list(range(len(text_a) + 1))
+    for y in range(len(text_b) + 1):
+        matrix[y][0] = y
+    # Fill the matrix of edits.
+    for x in range(1, len(text_b) + 1):
+        for y in range(1, len(text_a) + 1):
+            base = [matrix[x - 1][y] + 1, matrix[x][y - 1] + 1]
+            if text_b[x - 1] == text_a[y - 1]:
+                base.append(matrix[x - 1][y - 1])
+            else:
+                base.append(matrix[x - 1][y - 1] + 1)
+            matrix[x][y] = min(base)
+    # Return the final value.
+    return matrix[-1][-1]
+
+
 def mean(values):
     """
     Calculate the mean of a list. (float)

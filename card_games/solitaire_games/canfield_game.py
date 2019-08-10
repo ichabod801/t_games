@@ -92,8 +92,10 @@ class Canfield(solitaire.Solitaire):
     def do_gipf(self, arguments):
         """
         Blackjack allows you to build a jack onto anything.
+
+        Prisoner's Dilemma allows you to lane any card once.
         """
-        game, losses = self.gipf_check(arguments, ('blackjack',))
+        game, losses = self.gipf_check(arguments, ('blackjack', "prisoner's dilemma"))
         # Blackjack allows building a jack on anything.
         if game == 'blackjack':
             if not losses:
@@ -107,10 +109,26 @@ class Canfield(solitaire.Solitaire):
                         continue
                     go = self.do_build(cards)
                 self.pair_checkers = pair_hold
+        # Prisoner's Dilemma allows you to lane any card once.
+        if game == "prisoner's dilemma":
+            if not losses:
+                self.lane_checkers = []
+                self.human.tell('\nThe next card you lane can be any otherwise playable card.')
         # Otherwise I'm confused.
         else:
             self.human.tell("I'm sorry, I don't speak Flemish.")
         return True
+
+    def do_lane(self, card):
+        """
+        Move a card into an empty lane. (l)
+
+        This command takes one argument: the card to move.
+        """
+        go = super(Canfield, self).do_lane(card)
+        if not go:
+            self.lane_checkers = [solitaire.lane_reserve_waste]
+        return go
 
     def handle_options(self):
         """Handle the option settings for this game. (None)"""

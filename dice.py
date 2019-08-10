@@ -206,13 +206,16 @@ class Pool(object):
     Methods:
     count: Count the number of times a particular rolls has been made. (int)
     hold: Hold some of the dice from further rolling. (None)
+    index: Return the index of the die with the specified value. (int)
     release: Make all held dice available for rolling. (None)
     roll: Roll the dice in the pool. (list)
     sort: Sort the dice in the pool in place. (list)
 
     Overridden Methods:
     __init__
+    __contains__
     __iter__
+    __len__
     __repr__
     __str__
     """
@@ -238,9 +241,22 @@ class Pool(object):
         self.roll()
         self.held = 0
 
+    def __contains__(self, value):
+        """
+        Checking if the specified value has been rolled. (bool)
+
+        Parameters:
+        value: The value to check for. (object)
+        """
+        return value in self.dice
+
     def __iter__(self):
         """Iterate over the dice. (iterator)"""
         return iter(self.dice)
+
+    def __len__(self):
+        """Return the number of dice. (int)"""
+        return len(self.dice)
 
     def __repr__(self):
         """Generate debugging text representation. (str)"""
@@ -277,6 +293,24 @@ class Pool(object):
             unheld[spot].held = True
             self.held += 1
             del unheld[spot]
+
+    def index(self, value, start = 0, end = None):
+        """
+        Return the index of the die with the specified value. (int)
+
+        Parameters:
+        value: The value to search for. (object)
+        start: The index to start searching from. (int)
+        end: The index to stop searching on. (int)
+        """
+        if end is None:
+            end = len(self)
+        while True:
+            if start >= end:
+                raise ValueError('No die currently has the value {!r}.'.format(value))
+            if self.dice[start] == value:
+                return start
+            start += 1
 
     def release(self):
         """Make all held dice available for rolling. (None)"""

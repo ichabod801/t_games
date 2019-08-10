@@ -20,6 +20,7 @@ SATAN_NAMES: Some names for Satan from the Bible. (str)
 Classes:
 PigBotBasePaceRace: A bot w/ min score, max behind, + when to go nuts. (Bot)
 PigBotPaceRace: A bot with  min score, modifier, and when to go nuts. (Bot)
+PigBotPenoptimal: A Pig bot that closely approximates optimal play. (Bot)
 PigBotRolls: A Pig bot that stops after a set number of rolls. (Bot)
 PigBotScoringTurns: A Pig bot that tries to win in t scoring turns. (Bot)
 PigBotValue: A Pig bot that rolls until it exceeds a certain value. (Bot)
@@ -72,6 +73,7 @@ The general bots are:
     pace-race: This bot tries to score at least base, +/-1 for every modifer
         it's behind/ahead, and tries to win if in anyone is within the race
         parameter of winning. (alias: pr, defaults=21/8/29)
+    penoptimus: This bot is a close approximation of optimal play. (alias: po)
     rolls: This bot stops after a given number of rolls. (alias: r, defaults=5)
     scoring-turns: This bot tries to win in t scoring turns. (alias: st,
         defaults=4)
@@ -82,6 +84,7 @@ The preset bots are:
     easy (e): A default scoring-turns bot.
     medium (m): A default base-pace-race bot.
     hard (h): A default pace-race bot.
+    insane (i): A penoptimus bot.
     knizia (k): A value bot with a value of 20.
     satan (666): A base-pace-race bot with parameters 6/6/6
     x: A rolls bot with 3 rolls.
@@ -229,6 +232,64 @@ class PigBotPaceRace(player.Bot):
             return 'stop'
 
 
+class PigBotPenoptimal(player.Bot):
+    """
+    A Pig bot that closely approximates optimal play. (player.Bot)
+
+    The data for this bot was provided by Todd Neller as an approximation of the
+    optimal play strategy that he calculated.
+
+    Class Attributes:
+    parameters: The names of the parameters for the bot. (list of str)
+
+    Attributes:
+    value: The the minimum turn score this bot will stop rolling on. (int)
+
+    Overridden Methods:
+    __init__
+    ask
+    """
+
+    parameters = []
+
+    def __init__(self, taken_names = []):
+        """
+        Set the bot's value. (None)
+
+        Parameters:
+        value: The the minimum turn score this bot will stop rolling on. (int)
+        taken_names: Names already used by a player. (list of str)
+        """
+        super(PigBotPenoptimal, self).__init__(taken_names, 'o')
+        self.data = []
+        with open('{}/dice_games/penoptimus.txt'.format(utility.LOC)) as data_file:
+            for row in data_file:
+                self.data.append([int(hold) for hold in row.split(',')])
+
+    def ask(self, prompt):
+        """
+        Get information from the player. (str)
+
+        Parameters:
+        prompt: The question being asked of the player. (str)
+        """
+        # Calcuate the values the values that inform the decision.
+        turn_score = self.game.turn_score
+        my_score = self.game.scores[self.name]
+        max_score = max(score for name, score in self.game.scores.items() if name != self.name)
+        # Keep going if it's your last chance.
+        if max_score > 99 and my_score + turn_score <= max_score:
+            return 'roll'
+        # Stop if you've won.
+        elif my_score + turn_score > 99:
+            return 'stop'
+        # Stop if the hold value is met or exceeded.
+        elif self.game.turn_score < self.data[my_score][max_score]:
+            return 'roll'
+        else:
+            return 'stop'
+
+
 class PigBotRolls(player.Bot):
     """
     A Pig bot that stops after a set number of rolls. (player.Bot)
@@ -345,7 +406,7 @@ class PigBotScoringTurns(player.Bot):
         my_score = self.game.scores[self.name]
         turn_score = self.game.turn_score
         max_score = max(self.game.scores.values())
-        hold_at = (100 - my_score) // self.scoring_turns
+        hold_at = (100 - my_score) // self.turns_left
         # Keep going if it's your last chance.
         if max_score > 99 and my_score + turn_score <= max_score:
             return 'roll'
@@ -356,8 +417,12 @@ class PigBotScoringTurns(player.Bot):
         elif self.game.turn_score < hold_at:
             return 'roll'
         else:
-            self.scoring_turns -= 1
+            self.turns_left -= 1
             return 'stop'
+
+    def set_up(self):
+        """Set up the tracking variable. (None)"""
+        self.turns_left = self.scoring_turns
 
 
 class PigBotValue(player.Bot):
@@ -439,7 +504,8 @@ class Pig(game.Game):
     categories = ['Dice Games']
     credits = CREDITS
     bot_classes = {'value': PigBotValue, 'base-pace-race': PigBotBasePaceRace,
-        'scoring-turns': PigBotScoringTurns, 'pace-race': PigBotPaceRace, 'rolls': PigBotRolls}
+        'scoring-turns': PigBotScoringTurns, 'penoptimus': PigBotPenoptimal, 'pace-race': PigBotPaceRace,
+        'rolls': PigBotRolls}
     num_options = 3
     rules = RULES
 
@@ -603,6 +669,8 @@ class Pig(game.Game):
         self.option_set.add_option('base-pace-race', aliases = ['bpr'], action = 'bot',
             default = None, check = lambda params: len(params) <= 3 and max(params) <= 100,
             converter = int)
+        self.option_set.add_option('penoptimus', ['po'], action = 'bot', default = None,
+            check = lambda params: not params)
         self.option_set.add_option(name = 'scoring-turns', aliases = ['t'], action = 'bot', default = None,
             check = lambda param: param <= 100, converter = int)
         self.option_set.add_option(name = 'pace-race', aliases = ['pr'], action = 'bot', default = None,
@@ -617,6 +685,8 @@ class Pig(game.Game):
         self.option_set.add_option('medium', ['m'], action = 'bot', target = 'base-pace-race', value = (),
             default = None)
         self.option_set.add_option('hard', ['h'], action = 'bot', target = 'pace-race', value = (),
+            default = None)
+        self.option_set.add_option('insane', ['i'], action = 'bot', target = 'penoptimus', value = (),
             default = None)
         self.option_set.add_option('knizia', ['k'], action = 'bot', target = 'value', value = (20,),
             default = None)
