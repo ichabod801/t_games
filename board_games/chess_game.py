@@ -390,7 +390,6 @@ class Chess(game.Game):
         if match_type in (8, 10):
             end = sunfish.parse(groups[3])
             direction = -10 if self.player_index else 10
-            print('pawn', end, direction, self.position.board)
             if self.player_index:
                 board = self.position.rotate().board
             else:
@@ -410,7 +409,6 @@ class Chess(game.Game):
         elif match_type in (9, 11, 13):
             piece = groups[0]
             end = sunfish.parse(groups[3])
-            print('piece', piece, end, match_type, self.position.board)
             # Set up disambiguation.
             if match_type == 11:
                 column = ' abcdefgh'.index(groups[1])
@@ -428,7 +426,6 @@ class Chess(game.Game):
                     elif match_type == 13 and move[0] // 10 != row:
                         continue
                     starts.append(move[0])
-            print(end, starts, list(self.position.gen_moves()))
             # Check for ambiguous moves.
             if len(starts) == 1:
                 if self.player_index:
@@ -443,7 +440,6 @@ class Chess(game.Game):
         elif match_type == 14:
             start = sunfish.parse('{}{}'.format(*groups[1:3]))
             end = sunfish.parse(groups[3])
-            print('two squares', start, end)
             return (start, end)
         else:
             return (None, '{} is not a valid algebraic move.'.format(text))
