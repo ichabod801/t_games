@@ -289,7 +289,8 @@ class NumberGuess(game.Game):
             self.bot = GuessBotter(taken_names = [self.human.name])
         self.players = [self.human, self.bot]
         # Set the information flags.
-        self.high_low, self.warm_cold = self.info_types[self.info]
+        #self.high_low, self.warm_cold = self.info_types[self.info]
+        self.high_low, self.warm_cold = True, False
 
     def player_action(self, player):
         """
@@ -318,8 +319,8 @@ class NumberGuess(game.Game):
     def set_options(self):
         """Set the options for the game. (None)"""
         self.option_set.add_option('easy', ['e'], question = 'Do you want to play in easy mode? bool')
-        self.option_set.add_option('info', ['i'], valid = ('high-low', 'warm-cold', 'both'),
-            question = 'What information should you get (high-low (default), warm-cold, or both)? ')
+        """self.option_set.add_option('info', ['i'], valid = ('high-low', 'warm-cold', 'both'),
+            question = 'What information should you get (high-low (default), warm-cold, or both)? ')"""
         self.option_set.add_option('low', ['l'], int, 1,
             question = 'What should the lowest possible number be (return for 1)? ')
         self.option_set.add_option('high', ['h'], int, 108,
