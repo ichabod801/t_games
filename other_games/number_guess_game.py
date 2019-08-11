@@ -161,9 +161,16 @@ class NumberGuess(game.Game):
     Attributes:
     easy: A flag for easier game play. (bool)
     high: The highest possible secret number. (int)
+    high_low: A flag for showing high/low information. (bool)
+    info: The type of information to show the user. (str)
+    last_guess: The user's last guess. (int or None)
     low: The lowest possible secret number. (int)
     number: The secret number. (int)
     phase: Whether the human is guessing or answering. (str)
+    warm_cold: A flag for showing warm/cold information. (bool)
+
+    Class Attributes:
+    info_types: The translation of information given to information flags. (dict)
 
     Methods:
     do_guess: Guess the secret number. (bool)
@@ -179,6 +186,7 @@ class NumberGuess(game.Game):
 
     aka = ['NuGG', 'Guess a Number']
     categories = ['Other Games']
+    info_types = {'high-low': (True, False), 'warm-cold': (False, True), 'both': (True, True)}
     name = 'Number Guessing Game'
     num_options = 3
 
@@ -213,18 +221,44 @@ class NumberGuess(game.Game):
             elif guess > self.high:
                 player.error('{} is above the highest possible secret number.'.format(guess))
             else:
-                # Check the input against the secret number.
                 self.guesses += 1
-                if guess < self.number:
-                    player.tell('{} is lower than the secret number.'.format(guess))
-                elif guess > self.number:
-                    player.tell('{} is higher than the secret number.'.format(guess))
-                else:
+                # Check the input against the secret number.
+                if guess == self.number:
                     text = '{} is the secret number! You got it in {} guesses.'
                     player.tell(text.format(guess, self.guesses))
                     self.scores[player.name] = self.guesses
                     self.reset()
                     return False
+                # Give high/low information, if allowed.
+                if self.high_low:
+                    if guess < self.number:
+                        player.tell('{} is lower than the secret number.'.format(guess))
+                    elif guess > self.number:
+                        player.tell('{} is higher than the secret number.'.format(guess))
+                # Give warm/cold information, if allowed.
+                if self.warm_cold:
+                    if self.last_guess is None:
+                        # Give initial distance as a temperature.
+                        close = abs(guess - self.number) / (self.high - self.low + 1.0)
+                        if close < 0.05:
+                            player.tell('You are hot.')
+                        elif close < 0.25:
+                            player.tell('You are warm.')
+                        elif close < 0.95:
+                            player.tell('You are cold.')
+                        else:
+                            player.tell('You are frozen.')
+                    else:
+                        # Give warmer/colder information.
+                        distance = abs(guess - self.number)
+                        last_distance = abs(self.last_guess - self.number)
+                        if distance < last_distance:
+                            player.tell('Warmer.')
+                        elif distance > last_distance:
+                            player.tell('Colder.')
+                        else:
+                            player.tell('No change in temperature.')
+                self.last_guess = guess
         return True
 
     def game_over(self):
@@ -254,6 +288,8 @@ class NumberGuess(game.Game):
         else:
             self.bot = GuessBotter(taken_names = [self.human.name])
         self.players = [self.human, self.bot]
+        # Set the information flags.
+        self.high_low, self.warm_cold = self.info_types[self.info]
 
     def player_action(self, player):
         """
@@ -276,11 +312,14 @@ class NumberGuess(game.Game):
     def reset(self):
         """Reset guess tracking. (None)"""
         self.number = None
+        self.last_guess = None
         self.guesses = 0
 
     def set_options(self):
         """Set the options for the game. (None)"""
         self.option_set.add_option('easy', ['e'], question = 'Do you want to play in easy mode? bool')
+        self.option_set.add_option('info', ['i'], valid = ('high-low', 'warm-cold', 'both'),
+            question = 'What information should you get (high-low (default), warm-cold, or both)? ')
         self.option_set.add_option('low', ['l'], int, 1,
             question = 'What should the lowest possible number be (return for 1)? ')
         self.option_set.add_option('high', ['h'], int, 108,
