@@ -7,6 +7,8 @@ Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Classes:
+GuessBot: A number guessing bot using a random strategy. (player.Bot)
+GuessBotter: A number guessing bot using a binary search. (GuessBot)
 NumberGuess: A classic number guessing game. (game.Game)
 """
 
@@ -18,9 +20,26 @@ from .. import player
 from .. import utility
 
 
+CREDITS = """
+Game Design: Traditional
+Game Programming: Craig "Ichabod" O'Brien
+"""
+
+RULES = """
+Each turn you guess a number chosen in secret by the computer. Then the
+computer tries to guess a number you choose. Whoever guesses correctly with the
+least number of guesses wins.
+
+Options:
+easy (e): Play against a random opponent.
+high (h): The highest possible secret number (defaults to 108).
+low (l): The lowest possible secret number (defaults to 1).
+"""
+
+
 class GuessBot(player.Bot):
     """
-    A number guessing bot. (player.Bot)
+    A number guessing bot using a random strategy. (player.Bot)
 
     Attributes:
     high_guess: The highest guess the bot should make. (int)
@@ -96,6 +115,24 @@ class GuessBot(player.Bot):
         super(GuessBot, self).tell(*args, **kwargs)
 
 
+class GuessBotter(GuessBot):
+    """
+    A number guessing bot using a binary search. (GuessBot)
+
+    Overridden Methods:
+    guess
+    """
+
+    def guess(self):
+        """Guess a number. (int)"""
+        # Use a binary search.
+        guess = (self.high_guess - self.low_guess + 1) // 2 + self.low_guess
+        # Fudge it early on to avoid predictability.
+        if self.high_guess - self.low_guess > 10:
+            guess += random.choice((-1, 0, 1))
+        return guess
+
+
 class NumberGuess(game.Game):
     """
     A classic number guessing game. (game.Game)
@@ -143,16 +180,19 @@ class NumberGuess(game.Game):
         Guess the secret number. (g)
         """
         player = self.players[self.player_index]
+        # Check for integer input.
         try:
             guess = int(arguments)
         except ValueError:
             player.error('{!r} is not a valid integer.'.format(arguments))
         else:
+            # Check that the input is in range.
             if guess < self.low:
                 player.error('{} is below the lowest possible secret number.'.format(guess))
             elif guess > self.high:
                 player.error('{} is above the highest possible secret number.'.format(guess))
             else:
+                # Check the input against the secret number.
                 self.guesses += 1
                 if guess < self.number:
                     player.tell('{} is lower than the secret number.'.format(guess))
@@ -168,6 +208,7 @@ class NumberGuess(game.Game):
 
     def game_over(self):
         """Determine if the game is finished or not. (bool)"""
+        # Finish after each person guesses correctly.
         if self.turns == 2:
             if self.scores[self.human.name] < self.scores[self.bot.name]:
                 text = 'You won, {0} guesses to {1}.'
@@ -196,12 +237,15 @@ class NumberGuess(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
+        # Give the number of guesses.
         guess_text = utility.number_plural(self.guesses, 'guess', 'guesses')
         player.tell('\nYou have made {} so far.'.format(guess_text))
+        # Get the secret number, if it hasn't been defined yet.
         if self.number is None:
             foe = self.players[1 - self.player_index]
             query = 'What do you want the secret number to be? '
             self.number = foe.ask_int(query, low = self.low, high = self.high)
+        # Handle the player's move.
         return self.handle_cmd(player.ask('What is your guess? '))
 
     def reset(self):
