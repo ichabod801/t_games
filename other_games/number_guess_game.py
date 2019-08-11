@@ -132,6 +132,27 @@ class GuessBotter(GuessBot):
             guess += random.choice((-1, 0, 1))
         return guess
 
+    def secret_number(self, low, high):
+        """
+        Make a number to be guessed. (int)
+
+        Parameters:
+        low: The lowest possible secret number. (int)
+        high: The highest possible secret number. (int)
+        """
+        # Start in the middle, with fudging to avoid predictability.
+        width = high - low + 1
+        start = width // 2 + random.choice((-1, 0, 1))
+        base = [low, start, high]
+        # Run a binary search from there.
+        while len(base) < width:
+            next_row = []
+            for first, second in zip(base, base[1:]):
+                next_row.append((second - first + 1) // 2 + first)
+            base = sorted(set(base + next_row))
+        # Use of the last numbers that a binary search would find.
+        return random.choice(next_row)
+
 
 class NumberGuess(game.Game):
     """
@@ -227,7 +248,11 @@ class NumberGuess(game.Game):
     def handle_options(self):
         """Process the option settings for the game. (None)"""
         super(NumberGuess, self).handle_options()
-        self.bot = GuessBot(taken_names = [self.human.name])
+        # Set the computer opponent.
+        if self.easy:
+            self.bot = GuessBot(taken_names = [self.human.name])
+        else:
+            self.bot = GuessBotter(taken_names = [self.human.name])
         self.players = [self.human, self.bot]
 
     def player_action(self, player):
