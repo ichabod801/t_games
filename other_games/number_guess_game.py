@@ -282,6 +282,13 @@ class NumberGuess(game.Game):
     def handle_options(self):
         """Process the option settings for the game. (None)"""
         super(NumberGuess, self).handle_options()
+        # Check the range settings.
+        if self.high == self.low:
+            self.human.tell('\nThe high option must be different than the low option.')
+            self.option_set.errors.append('Invalid range specified.')
+        elif self.high < self.low:
+            self.human.tell('\nThe range was entered backward and has been reversed.')
+            self.low, self.high = self.high, self.low
         # Set the computer opponent.
         if self.easy:
             self.bot = GuessBot(taken_names = [self.human.name])
