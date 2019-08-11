@@ -545,6 +545,19 @@ class CrazyEights(game.Game):
                 rank_name = self.card_class.rank_names[self.card_class.ranks.index(self.skip_rank)]
                 self.human.tell('The rank to skip the next player is {}.'.format(rank_name))
 
+    def mental_health(self):
+        """Perform a mental health evaluation."""
+        if self.psychotic:
+            # Get some random ranks.
+            ranks = random.sample(self.all_ranks, 4)
+            # Make sure eight is one of them.
+            if '8' not in ranks:
+                ranks[0] == '8'
+            # Assign the roles randomly.
+            random.shuffle(ranks)
+            for rank, action in zip(ranks, ('change_rank', 'draw_rank', 'reverse_rank', 'skip_rank')):
+                setattr(self, action, rank)
+
     def pass_turn(self, player):
         """
         Pass the turn. (bool)
@@ -712,6 +725,8 @@ class CrazyEights(game.Game):
         self.human.tell()
         for player in self.players:
             self.human.tell('{} has {} points.'.format(player.name, self.scores[player.name]))
+        # Perform a mental health evaluation.
+        self.mental_health()
 
     def set_options(self):
         """Define the options for the game. (None)"""
@@ -767,15 +782,9 @@ class CrazyEights(game.Game):
         else:
             self.deck = cards.Deck(decks = 2, shuffle_size = -1)
         self.card_class = card_class = self.deck.cards[0].__class__
+        self.all_ranks = list(set([card.rank for card in self.deck.cards]))
         # Perform a mental health evaluation.
-        if self.psychotic:
-            all_ranks = list(set([card.rank for card in self.deck.cards]))
-            ranks = random.sample(all_ranks, 4)
-            if '8' not in ranks:
-                ranks[0] == '8'
-            random.shuffle(ranks)
-            for rank, action in zip(ranks, ('change_rank', 'draw_rank', 'reverse_rank', 'skip_rank')):
-                setattr(self, action, rank)
+        self.mental_health()
         # Set up the tracking variables.
         self.history = []
         self.suit = ''
