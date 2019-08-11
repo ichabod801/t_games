@@ -68,6 +68,7 @@ multi-score (ms): Each players scores the points in the largest hand minus the
     points in their own hand.
 one-alert (1a): A warning is given when a player has one card.
 one-round (1r): Only play one round.
+psychotic (@): The four special ranks are set randomly, and change every deal.
 reverse= (r): The rank, typically A, that reverses the order of play.
 skip= (s): The rank, typically Q, that skips the next player.
 
@@ -330,7 +331,7 @@ class CrazyEights(game.Game):
         'All work and no play makes Jack a dull boy.')
     credits = CREDITS
     name = 'Crazy Eights'
-    num_options = 13
+    num_options = 14
     rules = RULES
 
     def deal(self, keep_one = False):
