@@ -4,10 +4,12 @@ slot_machine_game.py
 Classes:
 Machine: A slot machine. (object)
 MachineError: An error in the operation of a slot machine. (ValueError)
+SevenWords: A two-dollar machine based on four letter words. (Machine)
 Slots: Play a slot machine. (game.Game)
 """
 
 
+import os
 import random
 import time
 
@@ -90,7 +92,7 @@ class Machine(object):
 
     def payout(self, values):
         """
-        Calculate the payout for a given set of values. (int)
+        Calculate the payout for a given set of values. (list of tuple)
 
         values: The values of the current play. (list of str)
         """
@@ -176,6 +178,75 @@ class Machine(object):
         for index, reel in zip(self.state[-1], self.reels):
             next_reel.append((index + (random.random() < 0.9)) % len(reel))
         self.state.append(next_reel)
+
+
+class SevenWords(Machine):
+    """
+    A two-dollar machine based on four letter words. (Machine)
+
+    Class Attributes:
+    letters: The capital english letters. (str)
+
+    Methods:
+    load_words: Load the four letter words. (None)
+
+    Overridden Methods:
+    __init__
+    payout
+    """
+
+    cost = 2
+    letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    name = 'Seven Words'
+    plays = {1: [[(1, 0), (1, 1), (1, 2), (1, 3)]],
+        2: [[(0, 0), (0, 1), (0, 2), (0, 3)], [(2, 0), (2, 1), (2, 2), (2, 3)]],
+        3: [[(0, 0), (0, 1), (0, 2), (0, 3)], [(1, 0), (1, 1), (1, 2), (1, 3)],
+            [(2, 0), (2, 1), (2, 2), (2, 3)]]}
+    reels = [list('ABCDEFGHIJKLMNOPQRSTUVWXYZ') for reel in range(4)]
+    rows = 3
+
+    def __init__(self):
+        """Set up the machine. (None)"""
+        super(SevenWords, self).__init__()
+        self.load_words()
+
+    def load_words(self):
+        """Load the four letter words. (None)"""
+        path = os.path.join(utility.LOC, 'other_games', '3of6game.txt')
+        self.words = set()
+        with open(path) as word_file:
+            for word in word_file:
+                if len(word) == 5:
+                    self.words.add(word.strip().upper())
+        self.the_seven = set(('SHIT', 'PISS', 'FUCK', 'CUNT', 'TITS', 'COCK', 'MOFO'))
+
+    def payout(self, values):
+        """
+        Calculate the payout for a given set of values. (list of tuple)
+
+        values: The values of the current play. (list of str)
+        """
+        counts = sorted(values.count(value) for value in values)
+        word = ''.join(values)
+        payout, text = 0, 'nothing'
+        # !! more details in text (what the pair was of), here and in Eight Ball.
+        if word in self.the_seven:
+            payout, text = 2600, 'one of the Seven'
+        elif word in self.letters:
+            payout, text = 1000, 'ascending letters in order'
+        elif counts == [4, 4, 4, 4]:
+            payout, text = 801, 'four-of-a-kind'
+        elif ''.join(sorted(values)) in self.letters:
+            payout, text = 69, 'mixed up ascending letters'
+        elif counts == [1, 3, 3, 3]:
+            payout, text = 30, 'three-of-a-kind'
+        elif word in self.words:
+            payout, text = 26, 'the English word {!r}'.format(word.lower())
+        elif counts == [2, 2, 2, 2]:
+            payout, text = 20, 'two pair'
+        elif counts == [1, 1, 2, 2]:
+            payout, text = 1, 'a pair'
+        return [(payout, text)]
 
 
 class MachineError(ValueError):
