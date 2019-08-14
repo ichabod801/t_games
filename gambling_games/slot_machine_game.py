@@ -20,9 +20,10 @@ class Machine(object):
     A slot machine. (object)
 
     Class Attributes:
+    plays: The different number of plays and what reels/rows they use. (dict)
     reels: The reels of the slot machine. (list of list)
     rows: The number of playable rows. (int)
-    plays: The different number of plays and what reels/rows they use. (dict)
+    sep: The separator when displaying the reels. (str)
 
     Methods:
     finish: Fill in the extra rows of the machine. (None)
@@ -40,9 +41,10 @@ class Machine(object):
 
     cost = 1
     name = 'Eight Ball'
+    plays = {1: [[(0, 0), (0, 1), (0, 2)]]}
     reels = [list('0123456789') for reel in range(3)]
     rows = 1
-    plays = {1: [[(0, 0), (0, 1), (0, 2)]]}
+    sep = '-'
 
     def __init__(self):
         """Set up the machine. (None)"""
@@ -105,7 +107,7 @@ class Machine(object):
         if not payout:
             nums = [int(value) for value in values]
             if nums[1] - nums[0] == 1 and nums[2] - nums[1] == 1:
-                payout, text = 12, 'a upper'
+                payout, text = 12, 'an upper'
             elif nums[0] - nums[1] == 1 and nums[1] - nums[2] == 1:
                 payout, text = 11, 'a downer'
             elif nums == [1, 0, 8]:
@@ -130,7 +132,7 @@ class Machine(object):
         Parameters:
         row: The row to generate text for. (list of int)
         """
-        return ''.join([reel[index] for index, reel in zip(row, self.reels)])
+        return self.sep.join([reel[index] for index, reel in zip(row, self.reels)])
 
     def shuffle(self):
         """Shuffle the reels. (None)"""
@@ -149,15 +151,18 @@ class Machine(object):
         """
         # Check for a valid number of plays.
         if plays not in self.plays:
-            raise MachineError(']n{} machines do not support {} plays.'.format(self.name, plays))
+            raise MachineError('\n{} machines do not support {} plays.'.format(self.name, plays))
         # Spin the reels.
         self.reset()
-        pause = 0.05
+        pause = 0.015
+        player.tell('')
         for step in range(108):
             player.tell(self.row_text(self.state[-1]))
             time.sleep(pause)
-            if step in (80, 100):
-                pause *= 2
+            if step >= 50:
+                pause += 0.005
+            if step >= 80:
+                pause += 0.005
             self.step()
         # Show the final state of the machine.
         self.finish()
@@ -193,6 +198,7 @@ class Slots(game.Game):
 
     Overridden Methods:
     __str__
+    default
     do_quit
     game_over
     player_action
@@ -202,14 +208,15 @@ class Slots(game.Game):
 
     aka = ['Fruit Machiness', 'Puggy', 'The Slots', 'Slots', 'Slot', 'Poker Machines', 'Pokies',
         'One-Armed-Bandits', 'SlMa']
-    aliases = {'s': 'spin', 'sw': 'switch', 'pull': 'spin', 'p': 'spin'}
+    aliases = {'s': 'spin', 'sw': 'switch', 'pull': 'spin', 'p': 'spin', '': 'spin'}
     categories = ['Gambling Games']
     name = 'Slot Machines'
 
     def __str__(self):
         """Human readable text representation. (str)"""
-        text = '\n{}\n\nYou have {} {} left'
-        return text.format(self.machine, self.scores[self.human.name], utility.plural(self.stake, 'buck'))
+        text = '\nYou are playing {}.\nYou have {} {} left'
+        bucks = utility.plural(self.scores[self.human.name], 'buck')
+        return text.format(self.machine.name, self.scores[self.human.name], bucks)
 
     def do_quit(self, argument):
         """
@@ -259,9 +266,14 @@ class Slots(game.Game):
         self.scores[self.human.name] -= self.machine.cost * plays
         total_payout = 0
         for values, bucks, text in payouts:
-            if bucks:
-                self.human.tell(text)
-                total_payout += bucks
+            if bucks > self.machine.cost * 10:
+                punctuation = '!!!'
+            elif bucks > self.machine.cost:
+                punctuation = '!'
+            else:
+                punctuation = '.'
+            self.human.tell('You got {}{}'.format(text, punctuation))
+            total_payout += bucks
         if total_payout:
             bucks = utility.plural(total_payout, 'buck')
             self.human.tell('\nYour won a total of {} {} this spin.'.format(total_payout, bucks))
