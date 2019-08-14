@@ -9,6 +9,8 @@ Slots: Play a slot machine. (game.Game)
 """
 
 
+import collections
+import itertools
 import os
 import random
 import time
@@ -179,10 +181,39 @@ class Machine(object):
             next_reel.append((index + (random.random() < 0.9)) % len(reel))
         self.state.append(next_reel)
 
+    def test(self, player):
+        """
+        Run all possible combinations and report the payouts. (None)
+
+        Parameters:
+        player: The player to report the results to. (player.Player)
+        """
+        # Check every possible combination.
+        counts = collections.defaultdict(int)
+        total_payouts = collections.defaultdict(int)
+        for spin in itertools.product(*self.reels):
+            payouts = self.payout(spin)
+            for payout, text in payouts:
+                key = text.split('(')[0]
+                counts[key] += 1
+                total_payouts[key] += payout
+        # Print the results from most frequent to least.
+        player.tell('')
+        order = sorted(((count, value) for value, count in counts.items()), reverse = True)
+        for count, value in order:
+            print('{}: n = {}, $ = {}'.format(value, count, total_payouts[value]))
+        print('\nTotal Combinations: {}'.format(sum(counts.values())))
+        print('\nTotal Payout: {}'.format(sum(total_payouts.values())))
+
 
 class SevenWords(Machine):
     """
     A two-dollar machine based on four letter words. (Machine)
+
+    Attributes:
+    the_seven: The seven jackpot words. (set of str)
+    words_four: The four letter English words. (set of str)
+    words_three: The three letter English words. (set of str)
 
     Class Attributes:
     letters: The capital english letters. (str)
@@ -217,7 +248,9 @@ class SevenWords(Machine):
         with open(path) as word_file:
             for word in word_file:
                 if len(word) == 5:
-                    self.words.add(word.strip().upper())
+                    self.words_four.add(word.strip().upper())
+                elif len(word) == 5:
+                    self.words_three.add(word.strip().upper())
         self.the_seven = set(('SHIT', 'PISS', 'FUCK', 'CUNT', 'TITS', 'COCK', 'MOFO'))
 
     def payout(self, values):
@@ -241,7 +274,7 @@ class SevenWords(Machine):
         elif counts == [1, 3, 3, 3]:
             payout, text = 30, 'three-of-a-kind'
         elif word in self.words:
-            payout, text = 26, 'the English word {!r}'.format(word.lower())
+            payout, text = 26, 'an English word ({!r})'.format(word.lower())
         elif counts == [2, 2, 2, 2]:
             payout, text = 20, 'two pair'
         elif counts == [1, 1, 2, 2]:
@@ -289,6 +322,30 @@ class Slots(game.Game):
         bucks = utility.plural(self.scores[self.human.name], 'buck')
         return text.format(self.machine.name, self.scores[self.human.name], bucks)
 
+    def do_plays(self, arguments):
+        """
+        Set the default number of plays.
+
+        The argument is the number of plays for when you use the spin command without
+        an argument.
+        """
+        # Check for an integer.
+        try:
+            plays = int(arguments)
+        except ValueError:
+            self.human.error('\nInvalid argument to the plays command: {!r}.'.format(arguments))
+            return True
+        if plays in self.machine.plays:
+            # Assign a valid number of plays.
+            self.default_plays = plays
+            self.human.tell('\nThe default number of plays is now {}.'.format(plays))
+        else:
+            # Give information about an invalid number of plays.
+            self.human.error('\nThe current machine does not support {} plays.'.format(plays))
+            play_text = utility.oxford(sorted(self.machine.plays))
+            self.human.error('It supports the follow numbers of plays: {}.'.format(play_text))
+        return True
+
     def do_quit(self, argument):
         """
         Stop playing Blackjack. (!)
@@ -328,6 +385,7 @@ class Slots(game.Game):
                 return True
         else:
             plays = self.default_plays
+        # !! check for having enough bucks.
         try:
             payouts = self.machine.spin(self.human, plays)
         except MachineError as err:
@@ -351,6 +409,16 @@ class Slots(game.Game):
             self.scores[self.human.name] += total_payout
         else:
             self.human.tell('\nYou did not win anything this spin.')
+
+    def do_test(self, arguments):
+        """
+        Test the payouts of the machine.
+
+        This only tests payouts from one play. This may take a while for more
+        complicated games with more/larger reels.
+        """
+        self.machine.test(self.human)
+        return True
 
     def do_switch(self, arguments):
         """
