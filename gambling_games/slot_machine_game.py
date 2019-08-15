@@ -384,23 +384,31 @@ class Slots(game.Game):
         one, and can be changed with the plays command.
         """
         if arguments:
+            # Check that the argument is an integer.
             try:
                 plays = int(arguments)
             except:
                 self.human.error('\nInvalid argument to spin command: {!r}.'.format(arguments))
                 return True
         else:
+            # Use the default if there are no arguments.
             plays = self.default_plays
-        # !! check for having enough bucks.
+        # Make sure the player has enough money.
+        if plays * self.machine.cost > self.scores[self.human.name]:
+            self.human.error('\nYou do not have enough money to do that.')
+            return True
+        # Spin the machine.
         try:
             payouts = self.machine.spin(self.human, plays)
         except MachineError as err:
             print(err.message)
             return True
+        # Inform the player of the results.
         self.human.tell('')
         self.scores[self.human.name] -= self.machine.cost * plays
         total_payout = 0
         for values, bucks, text in payouts:
+            # Emphasize good results with exclamation points.
             if bucks > self.machine.cost * 10:
                 punctuation = '!!!'
             elif bucks > self.machine.cost:
@@ -409,6 +417,7 @@ class Slots(game.Game):
                 punctuation = '.'
             self.human.tell('You got {}{}'.format(text, punctuation))
             total_payout += bucks
+        # Give the overall results.
         if total_payout:
             bucks = utility.plural(total_payout, 'buck')
             self.human.tell('\nYour won a total of {} {} this spin.'.format(total_payout, bucks))
