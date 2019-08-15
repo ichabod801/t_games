@@ -210,13 +210,15 @@ class SevenWords(Machine):
     """
     A two-dollar machine based on four letter words. (Machine)
 
+    The reels used are based on the frequencies of the letters in each position of
+    a four letter word. So the first reel is based on the frequency of the first
+    letter of a four letter word. The three most common letters are on each reel
+    three times, and the next four most common letters are on each reel twice.
+
     Attributes:
     the_seven: The seven jackpot words. (set of str)
     words_four: The four letter English words. (set of str)
     words_three: The three letter English words. (set of str)
-
-    Class Attributes:
-    letters: The capital english letters. (str)
 
     Methods:
     load_words: Load the four letter words. (None)
@@ -227,13 +229,13 @@ class SevenWords(Machine):
     """
 
     cost = 2
-    letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     name = 'Seven Words'
     plays = {1: [[(1, 0), (1, 1), (1, 2), (1, 3)]],
         2: [[(0, 0), (0, 1), (0, 2), (0, 3)], [(2, 0), (2, 1), (2, 2), (2, 3)]],
         3: [[(0, 0), (0, 1), (0, 2), (0, 3)], [(1, 0), (1, 1), (1, 2), (1, 3)],
             [(2, 0), (2, 1), (2, 2), (2, 3)]]}
-    reels = [list('ABCDEFGHIJKLMNOPQRSTUVWXYZ') for reel in range(4)]
+    reels = [list('SSSBBBPPPPTTCCDDLLFMRGHWANOEJVKYIUZQ'), list('AAAOOOIIIEEUULLRRHNPWYCTMKDBVGSXFZJQ'),
+        list('AAAEEENNNRRLLOOSSITMCUPGDBWFKVZYHXJ'), list('SSSEEETTTDDKKLLNNYPMRHGAOFBWIXCZUVJ')]
     rows = 3
 
     def __init__(self):
@@ -244,12 +246,12 @@ class SevenWords(Machine):
     def load_words(self):
         """Load the four letter words. (None)"""
         path = os.path.join(utility.LOC, 'other_games', '3of6game.txt')
-        self.words = set()
+        self.words_four, self.words_three = set(), set()
         with open(path) as word_file:
             for word in word_file:
                 if len(word) == 5:
                     self.words_four.add(word.strip().upper())
-                elif len(word) == 5:
+                elif len(word) == 4:
                     self.words_three.add(word.strip().upper())
         self.the_seven = set(('SHIT', 'PISS', 'FUCK', 'CUNT', 'TITS', 'COCK', 'MOFO'))
 
@@ -264,19 +266,19 @@ class SevenWords(Machine):
         payout, text = 0, 'nothing'
         # !! more details in text (what the pair was of), here and in Eight Ball.
         if word in self.the_seven:
-            payout, text = 2600, 'one of the Seven'
-        elif word in self.letters:
-            payout, text = 1000, 'ascending letters in order'
+            payout, text = 2626, 'one of the Seven'
         elif counts == [4, 4, 4, 4]:
-            payout, text = 801, 'four-of-a-kind'
-        elif ''.join(sorted(values)) in self.letters:
-            payout, text = 69, 'mixed up ascending letters'
+            payout, text = 1080, 'four-of-a-kind'
         elif counts == [1, 3, 3, 3]:
-            payout, text = 30, 'three-of-a-kind'
-        elif word in self.words:
-            payout, text = 26, 'an English word ({!r})'.format(word.lower())
+            payout, text = 40, 'three-of-a-kind'
         elif counts == [2, 2, 2, 2]:
-            payout, text = 20, 'two pair'
+            payout, text = 22, 'two pair'
+        elif word in self.words_four:
+            payout, text = 16, 'a four letter English word ({})'.format(word.lower())
+        elif word[:3] in self.words_three:
+            payout, text = 3, 'a three letter English word ({})'.format(word[:3].lower())
+        elif word[1:] in self.words_three:
+            payout, text = 3, 'a three letter English word ({})'.format(word[1:].lower())
         elif counts == [1, 1, 2, 2]:
             payout, text = 1, 'a pair'
         return [(payout, text)]
