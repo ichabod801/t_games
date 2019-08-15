@@ -29,6 +29,28 @@ Machine Designs: Craig "Ichabod" O'Brien
 Game Programming: Craig "Ichabod" O'Brien
 """
 
+EIGHT_BALL_PAYOUTS = """
+Eight Ball
+
+Cost per play: 1 buck
+
+Payouts:
+Split Pair      (4-0-4):  1 buck
+Left Pair       (2-2-5):  2 bucks
+Right Pair      (9-1-1):  2 bucks
+Three of a Kind (6-6-6):  9 bucks
+Downer          (5-4-3): 11 bucks
+Upper           (1-2-3): 12 bucks
+The Lotus       (1-0-8): 24 bucks
+The Wheel       (8-0-1): 24 bucks
+
+One or more eights in the result doubles the payout, so the Lotus and the
+Wheel payout 48 bucks total. Downers and uppers must be sequences in order,
+and the Lotus and the Wheel must be those exact numbers.
+
+Eight Ball only has one play.
+"""
+
 RULES = """
 At the start you choose which game (type of slot machine) you want to play.
 Pick one, and enter the spin command. The cost of the machine will be auto-
@@ -48,6 +70,32 @@ number of plays.
 You can change games with the switch command ('switch game'). You can also use
 the switch command to change to a different machine of the same type ('switch
 machine'). This resets the wheels of the machine.
+
+The payouts command will give you the payouts for the current machine.
+"""
+
+SEVEN_WORDS_PAYOUTS = """
+Seven Words
+
+Cost per play: 2 bucks
+
+Payouts:
+A Pair          (A-B-A-C):    1 buck
+3-Letter Word   (B-E-T-X):    3 bucks
+4-Letter Word   (B-U-C-K):   16 bucks
+Two Pair        (D-F-F-D):   22 bucks
+Three of a Kind (G-H-G-G):   40 bucks
+Four of a Kind  (I-I-I-I): 1080 bucks
+The Seven       (?-?-?-?): 2626 bucks
+
+The Seven Words that give the max payout are secret, but the Ginger Oracle
+knows. Pairs and three of a kind can be in any order. Three letter words
+must be either the first three letters or the last three letters. All words
+must be in order.
+
+Seven Words has three rows and one, two, or three plays. One play plays the
+center row, two plays plays the top and bottom row, and three plays plays all
+three rows.
 """
 
 
@@ -77,6 +125,7 @@ class Machine(object):
 
     cost = 1
     name = 'Eight Ball'
+    payout_text = EIGHT_BALL_PAYOUTS
     plays = {1: [[(0, 0), (0, 1), (0, 2)]]}
     reels = [list('0123456789') for reel in range(3)]
     rows = 1
@@ -262,6 +311,7 @@ class SevenWords(Machine):
 
     cost = 2
     name = 'Seven Words'
+    payout_text = SEVEN_WORDS_PAYOUTS
     plays = {1: [[(1, 0), (1, 1), (1, 2), (1, 3)]],
         2: [[(0, 0), (0, 1), (0, 2), (0, 3)], [(2, 0), (2, 1), (2, 2), (2, 3)]],
         3: [[(0, 0), (0, 1), (0, 2), (0, 3)], [(1, 0), (1, 1), (1, 2), (1, 3)],
@@ -359,6 +409,12 @@ class Slots(game.Game):
         text = '\nYou are playing {}.\nYou have {} {} left'
         bucks = utility.plural(self.scores[self.human.name], 'buck')
         return text.format(self.machine.name, self.scores[self.human.name], bucks)
+
+    def do_payouts(self, arguments):
+        """
+        Show the payouts for the current machine.
+        """
+        self.human.tell(self.machine.payout_text.rstrip())
 
     def do_plays(self, arguments):
         """
