@@ -1,6 +1,10 @@
 """
 slot_machine_game.py
 
+Constants:
+CREDITS: The credits for slot machines. (str)
+RULES: The rules for playing slot machines. (str)
+
 Classes:
 Machine: A slot machine. (object)
 MachineError: An error in the operation of a slot machine. (ValueError)
@@ -17,6 +21,34 @@ import time
 
 from .. import game
 from .. import utility
+
+
+CREDITS = """
+Game Design: Charles Fey
+Machine Designs: Craig "Ichabod" O'Brien
+Game Programming: Craig "Ichabod" O'Brien
+"""
+
+RULES = """
+At the start you choose which game (type of slot machine) you want to play.
+Pick one, and enter the spin command. The cost of the machine will be auto-
+matically deducted from your stake. The reels will spin, as shown on the
+screen, and based on the final values, you may get a payout in return.
+
+Some machines will have more than row in the final output, and will allow you
+to make multiple plays each spin. To make more than one play, you entere the
+number of plays you want to make as an argument to the spin command, such as
+'spin 3'. Alternatively, you can change the default number of plays from 1
+using the plays command.
+
+Note that the spin command has many aliases, including pull, s, and p. Ad-
+ditionally, you can just enter return, and the reels will spin with the default
+number of plays.
+
+You can change games with the switch command ('switch game'). You can also use
+the switch command to change to a different machine of the same type ('switch
+machine'). This resets the wheels of the machine.
+"""
 
 
 class Machine(object):
