@@ -23,9 +23,29 @@ from .. import game
 from .. import utility
 
 
+AMPERSAND_PAYOUTS = """
+Ampersand
+
+Cost per play: 1 buck
+
+Payouts:
+Two Alphasands                 (@-!-@):  1 buck
+Two Alphasands and an Asterisk (@-@-*):  2 bucks
+Three Dollars                  ($-$-$):  4 bucks
+Three Factorials               (!-!-!):  6 bucks
+Three Octothorpes              (#-#-#):  8 bucks
+Three Ampersands               (&-&-&): 10 bucks
+
+Ampersand only has one play.
+
+The Ampersand machine is based on the original Liberty Bell, the first slot
+machine. The Liberty Bell was designed by Charles Fey in 1895. The play is
+the same, but the symbols are different.
+"""
+
 CREDITS = """
 Game Design: Charles Fey
-Machine Designs: Craig "Ichabod" O'Brien
+Machine Designs: Charles Fey and Craig O'Brien
 Game Programming: Craig "Ichabod" O'Brien
 """
 
@@ -286,6 +306,39 @@ class Machine(object):
         print('\nTotal Combinations: {}'.format(sum(counts.values())))
         print('\nTotal Payout: {}'.format(sum(total_payouts.values())))
 
+
+class Ampersand(Machine):
+    """
+    A simple slot machine based on the original Liberty Bell slot. (Machine)
+    """
+
+    name = 'Ampersand'
+    payout_text = AMPERSAND_PAYOUTS
+    reels = [list('!@#$&*') for reel in range(3)]
+
+    def payout(self, values):
+        """
+        Calculate the payout for a given set of values. (list of tuple)
+
+        values: The values of the current play. (list of str)
+        """
+        counts = tuple(values.count(value) for value in values)
+        payout, text = 0, 'nothing'
+        if 2 in counts and sorted(values)[1] == '@':
+            if '*' in values:
+                payout, text = 2, 'two alphasands and an asterisk'
+            else:
+                payout, text = 1, 'two alphasands'
+        elif 3 in counts:
+            if values[0] == '$':
+                payout, text = 4, 'three dollars'
+            elif values[0] == '!':
+                payout, text = 6, 'three factorials'
+            elif values[0] == '#':
+                payout, text = 8, 'three octothorpes'
+            elif values[0] == '&':
+                payout, text = 10, 'three ampersands'
+        return [(payout, text)]
 
 class SevenWords(Machine):
     """
