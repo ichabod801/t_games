@@ -101,19 +101,19 @@ class Machine(object):
         counts = tuple(values.count(value) for value in values)
         payout, text = 0, 'nothing'
         if counts == (2, 1, 2):
-            payout, text = 1, 'a split pair'
+            payout, text = 1, "a split pair ({}'s)".format(values[0])
         elif counts == (2, 2, 1):
-            payout, text = 2, 'a left pair'
+            payout, text = 2, "a left pair ({}'s)".format(values[0])
         elif counts == (1, 2, 2):
-            payout, text = 2, 'a right pair'
+            payout, text = 2, "a right pair ({}'s)".format(values[1])
         elif counts == (3, 3, 3):
-            payout, text = 9, 'a three-of-a-kind'
+            payout, text = 9, "a three-of-a-kind".format(values[0])
         if not payout:
             nums = [int(value) for value in values]
             if nums[1] - nums[0] == 1 and nums[2] - nums[1] == 1:
-                payout, text = 12, 'an upper'
+                payout, text = 12, "an upper (to the {})".format(values[2])
             elif nums[0] - nums[1] == 1 and nums[1] - nums[2] == 1:
-                payout, text = 11, 'a downer'
+                payout, text = 11, "a downer (to the {})".format(values[2])
             elif nums == [1, 0, 8]:
                 payout, text = 24, 'the Lotus'
             elif nums == [8, 0, 1]:
@@ -264,15 +264,16 @@ class SevenWords(Machine):
         counts = sorted(values.count(value) for value in values)
         word = ''.join(values)
         payout, text = 0, 'nothing'
-        # !! more details in text (what the pair was of), here and in Eight Ball.
         if word in self.the_seven:
-            payout, text = 2626, 'one of the Seven'
+            payout, text = 2626, 'one of the Seven (CENSORED)'
         elif counts == [4, 4, 4, 4]:
-            payout, text = 1080, 'four-of-a-kind'
+            payout, text = 1080, "four-of-a-kind ({}'s)".format(values[0])
         elif counts == [1, 3, 3, 3]:
-            payout, text = 40, 'three-of-a-kind'
+            values.sort()
+            payout, text = 40, "three-of-a-kind ({}'s)".format(values[1])
         elif counts == [2, 2, 2, 2]:
-            payout, text = 22, 'two pair'
+            values.sort()
+            payout, text = 22, "two pair ({}'s and {}'s)".format(values[0], values[2])
         elif word in self.words_four:
             payout, text = 16, 'a four letter English word ({})'.format(word.lower())
         elif word[:3] in self.words_three:
@@ -280,7 +281,10 @@ class SevenWords(Machine):
         elif word[1:] in self.words_three:
             payout, text = 3, 'a three letter English word ({})'.format(word[1:].lower())
         elif counts == [1, 1, 2, 2]:
-            payout, text = 1, 'a pair'
+            for pair in values:
+                if values.count(pair) == 2:
+                    break
+            payout, text = 1, "a pair ({}'s)".format(pair)
         return [(payout, text)]
 
 
@@ -412,16 +416,6 @@ class Slots(game.Game):
         else:
             self.human.tell('\nYou did not win anything this spin.')
 
-    def do_test(self, arguments):
-        """
-        Test the payouts of the machine.
-
-        This only tests payouts from one play. This may take a while for more
-        complicated games with more/larger reels.
-        """
-        self.machine.test(self.human)
-        return True
-
     def do_switch(self, arguments):
         """
         Switch to another game or machine. (sw)
@@ -443,13 +437,24 @@ class Slots(game.Game):
             # Check default plays.
             if self.default_plays not in self.machine.plays:
                 new_plays = min(self.machine.plays.keys())
-                self.human.tell('Current default plays setting is invalid. Reset to {}.'.format(new_plays))
+                self.human.tell('\nThe current default plays setting is invalid for this machine.')
+                self.human.tell('The default number of plays has been reset to {}.'.format(new_plays))
                 self.default_plays = new_plays
         elif arguments.lower() in ('m', 'machine'):
             self.machine.shuffle()
             self.human.tell('\nYou have moved to a different machine.')
         else:
-            self.human.error('Invalid argument to switch command: {!r}.'.format(arguments))
+            self.human.error('\nInvalid argument to switch command: {!r}.'.format(arguments))
+
+    def do_test(self, arguments):
+        """
+        Test the payouts of the machine.
+
+        This only tests payouts from one play. This may take a while for more
+        complicated games with more/larger reels.
+        """
+        self.machine.test(self.human)
+        return True
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
