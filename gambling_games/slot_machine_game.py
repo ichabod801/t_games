@@ -8,6 +8,7 @@ RULES: The rules for playing slot machines. (str)
 Classes:
 Machine: A slot machine. (object)
 MachineError: An error in the operation of a slot machine. (ValueError)
+Ampersand: A simple slot machine based on the Liberty Bell slot. (Machine)
 SevenWords: A two-dollar machine based on four letter words. (Machine)
 Slots: Play a slot machine. (game.Game)
 """
@@ -40,7 +41,7 @@ Ampersand only has one play.
 
 The Ampersand machine is based on the original Liberty Bell, the first slot
 machine. The Liberty Bell was designed by Charles Fey in 1895. The play is
-the same, but the symbols are different.
+the same, but the symbols are different, and Liberty Bell cost a nickel.
 """
 
 CREDITS = """
@@ -310,6 +311,9 @@ class Machine(object):
 class Ampersand(Machine):
     """
     A simple slot machine based on the original Liberty Bell slot. (Machine)
+
+    Overridden Methods:
+    payout
     """
 
     name = 'Ampersand'
