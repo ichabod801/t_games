@@ -344,6 +344,117 @@ class Ampersand(Machine):
                 payout, text = 10, 'three ampersands'
         return [(payout, text)]
 
+
+class FullHouse(Machine):
+    """
+    A five-dollar machine based on pairs and trips. (Machine)
+
+    Overridden Methods:
+    all_payouts
+    payout
+    """
+
+    cost = 5
+    digits = set('1234567890')
+    lowers = set('gqxyz')
+    name = 'Full House'
+    plays = {1: [[(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)]],
+        3: [[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)], [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)],
+           [(2, 0), (2, 1), (2, 2), (2, 3), (2, 4)]],
+        5: [[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)], [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)],
+           [(2, 0), (2, 1), (2, 2), (2, 3), (2, 4)], [(2, 0), (1, 1), (0, 2), (1, 3), (2, 4)],
+           [(0, 0), (1, 1), (2, 2), (1, 3), (0, 4)]]}
+    reels = [list('12345678901234567890!@#$%&*?=|'), list('1234567890GQXYZgqxyz!@#$%&*?=|'),
+        list('1234567890GQXYZgqxyzGQXYZgqxyz!@#$%&*?=|'), list('1234567890GQXYZgqxyz!@#$%&*?=|'),
+        list('1234567890GQXYZgqxyz!@#$%&*?=|!@#$%&*?=|')]
+    rows = 3
+    sep = ':'
+    symbols = set('!@#$%&*?=|')
+    uppers = set('GQXYZ')
+
+    def all_payouts(self, plays):
+        """
+        Get the payouts for all of the plays. (list)
+
+        There is an item in the returned list for each payout. That item is a tuple of
+        the values the payout is based on, the bucks payed out, and a phrase describing
+        the combination responsible for the payout.
+
+        Parameters:
+        plays: The number of plays for this spin. (int)
+        """
+        payouts = super(FullHouse, self).all_payouts(plays)
+        payout_types = [text.split('(')[0].strip() for values, payout, text in payouts]
+        pairs = payout_types.count('a pair') + payout_types.count('two_pair') * 2
+        pass_pairs = payout_types.count('a password pair')
+        trips = payout_types.count('three-of-a-kind')
+        constructed = (pass_pairs + pairs) * trips
+        if constructed:
+            payout = 38 * (pass_pairs * trips) + 35 * (pairs * trips)
+            number_text = utility.number_word(constructed)
+            house_text = utility.plural(constructed, 'house')
+            payouts.append(([], payout, '{} constructed full {}'.format(number_text, house_text)))
+        houses = payout_types.count('a full house')
+        if houses:
+            total_payout = sum(payout for values, payout, text in payouts)
+            bonus = (total_payout - 1800) * 2 * houses
+            if bonus:
+                bonus_text = 'a bonus for {}.'.format(utility.number_plural(houses, 'full house'))
+                payouts.append([], bonus, bonus_text)
+        return payouts
+
+    def payout(self, raw_values):
+        """
+        Calculate the payout for a given set of values. (list of tuple)
+
+        raw_values: The values of the current play. (list of str)
+        """
+        values = sorted(raw_values)
+        counts = sorted(values.count(value) for value in values)
+        has_digits = self.digits.intersection(values)
+        has_lowers = self.lowers.intersection(values)
+        has_symbols = self.symbols.intersection(values)
+        has_uppers = self.uppers.intersection(values)
+        has_letters = has_lowers or has_uppers
+        if has_digits and has_lowers and has_uppers and has_symbols:
+            payout, text = 3, 'a password'
+        else:
+            payout, text = 0, 'nothing'
+        if has_digits and not has_letters and not has_symbols:
+            payout, text = 23, 'pure digits'
+        elif ''.join(raw_values).lower() == 'xyzzy':
+            payout, text = 180000, 'the jackpot'
+        elif not has_digits and has_letters and not has_symbols:
+            payout, text = 23, 'pure letters'
+        elif not has_digits and not has_letters and has_symbols:
+            payout, text = 23, 'pure symbols'
+        elif counts == [1, 1, 1, 2, 2]:
+            for pair in values:
+                if values.count(pair) == 2:
+                    break
+            if text == 'a password':
+                payout, text = 9, "a password pair ({}'s)".format(pair)
+            else:
+                payout, text = 6, "a pair ({}'s)".format(pair)
+        elif counts == [1, 2, 2, 2, 2]:
+            high, low = values[3], values[1]
+            payout, text = 18, "two pair ({}'s and {}'s)".format(high, low)
+        elif counts == [1, 1, 3, 3, 3]:
+            payout, text = 23, "three-of-a-kind ({}'s)".format(values[2])
+        elif counts == [2, 2, 3, 3, 3]:
+            trip = values[2]
+            if values[0] == trip:
+                pair = values[4]
+            else:
+                pair = values[0]
+            payout, text = 1800, "a full house ({}'s over {}'s)".format(trip, pair)
+        elif counts == [1, 4, 4, 4, 4]:
+            payout, text = 801, "four-of-a-kind ({}'s)".format(values[2])
+        elif counts == [5, 5, 5, 5, 5]:
+            payout, text = 360000, 'the super jackpot'
+        return [(payout, text)]
+
+
 class SevenWords(Machine):
     """
     A two-dollar machine based on four letter words. (Machine)
