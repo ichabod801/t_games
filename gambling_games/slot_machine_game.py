@@ -364,9 +364,10 @@ class FullHouse(Machine):
         5: [[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)], [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)],
            [(2, 0), (2, 1), (2, 2), (2, 3), (2, 4)], [(2, 0), (1, 1), (0, 2), (1, 3), (2, 4)],
            [(0, 0), (1, 1), (2, 2), (1, 3), (0, 4)]]}
-    reels = [list('12345678901234567890!@#$%&*?=|'), list('1234567890GQXYZgqxyz!@#$%&*?=|'),
+    """reels = [list('12345678901234567890!@#$%&*?=|'), list('1234567890GQXYZgqxyz!@#$%&*?=|'),
         list('1234567890GQXYZgqxyzGQXYZgqxyz!@#$%&*?=|'), list('1234567890GQXYZgqxyz!@#$%&*?=|'),
-        list('1234567890GQXYZgqxyz!@#$%&*?=|!@#$%&*?=|')]
+        list('1234567890GQXYZgqxyz!@#$%&*?=|!@#$%&*?=|')]"""
+    reels = [list('1234567890GQXYZgqxyz!@#$%&*?=|') for reel in range(5)]
     rows = 3
     sep = ':'
     symbols = set('!@#$%&*?=|')
@@ -417,13 +418,15 @@ class FullHouse(Machine):
         has_uppers = self.uppers.intersection(values)
         has_letters = has_lowers or has_uppers
         if has_digits and has_lowers and has_uppers and has_symbols:
-            payout, text = 3, 'a password'
+            payout, text = 6, 'a password'
         else:
             payout, text = 0, 'nothing'
-        if has_digits and not has_letters and not has_symbols:
+        if counts == [5, 5, 5, 5, 5]:
+            payout, text = 180000, 'the fiver jackpot'
+        elif has_digits and not has_letters and not has_symbols:
             payout, text = 23, 'pure digits'
         elif ''.join(raw_values).lower() == 'xyzzy':
-            payout, text = 180000, 'the jackpot'
+            payout, text = 180000, 'the xyzzy jackpot'
         elif not has_digits and has_letters and not has_symbols:
             payout, text = 23, 'pure letters'
         elif not has_digits and not has_letters and has_symbols:
@@ -435,7 +438,7 @@ class FullHouse(Machine):
             if text == 'a password':
                 payout, text = 9, "a password pair ({}'s)".format(pair)
             else:
-                payout, text = 6, "a pair ({}'s)".format(pair)
+                payout, text = 3, "a pair ({}'s)".format(pair)
         elif counts == [1, 2, 2, 2, 2]:
             high, low = values[3], values[1]
             payout, text = 18, "two pair ({}'s and {}'s)".format(high, low)
@@ -450,8 +453,6 @@ class FullHouse(Machine):
             payout, text = 1800, "a full house ({}'s over {}'s)".format(trip, pair)
         elif counts == [1, 4, 4, 4, 4]:
             payout, text = 801, "four-of-a-kind ({}'s)".format(values[2])
-        elif counts == [5, 5, 5, 5, 5]:
-            payout, text = 360000, 'the super jackpot'
         return [(payout, text)]
 
 
