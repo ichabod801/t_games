@@ -318,6 +318,9 @@ class Ampersand(Machine):
     """
     A simple slot machine based on the original Liberty Bell slot. (Machine)
 
+    !! This should be the functionality of Machine, and Eight Ball should be a
+    separate class.
+
     Overridden Methods:
     payout
     """
@@ -361,8 +364,8 @@ class FullHouse(Machine):
     """
 
     cost = 5
-    digits = set('1234567890')
-    lowers = set('gqxyz')
+    digits = set('12346890')
+    lowers = set('gxyz')
     name = 'Full House'
     plays = {1: [[(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)]],
         3: [[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)], [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)],
@@ -370,11 +373,11 @@ class FullHouse(Machine):
         5: [[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)], [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)],
            [(2, 0), (2, 1), (2, 2), (2, 3), (2, 4)], [(2, 0), (1, 1), (0, 2), (1, 3), (2, 4)],
            [(0, 0), (1, 1), (2, 2), (1, 3), (0, 4)]]}
-    reels = [list('1234567890GQXYZgqxyz!@#$%&*?=|') for reel in range(5)]
+    reels = [list('12346890GXYZgxyz!@#$%&?=') for reel in range(5)]
     rows = 3
     sep = ':'
-    symbols = set('!@#$%&*?=|')
-    uppers = set('GQXYZ')
+    symbols = set('!@#$%&?=')
+    uppers = set('GXYZ')
 
     def all_payouts(self, plays):
         """
