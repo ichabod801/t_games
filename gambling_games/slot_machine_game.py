@@ -77,6 +77,48 @@ and the Lotus and the Wheel must be those exact numbers.
 Eight Ball only has one play.
 """
 
+FULL_HOUSE_PAYOUTS = """
+Full House
+
+Cost per play: 5 bucks
+
+Payouts:
+Pair                  2 bucks
+Password              4 bucks
+Password Pair        12 bucks
+Two Pair             15 bucks
+Three-of-a-Kind      23 bucks
+Purity               30 bucks
+Full House          801 bucks
+Four-of-a-Kind     1300 bucks
+Xyzzy             77000 bucks
+Five-of-a-Kind   100000 bucks
+
+A password has at least one digit, at least one symbol, at least one upper
+case letter, and at least one lower case letter. A purity has only numbers,
+symbols, or letters. A full house is a pair and three-of-a-kind. Xyzzy can be
+any case.
+
+Getting a full house with mutliple plays doubles every other play you score on.
+Getting a pair and a three-of-a-kind on separate plays doubles both of them.
+This can happen mutliple times. For example, if you get two pair and a three-
+of-a-kind, both pairs are doubled and the three-of-a-kind is doubled twice,
+once for each pair.
+
+Full House has one, three, or five plays. One play is the middle row. Three
+plays is all three rows. Five plays is all three rows, the up angle, and the
+down angle. The up angle goes diagonally up from the lower left and then
+back down to the lower right, and the down angle goes diagonally down from
+the upper left and then back up to the upper right. For example:
+
+1-2-3-4-5
+X-y-Z-z-Y
+!-@-#-$-%
+
+With the above three rows, the up angle play would be !-y-3-z-%, and the down
+angle play would be 1-y-#-z-5.
+"""
+
 RULES = """
 At the start you choose which game (type of slot machine) you want to play.
 Pick one, and enter the spin command. The cost of the machine will be auto-
@@ -358,6 +400,12 @@ class FullHouse(Machine):
     """
     A five-dollar machine based on pairs and trips. (Machine)
 
+    Class Attributes:
+    digits: The numeric digits on the reels. (set of str)
+    lowers: The lower case letters on the reels. (set of str)
+    symbols: The non-alphanumeric symbols on the reels. (set of str)
+    uppers: The upper case letters on the reels. (set of str)
+
     Overridden Methods:
     all_payouts
     payout
@@ -367,6 +415,7 @@ class FullHouse(Machine):
     digits = set('12346890')
     lowers = set('gxyz')
     name = 'Full House'
+    payout_text = FULL_HOUSE_PAYOUTS
     plays = {1: [[(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)]],
         3: [[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)], [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)],
            [(2, 0), (2, 1), (2, 2), (2, 3), (2, 4)]],
@@ -390,21 +439,25 @@ class FullHouse(Machine):
         Parameters:
         plays: The number of plays for this spin. (int)
         """
+        # Get the winning combinations.
         payouts = super(FullHouse, self).all_payouts(plays)
         payout_types = [text.split('(')[0].strip() for values, payout, text in payouts]
+        # Count the pairs and trips.
         pairs = payout_types.count('a pair') + payout_types.count('two_pair') * 2
         pass_pairs = payout_types.count('a password pair')
         trips = payout_types.count('three-of-a-kind')
+        # Add payouts for constructed full houses.
         constructed = (pass_pairs + pairs) * trips
         if constructed:
-            payout = 38 * (pass_pairs * trips) + 35 * (pairs * trips)
+            payout = 35 * (pass_pairs * trips) + 25 * (pairs * trips)
             number_text = utility.number_word(constructed)
             house_text = utility.plural(constructed, 'house')
             payouts.append(([], payout, '{} constructed full {}'.format(number_text, house_text)))
+        # Add a bonus for full houses.
         houses = payout_types.count('a full house')
         if houses:
             total_payout = sum(payout for values, payout, text in payouts)
-            bonus = (total_payout - 1800) * 2 * houses
+            bonus = (total_payout - 801) * 2 * houses
             if bonus:
                 bonus_text = 'a bonus for {}.'.format(utility.number_plural(houses, 'full house'))
                 payouts.append([], bonus, bonus_text)
@@ -416,6 +469,7 @@ class FullHouse(Machine):
 
         raw_values: The values of the current play. (list of str)
         """
+        # Analyze the values.
         values = sorted(raw_values)
         counts = sorted(values.count(value) for value in values)
         has_digits = self.digits.intersection(values)
@@ -423,42 +477,46 @@ class FullHouse(Machine):
         has_symbols = self.symbols.intersection(values)
         has_uppers = self.uppers.intersection(values)
         has_letters = has_lowers or has_uppers
+        # Determine the payouts.
         if has_digits and has_lowers and has_uppers and has_symbols:
-            payout, text = 6, 'a password'
+            payout, text = 2, 'a password'
         else:
             payout, text = 0, 'nothing'
         if counts == [5, 5, 5, 5, 5]:
-            payout, text = 180000, 'the fiver jackpot'
+            payout, text = 10000, 'the fiver jackpot'
         elif has_digits and not has_letters and not has_symbols:
-            payout, text = 23, 'pure digits'
+            payout, text = 30, 'pure digits'
         elif ''.join(raw_values).lower() == 'xyzzy':
-            payout, text = 180000, 'the xyzzy jackpot'
+            payout, text = 77000, 'the xyzzy jackpot'
         elif not has_digits and has_letters and not has_symbols:
-            payout, text = 23, 'pure letters'
+            payout, text = 30, 'pure letters'
         elif not has_digits and not has_letters and has_symbols:
-            payout, text = 23, 'pure symbols'
+            payout, text = 30, 'pure symbols'
         elif counts == [1, 1, 1, 2, 2]:
+            # Find the pair symbol.
             for pair in values:
                 if values.count(pair) == 2:
                     break
+            # Check for a password pair.
             if text == 'a password':
-                payout, text = 9, "a password pair ({}'s)".format(pair)
+                payout, text = 12, "a password pair ({}'s)".format(pair)
             else:
-                payout, text = 3, "a pair ({}'s)".format(pair)
+                payout, text = 4, "a pair ({}'s)".format(pair)
         elif counts == [1, 2, 2, 2, 2]:
             high, low = values[3], values[1]
-            payout, text = 18, "two pair ({}'s and {}'s)".format(high, low)
+            payout, text = 15, "two pair ({}'s and {}'s)".format(high, low)
         elif counts == [1, 1, 3, 3, 3]:
             payout, text = 23, "three-of-a-kind ({}'s)".format(values[2])
         elif counts == [2, 2, 3, 3, 3]:
+            # Find the trip symbol.
             trip = values[2]
             if values[0] == trip:
                 pair = values[4]
             else:
                 pair = values[0]
-            payout, text = 1800, "a full house ({}'s over {}'s)".format(trip, pair)
+            payout, text = 801, "a full house ({}'s over {}'s)".format(trip, pair)
         elif counts == [1, 4, 4, 4, 4]:
-            payout, text = 801, "four-of-a-kind ({}'s)".format(values[2])
+            payout, text = 1300 , "four-of-a-kind ({}'s)".format(values[2])
         return [(payout, text)]
 
 
