@@ -192,10 +192,10 @@ class Machine(object):
     """
 
     cost = 1
-    name = 'Eight Ball'
-    payout_text = EIGHT_BALL_PAYOUTS
+    name = 'Ampersand'
+    payout_text = AMPERSAND_PAYOUTS
     plays = {1: [[(0, 0), (0, 1), (0, 2)]]}
-    reels = [list('0123456789') for reel in range(3)]
+    reels = [list('!@#$&*') for reel in range(3)]
     rows = 1
     sep = '-'
 
@@ -250,28 +250,20 @@ class Machine(object):
         """
         counts = tuple(values.count(value) for value in values)
         payout, text = 0, 'nothing'
-        if counts == (2, 1, 2):
-            payout, text = 1, "a split pair ({}'s)".format(values[0])
-        elif counts == (2, 2, 1):
-            payout, text = 2, "a left pair ({}'s)".format(values[0])
-        elif counts == (1, 2, 2):
-            payout, text = 2, "a right pair ({}'s)".format(values[1])
-        elif counts == (3, 3, 3):
-            payout, text = 9, "a three-of-a-kind".format(values[0])
-        if not payout:
-            nums = [int(value) for value in values]
-            if nums[1] - nums[0] == 1 and nums[2] - nums[1] == 1:
-                payout, text = 12, "an upper (to the {})".format(values[2])
-            elif nums[0] - nums[1] == 1 and nums[1] - nums[2] == 1:
-                payout, text = 11, "a downer (to the {})".format(values[2])
-            elif nums == [1, 0, 8]:
-                payout, text = 24, 'the Lotus'
-            elif nums == [8, 0, 1]:
-                payout, text = 24, 'the Wheel'
-        if payout and '8' in values:
-            payout *= 2
-            if payout < 48:
-                text = '{} with an eight'.format(text)
+        if 2 in counts and sorted(values)[1] == '@':
+            if '*' in values:
+                payout, text = 2, 'two alphasands and an asterisk'
+            else:
+                payout, text = 1, 'two alphasands'
+        elif 3 in counts:
+            if values[0] == '$':
+                payout, text = 4, 'three dollars'
+            elif values[0] == '!':
+                payout, text = 6, 'three factorials'
+            elif values[0] == '#':
+                payout, text = 8, 'three octothorpes'
+            elif values[0] == '&':
+                payout, text = 10, 'three ampersands'
         return [(payout, text)]
 
     def reset(self):
@@ -356,20 +348,17 @@ class Machine(object):
         print('\nTotal Payout: {}'.format(sum(total_payouts.values())))
 
 
-class Ampersand(Machine):
+class EightBall(Machine):
     """
-    A simple slot machine based on the original Liberty Bell slot. (Machine)
-
-    !! This should be the functionality of Machine, and Eight Ball should be a
-    separate class.
+    A simple one-dollar machine with just numbers. (Machine)
 
     Overridden Methods:
     payout
     """
 
-    name = 'Ampersand'
-    payout_text = AMPERSAND_PAYOUTS
-    reels = [list('!@#$&*') for reel in range(3)]
+    name = 'Eight Ball'
+    payout_text = EIGHT_BALL_PAYOUTS
+    reels = [list('0123456789') for reel in range(3)]
 
     def payout(self, values):
         """
@@ -379,20 +368,28 @@ class Ampersand(Machine):
         """
         counts = tuple(values.count(value) for value in values)
         payout, text = 0, 'nothing'
-        if 2 in counts and sorted(values)[1] == '@':
-            if '*' in values:
-                payout, text = 2, 'two alphasands and an asterisk'
-            else:
-                payout, text = 1, 'two alphasands'
-        elif 3 in counts:
-            if values[0] == '$':
-                payout, text = 4, 'three dollars'
-            elif values[0] == '!':
-                payout, text = 6, 'three factorials'
-            elif values[0] == '#':
-                payout, text = 8, 'three octothorpes'
-            elif values[0] == '&':
-                payout, text = 10, 'three ampersands'
+        if counts == (2, 1, 2):
+            payout, text = 1, "a split pair ({}'s)".format(values[0])
+        elif counts == (2, 2, 1):
+            payout, text = 2, "a left pair ({}'s)".format(values[0])
+        elif counts == (1, 2, 2):
+            payout, text = 2, "a right pair ({}'s)".format(values[1])
+        elif counts == (3, 3, 3):
+            payout, text = 9, "a three-of-a-kind".format(values[0])
+        if not payout:
+            nums = [int(value) for value in values]
+            if nums[1] - nums[0] == 1 and nums[2] - nums[1] == 1:
+                payout, text = 12, "an upper (to the {})".format(values[2])
+            elif nums[0] - nums[1] == 1 and nums[1] - nums[2] == 1:
+                payout, text = 11, "a downer (to the {})".format(values[2])
+            elif nums == [1, 0, 8]:
+                payout, text = 24, 'the Lotus'
+            elif nums == [8, 0, 1]:
+                payout, text = 24, 'the Wheel'
+        if payout and '8' in values:
+            payout *= 2
+            if payout < 48:
+                text = '{} with an eight'.format(text)
         return [(payout, text)]
 
 
