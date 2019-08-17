@@ -8,7 +8,7 @@ RULES: The rules for playing slot machines. (str)
 Classes:
 Machine: A slot machine. (object)
 MachineError: An error in the operation of a slot machine. (ValueError)
-Ampersand: A simple slot machine based on the Liberty Bell slot. (Machine)
+Eight Ball: A simple one-dollar machine with just numbers. (Machine)
 SevenWords: A two-dollar machine based on four letter words. (Machine)
 Slots: Play a slot machine. (game.Game)
 """
@@ -228,10 +228,12 @@ class Machine(object):
         Parameters:
         plays: The number of plays for this spin. (int)
         """
+        # Loop through the different values for the current plays.
         all_payouts = []
         for play in self.plays[plays]:
             values = [self.reels[reel][self.state[row][reel]] for row, reel in play]
             payouts = self.payout(values)
+            # Store the payouts with their values.
             for payout, text in payouts:
                 all_payouts.append((values, payout, text))
         return all_payouts
@@ -248,13 +250,16 @@ class Machine(object):
 
         values: The values of the current play. (list of str)
         """
+        # Analyse the values.
         counts = tuple(values.count(value) for value in values)
         payout, text = 0, 'nothing'
+        # Check for alphasand pairs.
         if 2 in counts and sorted(values)[1] == '@':
             if '*' in values:
                 payout, text = 2, 'two alphasands and an asterisk'
             else:
                 payout, text = 1, 'two alphasands'
+        # Check for trips.
         elif 3 in counts:
             if values[0] == '$':
                 payout, text = 4, 'three dollars'
@@ -366,7 +371,9 @@ class EightBall(Machine):
 
         values: The values of the current play. (list of str)
         """
+        # Analyze the values.
         counts = tuple(values.count(value) for value in values)
+        # Check for count based wins.
         payout, text = 0, 'nothing'
         if counts == (2, 1, 2):
             payout, text = 1, "a split pair ({}'s)".format(values[0])
@@ -377,6 +384,7 @@ class EightBall(Machine):
         elif counts == (3, 3, 3):
             payout, text = 9, "a three-of-a-kind".format(values[0])
         if not payout:
+            # Check for value based wins.
             nums = [int(value) for value in values]
             if nums[1] - nums[0] == 1 and nums[2] - nums[1] == 1:
                 payout, text = 12, "an upper (to the {})".format(values[2])
@@ -386,6 +394,7 @@ class EightBall(Machine):
                 payout, text = 24, 'the Lotus'
             elif nums == [8, 0, 1]:
                 payout, text = 24, 'the Wheel'
+        # Double the payout with an eight.
         if payout and '8' in values:
             payout *= 2
             if payout < 48:
@@ -556,15 +565,18 @@ class SevenWords(Machine):
         self.load_words()
 
     def load_words(self):
-        """Load the four letter words. (None)"""
+        """Load the small letter words. (None)"""
+        # Loop through the word list.
         path = os.path.join(utility.LOC, 'other_games', '3of6game.txt')
         self.words_four, self.words_three = set(), set()
         with open(path) as word_file:
             for word in word_file:
+                # Save the three and four letter words.
                 if len(word) == 5:
                     self.words_four.add(word.strip().upper())
                 elif len(word) == 4:
                     self.words_three.add(word.strip().upper())
+        # Save the seven secret words, based off the George Carlin skit.
         self.the_seven = set(('SHIT', 'PISS', 'FUCK', 'CUNT', 'TITS', 'COCK', 'MOFO'))
 
     def payout(self, values):
@@ -573,8 +585,10 @@ class SevenWords(Machine):
 
         values: The values of the current play. (list of str)
         """
+        # Analyze the values.
         counts = sorted(values.count(value) for value in values)
         word = ''.join(values)
+        # Calculate the payouts from the top down.
         payout, text = 0, 'nothing'
         if word in self.the_seven:
             payout, text = 2626, 'one of the Seven (CENSORED)'
