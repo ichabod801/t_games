@@ -20,6 +20,11 @@ import os
 import random
 import time
 
+try:
+    reduce(pow, (1, 2, 3, 4))
+except NameError:
+    from functools import reduce
+
 from .. import game
 from .. import utility
 
@@ -154,6 +159,7 @@ class Machine(object):
 
     def __init__(self):
         """Set up the machine. (None)"""
+        self.size = reduce(lambda x, y: x * y, [len(reel) for reel in self.reels])
         self.shuffle()
         self.reset()
 
@@ -364,9 +370,6 @@ class FullHouse(Machine):
         5: [[(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)], [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)],
            [(2, 0), (2, 1), (2, 2), (2, 3), (2, 4)], [(2, 0), (1, 1), (0, 2), (1, 3), (2, 4)],
            [(0, 0), (1, 1), (2, 2), (1, 3), (0, 4)]]}
-    """reels = [list('12345678901234567890!@#$%&*?=|'), list('1234567890GQXYZgqxyz!@#$%&*?=|'),
-        list('1234567890GQXYZgqxyzGQXYZgqxyz!@#$%&*?=|'), list('1234567890GQXYZgqxyz!@#$%&*?=|'),
-        list('1234567890GQXYZgqxyz!@#$%&*?=|!@#$%&*?=|')]"""
     reels = [list('1234567890GQXYZgqxyz!@#$%&*?=|') for reel in range(5)]
     rows = 3
     sep = ':'
@@ -760,7 +763,7 @@ class Slots(game.Game):
             machine_classes.append(search.pop())
             search.extend(machine_classes[-1].__subclasses__())
         self.machines = [cls() for cls in machine_classes]
-        self.machines.sort(key = lambda machine: (machine.rows, len(machine.reels)))
+        self.machines.sort(key = lambda machine: machine.size)
         # Set up tracking variables:
         self.machine = None
         self.scores[self.human.name] = self.stake
