@@ -211,21 +211,21 @@ class SnakesAndLadders(game.Game):
         # Set up the board and player tracking.
         self.board = SnakeBoard(exact = self.exact)
         # Get the symbols for the players' pieces.
-        # !! only ask if no pieces yet.
-        self.pieces = {}
-        taken_pieces = set('SL')
-        for player in self.players:
-            while True:
-                # As for the symbol.
-                piece = player.ask('\nWhat symbol do you want to be on the board? ')
-                # All symbols must be visible and unique.
-                if piece in taken_pieces:
-                    player.tell('That symbol is already taken, please choose another.')
-                elif not piece:
-                    player.tell('You are not allowed to be invisible.')
-                # Store the symbol and go to the next player.
-                else:
-                    self.pieces[player.name] = piece[0]
-                    taken_pieces.add(piece[0])
-                    self.board.cells[0].add_piece(piece[0])
-                    break
+        if not hasattr(self, 'pieces'):
+            self.pieces = {}
+            taken_pieces = set('SL')
+            for player in self.players:
+                while True:
+                    # As for the symbol.
+                    piece = player.ask('\nWhat symbol do you want to be on the board? ')
+                    # All symbols must be visible and unique.
+                    if piece in taken_pieces:
+                        player.tell('That symbol is already taken, please choose another.')
+                    elif not piece:
+                        player.tell('You are not allowed to be invisible.')
+                    # Store the symbol and go to the next player.
+                    else:
+                        self.pieces[player.name] = piece[0]
+                        taken_pieces.add(piece[0])
+                        self.board.cells[0].add_piece(piece[0])
+                        break
