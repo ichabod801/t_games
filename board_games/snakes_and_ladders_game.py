@@ -211,7 +211,7 @@ class SnakesAndLadders(game.Game):
     def set_up(self):
         """Set up the game."""
         # Set up the board and player tracking.
-        self.board = SnakeBoard()
+        self.board = SnakeBoard(exact = self.exact)
         # Get the symbols for the players' pieces.
         # !! only ask if no pieces yet.
         self.pieces = {}
