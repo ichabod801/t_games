@@ -208,8 +208,6 @@ class SnakesAndLadders(game.Game):
 
     def set_up(self):
         """Set up the game."""
-        # Set up the board and player tracking.
-        self.board = SnakeBoard(exact = self.exact)
         # Get the symbols for the players' pieces.
         if not hasattr(self, 'pieces'):
             self.pieces = {}
@@ -227,5 +225,8 @@ class SnakesAndLadders(game.Game):
                     else:
                         self.pieces[player.name] = piece[0]
                         taken_pieces.add(piece[0])
-                        self.board.cells[0].add_piece(piece[0])
                         break
+        # Set up the board and player tracking.
+        self.board = SnakeBoard(exact = self.exact)
+        for player in self.players:
+            self.board.cells[0].add_piece(self.pieces[player.name])
