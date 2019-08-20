@@ -101,7 +101,7 @@ class SnakeBoard(board.LineBoard):
                 end = location
             elif self.exact == 'bounce':
                 player.tell('{} rolled too high and bounces back.'.format(player.name))
-                end = 200 - location - roll
+                end = self.columns * self.rows * 2 - location - roll
             else:
                 end = self.columns * self.rows
         if end != location:
