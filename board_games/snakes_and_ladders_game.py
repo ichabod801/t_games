@@ -17,7 +17,7 @@ class SnakeBot(player.Bot):
     def ask(self, prompt):
         if prompt.startswith('\nPress enter'):
             return ''
-        elif prompt.startswith('What symbol'):
+        elif prompt.startswith('\nWhat symbol'):
             return random.choice('!@#$%^&*<>?')
 
     def tell(self, *args, **kwargs):
@@ -34,15 +34,17 @@ class SnakeBoard(board.LineBoard):
         (47, 26), (49, 11), (51, 67), (56, 53), (62, 19), (64, 60), (71, 91), (80, 100), (87, 24), (93, 73),
         (95, 75), (98, 78)]}
 
-    def __init__(self, name = 'Milton-Bradley', columns = 0, rows = 0):
+    def __init__(self, name = 'Milton-Bradley', exact = 'no', columns = 0, rows = 0, level = ''):
         """
         Set up the board. (None)
 
         Parameters:
         name: The name of the layout. (str)
+        exact: Whether an exact roll is needed for a win. (str)
         columns: The number of columns in the layout. (int)
         rows: The number of rows in the layout. (int)
         """
+        self.exact = exact
         self.die = dice.Die()
         if name == 'Random':
             layout = self.random_layout(columns, rows)
@@ -65,7 +67,7 @@ class SnakeBoard(board.LineBoard):
         for index in range(1, self.columns * self.rows + 1):
             number_text.append('{:^4}'.format(index))
             piece_text.append('{:^4}'.format(''.join(self.cells[index].contents)))
-        lines = ['']
+        lines = []
         for column in range(self.columns - 1, -1, -1):
             #lines.append('')
             row_order = range(self.rows, 0, -1) if column % 2 else range(1, self.rows + 1)
@@ -84,6 +86,8 @@ class SnakeBoard(board.LineBoard):
 
         The return value is the new location of the player.
 
+        !! shouldn't the interface be in game?
+
         Parameters:
         player: The player being moved. (player.Player)
         player: Where the player is on the board. (int)
@@ -94,8 +98,16 @@ class SnakeBoard(board.LineBoard):
         player.tell('You rolled a {}.'.format(roll))
         end = location + roll
         if end > self.columns * self.rows:
-            end = self.columns * self.rows
-        player.tell('You move to square #{}.'.format(end))
+            if self.exact == 'stop':
+                player.tell('{} does not move because they rolled too high.'.format(player.name))
+                end = location
+            elif self.exact == 'bounce':
+                player.tell('{} rolled too high and bounces back.')
+                end = 200 - location - roll
+            else:
+                end = self.columns * self.rows
+        if end != location:
+            player.tell('You move to square #{}.'.format(end))
         if end in self.ladders:
             new_end = self.ladders[end]
             player.tell('Square #{} is a ladder up to square #{}.'.format(end, new_end))
@@ -105,7 +117,7 @@ class SnakeBoard(board.LineBoard):
             player.tell('Square #{} is a snake down to square #{}.'.format(end, new_end))
             end = new_end
         self.cells[end].add_piece(piece)
-        if roll == 6:
+        if roll == 6 and end != self.columns * self.rows:
             player.tell('{} rolled a 6, so they get to roll again.'.format(player.name))
             end = self.roll(player, end, piece)
         return end
@@ -145,7 +157,7 @@ class SnakesAndLadders(game.Game):
             # Get the overall winner.
             scores = [(score, name) for name, score in self.scores.items()]
             scores.sort(reverse = True)
-            self.human.tell('{} wins!'.format(scores[0][1]))
+            self.human.tell('\n{} wins!'.format(scores[0][1]))
             # Figure out the human's win/loss/draw score.
             human_score = self.scores[self.human.name]
             for score, name in scores:
@@ -181,6 +193,7 @@ class SnakesAndLadders(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
+        player.tell('')
         player.tell(self.board)
         command = player.ask('\nPress enter to roll: ')
         if not command:
@@ -192,21 +205,26 @@ class SnakesAndLadders(game.Game):
         """Define the options for the game."""
         self.option_set.add_option('bots', ['b'], int, 3, valid = range(1, 12), target = 'n_bots',
             question = 'How many bots should there be in the game (1-11, return for 3)? ')
+        self.option_set.add_option('exact', ['x'], str.lower, 'no', valid = ['no', 'stop', 'bounce'],
+            question = 'What happens if you roll over 100 (stop, bounce, or return for no)? ')
 
     def set_up(self):
         """Set up the game."""
         # Set up the board and player tracking.
         self.board = SnakeBoard()
         # Get the symbols for the players' pieces.
+        # !! only ask if no pieces yet.
         self.pieces = {}
         taken_pieces = set('SL')
         for player in self.players:
             while True:
                 # As for the symbol.
-                piece = player.ask('What symbol do you want to be on the board? ')
-                # All symbols must be unique.
+                piece = player.ask('\nWhat symbol do you want to be on the board? ')
+                # All symbols must be visible and unique.
                 if piece in taken_pieces:
                     player.tell('That symbol is already taken, please choose another.')
+                elif not piece:
+                    player.tell('You are not allowed to be invisible.')
                 # Store the symbol and go to the next player.
                 else:
                     self.pieces[player.name] = piece[0]
