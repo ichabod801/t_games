@@ -17,8 +17,9 @@ data_to_text: Convert CREDITS_DATA to formatted text. (str)
 
 CREDITS_DATA = [('Interface Programming', """Craig O'Brien, Micah Page"""),
     ('Game Design', """Humans; Paul Alfille, Matt Baker, Richard A. Canfield, Melvin Dresher, Doug Dyment,
-        Merrill Flood, Michael Keller, Bernard de Marigny, Albert Morehead, Geoffrey Mott-Smith,
-        Craig O'Brien, Ned Strongin, Sid Sackson, John Suckling, Howard Wexler, Gregory Yob"""),
+        Charles Fey, Merrill Flood, Michael Keller, Bernard de Marigny, Albert Morehead,
+        Geoffrey Mott-Smith, Craig O'Brien, Ned Strongin, Sid Sackson, John Suckling, Howard Wexler,
+        Gregory Yob"""),
     ('Game Programming', """Thomas Ahle, Craig O'Brien, David B. Wilson"""),
     ('Bot Design', """Robert Axelrod, B. Beaufils, S. Braver, K. Deb, J. Delahaye, James Friedman,
         Roger Johnson, Reiner Knizia, J. Komorita, David Kraines, Vivian Kraines, S. Mittal, Todd Neller,
@@ -27,7 +28,8 @@ CREDITS_DATA = [('Interface Programming', """Craig O'Brien, Micah Page"""),
     ('Documentation', """wma, Craig O'Brien"""),
     ('Play Testing', """Doug Edmunds, Craig O'Brien, Micah Page"""),
     ('Special Thanks', """Guido van Rossum; python-forum.io, github.com, Wikipedia, pagat.com;
-        Alan Beale, Kris Burm, Matt Groening, Lawrence Lasker, Walter F. Parks, David Parlett""")]
+        Alan Beale, Kris Burm, George Carlin, Matt Groening, Lawrence Lasker, Walter F. Parks,
+        David Parlett""")]
 
 
 def data_to_text():
