@@ -105,6 +105,9 @@ class SnakeBoard(board.LineBoard):
             player.tell('Square #{} is a snake down to square #{}.'.format(end, new_end))
             end = new_end
         self.cells[end].add_piece(piece)
+        if roll == 6:
+            player.tell('{} rolled a 6, so they get to roll again.'.format(player.name))
+            end = self.roll(player, end, piece)
         return end
 
 
