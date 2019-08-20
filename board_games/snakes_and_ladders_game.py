@@ -99,7 +99,7 @@ class SnakeBoard(board.LineBoard):
         end = location + roll
         if end > self.columns * self.rows:
             if self.exact == 'stop':
-                player.tell('{} does not move because they rolled too high.'.format(player.name))
+                player.tell('{} did not move because they rolled too high.'.format(player.name))
                 end = location
             elif self.exact == 'bounce':
                 player.tell('{} rolled too high and bounces back.')
@@ -107,7 +107,7 @@ class SnakeBoard(board.LineBoard):
             else:
                 end = self.columns * self.rows
         if end != location:
-            player.tell('You move to square #{}.'.format(end))
+            player.tell('{} moved to square #{}.'.format(player.name, end))
         if end in self.ladders:
             new_end = self.ladders[end]
             player.tell('Square #{} is a ladder up to square #{}.'.format(end, new_end))
