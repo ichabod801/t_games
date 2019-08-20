@@ -1,5 +1,11 @@
 """
 snakes_and_ladders_game.py
+
+to do:
+clean up code
+rules and credits
+random layouts
+auto
 """
 
 
@@ -10,6 +16,32 @@ from .. import board
 from .. import game
 from .. import player
 from .. import utility
+
+
+CREDITS = """
+Game Design: Traditional (India)
+Game Programming: Craig "Ichabod" O'Brien
+"""
+
+RULES = """
+The game consists of a square grid of numbered squares, with snakes and
+laddders connecting non-adjacent squares. The board follows a boustrophedon
+(back and forth ox-plow) path from the bottom to the top. Each turn you roll
+a die, which determines how many squares forward you move. If you roll a 6
+you get to roll again. If you end any move at the top of a snake or the
+bottom of a ladder, you move down the snake or up the ladder to the square at
+the other end. The first one to get to or past the end of the board wins.
+
+Options:
+bots= (b=): How many bots you play against. (1-11, default is 3)
+exact= (x=): You must land on the last space exactly to win. If exact is
+    'bounce', you bounce back from the last space if you roll too high. If it
+    is 'stop', you just don't move. The default is 'no', which means rolling
+    too high is still a win.
+layout= (l=): The layout can be 'milton' (the layout of Milton-Bradley's Chutes
+    and Ladders), 'nepal' (a Nepalese version of the board) or 'easy'/'medium'/
+    'hard' (random layouts of varying difficutly)
+"""
 
 
 class SnakeBot(player.Bot):
@@ -136,7 +168,9 @@ class SnakesAndLadders(game.Game):
 
     aka = ['Chutes and Ladders', 'SnAL']
     categories = ['Board Games']
+    credits = CREDITS
     name = 'Snakes and Ladders'
+    rules = RULES
 
     def do_roll(self, arguments):
         """
