@@ -27,10 +27,10 @@ class SnakeBot(player.Bot):
 
 class SnakeBoard(board.LineBoard):
 
-    layouts = {'Nepalese': [(9, 8), (10, 23), (16, 4), (17, 69), (20, 32), (24, 7), (27, 41), (28, 50),
+    layouts = {'nepal': [(9, 8), (10, 23), (16, 4), (17, 69), (20, 32), (24, 7), (27, 41), (28, 50),
         (29, 6), (37, 66), (44, 9), (45, 67), (46, 62), (52, 35), (54, 66), (55, 3), (61, 13), (63, 2),
         (72, 51)],
-        'Milton-Bradley': [(10, 10), (1, 38), (4, 14), (9, 31), (16, 6), (21, 42), (28, 84), (36, 44),
+        'milton': [(10, 10), (1, 38), (4, 14), (9, 31), (16, 6), (21, 42), (28, 84), (36, 44),
         (47, 26), (49, 11), (51, 67), (56, 53), (62, 19), (64, 60), (71, 91), (80, 100), (87, 24), (93, 73),
         (95, 75), (98, 78)]}
 
@@ -203,6 +203,9 @@ class SnakesAndLadders(game.Game):
         """Define the options for the game."""
         self.option_set.add_option('bots', ['b'], int, 3, valid = range(1, 12), target = 'n_bots',
             question = 'How many bots should there be in the game (1-11, return for 3)? ')
+        self.option_set.add_option('layout', ['l'], str.lower, 'milton',
+            valid = ['milton', 'nepal', 'easy', 'medium', 'hard'],
+            question = 'What board layout should be used (return for milton)? ')
         self.option_set.add_option('exact', ['x'], str.lower, 'no', valid = ['no', 'stop', 'bounce'],
             question = 'What happens if you roll over 100 (stop, bounce, or return for no)? ')
 
@@ -227,6 +230,6 @@ class SnakesAndLadders(game.Game):
                         taken_pieces.add(piece[0])
                         break
         # Set up the board and player tracking.
-        self.board = SnakeBoard(exact = self.exact)
+        self.board = SnakeBoard(self.layout, self.exact)
         for player in self.players:
             self.board.cells[0].add_piece(self.pieces[player.name])
