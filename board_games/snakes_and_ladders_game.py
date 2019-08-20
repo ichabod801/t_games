@@ -86,8 +86,6 @@ class SnakeBoard(board.LineBoard):
 
         The return value is the new location of the player.
 
-        !! shouldn't the interface be in game?
-
         Parameters:
         player: The player being moved. (player.Player)
         player: Where the player is on the board. (int)
@@ -102,7 +100,7 @@ class SnakeBoard(board.LineBoard):
                 player.tell('{} did not move because they rolled too high.'.format(player.name))
                 end = location
             elif self.exact == 'bounce':
-                player.tell('{} rolled too high and bounces back.')
+                player.tell('{} rolled too high and bounces back.'.format(player.name))
                 end = 200 - location - roll
             else:
                 end = self.columns * self.rows
