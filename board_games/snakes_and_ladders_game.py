@@ -175,33 +175,45 @@ class SnakeBoard(board.LineBoard):
         player: Where the player is on the board. (int)
         piece: The player's piece symbol. (str)
         """
+        # Remove the piece.
         self.cells[location].remove_piece(piece)
+        # Roll to determine the end square.
         roll = self.die.roll()
         player.tell('You rolled a {}.'.format(roll))
         end = location + roll
+        # Check for rolling over the end of the board.
         if end > self.columns * self.rows:
+            # Handle stopping.
             if self.exact == 'stop':
                 player.tell('{} did not move because they rolled too high.'.format(player.name))
                 end = location
+            # Handle bouncing.
             elif self.exact == 'bounce':
                 player.tell('{} rolled too high and bounces back.'.format(player.name))
                 end = self.columns * self.rows * 2 - location - roll
+            # Handle winning.
             else:
                 end = self.columns * self.rows
+        # Announce new location if they actually moved.
         if end != location:
             player.tell('{} moved to square #{}.'.format(player.name, end))
+        # Check for ladders.
         if end in self.ladders:
             new_end = self.ladders[end]
             player.tell('Square #{} is a ladder up to square #{}.'.format(end, new_end))
             end = new_end
-        if end in self.snakes:
+        # Check for snakes.
+        elif end in self.snakes:
             new_end = self.snakes[end]
             player.tell('Square #{} is a snake down to square #{}.'.format(end, new_end))
             end = new_end
+        # Place the piece in the new square.
         self.cells[end].add_piece(piece)
+        # Check for getting another roll after a six.
         if roll == 6 and end != self.columns * self.rows:
             player.tell('{} rolled a 6, so they get to roll again.'.format(player.name))
             end = self.roll(player, end, piece)
+        # Return the final square for game tracking.
         return end
 
 
@@ -214,7 +226,9 @@ class SnakesAndLadders(game.Game):
 
     Overridden Methods:
     game_over
+    handle_options
     player_action
+    set_options
     set_up
     """
 
@@ -228,7 +242,9 @@ class SnakesAndLadders(game.Game):
         """
         Roll and move on the board. (r)
         """
+        # Get the player.
         player = self.players[self.player_index]
+        # Roll and move the player's piece.
         location = self.scores[player.name]
         piece = self.pieces[player.name]
         self.scores[player.name] = self.board.roll(player, location, piece)
@@ -263,6 +279,7 @@ class SnakesAndLadders(game.Game):
     def handle_options(self):
         """Handle the options for this play of the game. (None)"""
         super(SnakesAndLadders, self).handle_options()
+        # Add the bots.
         taken_names = [self.human.name]
         for bot in range(self.n_bots):
             self.players.append(SnakeBot(taken_names = taken_names))
@@ -277,8 +294,10 @@ class SnakesAndLadders(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
+        # Show the board.
         player.tell('')
         player.tell(self.board)
+        # Handle the players move.
         command = player.ask('\nPress enter to roll: ')
         if not command:
             return self.do_roll('')
