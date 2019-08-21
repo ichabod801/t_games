@@ -177,14 +177,14 @@ class SnakeBoard(board.LineBoard):
         # Create as many snakes and ladders as specified.
         layout = [(columns, rows)]
         snake_paths, ladder_paths = [], []
-        squares = list(range(1, columns * rows + 1))
+        squares = list(range(1, columns * rows))
         for paths, size in ((snake_paths, snakes), (ladder_paths, ladders)):
             while len(paths) < size:
                 # Pull two random squares.
                 random.shuffle(squares)
                 start, end = squares.pop(), squares.pop()
                 # Make sure they're in the correct order
-                if (start > end and paths is snake_paths) or (start < end and path is ladder_paths):
+                if (start > end and paths is snake_paths) or (start < end and paths is ladder_paths):
                     start, end = end, start
                 # No short paths.
                 if abs(start - end) > 9:
@@ -193,7 +193,7 @@ class SnakeBoard(board.LineBoard):
                     squares.append(start)
                     squares.append(end)
         # Join the snakes and ladders to the size and return.
-        return layout + snakes + ladders
+        return layout + snake_paths + ladder_paths
 
     def roll(self, player, location, piece):
         """
