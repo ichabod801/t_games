@@ -3,7 +3,6 @@ snakes_and_ladders_game.py
 
 to do:
 random layouts
-auto
 show final board
 """
 
@@ -271,6 +270,9 @@ class SnakesAndLadders(game.Game):
         """Check for the end of the game."""
         # Someone getting to the end finishes the game.
         if self.board.columns * self.board.rows in self.scores.values():
+            # Show the final board.
+            self.human.tell('')
+            self.human.tell(self.board)
             # Get the overall winner.
             scores = [(score, name) for name, score in self.scores.items()]
             scores.sort(reverse = True)
