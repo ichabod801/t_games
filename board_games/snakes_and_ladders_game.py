@@ -45,19 +45,66 @@ layout= (l=): The layout can be 'milton' (the layout of Milton-Bradley's Chutes
 
 
 class SnakeBot(player.Bot):
+    """
+    A basic bot for Snakes and Ladders. (player.Bot)
+
+    Overridden Methods:
+    ask
+    tell
+    """
 
     def ask(self, prompt):
+        """
+        Get information from the player. (str)
+
+        Parameters:
+        prompt: The question being asked of the player. (str)
+        """
+        # Roll the die.
         if prompt.startswith('\nPress enter'):
             return ''
+        # Choose a piece.
         elif prompt.startswith('\nWhat symbol'):
             return random.choice('!@#$%^&*<>?')
 
     def tell(self, *args, **kwargs):
+        """
+        Give information to the player. (None)
+
+        Parameters:
+        The parameters are as per the built-in print function.
+        """
+        # Don't show the board or piece choice problems to the human.
         if not (isinstance(args[0], SnakeBoard) or args[0].startswith('That symbol')):
             super(SnakeBot, self).tell(*args, **kwargs)
 
 
 class SnakeBoard(board.LineBoard):
+    """
+    A boustrophedon baord for Snakes and Ladders. (board.Lineboard)
+
+    The layouts are a list of two integer tuples. The first two integetrs are
+    the number of columns and rows on the board. The rest are the snakes and the
+    ladders, which can be differentiated by which integer is larger.
+
+    Attributes:
+    columns: How many columns the board has. (int)
+    die: The die that is rolled to move the player along. (dice.Die)
+    exact: The behavior when rolling over the end of the board. (str)
+    ladders: The ladders on the board. (dict of int: int)
+    rows: How many rows the board has.
+    snakes: The snakes on the board. (dict of int: int)
+
+    Class Attributes:
+    layouts: Diffent layouts for the board. (dict of str: list)
+
+    Methods:
+    roll: Roll the dice and move the player. (int)
+
+    Overridden Methods:
+    __init__
+    __str__
+    """
 
     layouts = {'nepal': [(9, 8), (10, 23), (16, 4), (17, 69), (20, 32), (24, 7), (27, 41), (28, 50),
         (29, 6), (37, 66), (44, 9), (45, 67), (46, 62), (52, 35), (54, 66), (55, 3), (61, 13), (63, 2),
@@ -76,14 +123,18 @@ class SnakeBoard(board.LineBoard):
         columns: The number of columns in the layout. (int)
         rows: The number of rows in the layout. (int)
         """
+        # Set up the basic attributes.
         self.exact = exact
         self.die = dice.Die()
+        # Get the layout.
         if name == 'Random':
             layout = self.random_layout(columns, rows)
         else:
             layout = self.layouts[name]
+        # Initialize the base line board.
         self.columns, self.rows = layout[0]
         super(SnakeBoard, self).__init__(self.columns * self.rows, extra_cells = [0])
+        # Save and set up the snakes and ladders.
         self.snakes, self.ladders = {}, {}
         for start, end in layout[1:]:
             if start < end:
@@ -95,17 +146,18 @@ class SnakeBoard(board.LineBoard):
 
     def __str__(self):
         """Human readable text representation. (str)"""
+        # Get the text parts for each cell.
         number_text, piece_text = [''], ['']
         for index in range(1, self.columns * self.rows + 1):
             number_text.append('{:^4}'.format(index))
             piece_text.append('{:^4}'.format(''.join(self.cells[index].contents)))
+        # Get the lines of output, from top to bottom.
         lines = []
-        for column in range(self.columns - 1, -1, -1):
-            #lines.append('')
-            row_order = range(self.rows, 0, -1) if column % 2 else range(1, self.rows + 1)
+        for row in range(self.rows - 1, -1, -1):
+            column_order = range(self.columns, 0, -1) if row % 2 else range(1, self.columns + 1)
             numbers, pieces = [], []
-            for row in row_order:
-                n = column * self.rows + row
+            for column in column_order:
+                n = row * self.columns + column
                 numbers.append(number_text[n])
                 pieces.append(piece_text[n])
             lines.append(' '.join(pieces))
