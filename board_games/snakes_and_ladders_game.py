@@ -111,22 +111,20 @@ class SnakeBoard(board.LineBoard):
         (47, 26), (49, 11), (51, 67), (56, 53), (62, 19), (64, 60), (71, 91), (80, 100), (87, 24), (93, 73),
         (95, 75), (98, 78)]}
 
-    def __init__(self, name = 'Milton-Bradley', exact = 'no', columns = 0, rows = 0, level = ''):
+    def __init__(self, name = 'milton', exact = 'no'):
         """
         Set up the board. (None)
 
         Parameters:
         name: The name of the layout. (str)
         exact: Whether an exact roll is needed for a win. (str)
-        columns: The number of columns in the layout. (int)
-        rows: The number of rows in the layout. (int)
         """
         # Set up the basic attributes.
         self.exact = exact
         self.die = dice.Die()
         # Get the layout.
-        if name == 'Random':
-            layout = self.random_layout(columns, rows)
+        if name in ('easy', 'medium', 'hard'):
+            layout = self.random_layout(name)
         else:
             layout = self.layouts[name]
         # Initialize the base line board.
@@ -161,6 +159,41 @@ class SnakeBoard(board.LineBoard):
             lines.append(' '.join(pieces))
             lines.append(' '.join(numbers))
         return '\n'.join(lines)
+
+    def random_layout(self, difficulty):
+        """
+        Generate a random board layout. (list of (int, int))
+
+        Parameters:
+        difficulty: How hard (long) the board should be. (str)
+        """
+        # Convert the difficulty in to numeric parameters.
+        if difficulty == 'easy':
+            columns, rows, snakes, ladders = 8, 8, 7, 9
+        elif difficulty == 'medium':
+            columns, rows, snakes, ladders = 9, 9, 9, 9
+        elif difficulty == 'hard':
+            columns, rows, snakes, ladders = 10, 10, 11, 9
+        # Create as many snakes and ladders as specified.
+        layout = [(columns, rows)]
+        snake_paths, ladder_paths = [], []
+        squares = list(range(1, columns * rows + 1))
+        for paths, size in ((snake_paths, snakes), (ladder_paths, ladders)):
+            while len(paths) < size:
+                # Pull two random squares.
+                random.shuffle(squares)
+                start, end = squares.pop(), squares.pop()
+                # Make sure they're in the correct order
+                if (start > end and paths is snake_paths) or (start < end and path is ladder_paths):
+                    start, end = end, start
+                # No short paths.
+                if abs(start - end) > 9:
+                    paths.append((start, end))
+                else:
+                    squares.append(start)
+                    squares.append(end)
+        # Join the snakes and ladders to the size and return.
+        return layout + snakes + ladders
 
     def roll(self, player, location, piece):
         """
