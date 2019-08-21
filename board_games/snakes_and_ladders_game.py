@@ -2,10 +2,9 @@
 snakes_and_ladders_game.py
 
 to do:
-clean up code
-rules and credits
 random layouts
 auto
+show final board
 """
 
 
@@ -233,10 +232,25 @@ class SnakesAndLadders(game.Game):
     """
 
     aka = ['Chutes and Ladders', 'SnAL']
+    aliases = {'a': 'auto', 'r': 'roll'}
     categories = ['Board Games']
     credits = CREDITS
     name = 'Snakes and Ladders'
     rules = RULES
+
+    def do_auto(self, arguments):
+        """
+        Turn on automatic play. (a)
+
+        If a number is given, automatic play stops after someone reaches or
+        passes that square on the board. Otherwise, automatic play does not
+        stop until the game is over.
+        """
+        try:
+            self.auto = int(arguments)
+        except ValueError:
+            self.auto = self.board.columns * self.board.rows + 1
+        return True
 
     def do_roll(self, arguments):
         """
@@ -248,6 +262,9 @@ class SnakesAndLadders(game.Game):
         location = self.scores[player.name]
         piece = self.pieces[player.name]
         self.scores[player.name] = self.board.roll(player, location, piece)
+        # Check for turning off automatic play.
+        if self.scores[player.name] >= self.auto:
+            self.auto = 0
         return False
 
     def game_over(self):
@@ -294,11 +311,14 @@ class SnakesAndLadders(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        # Show the board.
+        # Show the board and get the move.
         player.tell('')
-        player.tell(self.board)
+        if not self.auto:
+            player.tell(self.board)
+            command = player.ask('\nPress enter to roll: ')
+        else:
+            command = ''
         # Handle the players move.
-        command = player.ask('\nPress enter to roll: ')
         if not command:
             return self.do_roll('')
         else:
@@ -338,3 +358,5 @@ class SnakesAndLadders(game.Game):
         self.board = SnakeBoard(self.layout, self.exact)
         for player in self.players:
             self.board.cells[0].add_piece(self.pieces[player.name])
+        # Set up the other tracking variables.
+        self.auto = 0
