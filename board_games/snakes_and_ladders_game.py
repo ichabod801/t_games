@@ -1,6 +1,8 @@
 """
 snakes_and_ladders_game.py
 
+A game of Snakes and Ladders
+
 SnakeBoard: A boustrophedon baord for Snakes and Ladders. (board.Lineboard)
 SnakeBot: A basic bot for Snakes and Ladders. (player.Bot)
 SnakesAndLadders: A game of Snakes and Ladders. (game.Game)
