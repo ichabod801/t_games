@@ -1,9 +1,9 @@
 """
 snakes_and_ladders_game.py
 
-to do:
-random layouts
-show final board
+SnakeBoard: A boustrophedon baord for Snakes and Ladders. (board.Lineboard)
+SnakeBot: A basic bot for Snakes and Ladders. (player.Bot)
+SnakesAndLadders: A game of Snakes and Ladders. (game.Game)
 """
 
 
@@ -40,41 +40,6 @@ layout= (l=): The layout can be 'milton' (the layout of Milton-Bradley's Chutes
     and Ladders), 'nepal' (a Nepalese version of the board) or 'easy'/'medium'/
     'hard' (random layouts of varying difficutly)
 """
-
-
-class SnakeBot(player.Bot):
-    """
-    A basic bot for Snakes and Ladders. (player.Bot)
-
-    Overridden Methods:
-    ask
-    tell
-    """
-
-    def ask(self, prompt):
-        """
-        Get information from the player. (str)
-
-        Parameters:
-        prompt: The question being asked of the player. (str)
-        """
-        # Roll the die.
-        if prompt.startswith('\nPress enter'):
-            return ''
-        # Choose a piece.
-        elif prompt.startswith('\nWhat symbol'):
-            return random.choice('!@#$%^&*<>?')
-
-    def tell(self, *args, **kwargs):
-        """
-        Give information to the player. (None)
-
-        Parameters:
-        The parameters are as per the built-in print function.
-        """
-        # Don't show the board or piece choice problems to the human.
-        if not (isinstance(args[0], SnakeBoard) or args[0].startswith('That symbol')):
-            super(SnakeBot, self).tell(*args, **kwargs)
 
 
 class SnakeBoard(board.LineBoard):
@@ -246,6 +211,41 @@ class SnakeBoard(board.LineBoard):
             end = self.roll(player, end, piece)
         # Return the final square for game tracking.
         return end
+
+
+class SnakeBot(player.Bot):
+    """
+    A basic bot for Snakes and Ladders. (player.Bot)
+
+    Overridden Methods:
+    ask
+    tell
+    """
+
+    def ask(self, prompt):
+        """
+        Get information from the player. (str)
+
+        Parameters:
+        prompt: The question being asked of the player. (str)
+        """
+        # Roll the die.
+        if prompt.startswith('\nPress enter'):
+            return ''
+        # Choose a piece.
+        elif prompt.startswith('\nWhat symbol'):
+            return random.choice('!@#$%^&*<>?')
+
+    def tell(self, *args, **kwargs):
+        """
+        Give information to the player. (None)
+
+        Parameters:
+        The parameters are as per the built-in print function.
+        """
+        # Don't show the board or piece choice problems to the human.
+        if not (isinstance(args[0], SnakeBoard) or args[0].startswith('That symbol')):
+            super(SnakeBot, self).tell(*args, **kwargs)
 
 
 class SnakesAndLadders(game.Game):
