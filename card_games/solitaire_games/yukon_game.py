@@ -108,8 +108,10 @@ class Yukon(solitaire.Solitaire):
                 # Rotate the pile.
                 rotation = random.randint(up_index + 1, len(pile) - 1)
                 moving_stack = pile[up_index:rotation]
+                undo_stack = pile[rotation:]
                 self.transfer(moving_stack, pile)
-                # !! Fix the undo.
+                # Fix the undo.
+                self.moves[-1] = (undo_stack, pile, pile, 0, False)
         # Otherwise I'm confused.
         else:
             self.human.tell("That is not one of the eleven words for snow.")
