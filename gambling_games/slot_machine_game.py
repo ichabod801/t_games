@@ -654,6 +654,20 @@ class Slots(game.Game):
         bucks = utility.plural(self.scores[self.human.name], 'buck')
         return text.format(self.machine.name, self.scores[self.human.name], bucks)
 
+    def do_gipf(self, arguments):
+        """
+        Snakes and Ladders gives you a free spin.
+        """
+        # Run the edge, if possible.
+        game, losses = self.gipf_check(arguments, ('snakes and ladders',))
+        # Winning Snakes and Ladders gets you a free spin.
+        if game == 'snakes and ladders':
+            if not losses:
+                self.free_spins = max(self.machine.plays.keys())
+        # I'm confused
+        else:
+            self.human.tell('\nThe Gipf machine is out for repairs.')
+
     def do_payouts(self, arguments):
         """
         Show the payouts for the current machine.
@@ -735,9 +749,13 @@ class Slots(game.Game):
         except MachineError as err:
             print(err.message)
             return True
+        # Calculate the cost.
+        freebies = min(self.free_spins, plays)
+        plays -= freebies
+        self.free_spins -= freebies
+        self.scores[self.human.name] -= self.machine.cost * plays
         # Inform the player of the results.
         self.human.tell('')
-        self.scores[self.human.name] -= self.machine.cost * plays
         total_payout = 0
         for values, bucks, text in payouts:
             # Emphasize good results with exclamation points.
@@ -840,5 +858,6 @@ class Slots(game.Game):
         self.machine = None
         self.scores[self.human.name] = self.stake
         self.default_plays = 1
+        self.free_spins = 0
         self.do_switch('game')
 
