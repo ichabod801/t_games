@@ -204,6 +204,20 @@ class NumberGuess(game.Game):
         else:
             return self.do_guess(line)
 
+    def do_gipf(self, arguments):
+        """
+        Canfield makes the game 'forget' your last guess.
+        """
+        # Run the edge, if possible.
+        game, losses = self.gipf_check(arguments, ('canfield',))
+        # Winning Snakes and Ladders gets you a free spin.
+        if game == 'canfield':
+            if not losses:
+                self.guesses -= 1
+        else:
+            self.human.tell("\nGipf is inside the innermost possible secret number.")
+        return True
+
     def do_guess(self, arguments):
         """
         Guess the secret number. (g)
