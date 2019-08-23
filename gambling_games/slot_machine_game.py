@@ -667,6 +667,7 @@ class Slots(game.Game):
         # I'm confused
         else:
             self.human.tell('\nThe Gipf machine is out for repairs.')
+        return True
 
     def do_payouts(self, arguments):
         """

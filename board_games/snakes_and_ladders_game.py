@@ -162,7 +162,7 @@ class SnakeBoard(board.LineBoard):
         # Join the snakes and ladders to the size and return.
         return layout + snake_paths + ladder_paths
 
-    def roll(self, player, location, piece):
+    def roll(self, player, location, piece, force = 0):
         """
         Roll the dice and move the player. (int)
 
@@ -172,11 +172,15 @@ class SnakeBoard(board.LineBoard):
         player: The player being moved. (player.Player)
         player: Where the player is on the board. (int)
         piece: The player's piece symbol. (str)
+        force: The value to force the roll to. (int)
         """
         # Remove the piece.
         self.cells[location].remove_piece(piece)
         # Roll to determine the end square.
-        roll = self.die.roll()
+        if force:
+            roll = force
+        else:
+            roll = self.die.roll()
         player.tell('You rolled a {}.'.format(roll))
         end = location + roll
         # Check for rolling over the end of the board.
@@ -286,6 +290,21 @@ class SnakesAndLadders(game.Game):
             self.auto = self.board.columns * self.board.rows + 1
         return True
 
+    def do_gipf(self, arguments):
+        """
+        Guess a Number makes your next roll a 6.
+        """
+        # Run the edge, if possible.
+        game, losses = self.gipf_check(arguments, ('number guessing game',))
+        # Winning Snakes and Ladders gets you a free spin.
+        if game == 'number guessing game':
+            if not losses:
+                self.force = 6
+        else:
+            text = '\nSquare #{0} is a gipf across to square #{0}.'
+            self.human.tell(text.format(self.scores[self.human.name]))
+        return True
+
     def do_roll(self, arguments):
         """
         Roll and move on the board. (r)
@@ -295,7 +314,8 @@ class SnakesAndLadders(game.Game):
         # Roll and move the player's piece.
         location = self.scores[player.name]
         piece = self.pieces[player.name]
-        self.scores[player.name] = self.board.roll(player, location, piece)
+        self.scores[player.name] = self.board.roll(player, location, piece, self.force)
+        self.force = 0
         # Check for turning off automatic play.
         if self.scores[player.name] >= self.auto:
             self.auto = 0
@@ -397,3 +417,4 @@ class SnakesAndLadders(game.Game):
             self.board.cells[0].add_piece(self.pieces[player.name])
         # Set up the other tracking variables.
         self.auto = 0
+        self.force = 0
