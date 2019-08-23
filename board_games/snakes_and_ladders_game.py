@@ -292,14 +292,22 @@ class SnakesAndLadders(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Guess a Number makes your next roll a 6.
+        Guess a Number makes your next roll a 6. Forty Thieves lets you pick the next
+        roll, but you can't pick a 6.
         """
         # Run the edge, if possible.
-        game, losses = self.gipf_check(arguments, ('number guessing game',))
+        game, losses = self.gipf_check(arguments, ('number guessing game', 'forty thieves'))
         # Winning Snakes and Ladders gets you a free spin.
         if game == 'number guessing game':
             if not losses:
                 self.force = 6
+        if game == 'forty thieves':
+            if not losses:
+                player = self.players[self.player_index]
+                player.tell()
+                player.tell(self.board)
+                query = '\nWhat do you want the next roll be (1-5)? '
+                self.force = player.ask_int(query, low = 1, high = 5, cmd = False)
         else:
             text = '\nSquare #{0} is a gipf across to square #{0}.'
             self.human.tell(text.format(self.scores[self.human.name]))
