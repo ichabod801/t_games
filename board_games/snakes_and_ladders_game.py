@@ -3,6 +3,10 @@ snakes_and_ladders_game.py
 
 A game of Snakes and Ladders
 
+Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+See the top level __init__.py file for details on the t_games license.
+
+Classes:
 SnakeBoard: A boustrophedon baord for Snakes and Ladders. (board.Lineboard)
 SnakeBot: A basic bot for Snakes and Ladders. (player.Bot)
 SnakesAndLadders: A game of Snakes and Ladders. (game.Game)
