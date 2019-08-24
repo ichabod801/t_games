@@ -704,7 +704,7 @@ class Slots(game.Game):
             # Give information about an invalid number of plays.
             self.human.error('\nThe current machine does not support {} plays.'.format(plays))
             play_text = utility.oxford(sorted(self.machine.plays))
-            self.human.error('It supports the follow numbers of plays: {}.'.format(play_text))
+            self.human.error('It supports the following numbers of plays: {}.'.format(play_text))
         return True
 
     def do_quit(self, argument):
