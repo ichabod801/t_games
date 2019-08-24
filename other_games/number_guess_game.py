@@ -64,7 +64,7 @@ class GuessBot(player.Bot):
         Parameters:
         prompt: The question being asked of the player. (str)
         """
-        if prompt == 'What is your guess? ':
+        if prompt.startswith('Guess a number between'):
             self.last_guess = self.guess()
             return str(self.last_guess)
 
@@ -335,7 +335,8 @@ class NumberGuess(game.Game):
             query = 'What do you want the secret number to be? '
             self.number = foe.ask_int(query, low = self.low, high = self.high, cmd = False)
         # Handle the player's move.
-        return self.handle_cmd(player.ask('What is your guess? '))
+        query = 'Guess a number between {} and {}: '.format(self.low, self.high)
+        return self.handle_cmd(player.ask(query))
 
     def reset(self):
         """Reset guess tracking. (None)"""
