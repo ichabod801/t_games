@@ -15,6 +15,8 @@ Yukon: A game of Yukon.
 """
 
 
+import random
+
 from . import solitaire_game as solitaire
 
 
@@ -57,8 +59,11 @@ class Yukon(solitaire.Solitaire):
     def do_gipf(self, arguments):
         """
         Klondike allows you to move the top three cards of any pile onto any open card.
+
+        Slot Machines lets you randomly rotate the face up cards of any one tableau
+        pile.
         """
-        game, losses = self.gipf_check(arguments, ('klondike',))
+        game, losses = self.gipf_check(arguments, ('klondike', 'slot machines'))
         # Klondike lets you move any three onto anything.
         if game == 'klondike':
             if not losses:
@@ -85,6 +90,28 @@ class Yukon(solitaire.Solitaire):
                     player.error('The {} is not on top of a tableau stack.'.format(target.name))
                 # Make the move.
                 self.transfer(moving_stack, location)
+        # Slot Machines randomly rotates a pile.
+        elif game == 'slot machines':
+            if not losses:
+                player = self.players[self.player_index]
+                # Show the current state.
+                player.tell(self)
+                player.tell()
+                # Get the pile to rotate.
+                query = 'Pick a tableau pile (1-7, left to right) to rotate: '
+                pile_index = player.ask_int(query, low = 1, high = 7) - 1
+                pile = self.tableau[pile_index]
+                # Get the size of the face up stack.
+                for up_index, card in enumerate(pile):
+                    if card.up:
+                        break
+                # Rotate the pile.
+                rotation = random.randint(up_index + 1, len(pile) - 1)
+                moving_stack = pile[up_index:rotation]
+                undo_stack = pile[rotation:]
+                self.transfer(moving_stack, pile)
+                # Fix the undo.
+                self.moves[-1] = (undo_stack, pile, pile, 0, False)
         # Otherwise I'm confused.
         else:
             self.human.tell("That is not one of the eleven words for snow.")

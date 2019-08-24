@@ -204,6 +204,24 @@ class NumberGuess(game.Game):
         else:
             return self.do_guess(line)
 
+    def do_gipf(self, arguments):
+        """
+        Canfield makes the game 'forget' your last guess. Ninety-nine tells you the
+        remainder after dividing the secret number by 9.
+        """
+        # Run the edge, if possible.
+        game, losses = self.gipf_check(arguments, ('canfield', 'ninety-nine'))
+        # Winning Snakes and Ladders gets you a free spin.
+        if game == 'canfield':
+            if not losses:
+                self.guesses -= 1
+        elif game == 'ninety-nine':
+            if not losses:
+                self.human.tell('\nThe secret number modulo 9 is {}.'.format(self.number % 9))
+        else:
+            self.human.tell("\nGipf is inside the innermost possible secret number.")
+        return True
+
     def do_guess(self, arguments):
         """
         Guess the secret number. (g)
