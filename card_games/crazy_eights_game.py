@@ -494,7 +494,7 @@ class CrazyEights(game.Game):
             # Find the winner.
             scores = [(score, name) for name, score in self.scores.items()]
             scores.sort(reverse = True)
-            self.human.tell('{1} won the game with {0} points.'.format(*scores[0]))
+            self.human.tell('\n{1} won the game with {0} points.'.format(*scores[0]))
             # Calculate the win/loss/draw.
             human_score = self.scores[self.human.name]
             for name, score in self.scores.items():
