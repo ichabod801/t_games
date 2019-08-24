@@ -195,9 +195,9 @@ class NinetyNine(game.Game):
                 self.hands[player.name].discard()
                 self.player_index = self.players.index(next_player) - 1
                 self.human.tell('{} is out of the game.'.format(player.name))
-            # Reset the game.
-            self.deal()
-            self.total = 0
+        # Reset the game.
+        self.deal()
+        self.total = 0
 
     def do_tokens(self, arguments):
         """

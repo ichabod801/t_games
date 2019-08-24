@@ -364,9 +364,9 @@ class Craps(game.Game):
                 player.ask('You are the shooter. Press enter to roll the dice: ')
             self.dice.roll()
             # Handle forced rolls.
-            while self.force_roll and sum(self.dice) != self.force_roll:
+            while self.force_roll and tuple(self.dice.values) not in self.force_roll:
                 self.dice.roll()
-            self.force_roll = 0
+            self.force_roll = ()
             # Deal with the results of the roll.
             self.human.tell('\n{} rolled {}.'.format(player.name, self.dice))
             self.resolve_bets()
@@ -377,12 +377,17 @@ class Craps(game.Game):
         """
         Crazy Eights makes the next roll an eight.
         """
-        game, losses = self.gipf_check(arguments, ('crazy eights',))
+        game, losses = self.gipf_check(arguments, ('crazy eights', 'slot machines'))
         # Crazy Eights forces the next roll to be an eight.
         if game == 'crazy eights':
             if not losses:
-                self.human.tell('The next roll will be an eight.')
-                self.force_roll = 8
+                self.human.tell('\nThe next roll will be an eight.')
+                self.force_roll = ((2, 6), (3, 5), (4, 4), (5, 3), (6, 2))
+        # Slot Machines forces the next roll to be a pair.
+        elif game == 'slot machines':
+            if not losses:
+                self.human.tell('\nThe next roll will be a pair.')
+                self.force_roll = ((1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6))
         # Otherwise I'm confused.
         else:
             self.human.tell('Look, I only speak two languages: English and Bad English.')

@@ -68,6 +68,7 @@ multi-score (ms): Each players scores the points in the largest hand minus the
     points in their own hand.
 one-alert (1a): A warning is given when a player has one card.
 one-round (1r): Only play one round.
+psychotic (@): The four special ranks are set randomly, and change every deal.
 reverse= (r): The rank, typically A, that reverses the order of play.
 skip= (s): The rank, typically Q, that skips the next player.
 
@@ -318,6 +319,16 @@ class CrazyEights(game.Game):
 
     aka = ['Rockaway', 'Swedish Rummy', 'CrEi']
     categories = ['Card Games']
+    crazy_quotes = ("I don't really come from outer space.",
+        "I'm a dog chasing cars. I wouldn't know what to do with one if I caught it!",
+        "I'm insane and you are my insanity.", 'Colonics for everyone!',
+        'Viddy well, little brother, viddy well.',
+        "No. I don't keep count. But you do. And I love you for it.",
+        'If I have to have a past, then I prefer it to be multiple choice.',
+        "I'm a goddamn marvel of modern science.", 'When I was a little kid, I was just like anybody else.',
+        "A long time ago being crazy meant something. Nowadays everybody's crazy.",
+        'That is not dead which can eternal lie, and with strange aeons even death may die.',
+        'All work and no play makes Jack a dull boy.')
     credits = CREDITS
     name = 'Crazy Eights'
     num_options = 13
@@ -483,7 +494,7 @@ class CrazyEights(game.Game):
             # Find the winner.
             scores = [(score, name) for name, score in self.scores.items()]
             scores.sort(reverse = True)
-            self.human.tell('{1} won the game with {0} points.'.format(*scores[0]))
+            self.human.tell('\n{1} won the game with {0} points.'.format(*scores[0]))
             # Calculate the win/loss/draw.
             human_score = self.scores[self.human.name]
             for name, score in self.scores.items():
@@ -518,25 +529,35 @@ class CrazyEights(game.Game):
 
     def help_ranks(self):
         """Show the current special ranks in the game. (None)"""
-        self.human.tell('\nThe current special ranks are:\n')
-        if self.deck.discards:
-            card_class = self.deck.discards[0].__class__
-        elif self.deck.cards:
-            card_class = self.deck.cards[0].__class__
+        if self.psychotic:
+            self.human.tell('\n', random.choice(self.crazy_quotes), sep = '')
         else:
-            card_class = self.hands[self.human.name].cards[0]
-        if self.change_rank:
-            rank_name = card_class.rank_names[card_class.ranks.index(self.change_rank)]
-            self.human.tell('The rank to change the suit is {}.'.format(rank_name))
-        if self.draw_rank:
-            rank_name = card_class.rank_names[card_class.ranks.index(self.draw_rank)]
-            self.human.tell('The rank to force drawing cards is {}.'.format(rank_name))
-        if self.reverse_rank:
-            rank_name = card_class.rank_names[card_class.ranks.index(self.reverse_rank)]
-            self.human.tell('The rank to reverse the order of play is {}.'.format(rank_name))
-        if self.skip_rank:
-            rank_name = card_class.rank_names[card_class.ranks.index(self.skip_rank)]
-            self.human.tell('The rank to skip the next player is {}.'.format(rank_name))
+            self.human.tell('\nThe current special ranks are:\n')
+            if self.change_rank:
+                rank_name = self.card_class.rank_names[self.card_class.ranks.index(self.change_rank)]
+                self.human.tell('The rank to change the suit is {}.'.format(rank_name))
+            if self.draw_rank:
+                rank_name = self.card_class.rank_names[self.card_class.ranks.index(self.draw_rank)]
+                self.human.tell('The rank to force drawing cards is {}.'.format(rank_name))
+            if self.reverse_rank:
+                rank_name = self.card_class.rank_names[self.card_class.ranks.index(self.reverse_rank)]
+                self.human.tell('The rank to reverse the order of play is {}.'.format(rank_name))
+            if self.skip_rank:
+                rank_name = self.card_class.rank_names[self.card_class.ranks.index(self.skip_rank)]
+                self.human.tell('The rank to skip the next player is {}.'.format(rank_name))
+
+    def mental_health(self):
+        """Perform a mental health evaluation."""
+        if self.psychotic:
+            # Get some random ranks.
+            ranks = random.sample(self.all_ranks, 4)
+            # Make sure eight is one of them.
+            if '8' not in ranks:
+                ranks[0] = '8'
+            # Assign the roles randomly.
+            random.shuffle(ranks)
+            for rank, action in zip(ranks, ('change_rank', 'draw_rank', 'reverse_rank', 'skip_rank')):
+                setattr(self, action, rank)
 
     def pass_turn(self, player):
         """
@@ -705,6 +726,8 @@ class CrazyEights(game.Game):
         self.human.tell()
         for player in self.players:
             self.human.tell('{} has {} points.'.format(player.name, self.scores[player.name]))
+        # Perform a mental health evaluation.
+        self.mental_health()
 
     def set_options(self):
         """Define the options for the game. (None)"""
@@ -731,6 +754,8 @@ class CrazyEights(game.Game):
         self.option_set.add_option('skip', ['s'], convert_rank, '', valid = cards.Card.ranks,
             question = 'What rank should skip the next player? ', error_text = rank_error,
             target = 'skip_rank')
+        self.option_set.add_option('psychotic', ['@'],
+            question = 'Are you mentally divergent, friend? bool')
         # Set the bot options.
         self.option_set.add_option('easy', ['e'], int, 2, valid = range(10), target = 'num_easy',
             question = 'How many easy bots should there be (return for 2)? ')
@@ -757,6 +782,10 @@ class CrazyEights(game.Game):
             self.deck = cards.Deck(shuffle_size = -1)
         else:
             self.deck = cards.Deck(decks = 2, shuffle_size = -1)
+        self.card_class = card_class = self.deck.cards[0].__class__
+        self.all_ranks = list(set([card.rank for card in self.deck.cards]))
+        # Perform a mental health evaluation.
+        self.mental_health()
         # Set up the tracking variables.
         self.history = []
         self.suit = ''
