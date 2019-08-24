@@ -278,6 +278,7 @@ class SnakesAndLadders(game.Game):
     categories = ['Board Games']
     credits = CREDITS
     name = 'Snakes and Ladders'
+    num_options = 3
     rules = RULES
 
     def do_auto(self, arguments):

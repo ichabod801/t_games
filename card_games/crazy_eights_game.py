@@ -331,7 +331,7 @@ class CrazyEights(game.Game):
         'All work and no play makes Jack a dull boy.')
     credits = CREDITS
     name = 'Crazy Eights'
-    num_options = 14
+    num_options = 13
     rules = RULES
 
     def deal(self, keep_one = False):

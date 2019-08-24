@@ -652,6 +652,7 @@ class Slots(game.Game):
     aliases = {'s': 'spin', 'sw': 'switch', 'pull': 'spin', 'p': 'spin', '': 'spin'}
     categories = ['Gambling Games']
     name = 'Slot Machines'
+    num_options = 1
 
     def __str__(self):
         """Human readable text representation. (str)"""
