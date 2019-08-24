@@ -553,7 +553,7 @@ class CrazyEights(game.Game):
             ranks = random.sample(self.all_ranks, 4)
             # Make sure eight is one of them.
             if '8' not in ranks:
-                ranks[0] == '8'
+                ranks[0] = '8'
             # Assign the roles randomly.
             random.shuffle(ranks)
             for rank, action in zip(ranks, ('change_rank', 'draw_rank', 'reverse_rank', 'skip_rank')):
