@@ -756,7 +756,7 @@ class Slots(game.Game):
         try:
             payouts = self.machine.spin(self.human, plays)
         except MachineError as err:
-            print(err.message)
+            print(err.args[0])
             return True
         # Calculate the cost.
         freebies = min(self.free_spins, plays)
