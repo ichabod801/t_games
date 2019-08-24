@@ -331,7 +331,7 @@ class NumberGuess(game.Game):
         if self.number is None:
             foe = self.players[1 - self.player_index]
             query = 'What do you want the secret number to be? '
-            self.number = foe.ask_int(query, low = self.low, high = self.high)
+            self.number = foe.ask_int(query, low = self.low, high = self.high, cmd = False)
         # Handle the player's move.
         return self.handle_cmd(player.ask('What is your guess? '))
 
