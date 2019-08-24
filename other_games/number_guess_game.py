@@ -186,9 +186,11 @@ class NumberGuess(game.Game):
 
     aka = ['NuGG', 'Guess a Number']
     categories = ['Other Games']
+    credits = CREDITS
     info_types = {'high-low': (True, False), 'warm-cold': (False, True), 'both': (True, True)}
     name = 'Number Guessing Game'
     num_options = 3
+    rules = RULES
 
     def default(self, line):
         """

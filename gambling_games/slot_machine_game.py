@@ -650,9 +650,11 @@ class Slots(game.Game):
     aka = ['Fruit Machiness', 'Puggy', 'The Slots', 'Slots', 'Slot', 'Poker Machines', 'Pokies',
         'One-Armed-Bandits', 'SlMa']
     aliases = {'s': 'spin', 'sw': 'switch', 'pull': 'spin', 'p': 'spin', '': 'spin'}
+    credits = CREDITS
     categories = ['Gambling Games']
     name = 'Slot Machines'
     num_options = 1
+    rules = RULES
 
     def __str__(self):
         """Human readable text representation. (str)"""
