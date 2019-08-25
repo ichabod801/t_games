@@ -508,8 +508,10 @@ def deal_reserve_n(n, up = False):
     up: A flag for dealing the cards face up. (str)
     """
     def dealer(game):
+        # Deal the cards.
         for card_index in range(n):
             game.deck.deal(game.reserve[card_index % game.options['num-reserve']], up)
+        # Flip cards face up.
         for pile in game.reserve:
             pile[-1].up = True
     return dealer
