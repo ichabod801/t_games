@@ -391,20 +391,13 @@ def deal_five_six(game):
 
 def deal_free(game):
     """
-    Fill the free cells with the last cards dealt. (None)
+    Fill the free cells. (None)
 
     Parameters:
     game: The game to deal the cards for. (Solitaire)
     """
-    # Find the last card dealt.
-    max_tableau = max([len(pile) for pile in game.tableau])
-    last_index = [index for index, pile in enumerate(game.tableau) if len(pile) == max_tableau][-1]
-    # Move them to the free cells.
-    unfilled = game.num_cells - len(game.cells)
-    for card in range(unfilled):
-        game.cells.append(game.tableau[last_index].pop())
-        game.cells[-1].game_location = game.cells
-        last_index = (last_index - 1) % len(game.tableau)
+    for cell_index in range(game.num_cells):
+        game.deck.deal(game.cells, up = True)
 
 
 def deal_klondike(game):
