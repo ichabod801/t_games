@@ -74,7 +74,7 @@ class SoCoKit(game.Game):
             self.show_game(game_info)
             choice = self.human.ask('\nWhat would you like to change? ').upper()
             if choice not in valid:
-                self.human.tell('That is not a valid choice (just the letter, please).')
+                self.handle_cmd(choice)
                 continue
             elif choice == '!':
                 break
@@ -114,7 +114,7 @@ class SoCoKit(game.Game):
         base.set_up()
         game_info = {'num-cells': base.num_cells, 'wrap-ranks': base.wrap_ranks,
             'turn-count': base.turn_count, 'max-passes': base.max_passes}
-        game_info['deck-specs'] = base.options.get('deck-specs', {'jokers': 0, 'decks': 1})
+        game_info['deck-specs'] = base.options.get('deck-specs', [])
         game_info['num-tableau'] = base.options.get('num-tableau', 7)
         game_info['num-foundations'] = base.options.get('num-foundations', 4)
         game_info['num-reserve'] = base.options.get('num-reserve', 0)
