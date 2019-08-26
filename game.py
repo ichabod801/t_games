@@ -121,13 +121,14 @@ class Game(OtherCmd):
         'sin': (math.sin, 1), 'V': (math.sqrt, 1), 'tan': (math.tan, 1)}
     rules = 'No rules have been specified for this game.'
 
-    def __init__(self, human, raw_options, interface = None):
+    def __init__(self, human, raw_options, interface = None, silent = False):
         """
         Set up the game. (None)
 
         human: The primary player of the game. (player.Player)
         raw_options: The user's option choices as provided by the interface. (str)
         interface: The interface that started the game playing. (interface.Interface)
+        silent: A flag for supressing the greeting. (bool)
         """
         # Set the specified attributes.
         self.human = human
@@ -145,7 +146,7 @@ class Game(OtherCmd):
             if hasattr(cls, 'help_text'):
                 self.help_text.update(cls.help_text)
         # Introduce yourself.
-        if self.name != 'Fireball':
+        if self.name != 'Fireball' and not silent:
             self.human.tell('\nWelcome to a game of {}, {}.'.format(self.name, self.human.name))
         # Define and process the game options.
         self.option_set = options.OptionSet(self)
