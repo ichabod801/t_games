@@ -39,6 +39,28 @@ class SoCoKit(game.Game):
         ('O', 'Dealers', 'dealers')]
     name = 'Solitaire Construction Kit'
 
+    def add_checker(self, key, checkers):
+        """
+        Get a new checker to add to the game. (function)
+
+        Parameters:
+        key: The game_key for the checker type to add. (str)
+        checkers: The current checkers. (list of function)
+        """
+        prefix, dash, checker = key.partition('-')
+        choices = []
+        for name in dir(solitaire):
+            if name.startswith(prefix):
+                function = getattr(solitaire, name)
+                if function not in checkers:
+                    choices.append(function)
+        self.human.tell()
+        for function_index, function in enumerate(choices, start = 1):
+            self.human.tell(self.function_choice(function_index, function))
+        query = '\nWhich function do you want to add (#)? '
+        checker_index = self.human.ask_int(query, low = 1, high = len(choices), cmd = False) - 1
+        return choices[checker_index]
+
     def build_game(self, game_info):
         """
         Construct the solitaire game. (dict)
@@ -59,7 +81,7 @@ class SoCoKit(game.Game):
             else:
                 choice, text, key = self.menu[ord(choice) - 65]
                 if choice > 'H':
-                    game_info[key] = self.modify_checkers(text, key)
+                    game_info[key] = self.modify_checkers(game_info, text, key)
                 else:
                     value = self.human.ask('\nWhat should the new value be? ')
                     if choice in 'BDEFG':
@@ -72,6 +94,13 @@ class SoCoKit(game.Game):
                         value = value.lower() in ('true', 't', '1')
                     game_info[key] = value
         return game_info
+
+    @staticmethod
+    def function_choice(char, func):
+        """Return sensible choice text for a function."""
+        name = func.__name__
+        description = func.__doc__.split('\n')[1].split('(')[0].strip()
+        return '{}: {}\n   {}'.format(char, name, description)
 
     def get_game_info(self, base_game):
         """
@@ -113,6 +142,57 @@ class SoCoKit(game.Game):
         game_info['name'] = game_name
         game_info = self.build_game(game_info)
         self.game = self.make_game(game_info)
+
+    def make_game(self, game_info):
+        """
+        Make a game object based on the design. (solitaire.Solitaire)
+
+        Parameters:
+        game_info: The definition of the game.
+        """
+        class ConstructedGame(solitaire.Solitaire):
+            name = game_info['name']
+            def handle_options(self):
+                self.options = game_info
+            def set_checkers(self):
+                for checker_type in 'build free lane match pair sort'.split():
+                    attr = '{}_checkers'.format(checker_type)
+                    key = '{}-checkers'.format(checker_type)
+                    setattr(self, attr, game_info[key])
+                self.dealers = game_info['dealers']
+        return ConstructedGame(self.human, '')
+
+    def modify_checkers(self, game_info, text, key):
+        """
+        Modify one of the lists of rules checkers. (list of function)
+
+        Parameter:
+        game_info: The definition of the game. (dict)
+        text: The description of the list of rules checkers. (str)
+        key: The key in game_info for the list of rules checkers. (str)
+        """
+        checkers = game_info[key][:]
+        while True:
+            self.human.tell('\n{}:'.format(text))
+            for checker_index, checker in enumerate(checkers, start = 1):
+                self.human.tell(self.function_choice(checker_index, checker))
+            self.human.tell('\nOptions:')
+            self.human.tell('A: Add Function')
+            self.human.tell('D: Delete Function')
+            self.human.tell('<: Return to Main Design Menu')
+            choice = self.human.ask('\nWhat is your choice? ').upper()
+            if choice == 'A':
+                checkers.append(self.add_checker(key, checkers))
+            elif choice == 'D':
+                query = 'Which checker do you want to delete (#)? '
+                checker_index = self.human.ask_int(query, low = 1, high = len(checkers), cmd = False) - 1
+                del checkers[checker_index]
+            elif choice == '<':
+                break
+        return checkers
+
+    def play(self):
+        return self.game.play()
 
     def show_game(self, game_info):
         """
