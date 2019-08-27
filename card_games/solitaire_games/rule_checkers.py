@@ -25,15 +25,18 @@ See the top level __init__.py file for details on the t_games license.
 Functions:
 _move_one_size: Calculate maximum stack under "move one" rules. (int)
 ---------------------------------------------------------------------
-build_alt_color_one: Movers must be a different color than the targets. (str)
-build_down: Check that only stacks of descending ranks are moved. (str)
-build_down_one: Check that the moving card is one less than the target. (str)
+build_alt_color_one: Cards can only be built on cards of the opposite
+    color. (str)
+build_down: Only stacks descending by one rank at a time can be moved. (str)
+build_down_one: Cards can only be built if they are one rank less than the
+    target. (str)
 build_none: No building is allowed. (str)
-build_one: Build moving one card at a time. (str)
-build_reserve: Build only from the reserve. (str)
-build_suit: Check that only stacks of the same suit are moved. (str)
-build_suit_one: You can only build on cards of the same suit. (str)
-build_whole: Check that only complete tableau stacks are moved. (str)
+build_one: Building must be doable one card at a time. (str)
+build_reserve: Building can only be done from the reserve. (str)
+build_suit: Only stacks of the same suit can be moved together. (str)
+build_suit_one: Cards can only be built on cards of the same suit. (str)
+build_unblocked: Building cannot be done from blocked reserve piles. (str)
+build_whole: Only whole stacks can be moved together. (str)
 -------------------------------------------------
 deal_aces: Deal the aces onto the tableau. (None)
 deal_aces_multi: Deal the aces to the foundations in a multi-deck game. (None)
@@ -130,7 +133,7 @@ def _move_one_size(game, to_lane = False):
 
 def build_alt_color_one(self, mover, target, moving_stack):
     """
-    Movers must be a different color than the targets. (str)
+    Cards can only be built on cards of the opposite color. (str)
 
     Parameters:
     game: The game buing played. (Solitaire)
@@ -146,9 +149,9 @@ def build_alt_color_one(self, mover, target, moving_stack):
     return error
 
 
-def build_down(game, mover, target, moving_stack):
+def build_down(game, mover, target, moving_stack):  # !! maybe just need pair check.
     """
-    Check that only stacks of descending ranks are moved. (str)
+    Only stacks descending by one rank at a time can be moved. (str)
 
     Parameters:
     game: The game being played. (Solitaire)
@@ -167,7 +170,7 @@ def build_down(game, mover, target, moving_stack):
 
 def build_down_one(game, mover, target, moving_stack):
     """
-    Check that the moving card is one less than the target card. (str)
+    Cards can only be built if they are one rank less than the target. (str)
 
     Parameters:
     game: The game being played. (Solitaire)
@@ -197,7 +200,7 @@ def build_none(game, mover, target, moving_stack):
 
 def build_one(game, mover, target, moving_stack):
     """
-    Build moving one card at a time. (str)
+    Building must be doable one card at a time. (str)
 
     Parameters:
     game: The game being played. (Solitaire)
@@ -214,7 +217,7 @@ def build_one(game, mover, target, moving_stack):
 
 def build_reserve(game, mover, target, moving_stack):
     """
-    Build only from the reserve. (str)
+    Building can only be done from the reserve. (str)
 
     Parameters:
     game: The game being played. (Solitaire)
@@ -229,9 +232,9 @@ def build_reserve(game, mover, target, moving_stack):
     return error
 
 
-def build_suit(game, mover, target, moving_stack):
+def build_suit(game, mover, target, moving_stack):  # !! maybe just need pair check
     """
-    You can only build on cards of the same suit. (str)
+    Only stacks of the same suit can be moved together. (str)
 
     Parameters:
     game: The game being played. (Solitaire)
@@ -251,7 +254,7 @@ def build_suit(game, mover, target, moving_stack):
 
 def build_suit_one(game, mover, target, moving_stack):
     """
-    Check that the moving card is the same suit as the target card. (str)
+    Cards can only be built on cards of the same suit. (str)
 
     Parameters:
     game: The game being played. (Solitaire)
@@ -268,7 +271,7 @@ def build_suit_one(game, mover, target, moving_stack):
 
 def build_unblocked(game, mover, target, moving_stack):
     """
-    Do not build from blocked reserve piles. (str)
+    Building cannot be done from blocked reserve piles. (str)
 
     Parameters:
     game: The game being played. (Solitaire)
@@ -286,7 +289,7 @@ def build_unblocked(game, mover, target, moving_stack):
 
 def build_whole(game, mover, target, moving_stack):
     """
-    Check that only complete tableau stacks are moved. (str)
+    Only whole stacks can be moved together. (str)
 
     Parameters:
     game: The game being played. (Solitaire)
