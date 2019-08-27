@@ -5,6 +5,8 @@ The Solitaire Construction Kit, for dynamic solitaire game creation.
 
 to do:
 handle higher order rule checkers
+    get rid of names in rule menus
+    redo rule_checkers.py
 clear out bang bangs
 rewrite rule checker docstrings as rules
 full option handling/automatic shortcuts
@@ -162,9 +164,9 @@ class SoCoKit(game.Game):
     @staticmethod
     def function_choice(char, func):
         """Return menu item text for a function. (str)"""
-        name = func.__name__  # ?? do I need the function names? Maybe too confusing for non-programmers.
+        #name = func.__name__  # ?? do I need the function names? Maybe too confusing for non-programmers.
         description = func.__doc__.split('\n')[1].split('(')[0].strip()
-        return '{}: {}\n   {}'.format(char, name, description)
+        return '{}: {}'.format(char, description)
 
     def get_game_info(self, base_game):
         """
