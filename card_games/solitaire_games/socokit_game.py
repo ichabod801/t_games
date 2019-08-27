@@ -7,9 +7,10 @@ to do:
 handle higher order rule checkers
     get rid of names in rule menus
     redo rule_checkers.py
-clear out bang bangs
+clear out bang bangs (here and in rule_checkers.py)
 rewrite rule checker docstrings as rules
 full option handling/automatic shortcuts
+allow options for the base game.
 
 Classes:
 SoCoKit: A way to design a solitiare game on the fly. (game.Game)

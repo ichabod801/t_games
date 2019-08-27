@@ -44,12 +44,12 @@ deal_aces_up: Deal the aces onto the foundations. (None)
 deal_all: Deal all the cards out onto the tableau. (None)
 deal_bisley: Deal cards to the tableau with the first four piles short. (None)
 deal_five_six: Deal the fives and sixes as foundations. (None)
-deal_free: Fill the free cells with the last cards dealt. (None)
-deal_klondike: Deal deal a triangle in the tableau. (None)
+deal_free: Deal a card into each free cell. (None)
+deal_klondike: Deal tableau piles of increasing size. (None)
 deal_n: Create a dealer that deals n cards onto the tableau. (function)
 deal_one_row: Deal one card face up to each tableau pile. (None)
 deal_open: Turn all of the tableau cards face up. (None)
-deal_pyramid: Deal a pyramid of cards. (None)
+deal_pyramid: Deal a pyramid of overlapping cards. (None)
 deal_queens_out: Discard the queensl (None)
 deal_rank_foundations: Deal a specific rank to the foundations. (None)
 deal_reserve_n: Create a dealer that deals n cards to the reserve (None)
@@ -329,7 +329,7 @@ def deal_aces(game):
 
 def deal_aces_multi(game):
     """
-    Deal the aces to the foundations in a multi-deck game.
+    Deal the aces to the foundations in a multi-deck game. (None)
 
     Parameters:
     game: A multi-deck game of solitaire. (MultiSolitaire)
@@ -343,7 +343,7 @@ def deal_aces_multi(game):
             game.deck.force(ace_text, foundation)
 
 
-def deal_aces_up(game):
+def deal_aces_up(game):  ## !! maybe change the name of this one.
     """
     Deal the aces onto the foundations. (None)
 
@@ -394,7 +394,7 @@ def deal_five_six(game):
 
 def deal_free(game):
     """
-    Fill the free cells. (None)
+    Deal a card into each free cell. (None)
 
     Parameters:
     game: The game to deal the cards for. (Solitaire)
@@ -405,7 +405,7 @@ def deal_free(game):
 
 def deal_klondike(game):
     """
-    Deal deal a triangle in the tableau. (None)
+    Deal tableau piles of increasing size. (None)
 
     Parameters:
     game: The game to deal the cards for. (Solitaire)
@@ -432,6 +432,7 @@ def deal_n(n, up = True):
         # Turn the top cards face up.
         for pile in game.tableau:
             pile[-1].up = True
+    dealer.__doc__ = 'Deal {} cards to the tableau (created).'.format(n)
     return dealer
 
 
@@ -460,7 +461,7 @@ def deal_open(game):
 
 def deal_pyramid(game):
     """
-    Deal a pyramid of cards. (None)
+    Deal a pyramid of overlapping cards. (None)
 
     Parameters:
     game: The game being played. (solitaire.Solitaire)
@@ -497,6 +498,7 @@ def deal_rank_foundations(rank):
             card = game.deck.find(rank + suit)
             target = game.find_foundation(card)
             game.deck.force(card, target)
+    deal_foundations.__doc__ = "Deal the {}'s to the foundations (created).".format(rank)
     return deal_foundations
 
 
@@ -517,6 +519,7 @@ def deal_reserve_n(n, up = False):
         # Flip cards face up.
         for pile in game.reserve:
             pile[-1].up = True
+    dealer.__doc__ = 'Deal {} cards to the reserve.'.format(n)
     return dealer
 
 
@@ -529,7 +532,7 @@ def deal_selective(game):
     """
     # Get the possible foundation cards.
     starters = game.deck.cards[-len(game.tableau) - 1:]
-    starter_text = ', '.join([card.rank + card.suit for card in starters])
+    starter_text = ', '.join([card.rank + card.suit for card in starters])  # !! utility.oxford
     # Get the player's choice for a foundation card.
     message = 'Which of these cards would you like on the foundation: {}? '.format(starter_text)
     while True:
@@ -594,7 +597,7 @@ def deal_twos(game):
 
 def deal_yukon(game):
     """
-    Deal the cards face up on the tableau, except the first pile. (None)
+    Deal all the cards face up on the tableau, except the first pile. (None)
 
     Parameters:
     game: The game to deal the cards for. (Solitaire)
@@ -606,7 +609,7 @@ def deal_yukon(game):
                 break
 
 
-def flip_random(game):
+def flip_random(game):   # !! change the name of this one to deal_something.
     """
     Flip random tableau cards face down. (None)
 
