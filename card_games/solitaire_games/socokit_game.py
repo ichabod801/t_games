@@ -3,6 +3,12 @@ socokit_game.py
 
 The Solitaire Construction Kit, for dynamic solitaire game creation.
 
+to do:
+handle higher order rule checkers
+clear out bang bangs
+rewrite rule checker docstrings as rules
+full option handling/automatic shortcuts
+
 Classes:
 SoCoKit: A way to design a solitiare game on the fly. (game.Game)
 """
@@ -10,6 +16,7 @@ SoCoKit: A way to design a solitiare game on the fly. (game.Game)
 
 from ... import game
 from . import solitaire_game as solitaire
+from ... import utility
 
 
 class SoCoKit(game.Game):
@@ -64,6 +71,8 @@ class SoCoKit(game.Game):
         """
         # Get all of the matching rule checker functions.
         prefix, dash, checker = key.partition('-')
+        if prefix == 'dealers':
+            prefix = 'deal'
         choices = []
         for name in dir(solitaire):
             if name.startswith(prefix):
@@ -78,7 +87,34 @@ class SoCoKit(game.Game):
         # !! add option to pick none of them.
         query = '\nWhich function do you want to add (#)? '
         checker_index = self.human.ask_int(query, low = 1, high = len(choices), cmd = False) - 1
-        return choices[checker_index]
+        checker = choices[checker_index]
+        # Check for higher order function.
+        if 'Create' in checker.__doc__:
+            # Find the parameters.
+            params = checker.__code__.co_varnames[:checker.__code__.co_argcount]
+            param_values = []
+            # Get the parameter values based on the parameter names.
+            for param in params:
+                # Get basic integer values.
+                if param == 'n':
+                    query = 'How many cards should the rule apply to? '
+                    value = self.human.ask_int(query, low = 1, cmd = False)
+                # Get boolean values for up/down deals.
+                elif param == 'up':
+                    yes_no = self.human.ask('Should all the cards be dealt face up? ')
+                    value = yes_no in utility.YES
+                # Card ranks, based on the base game's deck.
+                elif param == 'rank':
+                    valid = self.base.deck.ranks
+                    while True:
+                        value = self.human.ask('What rank should the rule apply to? ').upper()
+                        if value in valid:
+                            break
+                        self.human.error('That rank is not valid. Please choose one of {!r}.'.format(valid))
+                param_values.append(value)
+            # Get the derived rule checker using the user's parameter values.
+            checker = checker(*param_values)
+        return checker
 
     def build_game(self, game_info):
         """
@@ -138,21 +174,23 @@ class SoCoKit(game.Game):
         base_game: A solitaire game. (solitiare.Solitaire)
         """
         # Make a viable instance of the game (to pull in hard coded solitaire options).
-        base = base_game(self.human, 'none', silent = True)
-        base.scores = {}
-        base.set_up()
+        self.base = base_game(self.human, 'none', silent = True)
+        self.base.scores = {}
+        self.base.set_up()
         # Get information from the attributes.
-        game_info = {'num-cells': base.num_cells, 'wrap-ranks': base.wrap_ranks,
-            'turn-count': base.turn_count, 'max-passes': base.max_passes}
+        game_info = {'num-cells': self.base.num_cells, 'wrap-ranks': self.base.wrap_ranks,
+            'turn-count': self.base.turn_count, 'max-passes': self.base.max_passes}
         # Get information from the options, with defaults.
-        game_info['deck-specs'] = base.options.get('deck-specs', [])
-        game_info['num-tableau'] = base.options.get('num-tableau', 7)
-        game_info['num-foundations'] = base.options.get('num-foundations', 4)
-        game_info['num-reserve'] = base.options.get('num-reserve', 0)
+        game_info['deck-specs'] = self.base.options.get('deck-specs', [])
+        game_info['num-tableau'] = self.base.options.get('num-tableau', 7)
+        game_info['num-foundations'] = self.base.options.get('num-foundations', 4)
+        game_info['num-reserve'] = self.base.options.get('num-reserve', 0)
         # Get the rule checker lists.
         for check_type in 'build free lane match pair sort'.split():
-            game_info['{}-checkers'.format(check_type)] = getattr(base, '{}_checkers'.format(check_type))
-        game_info['dealers'] = base.dealers
+            key = '{}-checkers'.format(check_type)
+            attribute = '{}_checkers'.format(check_type)
+            game_info[key] = getattr(self.base, attribute)
+        game_info['dealers'] = self.base.dealers
         return game_info
 
     def handle_options(self):
@@ -227,6 +265,7 @@ class SoCoKit(game.Game):
             for checker_index, checker in enumerate(checkers, start = 1):
                 self.human.tell(self.function_choice(checker_index, checker))
             # Show the menu options.
+            # !! add move up/down for dealers
             self.human.tell('\nOptions:')
             self.human.tell('A: Add Function')
             self.human.tell('D: Delete Function')
