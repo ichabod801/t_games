@@ -786,7 +786,7 @@ def lane_unblocked(game, card, moving_stack):
 
 def match_adjacent(game, card, match):
     """
-    Allow matching of cards are in adjacent tableau piles. (str)
+    Cards can be matched if they are in adjacent tableau piles. (str)
 
     Parameters:
     game: The game being played. (solitaire.Solitaire)
@@ -821,7 +821,7 @@ def match_adjacent(game, card, match):
 
 def match_none(game, card, match):
     """
-    Disallow any matches. (str)
+    Cards cannot be matched. (str)
 
     Parameters:
     game: The game being played. (solitaire.Solitaire)
@@ -833,7 +833,7 @@ def match_none(game, card, match):
 
 def match_pairs(game, card, match):
     """
-    Allow matching cards of the same rank. (str)
+    Cards of the same rank can be matched. (str)
 
     Parameters:
     game: The game being played. (solitaire.Solitaire)
@@ -849,7 +849,7 @@ def match_pairs(game, card, match):
 
 def match_pyramid(game, target, match):
     """
-    Allow matching cards open below and to the right. (str)
+    Cards may be matched if they are not blocked by other cards. (str)
 
     Parameters:
     game: The game being played. (solitaire.Solitaire)
@@ -870,7 +870,7 @@ def match_pyramid(game, target, match):
 
 def match_pyramid_relax(game, target, match):
     """
-    Match cards open below and right, even right of each other. (str)
+    Cards may be matched if they are not blocked, even if they block each other. (str)
 
     Parameters:
     game: The game being played. (solitaire.Solitaire)
@@ -893,7 +893,7 @@ def match_pyramid_relax(game, target, match):
 
 def match_tableau(game, card, match):
     """
-    Allow matching if the cards are in the tableau. (str)
+    Only cards on the tableau can be matched. (str)
 
     Parameters:
     game: The game being played. (solitaire.Solitaire)
@@ -911,7 +911,7 @@ def match_tableau(game, card, match):
 
 def match_thirteen(game, card, match):
     """
-    Allow matching cards that sum to 13. (str)
+    Cards can be matched if they sume to thirteen. (str)
 
     Parameters:
     game: The game being played. (solitaire.Solitaire)
@@ -928,7 +928,7 @@ def match_thirteen(game, card, match):
 
 def match_top(game, target, match):
     """
-    Allow matching cards on the top of a pile. (str)
+    Only cards on the top of a pile can be matched. (str)
 
     Parameters:
     game: The game being played. (solitaire.Solitaire)
@@ -947,7 +947,7 @@ def match_top(game, target, match):
 
 def match_top_two(game, target, match):
     """
-    Allow matching cards on the top of a pile, even if on top of each other. (str)
+    Cards on the top of a pile can be matched, even if they block each other. (str)
 
     Parameters:
     game: The game being played. (solitaire.Solitaire)
