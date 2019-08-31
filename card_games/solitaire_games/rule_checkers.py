@@ -972,7 +972,7 @@ def match_top_two(game, target, match):
 
 def pair_alt_color(self, mover, target):
     """
-    Build in alternating colors. (str)
+    Cards must be built on the tableau in alternating colors. (str)
 
     Parameters:
     game: The game buing played. (Solitaire)
@@ -989,7 +989,7 @@ def pair_alt_color(self, mover, target):
 
 def pair_down(self, mover, target):
     """
-    Build sequentially down in rank. (str)
+    Cards must be built on the tableau sequentially down in rank. (str)
 
     Parameters:
     game: The game being played. (Solitaire)
@@ -1006,7 +1006,7 @@ def pair_down(self, mover, target):
 
 def pair_not_suit(game, mover, target):
     """
-    Build in anything but suits. (str)
+    Cards must be built on the tableau in different suits. (str)
 
     Parameters:
     game: The game buing played. (Solitaire)
@@ -1023,7 +1023,7 @@ def pair_not_suit(game, mover, target):
 
 def pair_suit(self, mover, target):
     """
-    Build in suits. (str)
+    Cards must be built on the tableau in the same suit. (str)
 
     Parameters:
     game: The game buing played. (Solitaire)
@@ -1040,7 +1040,7 @@ def pair_suit(self, mover, target):
 
 def pair_up_down(self, mover, target):
     """
-    Build sequentially up or down in rank. (str)
+    Cards must be built on the tableau sequentially up or down in rank. (str)
 
     Parameters:
     game: The game being played. (Solitaire)
