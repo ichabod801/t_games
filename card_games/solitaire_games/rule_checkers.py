@@ -1060,7 +1060,7 @@ def pair_up_down(self, mover, target):
 
 def sort_ace(game, card, foundation):
     """
-    Sort starting with the ace. (str)
+    The first card sorted to a foundation must be an ace. (str)
 
     Parameters:
     game: The game being played. (Solitiaire)
@@ -1076,7 +1076,7 @@ def sort_ace(game, card, foundation):
 
 def sort_kings(game, card, foundation):
     """
-    Sort starting with the king. (str)
+    The first card sorted to a foundation must be a king. (str)
 
     Parameters:
     game: The game being played. (Solitiaire)
@@ -1092,7 +1092,7 @@ def sort_kings(game, card, foundation):
 
 def sort_kings_only(game, card, foundation):
     """
-    Only allow kings to be sorted. (str)
+    Only kings can be sorted to the foundations (str)
 
     Parameters:
     game: The game being played. (solitaire.Solitaire)
@@ -1108,7 +1108,7 @@ def sort_kings_only(game, card, foundation):
 
 def sort_no_reserve(game, card, foundation):
     """
-    Sort non-starters only when the reserve is empty. (str)
+    Only the starting card in a foundation may be sorted before the reserve is empty. (str)
 
     Parameters:
     game: The game being played. (Solitiaire)
@@ -1124,7 +1124,7 @@ def sort_no_reserve(game, card, foundation):
 
 def sort_none(game, card, foundation):
     """
-    No sorting is allowed. (str)
+    Cards may not be sorted to the foundation. (str)
 
     Parameters:
     game: The game being played. (solitaire.Solitaire)
@@ -1136,7 +1136,7 @@ def sort_none(game, card, foundation):
 
 def sort_pyramid(game, card, foundation):
     """
-    Sorting of blocked cards in a pyramid layout is banned. (str)
+    You cannot sort cards that are blocked by other cards. (str)
 
     Parameters:
     game: The game being played. (solitaire.Solitaire)
@@ -1154,7 +1154,7 @@ def sort_pyramid(game, card, foundation):
 
 def sort_rank(game, card, foundation):
     """
-    Sort starting with a specific rank. (str)
+    The first card sorted to a foundation must be the rank set while dealing. (str)
 
     Parameters:
     game: The game being played. (Solitiaire)
@@ -1171,7 +1171,7 @@ def sort_rank(game, card, foundation):
 
 def sort_unblocked(game, card, foundation):
     """
-    Do not sort cards from blocked reserve piles. (str)
+    Cards from blocked reserve piles may not be sorted. (str)
 
     Parameters:
     game: The game being played. (Solitiaire)
@@ -1188,7 +1188,7 @@ def sort_unblocked(game, card, foundation):
 
 def sort_up(game, card, foundation):
     """
-    Sort sequentially up in rank. (str)
+    Sort to the foundations sequentially up in rank. (str)
 
     Parameters:
     game: The game being played. (Solitiaire)
@@ -1204,7 +1204,7 @@ def sort_up(game, card, foundation):
 
 def sort_up_down(game, card, foundation):
     """
-    Sort a card up or down, depending on the foundation. (str)
+    Sort cards to the foundations up or down in rank, depending on the foundation. (str)
 
     Parameters:
     game: The game being played. (solitaire.Solitaire)
