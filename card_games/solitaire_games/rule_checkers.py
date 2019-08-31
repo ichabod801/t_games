@@ -625,7 +625,7 @@ def flip_random(game):   # !! change the name of this one to deal_something.
 
 def free_pyramid(game, card):
     """
-    Allow freeing cards open below and to the right. (str)
+    Allow freeing cards only if they are open below and to the right. (str)
 
     Parameters:
     game: The game being played. (solitaire.Solitaire)
@@ -644,7 +644,7 @@ def free_pyramid(game, card):
 
 def lane_down(game, card, moving_stack):
     """
-    Check moving only stacks of descending ranks into a lane. (str)
+    Only stacks of descending ranks can be moved into a lane. (str)
 
     Parameters:
     game: The game being played. (Solitaire)
@@ -663,7 +663,7 @@ def lane_down(game, card, moving_stack):
 
 def lane_king(game, card, moving_stack):
     """
-    Check moving only kings into a lane. (str)
+    Only kings can be moved into a lane. (str)
 
     Parameters:
     game: The game being played. (Solitaire)
@@ -691,7 +691,7 @@ def lane_none(game, card, moving_stack):
 
 def lane_one(game, card, moving_stack):
     """
-    Check moving one card at a time into a lane. (str)
+    Stacks can only be moved into a lane if they could be moved one card at a time. (str)
 
     Parameters:
     game: The game being played. (Solitaire)
@@ -708,9 +708,9 @@ def lane_one(game, card, moving_stack):
 
 def lane_reserve(game, card, moving_stack):
     """
-    Lane only from the reserve (str)
+    Empty lanes may only be filled from the reserve. (str)
 
-    This function assumes one and only one reserve pile.
+    !! This function assumes one and only one reserve pile.
 
     Parameters:
     game: The game being played. (Solitaire)
@@ -726,7 +726,7 @@ def lane_reserve(game, card, moving_stack):
 
 def lane_reserve_waste(game, card, moving_stack):
     """
-    Check only laning cards from the reserve. (str)
+    Empty lanes may only be filled from the reserve, or the waste if the reserve is empty. (str)
 
     If nothing is in the reserve, the waste pile may be used.
 
@@ -747,7 +747,7 @@ def lane_reserve_waste(game, card, moving_stack):
 
 def lane_suit(game, card, moving_stack):
     """
-    Check moving only stacks of the same suit to empty lanes. (str)
+    Only stacks of the same suit may be moved into empty lanes. (str)
 
     Parameters:
     game: The game being played. (Solitaire)
@@ -766,7 +766,7 @@ def lane_suit(game, card, moving_stack):
 
 def lane_unblocked(game, card, moving_stack):
     """
-    Cards may not be moved from blocked reserve piles. (str)
+    Cards from blocked reserve piles may not be used to fill empty lanes. (str)
 
     Parameters:
     game: The game being played. (Solitaire)
