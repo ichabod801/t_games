@@ -83,7 +83,6 @@ class SoCoKit(game.Game):
         for function_index, function in enumerate(choices, start = 1):
             self.human.tell(self.function_choice(function_index, function))
         # Get the user's choice.
-        # !! add option to pick none of them.
         query = '\nWhich rule do you want to add (#)? '
         checker_index = self.human.ask_int(query, low = 0, high = len(choices), cmd = False)
         if not checker_index:
@@ -269,8 +268,10 @@ class SoCoKit(game.Game):
             # Show the menu options.
             # !! add move up/down for dealers
             self.human.tell('\nOptions:')
-            self.human.tell('A: Add Function')
-            self.human.tell('D: Delete Function')
+            self.human.tell('A: Add Rule')
+            self.human.tell('D: Delete Rule')
+            if text == 'Dealers':
+                self.human.tell('R: Reorder Rules')
             self.human.tell('<: Return to Main Design Menu')
             choice = self.human.ask('\nWhat is your choice? ').upper()
             # Handle new checkers.
@@ -280,12 +281,20 @@ class SoCoKit(game.Game):
                     checkers.append(new_checker)
             # Handle getting rid of checkers.
             elif choice == 'D':
-                query = 'Which checker do you want to delete (#)? '
+                query = '\nWhich rule do you want to delete (#)? '
                 checker_index = self.human.ask_int(query, low = 1, high = len(checkers), cmd = False) - 1
                 del checkers[checker_index]
+            # Handle reordering rules (dealers).
+            elif choice == 'R' and text == 'Dealers':
+                query = '\nEnter the rule numbers in the order you want them to be: '
+                order = self.human.ask_int_list(query, valid = range(1, len(checkers) + 1), cmd = False)
+                checkers = [checkers[index - 1] for index in order]
             # Handle going back to the main menu.
             elif choice == '<':
                 break
+            # Handle invalid choices.
+            else:
+                self.human.error('\nThat is not a valid choice.')
         # Return the modified list of checkers.
         return checkers
 
