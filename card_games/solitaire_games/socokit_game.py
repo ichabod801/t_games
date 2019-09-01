@@ -123,7 +123,7 @@ class SoCoKit(game.Game):
         game_info: The definition of the base game. (dict)
         """
         # Set up the menu helpers.
-        valid = list('ABCDEFGHIJKLMNO!')
+        valid = list('ABCDEFGHIJKLMNO+!')
         checkers = dict(zip('IJKLMN', 'build free lane match pair sort'.split()))
         # Loop through main menu selections.
         while True:
@@ -133,8 +133,12 @@ class SoCoKit(game.Game):
                 # Allow for non-menu commands.
                 self.handle_cmd(choice)
                 continue
-            elif choice == '!':
+            elif choice == '+':
                 # Handle being finished.
+                break
+            elif choice == '!':
+                # Handle cancelling out (empty game_nnfo signifies quitting).
+                game_info = {}
                 break
             else:
                 # Get the menu definition for the user choice
@@ -155,7 +159,6 @@ class SoCoKit(game.Game):
                     elif choice == 'H':
                         value = value.lower() in ('true', 't', '1')
                     game_info[key] = value
-        # !! add confirmation that they really want to play.
         return game_info
 
     @staticmethod
@@ -222,7 +225,11 @@ class SoCoKit(game.Game):
         game_info['name'] = game_name
         # Build the game.
         game_info = self.build_game(game_info)
-        self.game = self.make_game(game_info)
+        # Check for exit without playing.
+        if game_info:
+            self.game = self.make_game(game_info)
+        else:
+            self.option_set.errors.append('Game aborted by the user.')
 
     def make_game(self, game_info):
         """
@@ -318,6 +325,7 @@ class SoCoKit(game.Game):
                 value = len(game_info[key])
             lines.append('{}) {}: {}'.format(char, text, value))
         # Add a quit option
-        lines.append('!) Finished Construction')
+        lines.append('+) Finish Construction and Play')
+        lines.append('!) Quit Without Playing')
         # Show it to the human.
         self.human.tell('\n'.join(lines))
