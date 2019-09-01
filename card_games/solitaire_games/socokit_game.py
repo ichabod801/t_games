@@ -78,7 +78,7 @@ class SoCoKit(game.Game):
         for name in dir(solitaire):
             if name.startswith(prefix):
                 function = getattr(solitaire, name)
-                if function not in checkers:
+                if function not in checkers:         # !! I might want duplicates for dealers.
                     choices.append(function)
         # Present a menu of the matching rule checker functions.
         self.human.tell()
@@ -196,6 +196,8 @@ class SoCoKit(game.Game):
 
     def handle_options(self):
         """Design the solitaire game. (None)"""
+        self.players = [self.human]
+        self.player_index = 0
         # !! This will need to be redone to handle full option specification.
         # Get the base game.
         while self.raw_options and self.raw_options not in self.interface.games:
