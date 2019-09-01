@@ -343,7 +343,7 @@ def deal_aces_multi(game):
             game.deck.force(ace_text, foundation)
 
 
-def deal_aces_up(game):  ## !! maybe change the name of this one.
+def deal_aces_up(game):
     """
     Deal the aces onto the foundations. (None)
 
@@ -710,8 +710,6 @@ def lane_reserve(game, card, moving_stack):
     """
     Empty lanes may only be filled from the reserve. (str)
 
-    !! This function assumes one and only one reserve pile.
-
     Parameters:
     game: The game being played. (Solitaire)
     card: The card to move into the lane. (TrackingCard)
@@ -719,7 +717,8 @@ def lane_reserve(game, card, moving_stack):
     """
     error = ''
     # Check for the moving card being in the reserve.
-    if (not game.reserve[0]) or card != game.reserve[0][-1]:
+    valid = [pile[0][-1] for pile in game.reserve if pile]
+    if valid and card not in valid:
         error = 'You can only lane the top card from the reserve.'
     return error
 
