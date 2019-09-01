@@ -76,8 +76,7 @@ class SoCoKit(game.Game):
         for name in dir(solitaire):
             if name.startswith(prefix):
                 function = getattr(solitaire, name)
-                if function not in checkers:         # !! I might want duplicates for dealers.
-                    choices.append(function)
+                choices.append(function)
         # Present a menu of the matching rule checker functions.
         self.human.tell('\n0: Cancel (do not add a rule).')
         for function_index, function in enumerate(choices, start = 1):
@@ -266,7 +265,6 @@ class SoCoKit(game.Game):
             for checker_index, checker in enumerate(checkers, start = 1):
                 self.human.tell(self.function_choice(checker_index, checker))
             # Show the menu options.
-            # !! add move up/down for dealers
             self.human.tell('\nOptions:')
             self.human.tell('A: Add Rule')
             self.human.tell('D: Delete Rule')
