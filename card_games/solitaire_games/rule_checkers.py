@@ -44,6 +44,7 @@ deal_aces_up: Deal the aces onto the foundations. (None)
 deal_all: Deal all the cards out onto the tableau. (None)
 deal_bisley: Deal cards to the tableau with the first four piles short. (None)
 deal_five_six: Deal the fives and sixes as foundations. (None)
+deal_flip_random: Flip random tableau cards face down. (None)
 deal_free: Deal a card into each free cell. (None)
 deal_klondike: Deal tableau piles of increasing size. (None)
 deal_n: Create a dealer that deals n cards onto the tableau. (function)
@@ -58,7 +59,6 @@ deal_start_foundation: Deal an initial foundation card. (None)
 deal_stock_all: Move the rest of the deck into the stock. (None)
 deal_twos: Deal the twos onto the tableau. (None)
 deal_yukon: Deal the cards face up on the tableau, except the first pile. (None)
-flip_random: Flip random tableau cards face down. (None)
 --------------------------------------------------------
 free_pyramid: Allow freeing cards open below and to the right. (str)
 --------------------------------------------------------------------
@@ -392,6 +392,17 @@ def deal_five_six(game):
         game.deck.force(six, game.foundations[foundation_index + 4])
 
 
+def deal_flip_random(game):
+    """
+    Flip random tableau cards face down. (None)
+
+    Parameters:
+    game: The game to deal the cards for. (Solitaire)
+    """
+    for pile in game.tableau:
+        random.choice(pile[:-1]).up = False
+
+
 def deal_free(game):
     """
     Deal a card into each free cell. (None)
@@ -607,17 +618,6 @@ def deal_yukon(game):
             game.deck.deal(pile)
             if not game.deck.cards:
                 break
-
-
-def flip_random(game):   # !! change the name of this one to deal_something.
-    """
-    Flip random tableau cards face down. (None)
-
-    Parameters:
-    game: The game to deal the cards for. (Solitaire)
-    """
-    for pile in game.tableau:
-        random.choice(pile[:-1]).up = False
 
 
 ################## Define free checkers. ##################

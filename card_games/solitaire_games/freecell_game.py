@@ -155,7 +155,7 @@ class FreeCell(solitaire.Solitaire):
         if self.fill_free:
             self.dealers.append(solitaire.deal_free)
         if self.supercell:
-            self.dealers.append(solitaire.flip_random)
+            self.dealers.append(solitaire.deal_flip_random)
 
     def set_options(self):
         """Set the game options. (None)"""
