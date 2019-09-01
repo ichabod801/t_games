@@ -432,7 +432,7 @@ def deal_n(n, up = True):
         # Turn the top cards face up.
         for pile in game.tableau:
             pile[-1].up = True
-    dealer.__doc__ = 'Deal {} cards to the tableau (created).'.format(n)
+    dealer.__doc__ = '\nDeal {} cards to the tableau [created] (None).\n'.format(n)
     return dealer
 
 
@@ -498,7 +498,7 @@ def deal_rank_foundations(rank):
             card = game.deck.find(rank + suit)
             target = game.find_foundation(card)
             game.deck.force(card, target)
-    deal_foundations.__doc__ = "Deal the {}'s to the foundations (created).".format(rank)
+    deal_foundations.__doc__ = "\nDeal the {}'s to the foundations [created] (None)\n.".format(rank)
     return deal_foundations
 
 
@@ -519,7 +519,7 @@ def deal_reserve_n(n, up = False):
         # Flip cards face up.
         for pile in game.reserve:
             pile[-1].up = True
-    dealer.__doc__ = 'Deal {} cards to the reserve.'.format(n)
+    dealer.__doc__ = '\nDeal {} cards to the reserve [created] (None)\n.'.format(n)
     return dealer
 
 

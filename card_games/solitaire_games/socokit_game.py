@@ -5,10 +5,8 @@ The Solitaire Construction Kit, for dynamic solitaire game creation.
 
 to do:
 handle higher order rule checkers
-    get rid of names in rule menus
     redo rule_checkers.py
 clear out bang bangs (here and in rule_checkers.py)
-rewrite rule checker docstrings as rules
 full option handling/automatic shortcuts
 allow options for the base game.
 
