@@ -79,14 +79,16 @@ class SoCoKit(game.Game):
                 if function not in checkers:         # !! I might want duplicates for dealers.
                     choices.append(function)
         # Present a menu of the matching rule checker functions.
-        self.human.tell()
+        self.human.tell('\n0: Cancel (do not add a rule).')
         for function_index, function in enumerate(choices, start = 1):
             self.human.tell(self.function_choice(function_index, function))
         # Get the user's choice.
         # !! add option to pick none of them.
-        query = '\nWhich function do you want to add (#)? '
-        checker_index = self.human.ask_int(query, low = 1, high = len(choices), cmd = False) - 1
-        checker = choices[checker_index]
+        query = '\nWhich rule do you want to add (#)? '
+        checker_index = self.human.ask_int(query, low = 0, high = len(choices), cmd = False)
+        if not checker_index:
+            return None
+        checker = choices[checker_index - 1]
         # Check for higher order function.
         if 'Create' in checker.__doc__:
             # Find the parameters.
@@ -273,7 +275,9 @@ class SoCoKit(game.Game):
             choice = self.human.ask('\nWhat is your choice? ').upper()
             # Handle new checkers.
             if choice == 'A':
-                checkers.append(self.add_checker(key, checkers))
+                new_checker = self.add_checker(key, checkers)
+                if new_checker is not None:
+                    checkers.append(new_checker)
             # Handle getting rid of checkers.
             elif choice == 'D':
                 query = 'Which checker do you want to delete (#)? '
