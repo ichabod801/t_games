@@ -4,8 +4,8 @@ socokit_game.py
 The Solitaire Construction Kit, for dynamic solitaire game creation.
 
 to do:
-clear out bang bangs in rule_checkers.py
 test multideck
+    !! fails to carry over deck_specs
 full option handling/automatic shortcuts
 allow options for the base game.
 allow mutli-deck to single-deck changes
@@ -239,10 +239,10 @@ class SoCoKit(game.Game):
             self.raw_options = 'solitaire base'
         base_game = self.interface.games[self.raw_options]
         # Get the base class the game will inherit from.
-        if issubclass(base_game, solitaire.Solitaire):
-            self.base_class = solitaire.Solitaire
-        else:
+        if issubclass(base_game, solitaire.MultiSolitaire):
             self.base_class = solitaire.MultiSolitaire
+        else:
+            self.base_class = solitaire.Solitaire
         # Extract the game design from the base game.
         game_info = self.get_game_info(base_game)
         # Get a (unique) name for the game.
