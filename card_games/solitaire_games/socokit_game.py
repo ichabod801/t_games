@@ -4,9 +4,11 @@ socokit_game.py
 The Solitaire Construction Kit, for dynamic solitaire game creation.
 
 to do:
-clear out bang bangs (here and in rule_checkers.py)
+clear out bang bangs in rule_checkers.py
+test multideck
 full option handling/automatic shortcuts
 allow options for the base game.
+allow mutli-deck to single-deck changes
 
 Classes:
 SoCoKit: A way to design a solitiare game on the fly. (game.Game)
@@ -16,6 +18,34 @@ SoCoKit: A way to design a solitiare game on the fly. (game.Game)
 from ... import game
 from . import solitaire_game as solitaire
 from ... import utility
+
+
+RULE_HELP = """
+In general, the different types of rules apply to the different types of moves
+you can make in a typical solitaire game: free rules apply to moving cards to
+free cells, match rules apply to pairing cards for movement to the foundations,
+and sorting rules apply to sending individual cards to the foundation.
+
+Rules for moving cards on the tableau are a little more complicated. Build
+rules apply to building one card onto another, and can apply to all of the
+cards in the stack of cards being moved (depending on the rule). Lane rules
+are the same, but for moving cards into empty lanes on the tableau. Pair rules
+can apply to both building and laning. The base card of a stack being moved on
+the tableau and the card it is moving onto must follow the pair rules. In
+addition, every sequential pair of cards in a stack being moved on the tableau
+(eithet building or laning) must follow the pair rules.
+
+For example, in Yukon there are build rules but no pair rules. The base card
+and the card it is being moved to matter, but what cards are in the stack don't
+matter. However, FreeCell's only build rule is about moves being doable one
+card at a time. The pair rules enforce the alternate color/desceding rank to
+make sure only valid stacks are moved.
+
+While rules typically only apply to the moving card and the card being moved
+onto (and sometimes the stack on top of the moving card), they can access other
+information about the location of the cards. For example, Canfield uses this to
+make sure that stacks of cards that have been built up cannot be split apart.
+"""
 
 
 class SoCoKit(game.Game):
@@ -305,7 +335,6 @@ class SoCoKit(game.Game):
 
     def play(self):
         """Play the game. (list of int)"""
-        # !! this gets recorded under Solitaire Construction Kit, not the game's name.
         return self.game.play()
 
     def show_game_menu(self, game_info):
