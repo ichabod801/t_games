@@ -103,6 +103,8 @@ sort_up_down: Sort a card up or down, depending on the foundation. (str)
 import itertools
 import random
 
+from ... import utility
+
 
 ################## Define helper functions for the dealers and checkers. ##################
 
@@ -131,7 +133,7 @@ def _move_one_size(game, to_lane = False):
 ################## Define build checkers. ##################
 
 
-def build_alt_color_one(self, mover, target, moving_stack):
+def build_alt_color_one(game, mover, target, moving_stack):
     """
     Cards can only be built on cards of the opposite color. (str)
 
@@ -149,7 +151,7 @@ def build_alt_color_one(self, mover, target, moving_stack):
     return error
 
 
-def build_down(game, mover, target, moving_stack):  # !! maybe just need pair check.
+def build_down(game, mover, target, moving_stack):
     """
     Only stacks descending by one rank at a time can be moved. (str)
 
@@ -232,7 +234,7 @@ def build_reserve(game, mover, target, moving_stack):
     return error
 
 
-def build_suit(game, mover, target, moving_stack):  # !! maybe just need pair check
+def build_suit(game, mover, target, moving_stack):
     """
     Only stacks of the same suit can be moved together. (str)
 
@@ -543,7 +545,7 @@ def deal_selective(game):
     """
     # Get the possible foundation cards.
     starters = game.deck.cards[-len(game.tableau) - 1:]
-    starter_text = ', '.join([card.rank + card.suit for card in starters])  # !! utility.oxford
+    starter_text = utility.oxford([card.rank + card.suit for card in starters], 'or')
     # Get the player's choice for a foundation card.
     message = 'Which of these cards would you like on the foundation: {}? '.format(starter_text)
     while True:
