@@ -4,8 +4,6 @@ socokit_game.py
 The Solitaire Construction Kit, for dynamic solitaire game creation.
 
 to do:
-test multideck
-    !! fails to carry over deck_specs
 full option handling/automatic shortcuts
 allow options for the base game.
 allow mutli-deck to single-deck changes
@@ -158,10 +156,11 @@ class SoCoKit(game.Game):
         # Loop through main menu selections.
         while True:
             self.show_game_menu(game_info)
-            choice = self.human.ask('\nWhat would you like to change? ').upper()
+            raw_choice = self.human.ask('\nWhat would you like to change? ')
+            choice = raw_choice.upper()
             if choice not in valid:
                 # Allow for non-menu commands.
-                self.handle_cmd(choice)
+                self.handle_cmd(raw_choice)
                 continue
             elif choice == '+':
                 # Handle being finished.
