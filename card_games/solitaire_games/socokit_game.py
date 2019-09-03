@@ -237,14 +237,9 @@ class SoCoKit(game.Game):
         # Use Solitaire Base as the default base game.
         if not self.raw_options:
             self.raw_options = 'solitaire base'
-        base_game = self.interface.games[self.raw_options]
-        # Get the base class the game will inherit from.
-        if issubclass(base_game, solitaire.MultiSolitaire):
-            self.base_class = solitaire.MultiSolitaire
-        else:
-            self.base_class = solitaire.Solitaire
+        self.base_class = self.interface.games[self.raw_options]
         # Extract the game design from the base game.
-        game_info = self.get_game_info(base_game)
+        game_info = self.get_game_info(self.base_class)
         # Get a (unique) name for the game.
         while True:
             game_name = self.human.ask('\nWhat is the name of the game you are making? ').strip()
