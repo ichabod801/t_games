@@ -77,6 +77,7 @@ class Game(OtherCmd):
     option_set: The definitions of allowed options for the game (OptionSet)
     raw_options: The options as given by the play command. (str)
     scores: The players' scores in the game. (dict of str: int)
+    silent: A flag for suppressing pre-game output. (bool)
     turns: The number of turns played in the game. (int)
     win_loss_draw: A list of the player's results in the game. (list of int)
 
@@ -134,6 +135,7 @@ class Game(OtherCmd):
         self.human = human
         self.interface = interface
         self.raw_options = raw_options.strip()
+        self.silent = silent
         # Set the default attributes.
         self.flags = 0
         self.gipfed = []
@@ -146,7 +148,7 @@ class Game(OtherCmd):
             if hasattr(cls, 'help_text'):
                 self.help_text.update(cls.help_text)
         # Introduce yourself.
-        if self.name != 'Fireball' and not silent:
+        if self.name != 'Fireball' and not self.silent:
             self.human.tell('\nWelcome to a game of {}, {}.'.format(self.name, self.human.name))
         # Define and process the game options.
         self.option_set = options.OptionSet(self)

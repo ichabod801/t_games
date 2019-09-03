@@ -5,6 +5,7 @@ The Solitaire Construction Kit, for dynamic solitaire game creation.
 
 to do:
 full option handling/automatic shortcuts
+    show/hide function names in checker menu.
 allow options for the base game.
 allow mutli-deck to single-deck changes
 
@@ -132,7 +133,7 @@ class SoCoKit(game.Game):
                     value = yes_no in utility.YES
                 # Card ranks, based on the base game's deck.
                 elif param == 'rank':
-                    valid = self.base.deck.ranks
+                    valid = self.base_game.deck.ranks
                     while True:
                         value = self.human.ask('What rank should the rule apply to? ').upper()
                         if value in valid:
@@ -196,49 +197,38 @@ class SoCoKit(game.Game):
         description = func.__doc__.split('\n')[1].split('(')[0].strip()
         return '{}: {}'.format(char, description)
 
-    def get_game_info(self, base_game):
+    def get_game_info(self):
         """
         Get the inforamation defining the base game. (dict)
-
-        Parameters:
-        base_game: A solitaire game. (solitiare.Solitaire)
         """
         # Make a viable instance of the game (to pull in hard coded solitaire options).
-        self.base = base_game(self.human, 'none', silent = True)
-        self.base.scores = {}
-        self.base.set_up()
+        self.base_game = self.base_class(self.human, self.base_options, silent = True)
+        self.base_game.scores = {}
+        self.base_game.set_up()
         # Get information from the attributes.
-        game_info = {'num-cells': self.base.num_cells, 'wrap-ranks': self.base.wrap_ranks,
-            'turn-count': self.base.turn_count, 'max-passes': self.base.max_passes}
+        game_info = {'num-cells': self.base_game.num_cells, 'wrap-ranks': self.base_game.wrap_ranks,
+            'turn-count': self.base_game.turn_count, 'max-passes': self.base_game.max_passes}
         # Get information from the options, with defaults.
-        game_info['deck-specs'] = self.base.options.get('deck-specs', [])
-        game_info['num-tableau'] = self.base.options.get('num-tableau', 7)
-        game_info['num-foundations'] = self.base.options.get('num-foundations', 4)
-        game_info['num-reserve'] = self.base.options.get('num-reserve', 0)
+        game_info['deck-specs'] = self.base_game.options.get('deck-specs', [])
+        game_info['num-tableau'] = self.base_game.options.get('num-tableau', 7)
+        game_info['num-foundations'] = self.base_game.options.get('num-foundations', 4)
+        game_info['num-reserve'] = self.base_game.options.get('num-reserve', 0)
         # Get the rule checker lists.
         for check_type in 'build free lane match pair sort'.split():
             key = '{}-checkers'.format(check_type)
             attribute = '{}_checkers'.format(check_type)
-            game_info[key] = getattr(self.base, attribute)
-        game_info['dealers'] = self.base.dealers
+            game_info[key] = getattr(self.base_game, attribute)
+        game_info['dealers'] = self.base_game.dealers
         return game_info
 
     def handle_options(self):
         """Design the solitaire game. (None)"""
         self.players = [self.human]
         self.player_index = 0
-        # !! This will need to be redone to handle full option specification.
-        # Get the base game.
-        while self.raw_options and self.raw_options not in self.interface.games:
-            self.human.tell('I do not recognize the game {!r}.'.format(self.raw_options))
-            base_name = self.human.ask('\nPlease enter the game to use as a base (return for none): ')
-            self.raw_options = base_name.strip().lower()
-        # Use Solitaire Base as the default base game.
-        if not self.raw_options:
-            self.raw_options = 'solitaire base'
-        self.base_class = self.interface.games[self.raw_options]
+        self.parse_options()
+        self.base_class = self.interface.games[self.base_name]
         # Extract the game design from the base game.
-        game_info = self.get_game_info(self.base_class)
+        game_info = self.get_game_info()
         # Get a (unique) name for the game.
         while True:
             game_name = self.human.ask('\nWhat is the name of the game you are making? ').strip()
@@ -326,6 +316,40 @@ class SoCoKit(game.Game):
                 self.human.error('\nThat is not a valid choice.')
         # Return the modified list of checkers.
         return checkers
+
+    def parse_options(self):
+        """Parse the raw options for later handling. (None)"""
+        # Split out the base game, options to the base game, and build options.
+        slash_index = self.raw_options.find('/')
+        pipe_index = self.raw_options.find('|')
+        # Game and build options
+        if slash_index != -1 and pipe_index != -1:
+            self.base_name = self.raw_options[:slash_index].strip()
+            self.base_options = self.raw_options[(slash_index + 1):pipe_index].strip()
+            self.build_options = self.raw_options[(pipe_index + 1):].strip()
+        # Game options only.
+        elif slash_index != -1:
+            self.base_name = self.raw_options[:slash_index].strip()
+            self.base_options = self.raw_options[(slash_index + 1):].strip()
+            self.build_options = ''
+        # Build options only.
+        elif pipe_index != -1:
+            self.base_name = self.raw_options[:pipe_index].strip()
+            self.base_options = 'none'
+            self.build_options = self.raw_options[(pipe_index + 1):].strip()
+        # no options
+        else:
+            if self.raw_options.strip():
+                self.base_name = self.raw_options.strip()
+            else:
+                self.base_name = 'solitaire base'
+            self.base_options = 'none'
+            self.build_options = ''
+        print(self.base_name, self.base_options, self.build_options)
+        # Confirm the base game.
+        while self.base_name not in self.interface.games:
+            self.human.tell('I do not recognize the game {!r}.'.format(self.raw_options))
+            self.base_name = self.human.ask('\nPlease enter the game to use as a base (return for none): ')
 
     def play(self):
         """Play the game. (list of int)"""
