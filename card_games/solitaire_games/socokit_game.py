@@ -6,7 +6,6 @@ The Solitaire Construction Kit, for dynamic solitaire game creation.
 to do:
 full option handling/automatic shortcuts
     show/hide function names in checker menu.
-allow options for the base game.
 allow mutli-deck to single-deck changes
 
 Classes:
@@ -191,11 +190,13 @@ class SoCoKit(game.Game):
                     game_info[key] = value
         return game_info
 
-    @staticmethod
-    def function_choice(char, func):
+    def function_choice(self, char, func):
         """Return menu item text for a function. (str)"""
         description = func.__doc__.split('\n')[1].split('(')[0].strip()
-        return '{}: {}'.format(char, description)
+        if self.show_names:
+            return '{}: {}\n    {}'.format(char, func.__name__, description)
+        else:
+            return '{}: {}'.format(char, description)
 
     def get_game_info(self):
         """
@@ -225,6 +226,7 @@ class SoCoKit(game.Game):
         """Design the solitaire game. (None)"""
         self.players = [self.human]
         self.player_index = 0
+        self.show_names = False
         self.parse_options()
         self.base_class = self.interface.games[self.base_name]
         # Extract the game design from the base game.
@@ -289,8 +291,12 @@ class SoCoKit(game.Game):
             self.human.tell('\nOptions:')
             self.human.tell('A: Add Rule')
             self.human.tell('D: Delete Rule')
+            if self.show_names:
+                self.human.tell('H: Hide Function Names')
             if text == 'Dealers':
                 self.human.tell('R: Reorder Rules')
+            if not self.show_names:
+                self.human.tell('S: Show Function Names')
             self.human.tell('<: Return to Main Design Menu')
             choice = self.human.ask('\nWhat is your choice? ').upper()
             # Handle new checkers.
@@ -303,6 +309,11 @@ class SoCoKit(game.Game):
                 query = '\nWhich rule do you want to delete (#)? '
                 checker_index = self.human.ask_int(query, low = 1, high = len(checkers), cmd = False) - 1
                 del checkers[checker_index]
+            # Handle hiding or showing function names.
+            elif choice == 'H':
+                self.show_names = False
+            elif choice == 'S':
+                self.show_names = True
             # Handle reordering rules (dealers).
             elif choice == 'R' and text == 'Dealers':
                 query = '\nEnter the rule numbers in the order you want them to be: '
@@ -345,7 +356,6 @@ class SoCoKit(game.Game):
                 self.base_name = 'solitaire base'
             self.base_options = 'none'
             self.build_options = ''
-        print(self.base_name, self.base_options, self.build_options)
         # Confirm the base game.
         while self.base_name not in self.interface.games:
             self.human.tell('I do not recognize the game {!r}.'.format(self.raw_options))
