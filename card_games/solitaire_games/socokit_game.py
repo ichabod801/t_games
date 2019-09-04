@@ -5,7 +5,6 @@ The Solitaire Construction Kit, for dynamic solitaire game creation.
 
 to do:
 full option handling/automatic shortcuts
-    show/hide function names in checker menu.
 allow mutli-deck to single-deck changes
 
 Classes:
@@ -224,13 +223,20 @@ class SoCoKit(game.Game):
 
     def handle_options(self):
         """Design the solitaire game. (None)"""
+        # Set up this game.
         self.players = [self.human]
         self.player_index = 0
+        # Set up this interface.
         self.show_names = False
-        self.parse_options()
+        option_info = self.parse_options()
         self.base_class = self.interface.games[self.base_name]
         # Extract the game design from the base game.
         game_info = self.get_game_info()
+        # Apply the options or quit due to errors.
+        if option_info is None:
+            self.option_set.errors.append('Game aborted by the user.')
+            return None
+        game_info.update(option_info)
         # Get a (unique) name for the game.
         while True:
             game_name = self.human.ask('\nWhat is the name of the game you are making? ').strip()
@@ -240,7 +246,8 @@ class SoCoKit(game.Game):
                 break
         game_info['name'] = game_name
         # Build the game.
-        game_info = self.build_game(game_info)
+        if 'no-build' not in option_info:
+            game_info = self.build_game(game_info)
         # Check for exit without playing.
         if game_info:
             self.game = self.make_game(game_info)
@@ -328,11 +335,47 @@ class SoCoKit(game.Game):
         # Return the modified list of checkers.
         return checkers
 
+    def parse_build_options(self):
+        """Get the actual settings of the build options. (dict)"""
+        # Remove unwanted spaces.
+        for gap, no_gap in ((' =', '='), ('= ', '='), (' /', '/'), ('/ ', '/')):
+            while gap in self.build_options:
+                self.build_options = self.build_options.replace(gap, no_gap)
+        option_info = {}
+        errors = []
+        for option in self.build_options.split():
+            if '=' in option:
+                key, value = option.split('=', 1)
+                if '/' in value and ('checkers' in key or key == 'dealers'):
+                    try:
+                        value = [eval('solitaire.' + func_name) for func_name in value.split('/')]
+                    except AttributeError as err:
+                        errors.append(err.args[0])
+                elif value.isdigit() or value == '-1':
+                    value = int(value)
+                elif value.lower() in ('true', 't', 'false', 'f') and key == 'wrap-ranks':
+                    value = (value[0].lower() == 't')
+                else:
+                    errors.append('Invalid value for {!r} key: {!r}.'.format(key, value))
+                option_info[key] = value
+            elif option in ('wrap-ranks', 'no-build'):
+                option_info[option] = True
+            else:
+                errors.append('Invalid stand alone option: {!r}.'.format(option))
+        if errors:
+            for error in errors:
+                self.human.error(error)
+            if self.human.ask('\nDo you wish to continue? ') not in utility.YES:
+                return None
+        return option_info
+
     def parse_options(self):
-        """Parse the raw options for later handling. (None)"""
+        """Parse the raw options for later handling. (dict)"""
         # Split out the base game, options to the base game, and build options.
         slash_index = self.raw_options.find('/')
         pipe_index = self.raw_options.find('|')
+        # Only count slashes before the build options.
+        slash_index = slash_index if slash_index < pipe_index else -1
         # Game and build options
         if slash_index != -1 and pipe_index != -1:
             self.base_name = self.raw_options[:slash_index].strip()
@@ -360,6 +403,7 @@ class SoCoKit(game.Game):
         while self.base_name not in self.interface.games:
             self.human.tell('I do not recognize the game {!r}.'.format(self.raw_options))
             self.base_name = self.human.ask('\nPlease enter the game to use as a base (return for none): ')
+        return self.parse_build_options()
 
     def play(self):
         """Play the game. (list of int)"""
