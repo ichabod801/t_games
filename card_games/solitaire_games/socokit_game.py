@@ -227,15 +227,15 @@ class SoCoKit(game.Game):
         self.players = [self.human]
         self.player_index = 0
         # Set up this interface.
-        self.show_names = False
         option_info = self.parse_options()
+        if option_info is None:
+            self.option_set.errors.append('Game aborted by the user.')
+            return None
+        self.show_names = False
         self.base_class = self.interface.games[self.base_name]
         # Extract the game design from the base game.
         game_info = self.get_game_info()
         # Apply the options or quit due to errors.
-        if option_info is None:
-            self.option_set.errors.append('Game aborted by the user.')
-            return None
         game_info.update(option_info)
         # Get a (unique) name for the game.
         while True:
@@ -247,10 +247,13 @@ class SoCoKit(game.Game):
         game_info['name'] = game_name
         # Build the game.
         if 'no-build' not in option_info:
-            game_info = self.build_game(game_info)
+            self.game_info = self.build_game(game_info)
+        else:
+            self.game_info = game_info
         # Check for exit without playing.
-        if game_info:
-            self.game = self.make_game(game_info)
+        if self.game_info:
+            self.game = self.make_game(self.game_info)
+            self.option_text()
         else:
             self.option_set.errors.append('Game aborted by the user.')
 
@@ -334,6 +337,27 @@ class SoCoKit(game.Game):
                 self.human.error('\nThat is not a valid choice.')
         # Return the modified list of checkers.
         return checkers
+
+    def option_text(self):
+        """Create the option text for the game. (None)"""
+        if self.base_options == 'none':
+            option_text = self.base_name
+        else:
+            option_text = '{} / {}'.format(self.base_name, self.base_game.option_set.settings_text)
+        build_options = []
+        base_info = self.get_game_info()
+        for key, value in self.game_info.items():
+            if key not in base_info or base_info[key] != value:
+                if isinstance(value, list):
+                    pass
+                elif key in ('wrap-ranks', 'no-build'):
+                    build_options.append(key)
+                else:
+                    build_options.append('{}={}'.format(key, value))
+        if build_options:
+            build_options.sort()
+            option_text = '{} | {}'.format(option_text, ' '.join(build_options))
+        self.game.option_set.settings_text = option_text
 
     def parse_build_options(self):
         """Get the actual settings of the build options. (dict)"""
