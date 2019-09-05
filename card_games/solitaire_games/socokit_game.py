@@ -239,13 +239,12 @@ class SoCoKit(game.Game):
         # Apply the options or quit due to errors.
         game_info.update(option_info)
         # Get a (unique) name for the game.
-        while True:
-            game_name = self.human.ask('\nWhat is the name of the game you are making? ').strip()
-            if game_name.lower() in self.interface.games:
-                self.human.tell('That name is already taken, please choose another.')
-            else:
-                break
-        game_info['name'] = game_name
+        if 'name' not in game_info:
+            game_info['name'] = self.human.ask('\nWhat is the name of the game you are making? ').strip()
+        while game_info['name'].lower() in self.interface.games:
+            warning = 'The name {!r} is already in use by another game.'.format(game_info['name'])
+            self.human.tell(warning)
+            game_info['name'] = self.human.ask('Please choose another name for your game: ').strip()
         # Build the game.
         if 'no-build' not in option_info:
             self.game_info = self.build_game(game_info)
@@ -427,6 +426,7 @@ class SoCoKit(game.Game):
             self.base_options = 'none'
             self.build_options = ''
         # Confirm the base game.
+        # !! make case insensitive.
         while self.base_name not in self.interface.games:
             self.human.tell('I do not recognize the game {!r}.'.format(self.base_name))
             self.base_name = self.human.ask('\nPlease enter the game to use as a base (return for none): ')
