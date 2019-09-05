@@ -380,6 +380,8 @@ class SoCoKit(game.Game):
                     value = int(value)
                 elif value.lower() in ('true', 't', 'false', 'f') and key == 'wrap-ranks':
                     value = (value[0].lower() == 't')
+                elif key in ('name'):
+                    pass
                 else:
                     errors.append('Invalid value for {!r} key: {!r}.'.format(key, value))
                 option_info[key] = value
