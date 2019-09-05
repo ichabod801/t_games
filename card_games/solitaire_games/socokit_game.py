@@ -6,6 +6,7 @@ The Solitaire Construction Kit, for dynamic solitaire game creation.
 to do:
 full option handling/automatic shortcuts
 allow mutli-deck to single-deck changes
+clean up the comments
 
 Classes:
 SoCoKit: A way to design a solitiare game on the fly. (game.Game)
@@ -425,7 +426,7 @@ class SoCoKit(game.Game):
             self.build_options = ''
         # Confirm the base game.
         while self.base_name not in self.interface.games:
-            self.human.tell('I do not recognize the game {!r}.'.format(self.raw_options))
+            self.human.tell('I do not recognize the game {!r}.'.format(self.base_name))
             self.base_name = self.human.ask('\nPlease enter the game to use as a base (return for none): ')
         return self.parse_build_options()
 
