@@ -4,9 +4,17 @@ socokit_game.py
 The Solitaire Construction Kit, for dynamic solitaire game creation.
 
 to do:
-automatic shortcuts
+function code for created options!!!
 allow mutli-deck to single-deck changes
 clean up the comments
+    rules/credits
+categories??
+
+Constants:'
+ATTRIBUTE_HELP: Help text for changing game attributes. (str)
+CREDITS: The credits for the Solitaire Construction Kit. (str)
+RULE_HELP: Help text for changing rule functions. (str)
+RULES: Basic instructions for the Solitaire Construction Kit. (str)
 
 Classes:
 SoCoKit: A way to design a solitiare game on the fly. (game.Game)
@@ -17,6 +25,40 @@ from ... import game
 from . import solitaire_game as solitaire
 from ... import utility
 
+
+ATTRIBUTE_HELP = """
+The following are attributes of solitaire games that can be changed in the
+main design menu. In parentheses after each one is the name of the SoCK option
+for that attribute.
+
+The number of cards dealt by the turn command. This is the number of cards
+    turned over from the stock into the waste. (turn-count=)
+The number of foundation piles. This should generally not be messed with. In
+    matching games it should be one, in one-deck games it should be four, and
+    in two-deck games it should be eight. The only real exception to this is
+    Quadrille with the sort_up_down rule function. (num-foundations=)
+The number of free cells. You can use this to add free cells to just about any
+    game. (num-cells=)
+The number of reserve piles. These are non-building piles for holding cards.
+    (num-reserve=)
+The number of tableau piles. Generally more tableau piles makes games easier
+    while fewer tableau piles makes games harder. Especially with tableau
+    piles, you may want to change the dealers if you change this attribute.
+    (num-tableau)
+The maximum number of passes through the stock. Some games put a limit on the
+    number of times you can go through the stock by turning over cards into the
+    waste. If you don't want a limit on this, set this attribute to -1.
+    (max-passes)
+Wrapping ranks for building/sorting. This should only be true if the foundation
+    piles don't start with an ace. If they don't, this needs to be true or the
+    game will be unwinnable. (wrap-ranks)
+"""
+
+CREDITS = """
+Construction Kit Design: Craig "Ichabod" O'Brien
+Construction Kit Programming: Craig "Ichabod" O'Brien
+Inspired by the Pinball Construction Kit made by Bill Budge
+"""
 
 RULE_HELP = """
 In general, the different types of rules apply to the different types of moves
@@ -43,6 +85,93 @@ While rules typically only apply to the moving card and the card being moved
 onto (and sometimes the stack on top of the moving card), they can access other
 information about the location of the cards. For example, Canfield uses this to
 make sure that stacks of cards that have been built up cannot be split apart.
+
+The option names for the rules options are:
+build-checkers=: Rules for building on the tableau.
+dealers=: Rules for dealing the initial layout of cards.
+free-checkers=: Rules for moving cards to free cells.
+lane-checkers=: Rules for moving cards to empty lanes.
+match-checkers=: Rules for matching cards together.
+pair-checkers=: Rules for stacking cards on the tableau, both when laning and
+    building.
+sort-checkers=: Rules for sorting cards to the foundations.
+
+The values for the above options are slash-delimited lists of rule function
+names or calls to functions that create rule functions. The names of the rule
+checking functions are hidden by default in the design menu interface, but
+there is an option to show them. When using calls to functions in option values
+be sure to remove all spaces. Any spaces will mess up the option parsing.
+
+Note that not all game rules are represented by rule checking functions. Some
+of them are hard-coded as methods of specific game classes. This is especially
+true of modified rules for the turn command, as in Monte Carlo, Pyramid, and
+Spider. Access to those rules can only be obtained by basing your game on those
+games.
+"""
+
+RULES = """
+You make the rules for this one.
+
+The Solitaire Construction Kit (SoCK) is for designing your own solitaire game.
+You choose the game to base your game off of, modify the rules of that game,
+and then you can play the game you just created. If you don't choose a game to
+base your game off of, it will be based off a generalized solitaire game with
+almost no rules.
+
+You will be presented with a menu of different rules you can change. The first
+options are the numeric attributes of the game, like how many of each type of
+pile there are. Selecting that option will allow you to enter a new value for
+that attribute. To get detailed information on the attributes, type 'help
+attributes'.
+
+After the attributes are the different types of rules, including the rules for
+dealing the cards (the 'dealers'). In the main design menu only the number of
+each type of rule is shown. Choosing the option for a particular type of rule
+gives you a list of those rules, and a sub-menu allowing you to add or remove
+rules from that list. For an explanation of the different types of rules, type
+'help rules'.
+
+Some of the rules are generalized types of rules, like deal a certain number of
+cards. These will be listed in the menu as 'Create a rule that ...'. If you
+choose to add such a rule, you will be prompted for the specific parameters of
+the rule you want. Rules in the game that have been created that way will have
+a '[created]' tag to identify them.
+
+Order doesn't matter for most of the rules, but it does matter for the rules
+about how to deal the cards. In the menu for the dealers, you will have the
+option to reorder the rules. You just give the numbers of the rules as listed
+above the menu, in the order you want them. Only the rules you list will be
+kept, so you can use this to delete rules as well.
+
+After you play the game, you will have the option to create a shortcut for the
+game. If you choose this option, a shortcut will be created in your personal
+shortcuts that will take you into SoCK, redesign the game, and take you
+straight to playing it again. Note that this will override any previous
+shortcut using the name of the game you just made (with spaces replaced by
+hypens).
+
+In addition to the options for attributes and rules, there are the following
+options for the system in general:
+
+name: The name of the game you are designing.
+no-build: Skip the main design menu and go straight to playing the game.
+
+Note that you can provide options for the base game, to start with that game
+and those options. Options for SoCK come after the base game options, and are
+separated from them with a pipe character (|). Consider these four commands
+for using SoCK:
+
+1. sock / klondike
+2. sock / klondike / switch-one
+3. sock / klondike / switch-one | num-cells = 2 no-build
+4. sock / klondike | num-cells = 2 name = Horns
+
+The first one starts SoCK with Klondike as the base game. The second starts
+with Klondike using the switch-one option as the base game. The third one has
+Klondike with the switch-one option as the base game, adds two free cells, and
+goes straight to playing the game (although you will be asked for a name). The
+last one uses Klondike with no options as the base game, but adds two free
+cells and gives the game the name 'Horns'.
 """
 
 
@@ -71,6 +200,7 @@ class SoCoKit(game.Game):
 
     aka = ['SoCoKit', 'SoCK']
     categories = ['Card Games', 'Solitaire Games']
+    help_text = {'attributes': ATTRIBUTE_HELP, 'rules': RULE_HELP}
     menu = [('A', 'Name', 'name'),
         ('B', '# of Cards Dealt by Turn Command', 'turn-count'),
         ('C', '# of Foundation Piles', 'num-foundations'),
