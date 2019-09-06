@@ -4,7 +4,7 @@ socokit_game.py
 The Solitaire Construction Kit, for dynamic solitaire game creation.
 
 to do:
-full option handling/automatic shortcuts
+automatic shortcuts
 allow mutli-deck to single-deck changes
 clean up the comments
 
@@ -426,15 +426,23 @@ class SoCoKit(game.Game):
             self.base_options = 'none'
             self.build_options = ''
         # Confirm the base game.
-        # !! make case insensitive.
-        while self.base_name not in self.interface.games:
+        while self.base_name.lower() not in self.interface.games:
             self.human.tell('I do not recognize the game {!r}.'.format(self.base_name))
             self.base_name = self.human.ask('\nPlease enter the game to use as a base (return for none): ')
+        self.base_name = self.base_name.lower()
         return self.parse_build_options()
 
     def play(self):
         """Play the game. (list of int)"""
-        return self.game.play()
+        results = self.game.play()
+        shortcut_name = self.game.name.lower().replace(' ', '-')
+        if shortcut_name not in self.human.shortcuts:
+            make_it = self.human.ask('\nWould you like to make a shortcut for {}? '.format(self.game.name))
+            if make_it in utility.YES:
+                shortcut_value = 'socokit / {} no-build'.format(self.game.option_set.settings_text)
+                self.human.shortcuts[shortcut_name] = shortcut_value
+                self.human.tell('The shortcut for this game is {!r}.'.format(shortcut_name))
+        return results
 
     def show_game_menu(self, game_info):
         """
