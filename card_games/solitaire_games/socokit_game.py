@@ -4,9 +4,7 @@ socokit_game.py
 The Solitaire Construction Kit, for dynamic solitaire game creation.
 
 to do:
-function code for created options!!!
 allow mutli-deck to single-deck changes
-clean up the comments
 categories??
 
 Constants:'
@@ -178,15 +176,29 @@ class SoCoKit(game.Game):
     """
     A way to design a solitiare game on the fly. (game.Game)
 
+    Attributes:
+    base_class: The class of the base game to build off of. (type)
+    base_game: An instance of the base game to build off of. (solitaire.Solitaire)
+    base_options: The user provided options for the base game. (text)
+    build_options: The user provided options for SoCoKit. (text)
+    game: An instance of the created game to actually play. (solitaire.Solitaire)
+    game_info: The attributes and rule checkers for the designed game. (dict)
+    show_names: A flag for showing function names in rule sub-menus. (bool)
+
     Class Attributes:
     menu: The main menu items and their keys in the game definition. (list)
 
     Methods:
     add_checker: Get a new rule checker to add to the game. (function)
     build_game: Get the user's definition of the solitaire game. (dict)
+    checker_text: Generate the option text for a rule checker function. (str)
+    function_choice: Return menu item text for a function. (str)
     get_game_info: Get the inforamation defining the base game. (dict)
     make_game: Make a game object based on the design. (solitaire.Solitaire)
     modify_checkers: Modify a list of rules checkers. (list of function)
+    option_text: Create the option text for the game. (None)
+    parse_build_options: Get the actual settings of the build options. (dict)
+    paser_options: Parse the raw options for later handling. (dict)
     show_game_menu: Show the current status of the game as a menu. (None)
 
     Static Methods:
@@ -319,7 +331,7 @@ class SoCoKit(game.Game):
                     game_info[key] = value
         return game_info
 
-    def checker_code(self, rule_checker):
+    def checker_text(self, rule_checker):
         """
         Generate the option text for a rule checker function. (str)
 
@@ -327,15 +339,19 @@ class SoCoKit(game.Game):
         rule_checker: A function for checking rules. (callable)
         """
         if 'option-code' in rule_checker.__doc__:
+            # Handle created rule checkers.
             start = rule_checker.__doc__.index('option-code') + 13
             end = rule_checker.__doc__.index('\n', start)
             return rule_checker.__doc__[start:end]
         else:
+            # Handle standard rule checkers.
             return rule_checker.__name__
 
     def function_choice(self, char, func):
         """Return menu item text for a function. (str)"""
+        # Get the description.
         description = func.__doc__.split('\n')[1].split('(')[0].strip()
+        # Add the name if necessary.
         if self.show_names:
             return '{}: {}\n    {}'.format(char, func.__name__, description)
         else:
@@ -483,24 +499,32 @@ class SoCoKit(game.Game):
 
     def option_text(self):
         """Create the option text for the game. (None)"""
+        # Get the base game and it's options, if any.
         if self.base_options == 'none':
             option_text = self.base_name
         else:
             option_text = '{} / {}'.format(self.base_name, self.base_game.option_set.settings_text)
+        # Get a list of build options by comparing game info dictionaries.
         build_options = []
         base_info = self.get_game_info()
         for key, value in self.game_info.items():
+            # Save any differences.
             if key not in base_info or base_info[key] != value:
+                # Handle rule checkers.
                 if isinstance(value, list):
-                    text = '/'.join(self.checker_code(func) for func in value)
+                    text = '/'.join(self.checker_text(func) for func in value)
                     build_options.append('{}={}'.format(key, text))
+                # Handle flag options.
                 elif key in ('wrap-ranks', 'no-build'):
                     build_options.append(key)
+                # Handle attribute options.
                 else:
                     build_options.append('{}={}'.format(key, value))
+        # Sort and add any build options found.
         if build_options:
             build_options.sort()
             option_text = '{} | {}'.format(option_text, ' '.join(build_options))
+        # Store the options in the created game.
         self.game.option_set.settings_text = option_text
 
     def parse_build_options(self):
@@ -509,29 +533,40 @@ class SoCoKit(game.Game):
         for gap, no_gap in ((' =', '='), ('= ', '='), (' /', '/'), ('/ ', '/')):
             while gap in self.build_options:
                 self.build_options = self.build_options.replace(gap, no_gap)
+        # Build a dictionary of options.
         option_info = {}
         errors = []
         for option in self.build_options.split():
+            # Check for assigned values.
             if '=' in option:
+                # Split out the value (but not any parameter assignments for rule checkers)
                 key, value = option.split('=', 1)
+                # Handle rule checker options.
                 if '/' in value and ('checkers' in key or key == 'dealers'):
                     try:
                         value = [eval('solitaire.' + func_name) for func_name in value.split('/')]
                     except AttributeError as err:
                         errors.append(err.args[0])
+                # Handle integer values.
                 elif value.isdigit() or value == '-1':
                     value = int(value)
-                elif value.lower() in ('true', 't', 'false', 'f') and key == 'wrap-ranks':
+                # Handle assigned flags.
+                elif value.lower() in ('true', 't', 'false', 'f') and key in ('no-build', 'wrap-ranks'):
                     value = (value[0].lower() == 't')
+                # Skip the name options
                 elif key in ('name'):
                     pass
+                # Handle bad options (!! doesn't check for invalid option names).
                 else:
                     errors.append('Invalid value for {!r} key: {!r}.'.format(key, value))
+                # Assign the value.
                 option_info[key] = value
+            # Handle flag options.
             elif option in ('wrap-ranks', 'no-build'):
                 option_info[option] = True
             else:
                 errors.append('Invalid stand alone option: {!r}.'.format(option))
+        # Check for continuation if there are any errors.
         if errors:
             for error in errors:
                 self.human.error(error)
@@ -579,10 +614,13 @@ class SoCoKit(game.Game):
     def play(self):
         """Play the game. (list of int)"""
         results = self.game.play()
+        # Check for existing short cut.
         shortcut_name = self.game.name.lower().replace(' ', '-')
         if shortcut_name not in self.human.shortcuts:
+            # Ask about creating a short cut.
             make_it = self.human.ask('\nWould you like to make a shortcut for {}? '.format(self.game.name))
             if make_it in utility.YES:
+                # Create the shortcut if user approves.
                 shortcut_value = 'socokit / {} no-build'.format(self.game.option_set.settings_text)
                 self.human.shortcuts[shortcut_name] = shortcut_value
                 self.human.tell('The shortcut for this game is {!r}.'.format(shortcut_name))
