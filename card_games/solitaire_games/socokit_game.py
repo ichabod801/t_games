@@ -3,10 +3,6 @@ socokit_game.py
 
 The Solitaire Construction Kit, for dynamic solitaire game creation.
 
-to do:
-allow mutli-deck to single-deck changes
-categories??
-
 Constants:'
 ATTRIBUTE_HELP: Help text for changing game attributes. (str)
 CREDITS: The credits for the Solitaire Construction Kit. (str)

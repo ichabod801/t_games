@@ -419,7 +419,7 @@ class Human(Humanoid):
         self.results = []
         with open(os.path.join(self.folder_name, 'results.txt')) as player_data:
             for line in player_data:
-                results = line.strip().split(',')
+                results = line.strip().split(',', 7)
                 self.results.append(results[:1] + [int(x) for x in results[1:-1]] + results[-1:])
         self.session_index = len(self.results)
         self.fire_index = self.session_index

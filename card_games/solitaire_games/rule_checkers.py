@@ -722,8 +722,8 @@ def lane_reserve(game, card, moving_stack):
     """
     error = ''
     # Check for the moving card being in the reserve.
-    valid = [pile[0][-1] for pile in game.reserve if pile]
-    if valid and card not in valid:
+    valid = [pile[-1] for pile in game.reserve if pile]
+    if card not in valid:
         error = 'You can only lane the top card from the reserve.'
     return error
 
