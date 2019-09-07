@@ -7,7 +7,6 @@ to do:
 function code for created options!!!
 allow mutli-deck to single-deck changes
 clean up the comments
-    rules/credits
 categories??
 
 Constants:'
@@ -320,6 +319,20 @@ class SoCoKit(game.Game):
                     game_info[key] = value
         return game_info
 
+    def checker_code(self, rule_checker):
+        """
+        Generate the option text for a rule checker function. (str)
+
+        Parameters:
+        rule_checker: A function for checking rules. (callable)
+        """
+        if 'option-code' in rule_checker.__doc__:
+            start = rule_checker.__doc__.index('option-code') + 13
+            end = rule_checker.__doc__.index('\n', start)
+            return rule_checker.__doc__[start:end]
+        else:
+            return rule_checker.__name__
+
     def function_choice(self, char, func):
         """Return menu item text for a function. (str)"""
         description = func.__doc__.split('\n')[1].split('(')[0].strip()
@@ -479,7 +492,8 @@ class SoCoKit(game.Game):
         for key, value in self.game_info.items():
             if key not in base_info or base_info[key] != value:
                 if isinstance(value, list):
-                    pass
+                    text = '/'.join(self.checker_code(func) for func in value)
+                    build_options.append('{}={}'.format(key, text))
                 elif key in ('wrap-ranks', 'no-build'):
                     build_options.append(key)
                 else:

@@ -446,6 +446,7 @@ def deal_n(n, up = True):
         for pile in game.tableau:
             pile[-1].up = True
     dealer.__doc__ = '\nDeal {} cards to the tableau [created] (None).\n'.format(n)
+    dealer.__doc__ = '{}\noption-code: deal_n({},{})\n'.format(dealer.__doc__, n, up)
     return dealer
 
 
@@ -506,13 +507,14 @@ def deal_rank_foundations(rank):
     Parameters:
     rank: The rank to deal to the foundations. (str)
     """
-    def deal_foundations(game):
+    def dealer(game):
         for suit in game.deck.suits:
             card = game.deck.find(rank + suit)
             target = game.find_foundation(card)
             game.deck.force(card, target)
-    deal_foundations.__doc__ = "\nDeal the {}'s to the foundations [created] (None)\n.".format(rank)
-    return deal_foundations
+    dealer.__doc__ = "\nDeal the {}'s to the foundations [created] (None)\n.".format(rank)
+    dealer.__doc__ = '{}\noption-code: deal_rank_foundations({!r})\n'.format(dealer.__doc__, rank)
+    return dealer
 
 
 def deal_reserve_n(n, up = False):
@@ -533,6 +535,7 @@ def deal_reserve_n(n, up = False):
         for pile in game.reserve:
             pile[-1].up = True
     dealer.__doc__ = '\nDeal {} cards to the reserve [created] (None)\n.'.format(n)
+    dealer.__doc__ = '{}\noption-code: deal_reserve_n({},{})\n'.format(dealer.__doc__, n, up)
     return dealer
 
 
