@@ -425,6 +425,7 @@ class SoCoKit(game.Game):
         """
         # Use the base game to determine solitaire vs. multisolitaire.
         class ConstructedGame(self.base_class):
+            categories = ['Card Games', 'Solitaire Games']
             name = game_info['name']
             def handle_options(self):
                 # Use the game definition for the options.
