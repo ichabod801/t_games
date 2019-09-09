@@ -29,8 +29,11 @@ class Hearts(game.Game):
     deal: Deal the cards to the players. (None)
     do_play: Play a card, to either start or contribute to a trick. (bool)
     set_dealer: Determine the first dealer for the game. (None)
+    trick_winner: Determine who won the trick. (None)
 
     Overridden Methods:
+    game_over
+    handle_options
     player_action
     set_up
     """
@@ -81,6 +84,28 @@ class Hearts(game.Game):
                 return True
             hand.shift(card, self.trick)
 
+    def game_over(self):
+        """Determine if the game is over. (bool)"""
+        if max(self.scores.values()) > self.win:
+            human_score = self.scores[self.human.name]
+            winning_score = min(self.scores.values())
+            for name, score in self.scores.items():
+                if score > human_score:
+                    self.win_loss_draw[0] += 1
+                elif score < human_score:
+                    self.win_loss_draw[1] += 1
+                elif name != human_score:
+                    self.win_loss_draw[2] += 1
+                if score == winning_score:
+                    self.human.tell('{} wins with {} points.'.format(name, score))
+            return True
+        else:
+            return False
+
+    def handle_options(self):
+        """Handle the option settings for this game. (None)"""
+        self.win = 100
+
     def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
@@ -100,9 +125,8 @@ class Hearts(game.Game):
                         hand.shift(card, self.passes[player.name])
                     if player == self.dealer:
                         for pass_from, pass_to in zip(self.players[1:] + self.players[:1], self.players):
-                            pass_hand = self.hands[pass_from.name]
-                            for card in pass_hand:
-                                pass_hand.shift(card, self.hands[pass_to.name])
+                            self.hands[pass_to.name].cards.extend(self.passes[pass_from.name].cards)
+                            self.passes[pass_from.name].cards = []
                         self.phase == 'trick'
             else:
                 return self.handle_cmd(move)
@@ -114,8 +138,9 @@ class Hearts(game.Game):
             player.tell('Your hand is: {}.'.format(self.hands[player.name]))
             move = player.ask('\nWhat is your play? ')
             if self.card_re.match(move):
-                return self.do_play(move)
-                # !! handle end of trick
+                go = self.do_play(move)
+                if not go and self.players[(self.player_index + 1) % len(self.players)] == self.dealer:
+                    self.trick_winner()
             else:
                 return self.handle_cmd(move)
 
@@ -158,7 +183,30 @@ class Hearts(game.Game):
         self.deck = cards.Deck()
         self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
         self.passes = {player.name: cards.Hand(self.deck) for player in self.players}
+        self.taken = {player.name: cards.Hand(self.deck) for player in self.players}
         self.trick = cards.Hand(self.deck)
         self.set_dealer()
         self.deal()
         self.phase = 'pass'
+
+    def trick_winner(self):
+        """Determine who won the trick. (None)"""
+        # Find the winning card.
+        trick_suit = self.trick.cards[0].suit
+        suit_cards = [card for card in self.trick if card.suit == trick_suit]
+        winning_card = max(suit_cards)
+        card_index = self.trick.cards.index(winning_card)
+        # Find the winning player.
+        winner_index = (self.players.index(self.dealer) + card_index) % len(self.players)
+        winner = self.players[winner_index]
+        # Handle the win.
+        self.human.tell('\n{} won the trick with the {}.'.format(winner, winning_card))
+        self.taken[winner.name].cards.extend(self.trick.cards)
+        self.trick.cards = []
+        # Check for the end of the round.
+        if not self.hands[self.human.name]:
+            self.score_round()
+            for hand in self.taken.values():
+                hand.discard()
+            self.dealer = self.winner
+            self.deal()
