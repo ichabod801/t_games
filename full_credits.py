@@ -28,7 +28,7 @@ CREDITS_DATA = [('Interface Programming', """Craig O'Brien, Micah Page"""),
     ('Documentation', """wma, Craig O'Brien"""),
     ('Play Testing', """Doug Edmunds, Craig O'Brien, Micah Page"""),
     ('Special Thanks', """Guido van Rossum; python-forum.io, github.com, Wikipedia, pagat.com;
-        Alan Beale, Kris Burm, George Carlin, Matt Groening, Lawrence Lasker, Walter F. Parks,
+        Alan Beale, Bill Budge, Kris Burm, George Carlin, Matt Groening, Lawrence Lasker, Walter F. Parks,
         David Parlett""")]
 
 
