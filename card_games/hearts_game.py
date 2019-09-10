@@ -43,7 +43,9 @@ class HeartBot(player.Bot):
         if prompt.startswith('\nWhich three'):
             return ' '.join(str(card) for card in self.pass_cards())
         elif prompt.startswith('\nWhat is'):
-            return str(self.play())
+            card = str(self.play())
+            self.game.human.tell('{} plays the {}.'.format(self.name, card))
+            return card
         else:
             return super(HeartBot, self).ask(prompt)
 
@@ -63,7 +65,7 @@ class HeartBot(player.Bot):
             playable = [card for card in self.hand if card.suit == trick_starter.suit]
             if playable:
                 playable.sort()
-                losers = [card for card in self.hand if card < trick_starter]
+                losers = [card for card in playable if card < trick_starter]
                 if losers:
                     return losers[-1]
                 else:
@@ -76,6 +78,9 @@ class HeartBot(player.Bot):
                     return hearts[-1]
                 else:
                     return sorted(self.hand.cards)[-1]
+        else:
+            self.hand.cards.sort()
+            return self.hand.cards[0]
 
     def set_up(self):
         """Set up the bot. (None)"""
@@ -124,15 +129,15 @@ class Hearts(game.Game):
         # Deal the cards out equally, leaving any extras aside.
         self.deck.shuffle()
         player_index = self.players.index(self.dealer)
-        while self.deck.cards:
+        while True:
             player_index = (player_index + 1) % len(self.players)
+            self.hands[self.players[player_index].name].draw()
             if self.players[player_index] == self.dealer and len(self.deck.cards) < len(self.players):
                 break
-            self.hands[self.players[player_index].name].draw()
         self.human.tell('{} deals.'.format(self.players[player_index]))
         # Eldest hand starts, and is the next dealer.
-        self.player_index = (player_index + 1) % len(self.players)
-        self.dealer = self.players[self.player_index]
+        self.dealer = self.players[(player_index + 1) % len(self.players)]
+        #print('dealer set to {}.'.format(self.dealer))
 
     def do_play(self, arguments):
         """
@@ -140,6 +145,7 @@ class Hearts(game.Game):
         """
         player = self.players[self.player_index]
         hand = self.hands[player.name]
+        #print(player.name, hand)
         if self.card_re.match(arguments):
             card_text = arguments.upper()
         else:
@@ -198,17 +204,22 @@ class Hearts(game.Game):
             move = player.ask('\nWhich three cards do you wish to pass? ')
             cards = self.card_re.findall(move)
             if len(cards) == 3:
+                #print('{} passes.'.format(player))
                 cards = [card.strip().upper() for card in cards]
                 hand = self.hands[player.name]
                 if all(card in hand for card in cards):
                     for card in cards:
                         hand.shift(card, self.passes[player.name])
-                    if player == self.dealer:
-                        print('passing cards...')
+                    if all(self.passes.values()):
+                        #print('passing cards...')
+                        #print([len(hand) for hand in self.hands.values()])
                         for pass_from, pass_to in zip(self.players[1:] + self.players[:1], self.players):
+                            #print('passing from {} to {}'.format(pass_from, pass_to))
                             self.hands[pass_to.name].cards.extend(self.passes[pass_from.name].cards)
                             self.passes[pass_from.name].cards = []
+                        #print([len(hand) for hand in self.hands.values()])
                         self.phase = 'trick'
+                        self.player_index = self.players.index(self.dealer) - 1
             else:
                 return self.handle_cmd(move)
         elif self.phase == 'trick':
@@ -220,7 +231,7 @@ class Hearts(game.Game):
             move = player.ask('\nWhat is your play? ')
             if self.card_re.match(move):
                 go = self.do_play(move)
-                if not go and self.players[(self.player_index + 1) % len(self.players)] == self.dealer:
+                if len(self.trick) == len(self.players):
                     self.trick_winner()
             else:
                 return self.handle_cmd(move)
@@ -278,7 +289,7 @@ class Hearts(game.Game):
         winning_card = max(suit_cards)
         card_index = self.trick.cards.index(winning_card)
         # Find the winning player.
-        winner_index = (self.players.index(self.dealer) + card_index) % len(self.players)
+        winner_index = (self.player_index + 1 + card_index) % len(self.players)
         winner = self.players[winner_index]
         # Handle the win.
         self.human.tell('\n{} won the trick with the {}.'.format(winner, winning_card))
@@ -291,3 +302,5 @@ class Hearts(game.Game):
                 hand.discard()
             self.dealer = self.winner
             self.deal()
+        else:
+            self.player_index = winner_index - 1
