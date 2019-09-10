@@ -14,6 +14,7 @@ import re
 from .. import cards
 from .. import game
 from .. import player
+from .. import utility
 
 
 class HeartBot(player.Bot):
@@ -236,6 +237,26 @@ class Hearts(game.Game):
             else:
                 return self.handle_cmd(move)
 
+    def score_round(self):
+        """Score one deck's worth of tricks. (None)"""
+        self.human.tell('')
+        for player in self.players:
+            hearts, lady = 0, 0
+            for card in self.taken[player.name]:
+                if card.suit == 'H':
+                    hearts += 1
+                elif card == 'QS':
+                    lady += 1
+            round_points = hearts + 13 * lady
+            self.scores[player.name] += round_points
+            score_text = '{} had {} {}'.format(player.name, hearts, utility.plural(hearts, 'heart'))
+            lady_text = ' and the Queen of Spades' if lady else ''
+            score_text = '{}{}, for {} points this round.'.format(score_text, lady_text, round_points)
+            self.human.tell(score_text)
+        self.human.tell('\nOverall Scores:')
+        for player in self.players:
+            self.human.tell('{}: {}'.format(player, self.scores[player.name]))
+
     def set_dealer(self):
         """Determine the first dealer for the game. (None)"""
         # Deal a card to each player, keeping track of the max rank and who was dealt it.
@@ -244,6 +265,7 @@ class Hearts(game.Game):
         players = self.players[:]
         max_players = []
         player_index = 0
+        self.human.tell('')
         while True:
             # Deal the card.
             card = self.deck.deal(up = True)
@@ -298,9 +320,9 @@ class Hearts(game.Game):
         # Check for the end of the round.
         if not self.hands[self.human.name]:
             self.score_round()
-            for hand in self.taken.values():
-                hand.discard()
-            self.dealer = self.winner
-            self.deal()
+            if max(self.scores.values()) < self.win:
+                for hand in self.taken.values():
+                    hand.discard()
+                self.deal()
         else:
             self.player_index = winner_index - 1
