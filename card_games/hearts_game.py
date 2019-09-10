@@ -4,6 +4,7 @@ hearts_game.py
 A game of Hearts.
 
 Classes:
+HeartBot: A simple bot for Hearts. (player.Bot)
 Hearts: A game of Hearts. (game.Game)
 """
 
@@ -13,6 +14,81 @@ import re
 from .. import cards
 from .. import game
 from .. import player
+
+
+class HeartBot(player.Bot):
+    """
+    A simple bot for Hearts. (player.Bot)
+
+    Attribute:
+    hand: The player's cards in the game. (cards.Hand)
+
+    Methods:
+    pass_cards: Determine which cards to pass. (list of cards.Card)
+    play: Play a card to start or add to a trick. (card.Card)
+
+    Overridden Methods:
+    ask
+    set_up
+    tell
+    """
+
+    def ask(self, prompt):
+        """
+        Get a response from the bot. (str)
+
+        Parameters:
+        prompt: The question to ask the bot. (str)
+        """
+        if prompt.startswith('\nWhich three'):
+            return ' '.join(str(card) for card in self.pass_cards())
+        elif prompt.startswith('\nWhat is'):
+            return str(self.play())
+        else:
+            return super(HeartBot, self).ask(prompt)
+
+    def pass_cards(self):
+        """Determine which cards to pass. (list of card.Card)"""
+        # Get rid of high spades, high hearts, and high other cards, in that order
+        to_pass = [card for card in self.hand if card in ('KS', 'AS')]
+        to_pass.extend(sorted([card for card in self.hand if card.suit == 'H'], reverse = True))
+        if len(to_pass) < 3:
+            to_pass.extend(sorted([card for card in self.hand if card not in to_pass], reverse = True))
+        return to_pass[:3]
+
+    def play(self):
+        """Play a card to start or add to a trick. (card.Card)"""
+        if self.game.trick:
+            trick_starter = self.game.trick.cards[0]
+            playable = [card for card in self.hand if card.suit == trick_starter.suit]
+            if playable:
+                playable.sort()
+                losers = [card for card in self.hand if card < trick_starter]
+                if losers:
+                    return losers[-1]
+                else:
+                    return playable[-1]
+            else:
+                if 'QS' in self.hand:
+                    return 'QS'
+                hearts = sorted([card for card in self.hand if card.suit == 'H'])
+                if hearts:
+                    return hearts[-1]
+                else:
+                    return sorted(self.hand.cards)[-1]
+
+    def set_up(self):
+        """Set up the bot. (None)"""
+        self.hand = self.game.hands[self.name]
+
+    def tell(self, *args, **kwargs):
+        """
+        Give information to the player. (None)
+
+        Parameters:
+        The parameters are as per the built-in print function.
+        """
+        pass
 
 
 class Hearts(game.Game):
@@ -105,6 +181,9 @@ class Hearts(game.Game):
     def handle_options(self):
         """Handle the option settings for this game. (None)"""
         self.win = 100
+        self.players = [self.human]
+        for bot in range(3):
+            self.players.append(HeartBot(taken_names = [player.name for player in self.players]))
 
     def player_action(self, player):
         """
