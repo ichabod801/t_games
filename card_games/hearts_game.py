@@ -115,7 +115,7 @@ class Hearts(game.Game):
     """
 
     aliases = {'p': 'play'}
-    card_re = re.compile(r'^\s*[x123456789tjqk][cdhs]\s*$', re.IGNORECASE)
+    card_re = re.compile(r'\s*[x123456789tjqka][cdhs]\s*', re.IGNORECASE)
     categories = ['Card Games']
     name = 'Hearts'
 
@@ -128,7 +128,8 @@ class Hearts(game.Game):
             player_index = (player_index + 1) % len(self.players)
             if self.players[player_index] == self.dealer and len(self.deck.cards) < len(self.players):
                 break
-            self.hands[self.players[player_index]].draw()
+            self.hands[self.players[player_index].name].draw()
+        self.human.tell('{} deals.'.format(self.players[player_index]))
         # Eldest hand starts, and is the next dealer.
         self.player_index = (player_index + 1) % len(self.players)
         self.dealer = self.players[self.player_index]
@@ -151,14 +152,14 @@ class Hearts(game.Game):
             player.error('You do not have the {} to play.'.format(card_text))
             return True
         if self.trick:
-            hand.shift(card_text, self.trick)
-        else:
             card = hand.cards[hand.cards.index(card_text)]
             trick_suit = self.trick.cards[0].suit
             if card.suit != trick_suit and filter(lambda card: card.suit == trick_suit, hand):
                 player.error('You must play a card of the suit led.')
                 return True
             hand.shift(card, self.trick)
+        else:
+            hand.shift(card_text, self.trick)
 
     def game_over(self):
         """Determine if the game is over. (bool)"""
@@ -193,7 +194,7 @@ class Hearts(game.Game):
         player: The player whose turn it is. (Player)
         """
         if self.phase == 'pass':
-            player.tell('Your hand is: {}.'.format(self.hands[player.name]))
+            player.tell('\nYour hand is: {}.'.format(self.hands[player.name]))
             move = player.ask('\nWhich three cards do you wish to pass? ')
             cards = self.card_re.findall(move)
             if len(cards) == 3:
@@ -203,10 +204,11 @@ class Hearts(game.Game):
                     for card in cards:
                         hand.shift(card, self.passes[player.name])
                     if player == self.dealer:
+                        print('passing cards...')
                         for pass_from, pass_to in zip(self.players[1:] + self.players[:1], self.players):
                             self.hands[pass_to.name].cards.extend(self.passes[pass_from.name].cards)
                             self.passes[pass_from.name].cards = []
-                        self.phase == 'trick'
+                        self.phase = 'trick'
             else:
                 return self.handle_cmd(move)
         elif self.phase == 'trick':
@@ -233,16 +235,16 @@ class Hearts(game.Game):
         player_index = 0
         while True:
             # Deal the card.
-            card = self.deck.deal()
-            self.deck.discard.append(hand)
+            card = self.deck.deal(up = True)
+            self.deck.discards.append(card)
             self.human.tell('{} was dealt the {}.'.format(players[player_index], card))
-            card_rank = self.deck.cards.index(card.rank)
+            card_rank = self.deck.ranks.index(card.rank)
             # Track the max rank.
             if card_rank == max_rank:
-                max_players.append(player)
+                max_players.append(players[player_index])
             elif card_rank > max_rank:
                 max_rank = card_rank
-                max_players = [player]
+                max_players = [players[player_index]]
             player_index += 1
             # Check for unique winner.
             if player_index == len(players):
