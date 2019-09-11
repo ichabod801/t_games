@@ -3,6 +3,12 @@ hearts_game.py
 
 A game of Hearts.
 
+Problems:
+* Ace is low.
+* Bots playing like idiots
+* Sometimes players run out of cards
+* Eldest hand not always picked correctly (2nd round?)
+
 Classes:
 HeartBot: A simple bot for Hearts. (player.Bot)
 Hearts: A game of Hearts. (game.Game)
@@ -138,7 +144,7 @@ class Hearts(game.Game):
         self.human.tell('{} deals.'.format(self.players[player_index]))
         # Eldest hand starts, and is the next dealer.
         self.dealer = self.players[(player_index + 1) % len(self.players)]
-        #print('dealer set to {}.'.format(self.dealer))
+        print('dealer set to {}.'.format(self.dealer))
 
     def do_play(self, arguments):
         """
@@ -234,11 +240,13 @@ class Hearts(game.Game):
                 go = self.do_play(move)
                 if len(self.trick) == len(self.players):
                     self.trick_winner()
+                return go
             else:
                 return self.handle_cmd(move)
 
     def score_round(self):
         """Score one deck's worth of tricks. (None)"""
+        # !! shoot the moon !
         self.human.tell('')
         for player in self.players:
             hearts, lady = 0, 0
@@ -251,7 +259,7 @@ class Hearts(game.Game):
             self.scores[player.name] += round_points
             score_text = '{} had {} {}'.format(player.name, hearts, utility.plural(hearts, 'heart'))
             lady_text = ' and the Queen of Spades' if lady else ''
-            score_text = '{}{}, for {} points this round.'.format(score_text, lady_text, round_points)
+            score_text = '{}{}, for {} points this round.'.format(score_text, lady_text, round_points) # !! plural points
             self.human.tell(score_text)
         self.human.tell('\nOverall Scores:')
         for player in self.players:
@@ -271,12 +279,11 @@ class Hearts(game.Game):
             card = self.deck.deal(up = True)
             self.deck.discards.append(card)
             self.human.tell('{} was dealt the {}.'.format(players[player_index], card))
-            card_rank = self.deck.ranks.index(card.rank)
             # Track the max rank.
-            if card_rank == max_rank:
+            if card.rank_num == max_rank:
                 max_players.append(players[player_index])
-            elif card_rank > max_rank:
-                max_rank = card_rank
+            elif card.rank_num > max_rank:
+                max_rank = card.rank_num
                 max_players = [players[player_index]]
             player_index += 1
             # Check for unique winner.
@@ -294,7 +301,7 @@ class Hearts(game.Game):
 
     def set_up(self):
         """Set up the game. (None)"""
-        self.deck = cards.Deck()
+        self.deck = cards.Deck(ace_high = True)
         self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
         self.passes = {player.name: cards.Hand(self.deck) for player in self.players}
         self.taken = {player.name: cards.Hand(self.deck) for player in self.players}
@@ -308,7 +315,7 @@ class Hearts(game.Game):
         # Find the winning card.
         trick_suit = self.trick.cards[0].suit
         suit_cards = [card for card in self.trick if card.suit == trick_suit]
-        winning_card = max(suit_cards)
+        winning_card = sorted(suit_cards, key = lambda card: card.rank_num)[-1]
         card_index = self.trick.cards.index(winning_card)
         # Find the winning player.
         winner_index = (self.player_index + 1 + card_index) % len(self.players)
@@ -324,5 +331,6 @@ class Hearts(game.Game):
                 for hand in self.taken.values():
                     hand.discard()
                 self.deal()
+                self.phase = 'pass'
         else:
             self.player_index = winner_index - 1

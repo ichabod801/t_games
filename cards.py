@@ -70,7 +70,7 @@ class Card(object):
     rank_names += ['Jack', 'Queen', 'King']
     card_re = re.compile('[{}][{}]'.format(ranks, suits), re.IGNORECASE)
 
-    def __init__(self, rank, suit, down_text = '??'):
+    def __init__(self, rank, suit, down_text = '??', ace_high = False):
         """
         Set up the card. (None)
 
@@ -78,10 +78,15 @@ class Card(object):
         rank: The rank of the card. (str)
         suit: The suit of the card. (str)
         down_text: How the card looks when face down. (str)
+        ace_high: Treat the ace as higher than a king. (bool)
         """
         # Set the specified paramters.
         self.rank = rank[0]
         self.suit = suit[0]
+        # Calculate the rank number.
+        self.rank_num = self.ranks.index(self.rank)
+        if self.rank_num == 1 and ace_high:
+            self.rank_num = len(self.ranks)
         # Calculated the color of the card.
         if self.suit in 'DH':
             self.color = 'R'
@@ -112,7 +117,7 @@ class Card(object):
         """
         # Compare cards by rank and suit.
         if isinstance(other, Card):
-            return (self.rank, self.suit) == (other.rank, other.suit)
+            return (self.rank_num, self.suit) == (other.rank_num, other.suit)
         # Compare strings by str.
         elif isinstance(other, str):
             return self.rank + self.suit == other.upper()
@@ -149,9 +154,9 @@ class Card(object):
     def __lt__(self, other):
         """For sorting by rank. (bool)"""
         if isinstance(other, Card):
-            return self.ranks.index(self.rank) < self.ranks.index(other.rank)
+            return self.rank_num < self.rank_num
         else:
-            return self.rank < other  # ?? do I want this? from class where rank is int.
+            return self.rank_num < other
 
     def __repr__(self):
         """Generate computer readable text representation. (str)"""
@@ -173,7 +178,7 @@ class Card(object):
         wrap_ranks: A flag for K-A-2 wrapping. (bool)
         """
         # Do the standard caculation
-        diff = self.ranks.index(self.rank) - self.ranks.index(other.rank)
+        diff = self.rank_num - self.rank_num
         # Account for wrap ranks.
         if wrap_ranks and diff < 0:
             diff += len(self.ranks) - 1
@@ -188,7 +193,7 @@ class Card(object):
         wrap_ranks: A flag for K-A-2 wrapping. (bool)
         """
         # Do the standard caculation
-        diff = self.ranks.index(other.rank) - self.ranks.index(self.rank)
+        diff = self.rank_num - self.rank_num
         # Account for wrap ranks.
         if wrap_ranks and diff < 0:
             diff += len(self.ranks) - 1
@@ -255,7 +260,7 @@ class Deck(object):
     __repr__
     """
 
-    def __init__(self, jokers = 0, decks = 1, shuffle_size = 0, card_class = Card):
+    def __init__(self, jokers = 0, decks = 1, shuffle_size = 0, card_class = Card, ace_high = False):
         """
         Fill the deck with a standard set of cards. (None)
 
@@ -276,7 +281,7 @@ class Deck(object):
         for deck in range(decks):
             for rank in card_class.ranks[1:]:
                 for suit in card_class.suits:
-                    self.cards.append(card_class(rank, suit))
+                    self.cards.append(card_class(rank, suit, ace_high = ace_high))
         # Add any requested jokers.
         joker_rank = card_class.ranks[0]
         for deck in range(decks):
