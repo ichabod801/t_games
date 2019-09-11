@@ -144,7 +144,7 @@ class Hearts(game.Game):
         self.human.tell('{} deals.'.format(self.players[player_index]))
         # Eldest hand starts, and is the next dealer.
         self.dealer = self.players[(player_index + 1) % len(self.players)]
-        print('dealer set to {}.'.format(self.dealer))
+        #print('dealer set to {}.'.format(self.dealer))
 
     def do_play(self, arguments):
         """
@@ -198,6 +198,7 @@ class Hearts(game.Game):
         self.players = [self.human]
         for bot in range(3):
             self.players.append(HeartBot(taken_names = [player.name for player in self.players]))
+        self.max_score = 26
 
     def player_action(self, player):
         """
@@ -246,23 +247,41 @@ class Hearts(game.Game):
 
     def score_round(self):
         """Score one deck's worth of tricks. (None)"""
-        # !! shoot the moon !
         self.human.tell('')
+        # Calculate the points this round for each player.
+        round_points = {}
+        shooter = ''
         for player in self.players:
+            # Count the scoring cards.
             hearts, lady = 0, 0
             for card in self.taken[player.name]:
                 if card.suit == 'H':
                     hearts += 1
                 elif card == 'QS':
                     lady += 1
-            round_points = hearts + 13 * lady
-            self.scores[player.name] += round_points
+            # Calculate and store the unadjusted points.
+            player_points = hearts + 13 * lady
+            round_points[player.name] = player_points
+            # Display the card counts and points.
             score_text = '{} had {} {}'.format(player.name, hearts, utility.plural(hearts, 'heart'))
             lady_text = ' and the Queen of Spades' if lady else ''
-            score_text = '{}{}, for {} points this round.'.format(score_text, lady_text, round_points) # !! plural points
+            score_text = '{}{}, for {} points this round.'.format(score_text, lady_text, player_points) # !! plural points
             self.human.tell(score_text)
+            # Inform and record any sucessful shooter.
+            if round_points == self.max_score:
+                self.human.tell('{} shot the moon!'.format(player.name))
+                shooter = player.name
+        # Adjust the round points if anyone shot the moon.
+        if shooter:
+            for player in round_points:
+                if player == shooter:
+                    round_points[player] = 0
+                else:
+                    round_points[player] = self.max_points
+        # Adjust and display the overall points.
         self.human.tell('\nOverall Scores:')
         for player in self.players:
+            self.scores[player.name] += round_points[player.name]
             self.human.tell('{}: {}'.format(player, self.scores[player.name]))
 
     def set_dealer(self):
