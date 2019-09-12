@@ -41,22 +41,26 @@ class HeartBot(player.Bot):
         Parameters:
         prompt: The question to ask the bot. (str)
         """
+        # Handle passing.
         if prompt.startswith('\nWhich three'):
             return ' '.join(str(card) for card in self.pass_cards())
-        elif prompt.startswith('\nWhat is'):
+        # Handle passing cards.
+        elif prompt.startswith('What is'):
             card = str(self.play())
-            self.game.human.tell('{} plays the {}.'.format(self.name, card))
             return card
+        # Handle everything else.
         else:
             return super(HeartBot, self).ask(prompt)
 
     def pass_cards(self):
         """Determine which cards to pass. (list of card.Card)"""
-        # Get rid of high spades, high hearts, and high other cards, in that order
+        # Get rid of high spades.
         to_pass = [card for card in self.hand if card in ('KS', 'AS')]
+        # Get rid of high hearts
         hearts = [card for card in self.hand if card.suit == 'H']
         hearts.sort(key = lambda card: card.rank_num, reverse = True)
         to_pass.extend(hearts)
+        # If that's not enough, get rid of other high cards.
         if len(to_pass) < 3:
             other = [card for card in self.hand if card not in to_pass]
             other.sort(key = lambda card: card.rank_num, reverse = True)
@@ -65,31 +69,43 @@ class HeartBot(player.Bot):
 
     def play(self):
         """Play a card to start or add to a trick. (card.Card)"""
+        # Handle continuing a trick.
         if self.game.trick:
+            # Get the cards matching the suit led.
             trick_starter = self.game.trick.cards[0]
             playable = [card for card in self.hand if card.suit == trick_starter.suit]
             if playable:
+                # Get the playable cards that lose.
                 playable.sort(key = lambda card: card.rank_num)
                 losers = [card for card in playable if card.rank_num < trick_starter.rank_num]
+                # Play the highest possible loser, or the lowest possible card in hopes of losing.
                 if losers:
-                    return losers[-1]
+                    card = losers[-1]
                 else:
-                    return playable[0]
+                    card = playable[0]
             else:
+                # Get rid of the queen if you can.
                 if 'QS' in self.hand:
-                    return 'QS'
+                    card = 'QS'
+                # Otherwise get rid of hearts if you can.
                 hearts = [card for card in self.hand if card.suit == 'H']
                 hearts.sort(key = lambda card: card.rank_num)
                 if hearts:
-                    return hearts[-1]
+                    card = hearts[-1]
                 else:
-                    return sorted(self.hand.cards, key = lambda card: card.rank_num)[-1]
+                    # If you have no penalty cards, get rid of the highest card you can.
+                    card = sorted(self.hand.cards, key = lambda card: card.rank_num)[-1]
+            self.game.human.tell('{} plays the {}.'.format(self.name, card))
         else:
+            # Open with the lowest card you have in the hopes of losing.
             self.hand.cards.sort(key = lambda card: card.rank_num)
-            return self.hand.cards[0]
+            card = self.hand.cards[0]
+            self.game.human.tell('{} opens with the {}.'.format(self.name, card))
+        return card
 
     def set_up(self):
         """Set up the bot. (None)"""
+        # Create a shortcut to your hand for easier programming.
         self.hand = self.game.hands[self.name]
 
     def tell(self, *args, **kwargs):
@@ -99,6 +115,7 @@ class HeartBot(player.Bot):
         Parameters:
         The parameters are as per the built-in print function.
         """
+        # Mute.
         pass
 
 
@@ -107,14 +124,22 @@ class Hearts(game.Game):
     A game of Hearts. (game.Game)
 
     Attributes:
+    dealer: The next player to deal cards. (player.Player)
     deck: The deck of cards used in the game. (cards.Deck)
     hands: The players' hands of cards. (dict of str: cards.Hand)
     passes: The cards passed by each player. (dict of str: cards.Hand)
+    phase: Whether the players are passing cards or playing tricks. (str)
+    taken: The cards from the tricks each player has taken. (dict)
     trick: The cards in the current trick. (cards.Hand)
+    tricks: The number of trick played so far. (int)
+
+    Class Attributes:
+    card_re: A regular expression detecting cards. (re.SRE_Pattern)
 
     Methods:
     deal: Deal the cards to the players. (None)
     do_play: Play a card, to either start or contribute to a trick. (bool)
+    score_round: Score one deck's worth of tricks. (None)
     set_dealer: Determine the first dealer for the game. (None)
     trick_winner: Determine who won the trick. (None)
 
@@ -149,21 +174,26 @@ class Hearts(game.Game):
         """
         Play a card, to either start or contribute to a trick.  (p)
         """
+        # Get the player and their hand.
         player = self.players[self.player_index]
         hand = self.hands[player.name]
         #print(player.name, hand)
+        # Check for a valid card.
         if self.card_re.match(arguments):
             card_text = arguments.upper()
         else:
             player.error('{!r} is not a card in the deck.'.format(arguments))
             return True
+        # Check for valid timing.
         if self.phase != 'trick':
             player.error('This is not the right time to play cards.')
             return True
+        # Check for possession of the card.
         elif card_text not in hand:
             player.error('You do not have the {} to play.'.format(card_text))
             return True
         if self.trick:
+            # Check that the card follows suit, or that the player is void in that suit.
             card = hand.cards[hand.cards.index(card_text)]
             trick_suit = self.trick.cards[0].suit
             if card.suit != trick_suit and filter(lambda card: card.suit == trick_suit, hand):
@@ -175,9 +205,12 @@ class Hearts(game.Game):
 
     def game_over(self):
         """Determine if the game is over. (bool)"""
+        # Check for someone breaking the "winning" score.
         if max(self.scores.values()) > self.win:
+            # Get the scores of interest.
             human_score = self.scores[self.human.name]
             winning_score = min(self.scores.values())
+            # Calculate the humans win/loss/draw.
             for name, score in self.scores.items():
                 if score > human_score:
                     self.win_loss_draw[0] += 1
@@ -185,8 +218,10 @@ class Hearts(game.Game):
                     self.win_loss_draw[1] += 1
                 elif name != human_score:
                     self.win_loss_draw[2] += 1
+                # Tell the human who won.
                 if score == winning_score:
                     self.human.tell('{} wins with {} points.'.format(name, score))
+            # Set the number turns to the number of tricks.
             self.turns = self.tricks
             return True
         else:
@@ -194,6 +229,7 @@ class Hearts(game.Game):
 
     def handle_options(self):
         """Handle the option settings for this game. (None)"""
+        # Set the
         self.win = 100
         self.players = [self.human]
         for bot in range(3):
@@ -207,44 +243,71 @@ class Hearts(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
+        # Handle passing.
         if self.phase == 'pass':
+            # Get the cards to pass.
             player.tell('\nYour hand is: {}.'.format(self.hands[player.name]))
             move = player.ask('\nWhich three cards do you wish to pass? ')
             cards = self.card_re.findall(move)
+            # If the correct number of cards are found, pass them.
             if len(cards) == 3:
                 #print('{} passes.'.format(player))
+                # Get the actual card objects.
                 cards = [card.strip().upper() for card in cards]
                 hand = self.hands[player.name]
+                # Make sure all of the cards are in their hand.
                 if all(card in hand for card in cards):
+                    # Shift the cards to their passing stack.
                     for card in cards:
                         hand.shift(card, self.passes[player.name])
+                    # If everyone has set up a passing stack, actually pass the cards.
                     if all(self.passes.values()):
                         #print('passing cards...')
                         #print([len(hand) for hand in self.hands.values()])
+                        # Pass the cards.
                         for pass_from, pass_to in zip(self.players[1:] + self.players[:1], self.players):
                             #print('passing from {} to {}'.format(pass_from, pass_to))
                             self.hands[pass_to.name].cards.extend(self.passes[pass_from.name].cards)
                             self.passes[pass_from.name].cards = []
                         #print([len(hand) for hand in self.hands.values()])
+                        # Set up the first trick (eldest hand/next dealer).
                         self.phase = 'trick'
                         self.player_index = self.players.index(self.dealer) - 1
+                else:
+                    # Warn if cards not in hand.
+                    player.error('You do not have all of those cards.')
             else:
+                # If incorrect number of cards, try to run a command.
                 return self.handle_cmd(move)
+        # Handle playing tricks
         elif self.phase == 'trick':
+            # Display the game status.
             if self.trick:
-                player.tell('\nThe trick to you is: {}.'.format(self.trick))
+                player.tell('The trick to you is: {}.'.format(self.trick))
             else:
-                player.tell('\nYou lead the trick.')
+                self.human.tell('')  # Make sure tricks are blocked out in the ouput.
+                player.tell('You lead the trick.')
             player.tell('Your hand is: {}.'.format(self.hands[player.name]))
-            move = player.ask('\nWhat is your play? ')
+            move = player.ask('What is your play? ')
             if self.card_re.match(move):
+                # Handle card text as plays.
                 go = self.do_play(move)
+                # Check for the trick being finished.
                 if len(self.trick) == len(self.players):
                     self.tricks += 1
                     self.trick_winner()
                 return go
             else:
+                # Handle other text as commands.
                 return self.handle_cmd(move)
+
+    def set_options(self):
+        """Set the possible options for the game. (None)"""
+        # pass options
+        self.option_set.add_option('pass', ['p'], default = 'right',
+            valid = ('r', 'right', 'l', 'left', 'rl', 'right-left', 'lr', 'left-right', 'lran', 'rot-left',
+            'rl', 'central', 'c', 'dealer', 'd', 'not', 'n'),
+            question = 'How should cards be passed? ')
 
     def score_round(self):
         """Score one deck's worth of tricks. (None)"""
@@ -321,13 +384,17 @@ class Hearts(game.Game):
 
     def set_up(self):
         """Set up the game. (None)"""
+        # Set up the deck.
         self.deck = cards.Deck(ace_high = True)
+        # Set up hands, including pseudo-hands for holding various sets of cards.
         self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
         self.passes = {player.name: cards.Hand(self.deck) for player in self.players}
         self.taken = {player.name: cards.Hand(self.deck) for player in self.players}
         self.trick = cards.Hand(self.deck)
+        # Handle the initial deal
         self.set_dealer()
         self.deal()
+        # Set up the tracking variables.
         self.phase = 'pass'
         self.tricks = 0
 
