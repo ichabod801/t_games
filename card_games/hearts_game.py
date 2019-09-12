@@ -60,9 +60,13 @@ class HeartBot(player.Bot):
         """Determine which cards to pass. (list of card.Card)"""
         # Get rid of high spades, high hearts, and high other cards, in that order
         to_pass = [card for card in self.hand if card in ('KS', 'AS')]
-        to_pass.extend(sorted([card for card in self.hand if card.suit == 'H'], reverse = True))
+        hearts = [card for card in self.hand if card.suit == 'H']
+        hearts.sort(key = lambda card: card.rank_num, reverse = True)
+        to_pass.extend(hearts)
         if len(to_pass) < 3:
-            to_pass.extend(sorted([card for card in self.hand if card not in to_pass], reverse = True))
+            other = [card for card in self.hand if card not in to_pass]
+            other.sort(key = lambda card: card.rank_num, reverse = True)
+            to_pass.extend(other)
         return to_pass[:3]
 
     def play(self):
@@ -71,22 +75,23 @@ class HeartBot(player.Bot):
             trick_starter = self.game.trick.cards[0]
             playable = [card for card in self.hand if card.suit == trick_starter.suit]
             if playable:
-                playable.sort()
-                losers = [card for card in playable if card < trick_starter]
+                playable.sort(key = lambda card: card.rank_num)
+                losers = [card for card in playable if card.rank_num < trick_starter.rank_num]
                 if losers:
                     return losers[-1]
                 else:
-                    return playable[-1]
+                    return playable[0]
             else:
                 if 'QS' in self.hand:
                     return 'QS'
-                hearts = sorted([card for card in self.hand if card.suit == 'H'])
+                hearts = [card for card in self.hand if card.suit == 'H']
+                hearts.sort(key = lambda card: card.rank_num)
                 if hearts:
                     return hearts[-1]
                 else:
-                    return sorted(self.hand.cards)[-1]
+                    return sorted(self.hand.cards, key = lambda card: card.rank_num)[-1]
         else:
-            self.hand.cards.sort()
+            self.hand.cards.sort(key = lambda card: card.rank_num)
             return self.hand.cards[0]
 
     def set_up(self):
@@ -268,7 +273,7 @@ class Hearts(game.Game):
             score_text = '{}{}, for {} points this round.'.format(score_text, lady_text, player_points) # !! plural points
             self.human.tell(score_text)
             # Inform and record any sucessful shooter.
-            if round_points == self.max_score:
+            if player_points == self.max_score:
                 self.human.tell('{} shot the moon!'.format(player.name))
                 shooter = player.name
         # Adjust the round points if anyone shot the moon.
@@ -277,7 +282,7 @@ class Hearts(game.Game):
                 if player == shooter:
                     round_points[player] = 0
                 else:
-                    round_points[player] = self.max_points
+                    round_points[player] = self.max_score
         # Adjust and display the overall points.
         self.human.tell('\nOverall Scores:')
         for player in self.players:
