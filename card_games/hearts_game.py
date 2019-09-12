@@ -3,12 +3,6 @@ hearts_game.py
 
 A game of Hearts.
 
-Problems:
-* Ace is low.
-* Bots playing like idiots
-* Sometimes players run out of cards
-* Eldest hand not always picked correctly (2nd round?)
-
 Classes:
 HeartBot: A simple bot for Hearts. (player.Bot)
 Hearts: A game of Hearts. (game.Game)
@@ -193,6 +187,7 @@ class Hearts(game.Game):
                     self.win_loss_draw[2] += 1
                 if score == winning_score:
                     self.human.tell('{} wins with {} points.'.format(name, score))
+            self.turns = self.tricks
             return True
         else:
             return False
@@ -245,6 +240,7 @@ class Hearts(game.Game):
             if self.card_re.match(move):
                 go = self.do_play(move)
                 if len(self.trick) == len(self.players):
+                    self.tricks += 1
                     self.trick_winner()
                 return go
             else:
@@ -333,6 +329,7 @@ class Hearts(game.Game):
         self.set_dealer()
         self.deal()
         self.phase = 'pass'
+        self.tricks = 0
 
     def trick_winner(self):
         """Determine who won the trick. (None)"""
