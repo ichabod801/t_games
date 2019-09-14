@@ -178,7 +178,7 @@ class Card(object):
         wrap_ranks: A flag for K-A-2 wrapping. (bool)
         """
         # Do the standard caculation
-        diff = self.rank_num - self.rank_num
+        diff = self.rank_num - other.rank_num
         # Account for wrap ranks.
         if wrap_ranks and diff < 0:
             diff += len(self.ranks) - 1
@@ -193,7 +193,7 @@ class Card(object):
         wrap_ranks: A flag for K-A-2 wrapping. (bool)
         """
         # Do the standard caculation
-        diff = self.rank_num - self.rank_num
+        diff = other.rank_num - self.rank_num
         # Account for wrap ranks.
         if wrap_ranks and diff < 0:
             diff += len(self.ranks) - 1
