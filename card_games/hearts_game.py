@@ -9,6 +9,7 @@ Hearts: A game of Hearts. (game.Game)
 """
 
 
+import itertools
 import re
 
 from .. import cards
@@ -79,6 +80,7 @@ class HeartBot(player.Bot):
                 playable.sort(key = lambda card: card.rank_num)
                 losers = [card for card in playable if card.rank_num < trick_starter.rank_num]
                 # Play the highest possible loser, or the lowest possible card in hopes of losing.
+                # !! needs to avoid playing QS
                 if losers:
                     card = losers[-1]
                 else:
@@ -263,6 +265,7 @@ class Hearts(game.Game):
 
     def handle_options(self):
         """Handle the option settings for this game. (None)"""
+        super(Hearts, self).handle_options()
         # Handle the player options.
         self.players = [self.human]
         for bot in range(3):
@@ -280,7 +283,7 @@ class Hearts(game.Game):
         if self.pass_dir == 'dealer':
             self.pass_dir = self.dealers_choice()
         else:
-            self.pass_dir = itertools.chain(self.pass_dirs[self.pass_dir])
+            self.pass_dir = itertools.cycle(self.pass_dirs[self.pass_dir])
         # Handle the scoring options
         self.max_score = 26
         # Handle the end of game options.
@@ -313,7 +316,7 @@ class Hearts(game.Game):
                 center.extend(self.passes[player.name].cards)
                 self.passes[pass_from.name].cards = []
             random.shuffle(center)
-            for player in itertools.chain(self.players):
+            for player in itertools.cycle(self.players):
                 self.hands[player.name].append(center.pop())
                 if not center:
                     break
