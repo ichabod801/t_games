@@ -50,7 +50,28 @@ class HeartBot(player.Bot):
         elif prompt.startswith('What is'):
             card = str(self.play())
             return card
+        # Handle dealer's choice of pass direction.
+        elif prompt.startswith('What direction'):
+            return self.pass_direction()
         # Handle everything else.
+        else:
+            return super(HeartBot, self).ask(prompt)
+
+    def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
+        """
+        Get an integer response from the human. (int)
+
+        Parameters:
+        prompt: The question asking for the interger. (str)
+        low: The lowest acceptable value for the integer. (int or None)
+        high: The highest acceptable value for the integer. (int or None)
+        valid: The valid values for the integer. (container of int)
+        default: The default choice. (int or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        if prompt.startswith('How many cards'):
+            self.hand = self.game.hands[self.name]  # This may be asked during game setup, before bot setup.
+            return self.pass_count(low, high)
         else:
             return super(HeartBot, self).ask(prompt)
 
@@ -63,11 +84,27 @@ class HeartBot(player.Bot):
         hearts.sort(key = lambda card: card.rank_num, reverse = True)
         to_pass.extend(hearts)
         # If that's not enough, get rid of other high cards.
-        if len(to_pass) < 3:
+        if len(to_pass) < self.game.num_pass:
             other = [card for card in self.hand if card not in to_pass]
             other.sort(key = lambda card: card.rank_num, reverse = True)
             to_pass.extend(other)
-        return to_pass[:3]
+        return to_pass[:self.game.num_pass]
+
+    def pass_count(self, low, high):
+        """
+        Determine how many cards to pass with dealer's choice. (int)
+
+        Parameters:
+        low: The lowest acceptable value for the integer. (int or None)
+        high: The highest acceptable value for the integer. (int or None)
+        """
+        high_hearts = len([card for card in self.hand.cards if card.suit == 'H' and card.rank_num > 10])
+        high_spades = len([card for card in self.hand.cards if card.suit == 'S' and card.rank_num > 11])
+        return max(low, min(high, high_hearts + high_spades))
+
+    def pass_direction(self):
+        """Determine which direction to pass cards with dealer's choice. (str)"""
+        return random.choice(('left', 'right', 'across'))
 
     def play(self):
         """Play a card to start or add to a trick. (card.Card)"""
@@ -181,14 +218,15 @@ class Hearts(game.Game):
     def dealers_choice(self):
         """Generator for dealer's choice of passing. (str)"""
         # Set the valid choices.
-        valid = ('left', 'right', 'not', 'center', 'scatter', 'across')
+        valid_dirs = ('left', 'right', 'not', 'center', 'scatter', 'across')
         if len(self.players) not in (4, 6):
-            valid = valid[:-1]
-        valid_text = 'Please choose {}.'.format(utility.oxford(valid, 'or'))
+            valid_dirs = valid[:-1]
+        valid_text = 'Please choose {}.'.format(utility.oxford(valid_dirs, 'or'))
         # Generate the direction and the pass count.
         while True:
             # Get the dealer for this deal (self.dealer is dealer for next deal at this point)
             dealer = self.players[self.players.index(self.dealer) - 1]
+            dealer.tell('\nYour hand is: {}.'.format(self.hands[dealer.name]))
             # Get a valid direction.
             while True:
                 pass_dir = dealer.ask('What direction shoud cards be passed? ')
@@ -332,10 +370,11 @@ class Hearts(game.Game):
                 pass_text = utility.oxford([other.name for other in self.players if other != player], 'or')
             else:
                 pass_text = self.pass_to[player.name]
-            move = player.ask('\nWhich three cards do you wish to pass to {}? '.format(pass_text))
+            query = '\nWhich {} cards do you wish to pass to {}? '
+            move = player.ask(query.format(utility.number_word(self.num_pass), pass_text))
             cards = self.card_re.findall(move)
             # If the correct number of cards are found, pass them.
-            if len(cards) == 3:
+            if len(cards) == self.num_pass:
                 #print('{} passes.'.format(player))
                 # Get the actual card objects.
                 cards = [card.strip().upper() for card in cards]
