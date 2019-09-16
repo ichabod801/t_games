@@ -291,30 +291,12 @@ class Hearts(game.Game):
 
     def pass_cards(self):
         """Handle the actual passing of the cards between players. (None)"""
-        # self.this_pass is set earlier, so dealer's choice can get the number of cards to pass.
-        # Check for not passing.
-        if self.this_pass == 'not':
-            if self.not_warning:
-                self.human.tell('There is no passing this round.')
-            return None
-        # Get the pass-to list.
-        if self.this_pass == 'left':
-            pass_to = self.players[1:] + self.players[:1]
-        elif self.this_pass == 'right':
-            pass_to = self.players[-1:] + self.players[:-1]
-        elif self.this_pass == 'across':
-            offset = len(self.players) // 2
-            pass_to = self.players[offset:] + self.players[:offset]
-        elif self.this_pass.startswith('left-'):
-            offset = int(this_pass.split('-')[1])
-            pass_to = self.players[offset:] + self.players[:offset]
-        # Pass the cards.
         # Handle passing to the center.
         if self.this_pass == 'center':
             center = []
             for player in self.players:
                 center.extend(self.passes[player.name].cards)
-                self.passes[pass_from.name].cards = []
+                self.passes[player.name].cards = []
             random.shuffle(center)
             for player in itertools.cycle(self.players):
                 self.hands[player.name].append(center.pop())
@@ -328,9 +310,10 @@ class Hearts(game.Game):
                         self.hands[pass_to.name].cards.append(self.passes[pass_from.name].pop)
         # Handle passing from player to player.
         else:
-            for pass_from, pass_to in zip(self.players, pass_to):
+            for pass_from in self.players:
+                pass_to = self.pass_to[pass_from.name]
                 #print('passing from {} to {}'.format(pass_from, pass_to))
-                self.hands[pass_to.name].cards.extend(self.passes[pass_from.name].cards)
+                self.hands[pass_to].cards.extend(self.passes[pass_from.name].cards)
                 self.passes[pass_from.name].cards = []
 
     def player_action(self, player):
@@ -344,7 +327,11 @@ class Hearts(game.Game):
         if self.phase == 'pass':
             # Get the cards to pass.
             player.tell('\nYour hand is: {}.'.format(self.hands[player.name]))
-            move = player.ask('\nWhich three cards do you wish to pass? ')
+            if self.this_pass == 'scatter':
+                pass_text = utility.oxford([other.name for other in self.players if other != player], 'or')
+            else:
+                pass_text = self.pass_to[player.name]
+            move = player.ask('\nWhich three cards do you wish to pass to {}? '.format(pass_text))
             cards = self.card_re.findall(move)
             # If the correct number of cards are found, pass them.
             if len(cards) == 3:
@@ -389,17 +376,6 @@ class Hearts(game.Game):
             else:
                 # Handle other text as commands.
                 return self.handle_cmd(move)
-
-    def set_options(self):
-        """Set the possible options for the game. (None)"""
-        # pass options
-        # !! I don't have scatter
-        self.option_set.add_option('num-pass', ['np'], int, 0, valid = range(5),
-            question = 'How many cards should be passed (return for 3, 2 with 5+ players)? ')
-        self.option_set.add_option('pass-dir', ['pd'], default = 'right',
-            valid = ('r', 'right', 'l', 'left', 'rl', 'right-left', 'lr', 'left-right', 'lran', 'rot-left',
-            'rl', 'central', 'c', 'dealer', 'd', 'not', 'n'),
-            question = 'In what direction should cards be passed (return for right)? ')
 
     def score_round(self):
         """Score one deck's worth of tricks. (None)"""
@@ -474,6 +450,47 @@ class Hearts(game.Game):
                     max_players = []
                     player_index = 0
 
+    def set_options(self):
+        """Set the possible options for the game. (None)"""
+        # pass options
+        # !! I don't have scatter
+        self.option_set.add_option('num-pass', ['np'], int, 0, valid = range(5),
+            question = 'How many cards should be passed (return for 3, 2 with 5+ players)? ')
+        self.option_set.add_option('pass-dir', ['pd'], default = 'right',
+            valid = ('r', 'right', 'l', 'left', 'rl', 'right-left', 'lr', 'left-right', 'lran', 'rot-left',
+            'rl', 'central', 'c', 'dealer', 'd', 'not', 'n'),
+            question = 'In what direction should cards be passed (return for right)? ')
+
+    def set_pass(self):
+        """Set up the passing of cards for this hand. (None)"""
+        # Set the game tracking to passing.
+        self.phase = 'pass'
+        self.this_pass = next(self.pass_dir)
+        # Check for not passing.
+        if self.this_pass == 'not':
+            if self.not_warning:
+                self.human.tell('There is no passing this round.')
+            self.phase = 'trick'
+            return None
+        # Translate the pass direction into passees.
+        if self.this_pass == 'left':
+            pass_to = self.players[1:] + self.players[:1]
+        elif self.this_pass == 'right':
+            pass_to = self.players[-1:] + self.players[:-1]
+        elif self.this_pass == 'across':
+            offset = len(self.players) // 2
+            pass_to = self.players[offset:] + self.players[:offset]
+        elif self.this_pass.startswith('left-'):
+            offset = int(this_pass.split('-')[1])
+            pass_to = self.players[offset:] + self.players[:offset]
+        # Set up the passing dictionary.
+        if self.this_pass == 'center':
+            self.pass_to = {pass_from.name: 'the center' for pass_from in self.players}
+        elif self.this_pass = 'scatter':
+            self.pass_to = {pass_from.name: self.this_pass for pass_from in self.players}
+        else:
+            self.pass_to = {passer.name: passee.name for passer, passee in zip(self.players, pass_to)}
+
     def set_up(self):
         """Set up the game. (None)"""
         # Set up the deck.
@@ -487,8 +504,7 @@ class Hearts(game.Game):
         self.set_dealer()
         self.deal()
         # Set up the tracking variables.
-        self.phase = 'pass'
-        self.this_pass = next(self.pass_dir)
+        self.set_pass()
         self.tricks = 0
 
     def trick_winner(self):
@@ -512,7 +528,6 @@ class Hearts(game.Game):
                 for hand in self.taken.values():
                     hand.discard()
                 self.deal()
-                self.phase = 'pass'
-                self.this_pass = next(self.pass_dir)
+                self.set_pass()
         else:
             self.player_index = winner_index - 1
