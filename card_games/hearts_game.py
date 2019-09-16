@@ -156,7 +156,7 @@ class Hearts(game.Game):
     card_re = re.compile(r'\s*[x123456789tjqka][cdhs]\s*', re.IGNORECASE)
     categories = ['Card Games']
     name = 'Hearts'
-    pass_aliases = {'l': 'left', 'r': 'right', 'rl': 'right-left', 'lr': 'left-right', 'rl': 'rot-left',
+    pass_aliases = {'l': 'left', 'r': 'right', 'rl': 'right-left', 'lr': 'left-right', '@': 'rot-left',
         'c': 'central', 'd': 'dealer', 'n': 'not', 's': 'scatter'}
     pass_dirs = {'left': ('left',), 'right': ('right',), 'left-right': ('left', 'right'),
         'right-left': ('right', 'left'), 'rot-left': (), 'central': ('center',), 'dealer': (),
@@ -279,8 +279,8 @@ class Hearts(game.Game):
             self.num_pass = len(self.players) - 1
         if self.pass_dir == 'rot-left':
             dirs = ['left-{}'.format(player_index) for player_index in range(1, len(self.players) + 1)]
-            self.pass_dir = tuple(['left'] + dirs[1:-1] + ['not'])
-        if self.pass_dir == 'dealer':
+            self.pass_dir = itertools.cycle(tuple(['left'] + dirs[1:-1] + ['not']))
+        elif self.pass_dir == 'dealer':
             self.pass_dir = self.dealers_choice()
         else:
             self.pass_dir = itertools.cycle(self.pass_dirs[self.pass_dir])
@@ -458,7 +458,7 @@ class Hearts(game.Game):
             question = 'How many cards should be passed (return for 3, 2 with 5+ players)? ')
         self.option_set.add_option('pass-dir', ['pd'], default = 'right',
             valid = ('r', 'right', 'l', 'left', 'rl', 'right-left', 'lr', 'left-right', 'lran', 'rot-left',
-            'rl', 'central', 'c', 'dealer', 'd', 'not', 'n'),
+            '@', 'central', 'c', 'dealer', 'd', 'not', 'n'),
             question = 'In what direction should cards be passed (return for right)? ')
 
     def set_pass(self):
@@ -469,7 +469,7 @@ class Hearts(game.Game):
         # Check for not passing.
         if self.this_pass == 'not':
             if self.not_warning:
-                self.human.tell('There is no passing this round.')
+                self.human.tell('\nThere is no passing this round.')
             self.phase = 'trick'
             return None
         # Translate the pass direction into passees.
@@ -481,12 +481,12 @@ class Hearts(game.Game):
             offset = len(self.players) // 2
             pass_to = self.players[offset:] + self.players[:offset]
         elif self.this_pass.startswith('left-'):
-            offset = int(this_pass.split('-')[1])
+            offset = int(self.this_pass.split('-')[1])
             pass_to = self.players[offset:] + self.players[:offset]
         # Set up the passing dictionary.
         if self.this_pass == 'center':
             self.pass_to = {pass_from.name: 'the center' for pass_from in self.players}
-        elif self.this_pass = 'scatter':
+        elif self.this_pass == 'scatter':
             self.pass_to = {pass_from.name: self.this_pass for pass_from in self.players}
         else:
             self.pass_to = {passer.name: passee.name for passer, passee in zip(self.players, pass_to)}
