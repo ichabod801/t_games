@@ -10,6 +10,7 @@ Hearts: A game of Hearts. (game.Game)
 
 
 import itertools
+import random
 import re
 
 from .. import cards
@@ -299,7 +300,7 @@ class Hearts(game.Game):
                 self.passes[player.name].cards = []
             random.shuffle(center)
             for player in itertools.cycle(self.players):
-                self.hands[player.name].append(center.pop())
+                self.hands[player.name].cards.append(center.pop())
                 if not center:
                     break
         # Handle scatter passing.
