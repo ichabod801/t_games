@@ -44,7 +44,7 @@ class HeartBot(player.Bot):
         prompt: The question to ask the bot. (str)
         """
         # Handle passing.
-        if prompt.startswith('\nWhich three'):
+        if 'want to pass' in prompt:
             return ' '.join(str(card) for card in self.pass_cards())
         # Handle passing cards.
         elif prompt.startswith('What is'):
@@ -370,8 +370,8 @@ class Hearts(game.Game):
                 pass_text = utility.oxford([other.name for other in self.players if other != player], 'or')
             else:
                 pass_text = self.pass_to[player.name]
-            query = '\nWhich {} cards do you wish to pass to {}? '
-            move = player.ask(query.format(utility.number_word(self.num_pass), pass_text))
+            query = '\nWhich {} do you want to pass to {}? '
+            move = player.ask(query.format(utility.number_plural(self.num_pass, 'card'), pass_text))
             cards = self.card_re.findall(move)
             # If the correct number of cards are found, pass them.
             if len(cards) == self.num_pass:
