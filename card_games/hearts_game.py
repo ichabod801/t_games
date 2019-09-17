@@ -355,10 +355,10 @@ class Hearts(game.Game):
                 pass_to = self.pass_to[pass_from.name]
                 #print('passing from {} to {}'.format(pass_from, pass_to))
                 self.hands[pass_to].cards.extend(self.passes[pass_from.name].cards)
-                if pass_to == self.human.name:
-                    pass_text = utility.oxford(self.passes[pass_from.name].cards, word_format = 'the {}')
-                    self.human.tell('You were passed {}.'.format(pass_text))
                 self.passes[pass_from.name].cards = []
+        human_got = self.hands[self.human.name].cards[-self.num_pass:]
+        pass_text = utility.oxford(human_got, word_format = 'the {}')
+        self.human.tell('You were passed {}.'.format(pass_text))
         # Sort the hands.
         for hand in self.hands.values():
             hand.cards.sort(key = lambda card: (card.suit, card.rank_num))
