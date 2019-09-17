@@ -346,7 +346,7 @@ class Hearts(game.Game):
             for pass_from in self.players:
                 for pass_to in self.players:
                     if pass_from != pass_to:
-                        self.hands[pass_to.name].cards.append(self.passes[pass_from.name].pop)
+                        self.hands[pass_to.name].cards.append(self.passes[pass_from.name].cards.pop(0))
         # Handle passing from player to player.
         else:
             for pass_from in self.players:
@@ -367,7 +367,7 @@ class Hearts(game.Game):
             # Get the cards to pass.
             player.tell('\nYour hand is: {}.'.format(self.hands[player.name]))
             if self.this_pass == 'scatter':
-                pass_text = utility.oxford([other.name for other in self.players if other != player], 'or')
+                pass_text = utility.oxford([other.name for other in self.players if other != player])
             else:
                 pass_text = self.pass_to[player.name]
             query = '\nWhich {} do you want to pass to {}? '
@@ -498,7 +498,7 @@ class Hearts(game.Game):
             question = 'How many cards should be passed (return for 3, 2 with 5+ players)? ')
         self.option_set.add_option('pass-dir', ['pd'], default = 'right',
             valid = ('r', 'right', 'l', 'left', 'rl', 'right-left', 'lr', 'left-right', 'lran', 'rot-left',
-            '@', 'central', 'c', 'dealer', 'd', 'not', 'n'),
+            '@', 'central', 'c', 'dealer', 'd', 'not', 'n', 'scatter', 's'),
             question = 'In what direction should cards be passed (return for right)? ')
 
     def set_pass(self):
