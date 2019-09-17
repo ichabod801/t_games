@@ -210,6 +210,8 @@ class Hearts(game.Game):
             self.hands[self.players[player_index].name].draw()
             if self.players[player_index] == self.dealer and len(self.deck.cards) < len(self.players):
                 break
+        for hand in self.hands.values():
+            hand.cards.sort(key = lambda card: (card.suit, card.rank_num))
         self.human.tell('{} deals.'.format(self.players[player_index]))
         # Eldest hand starts, and is the next dealer.
         self.dealer = self.players[(player_index + 1) % len(self.players)]
@@ -353,7 +355,13 @@ class Hearts(game.Game):
                 pass_to = self.pass_to[pass_from.name]
                 #print('passing from {} to {}'.format(pass_from, pass_to))
                 self.hands[pass_to].cards.extend(self.passes[pass_from.name].cards)
+                if pass_to == self.human.name:
+                    pass_text = utility.oxford(self.passes[pass_from.name].cards, word_format = 'the {}')
+                    self.human.tell('You were passed {}.'.format(pass_text))
                 self.passes[pass_from.name].cards = []
+        # Sort the hands.
+        for hand in self.hands.values():
+            hand.cards.sort(key = lambda card: (card.suit, card.rank_num))
 
     def player_action(self, player):
         """
