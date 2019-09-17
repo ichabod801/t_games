@@ -3,6 +3,10 @@ hearts_game.py
 
 A game of Hearts.
 
+Constants:
+CREDITS: The credits for Hearts. (str)
+RULES: The rules to Hearts. (str)
+
 Classes:
 HeartBot: A simple bot for Hearts. (player.Bot)
 Hearts: A game of Hearts. (game.Game)
@@ -69,10 +73,13 @@ class HeartBot(player.Bot):
 
     Methods:
     pass_cards: Determine which cards to pass. (list of cards.Card)
+    pass_count: Determine how many cards to pass with dealer's choice. (int)
+    pass_direction: Determine which direction to pass w/ dealer's choice. (str)
     play: Play a card to start or add to a trick. (card.Card)
 
     Overridden Methods:
     ask
+    ask_int
     set_up
     tell
     """
@@ -139,12 +146,14 @@ class HeartBot(player.Bot):
         low: The lowest acceptable value for the integer. (int or None)
         high: The highest acceptable value for the integer. (int or None)
         """
+        # Pass just enough to get rid of the nasty cards.
         high_hearts = len([card for card in self.hand.cards if card.suit == 'H' and card.rank_num > 10])
         high_spades = len([card for card in self.hand.cards if card.suit == 'S' and card.rank_num > 11])
         return max(low, min(high, high_hearts + high_spades))
 
     def pass_direction(self):
         """Determine which direction to pass cards with dealer's choice. (str)"""
+        # Who cares, pass randomly.
         return random.choice(('left', 'right', 'across'))
 
     def play(self):
@@ -216,12 +225,17 @@ class Hearts(game.Game):
 
     Class Attributes:
     card_re: A regular expression detecting cards. (re.SRE_Pattern)
+    pass_aliases: Aliases of pass-dir option settings. (dict of str: str)
+    pass_dirs: The directions to pass for pass-dire settings. (dict)
 
     Methods:
     deal: Deal the cards to the players. (None)
+    dealers_choice: Generator for dealer's choice of passing. (generator)
     do_play: Play a card, to either start or contribute to a trick. (bool)
+    pass_cards: Handle the actual passing of the cards between players. (None)
     score_round: Score one deck's worth of tricks. (None)
     set_dealer: Determine the first dealer for the game. (None)
+    set_pass: Set up the passing of cards for this hand. (None)
     trick_winner: Determine who won the trick. (None)
 
     Overridden Methods:
@@ -262,7 +276,7 @@ class Hearts(game.Game):
         #print('dealer set to {}.'.format(self.dealer))
 
     def dealers_choice(self):
-        """Generator for dealer's choice of passing. (str)"""
+        """Generator for dealer's choice of passing. (generator)"""
         # Set the valid choices.
         valid_dirs = ('left', 'right', 'not', 'center', 'scatter', 'across')
         if len(self.players) not in (4, 6):
@@ -414,6 +428,7 @@ class Hearts(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
+        # !! refactor before adding any code.
         # Handle passing.
         if self.phase == 'pass':
             # Get the cards to pass.
