@@ -49,6 +49,7 @@ The game ends when anyone's score goes over 100 points. Whoever has the least
 points at that time wins the game.
 
 Options:
+keep-spades: Players may not pass the Queen, King, or Ace of Spades.
 num-pass= (np=): The number of cards passed.
 pass-dir= (pd=): The direction in which cards are passed. Valid settings are:
     central (c): Everyone passes to the center. The cards are reshuffled and
@@ -128,7 +129,10 @@ class HeartBot(player.Bot):
     def pass_cards(self):
         """Determine which cards to pass. (list of card.Card)"""
         # Get rid of high spades.
-        to_pass = [card for card in self.hand if card in ('KS', 'AS')]
+        if self.game.keep_spades:
+            to_pass = []
+        else:
+            to_pass = [card for card in self.hand if card in ('QS', 'KS', 'AS')]
         # Get rid of high hearts
         hearts = [card for card in self.hand if card.suit == 'H']
         hearts.sort(key = lambda card: card.rank_num, reverse = True)
@@ -219,11 +223,15 @@ class Hearts(game.Game):
     dealer: The next player to deal cards. (player.Player)
     deck: The deck of cards used in the game. (cards.Deck)
     hands: The players' hands of cards. (dict of str: cards.Hand)
+    keep_spades: A flag preventing the passing of high spades. (bool)
+    num_pass: The number of cards each player passes. (int)
+    pass_dir: The direction(s) that cards are passed. (generator)
     passes: The cards passed by each player. (dict of str: cards.Hand)
     phase: Whether the players are passing cards or playing tricks. (str)
     taken: The cards from the tricks each player has taken. (dict)
     trick: The cards in the current trick. (cards.Hand)
     tricks: The number of trick played so far. (int)
+    this_pass: Then direction to pass cards for this hand. (str)
 
     Class Attributes:
     card_re: A regular expression detecting cards. (re.SRE_Pattern)
@@ -318,8 +326,18 @@ class Hearts(game.Game):
         #print('{} passes {} from {}.'.format(player, arguments, hand))
         # Get the actual card objects.
         cards = [card.strip().upper() for card in self.card_re.findall(arguments)]
-        # Make sure all of the cards are in their hand.
-        if all(card in hand for card in cards):
+        # Make sure all of the cards are in their hand and legal.
+        error = False
+        for card in cards:
+            if card not in hand:
+                player.error('You do not have the {}.'.format(card))
+                error = True
+            elif self.keep_spades and card in ('QS', 'KS', 'AS'):
+                player.error('You may not pass the {}.'.format(card))
+                error = True
+        if error:
+            return True
+        else:
             # Shift the cards to their passing stack.
             for card in cards:
                 hand.shift(card, self.passes[player.name])
@@ -328,11 +346,6 @@ class Hearts(game.Game):
                 self.pass_cards()
                 self.phase = 'trick'
                 self.player_index = self.players.index(self.dealer) - 1
-        else:
-            # Warn if cards not in hand.
-            player.error('You do not have all of those cards.')
-            return True
-        return False
 
     def do_play(self, arguments):
         """
@@ -572,6 +585,7 @@ class Hearts(game.Game):
     def set_options(self):
         """Set the possible options for the game. (None)"""
         # pass options
+        self.option_set.add_option('keep-spades', ['ks'])
         self.option_set.add_option('num-pass', ['np'], int, 0, valid = range(5),
             question = 'How many cards should be passed (return for 3, 2 with 5+ players)? ')
         self.option_set.add_option('pass-dir', ['pd'], default = 'right',
