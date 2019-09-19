@@ -40,7 +40,9 @@ trick and all of the cards.
 
 When all the cards are played the round is scored. Each heart won in a trick
 scores one point, and the Queen of Spades scores 13 points. Note that points
-are bad: you want to have a low score.
+are bad: you want to have a low score. If one player manages to get all of the
+hearts and the Queen of Spades, they shoot the Moon. Instead of getting 26
+points, they get no points and every other player gets 26 points.
 
 After scoring the round, the deal shifts to the left, and a new hand is dealt.
 The game ends when anyone's score goes over 100 points. Whoever has the least
@@ -231,6 +233,7 @@ class Hearts(game.Game):
     Methods:
     deal: Deal the cards to the players. (None)
     dealers_choice: Generator for dealer's choice of passing. (generator)
+    do_pass: Pass one or more cards to another player. (bool)
     do_play: Play a card, to either start or contribute to a trick. (bool)
     pass_cards: Handle the actual passing of the cards between players. (None)
     score_round: Score one deck's worth of tricks. (None)
@@ -304,6 +307,32 @@ class Hearts(game.Game):
                 self.num_pass = dealer.ask_int('How many cards should be passed? ', low = 1, high = 4)
             # Yield the direction.
             yield pass_dir
+
+    def do_pass(self, arguments):
+        """
+        Pass one or more cards to another player.
+        """
+        # Get the player and their hand.
+        player = self.players[self.player_index]
+        hand = self.hands[player.name]
+        #print('{} passes {} from {}.'.format(player, arguments, hand))
+        # Get the actual card objects.
+        cards = [card.strip().upper() for card in self.card_re.findall(arguments)]
+        # Make sure all of the cards are in their hand.
+        if all(card in hand for card in cards):
+            # Shift the cards to their passing stack.
+            for card in cards:
+                hand.shift(card, self.passes[player.name])
+            # If everyone has set up a passing stack, actually pass the cards.
+            if all(self.passes.values()):
+                self.pass_cards()
+                self.phase = 'trick'
+                self.player_index = self.players.index(self.dealer) - 1
+        else:
+            # Warn if cards not in hand.
+            player.error('You do not have all of those cards.')
+            return True
+        return False
 
     def do_play(self, arguments):
         """
@@ -428,7 +457,6 @@ class Hearts(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        # !! refactor before adding any code.
         # Handle passing.
         if self.phase == 'pass':
             # Get the cards to pass.
@@ -439,26 +467,9 @@ class Hearts(game.Game):
                 pass_text = self.pass_to[player.name]
             query = '\nWhich {} do you want to pass to {}? '
             move = player.ask(query.format(utility.number_plural(self.num_pass, 'card'), pass_text))
-            cards = self.card_re.findall(move)
             # If the correct number of cards are found, pass them.
-            if len(cards) == self.num_pass:
-                #print('{} passes.'.format(player))
-                # Get the actual card objects.
-                cards = [card.strip().upper() for card in cards]
-                hand = self.hands[player.name]
-                # Make sure all of the cards are in their hand.
-                if all(card in hand for card in cards):
-                    # Shift the cards to their passing stack.
-                    for card in cards:
-                        hand.shift(card, self.passes[player.name])
-                    # If everyone has set up a passing stack, actually pass the cards.
-                    if all(self.passes.values()):
-                        self.pass_cards()
-                        self.phase = 'trick'
-                        self.player_index = self.players.index(self.dealer) - 1
-                else:
-                    # Warn if cards not in hand.
-                    player.error('You do not have all of those cards.')
+            if len(self.card_re.findall(move)) == self.num_pass:
+                return self.do_pass(move)
             else:
                 # If incorrect number of cards, try to run a command.
                 return self.handle_cmd(move)
@@ -551,6 +562,7 @@ class Hearts(game.Game):
                     break
                 else:
                     # Redeal to any tied players.
+                    # !! Error with two aces, rank_num != ranks index.
                     self.human.tell("\nThere was a tie with two {}'s.".format(self.deck.ranks[max_rank]))
                     max_rank = -1
                     players = max_players
@@ -560,7 +572,6 @@ class Hearts(game.Game):
     def set_options(self):
         """Set the possible options for the game. (None)"""
         # pass options
-        # !! I don't have scatter
         self.option_set.add_option('num-pass', ['np'], int, 0, valid = range(5),
             question = 'How many cards should be passed (return for 3, 2 with 5+ players)? ')
         self.option_set.add_option('pass-dir', ['pd'], default = 'right',
