@@ -273,11 +273,10 @@ class Hearts(game.Game):
         """Deal the cards to the players. (None)"""
         # Deal the cards out equally, leaving any extras aside.
         self.deck.shuffle()
-        player_index = self.players.index(self.dealer)
-        while True:
-            player_index = (player_index + 1) % len(self.players)
-            self.hands[self.players[player_index].name].draw()
-            if self.players[player_index] == self.dealer and len(self.deck.cards) < len(self.players):
+        player_index = (self.players.index(self.dealer) + 1) % len(self.players)
+        for player in itertools.cycle(self.players[player_index:] + self.players[:player_index]):
+            self.hands[player.name].draw()
+            if player == self.dealer and len(self.deck.cards) < len(self.players):
                 break
         for hand in self.hands.values():
             hand.cards.sort(key = lambda card: (card.suit, card.rank_num))
