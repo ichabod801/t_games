@@ -49,6 +49,18 @@ The game ends when anyone's score goes over 100 points. Whoever has the least
 points at that time wins the game.
 
 Options:
+extras= (x+): How do deal with extra cards where there are not four players.
+    Valid settings are:
+    ditch (d): Ditch low cards from Clubs and Diamonds to even out hands.
+    first (f): The extra cards form a kitty that goes to the winner of the
+        first trick.
+    heart (h): The extra cards form a kitty that goes to the winner of the
+        first heart.
+    jokers (j): Jokers are added to the deck to even out the hands.
+jokers-clean (jc): Jokers have no suit. When leading, leading player chooses
+    the suit for the trick.
+jokers-follow (jf): Jokers may not lead tricks.
+joker-points (jp): Jokers score one point each.
 keep-spades: Players may not pass the Queen, King, or Ace of Spades.
 num-pass= (np=): The number of cards passed.
 pass-dir= (pd=): The direction in which cards are passed. Valid settings are:
@@ -222,7 +234,11 @@ class Hearts(game.Game):
     Attributes:
     dealer: The next player to deal cards. (player.Player)
     deck: The deck of cards used in the game. (cards.Deck)
+    extras: How to handle extra cards in the deck. (str)
     hands: The players' hands of cards. (dict of str: cards.Hand)
+    jokers_clean: A flag for jokers having no suit. (bool)
+    jokers_follow: A flag for jokers being unable to lead tricks. (bool)
+    joker_points: A flag for jokers being worth a point. (bool)
     keep_spades: A flag preventing the passing of high spades. (bool)
     num_pass: The number of cards each player passes. (int)
     pass_dir: The direction(s) that cards are passed. (generator)
@@ -408,8 +424,27 @@ class Hearts(game.Game):
         super(Hearts, self).handle_options()
         # Handle the player options.
         self.players = [self.human]
-        for bot in range(3):
+        for bot in range(2):
             self.players.append(HeartBot(taken_names = [player.name for player in self.players]))
+        # Set up the deck.
+        self.deck = cards.Deck(ace_high = True)
+        self.kitty = ''
+        # Handle the deal options.
+        if self.extras[0] == 'd':
+            ditch_stack = ['3D', '3C', '2D', '2C']
+            while len(self.deck.cards) % len(self.players):
+                self.deck.force(ditch_stack.pop())
+        elif self.extras[0] == 'f':
+            self.kitty = 'first'
+        elif self.extras[0] == 'h':
+            self.kitty = 'heart'
+        elif self.extras[0] == 'j':
+            if self.jokers_clean:
+                suits = itertools.cycle(('',))
+            else:
+                suits = itertools.cycle('CD')
+            while len(self.deck.cards) % len(self.players):
+                self.deck.cards.append(cards.Card('X', next(suits)))
         # Handle the passing options
         if not self.num_pass:
             self.num_pass = 3 if len(self.players) < 5 else 2
@@ -583,7 +618,15 @@ class Hearts(game.Game):
 
     def set_options(self):
         """Set the possible options for the game. (None)"""
-        # pass options
+        # Set the deal/card options.
+        self.option_set.add_option('extras', ['x'], default = 'ditch',
+            valid = ('d', 'ditch', 'f', 'first', 'h', 'heart', 'j', 'joker'),
+            question = 'How should extra cards be handled (return for ditch them)? ',
+            error_text = 'Please choose ditch, first, heart, or joker.')
+        self.option_set.add_option('jokers-clean', ['jc'])
+        self.option_set.add_option('jokers-follow', ['jf'])
+        self.option_set.add_option('joker-points', ['jp'])
+        # Set the pass options.
         self.option_set.add_option('keep-spades', ['ks'])
         self.option_set.add_option('num-pass', ['np'], int, 0, valid = range(5),
             question = 'How many cards should be passed (return for 3, 2 with 5+ players)? ')
@@ -624,8 +667,6 @@ class Hearts(game.Game):
 
     def set_up(self):
         """Set up the game. (None)"""
-        # Set up the deck.
-        self.deck = cards.Deck(ace_high = True)
         # Set up hands, including pseudo-hands for holding various sets of cards.
         self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
         self.passes = {player.name: cards.Hand(self.deck) for player in self.players}
