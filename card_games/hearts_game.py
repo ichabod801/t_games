@@ -49,6 +49,7 @@ The game ends when anyone's score goes over 100 points. Whoever has the least
 points at that time wins the game.
 
 Options:
+easy= (e=): The number of easy bots to play against.
 extras= (x+): How do deal with extra cards where there are not four players.
     Valid settings are:
     ditch (d): Ditch low cards from Clubs and Diamonds to even out hands.
@@ -237,6 +238,7 @@ class Hearts(game.Game):
     Attributes:
     dealer: The next player to deal cards. (player.Player)
     deck: The deck of cards used in the game. (cards.Deck)
+    ease: The number of easy bots in the game. (int)
     extras: How to handle extra cards in the deck. (str)
     hands: The players' hands of cards. (dict of str: cards.Hand)
     jokers_clean: A flag for jokers having no suit. (bool)
@@ -431,7 +433,9 @@ class Hearts(game.Game):
         super(Hearts, self).handle_options()
         # Handle the player options.
         self.players = [self.human]
-        for bot in range(2):
+        if self.easy > 5:
+            self.option_set.errors.append('There can be at most five bots in the game.')
+        for bot in range(self.easy):
             self.players.append(HeartBot(taken_names = [player.name for player in self.players]))
         # Set up the deck.
         self.deck = cards.Deck(ace_high = True)
@@ -633,6 +637,9 @@ class Hearts(game.Game):
 
     def set_options(self):
         """Set the possible options for the game. (None)"""
+        # Set the bot options.
+        self.option_set.add_option('easy', ['e'], int, 3, valid = range(5),
+            question = 'How many easy bots do you want to play against (return for 3)? ')
         # Set the deal/card options.
         self.option_set.add_option('extras', ['x'], default = 'ditch',
             valid = ('d', 'ditch', 'f', 'first', 'h', 'heart', 'j', 'joker'),
