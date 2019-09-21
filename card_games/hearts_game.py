@@ -307,9 +307,9 @@ class Hearts(game.Game):
                 break
         for hand in self.hands.values():
             hand.cards.sort(key = lambda card: (card.suit, card.rank_num))
-        self.human.tell('{} deals.'.format(self.players[player_index]))
+        self.human.tell('{} deals.'.format(self.dealer))
         # Eldest hand starts, and is the next dealer.
-        self.dealer = self.players[(player_index + 1) % len(self.players)]
+        self.dealer = self.players[player_index]
         self.hearts_broken = not self.break_hearts
         #print('dealer set to {}.'.format(self.dealer))
 
@@ -666,7 +666,7 @@ class Hearts(game.Game):
                     if max_rank == 14:
                         # Correct rank index for aces.
                         max_rank = 2
-                    self.human.tell("\nThere was a tie with two {}'s.".format(self.deck.ranks[max_rank]))
+                    self.human.tell("\nThere was a tie of {}'s.".format(self.deck.ranks[max_rank]))
                     max_rank = -1
                     players = max_players
                     max_players = []
