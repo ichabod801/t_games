@@ -212,6 +212,10 @@ class HeartBot(player.Bot):
             while self.game.jokers_follow and card.rank == 'X':
                 play_index += 1
                 card = self.hand.cards[play_index]
+            # Don't lead with hearts if they're not broken.
+            while not self.game.hearts_broken and card.suit == 'H':
+                play_index += 1
+                card = self.hand.cards[play_index]
             self.game.human.tell('{} opens with the {}.'.format(self.name, card))
         return card
 
@@ -236,12 +240,13 @@ class Hearts(game.Game):
     A game of Hearts. (game.Game)
 
     Attributes:
+    break_hearts: A flag for hearts needing to be played before leading. (bool)
     dealer: The next player to deal cards. (player.Player)
     deck: The deck of cards used in the game. (cards.Deck)
     ease: The number of easy bots in the game. (int)
     extras: How to handle extra cards in the deck. (str)
     hands: The players' hands of cards. (dict of str: cards.Hand)
-    jokers_clean: A flag for jokers having no suit. (bool)
+    hearts_broken: A flag that hearts can lead. (bool)
     jokers_follow: A flag for jokers being unable to lead tricks. (bool)
     joker_points: A flag for jokers being worth a point. (bool)
     keep_spades: A flag preventing the passing of high spades. (bool)
@@ -305,6 +310,7 @@ class Hearts(game.Game):
         self.human.tell('{} deals.'.format(self.players[player_index]))
         # Eldest hand starts, and is the next dealer.
         self.dealer = self.players[(player_index + 1) % len(self.players)]
+        self.hearts_broken = not self.break_hearts
         #print('dealer set to {}.'.format(self.dealer))
 
     def dealers_choice(self):
@@ -397,18 +403,27 @@ class Hearts(game.Game):
         elif card_text not in hand:
             player.error('You do not have the {} to play.'.format(card_text))
             return True
-        card = hand.cards[hand.cards.index(card_text)]
+        to_play = hand.cards[hand.cards.index(card_text)]
         if self.trick:
             # Check that the card follows suit, or that the player is void in that suit.
             trick_suit = self.trick.cards[0].suit
-            if card.suit != trick_suit and list(filter(lambda card: card.suit == trick_suit, hand)):
+            if to_play.suit != trick_suit and list(filter(lambda card: card.suit == trick_suit, hand)):
                 player.error('You must play a card of the suit led.')
                 return True
-            hand.shift(card, self.trick)
+            hand.shift(to_play, self.trick)
         else:
-            # Check for and validate joker leads.
-            if card.rank == 'X' and self.jokers_follow:
+            # Get the player's playable cards.
+            playable = hand.cards[:]
+            if self.jokers_follow:
+                playable = [card for card in playable if card.rank != 'X']
+            if not self.hearts_broken:
+                playable = [card for card in playable if card.suit != 'H']
+            # Validate the card they are leading with.
+            if to_play.rank == 'X' and self.jokers_follow and playable:
                 player.error('You cannot lead with a joker.')
+                return True
+            if to_play.suit == 'H' and not self.hearts_broken and playable:
+                player.error('You cannot lead with a heart until they are broken.')
                 return True
             hand.shift(card_text, self.trick)
 
@@ -680,6 +695,7 @@ class Hearts(game.Game):
             question = 'In what direction should cards be passed (return for right)? ')
         # Set the play options.
         self.option_set.add_option('low-club', ['lc'])
+        self.option_set.add_option('break-hearts', ['bh'])
 
     def set_pass(self):
         """Set up the passing of cards for this hand. (None)"""
@@ -749,6 +765,10 @@ class Hearts(game.Game):
                 if winner != self.human:
                     self.human.tell('{} won the kitty.')
                 self.deck.cards = []
+        # Check for breaking hearts.
+        if not self.hearts_broken:
+            if [card for card in self.trick if card.suit == 'H']:
+                self.hearts_broken = True
         # Clear the trick.
         self.trick.cards = []
         # Check for the end of the round.
