@@ -648,7 +648,9 @@ class Hearts(game.Game):
                     break
                 else:
                     # Redeal to any tied players.
-                    # !! Error with two aces, rank_num != ranks index.
+                    if max_rank == 14:
+                        # Correct rank index for aces.
+                        max_rank = 2
                     self.human.tell("\nThere was a tie with two {}'s.".format(self.deck.ranks[max_rank]))
                     max_rank = -1
                     players = max_players
