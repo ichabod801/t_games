@@ -57,8 +57,6 @@ extras= (x+): How do deal with extra cards where there are not four players.
     heart (h): The extra cards form a kitty that goes to the winner of the
         first heart.
     jokers (j): Jokers are added to the deck to even out the hands.
-jokers-clean (jc): Jokers have no suit. When leading, leading player chooses
-    the suit for the trick.
 jokers-follow (jf): Jokers may not lead tricks.
 joker-points (jp): Jokers score one point each.
 keep-spades: Players may not pass the Queen, King, or Ace of Spades.
@@ -439,10 +437,7 @@ class Hearts(game.Game):
         elif self.extras[0] == 'h':
             self.kitty = 'heart'
         elif self.extras[0] == 'j':
-            if self.jokers_clean:
-                suits = itertools.cycle(('',))
-            else:
-                suits = itertools.cycle('CD')
+            suits = itertools.cycle('CD')
             while len(self.deck.cards) % len(self.players):
                 self.deck.cards.append(cards.Card('X', next(suits)))
         # Handle the passing options
@@ -692,6 +687,18 @@ class Hearts(game.Game):
         # Handle the win.
         self.human.tell('\n{} won the trick with the {}.'.format(winner, winning_card))
         self.taken[winner.name].cards.extend(self.trick.cards)
+        # Handle any kitty.
+        if self.deck.cards:
+            kitty_win = self.kitty == 'first'
+            kitty_win = kitty_win or 'heart' and [card for card in self.trick.cards if card.suit == 'H']
+            if kitty_win:
+                self.taken[winner.name].cards.extend(self.deck.cards)
+                text = 'You won {} from the kitty.'
+                winner.tell(text.format(utility.oxford(self.deck.cards, word_format = 'the {0.up_text}')))
+                if winner != self.human:
+                    self.human.tell('{} won the kitty.')
+                self.deck.cards = []
+        # Clear the trick
         self.trick.cards = []
         # Check for the end of the round.
         if not self.hands[self.human.name]:
