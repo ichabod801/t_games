@@ -205,7 +205,12 @@ class HeartBot(player.Bot):
         else:
             # Open with the lowest card you have in the hopes of losing.
             self.hand.cards.sort(key = lambda card: card.rank_num)
-            card = self.hand.cards[0]
+            play_index = 0
+            card = self.hand.cards[play_index]
+            # Don't lead with jokers if it's banned.
+            while self.game.jokers_follow and card.rank == 'X':
+                play_index += 1
+                card = self.hand.cards[play_index]
             self.game.human.tell('{} opens with the {}.'.format(self.name, card))
         return card
 
@@ -382,15 +387,19 @@ class Hearts(game.Game):
         elif card_text not in hand:
             player.error('You do not have the {} to play.'.format(card_text))
             return True
+        card = hand.cards[hand.cards.index(card_text)]
         if self.trick:
             # Check that the card follows suit, or that the player is void in that suit.
-            card = hand.cards[hand.cards.index(card_text)]
             trick_suit = self.trick.cards[0].suit
             if card.suit != trick_suit and list(filter(lambda card: card.suit == trick_suit, hand)):
                 player.error('You must play a card of the suit led.')
                 return True
             hand.shift(card, self.trick)
         else:
+            # Check for and validate joker leads.
+            if card.rank == 'X' and self.jokers_follow:
+                player.error('You cannot lead with a joker.')
+                return True
             hand.shift(card_text, self.trick)
 
     def game_over(self):
@@ -456,6 +465,8 @@ class Hearts(game.Game):
             self.pass_dir = itertools.cycle(self.pass_dirs[self.pass_dir])
         # Handle the scoring options
         self.max_score = 26
+        if self.joker_points:
+            self.max_score += len([card for card in self.deck.cards if card.rank == 'X'])
         # Handle the end of game options.
         self.win = 100
 
@@ -545,19 +556,28 @@ class Hearts(game.Game):
         shooter = ''
         for player in self.players:
             # Count the scoring cards.
-            hearts, lady = 0, 0
+            hearts, lady, jokers = 0, 0, 0
             for card in self.taken[player.name]:
                 if card.suit == 'H':
                     hearts += 1
                 elif card == 'QS':
                     lady += 1
+                elif card.rank == 'X':
+                    jokers += 1
             # Calculate and store the unadjusted points.
             player_points = hearts + 13 * lady
+            if self.joker_points:
+                player_points += jokers
             round_points[player.name] = player_points
             # Display the card counts and points.
             score_text = '{} had {} {}'.format(player.name, hearts, utility.plural(hearts, 'heart'))
             lady_text = ' and the Queen of Spades' if lady else ''
-            score_text = '{}{}, for {} points this round.'.format(score_text, lady_text, player_points) # !! plural points
+            if self.joker_points and jokers:
+                joker_text = ' and {} {}'.format(jokers, utility.plural(jokers, 'joker'))
+            else:
+                joker_text = ''
+            point_text = '{} {}'.format(player_points, utility.plural(player_points, 'point'))
+            score_text = '{}{}{}, for {} this round.'.format(score_text, lady_text, joker_text, point_text)
             self.human.tell(score_text)
             # Inform and record any sucessful shooter.
             if player_points == self.max_score:
@@ -698,7 +718,7 @@ class Hearts(game.Game):
                 if winner != self.human:
                     self.human.tell('{} won the kitty.')
                 self.deck.cards = []
-        # Clear the trick
+        # Clear the trick.
         self.trick.cards = []
         # Check for the end of the round.
         if not self.hands[self.human.name]:
