@@ -245,6 +245,7 @@ class Hearts(game.Game):
     jokers_follow: A flag for jokers being unable to lead tricks. (bool)
     joker_points: A flag for jokers being worth a point. (bool)
     keep_spades: A flag preventing the passing of high spades. (bool)
+    low_club: The club that must lead each round. (cards.Card or False)
     num_pass: The number of cards each player passes. (int)
     pass_dir: The direction(s) that cards are passed. (generator)
     passes: The cards passed by each player. (dict of str: cards.Hand)
@@ -365,7 +366,14 @@ class Hearts(game.Game):
             if all(self.passes.values()):
                 self.pass_cards()
                 self.phase = 'trick'
-                self.player_index = self.players.index(self.dealer) - 1
+                # Set the first player.
+                if self.low_club:
+                    for player in self.players:
+                        if self.low_club in self.hands[player.name]:
+                            break
+                    self.player_index = self.players.index(player) - 1
+                else:
+                    self.player_index = self.players.index(self.dealer) - 1
 
     def do_play(self, arguments):
         """
@@ -467,6 +475,13 @@ class Hearts(game.Game):
             self.pass_dir = self.dealers_choice()
         else:
             self.pass_dir = itertools.cycle(self.pass_dirs[self.pass_dir])
+        # Handle the play options.
+        if self.low_club:
+            clubs = [card for card in self.deck.cards if card.suit == 'C']
+            clubs.sort(key = lambda card: card.rank_num, reverse = True)
+            self.low_club = clubs.pop()
+            while self.jokers_follow and self.low_club.rank == 'X':
+                self.low_club = clubs.pop()
         # Handle the scoring options
         self.max_score = 26
         if self.joker_points:
@@ -539,7 +554,12 @@ class Hearts(game.Game):
                 self.human.tell('')  # Make sure tricks are blocked out in the ouput.
                 player.tell('You lead the trick.')
             player.tell('Your hand is: {}.'.format(self.hands[player.name]))
-            move = player.ask('What is your play? ')
+            if self.low_club and self.low_club in self.hands[player.name]:
+                text = 'You must play the {1}.' if player == self.human else '{0} plays the {1}.'
+                self.human.tell(text.format(player, self.low_club))
+                move = self.low_club.up_text
+            else:
+                move = player.ask('What is your play? ')
             if self.card_re.match(move):
                 # Handle card text as plays.
                 go = self.do_play(move)
@@ -656,6 +676,8 @@ class Hearts(game.Game):
             valid = ('r', 'right', 'l', 'left', 'rl', 'right-left', 'lr', 'left-right', 'lran', 'rot-left',
             '@', 'central', 'c', 'dealer', 'd', 'not', 'n', 'scatter', 's'),
             question = 'In what direction should cards be passed (return for right)? ')
+        # Set the play options.
+        self.option_set.add_option('low-club', ['lc'])
 
     def set_pass(self):
         """Set up the passing of cards for this hand. (None)"""
