@@ -50,9 +50,9 @@ The game ends when anyone's score goes over 100 points. Whoever has the least
 points at that time wins the game.
 
 Options:
-break-hearts (bh): Hearts may not lead a trick before a heart has been played.
-break-all (ba): Hearts may not lead a trick before a penalty card has been
+all-break (ab): Hearts may not lead a trick before a penalty card has been
     played.
+break-hearts (bh): Hearts may not lead a trick before a heart has been played.
 easy= (e=): The number of easy bots to play against.
 extras= (x=): How do deal with extra cards where there are not four players.
     Valid settings are:
@@ -246,8 +246,8 @@ class Hearts(game.Game):
     A game of Hearts. (game.Game)
 
     Attributes:
+    all_break: A flag for any penalty card breaking hearts. (bool)
     break_hearts: A flag for hearts needing to be played before leading. (bool)
-    break_all: A flag for any penalty card breaking hearts. (bool)
     breakers: The cards that can break hearts. (set of cards.Card)
     dealer: The next player to deal cards. (player.Player)
     deck: The deck of cards used in the game. (cards.Deck)
@@ -318,7 +318,7 @@ class Hearts(game.Game):
         self.human.tell('{} deals.'.format(self.dealer))
         # Eldest hand starts, and is the next dealer.
         self.dealer = self.players[player_index]
-        self.hearts_broken = not (self.break_hearts or self.break_all)
+        self.hearts_broken = not (self.break_hearts or self.all_break)
         #print('dealer set to {}.'.format(self.dealer))
 
     def dealers_choice(self):
@@ -509,13 +509,16 @@ class Hearts(game.Game):
         # Handle the scoring options
         self.max_score = 26
         self.breakers = set([card for card in self.deck.cards if card.suit == 'H'])
-        if self.break_all:
+        if self.all_break:
             self.breakers.add('QS')
         if self.joker_points:
             jokers = [card for card in self.deck.cards if card.rank == 'X']
             self.max_score += len(jokers)
-            if self.break_all:
+            if self.all_break:
                 self.breakers.update(jokers)
+        if self.bonus:
+            self.bonus = cards.Card(*self.bonus)
+            self.max_score -= 10
         # Handle the end of game options.
         self.win = 100
 
@@ -604,6 +607,7 @@ class Hearts(game.Game):
 
     def score_round(self):
         """Score one deck's worth of tricks. (None)"""
+        # !! refactor
         self.human.tell('')
         # Calculate the points this round for each player.
         round_points = {}
@@ -611,6 +615,7 @@ class Hearts(game.Game):
         for player in self.players:
             # Count the scoring cards.
             hearts, lady, jokers = 0, 0, 0
+            bonus = None
             for card in self.taken[player.name]:
                 if card.suit == 'H':
                     hearts += 1
@@ -618,23 +623,30 @@ class Hearts(game.Game):
                     lady += 1
                 elif card.rank == 'X':
                     jokers += 1
+                elif card == self.bonus:
+                    bonus = card
             # Calculate and store the unadjusted points.
             player_points = hearts + 13 * lady
             if self.joker_points:
                 player_points += jokers
+            if self.bonus and bonus:
+                player_points = max(0, player_points - 10)
             round_points[player.name] = player_points
             # Display the card counts and points.
             score_text = '{} had {} {}'.format(player.name, hearts, utility.plural(hearts, 'heart'))
-            lady_text = ' and the Queen of Spades' if lady else ''
+            score_bits = ['{} {}'.format(hearts, utility.plural(hearts, 'heart'))]
+            if lady:
+                score_bits.append('the Queen of Spades')
             if self.joker_points and jokers:
-                joker_text = ' and {} {}'.format(jokers, utility.plural(jokers, 'joker'))
-            else:
-                joker_text = ''
+                score_bits.append('{} {}'.format(jokers, utility.plural(jokers, 'joker')))
+            if bonus:
+                score_bits.append('the {}'.format(bonus.name))
             point_text = '{} {}'.format(player_points, utility.plural(player_points, 'point'))
-            score_text = '{}{}{}, for {} this round.'.format(score_text, lady_text, joker_text, point_text)
+            base_text = '{} had {}, for {} this round.'
+            score_text = base_text.format(player.name, utility.oxford(score_bits), point_text)
             self.human.tell(score_text)
             # Inform and record any sucessful shooter.
-            if player_points == self.max_score:
+            if player_points == self.max_score and (bonus or not self.bonus):
                 self.human.tell('{} shot the moon!'.format(player.name))
                 shooter = player.name
         # Adjust the round points if anyone shot the moon.
@@ -643,7 +655,7 @@ class Hearts(game.Game):
                 if player == shooter:
                     round_points[player] = 0
                 else:
-                    round_points[player] = self.max_score
+                    round_points[player] = self.max_score + 10 * bool(self.bonus)
         # Adjust and display the overall points.
         self.human.tell('\nOverall Scores:')
         for player in self.players:
@@ -689,6 +701,9 @@ class Hearts(game.Game):
 
     def set_options(self):
         """Set the possible options for the game. (None)"""
+        # Get a card verifier.
+        def is_card(text):
+            return len(text) == 2 and text[0] in cards.Card.ranks and text[1] in cards.Card.suits
         # Set the bot options.
         self.option_set.add_option('easy', ['e'], int, 3, valid = range(5),
             question = 'How many easy bots do you want to play against (return for 3)? ')
@@ -709,9 +724,10 @@ class Hearts(game.Game):
             '@', 'central', 'c', 'dealer', 'd', 'not', 'n', 'scatter', 's'),
             question = 'In what direction should cards be passed (return for right)? ')
         # Set the play options.
-        self.option_set.add_option('low-club', ['lc'])
+        self.option_set.add_option('all-break', ['ab'])
         self.option_set.add_option('break-hearts', ['bh'])
-        self.option_set.add_option('break-all', ['ba'])
+        self.option_set.add_option('bonus', ['b'], str.upper, '', check = is_card)
+        self.option_set.add_option('low-club', ['lc'])
 
     def set_pass(self):
         """Set up the passing of cards for this hand. (None)"""
