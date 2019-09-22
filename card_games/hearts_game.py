@@ -40,17 +40,21 @@ trick and all of the cards.
 
 When all the cards are played the round is scored. Each heart won in a trick
 scores one point, and the Queen of Spades scores 13 points. Note that points
-are bad: you want to have a low score. If one player manages to get all of the
-hearts and the Queen of Spades, they shoot the Moon. Instead of getting 26
-points, they get no points and every other player gets 26 points.
+are bad: you want to have a low score. Cards that give points are called
+penalty cards. If one player manages to get all of the penalty cards, they
+shoot the Moon. Instead of getting 26 points, they get no points and every
+other player gets 26 points.
 
 After scoring the round, the deal shifts to the left, and a new hand is dealt.
 The game ends when anyone's score goes over 100 points. Whoever has the least
 points at that time wins the game.
 
 Options:
+break-hearts (bh): Hearts may not lead a trick before a heart has been played.
+break-all (ba): Hearts may not lead a trick before a penalty card has been
+    played.
 easy= (e=): The number of easy bots to play against.
-extras= (x+): How do deal with extra cards where there are not four players.
+extras= (x=): How do deal with extra cards where there are not four players.
     Valid settings are:
     ditch (d): Ditch low cards from Clubs and Diamonds to even out hands.
     first (f): The extra cards form a kitty that goes to the winner of the
@@ -60,6 +64,8 @@ extras= (x+): How do deal with extra cards where there are not four players.
     jokers (j): Jokers are added to the deck to even out the hands.
 jokers-follow (jf): Jokers may not lead tricks.
 joker-points (jp): Jokers score one point each.
+low-club (lc): The player with the lowest club in the deck (typically 2C) must
+    start the first trick of each hand.
 keep-spades: Players may not pass the Queen, King, or Ace of Spades.
 num-pass= (np=): The number of cards passed.
 pass-dir= (pd=): The direction in which cards are passed. Valid settings are:
@@ -241,6 +247,8 @@ class Hearts(game.Game):
 
     Attributes:
     break_hearts: A flag for hearts needing to be played before leading. (bool)
+    break_all: A flag for any penalty card breaking hearts. (bool)
+    breakers: The cards that can break hearts. (set of cards.Card)
     dealer: The next player to deal cards. (player.Player)
     deck: The deck of cards used in the game. (cards.Deck)
     ease: The number of easy bots in the game. (int)
@@ -310,7 +318,7 @@ class Hearts(game.Game):
         self.human.tell('{} deals.'.format(self.dealer))
         # Eldest hand starts, and is the next dealer.
         self.dealer = self.players[player_index]
-        self.hearts_broken = not self.break_hearts
+        self.hearts_broken = not (self.break_hearts or self.break_all)
         #print('dealer set to {}.'.format(self.dealer))
 
     def dealers_choice(self):
@@ -453,6 +461,7 @@ class Hearts(game.Game):
 
     def handle_options(self):
         """Handle the option settings for this game. (None)"""
+        # !! refactor.
         super(Hearts, self).handle_options()
         # Handle the player options.
         self.players = [self.human]
@@ -499,8 +508,14 @@ class Hearts(game.Game):
                 self.low_club = clubs.pop()
         # Handle the scoring options
         self.max_score = 26
+        self.breakers = set([card for card in self.deck.cards if card.suit == 'H'])
+        if self.break_all:
+            self.breakers.add('QS')
         if self.joker_points:
-            self.max_score += len([card for card in self.deck.cards if card.rank == 'X'])
+            jokers = [card for card in self.deck.cards if card.rank == 'X']
+            self.max_score += len(jokers)
+            if self.break_all:
+                self.breakers.update(jokers)
         # Handle the end of game options.
         self.win = 100
 
@@ -696,6 +711,7 @@ class Hearts(game.Game):
         # Set the play options.
         self.option_set.add_option('low-club', ['lc'])
         self.option_set.add_option('break-hearts', ['bh'])
+        self.option_set.add_option('break-all', ['ba'])
 
     def set_pass(self):
         """Set up the passing of cards for this hand. (None)"""
@@ -766,8 +782,7 @@ class Hearts(game.Game):
                     self.human.tell('{} won the kitty.')
                 self.deck.cards = []
         # Check for breaking hearts.
-        if not self.hearts_broken:
-            if [card for card in self.trick if card.suit == 'H']:
+        if not self.hearts_broken and self.breakers.intersection(self.trick):
                 self.hearts_broken = True
         # Clear the trick.
         self.trick.cards = []
