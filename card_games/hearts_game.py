@@ -278,7 +278,14 @@ class Hearts(game.Game):
     dealers_choice: Generator for dealer's choice of passing. (generator)
     do_pass: Pass one or more cards to another player. (bool)
     do_play: Play a card, to either start or contribute to a trick. (bool)
+    handle_opt_player: Handle the player option settings for this game. (None)
+    handle_opt_deal: Handle the deal option settings for this game. (None)
+    handle_opt_pass: Handle the passing option settings for this game. (None)
+    handle_opt_play: Handle the play option settings for this game. (None)
+    handle_opt_player: Handle the player option settings for this game. (None)
+    handle_opt_score: Handle the scoring option settings for this game. (None)
     pass_cards: Handle the actual passing of the cards between players. (None)
+    score_players: Score each player's hand. (dict, str)
     score_round: Score one deck's worth of tricks. (None)
     set_dealer: Determine the first dealer for the game. (None)
     set_pass: Set up the passing of cards for this hand. (None)
@@ -438,7 +445,7 @@ class Hearts(game.Game):
     def game_over(self):
         """Determine if the game is over. (bool)"""
         # Check for someone breaking the "winning" score.
-        if max(self.scores.values()) > self.win:
+        if max(self.scores.values()) >= self.win:
             # Get the scores of interest.
             human_score = self.scores[self.human.name]
             winning_score = min(self.scores.values())
@@ -459,20 +466,8 @@ class Hearts(game.Game):
         else:
             return False
 
-    def handle_options(self):
-        """Handle the option settings for this game. (None)"""
-        # !! refactor.
-        super(Hearts, self).handle_options()
-        # Handle the player options.
-        self.players = [self.human]
-        if self.easy > 5:
-            self.option_set.errors.append('There can be at most five bots in the game.')
-        for bot in range(self.easy):
-            self.players.append(HeartBot(taken_names = [player.name for player in self.players]))
-        # Set up the deck.
-        self.deck = cards.Deck(ace_high = True)
-        self.kitty = ''
-        # Handle the deal options.
+    def handle_opt_deal(self):
+        """Handle the deal option settings for this game. (None)"""
         if self.extras[0] == 'd':
             ditch_stack = ['3D', '3C', '2D', '2C']
             while len(self.deck.cards) % len(self.players):
@@ -485,7 +480,9 @@ class Hearts(game.Game):
             suits = itertools.cycle('CD')
             while len(self.deck.cards) % len(self.players):
                 self.deck.cards.append(cards.Card('X', next(suits)))
-        # Handle the passing options
+
+    def handle_opt_pass(self):
+        """Handle the passing option settings for this game. (None)"""
         if not self.num_pass:
             self.num_pass = 3 if len(self.players) < 5 else 2
         self.pass_dir = self.pass_aliases.get(self.pass_dir, self.pass_dir)
@@ -499,14 +496,26 @@ class Hearts(game.Game):
             self.pass_dir = self.dealers_choice()
         else:
             self.pass_dir = itertools.cycle(self.pass_dirs[self.pass_dir])
-        # Handle the play options.
+
+    def handle_opt_play(self):
+        """Handle the play option settings for this game. (None)"""
         if self.low_club:
             clubs = [card for card in self.deck.cards if card.suit == 'C']
             clubs.sort(key = lambda card: card.rank_num, reverse = True)
             self.low_club = clubs.pop()
             while self.jokers_follow and self.low_club.rank == 'X':
                 self.low_club = clubs.pop()
-        # Handle the scoring options
+
+    def handle_opt_player(self):
+        """Handle the player option settings for this game. (None)"""
+        self.players = [self.human]
+        if self.easy > 5:
+            self.option_set.errors.append('There can be at most five bots in the game.')
+        for bot in range(self.easy):
+            self.players.append(HeartBot(taken_names = [player.name for player in self.players]))
+
+    def handle_opt_score(self):
+        """Handle the scoring option settings for this game. (None)"""
         self.max_score = 26
         self.breakers = set([card for card in self.deck.cards if card.suit == 'H'])
         if self.all_break:
@@ -519,8 +528,19 @@ class Hearts(game.Game):
         if self.bonus:
             self.bonus = cards.Card(*self.bonus)
             self.max_score -= 10
-        # Handle the end of game options.
         self.win = 100
+
+    def handle_options(self):
+        """Handle the option settings for this game. (None)"""
+        super(Hearts, self).handle_options()
+        self.handle_opt_player()
+        # Set up the deck.
+        self.deck = cards.Deck(ace_high = True)
+        self.kitty = ''
+        self.handle_opt_deal()
+        self.handle_opt_pass()
+        self.handle_opt_play()
+        self.handle_opt_score()
 
     def pass_cards(self):
         """Handle the actual passing of the cards between players. (None)"""
@@ -605,11 +625,13 @@ class Hearts(game.Game):
                 # Handle other text as commands.
                 return self.handle_cmd(move)
 
-    def score_round(self):
-        """Score one deck's worth of tricks. (None)"""
-        # !! refactor
-        self.human.tell('')
-        # Calculate the points this round for each player.
+    def score_players(self):
+        """
+        Score each player's hand. (dict, str)
+
+        The return value is a dictionary of the raw points scored, and the name of the
+        shooter, if any.
+        """
         round_points = {}
         shooter = ''
         for player in self.players:
@@ -649,6 +671,13 @@ class Hearts(game.Game):
             if player_points == self.max_score and (bonus or not self.bonus):
                 self.human.tell('{} shot the moon!'.format(player.name))
                 shooter = player.name
+        return round_points, shooter
+
+    def score_round(self):
+        """Score one deck's worth of tricks. (None)"""
+        self.human.tell('')
+        # Calculate the points this round for each player.
+        round_points, shooter = self.score_players()
         # Adjust the round points if anyone shot the moon.
         if shooter:
             for player in round_points:
