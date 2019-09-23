@@ -64,6 +64,8 @@ extras= (x=): How do deal with extra cards where there are not four players.
     jokers (j): Jokers are added to the deck to even out the hands.
 jokers-follow (jf): Jokers may not lead tricks.
 joker-points (jp): Jokers score one point each.
+lady-points= (lp=): The points scored for the QS. Defaults to 13, sometimes it
+    is 0 or 25.
 low-club (lc): The player with the lowest club in the deck (typically 2C) must
     start the first trick of each hand.
 keep-spades: Players may not pass the Queen, King, or Ace of Spades.
@@ -82,6 +84,9 @@ pass-dir= (pd=): The direction in which cards are passed. Valid settings are:
     rot-left (@): Each round pass to the left of the player you passed to last
         round. Start to the left, and when passing to yourself just don't pass.
     scatter (s): Each player passes one other card to each other player.
+score-pips (sp): Each heart scores it's rank, with face cards scoring 10.
+score-ranks (sr): Each heart scores it's rank, with the ace scoring 14.
+win= (w=): The points needed to win, defaults to 100. 
 """
 
 class HeartBot(player.Bot):
@@ -528,7 +533,12 @@ class Hearts(game.Game):
         if self.bonus:
             self.bonus = cards.Card(*self.bonus)
             self.max_score -= 10
-        self.win = 100
+        self.heart_points = {rank: 1 for rank in self.deck.ranks}
+        if self.heart_score[0] == 'f':
+            self.heart_points.update({'J': 2, 'Q': 3, 'K': 4, 'A': 5})
+        elif self.heart_score[0] == 'p':
+            self.heart_points = {rank: min(10, score) for score, rank in enumerate(self.deck.ranks)}
+            
 
     def handle_options(self):
         """Handle the option settings for this game. (None)"""
@@ -741,11 +751,13 @@ class Hearts(game.Game):
             valid = ('d', 'ditch', 'f', 'first', 'h', 'heart', 'j', 'joker'),
             question = 'How should extra cards be handled (return for ditch them)? ',
             error_text = 'Please choose ditch, first, heart, or joker.')
-        self.option_set.add_option('jokers-clean', ['jc'])
-        self.option_set.add_option('jokers-follow', ['jf'])
-        self.option_set.add_option('joker-points', ['jp'])
+        self.option_set.add_option('jokers-follow', ['jf'],
+            question = 'Should jokers not be allowed to lead? bool')
+        self.option_set.add_option('joker-points', ['jp'],
+            question = 'Should jokers score one point each? bool')
         # Set the pass options.
-        self.option_set.add_option('keep-spades', ['ks'])
+        self.option_set.add_option('keep-spades', ['ks'],
+            question = 'Should passing QS, KS, and AS be banned? bool')
         self.option_set.add_option('num-pass', ['np'], int, 0, valid = range(5),
             question = 'How many cards should be passed (return for 3, 2 with 5+ players)? ')
         self.option_set.add_option('pass-dir', ['pd'], default = 'right',
@@ -753,10 +765,22 @@ class Hearts(game.Game):
             '@', 'central', 'c', 'dealer', 'd', 'not', 'n', 'scatter', 's'),
             question = 'In what direction should cards be passed (return for right)? ')
         # Set the play options.
-        self.option_set.add_option('all-break', ['ab'])
-        self.option_set.add_option('break-hearts', ['bh'])
-        self.option_set.add_option('bonus', ['b'], str.upper, '', check = is_card)
-        self.option_set.add_option('low-club', ['lc'])
+        self.option_set.add_option('all-break', ['ab'],
+            question = 'Should hearts not be able to lead until a penalty card is played? bool')
+        self.option_set.add_option('break-hearts', ['bh']
+            question = 'Should hearts not be able to lead until a heart is played otherwise? bool')
+        self.option_set.add_option('bonus', ['b'], str.upper, '', check = is_card,
+            question = 'What card should remove up to 10 points from your score (return for none)? ')
+        self.option_set.add_option('low-club', ['lc'],
+            question = 'Should the lowest club lead the first trick of each deal? bool')  # !! interaction with kitty
+        # Set the score options.
+        self.option_set.add_option('heart-score', ['hs'], str.lower, 'one',
+            valid = ('o', 'one', 'p', 'pip', 'r', 'rank', 'f', 'face'),
+            question = 'How should hearts be scored (one, face, pip or rank, return for one)? ')
+        self.option_set.add_option('lady-score', ['ls'], int, 13, valid = range(0, 50),
+            question = 'How much should the Queen of Spades score (return for 13)? ')
+        self.option_set.add_option('win', ['w'], int, 100, valid = range(50, 1000),
+            question = 'How many points for one player should end the game (return for 100)? ')
 
     def set_pass(self):
         """Set up the passing of cards for this hand. (None)"""
