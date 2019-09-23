@@ -77,6 +77,7 @@ lady-score= (lp=): The points scored for the QS. Defaults to 13, sometimes it
 low-club (lc): The player with the lowest club in the deck (typically 2C) must
     start the first trick of each hand.
 keep-spades: Players may not pass the Queen, King, or Ace of Spades.
+no-tricks= (nt=): The number of points taken off if a player wins no tricks.
 num-pass= (np=): The number of cards passed.
 pass-dir= (pd=): The direction in which cards are passed. Valid settings are:
     central (c): Everyone passes to the center. The cards are reshuffled and
@@ -202,6 +203,7 @@ class HeartBot(player.Bot):
                 losers = [card for card in playable if card.rank_num < trick_starter.rank_num]
                 # Play the highest possible loser, or the lowest possible card in hopes of losing.
                 # !! needs to avoid playing QS
+                # !! this is based on trick_starter, but a higher card in suit may have been played.
                 if losers:
                     card = losers[-1]
                 else:
@@ -209,7 +211,7 @@ class HeartBot(player.Bot):
             else:
                 # Get rid of the queen if you can.
                 if 'QS' in self.hand:
-                    card = 'QS'
+                    card = 'QS' # !! goes on to choose another card.
                 # Otherwise get rid of hearts if you can.
                 hearts = [card for card in self.hand if card.suit == 'H']
                 hearts.sort(key = lambda card: card.rank_num)
@@ -318,6 +320,7 @@ class Hearts(game.Game):
     categories = ['Card Games']
     credits = CREDITS
     name = 'Hearts'
+    num_options = 13
     pass_aliases = {'l': 'left', 'r': 'right', 'rl': 'right-left', 'lr': 'left-right', '@': 'rot-left',
         'c': 'central', 'd': 'dealer', 'n': 'not', 's': 'scatter'}
     pass_dirs = {'left': ('left',), 'right': ('right',), 'left-right': ('left', 'right'),
@@ -694,6 +697,11 @@ class Hearts(game.Game):
             if player_points == self.max_score and (bonus or not self.bonus):
                 self.human.tell('{} shot the moon!'.format(player.name))
                 shooter = player.name
+            # Check for taking no tricks.
+            if not self.taken[player.name] and self.no_tricks:
+                text = '{} gets {} points taken off for winning no tricks.'
+                self.human.tell(text.format(player.name, self.no_tricks))
+                round_points[player.name] = -self.no_tricks
         return round_points, shooter
 
     def score_round(self):
@@ -707,11 +715,14 @@ class Hearts(game.Game):
                 if player == shooter:
                     round_points[player] = 0
                 else:
-                    round_points[player] = self.max_score + 10 * bool(self.bonus)
+                    if round_points[player] < 0:
+                        round_points[player] = self.max_score + 10 * bool(self.bonus) + round_points[player]
+                    else:
+                        round_points[player] = self.max_score + 10 * bool(self.bonus)
         # Adjust and display the overall points.
         self.human.tell('\nOverall Scores:')
         for player in self.players:
-            self.scores[player.name] += round_points[player.name]
+            self.scores[player.name] = max(self.scores[player.name] + round_points[player.name], 0)
             self.human.tell('{}: {}'.format(player, self.scores[player.name]))
 
     def set_dealer(self):
@@ -793,6 +804,8 @@ class Hearts(game.Game):
         self.option_set.add_option('lady-score', ['ls'], int, 13, valid = range(0, 50),
             target = 'lady_points',
             question = 'How much should the Queen of Spades score (return for 13)? ')
+        self.option_set.add_option('no-tricks', ['nt'], int, 0, valid = range(0, 25),
+            question = 'How many points should be taken off if a player wins no tricks? ')
         self.option_set.add_option('end', ['e'], int, 100, valid = range(50, 1000),
             question = 'How many points for one player should end the game (return for 100)? ')
 
