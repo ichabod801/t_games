@@ -53,7 +53,8 @@ Options:
 all-break (ab): Hearts may not lead a trick before a penalty card has been
     played.
 break-hearts (bh): Hearts may not lead a trick before a heart has been played.
-easy= (e=): The number of easy bots to play against.
+easy= (ez=): The number of easy bots to play against.
+end= (e=): The points one players needs to stop the game, defaults to 100.
 extras= (x=): How do deal with extra cards where there are not four players.
     Valid settings are:
     ditch (d): Ditch low cards from Clubs and Diamonds to even out hands.
@@ -62,9 +63,16 @@ extras= (x=): How do deal with extra cards where there are not four players.
     heart (h): The extra cards form a kitty that goes to the winner of the
         first heart.
     jokers (j): Jokers are added to the deck to even out the hands.
+heart-score= (hs=): How hearts are scored. Valid setting are:
+    face (f): Hearts score 1, face cards score more: J = 2, Q = 3, K = 4, A =5.
+    one (o): Hearts score one point each.
+    pips (p): Hearts score the number of pips on them, face cards and the ace
+        score 10 points.
+    rank (r): Hearts score their rank in points, with J = 11, Q = 12, K = 13,
+        and A = 14.
 jokers-follow (jf): Jokers may not lead tricks.
 joker-points (jp): Jokers score one point each.
-lady-points= (lp=): The points scored for the QS. Defaults to 13, sometimes it
+lady-score= (lp=): The points scored for the QS. Defaults to 13, sometimes it
     is 0 or 25.
 low-club (lc): The player with the lowest club in the deck (typically 2C) must
     start the first trick of each hand.
@@ -84,9 +92,6 @@ pass-dir= (pd=): The direction in which cards are passed. Valid settings are:
     rot-left (@): Each round pass to the left of the player you passed to last
         round. Start to the left, and when passing to yourself just don't pass.
     scatter (s): Each player passes one other card to each other player.
-score-pips (sp): Each heart scores it's rank, with face cards scoring 10.
-score-ranks (sr): Each heart scores it's rank, with the ace scoring 14.
-win= (w=): The points needed to win, defaults to 100.
 """
 
 class HeartBot(player.Bot):
@@ -256,13 +261,17 @@ class Hearts(game.Game):
     breakers: The cards that can break hearts. (set of cards.Card)
     dealer: The next player to deal cards. (player.Player)
     deck: The deck of cards used in the game. (cards.Deck)
-    ease: The number of easy bots in the game. (int)
+    easy: The number of easy bots in the game. (int)
+    end: How many points end the game. (int)
     extras: How to handle extra cards in the deck. (str)
     hands: The players' hands of cards. (dict of str: cards.Hand)
+    heart_score: How the hearts should be scored. (str)
+    heart_points: The points scored by each rank of hearts. (dict of str: int)
     hearts_broken: A flag that hearts can lead. (bool)
     jokers_follow: A flag for jokers being unable to lead tricks. (bool)
     joker_points: A flag for jokers being worth a point. (bool)
     keep_spades: A flag preventing the passing of high spades. (bool)
+    lady_points: How many points the QS scores. (int)
     low_club: The club that must lead each round. (cards.Card or False)
     num_pass: The number of cards each player passes. (int)
     pass_dir: The direction(s) that cards are passed. (generator)
@@ -450,7 +459,7 @@ class Hearts(game.Game):
     def game_over(self):
         """Determine if the game is over. (bool)"""
         # Check for someone breaking the "winning" score.
-        if max(self.scores.values()) >= self.win:
+        if max(self.scores.values()) >= self.end:
             # Get the scores of interest.
             human_score = self.scores[self.human.name]
             winning_score = min(self.scores.values())
@@ -748,7 +757,7 @@ class Hearts(game.Game):
         def is_card(text):
             return len(text) == 2 and text[0] in cards.Card.ranks and text[1] in cards.Card.suits
         # Set the bot options.
-        self.option_set.add_option('easy', ['e'], int, 3, valid = range(5),
+        self.option_set.add_option('easy', ['ez'], int, 3, valid = range(5),
             question = 'How many easy bots do you want to play against (return for 3)? ')
         # Set the deal/card options.
         self.option_set.add_option('extras', ['x'], default = 'ditch',
@@ -784,7 +793,7 @@ class Hearts(game.Game):
         self.option_set.add_option('lady-score', ['ls'], int, 13, valid = range(0, 50),
             target = 'lady_points',
             question = 'How much should the Queen of Spades score (return for 13)? ')
-        self.option_set.add_option('win', ['w'], int, 100, valid = range(50, 1000),
+        self.option_set.add_option('end', ['e'], int, 100, valid = range(50, 1000),
             question = 'How many points for one player should end the game (return for 100)? ')
 
     def set_pass(self):
@@ -863,7 +872,7 @@ class Hearts(game.Game):
         # Check for the end of the round.
         if not self.hands[self.human.name]:
             self.score_round()
-            if max(self.scores.values()) < self.win:
+            if max(self.scores.values()) < self.end:
                 for hand in self.taken.values():
                     hand.discard()
                 self.deal()
