@@ -86,7 +86,7 @@ pass-dir= (pd=): The direction in which cards are passed. Valid settings are:
     scatter (s): Each player passes one other card to each other player.
 score-pips (sp): Each heart scores it's rank, with face cards scoring 10.
 score-ranks (sr): Each heart scores it's rank, with the ace scoring 14.
-win= (w=): The points needed to win, defaults to 100. 
+win= (w=): The points needed to win, defaults to 100.
 """
 
 class HeartBot(player.Bot):
@@ -521,7 +521,16 @@ class Hearts(game.Game):
 
     def handle_opt_score(self):
         """Handle the scoring option settings for this game. (None)"""
-        self.max_score = 26
+        self.heart_points = {rank: 1 for rank in self.deck.ranks[1:]}
+        if self.heart_score[0] == 'f':
+            self.heart_points.update({'J': 2, 'Q': 3, 'K': 4, 'A': 5})
+        elif self.heart_score[0] == 'p':
+            self.heart_points = {rank: min(10, score) for score, rank in enumerate(self.deck.ranks)}
+            self.heart_points['A'] = 10
+        elif self.heart_score[0] == 'r':
+            self.heart_points = {rank: score for score, rank in enumerate(self.deck.ranks)}
+            self.heart_points['A'] = 14
+        self.max_score = sum(self.heart_points.values()) + self.lady_points
         self.breakers = set([card for card in self.deck.cards if card.suit == 'H'])
         if self.all_break:
             self.breakers.add('QS')
@@ -533,12 +542,6 @@ class Hearts(game.Game):
         if self.bonus:
             self.bonus = cards.Card(*self.bonus)
             self.max_score -= 10
-        self.heart_points = {rank: 1 for rank in self.deck.ranks}
-        if self.heart_score[0] == 'f':
-            self.heart_points.update({'J': 2, 'Q': 3, 'K': 4, 'A': 5})
-        elif self.heart_score[0] == 'p':
-            self.heart_points = {rank: min(10, score) for score, rank in enumerate(self.deck.ranks)}
-            
 
     def handle_options(self):
         """Handle the option settings for this game. (None)"""
@@ -646,11 +649,12 @@ class Hearts(game.Game):
         shooter = ''
         for player in self.players:
             # Count the scoring cards.
-            hearts, lady, jokers = 0, 0, 0
+            hearts, heart_points, lady, jokers = 0, 0, 0, 0
             bonus = None
             for card in self.taken[player.name]:
                 if card.suit == 'H':
                     hearts += 1
+                    heart_points += self.heart_points[card.rank]
                 elif card == 'QS':
                     lady += 1
                 elif card.rank == 'X':
@@ -658,7 +662,7 @@ class Hearts(game.Game):
                 elif card == self.bonus:
                     bonus = card
             # Calculate and store the unadjusted points.
-            player_points = hearts + 13 * lady
+            player_points = heart_points + self.lady_points * lady
             if self.joker_points:
                 player_points += jokers
             if self.bonus and bonus:
@@ -767,7 +771,7 @@ class Hearts(game.Game):
         # Set the play options.
         self.option_set.add_option('all-break', ['ab'],
             question = 'Should hearts not be able to lead until a penalty card is played? bool')
-        self.option_set.add_option('break-hearts', ['bh']
+        self.option_set.add_option('break-hearts', ['bh'],
             question = 'Should hearts not be able to lead until a heart is played otherwise? bool')
         self.option_set.add_option('bonus', ['b'], str.upper, '', check = is_card,
             question = 'What card should remove up to 10 points from your score (return for none)? ')
@@ -778,6 +782,7 @@ class Hearts(game.Game):
             valid = ('o', 'one', 'p', 'pip', 'r', 'rank', 'f', 'face'),
             question = 'How should hearts be scored (one, face, pip or rank, return for one)? ')
         self.option_set.add_option('lady-score', ['ls'], int, 13, valid = range(0, 50),
+            target = 'lady_points',
             question = 'How much should the Queen of Spades score (return for 13)? ')
         self.option_set.add_option('win', ['w'], int, 100, valid = range(50, 1000),
             question = 'How many points for one player should end the game (return for 100)? ')
