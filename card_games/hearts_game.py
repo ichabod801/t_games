@@ -77,6 +77,10 @@ lady-score= (lp=): The points scored for the QS. Defaults to 13, sometimes it
 low-club (lc): The player with the lowest club in the deck (typically 2C) must
     start the first trick of each hand.
 keep-spades: Players may not pass the Queen, King, or Ace of Spades.
+moon= (m=): How shooting the Moon is scored. Valid settings are:
+    old (o): Every player that didn't shoot gains 26 points.
+    new (n): The shooting player loses 26 points.
+    auto (a): 'Old' unless that would end the game, in which case 'new'.
 no-tricks= (nt=): The number of points taken off if a player wins no tricks.
 num-pass= (np=): The number of cards passed.
 pass-dir= (pd=): The direction in which cards are passed. Valid settings are:
@@ -320,7 +324,7 @@ class Hearts(game.Game):
     categories = ['Card Games']
     credits = CREDITS
     name = 'Hearts'
-    num_options = 13
+    num_options = 15
     pass_aliases = {'l': 'left', 'r': 'right', 'rl': 'right-left', 'lr': 'left-right', '@': 'rot-left',
         'c': 'central', 'd': 'dealer', 'n': 'not', 's': 'scatter'}
     pass_dirs = {'left': ('left',), 'right': ('right',), 'left-right': ('left', 'right'),
@@ -711,14 +715,16 @@ class Hearts(game.Game):
         round_points, shooter = self.score_players()
         # Adjust the round points if anyone shot the moon.
         if shooter:
-            for player in round_points:
-                if player == shooter:
-                    round_points[player] = 0
-                else:
-                    if round_points[player] < 0:
-                        round_points[player] = self.max_score + 10 * bool(self.bonus) + round_points[player]
+            moon_value = self.max_score + 10 * bool(self.bonus)
+            auto_old = self.moon[0] == 'a' and max(self.scores.values()) + moon_value < self.end
+            if self.moon[0] == 'o' or auto_old:
+                for player in round_points:
+                    if player == shooter:
+                        round_points[player] = 0
                     else:
-                        round_points[player] = self.max_score + 10 * bool(self.bonus)
+                        round_points[player] += moon_value
+            else:
+                round_points[shooter] = -moon_value
         # Adjust and display the overall points.
         self.human.tell('\nOverall Scores:')
         for player in self.players:
@@ -804,6 +810,9 @@ class Hearts(game.Game):
         self.option_set.add_option('lady-score', ['ls'], int, 13, valid = range(0, 50),
             target = 'lady_points',
             question = 'How much should the Queen of Spades score (return for 13)? ')
+        self.option_set.add_option('moon', ['m'], str.lower, 'old',
+            valid = ('a', 'auto', 'n', 'new', 'o', 'old'),
+            question = 'How should shooting the Moon be scored (new, auto, or return for old)? ')
         self.option_set.add_option('no-tricks', ['nt'], int, 0, valid = range(0, 25),
             question = 'How many points should be taken off if a player wins no tricks? ')
         self.option_set.add_option('end', ['e'], int, 100, valid = range(50, 1000),
