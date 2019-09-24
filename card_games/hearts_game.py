@@ -200,30 +200,35 @@ class HeartBot(player.Bot):
         if self.game.trick:
             # Get the cards matching the suit led.
             trick_starter = self.game.trick.cards[0]
+            trick_cards = [card for card in self.game.trick if card.suit == trick_starter.suit]
+            trick_max = sorted(trick_cards, key = lambda card: card.rank_num)[-1]
             playable = [card for card in self.hand if card.suit == trick_starter.suit]
             if playable:
                 # Get the playable cards that lose.
                 playable.sort(key = lambda card: card.rank_num)
-                losers = [card for card in playable if card.rank_num < trick_starter.rank_num]
+                losers = [card for card in playable if card.rank_num < trick_max.rank_num]
                 # Play the highest possible loser, or the lowest possible card in hopes of losing.
-                # !! needs to avoid playing QS
-                # !! this is based on trick_starter, but a higher card in suit may have been played.
-                if losers:
+                if losers and 'QS' in losers:
+                    card = 'QS'
+                elif losers:
                     card = losers[-1]
+                elif playable[0] == 'QS' and len(playable) > 1:
+                    card = playable[1]
                 else:
                     card = playable[0]
             else:
                 # Get rid of the queen if you can.
                 if 'QS' in self.hand:
-                    card = 'QS' # !! goes on to choose another card.
+                    card = 'QS'
                 # Otherwise get rid of hearts if you can.
-                hearts = [card for card in self.hand if card.suit == 'H']
-                hearts.sort(key = lambda card: card.rank_num)
-                if hearts:
-                    card = hearts[-1]
                 else:
-                    # If you have no penalty cards, get rid of the highest card you can.
-                    card = sorted(self.hand.cards, key = lambda card: card.rank_num)[-1]
+                    hearts = [card for card in self.hand if card.suit == 'H']
+                    hearts.sort(key = lambda card: card.rank_num)
+                    if hearts:
+                        card = hearts[-1]
+                    else:
+                        # If you have no penalty cards, get rid of the highest card you can.
+                        card = sorted(self.hand.cards, key = lambda card: card.rank_num)[-1]
             self.game.human.tell('{} plays the {}.'.format(self.name, card))
         else:
             # Open with the lowest card you have in the hopes of losing.
@@ -238,6 +243,9 @@ class HeartBot(player.Bot):
             while not self.game.hearts_broken and card.suit == 'H':
                 play_index += 1
                 card = self.hand.cards[play_index]
+            # Avoid leading the QS.
+            if card == 'QS' and play_index < len(self.hand.cards) - 1:
+                card = self.hand.cards[play_index + 1]
             self.game.human.tell('{} opens with the {}.'.format(self.name, card))
         return card
 
