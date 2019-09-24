@@ -196,12 +196,17 @@ class HeartBot(player.Bot):
 
     def play(self):
         """Play a card to start or add to a trick. (card.Card)"""
+        # !! refactor
         # Handle continuing a trick.
         if self.game.trick:
             # Get the cards matching the suit led.
             trick_starter = self.game.trick.cards[0]
             trick_cards = [card for card in self.game.trick if card.suit == trick_starter.suit]
             trick_max = sorted(trick_cards, key = lambda card: card.rank_num)[-1]
+            point_cards = [card for card in self.game.trick if card.suit == 'H' or card == 'QS']
+            if self.game.joker_points:
+                point_cards.extend([card for card in self.game.trick if card.rank == 'X'])
+            last_player = len(self.game.trick) + 1 == len(self.game.players)
             playable = [card for card in self.hand if card.suit == trick_starter.suit]
             if playable:
                 # Get the playable cards that lose.
@@ -210,8 +215,16 @@ class HeartBot(player.Bot):
                 # Play the highest possible loser, or the lowest possible card in hopes of losing.
                 if losers and 'QS' in losers:
                     card = 'QS'
+                elif losers and last_player and not point_cards:
+                    card = playable[-1]
+                    if card == 'QS' and len(playable) > 1:
+                        card = playable[-2]
                 elif losers:
                     card = losers[-1]
+                elif last_player:
+                    card = playable[-1]
+                    if card == 'QS' and len(playable) > 1:
+                        card = playable[-2]
                 elif playable[0] == 'QS' and len(playable) > 1:
                     card = playable[1]
                 else:
