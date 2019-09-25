@@ -9,6 +9,7 @@ RULES: The rules to Hearts. (str)
 
 Classes:
 HeartBot: A simple bot for Hearts. (player.Bot)
+SmeartBot: A bot for Hearts that understands shooting the Moon. (HeartBot)
 Hearts: A game of Hearts. (game.Game)
 """
 
@@ -107,6 +108,8 @@ class HeartBot(player.Bot):
     hand: The player's cards in the game. (cards.Hand)
 
     Methods:
+    follow: Play a card to an existing trick. (cards.Card)
+    lead: Play a card to start a new trick. (cards.Card)
     pass_cards: Determine which cards to pass. (list of cards.Card)
     pass_count: Determine how many cards to pass with dealer's choice. (int)
     pass_direction: Determine which direction to pass w/ dealer's choice. (str)
@@ -158,6 +161,74 @@ class HeartBot(player.Bot):
         else:
             return super(HeartBot, self).ask(prompt)
 
+    def follow(self):
+        """Play a card to an existing trick. (str)"""
+        # Get the cards matching the suit led.
+        trick_starter = self.game.trick.cards[0]
+        trick_cards = [card for card in self.game.trick if card.suit == trick_starter.suit]
+        trick_max = sorted(trick_cards, key = lambda card: card.rank_num)[-1]
+        point_cards = [card for card in self.game.trick if card.suit == 'H' or card == 'QS']
+        if self.game.joker_points:
+            point_cards.extend([card for card in self.game.trick if card.rank == 'X'])
+        last_player = len(self.game.trick) + 1 == len(self.game.players)
+        playable = [card for card in self.hand if card.suit == trick_starter.suit]
+        if playable:
+            # Get the playable cards that lose.
+            playable.sort(key = lambda card: card.rank_num)
+            losers = [card for card in playable if card.rank_num < trick_max.rank_num]
+            # Play the highest possible loser, or the lowest possible card in hopes of losing.
+            if losers and 'QS' in losers:
+                card = 'QS'
+            elif losers and last_player and not point_cards:
+                card = playable[-1]
+                if card == 'QS' and len(playable) > 1:
+                    card = playable[-2]
+            elif losers:
+                card = losers[-1]
+            elif last_player:
+                card = playable[-1]
+                if card == 'QS' and len(playable) > 1:
+                    card = playable[-2]
+            elif playable[0] == 'QS' and len(playable) > 1:
+                card = playable[1]
+            else:
+                card = playable[0]
+        else:
+            # Get rid of the queen if you can.
+            if 'QS' in self.hand:
+                card = 'QS'
+            # Otherwise get rid of hearts if you can.
+            else:
+                hearts = [card for card in self.hand if card.suit == 'H']
+                hearts.sort(key = lambda card: card.rank_num)
+                if hearts:
+                    card = hearts[-1]
+                else:
+                    # If you have no penalty cards, get rid of the highest card you can.
+                    card = sorted(self.hand.cards, key = lambda card: card.rank_num)[-1]
+        self.game.human.tell('{} plays the {}.'.format(self.name, card))
+        return card
+
+    def lead(self):
+        """Play a card to start a trick. (cards.Card)""" 
+        # Open with the lowest card you have in the hopes of losing.
+        self.hand.cards.sort(key = lambda card: card.rank_num)
+        play_index = 0
+        card = self.hand.cards[play_index]
+        # Don't lead with jokers if it's banned.
+        while self.game.jokers_follow and card.rank == 'X':
+            play_index += 1
+            card = self.hand.cards[play_index]
+        # Don't lead with hearts if they're not broken.
+        while not self.game.hearts_broken and card.suit == 'H':
+            play_index += 1
+            card = self.hand.cards[play_index]
+        # Avoid leading the QS.
+        if card == 'QS' and play_index < len(self.hand.cards) - 1:
+            card = self.hand.cards[play_index + 1]
+        self.game.human.tell('{} opens with the {}.'.format(self.name, card))
+        return card
+
     def pass_cards(self):
         """Determine which cards to pass. (list of card.Card)"""
         # Get rid of high spades.
@@ -196,71 +267,11 @@ class HeartBot(player.Bot):
 
     def play(self):
         """Play a card to start or add to a trick. (card.Card)"""
-        # !! refactor
         # Handle continuing a trick.
         if self.game.trick:
-            # Get the cards matching the suit led.
-            trick_starter = self.game.trick.cards[0]
-            trick_cards = [card for card in self.game.trick if card.suit == trick_starter.suit]
-            trick_max = sorted(trick_cards, key = lambda card: card.rank_num)[-1]
-            point_cards = [card for card in self.game.trick if card.suit == 'H' or card == 'QS']
-            if self.game.joker_points:
-                point_cards.extend([card for card in self.game.trick if card.rank == 'X'])
-            last_player = len(self.game.trick) + 1 == len(self.game.players)
-            playable = [card for card in self.hand if card.suit == trick_starter.suit]
-            if playable:
-                # Get the playable cards that lose.
-                playable.sort(key = lambda card: card.rank_num)
-                losers = [card for card in playable if card.rank_num < trick_max.rank_num]
-                # Play the highest possible loser, or the lowest possible card in hopes of losing.
-                if losers and 'QS' in losers:
-                    card = 'QS'
-                elif losers and last_player and not point_cards:
-                    card = playable[-1]
-                    if card == 'QS' and len(playable) > 1:
-                        card = playable[-2]
-                elif losers:
-                    card = losers[-1]
-                elif last_player:
-                    card = playable[-1]
-                    if card == 'QS' and len(playable) > 1:
-                        card = playable[-2]
-                elif playable[0] == 'QS' and len(playable) > 1:
-                    card = playable[1]
-                else:
-                    card = playable[0]
-            else:
-                # Get rid of the queen if you can.
-                if 'QS' in self.hand:
-                    card = 'QS'
-                # Otherwise get rid of hearts if you can.
-                else:
-                    hearts = [card for card in self.hand if card.suit == 'H']
-                    hearts.sort(key = lambda card: card.rank_num)
-                    if hearts:
-                        card = hearts[-1]
-                    else:
-                        # If you have no penalty cards, get rid of the highest card you can.
-                        card = sorted(self.hand.cards, key = lambda card: card.rank_num)[-1]
-            self.game.human.tell('{} plays the {}.'.format(self.name, card))
+            return self.follow()
         else:
-            # Open with the lowest card you have in the hopes of losing.
-            self.hand.cards.sort(key = lambda card: card.rank_num)
-            play_index = 0
-            card = self.hand.cards[play_index]
-            # Don't lead with jokers if it's banned.
-            while self.game.jokers_follow and card.rank == 'X':
-                play_index += 1
-                card = self.hand.cards[play_index]
-            # Don't lead with hearts if they're not broken.
-            while not self.game.hearts_broken and card.suit == 'H':
-                play_index += 1
-                card = self.hand.cards[play_index]
-            # Avoid leading the QS.
-            if card == 'QS' and play_index < len(self.hand.cards) - 1:
-                card = self.hand.cards[play_index + 1]
-            self.game.human.tell('{} opens with the {}.'.format(self.name, card))
-        return card
+            return self.lead()
 
     def set_up(self):
         """Set up the bot. (None)"""
@@ -276,6 +287,50 @@ class HeartBot(player.Bot):
         """
         # Mute.
         pass
+
+
+class SmeartBot(HeartBot):
+    """
+    A bot for Hearts that understands shooting the Moon. (HeartBot)
+
+    Attributes:
+    strategy: The strategy the bot is usingto make moves. (str)
+    
+    Methods:
+    defend: Make a move to stop a player from shooting the moon. (cards.Card)
+    shoot: Make a move trying to shoot the moon. (cards.Card)
+
+    Overridden Methods:
+    play
+    set_up
+    """
+
+    def defend(self):
+        """Make a move to stop a player from shooting the moon. (cards.Card)"""
+        return super(SmeartBot, self).play()
+
+    def shoot(self):
+        """Make a move trying to shoot the moon. (cards.Card)"""
+        return super(SmeartBot, self).play()
+
+    def strategy_check(self):
+        """See if the bot's strategy needs revision. (cards.Card)"""
+        self.strategy = 'standard'
+
+    def play(self):
+        """Play a card to a trick. (cards.Card)"""
+        self.strategy_check()
+        if self.strategy == 'standard':
+            return super(SmeartBot, self).play()
+        elif self.strategy == 'shoot':
+            return self.shoot()
+        else:
+            return self.defend()
+
+    def set_up(self):
+        """Get the bot ready to play. (None)"""
+        super(SmeartBot, self).set_up()
+        self.mode = 'standard'
 
 
 class Hearts(game.Game):
@@ -299,6 +354,7 @@ class Hearts(game.Game):
     joker_points: A flag for jokers being worth a point. (bool)
     keep_spades: A flag preventing the passing of high spades. (bool)
     lady_points: How many points the QS scores. (int)
+    last_trick: The last trick won by a player. (cards.Hand)
     low_club: The club that must lead each round. (cards.Card or False)
     num_pass: The number of cards each player passes. (int)
     pass_dir: The direction(s) that cards are passed. (generator)
@@ -879,6 +935,7 @@ class Hearts(game.Game):
         self.passes = {player.name: cards.Hand(self.deck) for player in self.players}
         self.taken = {player.name: cards.Hand(self.deck) for player in self.players}
         self.trick = cards.Hand(self.deck)
+        self.last_trick = cards.Hand(self.deck)
         # Handle the initial deal
         self.set_dealer()
         self.deal()
@@ -912,9 +969,11 @@ class Hearts(game.Game):
                 self.deck.cards = []
         # Check for breaking hearts.
         if not self.hearts_broken and self.breakers.intersection(self.trick):
-                self.hearts_broken = True
+            self.hearts_broken = True
         # Clear the trick.
-        self.trick.cards = []
+        self.last_trick = self.trick
+        self.last_winner = winner
+        self.trick = cards.Hand(self.deck)
         # Check for the end of the round.
         if not self.hands[self.human.name]:
             self.score_round()
