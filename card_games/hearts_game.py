@@ -375,6 +375,8 @@ class Hearts(game.Game):
     dealers_choice: Generator for dealer's choice of passing. (generator)
     do_pass: Pass one or more cards to another player. (bool)
     do_play: Play a card, to either start or contribute to a trick. (bool)
+    do_scores: Show the current scores in the game. (s)
+    do_taken: View the cards you have taken so far this deal. (t)
     handle_opt_player: Handle the player option settings for this game. (None)
     handle_opt_deal: Handle the deal option settings for this game. (None)
     handle_opt_pass: Handle the passing option settings for this game. (None)
@@ -539,6 +541,31 @@ class Hearts(game.Game):
                 player.error('You cannot lead with a heart until they are broken.')
                 return True
             hand.shift(card_text, self.trick)
+
+    def do_scores(self, arguments):
+        """
+        Show the current scores in the game. (s)
+        """
+        current = self.players[self.player_index]
+        current.tell()
+        for player in self.players:
+            current.tell('{}: {}'.format(player, self.scores[player.name]))
+        current.tell('\nThe game ends when a player reaches {} points.\n'.format(self.end))
+        return True
+
+    def do_taken(self, arguments):
+        """
+        View the cards you have taken so far this deal. (t)
+        """
+        player = self.players[self.player_index]
+        taken = self.taken[player.name]
+        if taken:
+            cards = taken.cards[:]
+            cards.sort(key = lambda card: (card.suit, card.rank_num))
+            player.tell('\nSo far this deal you have taken: {}.\n'.format(utility.oxford(cards)))
+        else:
+            player.tell('\nYou have not taken any cards yet this deal.\n')
+        return True
 
     def game_over(self):
         """Determine if the game is over. (bool)"""
