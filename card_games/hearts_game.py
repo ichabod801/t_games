@@ -504,6 +504,9 @@ class Hearts(game.Game):
                     self.human.tell('{} wins with {} points.'.format(name, score))
             # Set the number turns to the number of tricks.
             self.turns = self.tricks
+            # Discard the last deal in case they want to play again.
+            for hand in self.hands.values():
+                hand.discard()
             return True
         else:
             return False
