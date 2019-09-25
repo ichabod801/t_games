@@ -50,6 +50,10 @@ After scoring the round, the deal shifts to the left, and a new hand is dealt.
 The game ends when anyone's score goes over 100 points. Whoever has the least
 points at that time wins the game.
 
+You can use the scores command to see the current game score for each player,
+and you can use the taken command to see the cards you have taken so far in
+the current deal.
+
 Options:
 all-break (ab): Hearts may not lead a trick before a penalty card has been
     played.
