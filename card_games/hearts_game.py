@@ -210,7 +210,7 @@ class HeartBot(player.Bot):
         return card
 
     def lead(self):
-        """Play a card to start a trick. (cards.Card)""" 
+        """Play a card to start a trick. (cards.Card)"""
         # Open with the lowest card you have in the hopes of losing.
         self.hand.cards.sort(key = lambda card: card.rank_num)
         play_index = 0
@@ -295,7 +295,7 @@ class SmeartBot(HeartBot):
 
     Attributes:
     strategy: The strategy the bot is usingto make moves. (str)
-    
+
     Methods:
     defend: Make a move to stop a player from shooting the moon. (cards.Card)
     shoot: Make a move trying to shoot the moon. (cards.Card)
@@ -560,9 +560,6 @@ class Hearts(game.Game):
                     self.human.tell('{} wins with {} points.'.format(name, score))
             # Set the number turns to the number of tricks.
             self.turns = self.tricks
-            # Discard the last deal in case they want to play again.
-            for hand in self.hands.values():
-                hand.discard()
             return True
         else:
             return False
@@ -977,9 +974,9 @@ class Hearts(game.Game):
         # Check for the end of the round.
         if not self.hands[self.human.name]:
             self.score_round()
+            for taken in self.taken.values():
+                taken.discard()
             if max(self.scores.values()) < self.end:
-                for hand in self.taken.values():
-                    hand.discard()
                 self.deal()
                 self.set_pass()
         else:
