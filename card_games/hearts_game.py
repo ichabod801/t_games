@@ -9,6 +9,7 @@ RULES: The rules to Hearts. (str)
 
 Classes:
 HeartBot: A simple bot for Hearts. (player.Bot)
+SmeartBot: A bot for Hearts that understands shooting the Moon. (HeartBot)
 Hearts: A game of Hearts. (game.Game)
 """
 
@@ -266,7 +267,6 @@ class HeartBot(player.Bot):
 
     def play(self):
         """Play a card to start or add to a trick. (card.Card)"""
-        # !! refactor
         # Handle continuing a trick.
         if self.game.trick:
             return self.follow()
@@ -287,6 +287,50 @@ class HeartBot(player.Bot):
         """
         # Mute.
         pass
+
+
+class SmeartBot(HeartBot):
+    """
+    A bot for Hearts that understands shooting the Moon. (HeartBot)
+
+    Attributes:
+    strategy: The strategy the bot is usingto make moves. (str)
+    
+    Methods:
+    defend: Make a move to stop a player from shooting the moon. (cards.Card)
+    shoot: Make a move trying to shoot the moon. (cards.Card)
+
+    Overridden Methods:
+    play
+    set_up
+    """
+
+    def defend(self):
+        """Make a move to stop a player from shooting the moon. (cards.Card)"""
+        return super(SmeartBot, self).play()
+
+    def shoot(self):
+        """Make a move trying to shoot the moon. (cards.Card)"""
+        return super(SmeartBot, self).play()
+
+    def strategy_check(self):
+        """See if the bot's strategy needs revision. (cards.Card)"""
+        self.strategy = 'standard'
+
+    def play(self):
+        """Play a card to a trick. (cards.Card)"""
+        self.strategy_check()
+        if self.strategy == 'standard':
+            return super(SmeartBot, self).play()
+        elif self.strategy == 'shoot':
+            return self.shoot()
+        else:
+            return self.defend()
+
+    def set_up(self):
+        """Get the bot ready to play. (None)"""
+        super(SmeartBot, self).set_up()
+        self.mode = 'standard'
 
 
 class Hearts(game.Game):
@@ -310,6 +354,7 @@ class Hearts(game.Game):
     joker_points: A flag for jokers being worth a point. (bool)
     keep_spades: A flag preventing the passing of high spades. (bool)
     lady_points: How many points the QS scores. (int)
+    last_trick: The last trick won by a player. (cards.Hand)
     low_club: The club that must lead each round. (cards.Card or False)
     num_pass: The number of cards each player passes. (int)
     pass_dir: The direction(s) that cards are passed. (generator)
@@ -887,6 +932,7 @@ class Hearts(game.Game):
         self.passes = {player.name: cards.Hand(self.deck) for player in self.players}
         self.taken = {player.name: cards.Hand(self.deck) for player in self.players}
         self.trick = cards.Hand(self.deck)
+        self.last_trick = cards.Hand(self.deck)
         # Handle the initial deal
         self.set_dealer()
         self.deal()
@@ -920,9 +966,11 @@ class Hearts(game.Game):
                 self.deck.cards = []
         # Check for breaking hearts.
         if not self.hearts_broken and self.breakers.intersection(self.trick):
-                self.hearts_broken = True
+            self.hearts_broken = True
         # Clear the trick.
-        self.trick.cards = []
+        self.last_trick = self.trick
+        self.last_winner = winner
+        self.trick = cards.Hand(self.deck)
         # Check for the end of the round.
         if not self.hands[self.human.name]:
             self.score_round()
