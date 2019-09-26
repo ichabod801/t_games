@@ -82,6 +82,7 @@ lady-score= (lp=): The points scored for the QS. Defaults to 13, sometimes it
 low-club (lc): The player with the lowest club in the deck (typically 2C) must
     start the first trick of each hand.
 keep-spades: Players may not pass the Queen, King, or Ace of Spades.
+medium= (md=): The number of medium hard bots to play against.
 moon= (m=): How shooting the Moon is scored. Valid settings are:
     old (o): Every player that didn't shoot gains 26 points.
     new (n): The shooting player loses 26 points.
@@ -210,7 +211,6 @@ class HeartBot(player.Bot):
                 else:
                     # If you have no penalty cards, get rid of the highest card you can.
                     card = sorted(self.hand.cards, key = lambda card: card.rank_num)[-1]
-        self.game.human.tell('{} plays the {}.'.format(self.name, card))
         return card
 
     def lead(self):
@@ -230,7 +230,6 @@ class HeartBot(player.Bot):
         # Avoid leading the QS.
         if card == 'QS' and play_index < len(self.hand.cards) - 1:
             card = self.hand.cards[play_index + 1]
-        self.game.human.tell('{} opens with the {}.'.format(self.name, card))
         return card
 
     def pass_cards(self):
@@ -297,8 +296,14 @@ class SmeartBot(HeartBot):
     """
     A bot for Hearts that understands shooting the Moon. (HeartBot)
 
+    Class Attributes:
+    danger_cards: Cards that signal trying to shoot the moon. (list of str)
+
     Attributes:
+    got_points: Which players have score points this deal. (dict of str: int)
+    shooter: The name of the player trying to shoot the moon. (str)
     strategy: The strategy the bot is usingto make moves. (str)
+    tricks: The number of tricks played this deal. (int)
 
     Methods:
     defend: Make a move to stop a player from shooting the moon. (cards.Card)
@@ -309,9 +314,43 @@ class SmeartBot(HeartBot):
     set_up
     """
 
+    danger_cards = ('QH', 'KH', 'AH', 'QS', 'KS', 'AS')
+
     def defend(self):
         """Make a move to stop a player from shooting the moon. (cards.Card)"""
-        return super(SmeartBot, self).play()
+        standard = super(SmeartBot, self).play()
+        if isinstance(standard, str):
+            standard = cards.Card(*standard)
+        base_check = standard.suit == 'H' or standard in self.danger_cards
+        if base_check or (self.game.joker_points and standard.rank == 'X'):
+            suit_cards = [card for card in self.game.trick if card.suit == self.game.trick.cards[0].suit]
+            suit_cards.sort(key = lambda card: card.rank_num)
+            best_card = suit_cards[-1]
+            best_index = self.game.trick.cards.index(best_card)
+            best_player = self.game.players[self.game.player_index - len(self.game.trick) + best_index]
+            self.hand.cards.sort(key = lambda card: card.rank_num)
+            if best_player.name == self.shooter:
+                playable = [card for card in self.hand if card.suit == self.game.trick.cards[0].suit]
+                if playable:
+                    winners = [card for card in playable if card.rank_num > best_card.rank_num]
+                    if winners:
+                        return winners[0]
+                    elif playable[0].suit == 'X':
+                        return playable[1]
+                    else:
+                        return playable[0]
+                else:
+                    non_points = [card for card in self.hand if card.suit != 'H' and card != 'QS']
+                    if self.game.joker_points:
+                        non_points = [card for card in non_points if card.rank != 'X']
+                    if non_points:
+                        return non_points[0]
+                    else:
+                        return self.hand.cards[0]
+            else:
+                return standard
+        else:
+            return standard
 
     def shoot(self):
         """Make a move trying to shoot the moon. (cards.Card)"""
@@ -319,7 +358,30 @@ class SmeartBot(HeartBot):
 
     def strategy_check(self):
         """See if the bot's strategy needs revision. (cards.Card)"""
-        self.strategy = 'standard'
+        # Update the tracking variables.
+        self.tricks += 1
+        if self.game.last_trick:
+            # Get the points from the last trick.
+            last_penalties = [card for card in self.game.last_trick if card.suit == 'H']
+            if self.game.joker_points:
+                last_penalties.extend([card for card in self.game.last_trick if card.rank == 'X'])
+            # Update who has scored points.
+            if last_penalties or 'QS' in self.game.last_trick:
+                self.got_points[self.game.last_winner.name] = True
+        # Look for signs of someone trying to shoot (leading a high card early).
+        if self.strategy == 'standard':
+            if self.game.trick and self.game.trick.cards[0] in self.danger_cards and self.tricks < 5:
+                self.strategy = 'defend'
+                self.shooter = self.game.players[self.game.player_index - len(self.game.trick)].name
+        # Go back to avoidance if more than one person has points.
+        if self.strategy in ('defend', 'shoot'):
+            if sum(self.got_points.values()) > 1:
+                self.strategy = 'standard'
+
+    def pass_cards(self):
+        """Determine which cards to pass. (list of card.Card)"""
+        self.set_tracking()
+        return super(SmeartBot, self).pass_cards()
 
     def play(self):
         """Play a card to a trick. (cards.Card)"""
@@ -331,10 +393,17 @@ class SmeartBot(HeartBot):
         else:
             return self.defend()
 
+    def set_tracking(self):
+        """Set up the tracking variables for a new deal. (None)"""
+        self.strategy = 'standard'
+        self.got_points = {player.name: False for player in self.game.players}
+        self.tricks = 0
+        self.shooter = ''
+
     def set_up(self):
         """Get the bot ready to play. (None)"""
         super(SmeartBot, self).set_up()
-        self.mode = 'standard'
+        self.set_tracking()
 
 
 class Hearts(game.Game):
@@ -360,6 +429,7 @@ class Hearts(game.Game):
     lady_points: How many points the QS scores. (int)
     last_trick: The last trick won by a player. (cards.Hand)
     low_club: The club that must lead each round. (cards.Card or False)
+    medium: The number of medium hard bots in the game. (int)
     num_pass: The number of cards each player passes. (int)
     pass_dir: The direction(s) that cards are passed. (generator)
     passes: The cards passed by each player. (dict of str: cards.Hand)
@@ -530,6 +600,8 @@ class Hearts(game.Game):
                 player.error('You must play a card of the suit led.')
                 return True
             hand.shift(to_play, self.trick)
+            if player != self.human:
+                self.human.tell('{} played the {}.'.format(player, to_play))
         else:
             # Get the player's playable cards.
             playable = hand.cards[:]
@@ -545,6 +617,8 @@ class Hearts(game.Game):
                 player.error('You cannot lead with a heart until they are broken.')
                 return True
             hand.shift(card_text, self.trick)
+            if player != self.human:
+                self.human.tell('{} lead with the {}.'.format(player, to_play))
 
     def do_scores(self, arguments):
         """
@@ -638,10 +712,12 @@ class Hearts(game.Game):
     def handle_opt_player(self):
         """Handle the player option settings for this game. (None)"""
         self.players = [self.human]
-        if self.easy > 5:
+        if self.easy + self.medium > 5:
             self.option_set.errors.append('There can be at most five bots in the game.')
         for bot in range(self.easy):
             self.players.append(HeartBot(taken_names = [player.name for player in self.players]))
+        for bot in range(self.medium):
+            self.players.append(SmeartBot(taken_names = [player.name for player in self.players]))
 
     def handle_opt_score(self):
         """Handle the scoring option settings for this game. (None)"""
@@ -882,8 +958,10 @@ class Hearts(game.Game):
         def is_card(text):
             return len(text) == 2 and text[0] in cards.Card.ranks and text[1] in cards.Card.suits
         # Set the bot options.
-        self.option_set.add_option('easy', ['ez'], int, 3, valid = range(5),
-            question = 'How many easy bots do you want to play against (return for 3)? ')
+        self.option_set.add_option('easy', ['ez'], int, 1, valid = range(5),
+            question = 'How many easy bots do you want to play against (return for 1)? ')
+        self.option_set.add_option('medium', ['md'], int, 2, valid = range(5),
+            question = 'How many medium bots do you want to play against (return for 2)? ')
         # Set the deal/card options.
         self.option_set.add_option('extras', ['x'], default = 'ditch',
             valid = ('d', 'ditch', 'f', 'first', 'h', 'heart', 'j', 'joker'),
