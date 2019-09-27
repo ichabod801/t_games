@@ -14,6 +14,7 @@ Hearts: A game of Hearts. (game.Game)
 """
 
 
+import collections
 import itertools
 import random
 import re
@@ -354,7 +355,11 @@ class SmeartBot(HeartBot):
 
     def shoot(self):
         """Make a move trying to shoot the moon. (cards.Card)"""
-        return super(SmeartBot, self).play()
+        self.hand.cards.sort(key = lambda card: card.rank_num)
+        if self.game.trick:
+            return [card for card in self.hand if card.suit == self.game.trick.cards[0].suit][-1]
+        else:
+            return self.hand.cards[-1]
 
     def strategy_check(self):
         """See if the bot's strategy needs revision. (cards.Card)"""
@@ -381,7 +386,30 @@ class SmeartBot(HeartBot):
     def pass_cards(self):
         """Determine which cards to pass. (list of card.Card)"""
         self.set_tracking()
-        return super(SmeartBot, self).pass_cards()
+        by_suit = collections.Counter(card.suit for card in self.hand)
+        if len(set(['QS', 'KS', 'AS', 'KH', 'AH']).intersection(self.hand)) >= 4:
+            if ('QH' in hand and by_suit['H'] > 4) or by_suit['H'] > 5:
+                self.strategy = 'shoot'
+                to_pass = sorted(cards, key = lambda card: card.rank_num + 2 * card.suit in ('HS'))
+        if self.strategy == 'standard':
+            to_pass = []
+            high_spades = set(['QS', 'KS', 'AS']).intersection(self.hand)
+            low_spades = set(char + 'S' for char in '234567').intersection(self.hand)
+            if high_spades and len(low_spades) < 3:
+                to_pass.extend(high_spades)
+            high_hearts = set(['QH', 'KH', 'AH']).intersection(self.hand)
+            low_hearts = set(char + 'H' for char in '234567').intersection(self.hand)
+            if high_hearts and len(low_spades) < 3:
+                to_pass.extend(high_hearts)
+            if len(to_pass) < self.game.num_pass:
+                if by_suit['C'] < by_suit['D']:
+                    suits = 'CD'
+                else:
+                    suits = 'DC'
+                to_pass.extend(card for card in self.hand if card.suit == suits[0])
+                if len(to_pass) < self.game.num_pass:
+                    to_pass.extend(card for card in self.hand if card.suit == suits[1])
+        return to_pass[:self.game.num_pass]
 
     def play(self):
         """Play a card to a trick. (cards.Card)"""
@@ -945,7 +973,7 @@ class Hearts(game.Game):
                     # Redeal to any tied players.
                     if max_rank == 14:
                         # Correct rank index for aces.
-                        max_rank = 2
+                        max_rank = 2 # !! getting twos, change to 1.
                     self.human.tell("\nThere was a tie of {}'s.".format(self.deck.ranks[max_rank]))
                     max_rank = -1
                     players = max_players
