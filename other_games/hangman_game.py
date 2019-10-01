@@ -236,7 +236,7 @@ class Hangman(game.Game):
             # Start computer guessing.
             if not self.word:
                 query = '\nThink of a word for me to guess. How many letters are in it? '
-                self.word_length = player.ask_int(query, low = 1)
+                self.word_length = player.ask_int(query, low = 1, cmd =False)
                 self.guess = '_' * self.word_length
                 self.word = '???'
                 self.possibles = [word for word in self.words if len(word) == self.word_length]
