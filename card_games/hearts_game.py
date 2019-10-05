@@ -421,14 +421,14 @@ class SmeartBot(HeartBot):
                     suits = 'DC'
                 to_pass.extend(card for card in self.hand if card.suit == suits[0])
                 to_pass.extend(card for card in self.hand if card.suit == suits[1])
-            # Never pass safe suit aces.
-            if 'AC' in to_pass:
-                to_pass.remove('AC')
-            if 'AD' in to_pass:
-                to_pass.remove('AD')
             # Never pass QS to you left.
-            if self.game.this_pass == 'left' and 'QS' in to_pass:
+            if self.game.this_pass == 'left' and 'QS' in to_pass and len(to_pass) > self.game.num_pass:
                 to_pass.remove('QS')
+            # Never pass safe suit aces.
+            if 'AC' in to_pass and len(to_pass) > self.game.num_pass:
+                to_pass.remove('AC')
+            if 'AD' in to_pass and len(to_pass) > self.game.num_pass:
+                to_pass.remove('AD')
             print(self.name, to_pass)
         return to_pass[:self.game.num_pass]
 
@@ -1091,6 +1091,7 @@ class Hearts(game.Game):
         self.taken = {player.name: cards.Hand(self.deck) for player in self.players}
         self.trick = cards.Hand(self.deck)
         self.last_trick = cards.Hand(self.deck)
+        random.shuffle(self.players)
         # Handle the initial deal
         self.set_dealer()
         self.deal()
