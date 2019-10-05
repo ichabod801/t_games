@@ -384,7 +384,11 @@ class SmeartBot(HeartBot):
                 self.strategy = 'standard'
 
     def pass_cards(self):
-        """Determine which cards to pass. (list of card.Card)"""
+        """
+        Determine which cards to pass. (list of card.Card)
+
+        Based on strategy tips from viphearts.com.
+        """
         self.set_tracking()
         by_suit = collections.Counter(card.suit for card in self.hand)
         if len(set(['QS', 'KS', 'AS', 'KH', 'AH']).intersection(self.hand)) >= 4:
@@ -393,22 +397,39 @@ class SmeartBot(HeartBot):
                 to_pass = sorted(cards, key = lambda card: card.rank_num + 2 * card.suit in ('HS'))
         if self.strategy == 'standard':
             to_pass = []
+            # Don't pass spades unless you have high ones and few spades.
             high_spades = set(['QS', 'KS', 'AS']).intersection(self.hand)
-            low_spades = set(char + 'S' for char in '234567').intersection(self.hand)
+            low_spades = [card for card in self.hand if card.suit == 'S' and card.rank_num < 12]
             if high_spades and len(low_spades) < 3:
                 to_pass.extend(high_spades)
-            high_hearts = set(['QH', 'KH', 'AH']).intersection(self.hand)
+            # Don't pass the ace of hearts, but pass other high hearts if you have few low hearts.
+            high_hearts = set(['JH', 'QH', 'KH']).intersection(self.hand)
             low_hearts = set(char + 'H' for char in '234567').intersection(self.hand)
-            if high_hearts and len(low_spades) < 3:
+            if high_hearts and len(low_hearts) < 3:
                 to_pass.extend(high_hearts)
+            # Pass the low club if it's the starter card.
+            if self.game.low_club and self.game.low_club in self.hand:
+                to_pass.extend(self.game.low_club)
+            # Always pass QS to your right.
+            if self.game.this_pass == 'right' and 'QS' in self.hand and 'QS' not in to_pass:
+                to_pass.append('QS')
+            # Fill out the cards to pass.
             if len(to_pass) < self.game.num_pass:
-                if by_suit['C'] < by_suit['D']:
+                if by_suit['C'] < by_suit['D'] and not self.game.low_club:
                     suits = 'CD'
                 else:
                     suits = 'DC'
                 to_pass.extend(card for card in self.hand if card.suit == suits[0])
-                if len(to_pass) < self.game.num_pass:
-                    to_pass.extend(card for card in self.hand if card.suit == suits[1])
+                to_pass.extend(card for card in self.hand if card.suit == suits[1])
+            # Never pass safe suit aces.
+            if 'AC' in to_pass:
+                to_pass.remove('AC')
+            if 'AD' in to_pass:
+                to_pass.remove('AD')
+            # Never pass QS to you left.
+            if self.game.this_pass == 'left' and 'QS' in to_pass:
+                to_pass.remove('QS')
+            print(self.name, to_pass)
         return to_pass[:self.game.num_pass]
 
     def play(self):
