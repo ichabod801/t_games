@@ -448,7 +448,8 @@ class GlobalThermonuclearWar(game.Game):
             for country_data in self.powers:
                 if country_data['name'] == self.human_country:
                     for key, value in country_data.items():
-                        setattr(self.human, key, value)
+                        if key != 'name':
+                            setattr(self.human, key, value)
                     self.human.arsenal_left = self.human.arsenal
                 else:
                     self.players.append(NationBot(**country_data))
