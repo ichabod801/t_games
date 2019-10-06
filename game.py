@@ -570,8 +570,9 @@ class Flip(Game):
                     self.human.tell('You beat {} with {} heads!'.format(self.bot.name, winning_score))
                 else:
                     self.win_loss_draw[1] = 1
-                    message = 'You lost to {} win {} heads.'
+                    message = 'You lost to {} with {} heads.'
                     self.human.tell(message.format(self.bot.name, winning_score - 2))
+                return True
 
     def handle_options(self):
         """Handle game options and set the player list. (None)"""
