@@ -496,7 +496,7 @@ class RandomValve(object):
     __repr__
     """
 
-    def __init__(self, p = 0.05):
+    def __init__(self, p = 0.1):
         """
         Set up the attributes. (None)
 
