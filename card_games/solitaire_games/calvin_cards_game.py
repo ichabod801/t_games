@@ -4,8 +4,7 @@ calvin_cards_game.py
 A game of Calvin Cards.
 
 To Do:
-disappearing lanes/cells
-comment
+clean up redealt reserves (deck.in_play is too long, can't win)
 make playable
 options (secret)
 skip setting a deal #
@@ -50,6 +49,7 @@ class CalvinCards(solitaire.Solitaire):
 
     Class Attributes:
     build_types: The available pair rule suffixes. (list of str)
+    ofs: What items in the game messages can be 'of'. (tuple of string)
     sort_to_lane: The lane-able rank for each foundation base rank. (dict)
 
     Methods:
@@ -72,6 +72,7 @@ class CalvinCards(solitaire.Solitaire):
     categories = ['Card Games', 'Solitaire Games']
     credits = CREDITS
     name = 'Calvin Cards'
+    ofs = ('wisdom', 'bonuses', 'songs', 'spinning', 'secrets', 'opposites', 'time')
     rules = RULES
     sort_to_lane = dict(zip('A23456789TJQK', 'KA23456789TJQ'))
 
@@ -132,7 +133,7 @@ class CalvinCards(solitaire.Solitaire):
             break
         # Set a message indicating the rules have changed.
         action = random.choice(('been bonked by', 'scored with', 'stumbled into', 'taken', 'lost'))
-        of = random.choice(('wisdom', 'bonuses', 'songs', 'spinning', 'secrets', 'opposites', 'time'))
+        of = random.choice(self.ofs)
         self.message = 'You have {} the {} of {}.'.format(action, item, of)
 
     def do_undo(self):
@@ -153,6 +154,7 @@ class CalvinCards(solitaire.Solitaire):
         self.move_chance = 0.33
         self.up_chance = 0.33
         self.down_chance = 0.5
+        self.drop_chance = 0.33
         # Do the standard option handling.
         super(CalvinCards, self).handle_options()
 
@@ -193,14 +195,34 @@ class CalvinCards(solitaire.Solitaire):
         """
         # Get and process the move.
         go = super(CalvinCards, self).player_action(player)
-        # If there was an actual move, check for changing rules.
+        # If there was an actual move, check for chaos.
         if not go:
+            # Check for rules change
             self.keep_rules -= 1
             if not self.keep_rules:
                 self.change_rules()
                 self.keep_rules = random.randint(4, 8)
-            # Check for moving cards.
-            self.move_cards()
+            # If no rule change, check for disappearing cell/pile.
+            elif not self.moves[-1][1]:
+                item = ''
+                old_loc = self.moves[-1][1]
+                if old_loc is self.cells and random.random() < self.drop_chance:
+                    # Remove the cell.
+                    self.num_cells -= 1
+                    self.options['num-cells'] -= 1
+                    item = 'flag'
+                elif any(old_loc is pile for pile in self.tableau) and random.random() < self.drop_chance:
+                    # Remove the tableau pile.
+                    self.options['num-tableau'] -= 1
+                    del self.tableau[[old_loc is pile for pile in self.tableau].index(True)]
+                    item = 'ball'
+                # Set a message if anything was removed.
+                if item:
+                    of = random.choice(self.ofs)
+                    self.message = 'Whoops! You dropped the {} of {}.'.format(item, of)
+            # If no other changes, check for moving cards.
+            else:
+                self.move_cards()
         return go
 
     def randomize_build(self):
