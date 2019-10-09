@@ -4,9 +4,16 @@ calvin_cards_game.py
 A game of Calvin Cards.
 
 To Do:
+limit swaps to w/o superstack
 make playable
+    I have won some games, how playable do I want to make it?
+        50/50 would be like flipping a coin.
+    remove by suit from pair checking
+        or restrict it somehow
+    allow for extra passes to be added after the last pass
+    allow k or any rank less than foundation rank to lane.
+    move cards to the reserve if it is empty???
 options (secret)
-skip setting a deal #
 
 Constants:
 CREDITS: The credits for Calvin Cards. (str)
@@ -180,8 +187,7 @@ class CalvinCards(solitaire.Solitaire):
                     random.choice(up_cards).up = False
             else:
                 # Swap two cards.
-                # !! limit to w/o superstack.
-                tableau_cards = [card for card in tableau_cards if card.game_location[-1] != card]
+                tableau_cards = [card for card in tableau_cards if not self.super_stack(card)]
                 if len(tableau_cards) > 1:
                     card_a, card_b = random.sample(tableau_cards, 2)
                     index_a = card_a.game_location.index(card_a)
