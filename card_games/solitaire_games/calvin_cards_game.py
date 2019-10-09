@@ -4,7 +4,6 @@ calvin_cards_game.py
 A game of Calvin Cards.
 
 To Do:
-clean up redealt reserves (deck.in_play is too long, can't win)
 make playable
 options (secret)
 skip setting a deal #
@@ -158,7 +157,8 @@ class CalvinCards(solitaire.Solitaire):
         self.up_chance = 0.33
         self.down_chance = 0.5
         self.drop_chance = 0.33
-        # Do the standard option handling.
+        # Do the standard option handling, with no deal number request.
+        self.silent = True
         super(CalvinCards, self).handle_options()
 
     def move_cards(self):
