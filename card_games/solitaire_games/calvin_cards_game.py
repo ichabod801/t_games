@@ -3,6 +3,11 @@ calvin_cards_game.py
 
 A game of Calvin Cards.
 
+To Do:
+disappearing lanes/cells
+comment
+make playable
+
 Classes:
 CalvinCards: A game of Calvin Cards. (solitaire.Solitaire)
 """
@@ -38,6 +43,13 @@ class CalvinCards(solitaire.Solitaire):
     rules = RULES
     sort_to_lane = dict(zip('A23456789TJQK', 'KA23456789TJQ'))
 
+    def __str__(self):
+        text = super(CalvinCards, self).__str__()
+        if self.message:
+            text = '{}\n\n{}'.format(text, self.message)
+            self.message = ''
+        return text
+
     def change_rules(self):
         """Change the rules of the game randomly. (None)"""
         while True:
@@ -62,6 +74,7 @@ class CalvinCards(solitaire.Solitaire):
                 else:
                     continue
             elif change == 'free':
+                self.options['num-cells'] += 1
                 self.num_cells += 1
                 item = 'flag'
             elif change == 'reserve':
@@ -77,10 +90,9 @@ class CalvinCards(solitaire.Solitaire):
                 else:
                     continue
             break
-        # !! Move this to __str__, so it is more obvious.
         action = random.choice(('been bonked by', 'scored with', 'stumbled into', 'taken', 'lost'))
         of = random.choice(('wisdom', 'bonuses', 'songs', 'spinning', 'secrets', 'opposites', 'time'))
-        self.human.tell('You have {} the {} of {}.'.format(action, item, of))
+        self.message = 'You have {} the {} of {}.'.format(action, item, of)
 
     def do_undo(self):
         """
@@ -166,7 +178,6 @@ class CalvinCards(solitaire.Solitaire):
         stock_cards = min(52 - tableau_cards - self.options['num-reserve'], random.randint(8, 22))
         # The reserve gets the rest of the cards.
         reserve_cards = 52 - tableau_cards - stock_cards
-        print(tableau_cards, stock_cards, reserve_cards)
         # Set the deal functions
         up = random.random() < 0.667
         dealer = random.choice((solitaire.deal_n, solitaire.deal_triangle_n, solitaire.deal_random_n))
@@ -197,3 +208,4 @@ class CalvinCards(solitaire.Solitaire):
         super(CalvinCards, self).set_up()
         # Set up game specific tracking valuesl
         self.keep_rules = random.randint(4, 8)
+        self.message = ''
