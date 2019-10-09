@@ -7,6 +7,12 @@ To Do:
 disappearing lanes/cells
 comment
 make playable
+options (secret)
+skip setting a deal #
+
+Constants:
+CREDITS: The credits for Calvin Cards. (str)
+RULES: The (lack of) rules for Calvin Cards. (str)
 
 Classes:
 CalvinCards: A game of Calvin Cards. (solitaire.Solitaire)
@@ -33,6 +39,32 @@ are. Except for the rule about masks. That is not to be questioned.
 class CalvinCards(solitaire.Solitaire):
     """
     A game of Calvin Cards. (solitaire.Solitaire)
+
+    Attributes:
+    down_chance: The chance that a card move will be a flip face down. (float)
+    keep_rules: A count down timer for changing the rules. (int)
+    lane_rank: The rank that can be moved into an empty lane. (str)
+    message: The message to give after a rule change. (str)
+    move_chance: The chance that cards will move on any given turn. (float)
+    up_chance: The chance that a card move will be a flip face up. (float)
+
+    Class Attributes:
+    build_types: The available pair rule suffixes. (list of str)
+    sort_to_lane: The lane-able rank for each foundation base rank. (dict)
+
+    Methods:
+    change_rules: Change the rules of the game randomly. (None)
+    move_cards: Randomly flip or swap cards. (None)
+    randomize_build: Randomize the building and pairing rules. (None)
+
+    Overridden Methods:
+    __str__
+    do_undo
+    handle_options
+    player_action
+    set_checkers
+    set_solitaire
+    set_up
     """
 
     aka = ['CaCa']
@@ -44,7 +76,9 @@ class CalvinCards(solitaire.Solitaire):
     sort_to_lane = dict(zip('A23456789TJQK', 'KA23456789TJQ'))
 
     def __str__(self):
+        """Human readable text representation. (str)"""
         text = super(CalvinCards, self).__str__()
+        # Add a message to the standard text, if there is one.
         if self.message:
             text = '{}\n\n{}'.format(text, self.message)
             self.message = ''
@@ -52,12 +86,15 @@ class CalvinCards(solitaire.Solitaire):
 
     def change_rules(self):
         """Change the rules of the game randomly. (None)"""
+        # Keep choosing rule categories until a valid change is found.
         while True:
             change = random.choice(('build', 'sort', 'turn', 'free', 'reserve'))
             if change == 'build':
+                # Change the build rules.
                 self.randomize_build()
                 item = 'ball'
             elif change == 'sort':
+                # Increase the base foundation rank, if there is still an empty foundation.
                 if [] in self.foundations:
                     current = self.deck.ranks.index(self.foundation_rank)
                     self.foundation_rank = self.deck.ranks[(current + 1) % len(self.deck.ranks)]
@@ -68,16 +105,19 @@ class CalvinCards(solitaire.Solitaire):
                 else:
                     continue
             elif change == 'turn':
+                # Change the number of cards turned over, if you can still go through the stock.
                 if self.stock_passes != self.max_passes:
                     self.turn_count = random.randint(1, 4)
                     item = 'tree'
                 else:
                     continue
             elif change == 'free':
+                # Increase the number of free cells.
                 self.options['num-cells'] += 1
                 self.num_cells += 1
                 item = 'flag'
             elif change == 'reserve':
+                # Redeal the reserve into a random number of piles, if there are still reserve cards.
                 reserve_cards = sum(self.reserve, [])
                 new_count = random.randint(1, 3)
                 if len(reserve_cards) >= new_count:
@@ -90,6 +130,7 @@ class CalvinCards(solitaire.Solitaire):
                 else:
                     continue
             break
+        # Set a message indicating the rules have changed.
         action = random.choice(('been bonked by', 'scored with', 'stumbled into', 'taken', 'lost'))
         of = random.choice(('wisdom', 'bonuses', 'songs', 'spinning', 'secrets', 'opposites', 'time'))
         self.message = 'You have {} the {} of {}.'.format(action, item, of)
@@ -103,17 +144,20 @@ class CalvinCards(solitaire.Solitaire):
 
     def handle_options(self):
         """Handle the option settings for this game. (None)"""
+        # Confirm the player is wearing a mask.
         mask = self.human.ask('\nAre you wearing a mask? ')
         if mask.lower() not in utility.YES:
             self.option_set.errors.append('No mask.')
             return
+        # Set the card movement probabilities.
         self.move_chance = 0.33
         self.up_chance = 0.33
         self.down_chance = 0.5
+        # Do the standard option handling.
         super(CalvinCards, self).handle_options()
 
     def move_cards(self):
-        """Randomly flip cards."""
+        """Randomly flip or swap cards. (None)"""
         # Check for actually moving a card.
         if random.random() < self.move_chance:
             tableau_cards = sum(self.tableau, [])
@@ -155,7 +199,8 @@ class CalvinCards(solitaire.Solitaire):
             if not self.keep_rules:
                 self.change_rules()
                 self.keep_rules = random.randint(4, 8)
-        self.move_cards()
+            # Check for moving cards.
+            self.move_cards()
         return go
 
     def randomize_build(self):
@@ -199,7 +244,9 @@ class CalvinCards(solitaire.Solitaire):
         self.options['num-reserve'] = random.randint(1, 3)
         self.options['num-cells'] = random.randint(0, 2)
         self.options['turn-count'] = random.randint(1, 4)
-        self.options['max-passes'] = random.randint(1, 3)
+        self.options['max-passes'] = random.randint(0, 3)
+        if not self.options['max-passes']:
+            self.options['max-passes'] = -1
         super(CalvinCards, self).set_solitaire()
 
     def set_up(self):
