@@ -1085,7 +1085,7 @@ def pair_color(self, mover, target):
     error = ''
     # Check for different colors.
     if mover.color != target.color:
-        error = 'The {} is not the ame color as the {}'
+        error = 'The {} is not the same color as the {}'
         error = error.format(mover.name, target.name)
     return error
 

@@ -62,8 +62,7 @@ class CalvinCards(solitaire.Solitaire):
                 else:
                     continue
             elif change == 'free':
-                self.free_cells.append([])
-                self.options['num-cells'] += 1
+                self.num_cells += 1
                 item = 'flag'
             elif change == 'reserve':
                 reserve_cards = sum(self.reserve, [])
@@ -78,9 +77,10 @@ class CalvinCards(solitaire.Solitaire):
                 else:
                     continue
             break
+        # !! Move this to __str__, so it is more obvious.
         action = random.choice(('been bonked by', 'scored with', 'stumbled into', 'taken', 'lost'))
         of = random.choice(('wisdom', 'bonuses', 'songs', 'spinning', 'secrets', 'opposites', 'time'))
-        self.human.tell('You have {} the {} of {}.'.format(item, action, of))
+        self.human.tell('You have {} the {} of {}.'.format(action, item, of))
 
     def do_undo(self):
         """
@@ -91,7 +91,7 @@ class CalvinCards(solitaire.Solitaire):
 
     def handle_options(self):
         """Handle the option settings for this game. (None)"""
-        mask = self.human.ask('Are you wearing a mask? ')
+        mask = self.human.ask('\nAre you wearing a mask? ')
         if mask.lower() not in utility.YES:
             self.option_set.errors.append('No mask.')
             return
