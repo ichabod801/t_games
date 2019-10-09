@@ -118,15 +118,18 @@ class CalvinCards(solitaire.Solitaire):
                 self.num_cells += 1
                 item = 'flag'
             elif change == 'reserve':
-                # Redeal the reserve into a random number of piles, if there are still reserve cards.
+                # Redeal the reserve into a random number of piles, if there are enough reserve cards.
                 reserve_cards = sum(self.reserve, [])
                 new_count = random.randint(1, 3)
                 if len(reserve_cards) >= new_count:
+                    # Reset the reserve data.
                     self.options['num-reserve'] = new_count
                     self.reserve = [[] for pile in range(new_count)]
+                    # Deal the cards.
                     self.deck.cards = reserve_cards
                     for card_index in range(len(reserve_cards)):
                         self.deck.deal(self.reserve[card_index % len(self.reserve)])
+                    self.deck.in_play = self.deck.in_play[:52]  # clean up card tracking.
                     item = 'ring'
                 else:
                     continue
@@ -177,6 +180,7 @@ class CalvinCards(solitaire.Solitaire):
                     random.choice(up_cards).up = False
             else:
                 # Swap two cards.
+                # !! limit to w/o superstack.
                 tableau_cards = [card for card in tableau_cards if card.game_location[-1] != card]
                 if len(tableau_cards) > 1:
                     card_a, card_b = random.sample(tableau_cards, 2)
