@@ -201,6 +201,7 @@ class CalvinCards(solitaire.Solitaire):
         go = super(CalvinCards, self).player_action(player)
         # If there was an actual move, check for chaos.
         if not go:
+            old_loc = self.moves[-1][1]
             # Check for rules change
             self.keep_rules -= 1
             if not self.keep_rules:
@@ -208,9 +209,8 @@ class CalvinCards(solitaire.Solitaire):
                 self.keep_rules = random.randint(4, 8)
             # If no rule change, check for disappearing cell/pile.
             # !! only lose a cell if all cells are empty.
-            elif not self.moves[-1][1] and random.random() < self.drop_chance:
+            elif (old_loc == self.cells or not old_loc) and random.random() < self.drop_chance:
                 item = ''
-                old_loc = self.moves[-1][1]
                 if old_loc is self.cells:
                     # Remove the cell.
                     self.num_cells -= 1
