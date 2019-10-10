@@ -6,7 +6,6 @@ A game of Calvin Cards.
 To Do:
 make playable
     allow k or any rank less than foundation rank to lane.
-    minimum of 4 tableau piles (otherwise might not be able to lane)
 options (secret)???
 
 Constants:
@@ -42,7 +41,7 @@ class CalvinCards(solitaire.Solitaire):
     Attributes:
     down_chance: The chance that a card move will be a flip face down. (float)
     keep_rules: A count down timer for changing the rules. (int)
-    lane_rank: The rank that can be moved into an empty lane. (str)
+    lane_ranks: The ranks that can be moved into an empty lane. (list of str)
     message: The message to give after a rule change. (str)
     move_chance: The chance that cards will move on any given turn. (float)
     up_chance: The chance that a card move will be a flip face up. (float)
@@ -101,7 +100,7 @@ class CalvinCards(solitaire.Solitaire):
                     self.foundation_rank = self.deck.ranks[(current + 1) % len(self.deck.ranks)]
                     if self.foundation_rank == 'X':
                         self.foundation_rank = 'A'
-                    self.lane_rank = self.sort_to_lane[self.foundation_rank]
+                    self.lane_ranks.append(self.sort_to_lane[self.foundation_rank])
                     item = 'shuttlecock'
                 else:
                     continue
@@ -208,7 +207,6 @@ class CalvinCards(solitaire.Solitaire):
                 self.change_rules()
                 self.keep_rules = random.randint(4, 8)
             # If no rule change, check for disappearing cell/pile.
-            # !! only lose a cell if all cells are empty.
             elif (old_loc == self.cells or not old_loc) and random.random() < self.drop_chance:
                 item = ''
                 if old_loc is self.cells:
@@ -264,9 +262,9 @@ class CalvinCards(solitaire.Solitaire):
         self.dealers.extend([solitaire.deal_reserve_n(reserve_cards), solitaire.deal_stock_all])
         # Set the sorting and laning functions.
         self.foundation_rank = 'A'
-        self.lane_rank = 'K'
+        self.lane_ranks = ['K']
         self.sort_checkers = [solitaire.sort_rank, solitaire.sort_up]
-        self.lane_checkers = [solitaire.lane_rank]
+        self.lane_checkers = [solitaire.lane_ranks]
 
     def set_solitaire(self):
         """Randomize the beginning of the solitaire game. (None)"""

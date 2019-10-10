@@ -69,7 +69,7 @@ lane_down: Check moving only stacks of descending ranks into a lane. (str)
 lane_king: Check moving only kings into a lane. (str)
 lane_none: Cards may not be moved to empty lanes. (str)
 lane_one: Check moving one card at a time into a lane. (str)
-lane_rank: The first card laned must be one below the first rank sorted. (str)
+lane_ranks: The first card laned a king below the first sortable rank. (str)
 lane_reserve: Lane only from the reserve (str)
 lane_reserve_waste: Check only laning cards from the reserve. (str)
 lane_suit: Check moving only stacks of the same suit to empty lanes. (str)
@@ -776,7 +776,7 @@ def lane_one(game, card, moving_stack):
     return error
 
 
-def lane_rank(game, card, moving_stack):
+def lane_ranks(game, card, moving_stack):
     """
     The first card moved into a lane must be one below the first rank sorted. (str)
 
@@ -787,9 +787,12 @@ def lane_rank(game, card, moving_stack):
     """
     error = ''
     # Get the correct rank.
-    if card.rank != game.lane_rank:
-        rank_name = card.rank_names[card.ranks.index(game.lane_rank)].lower()
-        error = 'You can only move {}s into an empty lane.'.format(rank_name)
+    if card.rank not in game.lane_ranks:
+        rank_name = card.rank_names[card.ranks.index(game.foundation_rank)].lower()
+        if game.foundation_rank == 'A':
+            error = 'You can only move kings into an empty lane.'
+        else:
+            error = 'You can only move kings or ranks less than {} into an empty lane.'.format(rank_name)
     return error
 
 
