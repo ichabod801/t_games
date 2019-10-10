@@ -207,15 +207,16 @@ class CalvinCards(solitaire.Solitaire):
                 self.change_rules()
                 self.keep_rules = random.randint(4, 8)
             # If no rule change, check for disappearing cell/pile.
-            elif not self.moves[-1][1]:
+            # !! only lose a cell if all cells are empty.
+            elif not self.moves[-1][1] and random.random() < self.drop_chance:
                 item = ''
                 old_loc = self.moves[-1][1]
-                if old_loc is self.cells and random.random() < self.drop_chance:
+                if old_loc is self.cells:
                     # Remove the cell.
                     self.num_cells -= 1
                     self.options['num-cells'] -= 1
                     item = 'flag'
-                elif any(old_loc is pile for pile in self.tableau) and random.random() < self.drop_chance:
+                elif any(old_loc is pile for pile in self.tableau) and len(self.tableau) > 4:
                     # Remove the tableau pile.
                     self.options['num-tableau'] -= 1
                     del self.tableau[[old_loc is pile for pile in self.tableau].index(True)]
