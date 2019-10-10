@@ -5,8 +5,6 @@ A game of Calvin Cards.
 
 To Do:
 make playable
-    must change from suit pair checking.
-    allow for extra passes to be added after the last pass
     allow k or any rank less than foundation rank to lane.
     minimum of 4 tableau piles (otherwise might not be able to lane)
 options (secret)???
@@ -111,9 +109,9 @@ class CalvinCards(solitaire.Solitaire):
                 # Change the number of cards turned over, if you can still go through the stock.
                 if self.stock_passes != self.max_passes:
                     self.turn_count = random.randint(1, 4)
-                    item = 'tree'
                 else:
-                    continue
+                    self.max_passes += 1
+                item = 'tree'
             elif change == 'free':
                 # Increase the number of free cells.
                 self.options['num-cells'] += 1
