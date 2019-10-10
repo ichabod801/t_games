@@ -4,16 +4,12 @@ calvin_cards_game.py
 A game of Calvin Cards.
 
 To Do:
-limit swaps to w/o superstack
 make playable
-    I have won some games, how playable do I want to make it?
-        50/50 would be like flipping a coin.
-    remove by suit from pair checking
-        or restrict it somehow
+    must change from suit pair checking.
     allow for extra passes to be added after the last pass
     allow k or any rank less than foundation rank to lane.
-    move cards to the reserve if it is empty???
-options (secret)
+    minimum of 4 tableau piles (otherwise might not be able to lane)
+options (secret)???
 
 Constants:
 CREDITS: The credits for Calvin Cards. (str)
@@ -237,11 +233,16 @@ class CalvinCards(solitaire.Solitaire):
 
     def randomize_build(self):
         """Randomize the building and pairing rules. (None)"""
+        # Get a random build type, but let it stay on by_suit if it is already there.
+        suit_build = solitaire.pair_suit in self.build_checkers
+        while True:
+            build_type = random.choice(self.build_types)
+            if not (suit_build and build_type == 'suit'):
+                break
+        # Reset the checkers.
         self.build_checkers = [solitaire.build_down]
         self.pair_checkers = [solitaire.pair_down]
-        build_type = random.choice(self.build_types)
         if build_type != 'ANY':
-            #self.build_checkers.append(getattr(solitaire, 'build_{}'.format(build_type)))
             self.pair_checkers.append(getattr(solitaire, 'pair_{}'.format(build_type)))
 
     def set_checkers(self):
