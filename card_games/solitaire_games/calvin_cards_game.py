@@ -4,8 +4,6 @@ calvin_cards_game.py
 A game of Calvin Cards.
 
 To Do:
-make playable
-    allow k or any rank less than foundation rank to lane.
 options (secret)???
 
 Constants:
@@ -152,13 +150,10 @@ class CalvinCards(solitaire.Solitaire):
         if mask.lower() not in utility.YES:
             self.option_set.errors.append('No mask.')
             return
-        # Set the card movement probabilities.
-        self.move_chance = 0.33
-        self.up_chance = 0.33
-        self.down_chance = 0.5
-        self.drop_chance = 0.33
-        # Do the standard option handling, with no deal number request.
+        # Do the standard option handling, with no deal number request, and no questions.
         self.silent = True
+        if not self.raw_options.strip():
+            self.raw_options = 'none'
         super(CalvinCards, self).handle_options()
 
     def move_cards(self):
@@ -254,10 +249,10 @@ class CalvinCards(solitaire.Solitaire):
         # The reserve gets the rest of the cards.
         reserve_cards = 52 - tableau_cards - stock_cards
         # Set the deal functions
-        up = random.random() < 0.667
+        up = random.random() < self.deal_up
         dealer = random.choice((solitaire.deal_n, solitaire.deal_triangle_n, solitaire.deal_random_n))
         self.dealers = [dealer(tableau_cards, up)]
-        if up and random.random() < 0.5:
+        if up and random.random() < self.flip_half:
             self.dealers.append(solitaire.deal_flip_half)
         self.dealers.extend([solitaire.deal_reserve_n(reserve_cards), solitaire.deal_stock_all])
         # Set the sorting and laning functions.
@@ -266,15 +261,39 @@ class CalvinCards(solitaire.Solitaire):
         self.sort_checkers = [solitaire.sort_rank, solitaire.sort_up]
         self.lane_checkers = [solitaire.lane_ranks]
 
+    def set_options(self):
+        """Set the options for the game. (None)"""
+        # !! document all of these attributes
+        # !! add a help topic for options
+        # Set the deal options.
+        self.option_set.add_option('deal-up', ['du'], float, 0.667)
+        self.option_set.add_option('flip-half', ['fh'], float, 0.5)
+        # Set the layout options
+        self.option_set.add_option('min-cells', ['nc'], int, 0)
+        self.option_set.add_option('max-cells', ['xc'], int, 2)
+        self.option_set.add_option('min-pass', ['np'], int, 0)
+        self.option_set.add_option('max-pass', ['xp'], int, 3)
+        self.option_set.add_option('min-reserve', ['nr'], int, 1)
+        self.option_set.add_option('max-reserve', ['xr'], int, 3)
+        self.option_set.add_option('min-tableau', ['nt'], int, 5)
+        self.option_set.add_option('max-tableau', ['xt'], int, 10)
+        self.option_set.add_option('min-turn', ['nu'], int, 1)
+        self.option_set.add_option('max-turn', ['xu'], int, 4)
+        # Set the card movement options.
+        self.option_set.add_option('down-chance', ['do'], float, 0.5)
+        self.option_set.add_option('drop-chance', ['dr'], float, 0.33)
+        self.option_set.add_option('move-chance', ['mv'], float, 0.33)
+        self.option_set.add_option('up-chance', ['up'], float, 0.33)
+
     def set_solitaire(self):
         """Randomize the beginning of the solitaire game. (None)"""
         # Randomize the options
         self.options = {'deck-spec': [], 'num-foundations': 4, 'wrap-ranks': True}
-        self.options['num-tableau'] = random.randint(5, 10)
-        self.options['num-reserve'] = random.randint(1, 3)
-        self.options['num-cells'] = random.randint(0, 2)
-        self.options['turn-count'] = random.randint(1, 4)
-        self.options['max-passes'] = random.randint(0, 3)
+        self.options['num-tableau'] = random.randint(self.min_tableau, self.max_tableau)
+        self.options['num-reserve'] = random.randint(self.min_reserve, self.max_reserve)
+        self.options['num-cells'] = random.randint(self.min_cells, self.max_cells)
+        self.options['turn-count'] = random.randint(self.min_turn, self.max_turn)
+        self.options['max-passes'] = random.randint(self.min_pass, self.max_pass)
         if not self.options['max-passes']:
             self.options['max-passes'] = -1
         super(CalvinCards, self).set_solitaire()
