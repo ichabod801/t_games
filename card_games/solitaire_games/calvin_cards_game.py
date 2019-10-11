@@ -3,9 +3,6 @@ calvin_cards_game.py
 
 A game of Calvin Cards.
 
-To Do:
-options (secret)???
-
 Constants:
 CREDITS: The credits for Calvin Cards. (str)
 RULES: The (lack of) rules for Calvin Cards. (str)
@@ -97,8 +94,10 @@ class CalvinCards(solitaire.Solitaire):
 
     Methods:
     change_rules: Change the rules of the game randomly. (None)
+    increase_sorting_base: Increase the base card for sorting. (None)
     move_cards: Randomly flip or swap cards. (None)
     randomize_build: Randomize the building and pairing rules. (None)
+    redeal_reserves: Redeal the reserves into a new set of piles. (None)
 
     Overridden Methods:
     __str__
@@ -131,7 +130,6 @@ class CalvinCards(solitaire.Solitaire):
 
     def change_rules(self):
         """Change the rules of the game randomly. (None)"""
-        # !! refactor for size
         # Keep choosing rule categories until a valid change is found.
         while True:
             change = random.choice(('build', 'sort', 'turn', 'free', 'reserve', 'tableau'))
@@ -142,11 +140,7 @@ class CalvinCards(solitaire.Solitaire):
             elif change == 'sort':
                 # Increase the base foundation rank, if there is still an empty foundation.
                 if [] in self.foundations:
-                    current = self.deck.ranks.index(self.foundation_rank)
-                    self.foundation_rank = self.deck.ranks[(current + 1) % len(self.deck.ranks)]
-                    if self.foundation_rank == 'X':
-                        self.foundation_rank = 'A'
-                    self.lane_ranks.append(self.sort_to_lane[self.foundation_rank])
+                    self.increase_sorting_base()
                     item = 'shuttlecock'
                 else:
                     continue
@@ -167,14 +161,7 @@ class CalvinCards(solitaire.Solitaire):
                 reserve_cards = sum(self.reserve, [])
                 new_count = random.randint(1, 3)
                 if len(reserve_cards) >= new_count:
-                    # Reset the reserve data.
-                    self.options['num-reserve'] = new_count
-                    self.reserve = [[] for pile in range(new_count)]
-                    # Deal the cards.
-                    self.deck.cards = reserve_cards
-                    for card_index in range(len(reserve_cards)):
-                        self.deck.deal(self.reserve[card_index % len(self.reserve)])
-                    self.deck.in_play = self.deck.in_play[:52]  # clean up card tracking.
+                    self.redeal_reserves(reserve_cards, new_count)
                     item = 'ring'
                 else:
                     continue
@@ -211,6 +198,14 @@ class CalvinCards(solitaire.Solitaire):
         if not self.raw_options.strip():
             self.raw_options = 'none'
         super(CalvinCards, self).handle_options()
+
+    def increase_sorting_base(self):
+        """Increase the base card for sorting. (None)"""
+        current = self.deck.ranks.index(self.foundation_rank)
+        self.foundation_rank = self.deck.ranks[(current + 1) % len(self.deck.ranks)]
+        if self.foundation_rank == 'X':
+            self.foundation_rank = 'A'
+        self.lane_ranks.append(self.sort_to_lane[self.foundation_rank])
 
     def move_cards(self):
         """Randomly flip or swap cards. (None)"""
@@ -292,6 +287,17 @@ class CalvinCards(solitaire.Solitaire):
         self.pair_checkers = [solitaire.pair_down]
         if build_type != 'ANY':
             self.pair_checkers.append(getattr(solitaire, 'pair_{}'.format(build_type)))
+
+    def redeal_reserves(self, reserve_cards, new_count):
+        """Redeal the reserves into a new set of piles. (None)"""
+        # Reset the reserve data.
+        self.options['num-reserve'] = new_count
+        self.reserve = [[] for pile in range(new_count)]
+        # Deal the cards.
+        self.deck.cards = reserve_cards
+        for card_index in range(len(reserve_cards)):
+            self.deck.deal(self.reserve[card_index % len(self.reserve)])
+        self.deck.in_play = self.deck.in_play[:52]  # clean up card tracking.
 
     def set_checkers(self):
         """Randomize the initial rule checkers. (None)"""
