@@ -26,6 +26,39 @@ Game Design: Calvin
 Game Programming: Craig "Ichabod" O'Brien
 """
 
+OPTION_HELP = """
+deal_up= (du=): The probability that cards are dealt face up. Defaults to
+    0.667.
+down_chance= (do=): The probability that a card will be turned face down.
+    Defaults to 0.5.
+drop_chance= (dr=): The probability that a cell or pile will be dropped.
+    Defaults to 0.33.
+flip_half= (fh=): The probability that half the dealt cards are flipped face
+    down. Defaults to 0.5
+max_cells= (xc=): The maximum number of initial free cells. Defaults to 2.
+max_pass= (xp=): The maximum number of initial passes through the deck.
+    Defaults to 3.
+max_reserve= (xr=): The maximum number of initial reserve piles. Defaults to 3.
+max_tableau= (xt=): The maximum number of initial tableau piles. Defaults to
+    10.
+max_turn= (xu=): The maximum number of initial cards turned over by the turn
+    command. Defaults to 4.
+min_cells= (nc=): The minimum number of initial free cells. Defaults to 0.
+min_pass= (np=): The minimum number of initial passes through the deck.
+    Defaults to 0, which converts to -1, which is treated as infinite.
+min_reserve= (nr=): The minimum number of initial reserve piles. Defaults to 1.
+min_tableau= (nt=): The minimum number of initial tableau piles. Defaults to 5.
+min_turn= (nu=): The minimum number of initial cards turned over by the turn
+    command. Defaults to 1.
+move-chance= (mv=): The probability that two cards will be swapped. Defaults to
+    0.33.
+up-chance= (up=): The probability that a card will be flipped face up. Defaults
+    to 0.33.
+
+Down chance is checked first, if there is no rule change. Then up chance is
+checked, and finally move chance.
+"""
+
 RULES = """
 I'd love to tell you the rules, but I can't, because no one knows what they
 are. Except for the rule about masks. That is not to be questioned.
@@ -37,10 +70,23 @@ class CalvinCards(solitaire.Solitaire):
     A game of Calvin Cards. (solitaire.Solitaire)
 
     Attributes:
+    deal_up: The probability that the cards will be dealt face up. (float)
     down_chance: The chance that a card move will be a flip face down. (float)
+    drop_chance: The probability that a cell or pile will be dropped. (float)
+    flip_half: The probability that half the cards will be flipped down. (float)
     keep_rules: A count down timer for changing the rules. (int)
     lane_ranks: The ranks that can be moved into an empty lane. (list of str)
     message: The message to give after a rule change. (str)
+    max_cells: The maximum number of initial free cells. (int)
+    max_pass: The maximum number of initial passes through the deck. (int)
+    max_reserve: The maximum number of initial reserve piles. (int)
+    max_tableau: The maximum number of initial tableau piles. (int)
+    max_turn: The maximum number of initial cards turned over by turn cmd. (int)
+    min_cells: The minimum number of initial free cells. (int)
+    min_pass: The minimum number of initial passes through the deck. (int)
+    min_reserve: The minimum number of initial reserve piles. (int)
+    min_tableau: The minimum number of initial tableau piles. (int)
+    min_turn: The minimum number of initial cards turned over by turn cmd. (int)
     move_chance: The chance that cards will move on any given turn. (float)
     up_chance: The chance that a card move will be a flip face up. (float)
 
@@ -68,6 +114,7 @@ class CalvinCards(solitaire.Solitaire):
     build_types = ['suit', 'color', 'alt_color', 'not_suit', 'ANY']
     categories = ['Card Games', 'Solitaire Games']
     credits = CREDITS
+    help_text = {'options': OPTION_HELP}
     name = 'Calvin Cards'
     ofs = ('wisdom', 'bonuses', 'songs', 'spinning', 'secrets', 'opposites', 'time')
     rules = RULES
@@ -84,9 +131,10 @@ class CalvinCards(solitaire.Solitaire):
 
     def change_rules(self):
         """Change the rules of the game randomly. (None)"""
+        # !! refactor for size
         # Keep choosing rule categories until a valid change is found.
         while True:
-            change = random.choice(('build', 'sort', 'turn', 'free', 'reserve'))
+            change = random.choice(('build', 'sort', 'turn', 'free', 'reserve', 'tableau'))
             if change == 'build':
                 # Change the build rules.
                 self.randomize_build()
@@ -128,6 +176,14 @@ class CalvinCards(solitaire.Solitaire):
                         self.deck.deal(self.reserve[card_index % len(self.reserve)])
                     self.deck.in_play = self.deck.in_play[:52]  # clean up card tracking.
                     item = 'ring'
+                else:
+                    continue
+            elif change == 'tableau':
+                # Increase the number of tableau piles.
+                if self.tableau.count([]) < 2:
+                    self.options['num-cells'] += 1
+                    self.num_cells += 1
+                    item = 'flag'
                 else:
                     continue
             break
@@ -263,8 +319,6 @@ class CalvinCards(solitaire.Solitaire):
 
     def set_options(self):
         """Set the options for the game. (None)"""
-        # !! document all of these attributes
-        # !! add a help topic for options
         # Set the deal options.
         self.option_set.add_option('deal-up', ['du'], float, 0.667)
         self.option_set.add_option('flip-half', ['fh'], float, 0.5)
