@@ -126,6 +126,7 @@ class Solitaire(game.Game):
     options: The standard solitaire options for this game. (dict of str: object)
     pair_checkers: Functions for validating pairs in tableau stacks. (list)
     reserve: Piles where building is not permitted. (list of list of Card)
+    silent: A flag for supressing deal number questions. (bool)
     sort_checkers: Functions for validating foundation moves. (list of callable)
     stock: A face down pile of cards for later play. (list of Card)
     stock_passes: The number of times the waste has been gone through. (int)

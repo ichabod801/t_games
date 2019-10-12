@@ -44,6 +44,7 @@ deal_aces_up: Deal the aces onto the foundations. (None)
 deal_all: Deal all the cards out onto the tableau. (None)
 deal_bisley: Deal cards to the tableau with the first four piles short. (None)
 deal_five_six: Deal the fives and sixes as foundations. (None)
+deal_flip_half: Flip half of the tableau cards face down at random. (None)
 deal_flip_random: Flip random tableau cards face down. (None)
 deal_free: Deal a card into each free cell. (None)
 deal_klondike: Deal tableau piles of increasing size. (None)
@@ -52,11 +53,13 @@ deal_one_row: Deal one card face up to each tableau pile. (None)
 deal_open: Turn all of the tableau cards face up. (None)
 deal_pyramid: Deal a pyramid of overlapping cards. (None)
 deal_queens_out: Discard the queensl (None)
+deal_random_n: Create a dealer to deal n cards into random piles. (None)
 deal_rank_foundations: Deal a specific rank to the foundations. (None)
 deal_reserve_n: Create a dealer that deals n cards to the reserve (None)
 deal_selective: Deal tableau cards with selection of foundation rank. (None)
 deal_start_foundation: Deal an initial foundation card. (None)
 deal_stock_all: Move the rest of the deck into the stock. (None)
+deal_triangle_n: Create a dealer to deal n cards into a triangle. (None)
 deal_twos: Deal the twos onto the tableau. (None)
 deal_yukon: Deal the cards face up on the tableau, except the first pile. (None)
 --------------------------------------------------------
@@ -66,6 +69,7 @@ lane_down: Check moving only stacks of descending ranks into a lane. (str)
 lane_king: Check moving only kings into a lane. (str)
 lane_none: Cards may not be moved to empty lanes. (str)
 lane_one: Check moving one card at a time into a lane. (str)
+lane_ranks: The first card laned a king below the first sortable rank. (str)
 lane_reserve: Lane only from the reserve (str)
 lane_reserve_waste: Check only laning cards from the reserve. (str)
 lane_suit: Check moving only stacks of the same suit to empty lanes. (str)
@@ -82,6 +86,7 @@ match_top: Allow matching cards on the top of a pile. (str)
 match_top_two: Match cards on top of pile, even on top of each other. (str)
 --------------------------------------------------
 pair_alt_color: Build in alternating colors. (str)
+pair_color: Cards must be built on the tableau in matching colors. (str)
 pair_down: Build sequentially down in rank. (str)
 pair_not_suit: Build in anything but suits. (str)
 pair_suit: Build in suits. (str)
@@ -394,6 +399,18 @@ def deal_five_six(game):
         game.deck.force(six, game.foundations[foundation_index + 4])
 
 
+def deal_flip_half(game):
+    """
+    Flip half of the tableau cards face down at random. (None)
+
+    Parameters:
+    game: The game to deal the cards for. (Solitaire)
+    """
+    for pile in game.tableau:
+        for card in pile[:-1]:
+            card.up = random.random() < 0.5
+
+
 def deal_flip_random(game):
     """
     Flip random tableau cards face down. (None)
@@ -500,6 +517,25 @@ def deal_queens_out(game):
         game.deck.discard(queen)
 
 
+def deal_random_n(n, up):
+    """
+    Create a dealer to deal n cards into random piles. (None)
+
+    Parameters:
+    n: The number of cards to deal. (int)
+    up: A flag for dealing the cards face up. (bool)
+    """
+    def dealer(game):
+        for card_index in range(n):
+            game.deck.deal(game.tableau[random.randrange(len(game.tableau))], up = up)
+        for pile in game.tableau:
+            if pile:
+                pile[-1].up = True
+    dealer.__doc__ = "\nDeal {} cards randomly [created] (None)\n.".format(n)
+    dealer.__doc__ = '{}\noption-code: deal_random_n({},{})\n'.format(dealer.__doc__, n, up)
+    return dealer
+
+
 def deal_rank_foundations(rank):
     """
     Create a dealer to deal a specific rank to the foundations. (None)
@@ -592,6 +628,35 @@ def deal_stock_all(game):
         game.deck.deal(game.stock, up = False)
     # Reverse the cards after being dealt.
     game.stock.reverse()
+
+
+def deal_triangle_n(n, up):
+    """
+    Create a dealer to deal n cards in an approximate triangle. (None)
+
+    Parameters:
+    n: The number of cards to deal. (int)
+    up: A flag for dealing the cards face up. (bool)
+    """
+    def dealer(game):
+        cards = 0
+        for level_index in range(len(game.tableau)):
+            for pile_index in range(level_index, len(game.tableau)):
+                game.deck.deal(game.tableau[pile_index], up = up)
+                cards += 1
+                if cards == n:
+                    break
+            if cards == n:
+                break
+        if cards < n:
+            for card_index in range(n - cards):
+                game.deck.deal(game.tableau[card_index % len(game.tableau)], up = up)
+        if not up:
+            for pile in game.tableau:
+                pile[-1].up = True
+    dealer.__doc__ = '\nDeal {} cards into a triangle [created] (None)\n.'.format(n)
+    dealer.__doc__ = '{}\noption-code: deal_triangle_n({},{})\n'.format(dealer.__doc__, n, up)
+    return dealer
 
 
 def deal_twos(game):
@@ -708,6 +773,26 @@ def lane_one(game, card, moving_stack):
     max_lane = _move_one_size(game, to_lane = True)
     if len(moving_stack) > max_lane:
         error = 'You can only move {} cards to a lane at the moment.'.format(max_lane)
+    return error
+
+
+def lane_ranks(game, card, moving_stack):
+    """
+    The first card moved into a lane must be one below the first rank sorted. (str)
+
+    Parameters:
+    game: The game being played. (Solitaire)
+    card: The card to move into the lane. (TrackingCard)
+    moving_stack: The cards on top of the card moving. (list of TrackingCard)
+    """
+    error = ''
+    # Get the correct rank.
+    if card.rank not in game.lane_ranks:
+        rank_name = card.rank_names[card.ranks.index(game.foundation_rank)].lower()
+        if game.foundation_rank == 'A':
+            error = 'You can only move kings into an empty lane.'
+        else:
+            error = 'You can only move kings or ranks less than {} into an empty lane.'.format(rank_name)
     return error
 
 
@@ -987,6 +1072,23 @@ def pair_alt_color(self, mover, target):
     # Check for different colors.
     if mover.color == target.color:
         error = 'The {} is not the opposite color of the {}'
+        error = error.format(mover.name, target.name)
+    return error
+
+
+def pair_color(self, mover, target):
+    """
+    Cards must be built on the tableau in matching colors. (str)
+
+    Parameters:
+    game: The game buing played. (Solitaire)
+    mover: The card to move. (TrackingCard)
+    target: The destination card. (TrackingCard)
+    """
+    error = ''
+    # Check for different colors.
+    if mover.color != target.color:
+        error = 'The {} is not the same color as the {}'
         error = error.format(mover.name, target.name)
     return error
 
