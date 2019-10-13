@@ -449,6 +449,14 @@ class Hand(object):
         """Human readable text representation. (str)"""
         return ', '.join([str(card) for card in self.cards])
 
+    def deal(self, card):
+        """
+        Add a card to the hand. (None)
+
+        card: The card to add to the hand. (Card)
+        """
+        self.cards.append(card)
+
     def draw(self, up = True):
         """
         Draw a card from the deck. (None)
