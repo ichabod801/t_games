@@ -16,6 +16,7 @@ import random
 
 from .. import cards
 from .. import game
+from .. import player
 from .. import utility
 
 
@@ -56,7 +57,7 @@ class GinRummy(game.Game):
     """
 
     aka = ['Gin', 'Knock Poker', 'Poker Gin', 'Gin Poker']
-    aliases = {'k': 'knock', 'p': 'pass'}
+    aliases = {'g': 'group', 'k': 'knock', 'p': 'pass', 's': 'score'}
     card_values = dict(zip('A23456789TJQK', (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10)))
     categories = ['Card Games']
     credits = CREDITS
@@ -76,10 +77,11 @@ class GinRummy(game.Game):
             for hand in self.hands.values():
                 hand.draw()
         # Discard one card.
-        self.deck.discard(self.deck.deal())
+        self.deck.discard(self.deck.deal(), up = True)
         # Handle dibs on the first discard.
         # Non-dealer gets first chance at the discard.
-        non_dealer = self.players[0] if self.players[1] == dealer else self.players[1]
+        non_dealer = self.players[0] if self.players[1] == self.dealer else self.players[1]
+        non_dealer.tell('Your hand is {}.'.format(self.hands[non_dealer.name]))
         query = 'Would you like the top card of the discard pile ({})? '.format(self.deck.discards[-1])
         take_discard = non_dealer.ask(query).lower()
         if take_discard in utility.YES:
@@ -87,6 +89,7 @@ class GinRummy(game.Game):
             self.player_index = self.players.index(self.dealer)
         else:
             # The dealer then gets a chance at the discard.
+            self.dealer.tell('Your hand is {}.'.format(self.hands[self.dealer.name]))
             take_discard = self.dealer.ask(query).lower()
             if take_discard in utility.YES:
                 self.hands[self.dealer.name].deal(self.deck.discards.pop())
@@ -95,7 +98,6 @@ class GinRummy(game.Game):
                 # If no one wants it, non-dealer starts with the top card off the deck.
                 self.hands[non_dealer.name].draw()
                 self.player_index = self.players.index(self.dealer)
-        # Set the dealer as the current player, so non-dealer starts.
         self.card_drawn = True
 
     def do_discard(self, argument):
@@ -108,12 +110,34 @@ class GinRummy(game.Game):
         # Validate the card.
         if argument in hand:
             # Discard valid cards.
-            self.hand.discard(argument)
+            hand.discard(argument)
+            self.deck.discards[-1].up = True
             return False
         else:
             # Give a warning if the card is not valid.
             player.error('You do not have that card to discard.')
             return True
+
+    def do_group(self, arguments):
+        """
+        Groups the cards provided as arguments and places them at the beginning of
+        your hand. (g)
+        """
+        # Get the player information
+        player = self.players[self.player_index]
+        hand = self.hands[player.name]
+        # Validate the cards.
+        card_text = arguments.split()
+        try:
+            cards = [hand.cards[hand.cards.index(card_name)] for card_name in card_text]
+        except IndexError:
+            player.error('You do not have all of those cards in your hand.')
+            return True
+        # Put the cards at the beginning of the hand.
+        for card in cards:
+            hand.cards.remove(card)
+        hand.cards = cards + hand.cards
+        return True
 
     def do_knock(self, argument):
         """
@@ -121,7 +145,14 @@ class GinRummy(game.Game):
         """
         attacker = self.players[self.player_index]
         defender = self.players[1 - self.player_index]
-        # !! get the attacker's discard
+        # Get the attacker's discard
+        while True:
+            discard = attacker.ask('Which card would you like to discard? ')
+            if discard in self.hands[attacker.name]:
+                break
+            attacker.tell('You do not have that card to discard.')
+            attacker.tell('Your hand is {}.'.format(self.hands[attacker.name]))
+        self.hands[attacker.name].discard(discard)
         # Spread the dealer's hand.
         attack_melds, attack_deadwood = self.spread(attacker)
         attack_score = sum([self.card_values[card[0]] for card in attack_deadwood])
@@ -146,7 +177,7 @@ class GinRummy(game.Game):
         self.human.tell('{} scored {} points.'.format(winner.name, score))
         self.scores[winner.name] += score
         self.wins[winner.name] += 1
-        self.do_scores('') # !! not implemented
+        self.do_scores('')
         # Redeal.
         if self.scores[winner.name] < self.end:
             for hand in self.hands.values():
@@ -154,6 +185,54 @@ class GinRummy(game.Game):
             self.dealer = winner
             self.deal()
         return False
+
+    def do_scores(self, arguments):
+        """
+        Show the current game scores. (s)
+        """
+        current = self.players[self.player_index]
+        current.tell('\nCurrent Scores:')
+        for player in self.players:
+            current.tell('{}: {}'.format(player.name, self.scores[player.name]))
+
+    def game_over(self):
+        """Check for end of game and calculate the final score. (bool)"""
+        if max(self.scores.values()) >= self.end:
+            self.human.tell('\nThe game is over.')
+            # Give the ender the game bonus.
+            ender = self.players[self.player_index]
+            self.human.tell('{} scores 100 points for ending the game.')
+            self.scores[ender.name] += 100
+            # Check for a sweep bonus.
+            opponent = self.players[1 - self.player_index]
+            if not self.wins[opponent.name]:
+                self.human.tell('{} doubles their score for sweeping the game.')
+                self.scores[ender.name] *= 2
+            # Give each payer 25 points for each win.
+            for player in self.players:
+                if self.wins[player.name]:
+                    win_points = 25 * self.wins[player.name]
+                    text = '{} gets {} extra points for winning {} hands.'
+                    self.human.tell(text.format(player.name, win_points, self.wins[player.name]))
+            # Determine the winner.
+            if self.scores[ender] > self.scores[opponent]:
+                winner = ender
+                loser = opponent
+            else:
+                winner = opponent
+                loser = ender
+            # Reset the scores.
+            for player in self.players:
+                self.scores[player] -= self.scores[loser]
+            # Announce the winner.
+            self.human.tell('\n{} won the game by {} points.'.format(winner.name, self.scores[winner.name]))
+            return True
+        else:
+            return False
+
+    def handle_options(self):
+        """Handle the option settings for this game. (None)"""
+        self.players = [self.human, player.Cyborg(taken_names = [self.human.name])]
 
     def player_action(self, player):
         """
@@ -168,25 +247,31 @@ class GinRummy(game.Game):
         # Handle the player action.
         if self.card_drawn:
             # Get a move
-            move = self.player.ask('What is your move? ').lower()
-            return self.handle_cmd(move)
+            move = player.ask('What is your move? ').lower()
+            go = self.handle_cmd(move)
+            if not go:
+                self.card_drawn = False
         else:
             # Draw a card.
             move = player.ask('Would like to draw from the discards or the top of the deck? ').lower()
             if move == 'discards' or move == self.deck.discards[-1]:
                 self.hands[player.name].deal(self.deck.discards.pop())
-            else:
+            else:  # !! put in a don't understand. Currently 'discard' draws from top of deck.
                 self.hands[player.name].draw()
             self.card_drawn = True
-        return True
+            go = True
+        return go
 
     def set_up(self):
         """Set up the game. (None)"""
         # Set up the cards.
         self.deck = cards.Deck()
-        self.hands = {player.name: card.Hand(self.deck) for player in self.players}
+        self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
         self.dealer = random.choice(self.players)
         self.deal()
+        # Adjust for the starting player (Game.play resets player_index after set_up runs)
+        if self.player_index == 0:
+            self.players.reverse()
         # Set up the tracking variables.
         self.wins = {player.name: 0 for player in self.players}
         self.end = 100
