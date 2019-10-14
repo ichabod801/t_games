@@ -130,7 +130,7 @@ class GinRummy(game.Game):
         card_text = arguments.split()
         try:
             cards = [hand.cards[hand.cards.index(card_name)] for card_name in card_text]
-        except IndexError:
+        except ValueError:
             player.error('You do not have all of those cards in your hand.')
             return True
         # Put the cards at the beginning of the hand.
@@ -143,6 +143,7 @@ class GinRummy(game.Game):
         """
         Set out your cards in an attempt to win the hand. (k)
         """
+        # !! needs a way to cancel out of it.
         attacker = self.players[self.player_index]
         defender = self.players[1 - self.player_index]
         # Get the attacker's discard
@@ -155,7 +156,7 @@ class GinRummy(game.Game):
         self.hands[attacker.name].discard(discard)
         # Spread the dealer's hand.
         attack_melds, attack_deadwood = self.spread(attacker)
-        attack_score = sum([self.card_values[card[0]] for card in attack_deadwood])
+        attack_score = sum([self.card_values[card[0]] for card in attack_deadwood]) # !! deadwood is cards.
         if attack_score > self.knock_min:
             attacker.error('You do not have a low enough score to knock.')
             return False
@@ -338,14 +339,14 @@ class GinRummy(game.Game):
         valid = False
         # Sort the cards.
         try:
-            meld.sort(key = lambda card: self.deck.ranks.index(card[0]))
+            meld.sort(key = lambda card: self.deck.ranks.index(card[0].upper()))
         except IndexError:
             return False
         # Check for a set.
-        if len(set(card[0] for card in meld)) == 1:
+        if len(set(card[0].upper() for card in meld)) == 1:
             valid = True
         # Check for a run.
-        elif len(set(card[1] for card in meld)) == 1:
+        elif len(set(card[1].upper() for card in meld)) == 1:
             if ''.join(card[0] for card in meld) in self.deck.ranks:
                 valid = True
         return valid
