@@ -156,7 +156,7 @@ class GinRummy(game.Game):
         self.hands[attacker.name].discard(discard)
         # Spread the dealer's hand.
         attack_melds, attack_deadwood = self.spread(attacker)
-        attack_score = sum([self.card_values[card[0]] for card in attack_deadwood]) # !! deadwood is cards.
+        attack_score = sum([self.card_values[card.rank] for card in attack_deadwood])
         if attack_score > self.knock_min:
             attacker.error('You do not have a low enough score to knock.')
             return False
@@ -165,7 +165,7 @@ class GinRummy(game.Game):
         else:
             defender.tell('Gin! You may not lay off.')
             defense_melds, defense_deadwood = self.spread(defender)
-        defense_score = sum([self.card_values[card[0]] for card in defense_deadwood])
+        defense_score = sum([self.card_values[card.rank] for card in defense_deadwood])
         # Score the hands.
         score_diff = attack_score - defense_score
         if not attack_score:
@@ -242,6 +242,7 @@ class GinRummy(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
+        # !! need to deal with the end of the deck.
         # Show the game status.
         player.tell('\nDiscard Pile: {}'.format(', '.join([str(card) for card in self.deck.discards])))
         player.tell('Your Hand: {}'.format(self.hands[player.name]))
@@ -286,6 +287,7 @@ class GinRummy(game.Game):
         player: The player who is spreading cards. (player.Player)
         attack: The melds that were spread by the attacking player. (list of list)
         """
+        # !! show the player their cards
         # Get the available cards.
         cards = self.hands[player.name].cards[:]
         # Show the attack, if any.
@@ -315,9 +317,10 @@ class GinRummy(game.Game):
             # Handle the cards.
             if valid:
                 # Shift cards out of the temporary hand.
-                scoring_sets.append(meld)
+                scoring_sets.append([])
                 for card in meld:
-                    cards.remove(card)
+                    # !! converting to card may cause problems laying off
+                    scoring_sets[-1].append(cards.pop(cards.index(card)))
                 if not cards:
                     break
             else:
@@ -347,6 +350,6 @@ class GinRummy(game.Game):
             valid = True
         # Check for a run.
         elif len(set(card[1].upper() for card in meld)) == 1:
-            if ''.join(card[0] for card in meld) in self.deck.ranks:
+            if ''.join(card[0].upper() for card in meld) in self.deck.ranks:
                 valid = True
         return valid
