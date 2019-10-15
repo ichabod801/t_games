@@ -167,7 +167,7 @@ class GinRummy(game.Game):
             defense_melds, defense_deadwood = self.spread(defender)
         defense_score = sum([self.card_values[card.rank] for card in defense_deadwood])
         # Score the hands.
-        score_diff = attack_score - defense_score
+        score_diff = defense_score - attack_score
         if not attack_score:
             winner, score = attacker, 25 + score_diff
         elif score_diff > 0:
@@ -294,7 +294,7 @@ class GinRummy(game.Game):
         if attack:
             player.tell('\nThe attacking melds: ')
             for meld in attack:
-                player.tell(', '.join(meld))
+                player.tell(', '.join(str(card) for card in meld))
         # Get the melds and layoffs.
         scoring_sets = []
         while True:
