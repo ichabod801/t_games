@@ -143,6 +143,7 @@ class GinRummy(game.Game):
         """
         Set out your cards in an attempt to win the hand. (k)
         """
+        # !! allow the discard to be an argument.
         # !! needs a way to cancel out of it.
         attacker = self.players[self.player_index]
         defender = self.players[1 - self.player_index]
@@ -255,11 +256,16 @@ class GinRummy(game.Game):
                 self.card_drawn = False
         else:
             # Draw a card.
-            move = player.ask('Would like to draw from the discards or the top of the deck? ').lower()
-            if move == 'discards' or move == self.deck.discards[-1]:
-                self.hands[player.name].deal(self.deck.discards.pop())
-            else:  # !! put in a don't understand. Currently 'discard' draws from top of deck.
-                self.hands[player.name].draw()
+            while True:
+                move = player.ask('Would like to draw from the discards or the top of the deck? ').lower()
+                if move in ('discard', 'discards', self.deck.discards[-1]):
+                    self.hands[player.name].deal(self.deck.discards.pop())
+                    break
+                elif move in ('deck', 'top'):
+                    self.hands[player.name].draw()
+                    break
+                else:
+                    player.tell('I do not undertand. Please enter "discards" or "deck".')
             self.card_drawn = True
             go = True
         return go
