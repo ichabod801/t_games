@@ -84,7 +84,7 @@ class GinRummy(game.Game):
         non_dealer.tell('Your hand is {}.'.format(self.hands[non_dealer.name]))
         query = 'Would you like the top card of the discard pile ({})? '.format(self.deck.discards[-1])
         take_discard = non_dealer.ask(query).lower()
-        if take_discard in utility.YES:
+        if take_discard in utility.YES:  # !! allow entering the card (or discard)
             self.hands[non_dealer.name].deal(self.deck.discards.pop())
             self.player_index = self.players.index(self.dealer)
         else:
@@ -143,17 +143,24 @@ class GinRummy(game.Game):
         """
         Set out your cards in an attempt to win the hand. (k)
         """
-        # !! allow the discard to be an argument.
         # !! needs a way to cancel out of it.
         attacker = self.players[self.player_index]
         defender = self.players[1 - self.player_index]
-        # Get the attacker's discard
-        while True:
-            discard = attacker.ask('Which card would you like to discard? ')
-            if discard in self.hands[attacker.name]:
-                break
-            attacker.tell('You do not have that card to discard.')
-            attacker.tell('Your hand is {}.'.format(self.hands[attacker.name]))
+        # Get the attacker's discard.
+        # Check for it passed as an argument.
+        if argument in self.hands[attacker.name]:
+            discard = argument
+        else:
+            # Warn about invalid arguments.
+            if argument:
+                attacker.tell('Invalid argument to the knock command: {!r}.'.format(argument))
+            # Query the user for the card.
+            while True:
+                discard = attacker.ask('Which card would you like to discard? ')
+                if discard in self.hands[attacker.name]:
+                    break
+                attacker.tell('You do not have that card to discard.')
+                attacker.tell('Your hand is {}.'.format(self.hands[attacker.name]))
         self.hands[attacker.name].discard(discard)
         # Spread the dealer's hand.
         attack_melds, attack_deadwood = self.spread(attacker)
@@ -243,7 +250,7 @@ class GinRummy(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        # !! need to deal with the end of the deck.
+        # !! need to deal with the end of the deck. (if len(deck) == 2 and no knock, the hand is a draw)
         # Show the game status.
         player.tell('\nDiscard Pile: {}'.format(', '.join([str(card) for card in self.deck.discards])))
         player.tell('Your Hand: {}'.format(self.hands[player.name]))
@@ -304,6 +311,7 @@ class GinRummy(game.Game):
         # Get the melds and layoffs.
         scoring_sets = []
         while True:
+            valid = False
             meld = player.ask('\nEnter a set of cards to score: ').split()
             # Check for no more scoring cards.
             if not meld:
