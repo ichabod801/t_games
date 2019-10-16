@@ -74,8 +74,18 @@ class GinBot(player.Bot):
     tracking
 
     Methods:
+    discard_check: Determine if drawing a discard is a good idea. (str)
+    find_melds: Find any melds of the specified type. (None)
+    match_check: Find any match between a card and tracked groups of cards. (list)
+    run_pair: Check if two cards can be in the same run. (bool)
+    set_pair: Check if two cards can be in the same set. (bool)
     sort_hand: Sort out the melds and potential melds in your hand. (None)
-    update_hand: Check to make sure new cards a tracked. (None)
+    update_hand: Check for new cards and add them to the tracking. (None)
+
+    Overridden Methods:
+    ask
+    set_up
+    tell
     """
 
     def ask(self, prompt):
@@ -86,6 +96,8 @@ class GinBot(player.Bot):
         else:
             self.update_hand()
         # Handle first pick.
+        if prompt.startswith('Would you like the top card of the discard pile'):
+            return 'yes' if self.discard_check(self.game.discards[0]) else 'no'
         # Handle discard vs. deck.
         # Handle knock vs. discard.
         # !! not finished
@@ -93,6 +105,10 @@ class GinBot(player.Bot):
     def find_melds(self, cards, check_function):
         """
         Find any melds of the specified type. (None)
+
+        Parameters:
+        cards: The cards to check for melds. (list of cards.Card)
+        check_function: The function that check for the appropriate match. (callable)
         """
         # Loop through pairs of cards
         current = []
@@ -111,6 +127,32 @@ class GinBot(player.Bot):
                 elif current:
                     self.tracking['potentials'].append(current)
                 current = []
+
+    def discard_check(self, card):
+        """
+        Determine if drawing a discard is a good idea. (str)
+
+        Parameters:
+        card: The discard to check. (cards.Card)
+        """
+        return self.match_check(card)
+
+    def match_check(self, card, groups = ('melds', 'possibles', 'deadwood')):
+        """
+        Find any match between a card and tracked groups of cards. (list)
+
+        If no match is found, the return value is an empty list.
+
+        Parameters:
+        card: The card to match. (cards.Card)
+        groups: The tracked groups to check against. (tuple of str)
+        """
+        # Loop through the groups.
+            # Check for a run match.
+                # Check the low end.
+                # Check the high end.
+            # Check for a set match.
+        # !! not finished
 
     def run_pair(self, card1, card2):
         """
@@ -158,6 +200,27 @@ class GinBot(player.Bot):
         # Set the deadwood.
         used = set(sum(self.tracking['melds'] + self.tracking['potentials'], []))
         self.tracking['deadwood'] = [card for card in cards if card not in used]
+
+    def tell(*args, **kwargs):
+        """
+        Recieve informatio from the game. (None)
+
+        The parameters are the same as for the print function.
+        """
+        pass
+
+    def update_hand(self):
+        """Check for new cards and add them to the tracking. (None)"""
+        # Check for new cards.
+            # Find any matches.
+            # Check the type of match.
+                # Handle meld matches.
+                # Handle potentail matches.
+                    # Clean up the potentials
+                # Handle deadwood matches.
+                    # Remove the deadwood.
+            # Mark the card as tracked.
+        # !! not finished
 
 
 class GinRummy(game.Game):
