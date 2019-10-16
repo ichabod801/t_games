@@ -325,12 +325,13 @@ class GinRummy(game.Game):
             if not meld:
                 break
             elif meld == ['cancel']:
-                if attack:
-                    cards = self.hands[player.name].cards[:]
-                    scoring_sets = []
-                    continue
-                else:
+                if player == self.players[self.player_index]:
                     return [], self.hands[player.name].cards[:]
+                else:
+                    player.tell('\nThe defending player may not cancel.')
+            elif meld == ['reset']:
+                cards = self.hands[player.name].cards[:]
+                scoring_sets = []
             # Validate cards
             if not all(card in cards for card in meld):
                 player.error('You do not have all of those cards.')
