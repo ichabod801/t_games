@@ -162,11 +162,14 @@ class GinRummy(game.Game):
                 attacker.tell('You do not have that card to discard.')
                 attacker.tell('Your hand is {}.'.format(self.hands[attacker.name]))
         self.hands[attacker.name].discard(discard)
+        self.deck.discards[-1].up = True
         # Spread the dealer's hand.
+        # !! scoring seems to be off. It scored 9 9 J 4 as 28 instead of 32.
         attack_melds, attack_deadwood = self.spread(attacker)
         attack_score = sum([self.card_values[card.rank] for card in attack_deadwood])
         if attack_score > self.knock_min:
-            attacker.error('You do not have a low enough score to knock.')
+            if attack_melds:
+                attacker.error('You do not have a low enough score to knock.')
             return False
         elif attack_score:
             defense_melds, defense_deadwood = self.spread(defender, attack_melds)
@@ -296,11 +299,14 @@ class GinRummy(game.Game):
         """
         Spread cards from a player's hand. (tuple of list of cards.Card)
 
+        The return value is the a list of the melds and a list of the deadwood. If the
+        attacking player cancels the spread, then the melds are returned empty. This
+        signals do_knock to cancel the knock.
+
         Parameters:
         player: The player who is spreading cards. (player.Player)
         attack: The melds that were spread by the attacking player. (list of list)
         """
-        # !! show the player their cards
         # Get the available cards.
         cards = self.hands[player.name].cards[:]
         # Show the attack, if any.
@@ -314,10 +320,17 @@ class GinRummy(game.Game):
             valid = False
             card_text = ', '.join(str(card) for card in cards)
             player.tell('\nThe following cards are still in your hand: {}'.format(card_text))
-            meld = player.ask('Enter a set of cards to score: ').split()
+            meld = player.ask('Enter a set of cards to score (return to finish, cancel to abort): ').split()
             # Check for no more scoring cards.
             if not meld:
                 break
+            elif meld == ['cancel']:
+                if attack:
+                    cards = self.hands[player.name].cards[:]
+                    scoring_sets = []
+                    continue
+                else:
+                    return [], self.hands[player.name].cards[:]
             # Validate cards
             if not all(card in cards for card in meld):
                 player.error('You do not have all of those cards.')
