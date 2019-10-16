@@ -81,20 +81,32 @@ class GinRummy(game.Game):
         # Handle dibs on the first discard.
         # Non-dealer gets first chance at the discard.
         non_dealer = self.players[0] if self.players[1] == self.dealer else self.players[1]
-        non_dealer.tell('Your hand is {}.'.format(self.hands[non_dealer.name]))
-        query = 'Would you like the top card of the discard pile ({})? '.format(self.deck.discards[-1])
-        take_discard = non_dealer.ask(query).lower()
-        if take_discard in utility.YES:  # !! allow entering the card (or discard)
-            self.hands[non_dealer.name].deal(self.deck.discards.pop())
-            self.player_index = self.players.index(self.dealer)
-        else:
+        self.player_index = self.players.index(non_dealer)
+        while True:
+            non_dealer.tell('Your hand is {}.'.format(self.hands[non_dealer.name]))
+            query = 'Would you like the top card of the discard pile ({})? '.format(self.deck.discards[-1])
+            take_discard = non_dealer.ask(query).lower()
+            if take_discard in utility.YES or take_discard == self.deck.discards[-1]:
+                self.hands[non_dealer.name].deal(self.deck.discards.pop())
+                self.player_index = self.players.index(self.dealer)
+            elif take_discard.split()[0] in ('g', 'group'):
+                self.handle_cmd(take_discard)
+                continue
+            break
+        if self.deck.discards:
             # The dealer then gets a chance at the discard.
-            self.dealer.tell('Your hand is {}.'.format(self.hands[self.dealer.name]))
-            take_discard = self.dealer.ask(query).lower()
-            if take_discard in utility.YES:
-                self.hands[self.dealer.name].deal(self.deck.discards.pop())
-                self.player_index = self.players.index(non_dealer)
-            else:
+            self.player_index = self.players.index(self.dealer)
+            while True:
+                self.dealer.tell('Your hand is {}.'.format(self.hands[self.dealer.name]))
+                take_discard = self.dealer.ask(query).lower()
+                if take_discard in utility.YES or take_discard == self.deck.discards[-1]:
+                    self.hands[self.dealer.name].deal(self.deck.discards.pop())
+                    self.player_index = self.players.index(non_dealer)
+                elif take_discard.split()[0] in ('g', 'group'):
+                    self.handle_cmd(take_discard)
+                    continue
+                break
+            if self.deck.discards:
                 # If no one wants it, non-dealer starts with the top card off the deck.
                 self.hands[non_dealer.name].draw()
                 self.player_index = self.players.index(self.dealer)
@@ -303,6 +315,8 @@ class GinRummy(game.Game):
         attacking player cancels the spread, then the melds are returned empty. This
         signals do_knock to cancel the knock.
 
+        !! easier ways to lay off would be nice. 9d-jd for a run, or just 5 for a set.
+
         Parameters:
         player: The player who is spreading cards. (player.Player)
         attack: The melds that were spread by the attacking player. (list of list)
@@ -329,9 +343,11 @@ class GinRummy(game.Game):
                     return [], self.hands[player.name].cards[:]
                 else:
                     player.tell('\nThe defending player may not cancel.')
+                    continue
             elif meld == ['reset']:
                 cards = self.hands[player.name].cards[:]
                 scoring_sets = []
+                continue
             # Validate cards
             if not all(card in cards for card in meld):
                 player.error('You do not have all of those cards.')
