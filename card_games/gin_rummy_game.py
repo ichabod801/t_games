@@ -8,6 +8,7 @@ CREDITS: The credits for Gin Rummy. (str)
 RULES: The rules for Gin Rummy. (str)
 
 Classes:
+GinBot: A bot that plays Gin Rummy. (player.Bot)
 GinRummy: A game of Gin Rummy. (game.Game)
 """
 
@@ -50,6 +51,10 @@ wins the hand, with ties going to the defender. The winner adds the difference
 in the hand scores to their game score. If knocker got Gin or the defender beat
 the knocker, they score an extra 25 points.
 
+The dealer alternates each hand. If the deck ever gets to two cards and the
+current player does not knock, the hand is a draw. It is not scored, and the
+same player that dealt the hand deals a new one.
+
 Play continues until someone has 100 game points or more. That player gets a
 game bonus of 100 points. If that player won every hand in the game, they get
 to double their score. Each player then adds 25 bonus points to their game
@@ -59,12 +64,111 @@ than their opponent's.
 """
 
 
+class GinBot(player.Bot):
+    """
+    A bot that plays Gin Rummy. (player.Bot)
+
+    Attributes:
+    hand: The bot's hand. (cards.Hand)
+    sorted: A flag that the bot has prepped it's hand for play. (bool)
+    tracking
+
+    Methods:
+    sort_hand: Sort out the melds and potential melds in your hand. (None)
+    update_hand: Check to make sure new cards a tracked. (None)
+    """
+
+    def ask(self, prompt):
+        """Answer a question from the game. (str)"""
+        # Make sure the meld tracking is up to date.
+        if not self.sorted:
+            self.sort_hand()
+        else:
+            self.update_hand()
+        # Handle first pick.
+        # Handle discard vs. deck.
+        # Handle knock vs. discard.
+        # !! not finished
+
+    def find_melds(self, cards, check_function):
+        """
+        Find any melds of the specified type. (None)
+        """
+        # Loop through pairs of cards
+        current = []
+        previous = cards[0]
+        for card in cards[1:]:
+            if check_function(previous, card):
+                # Track melds as they grow.
+                if current:
+                    current.append(card)
+                else:
+                    current = [previous, card]
+            else:
+                # If the current pair is not a meld, store any previous melds and reset.
+                if len(current) >= 3:
+                    self.tracking.melds.append(current)
+                elif current:
+                    self.tracking['potentials'].append(current)
+                current = []
+
+    def run_pair(self, card1, card2):
+        """
+        Check if two cards can be in the same run. (bool)
+
+        Parameters:
+        card1: The lower card to check. (cards.Card)
+        card1: The higher card to check. (cards.Card)
+        """
+        return card1.suit == card2.suit and card1.below(card2)
+
+    def set_pair(self, card1, card2):
+        """
+        Check if two cards can be in the same set. (bool)
+
+        Parameters:
+        card1: The first card to check. (cards.Card)
+        card1: The second card to check. (cards.Card)
+        """
+        return card1.rank == card2.rank
+
+    def set_up(self):
+        """Set up the bot. (None)"""
+        self.hand = self.game.hands[self.name]
+        self.sorted = False
+
+    def sort_hand(self):
+        """
+        Sort out the melds and potential melds in your hand. (None)
+
+        Note that if a card is in a run and a set, this tracks the run as a meld and
+        the set as a potential meld.
+        """
+        cards = self.hand.cards[:]
+        self.tracking = {'melds': [], 'potentials': [], 'deadwood': [], 'tracked': set(cards)}
+        # Check for runs.
+        cards.sort(lambda card: (card.suit, card.rank_num))
+        self.find_melds(cards, self.run_pair)
+        # Remove cards in runs.
+        melded = set(sum(self.tracking['melds'], []))
+        cards = [card for card in cards if card not in melded]
+        # Check for sets.
+        cards.sort(lambda card: card.rank_num)
+        self.find_melds(cards, self.set_pair)
+        # Set the deadwood.
+        used = set(sum(self.tracking['melds'] + self.tracking['potentials'], []))
+        self.tracking['deadwood'] = [card for card in cards if card not in used]
+
+
 class GinRummy(game.Game):
     """
     A game of Gin Rummy. (game.Game)
 
     Attributes:
+    card_drawn: A flag for a card having been drawn this turn. (bool)
+    deck: The deck of cards used in the game. (cards.Deck)
     end: The number of points that signals the end of a game. (int)
+    hands: The players' hands of cards. (dict of str: cards.Hand)
     wins: The number of hands each player has won. (dict of str: int)
 
     Class Attributes:
