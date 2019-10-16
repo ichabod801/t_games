@@ -45,6 +45,7 @@ class GinRummy(game.Game):
     deal: Deal the cards. (None)
     do_knock: Lay out your cards and attempt to win the hand. (bool)
     do_discard: Discard a card and end your turn. (bool)
+    do_group: Group cards in your hand. (bool)
     do_scores: Show the current scores. (bool)
     spread: Spread cards from a player's hand. (tuple of list of cards.Card)
 
@@ -155,7 +156,6 @@ class GinRummy(game.Game):
         """
         Set out your cards in an attempt to win the hand. (k)
         """
-        # !! needs a way to cancel out of it.
         attacker = self.players[self.player_index]
         defender = self.players[1 - self.player_index]
         # Get the attacker's discard.
@@ -265,7 +265,6 @@ class GinRummy(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        # !! need to deal with the end of the deck. (if len(deck) == 2 and no knock, the hand is a draw)
         # Show the game status.
         player.tell('\nDiscard Pile: {}'.format(', '.join([str(card) for card in self.deck.discards])))
         player.tell('Your Hand: {}'.format(self.hands[player.name]))
@@ -276,6 +275,11 @@ class GinRummy(game.Game):
             go = self.handle_cmd(move)
             if not go:
                 self.card_drawn = False
+        elif len(self.deck.cards) == 2:
+            self.human.tell('The hand is a draw.')
+            self.draws += 1
+            self.deal()
+            go = False
         else:
             # Draw a card.
             while True:
@@ -306,6 +310,7 @@ class GinRummy(game.Game):
         self.wins = {player.name: 0 for player in self.players}
         self.end = 100
         self.knock_min = 10
+        self.draws = 0
 
     def spread(self, player, attack = []):
         """
@@ -365,7 +370,6 @@ class GinRummy(game.Game):
                 # Shift cards out of the temporary hand.
                 scoring_sets.append([])
                 for card in meld:
-                    # !! converting to card may cause problems laying off
                     scoring_sets[-1].append(cards.pop(cards.index(card)))
                 if not cards:
                     break
