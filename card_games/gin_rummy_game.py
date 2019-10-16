@@ -312,7 +312,9 @@ class GinRummy(game.Game):
         scoring_sets = []
         while True:
             valid = False
-            meld = player.ask('\nEnter a set of cards to score: ').split()
+            card_text = ', '.join(str(card) for card in cards)
+            player.tell('\nThe following cards are still in your hand: {}'.format(card_text))
+            meld = player.ask('Enter a set of cards to score: ').split()
             # Check for no more scoring cards.
             if not meld:
                 break
