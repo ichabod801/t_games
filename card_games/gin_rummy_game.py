@@ -26,7 +26,36 @@ Game Programming: Craig "Ichabod" O'Brien
 """
 
 RULES = """
-To be written.
+Gin Rummy is played in a series of hands. Each player is dealt ten cards, and
+one card is dealt to the discard pile. The player who didn't deal gets the
+first shot at the first discard. If they don't want it, the dealer can take it.
+Whoever wants it starts play by drawing it into their hand. If neither player
+wants it, the player who didn't deal starts play by taking the top card off of
+the deck.
+
+Each turn, you draw a card and discard a card. The idea is to build up runs in
+the same suit (3S-4S-5S) or sets of the same rank (8D-8C-8H). These are called
+'melds', and must have at least three cards in them.
+
+On any turn you can 'knock' to end the hand. You discard as normal, but then
+'spread' you hand by setting aside any melds you have. Then the other player
+(the defender) spreads their melds. In addition, the defender can play cards
+that match the knocker's melds. This is called 'laying off.'
+
+Any cards that are not in melds are called 'deadwood.' If the knocker has no
+deadwood (they melded all ten cards), they have Gin, and the defender may not
+lay off. Each player's deadwood is scored by totally the ranks of the cards,
+with face cards worth 10 points each. Whichever player has the lowest score
+wins the hand, with ties going to the defender. The winner adds the difference
+in the hand scores to their game score. If knocker got Gin or the defender beat
+the knocker, they score an extra 25 points.
+
+Play continues until someone has 100 game points or more. That player gets a
+game bonus of 100 points. If that player won every hand in the game, they get
+to double their score. Each player then adds 25 bonus points to their game
+score for each hand they won. After all the bonus are added, whoever has the
+highest score wins. Their final score is how much higher their game score is
+than their opponent's.
 """
 
 
@@ -136,6 +165,7 @@ class GinRummy(game.Game):
         Groups the cards provided as arguments and places them at the beginning of
         your hand. (g)
         """
+        # !! more hand maneuvering options would be nice.
         # Get the player information
         player = self.players[self.player_index]
         hand = self.hands[player.name]
