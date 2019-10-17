@@ -70,13 +70,16 @@ class GinBot(player.Bot):
 
     Attributes:
     hand: The bot's hand. (cards.Hand)
+    listen: A flag for pulling attacking melds from the tell method. (bool)
     sorted: A flag that the bot has prepped it's hand for play. (bool)
-    tracking
+    tracking: A dictionary for tracking cards in the game. (dict of str: list)
 
     Methods:
     discard_check: Determine if drawing a discard is a good idea. (str)
     find_melds: Find any melds of the specified type. (None)
+    knock_check: Determine if it is time to knock or not. (str)
     match_check: Find any match between a card and tracked groups of cards. (list)
+    next_spread: Get the next meld or layoff to spread. (str)
     run_pair: Check if two cards can be in the same run. (bool)
     set_pair: Check if two cards can be in the same set. (bool)
     sort_hand: Sort out the melds and potential melds in your hand. (None)
@@ -99,8 +102,26 @@ class GinBot(player.Bot):
         if prompt.startswith('Would you like the top card of the discard pile'):
             return 'yes' if self.discard_check(self.game.discards[0]) else 'no'
         # Handle discard vs. deck.
+        elif prompt.startswith('Would like to draw from the discards'):
+            return 'discards' if self.discard_check(self.game.discards[0]) else 'deck'
         # Handle knock vs. discard.
-        # !! not finished
+        elif prompt == 'What is your move? ':
+            return self.knock_check()
+        # Handle spreading.
+        elif prompt.startswith('Enter a set of cards'):
+            return self.next_spread()
+        # Handle unforseen questions.
+        else:
+            return super(GinBot, self).ask(prompt)
+
+    def discard_check(self, card):
+        """
+        Determine if drawing a discard is a good idea. (str)
+
+        Parameters:
+        card: The discard to check. (cards.Card)
+        """
+        return self.match_check(card)
 
     def find_melds(self, cards, check_function):
         """
@@ -128,14 +149,28 @@ class GinBot(player.Bot):
                     self.tracking['potentials'].append(current)
                 current = []
 
-    def discard_check(self, card):
-        """
-        Determine if drawing a discard is a good idea. (str)
-
-        Parameters:
-        card: The discard to check. (cards.Card)
-        """
-        return self.match_check(card)
+    def knock_check(self):
+        """Determine if it is time to knock or not. (str)"""
+        # Determine discard.
+        if self.tracking['deadwood']:
+            possibles = self.tracking['deadwood']
+        elif self.trackingsum(self.tracking['potentials'], []):
+            possibles = sum(self.tracking['potentials'], [])
+        else:
+            possibles = sum([meld for meld in self.tracking['melds'] if len(meld) > 3], [])
+        possibles.sort(key = lambda card: card.rank_num)
+        discard = possibles[-1]
+        # Determine score.
+        deadwood = sum(self.tracking['potentials'], []) + self.tracking['deadwood']
+        score = sum(self.game.card_values[card.rank] for card in deadwood)
+        # Check if possible.
+        command = 'discard'
+        if score <= game.knock_min:
+            # Check if reasonable.
+            if score <= 5:
+                command = 'knock'
+        # Return the chosen command with the discard.
+        return '{} {}'.format(command, discard)
 
     def match_check(self, card, groups = ('melds', 'possibles', 'deadwood')):
         """
@@ -148,11 +183,31 @@ class GinBot(player.Bot):
         groups: The tracked groups to check against. (tuple of str)
         """
         # Loop through the groups.
-            # Check for a run match.
-                # Check the low end.
-                # Check the high end.
-            # Check for a set match.
-        # !! not finished
+        for group_type in groups:
+            for group in self.tracking[group_type]:
+                if group_type == 'deadwood':
+                    group = [group]
+                # Check for a run match.
+                if group[0].suit == group[-1].suit:
+                    if (card.below(group[0]) or card.above(group[0])) and card.suit == group[0].suit:
+                        return group
+                # Check for a set match.
+                if group[0].rank == group[-1].rank == card.rank:
+                    return group
+        return []
+
+    def next_spread(self):
+        """Get the next meld or layoff to spread. (str)"""
+        # Check for melds to return
+        if self.tracking['melds']:
+            meld = self.tracking['melds'].pop()
+            return ' '.join(str(card) for card in meld)
+        # Check for layoffs to return
+        for card in sum(self.tracking['possibles'], []) + self.tracking['deadwood']:
+            if self.match_check(card, groups = ('attacks',)):
+                return str(card)
+        # If nothing, return nothing.
+        return ''
 
     def run_pair(self, card1, card2):
         """
@@ -178,6 +233,7 @@ class GinBot(player.Bot):
         """Set up the bot. (None)"""
         self.hand = self.game.hands[self.name]
         self.sorted = False
+        self.listen = False
 
     def sort_hand(self):
         """
@@ -207,20 +263,56 @@ class GinBot(player.Bot):
 
         The parameters are the same as for the print function.
         """
-        pass
+        # Note when attacking melds are about to be told.
+        if args[0] == '\nThe attacking melds:':
+            self.listen = True
+            self.tracking['attacks'] = []
+        # Store attacking meld information.
+        elif self.listen:
+            self.tracking['attacks'].append([cards.Card(word) for word in args[0].split()])
+        # Note when all attacking melds have been told.
+        elif args[0].startswith('\nThe following cards'):
+            self.listen = False
+        # Clean up previous attacking melds if your opponent got Gin.
+        elif args[0].startswith('Gin!'):
+            self.tracking['attacks'] = []
 
     def update_hand(self):
         """Check for new cards and add them to the tracking. (None)"""
         # Check for new cards.
+        new_card = self.hand.cards[-1]
+        if new_card not in self.tracking['tracked']:
             # Find any matches.
+            match = match_check(new_card)
             # Check the type of match.
+            if len(match) >= 3:
                 # Handle meld matches.
-                # Handle potentail matches.
-                    # Clean up the potentials
+                if new_card.below(match[0]):
+                    match.insert(0, new_card)
+                else:
+                    match.append(new_card)
+            elif len(match) == 2:
+                # Handle potential matches.
+                if new_card.below(match[0]):
+                    self.tracking['melds'].append([new_card] + match)
+                else:
+                    self.tracking['melds'].append(match + [new_card])
+                match = set(match)
+                # Clean up the potentials
+                filter(lambda group: match.intersection(group), self.tracking['potentials'])
+            elif len(match) == 1:
                 # Handle deadwood matches.
-                    # Remove the deadwood.
+                if new_card.below(match[0]):
+                    self.tracking['potentials'].append([new_card, match[0]])
+                else:
+                    self.tracking['potentials'].append([match[0], new_card])
+                # Remove the deadwood.
+                self.tracking['deadwood'].remove(match[0])
+            else:
+                # Handle no match.
+                self.tracking['deadwood'].append(new_card)
             # Mark the card as tracked.
-        # !! not finished
+            self.tracking['tracked'].add(new_card)
 
 
 class GinRummy(game.Game):
@@ -527,7 +619,7 @@ class GinRummy(game.Game):
         cards = self.hands[player.name].cards[:]
         # Show the attack, if any.
         if attack:
-            player.tell('\nThe attacking melds: ')
+            player.tell('\nThe attacking melds:')
             for meld in attack:
                 player.tell(', '.join(str(card) for card in meld))
         # Get the melds and layoffs.
