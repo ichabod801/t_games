@@ -425,6 +425,7 @@ class GinRummy(game.Game):
         your hand. (g)
         """
         # !! more hand maneuvering options would be nice.
+        # !! errors out on duplicates
         # Get the player information
         player = self.players[self.player_index]
         hand = self.hands[player.name]
@@ -651,7 +652,7 @@ class GinRummy(game.Game):
             # Validate layoffs.
             else:
                 for target in attack:
-                    valid = self.validate_meld(target + meld)
+                    valid = self.validate_meld([str(card) for card in target] + meld)
                     if valid:
                         break
             # Handle the cards.
