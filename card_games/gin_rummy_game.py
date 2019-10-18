@@ -100,10 +100,10 @@ class GinBot(player.Bot):
             self.update_hand()
         # Handle first pick.
         if prompt.startswith('Would you like the top card of the discard pile'):
-            return 'yes' if self.discard_check(self.game.discards[0]) else 'no'
+            return 'yes' if self.discard_check(self.game.deck.discards[0]) else 'no'
         # Handle discard vs. deck.
         elif prompt.startswith('Would like to draw from the discards'):
-            return 'discards' if self.discard_check(self.game.discards[0]) else 'deck'
+            return 'discards' if self.discard_check(self.game.deck.discards[0]) else 'deck'
         # Handle knock vs. discard.
         elif prompt == 'What is your move? ':
             return self.knock_check()
@@ -144,7 +144,7 @@ class GinBot(player.Bot):
             else:
                 # If the current pair is not a meld, store any previous melds and reset.
                 if len(current) >= 3:
-                    self.tracking.melds.append(current)
+                    self.tracking['melds'].append(current)
                 elif current:
                     self.tracking['potentials'].append(current)
                 current = []
@@ -165,14 +165,14 @@ class GinBot(player.Bot):
         score = sum(self.game.card_values[card.rank] for card in deadwood)
         # Check if possible.
         command = 'discard'
-        if score <= game.knock_min:
+        if score <= self.game.knock_min:
             # Check if reasonable.
             if score <= 5:
                 command = 'knock'
         # Return the chosen command with the discard.
         return '{} {}'.format(command, discard)
 
-    def match_check(self, card, groups = ('melds', 'possibles', 'deadwood')):
+    def match_check(self, card, groups = ('melds', 'potentials', 'deadwood')):
         """
         Find any match between a card and tracked groups of cards. (list)
 
@@ -203,7 +203,7 @@ class GinBot(player.Bot):
             meld = self.tracking['melds'].pop()
             return ' '.join(str(card) for card in meld)
         # Check for layoffs to return
-        for card in sum(self.tracking['possibles'], []) + self.tracking['deadwood']:
+        for card in sum(self.tracking['potentials'], []) + self.tracking['deadwood']:
             if self.match_check(card, groups = ('attacks',)):
                 return str(card)
         # If nothing, return nothing.
@@ -245,19 +245,19 @@ class GinBot(player.Bot):
         cards = self.hand.cards[:]
         self.tracking = {'melds': [], 'potentials': [], 'deadwood': [], 'tracked': set(cards)}
         # Check for runs.
-        cards.sort(lambda card: (card.suit, card.rank_num))
+        cards.sort(key = lambda card: (card.suit, card.rank_num))
         self.find_melds(cards, self.run_pair)
         # Remove cards in runs.
         melded = set(sum(self.tracking['melds'], []))
         cards = [card for card in cards if card not in melded]
         # Check for sets.
-        cards.sort(lambda card: card.rank_num)
+        cards.sort(key = lambda card: card.rank_num)
         self.find_melds(cards, self.set_pair)
         # Set the deadwood.
         used = set(sum(self.tracking['melds'] + self.tracking['potentials'], []))
         self.tracking['deadwood'] = [card for card in cards if card not in used]
 
-    def tell(*args, **kwargs):
+    def tell(self, *args, **kwargs):
         """
         Recieve informatio from the game. (None)
 
@@ -269,7 +269,7 @@ class GinBot(player.Bot):
             self.tracking['attacks'] = []
         # Store attacking meld information.
         elif self.listen:
-            self.tracking['attacks'].append([cards.Card(word) for word in args[0].split()])
+            self.tracking['attacks'].append([cards.Card(*word.upper()) for word in args[0].split()])
         # Note when all attacking melds have been told.
         elif args[0].startswith('\nThe following cards'):
             self.listen = False
@@ -546,7 +546,8 @@ class GinRummy(game.Game):
 
     def handle_options(self):
         """Handle the option settings for this game. (None)"""
-        self.players = [self.human, player.Cyborg(taken_names = [self.human.name])]
+        #self.players = [self.human, player.Cyborg(taken_names = [self.human.name])]
+        self.players = [self.human, GinBot(taken_names = [self.human.name])]
 
     def player_action(self, player):
         """
@@ -555,6 +556,10 @@ class GinRummy(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
+        # Do the initial deal.
+        if not self.turns:
+            self.deal()
+            return False
         # Show the game status.
         player.tell('\nDiscard Pile: {}'.format(', '.join([str(card) for card in self.deck.discards])))
         player.tell('Your Hand: {}'.format(self.hands[player.name]))
@@ -592,10 +597,6 @@ class GinRummy(game.Game):
         self.deck = cards.Deck()
         self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
         self.dealer = random.choice(self.players)
-        self.deal()
-        # Adjust for the starting player (Game.play resets player_index after set_up runs)
-        if self.player_index == 0:
-            self.players.reverse()
         # Set up the tracking variables.
         self.wins = {player.name: 0 for player in self.players}
         self.end = 100

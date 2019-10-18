@@ -35,6 +35,7 @@ class Card(object):
     The color, rank, and suit attributes are length 1.
 
     Class Attributes:
+    an_ranks: Ranks whose name uses 'an' rather than 'a'. (str)
     card_re: A regular expression to match a card.
     rank_names: The names of the ranks. (list of str)
     ranks: The rank characters. (str)
