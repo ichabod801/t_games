@@ -68,6 +68,13 @@ class GinBot(player.Bot):
     """
     A bot that plays Gin Rummy. (player.Bot)
 
+    !! the bot sometimes draws from the discards and then discards that same card.
+        example: 9H, 5H, 4S, QH, QD, QS, 9C, JC, AC, QC; draws/discards KH
+        previously drew QC discard KD. Something left over?
+        next hand they drew from the deck and discarded one of the four queens.
+        The got tc jc qc and discarded another one.
+        tracking the strategizing closely once it is playing without errors.
+
     Attributes:
     hand: The bot's hand. (cards.Hand)
     listen: A flag for pulling attacking melds from the tell method. (bool)
@@ -94,25 +101,41 @@ class GinBot(player.Bot):
     def ask(self, prompt):
         """Answer a question from the game. (str)"""
         # Make sure the meld tracking is up to date.
-        if not self.sorted:
+        if not self.sorted:   # !! needs to be reset at some point.
             self.sort_hand()
         else:
             self.update_hand()
         # Handle first pick.
         if prompt.startswith('Would you like the top card of the discard pile'):
-            return 'yes' if self.discard_check(self.game.deck.discards[0]) else 'no'
+            discard = self.game.deck.discards[-1]
+            move = 'yes' if self.discard_check(discard) else 'no'
+            if move == 'yes':
+                self.game.human.tell('{} drew the {} from the discard pile.'.format(self.name, discard))
+            else:
+                self.game.human.tell('{} rejected the first discard.'.format(self.name))
         # Handle discard vs. deck.
-        elif prompt.startswith('Would like to draw from the discards'):
-            return 'discards' if self.discard_check(self.game.deck.discards[0]) else 'deck'
+        elif prompt.startswith('Would you like to draw from the discards'):
+            discard = self.game.deck.discards[-1]
+            move = 'discards' if self.discard_check(discard) else 'deck'
+            if move == 'deck':
+                self.game.human.tell('{} drew from the deck.'.format(self.name))
+            else:
+                self.game.human.tell('{} drew the {} from the discard pile.'.format(self.name, discard))
         # Handle knock vs. discard.
         elif prompt == 'What is your move? ':
-            return self.knock_check()
+            move = self.knock_check()
+            if move.startswith('dis'):
+                self.game.human.tell('{} discarded the {}.'.format(self.name, move[-2:]))
+            self.untrack(move[-2:])
         # Handle spreading.
         elif prompt.startswith('Enter a set of cards'):
-            return self.next_spread()
+            move = self.next_spread()
+            if move:
+                self.game.human.tell('{} spread {}.'.format(self.name, ', '.join(move.split())))
         # Handle unforseen questions.
         else:
-            return super(GinBot, self).ask(prompt)
+            move = super(GinBot, self).ask(prompt)
+        return move
 
     def discard_check(self, card):
         """
@@ -154,7 +177,7 @@ class GinBot(player.Bot):
         # Determine discard.
         if self.tracking['deadwood']:
             possibles = self.tracking['deadwood']
-        elif self.trackingsum(self.tracking['potentials'], []):
+        elif self.tracking['potentials']:
             possibles = sum(self.tracking['potentials'], [])
         else:
             possibles = sum([meld for meld in self.tracking['melds'] if len(meld) > 3], [])
@@ -204,6 +227,7 @@ class GinBot(player.Bot):
             return ' '.join(str(card) for card in meld)
         # Check for layoffs to return
         for card in sum(self.tracking['potentials'], []) + self.tracking['deadwood']:
+            print('debug:', 'tracking', self.tracking)
             if self.match_check(card, groups = ('attacks',)):
                 return str(card)
         # If nothing, return nothing.
@@ -256,6 +280,7 @@ class GinBot(player.Bot):
         # Set the deadwood.
         used = set(sum(self.tracking['melds'] + self.tracking['potentials'], []))
         self.tracking['deadwood'] = [card for card in cards if card not in used]
+        self.sorted = True
 
     def tell(self, *args, **kwargs):
         """
@@ -263,19 +288,37 @@ class GinBot(player.Bot):
 
         The parameters are the same as for the print function.
         """
+        #print('echo:', args[0])
         # Note when attacking melds are about to be told.
         if args[0] == '\nThe attacking melds:':
             self.listen = True
             self.tracking['attacks'] = []
-        # Store attacking meld information.
-        elif self.listen:
-            self.tracking['attacks'].append([cards.Card(*word.upper()) for word in args[0].split()])
+            #print('debug:', 'listening')
         # Note when all attacking melds have been told.
         elif args[0].startswith('\nThe following cards'):
             self.listen = False
+            print('debug:', 'not listening', self.tracking['attacks'])
         # Clean up previous attacking melds if your opponent got Gin.
         elif args[0].startswith('Gin!'):
             self.tracking['attacks'] = []
+            #print('debug:', 'gin', self.tracking['attacks'])
+        # Store attacking meld information.
+        elif self.listen:
+            self.tracking['attacks'].append([cards.Card(*word.upper()) for word in args[0].split()])
+            #print('debug:', 'tracking', self.tracking['attacks'])
+
+    def untrack(self, card_text):
+        """
+        Remove a card from the hand tracking. (None)
+
+        Parameters:
+        card_text: The name of the card to be removed. (str)
+        """
+        self.tracking['melds'] = [group for group in self.tracking['melds'] if card_text not in group]
+        self.tracking['potentials'] = [grp for grp in self.tracking['potentials'] if card_text not in grp]
+        if card_text in self.tracking['deadwood']:
+            self.tracking['deadwood'].remove(card_text)
+        self.tracking['tracked'].remove(card_text)
 
     def update_hand(self):
         """Check for new cards and add them to the tracking. (None)"""
@@ -283,7 +326,7 @@ class GinBot(player.Bot):
         new_card = self.hand.cards[-1]
         if new_card not in self.tracking['tracked']:
             # Find any matches.
-            match = match_check(new_card)
+            match = self.match_check(new_card)
             # Check the type of match.
             if len(match) >= 3:
                 # Handle meld matches.
@@ -578,7 +621,7 @@ class GinRummy(game.Game):
         else:
             # Draw a card.
             while True:
-                move = player.ask('Would like to draw from the discards or the top of the deck? ').lower()
+                move = player.ask('Would you like to draw from the discards or the top of the deck? ').lower()
                 if move in ('discard', 'discards', self.deck.discards[-1]):
                     self.hands[player.name].deal(self.deck.discards.pop())
                     break
