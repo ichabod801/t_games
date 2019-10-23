@@ -286,6 +286,7 @@ class GinBot(player.Bot):
         Note that if a card is in a run and a set, this tracks the run as a meld and
         the set as a potential meld.
         """
+        # !! missing end part runs (QS KS), and (2C 3C when largest deadwood)
         cards = self.hand.cards[:]
         # Check for runs.
         cards.sort(key = lambda card: (card.suit, card.rank_num))
@@ -305,7 +306,7 @@ class GinBot(player.Bot):
                     rank_score = self.game.card_values[part_set[0].rank]
                     broken_run = [card for card in run if card.rank != part_set[0].rank]
                     remainder, waste = self.find_melds(broken_run, self.run_pair)
-                    remainder_score = sum([self.game.card_values(card.rank) for card in sum(remainder, [])])
+                    remainder_score = sum([self.game.card_values[card.rank] for card in sum(remainder, [])])
                     run_score = sum([self.game.card_values[card.rank] for card in run])
                     # If the broken run leaves less points in hand, mark it for breaking.
                     if run_score - remainder_score - rank_score < 2 * rank_score:
@@ -452,6 +453,7 @@ class GinRummy(game.Game):
                 self.hands[non_dealer.name].draw()
                 self.player_index = self.players.index(self.dealer)
         self.card_drawn = True
+        self.deal_cards = False
 
     def do_discard(self, argument):
         """
@@ -476,7 +478,7 @@ class GinRummy(game.Game):
         Groups the cards provided as arguments and places them at the beginning of
         your hand. (g)
         """
-        # !! more hand maneuvering options would be nice.
+        # !! more hand maneuvering options would be nice. left/right, slash means 'of the card before slash'
         # !! errors out on duplicates
         # Get the player information
         player = self.players[self.player_index]
@@ -555,13 +557,13 @@ class GinRummy(game.Game):
         self.human.tell('{} scored {} points.'.format(winner.name, score))
         self.scores[winner.name] += score
         self.wins[winner.name] += 1
-        self.do_scores('')
+        self.do_scores('') # !! only shows to the current player.
         # Redeal.
         if self.scores[winner.name] < self.end:
             for hand in self.hands.values():
                 hand.discard()
             self.dealer = winner
-            self.deal()
+            self.deal_cards = True
         return False
 
     def do_scores(self, arguments):
@@ -593,6 +595,7 @@ class GinRummy(game.Game):
                     text = '{} gets {} extra points for winning {} hands.'
                     self.human.tell(text.format(player.name, win_points, self.wins[player.name]))
             # Determine the winner.
+            # !! key error, use name.
             if self.scores[ender] > self.scores[opponent]:
                 winner = ender
                 loser = opponent
@@ -620,8 +623,8 @@ class GinRummy(game.Game):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        # Do the initial deal.
-        if not self.turns:
+        # Deal the cards if necessary.
+        if self.deal_cards:
             self.deal()
             return False
         # Show the game status.
@@ -633,7 +636,7 @@ class GinRummy(game.Game):
             move = player.ask('What is your move? ').lower()
             go = self.handle_cmd(move)
             if not go:
-                self.card_drawn = False
+                self.card_drawn = False  # should be true after a knock
         elif len(self.deck.cards) == 2:
             self.human.tell('The hand is a draw.')
             self.draws += 1
@@ -666,6 +669,7 @@ class GinRummy(game.Game):
         self.end = 100
         self.knock_min = 10
         self.draws = 0
+        self.deal_cards = True
 
     def spread(self, player, attack = []):
         """
