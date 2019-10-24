@@ -3,6 +3,11 @@ gin_rummy_game.py
 
 A game of Gin Rummy.
 
+To Do:
+clean up bang bangs
+clean up output
+card tracking bot.
+
 Constants:
 CREDITS: The credits for Gin Rummy. (str)
 RULES: The rules for Gin Rummy. (str)
@@ -321,6 +326,7 @@ class GinBot(player.Bot):
         # Find the partial runs with the remaining cards.
         used = set(sum(full_sets + full_runs + part_sets, []))
         cards = [card for card in self.hand if card not in used]
+        cards.sort(key = lambda card: (card.suit, card.rank_num))
         empty, part_runs = self.find_melds(cards, self.run_pair)
         # Calculate deadwood, and store the full and partial melds.
         used.update(*part_runs)
@@ -373,6 +379,7 @@ class GinRummy(game.Game):
 
     Attributes:
     card_drawn: A flag for a card having been drawn this turn. (bool)
+    deal_cards: A flag for needing to deal cards on the next turn. (bool)
     deck: The deck of cards used in the game. (cards.Deck)
     end: The number of points that signals the end of a game. (int)
     hands: The players' hands of cards. (dict of str: cards.Hand)
@@ -479,7 +486,6 @@ class GinRummy(game.Game):
         your hand. (g)
         """
         # !! more hand maneuvering options would be nice. left/right, slash means 'of the card before slash'
-        # !! errors out on duplicates
         # Get the player information
         player = self.players[self.player_index]
         hand = self.hands[player.name]
@@ -490,10 +496,13 @@ class GinRummy(game.Game):
         except ValueError:
             player.error('You do not have all of those cards in your hand.')
             return True
-        # Put the cards at the beginning of the hand.
+        # Put the cards (without duplicates) at the beginning of the hand.
+        single_cards = []
         for card in cards:
-            hand.cards.remove(card)
-        hand.cards = cards + hand.cards
+            if card in hand:
+                hand.cards.remove(card)
+                single_cards.append(card)
+        hand.cards = single_cards + hand.cards
         return True
 
     def do_knock(self, argument):
@@ -557,7 +566,7 @@ class GinRummy(game.Game):
         self.human.tell('{} scored {} points.'.format(winner.name, score))
         self.scores[winner.name] += score
         self.wins[winner.name] += 1
-        self.do_scores('') # !! only shows to the current player.
+        self.do_scores('', self.human)
         # Redeal.
         if self.scores[winner.name] < self.end:
             for hand in self.hands.values():
@@ -566,14 +575,15 @@ class GinRummy(game.Game):
             self.deal_cards = True
         return False
 
-    def do_scores(self, arguments):
+    def do_scores(self, arguments, reciever = None):
         """
         Show the current game scores. (s)
         """
-        current = self.players[self.player_index]
-        current.tell('\nCurrent Scores:')
+        if reciever is None:
+            reciever = self.players[self.player_index]
+        reciever.tell('\nCurrent Scores:')
         for player in self.players:
-            current.tell('{}: {}'.format(player.name, self.scores[player.name]))
+            reciever.tell('{}: {}'.format(player.name, self.scores[player.name]))
 
     def game_over(self):
         """Check for end of game and calculate the final score. (bool)"""
@@ -595,8 +605,7 @@ class GinRummy(game.Game):
                     text = '{} gets {} extra points for winning {} hands.'
                     self.human.tell(text.format(player.name, win_points, self.wins[player.name]))
             # Determine the winner.
-            # !! key error, use name.
-            if self.scores[ender] > self.scores[opponent]:
+            if self.scores[ender.name] > self.scores[opponent.name]:
                 winner = ender
                 loser = opponent
             else:
@@ -604,7 +613,7 @@ class GinRummy(game.Game):
                 loser = ender
             # Reset the scores.
             for player in self.players:
-                self.scores[player] -= self.scores[loser]
+                self.scores[player.name] -= self.scores[loser.name]
             # Announce the winner.
             self.human.tell('\n{} won the game by {} points.'.format(winner.name, self.scores[winner.name]))
             return True
