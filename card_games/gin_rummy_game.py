@@ -381,8 +381,10 @@ class GinRummy(game.Game):
     deal: Deal the cards. (None)
     do_knock: Lay out your cards and attempt to win the hand. (bool)
     do_discard: Discard a card and end your turn. (bool)
-    do_group: Group cards in your hand. (bool)
+    do_left: Move cards to the left of another card. (bool)
+    do_right: Move cards to the right of another card. (bool)
     do_scores: Show the current scores. (bool)
+    move_cards: Arrange cards within a player's hand. (None)
     spread: Spread cards from a player's hand. (tuple of list of cards.Card)
 
     Overridden Methods:
@@ -394,7 +396,7 @@ class GinRummy(game.Game):
     """
 
     aka = ['Gin', 'Knock Poker', 'Poker Gin', 'Gin Poker']
-    aliases = {'g': 'group', 'k': 'knock', 'p': 'pass', 's': 'score'}
+    aliases = {'l': 'left', 'k': 'knock', 'p': 'pass', 'r': 'right', 's': 'score'}
     card_values = dict(zip('A23456789TJQK', (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10)))
     categories = ['Card Games']
     credits = CREDITS
@@ -469,31 +471,6 @@ class GinRummy(game.Game):
             player.error('You do not have that card to discard.')
             return True
 
-    def do_group(self, arguments):
-        """
-        Groups the cards provided as arguments and places them at the beginning of
-        your hand. (g)
-        """
-        # !! more hand maneuvering options would be nice. left/right, slash means 'of the card before slash'
-        # Get the player information
-        player = self.players[self.player_index]
-        hand = self.hands[player.name]
-        # Validate the cards.
-        card_text = arguments.split()
-        try:
-            cards = [hand.cards[hand.cards.index(card_name)] for card_name in card_text]
-        except ValueError:
-            player.error('You do not have all of those cards in your hand.')
-            return True
-        # Put the cards (without duplicates) at the beginning of the hand.
-        single_cards = []
-        for card in cards:
-            if card in hand:
-                hand.cards.remove(card)
-                single_cards.append(card)
-        hand.cards = single_cards + hand.cards
-        return True
-
     def do_knock(self, argument):
         """
         Set out your cards in an attempt to win the hand. (k)
@@ -564,6 +541,34 @@ class GinRummy(game.Game):
             self.deal_cards = True
         return False
 
+    def do_left(self, arguments):
+        """
+        Move cards to the left of another card in your hand. (l)
+
+        The argument to the left command is one card followed by a slash, followed by a
+        space delimited list of one or more cards. The cards after the slash are moved
+        to the left of the card before the slash.
+
+        Alternatively, you can list one more cards with no slash. In that case, all of
+        the cards listed will be moved to the far left of the hand.
+        """
+        self.move_cards(0, arguments)
+        return True
+
+    def do_right(self, arguments):
+        """
+        Move cards to the right of another card in your hand. (r)
+
+        The argument to the right command is one card followed by a slash, followed by
+        a space delimited list of one or more cards. The cards after the slash are
+        moved to the right of the card before the slash.
+
+        Alternatively, you can list one more cards with no slash. In that case, all of
+        the cards listed will be moved to the far right of the hand.
+        """
+        self.move_cards(1, arguments)
+        return True
+
     def do_scores(self, arguments, reciever = None):
         """
         Show the current game scores. (s)
@@ -613,6 +618,54 @@ class GinRummy(game.Game):
         """Handle the option settings for this game. (None)"""
         #self.players = [self.human, player.Cyborg(taken_names = [self.human.name])]
         self.players = [self.human, GinBot(taken_names = [self.human.name])]
+
+    def move_cards(self, mod, arguments):
+        """
+        Arrange cards within a player's hand. (None)
+
+        Parameters:
+        mod: The modifier to the target's index. (int)
+        arguments: The arguments to the left or right command. (str)
+        """
+        # Get the player information
+        player = self.players[self.player_index]
+        hand = self.hands[player.name]
+        # Parse the arguments.
+        if '/' in arguments:
+            target, slash, arguments = arguments.partition('/')
+            target = target.strip()
+        else:
+            target = ''
+        card_text = arguments.split()
+        # Make sure the target is in the hand.
+        if target and target not in hand:
+            player.error('You do not have the target card in your hand.')
+            return
+        # Make sure the cards to move are in the hand.
+        try:
+            cards = [hand.cards[hand.cards.index(card_name)] for card_name in card_text]
+        except ValueError:
+            player.error('You do not have all of those cards in your hand.')
+            return
+        # Make sure the target is not in the moving cards.
+        if target and target in cards:
+            player.error('You cannot move the target.')
+        else:
+            # Remove the cards to be moved.
+            single_cards = []
+            for card in cards:
+                if card in hand:
+                    hand.cards.remove(card)
+                    single_cards.append(card)
+            # Get the location to move the cards to.
+            if target:
+                index = hand.cards.index(target) + mod
+            elif mod:
+                index = len(hand.cards)
+            else:
+                index = 0
+            # Move the cards.
+            hand.cards[index:index] = single_cards
 
     def player_action(self, player):
         """
