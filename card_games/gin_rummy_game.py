@@ -105,7 +105,6 @@ class GinBot(player.Bot):
         """Answer a question from the game. (str)"""
         # Handle first pick.
         if prompt.startswith('Would you like the top card of the discard pile'):
-            print('debug', 'start', self.tracking)
             discard = self.game.deck.discards[-1]
             move = 'yes' if self.discard_check(discard) else 'no'
             if move == 'yes':
@@ -114,7 +113,6 @@ class GinBot(player.Bot):
                 self.game.human.tell('{} rejected the first discard.'.format(self.name))
         # Handle discard vs. deck.
         elif prompt.startswith('Would you like to draw from the discards'):
-            print('debug', 'start', self.tracking)
             discard = self.game.deck.discards[-1]
             move = 'discards' if self.discard_check(discard) else 'deck'
             if move == 'deck':
@@ -124,12 +122,10 @@ class GinBot(player.Bot):
         # Handle knock vs. discard.
         elif prompt == 'What is your move? ':
             self.sort_hand()
-            print('debug', 'middle', self.tracking)
             move = self.knock_check()
             if move.startswith('dis'):
                 self.game.human.tell('{} discarded the {}.'.format(self.name, move[-2:]))
             self.untrack(move[-2:])
-            print('debug', 'end', self.tracking)
         # Handle spreading.
         elif prompt.startswith('Enter a set of cards'):
             move = self.next_spread()
@@ -251,7 +247,6 @@ class GinBot(player.Bot):
         # Check for layoffs to return
         dead = sum(self.tracking['part-run'] + self.tracking['part-set'], []) + self.tracking['deadwood']
         for card in dead:
-            #print('debug:', 'tracking', self.tracking)
             if self.match_check(card, groups = ('attacks',)):
                 self.untrack(card)
                 return str(card)
@@ -291,7 +286,6 @@ class GinBot(player.Bot):
         Note that if a card is in a run and a set, this tracks the run as a meld and
         the set as a potential meld.
         """
-        # !! missing end part runs (QS KS), and (2C 3C when largest deadwood)
         cards = self.hand.cards[:]
         # Check for runs.
         cards.sort(key = lambda card: (card.suit, card.rank_num))
@@ -339,24 +333,19 @@ class GinBot(player.Bot):
 
         The parameters are the same as for the print function.
         """
-        #print('echo:', args[0])
         # Note when attacking melds are about to be told.
         if args[0] == '\nThe attacking melds:':
             self.listen = True
             self.tracking['attacks'] = []
-            #print('debug:', 'listening')
         # Note when all attacking melds have been told.
         elif 'deadwood' in args[0]:
             self.listen = False
-            print('debug:', 'not listening', self.tracking['attacks'])
         # Clean up previous attacking melds if your opponent got Gin.
         elif args[0].startswith('Gin!'):
             self.tracking['attacks'] = []
-            #print('debug:', 'gin', self.tracking['attacks'])
         # Store attacking meld information.
         elif self.listen:
             self.tracking['attacks'].append([cards.Card(*word.upper()) for word in args[0].split()])
-            #print('debug:', 'tracking', self.tracking['attacks'])
         elif args[0].endswith('deals.'):
             self.sort_hand()
 
@@ -591,12 +580,12 @@ class GinRummy(game.Game):
             self.human.tell('\nThe game is over.')
             # Give the ender the game bonus.
             ender = self.players[self.player_index]
-            self.human.tell('{} scores 100 points for ending the game.')
+            self.human.tell('{} scores 100 points for ending the game.'.format(ender.name))
             self.scores[ender.name] += 100
             # Check for a sweep bonus.
             opponent = self.players[1 - self.player_index]
             if not self.wins[opponent.name]:
-                self.human.tell('{} doubles their score for sweeping the game.')
+                self.human.tell('{} doubles their score for sweeping the game.'.format(ender.name))
                 self.scores[ender.name] *= 2
             # Give each payer 25 points for each win.
             for player in self.players:
