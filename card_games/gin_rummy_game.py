@@ -386,6 +386,7 @@ class GinRummy(game.Game):
     do_scores: Show the current scores. (bool)
     move_cards: Arrange cards within a player's hand. (None)
     parse_meld: Determine the cards for a given meld specification. (list of str)
+    show_melds: Show the opponent's melds to a player. (None)
     spread: Spread cards from a player's hand. (tuple of list of cards.Card)
 
     Overridden Methods:
@@ -476,24 +477,11 @@ class GinRummy(game.Game):
         """
         Set out your cards in an attempt to win the hand. (k)
         """
-        # !! refactor
+        # Get the players.
         attacker = self.players[self.player_index]
         defender = self.players[1 - self.player_index]
         # Get the attacker's discard.
-        # Check for it passed as an argument.
-        if argument in self.hands[attacker.name]:
-            discard = argument
-        else:
-            # Warn about invalid arguments.
-            if argument:
-                attacker.tell('Invalid argument to the knock command: {!r}.'.format(argument))
-            # Query the user for the card.
-            while True:
-                discard = attacker.ask('Which card would you like to discard? ')
-                if discard in self.hands[attacker.name]:
-                    break
-                attacker.tell('You do not have that card to discard.')
-                attacker.tell('Your hand is {}.'.format(self.hands[attacker.name]))
+        discard = self.get_knock_discard(attacker, argument)
         self.hands[attacker.name].discard(discard)
         self.deck.discards[-1].up = True
         # Spread the dealer's hand.
@@ -503,25 +491,15 @@ class GinRummy(game.Game):
             if attack_melds:
                 attacker.error('You do not have a low enough score to knock.')
             return False
-        # Show the attack.
-        defender.tell('\nThe attacking melds:')
-        for meld in attack_melds:
-            defender.tell(', '.join(str(card) for card in meld))
-        dead_text = ', '.join(str(card) for card in attack_deadwood)
-        defender.tell("{}'s deadwood is {}.".format(attacker.name, dead_text))
+        self.show_melds(attack_melds, attack_deadwood, defender, 'attacking')
         # Get the defender's melds.
         if attack_score:
             defense_melds, defense_deadwood = self.spread(defender, attack_melds)
         else:
             defender.tell('Gin! You may not lay off.')
             defense_melds, defense_deadwood = self.spread(defender)
-        # Show the defense.
-        attacker.tell('\nThe defending melds:')
-        for meld in defense_melds:
-            attacker.tell(', '.join(str(card) for card in meld))
-        dead_text = ', '.join(str(card) for card in defense_deadwood)
-        attacker.tell("{}'s deadwood is {}.".format(defender.name, dead_text))
         defense_score = sum([self.card_values[card.rank] for card in defense_deadwood])
+        self.show_melds(defense_melds, defense_deadwood, attacker, 'defending')
         # Score the hands.
         score_diff = defense_score - attack_score
         if not attack_score:
@@ -537,10 +515,7 @@ class GinRummy(game.Game):
         self.do_scores('', self.human)
         # Redeal.
         if self.scores[winner.name] < self.end:
-            for hand in self.hands.values():
-                hand.discard()
-            self.dealer = winner
-            self.deal_cards = True
+            self.dealer, self.deal_cards = winner, True
         return False
 
     def do_left(self, arguments):
@@ -615,6 +590,30 @@ class GinRummy(game.Game):
             return True
         else:
             return False
+
+    def get_knock_discard(self, knocker, argument):
+        """
+        Get the discard from the knocker. (str)
+
+        Parameters:
+        knocker: The player who knocked. (player.Player)
+        argument: The argument to the discard command. (str)
+        """
+        # Check for it passed as an argument.
+        if argument in self.hands[knocker.name]:
+            discard = argument
+        else:
+            # Warn about invalid arguments.
+            if argument:
+                knocker.tell('Invalid argument to the knock command: {!r}.'.format(argument))
+            # Query the user for the card.
+            while True:
+                discard = knocker.ask('Which card would you like to discard? ')
+                if discard in self.hands[knocker.name]:
+                    break
+                knocker.tell('You do not have that card to discard.')
+                knocker.tell('Your hand is {}.'.format(self.hands[knocker.name]))
+        return discard
 
     def handle_options(self):
         """Handle the option settings for this game. (None)"""
@@ -766,6 +765,23 @@ class GinRummy(game.Game):
         self.draws = 0
         self.deal_cards = True
 
+    def show_melds(self, melds, deadwood, show_to, role):
+        """
+        Show the opponent's melds to a player. (None)
+
+        Parameters:
+        melds: The melds to show. (list of list of card.Card)
+        deadwood: The deadwood associated with the melds. (list of card.Card)
+        show_to: The player to show the melds to. (player.Player)
+        role: The role of the player who spread the melds. (str)
+        """
+        show_to.tell('\nThe {} melds:'.format(role))
+        for meld in melds:
+            show_to.tell(', '.join(str(card) for card in meld))
+        if deadwood:
+            dead_text = ', '.join(str(card) for card in deadwood)
+            show_to.tell("The {} deadwood is {}.".format(role, dead_text))
+
     def spread(self, player, attack = []):
         """
         Spread cards from a player's hand. (tuple of list of cards.Card)
@@ -774,13 +790,10 @@ class GinRummy(game.Game):
         attacking player cancels the spread, then the melds are returned empty. This
         signals do_knock to cancel the knock.
 
-        !! easier ways to lay off would be nice. 9d-jd for a run, or just 5 for a set.
-
         Parameters:
         player: The player who is spreading cards. (player.Player)
         attack: The melds that were spread by the attacking player. (list of list)
         """
-        # !! refactor
         # Get the available cards.
         cards = self.hands[player.name].cards[:]
         # Get the melds and layoffs.
@@ -818,7 +831,7 @@ class GinRummy(game.Game):
                         if valid:
                             break
                 # Handle the cards.
-                if self.validate_meld(meld):
+                if self.validate_meld(meld):   # !! why am I validating meld again and ignoring valid?
                     # Shift cards out of the temporary hand.
                     scoring_sets.append([])
                     for card in meld:
@@ -827,10 +840,8 @@ class GinRummy(game.Game):
                         break
                 else:
                     # Warn if the meld or layoff is invalid.
-                    if attack:
-                        player.error('That is not a valid meld or layoff.')
-                    else:
-                        player.error('That is not a valid meld.')
+                    layoff = ' or layoff' if attack else ''
+                    player.error('That is not a valid meld{}.'.format(layoff))
         # Return the melds and the deadwood.
         return scoring_sets, cards
 
