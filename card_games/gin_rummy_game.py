@@ -379,8 +379,8 @@ class GinRummy(game.Game):
 
     Methods:
     deal: Deal the cards. (None)
-    do_knock: Lay out your cards and attempt to win the hand. (bool)
     do_discard: Discard a card and end your turn. (bool)
+    do_knock: Lay out your cards and attempt to win the hand. (bool)
     do_left: Move cards to the left of another card. (bool)
     do_right: Move cards to the right of another card. (bool)
     do_scores: Show the current scores. (bool)
@@ -396,7 +396,7 @@ class GinRummy(game.Game):
     """
 
     aka = ['Gin', 'Knock Poker', 'Poker Gin', 'Gin Poker']
-    aliases = {'l': 'left', 'k': 'knock', 'p': 'pass', 'r': 'right', 's': 'score'}
+    aliases = {'d': 'discard', 'l': 'left', 'k': 'knock', 'p': 'pass', 'r': 'right', 's': 'score'}
     card_values = dict(zip('A23456789TJQK', (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10)))
     categories = ['Card Games']
     credits = CREDITS
