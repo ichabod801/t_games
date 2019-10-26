@@ -677,21 +677,20 @@ class GinRummy(game.Game):
         meld: The split input from the user. (list of str)
         cards: The cards in hand at the moment. (list of card.Card)
         """
-        # !! sets or working, run shorthand always in invalid.
         meld = meld.lower().split()
         # Check for shorthand.
         if len(meld) == 1:
             # Check for run shorthand.
             if '-' in meld[0]:
                 # Get the ranks endpoints and the suit.
-                start, end = meld[0].split('-')
                 try:
+                    start, end = [word.strip().upper() for word in meld[0].split('-')]
                     start_rank, end_rank = start[0], end[0]
                     if len(start) > 1:
                         suit = start[1]
                     else:
                         suit = end[1]
-                except IndexError:
+                except ValueError, IndexError:
                     meld = ['error']
                 else:
                     # Loop through the ranks, creating the card strings.
