@@ -385,6 +385,7 @@ class GinRummy(game.Game):
     do_right: Move cards to the right of another card. (bool)
     do_scores: Show the current scores. (bool)
     move_cards: Arrange cards within a player's hand. (None)
+    parse_meld: Determine the cards for a given meld specification. (list of str)
     spread: Spread cards from a player's hand. (tuple of list of cards.Card)
 
     Overridden Methods:
@@ -475,6 +476,7 @@ class GinRummy(game.Game):
         """
         Set out your cards in an attempt to win the hand. (k)
         """
+        # !! refactor
         attacker = self.players[self.player_index]
         defender = self.players[1 - self.player_index]
         # Get the attacker's discard.
@@ -667,6 +669,49 @@ class GinRummy(game.Game):
             # Move the cards.
             hand.cards[index:index] = single_cards
 
+    def parse_meld(self, meld, cards):
+        """
+        Determine the cards for a given meld specification. (list of str)
+
+        Parameters:
+        meld: The split input from the user. (list of str)
+        cards: The cards in hand at the moment. (list of card.Card)
+        """
+        # !! sets or working, run shorthand always in invalid.
+        meld = meld.lower().split()
+        # Check for shorthand.
+        if len(meld) == 1:
+            # Check for run shorthand.
+            if '-' in meld[0]:
+                # Get the ranks endpoints and the suit.
+                start, end = meld[0].split('-')
+                try:
+                    start_rank, end_rank = start[0], end[0]
+                    if len(start) > 1:
+                        suit = start[1]
+                    else:
+                        suit = end[1]
+                except IndexError:
+                    meld = ['error']
+                else:
+                    # Loop through the ranks, creating the card strings.
+                    ranks = self.deck.ranks
+                    meld = []
+                    try:
+                        for rank in ranks[ranks.index(start_rank):(ranks.index(end_rank) + 1)]:
+                            meld.append(rank + suit)
+                    except ValueError:
+                        meld = ['error']
+            # Check for set shorthand.
+            elif len(meld[0]) == 1:
+                rank = meld[0].upper()
+                if rank in self.deck.ranks:
+                    meld = [str(card) for card in cards if card.rank == meld[0].upper()]
+                else:
+                    meld = ['error']
+        # Return other melds unprocessed.
+        return meld
+
     def player_action(self, player):
         """
         Handle a player's turn or other player actions. (bool)
@@ -736,6 +781,7 @@ class GinRummy(game.Game):
         player: The player who is spreading cards. (player.Player)
         attack: The melds that were spread by the attacking player. (list of list)
         """
+        # !! refactor
         # Get the available cards.
         cards = self.hands[player.name].cards[:]
         # Get the melds and layoffs.
@@ -744,7 +790,8 @@ class GinRummy(game.Game):
             valid = False
             card_text = ', '.join(str(card) for card in cards)
             player.tell('\nThe following cards are still in your hand: {}'.format(card_text))
-            meld = player.ask('Enter a set of cards to score (return to finish, cancel to abort): ').split()
+            meld_text = player.ask('Enter a set of cards to score (return to finish, cancel to abort): ')
+            meld = self.parse_meld(meld_text, cards)
             # Check for no more scoring cards.
             if not meld:
                 break
@@ -753,37 +800,38 @@ class GinRummy(game.Game):
                     return [], self.hands[player.name].cards[:]
                 else:
                     player.tell('\nThe defending player may not cancel.')
-                    continue
             elif meld == ['reset']:
                 cards = self.hands[player.name].cards[:]
                 scoring_sets = []
-                continue
-            # Validate cards
-            if not all(card in cards for card in meld):
-                player.error('You do not have all of those cards.')
-            # Validate melds.
-            if len(meld) >= 3:
-                valid = self.validate_meld(meld)
-            # Validate layoffs.
+            elif meld == ['error']:
+                player.error('\nInvalid meld specification: {!r}.'.format(meld_text))
             else:
-                for target in attack:
-                    valid = self.validate_meld([str(card) for card in target] + meld)
-                    if valid:
-                        break
-            # Handle the cards.
-            if valid:
-                # Shift cards out of the temporary hand.
-                scoring_sets.append([])
-                for card in meld:
-                    scoring_sets[-1].append(cards.pop(cards.index(card)))
-                if not cards:
-                    break
-            else:
-                # Warn if the meld or layoff is invalid.
-                if attack:
-                    player.error('That is not a valid meld or layoff.')
+                # Validate cards
+                if not all(card in cards for card in meld):
+                    player.error('You do not have all of those cards.')
+                # Validate melds.
+                if len(meld) >= 3:
+                    valid = self.validate_meld(meld)
+                # Validate layoffs.
                 else:
-                    player.error('That is not a valid meld.')
+                    for target in attack:
+                        valid = self.validate_meld([str(card) for card in target] + meld)
+                        if valid:
+                            break
+                # Handle the cards.
+                if self.validate_meld(meld):
+                    # Shift cards out of the temporary hand.
+                    scoring_sets.append([])
+                    for card in meld:
+                        scoring_sets[-1].append(cards.pop(cards.index(card)))
+                    if not cards:
+                        break
+                else:
+                    # Warn if the meld or layoff is invalid.
+                    if attack:
+                        player.error('That is not a valid meld or layoff.')
+                    else:
+                        player.error('That is not a valid meld.')
         # Return the melds and the deadwood.
         return scoring_sets, cards
 
