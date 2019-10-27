@@ -834,7 +834,7 @@ class GinRummy(game.Game):
                         if valid:
                             break
                 # Handle the cards.
-                if self.validate_meld(meld):   # !! why am I validating meld again and ignoring valid?
+                if valid:
                     # Shift cards out of the temporary hand.
                     scoring_sets.append([])
                     for card in meld:
