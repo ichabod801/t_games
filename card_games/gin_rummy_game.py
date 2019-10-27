@@ -336,10 +336,7 @@ class GinBot(player.Bot):
         """
         # Note when attacking melds are about to be told.
         if args[0] == '\nThe attacking melds:':
-            if self.gin:
-                self.gin = False
-            else:
-                self.listen = True
+            self.listen = True
             self.tracking['attacks'] = []
         # Note when all attacking melds have been told.
         elif 'deadwood' in args[0]:
@@ -347,7 +344,7 @@ class GinBot(player.Bot):
         # Clean up previous attacking melds if your opponent got Gin.
         elif args[0].startswith('Gin!'):
             self.tracking['attacks'] = []
-            self.gin = True
+            self.listen = False
         # Store attacking meld information.
         elif self.listen:
             self.tracking['attacks'].append([cards.Card(*word.upper()) for word in args[0].split()])
@@ -681,6 +678,7 @@ class GinRummy(game.Game):
         meld: The split input from the user. (list of str)
         cards: The cards in hand at the moment. (list of card.Card)
         """
+        # !! can't handle a space in run shorthand ('6 - 8c'). errors out, should at least catch error
         meld = meld.lower().split()
         # Check for shorthand.
         if len(meld) == 1:
