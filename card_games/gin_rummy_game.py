@@ -235,6 +235,8 @@ class GinBot(player.Bot):
 
     def next_spread(self):
         """Get the next meld or layoff to spread. (str)"""
+        # !! He had gin, 3xT (no TH), 7-9H, and A-4H. Was tracking the A-4 run but did not spread it.
+        print(self.tracking)
         # Check for melds to return
         if self.tracking['full-set']:
             meld = self.tracking['full-set'].pop()
@@ -315,8 +317,11 @@ class GinBot(player.Bot):
         # Remove and replace any broken runs.
         for full_set, part_set, full_run, remainder in breaks:
             full_sets.append(full_set)
-            part_sets.remove(part_set)
-            full_runs.remove(full_run)
+            # Watch out for multiple matches.
+            if part_set in part_sets:
+                part_sets.remove(part_set)
+            if full_run in full_runs:
+                full_runs.remove(full_run)
             full_runs.extend(remainder)
         # Find the partial runs with the remaining cards.
         used = set(sum(full_sets + full_runs + part_sets, []))
