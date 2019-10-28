@@ -110,7 +110,7 @@ class GinBot(player.Bot):
             if move == 'no':
                 self.game.human.tell('{} rejected the first discard.'.format(self.name))
         # Handle discard vs. deck.
-        elif prompt.startswith('Would you like to draw from the discards'):
+        elif prompt.startswith('Would you like to draw from the diScards'):
             discard = self.game.deck.discards[-1]
             move = 'discards' if self.discard_check(discard) else 'deck'
         # Handle knock vs. discard.
@@ -745,14 +745,14 @@ class GinRummy(game.Game):
             # Draw a card.
             foe = self.players[0] if player == self.players[1] else self.players[1]
             while True:
-                move = player.ask('Would you like to draw from the discards or the top of the deck? ')
+                move = player.ask('Would you like to draw from the diScards or the top of the decK? ')
                 move = move.lower()
-                if move in ('discard', 'discards', self.deck.discards[-1]):
+                if move in ('discard', 'discards', self.deck.discards[-1], 's'):
                     draw_text = '{} drew the {} from the discard pile.'
                     foe.tell(draw_text.format(player.name, self.deck.discards[-1]))
                     self.hands[player.name].deal(self.deck.discards.pop())
                     break
-                elif move in ('deck', 'top'):
+                elif move in ('deck', 'top', 'k'):
                     foe.tell('{} drew from the deck.'.format(player.name))
                     self.hands[player.name].draw()
                     break
