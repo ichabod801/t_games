@@ -181,9 +181,8 @@ class GinBot(player.Bot):
             part.append(current)
         return full, part
 
-    def knock_check(self):
-        """Determine if it is time to knock or not. (str)"""
-        # Determine discard.
+    def get_discard(self):
+        """Determine which card to discard. (cards.Card)"""
         if self.tracking['deadwood']:
             possibles = self.tracking['deadwood']
         elif self.tracking['part-run'] or self.tracking['part-set']:
@@ -192,7 +191,12 @@ class GinBot(player.Bot):
             melds = self.tracking['full-set'] + self.tracking['full-run']
             possibles = sum([meld for meld in melds if len(meld) > 3], [])
         possibles.sort(key = lambda card: card.rank_num)
-        discard = possibles[-1]
+        return possibles[-1]
+
+    def knock_check(self):
+        """Determine if it is time to knock or not. (str)"""
+        # Determine discard.
+        discard = self.get_discard()
         # Determine score.
         dead = sum(self.tracking['part-run'] + self.tracking['part-set'], []) + self.tracking['deadwood']
         score = sum(self.game.card_values[card.rank] for card in dead)
