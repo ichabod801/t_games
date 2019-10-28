@@ -367,9 +367,33 @@ class GinBot(player.Bot):
 class TrackingBot(GinBot):
     """
     A bot for Gin Rummy that tracks cards drawn. (GinBot)
-    """
-    pass
 
+    Attributes:
+    foe_draws: Cards the opponent has drawn. (list of str)
+
+    Overridden Methods:
+    set_up
+    tell
+    """
+
+    def set_up(self):
+        """Set up the bot for play. (None)"""
+        super(TrackingBot, self).set_up()
+        self.foe_draws = []
+        self.foe_draw_text = '{} drew the '.format(self.game.human.name)
+
+    def tell(self, *args, **kwargs):
+        """
+        Recieve informatio from the game. (None)
+
+        The parameters are the same as for the print function.
+        """
+        if args[0].startswith(self.foe_draw_text):
+            self.foe_draws.append(args[0].split()[3])
+            return None
+        elif args[0].endswith(' deals.'):
+            self.foe_draws = []
+        super(TrackingBot, self).tell(*args, **kwargs)
 
 class GinRummy(game.Game):
     """
@@ -627,7 +651,7 @@ class GinRummy(game.Game):
     def handle_options(self):
         """Handle the option settings for this game. (None)"""
         #self.players = [self.human, player.Cyborg(taken_names = [self.human.name])]
-        self.players = [self.human, GinBot(taken_names = [self.human.name])]
+        self.players = [self.human, TrackingBot(taken_names = [self.human.name])]
 
     def move_cards(self, mod, arguments):
         """
