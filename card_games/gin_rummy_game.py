@@ -4,7 +4,6 @@ gin_rummy_game.py
 A game of Gin Rummy.
 
 To Do:
-clean up bang bangs
 clean up output
 card tracking bot.
 
@@ -14,6 +13,7 @@ RULES: The rules for Gin Rummy. (str)
 
 Classes:
 GinBot: A bot that plays Gin Rummy. (player.Bot)
+TrackingBot: A bot for Gin Rummy that tracks cards drawn. (GinBot)
 GinRummy: A game of Gin Rummy. (game.Game)
 """
 
@@ -107,18 +107,12 @@ class GinBot(player.Bot):
         if prompt.startswith('Would you like the top card of the discard pile'):
             discard = self.game.deck.discards[-1]
             move = 'yes' if self.discard_check(discard) else 'no'
-            if move == 'yes':
-                self.game.human.tell('{} drew the {} from the discard pile.'.format(self.name, discard))
-            else:
+            if move == 'no':
                 self.game.human.tell('{} rejected the first discard.'.format(self.name))
         # Handle discard vs. deck.
         elif prompt.startswith('Would you like to draw from the discards'):
             discard = self.game.deck.discards[-1]
             move = 'discards' if self.discard_check(discard) else 'deck'
-            if move == 'deck':
-                self.game.human.tell('{} drew from the deck.'.format(self.name))
-            else:
-                self.game.human.tell('{} drew the {} from the discard pile.'.format(self.name, discard))
         # Handle knock vs. discard.
         elif prompt == 'What is your move? ':
             self.sort_hand()
@@ -129,8 +123,6 @@ class GinBot(player.Bot):
         # Handle spreading.
         elif prompt.startswith('Enter a set of cards'):
             move = self.next_spread()
-            if move:
-                self.game.human.tell('{} spread {}.'.format(self.name, ', '.join(move.split())))
         # Handle unforseen questions.
         else:
             move = super(GinBot, self).ask(prompt)
@@ -209,6 +201,8 @@ class GinBot(player.Bot):
         if score <= self.game.knock_min:
             command = 'knock'
         # Return the chosen command with the discard.
+        print(self.hand)
+        print(self.tracking)
         return '{} {}'.format(command, discard)
 
     def match_check(self, card, groups = ('full-run', 'full-set', 'part-run', 'part-set')):
@@ -287,6 +281,8 @@ class GinBot(player.Bot):
         Note that if a card is in a run and a set, this tracks the run as a meld and
         the set as a potential meld.
         """
+        # !! seems to have problems tracking deadwood that lead to not knocking when able
+        # !! having trouble replicating. Perhaps in partial sets matching full runs?
         cards = self.hand.cards[:]
         # Check for runs.
         cards.sort(key = lambda card: (card.suit, card.rank_num))
@@ -362,6 +358,13 @@ class GinBot(player.Bot):
             self.tracking[group] = [cards for cards in self.tracking[group] if card_text not in cards]
         if card_text in self.tracking['deadwood']:
             self.tracking['deadwood'].remove(card_text)
+
+
+class TrackingBot(GinBot):
+    """
+    A bot for Gin Rummy that tracks cards drawn. (GinBot)
+    """
+    pass
 
 
 class GinRummy(game.Game):
@@ -678,8 +681,7 @@ class GinRummy(game.Game):
         meld: The split input from the user. (list of str)
         cards: The cards in hand at the moment. (list of card.Card)
         """
-        # !! can't handle a space in run shorthand ('6 - 8c'). errors out, should at least catch error
-        meld = meld.lower().split()
+        meld = meld.lower().replace(' -', '-').replace('- ', '-').split()
         # Check for shorthand.
         if len(meld) == 1:
             # Check for run shorthand.
@@ -741,12 +743,17 @@ class GinRummy(game.Game):
             go = False
         else:
             # Draw a card.
+            foe = self.players[0] if player == self.players[1] else self.players[1]
             while True:
-                move = player.ask('Would you like to draw from the discards or the top of the deck? ').lower()
+                move = player.ask('Would you like to draw from the discards or the top of the deck? ')
+                move = move.lower()
                 if move in ('discard', 'discards', self.deck.discards[-1]):
+                    draw_text = '{} drew the {} from the discard pile.'
+                    foe.tell(draw_text.format(player.name, self.deck.discards[-1]))
                     self.hands[player.name].deal(self.deck.discards.pop())
                     break
                 elif move in ('deck', 'top'):
+                    foe.tell('{} drew from the deck.'.format(player.name))
                     self.hands[player.name].draw()
                     break
                 else:
