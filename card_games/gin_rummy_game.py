@@ -230,7 +230,7 @@ class GinBot(player.Bot):
                     group = [group]
                 # Check for a run match.
                 if group[0].suit == group[-1].suit:
-                    if (card.below(group[0]) or card.above(group[0])) and card.suit == group[0].suit:
+                    if (card.below(group[0]) or card.above(group[-1])) and card.suit == group[0].suit:
                         return group
                 # Check for a set match.
                 if group[0].rank == group[-1].rank == card.rank:
@@ -251,9 +251,14 @@ class GinBot(player.Bot):
         # Check for layoffs to return
         dead = sum(self.tracking['part-run'] + self.tracking['part-set'], []) + self.tracking['deadwood']
         for card in dead:
-            # !! Fails to apply mulitple cards to a run. ex: 8-td, lays 7d but not 6d.
-            if self.match_check(card, groups = ('attacks',)):
+            match = self.match_check(card, groups = ('attacks',))
+            if match:
+                # Move tracking of matched cards to the meld
                 self.untrack(card)
+                if card.below(match[0]):
+                    match.insert(0, card)
+                else:
+                    match.append(card)
                 return str(card)
         # If nothing, return nothing.
         return ''
@@ -292,8 +297,6 @@ class GinBot(player.Bot):
         Note that if a card is in a run and a set, this tracks the run as a meld and
         the set as a potential meld.
         """
-        # !! seems to have problems tracking deadwood that lead to not knocking when able
-        # !! having trouble replicating. Perhaps in partial sets matching full runs?
         cards = self.hand.cards[:]
         # Check for runs.
         cards.sort(key = lambda card: (card.suit, card.rank_num))
