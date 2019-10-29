@@ -200,10 +200,14 @@ class GinBot(player.Bot):
         # Determine score.
         dead = sum(self.tracking['part-run'] + self.tracking['part-set'], []) + self.tracking['deadwood']
         score = sum(self.game.card_values[card.rank] for card in dead)
-        # Check if possible.
+        discard_score = self.game.card_values[discard.rank]
+        # Check if knocking is possible.
         command = 'discard'
-        if score <= self.game.knock_min:
+        if score - discard_score <= self.game.knock_min:
             command = 'knock'
+            # Get the knock discard (you may score better discarding from a partial set or run)
+            dead.sort(key = lambda card: card.rank_num)
+            discard = dead[-1]
         # Return the chosen command with the discard.
         print(self.hand)
         print(self.tracking)
@@ -247,6 +251,7 @@ class GinBot(player.Bot):
         # Check for layoffs to return
         dead = sum(self.tracking['part-run'] + self.tracking['part-set'], []) + self.tracking['deadwood']
         for card in dead:
+            # !! Fails to apply mulitple cards to a run. ex: 8-td, lays 7d but not 6d.
             if self.match_check(card, groups = ('attacks',)):
                 self.untrack(card)
                 return str(card)
