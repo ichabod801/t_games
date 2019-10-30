@@ -89,6 +89,7 @@ class GinBot(player.Bot):
     discard_check: Determine if drawing a discard is a good idea. (str)
     find_melds: Find any melds of the specified type. (None)
     knock_check: Determine if it is time to knock or not. (str)
+    knock_min: Calculate the minimum hand value to knock with. (int)
     match_check: Find any match between a card and tracked groups of cards. (list)
     next_spread: Get the next meld or layoff to spread. (str)
     run_pair: Check if two cards can be in the same run. (bool)
@@ -203,15 +204,20 @@ class GinBot(player.Bot):
         discard_score = self.game.card_values[discard.rank]
         # Check if knocking is possible.
         command = 'discard'
-        if score - discard_score <= self.game.knock_min:
+        if score - discard_score <= self.knock_min():
             command = 'knock'
             # Get the knock discard (you may score better discarding from a partial set or run)
             dead.sort(key = lambda card: card.rank_num)
-            discard = dead[-1]
+            if dead:
+                discard = dead[-1]
         # Return the chosen command with the discard.
         print(self.hand)
         print(self.tracking)
         return '{} {}'.format(command, discard)
+
+    def knock_min(self):
+        """Calculate the minimum hand value to knock with. (int)"""
+        return self.game.knock_min
 
     def match_check(self, card, groups = ('full-run', 'full-set', 'part-run', 'part-set')):
         """
@@ -381,8 +387,6 @@ class TrackingBot(GinBot):
     """
     A bot for Gin Rummy that tracks cards drawn. (GinBot)
 
-    !! add cageyness about knocking.
-
     Attributes:
     foe_draws: Cards the opponent has drawn. (list of str)
 
@@ -391,6 +395,7 @@ class TrackingBot(GinBot):
     Overridden Methods:
     discard_check
     get_discard
+    knock_min
     set_up
     tell
     """
@@ -427,7 +432,7 @@ class TrackingBot(GinBot):
             rank_index = self.game.deck.ranks.index(card[0])
             if rank_index > 1:
                 adjacents.add(cards.Card(self.game.deck.ranks[rank_index - 1], card[1]))
-            if rank_index < 14:
+            if rank_index < 13:
                 adjacents.add(cards.Card(self.game.deck.ranks[rank_index + 1], card[1]))
         return adjacents
 
@@ -465,6 +470,15 @@ class TrackingBot(GinBot):
             # Return the card with the lowest adjusted rank.
             possibles.sort()
             return possibles[0][1]
+
+    def knock_min(self):
+        """Calculate the minimum hand value to knock with. (int)"""
+        if len(self.game.deck.cards) < 5:
+            knock_min = self.game.knock_min
+        else:
+            knock_mod = (len(self.game.deck.discards) + len(self.foe_draws) * 2) // 3
+            knock_min = min(self.game.knock_min, max(2, 11 - knock_mod))
+        return knock_min
 
     def set_up(self):
         """Set up the bot for play. (None)"""
