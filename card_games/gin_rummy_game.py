@@ -381,28 +381,108 @@ class TrackingBot(GinBot):
     """
     A bot for Gin Rummy that tracks cards drawn. (GinBot)
 
+    !! add cageyness about knocking.
+
     Attributes:
     foe_draws: Cards the opponent has drawn. (list of str)
 
+    Methods: Get the cards adjacent to a list of cards. (set of cards.Card)
+
     Overridden Methods:
+    discard_check
+    get_discard
     set_up
     tell
     """
+
+    def discard_check(self, card):
+        """
+        Determine if drawing a discard is a good idea. (str)
+
+        Parameters:
+        card: The discard to check. (cards.Card)
+        """
+        # Draw the discard if it creates or adds to a meld.
+        if self.match_check(card):
+            return True
+        # Otherwise draw from the deck
+        else:
+            return False
+
+    def get_adjacents(self, targets):
+        """
+        Get the cards adjacent to a list of cards. (set of cards.Card)
+
+        Parameters:
+        targets: The cards to find adjacent cards for. (list of str)
+        """
+        # Loop through the target cards.
+        adjacents = set()
+        for card in targets:
+            # Add other cards of the same rank.
+            for suit in self.game.deck.suits:
+                if suit != card[1]:
+                    adjacents.add(cards.Card(card[0], suit))
+            # Add other cards of the same suit and adjacent rank.
+            rank_index = self.game.deck.ranks.index(card[0])
+            if rank_index > 1:
+                adjacents.add(cards.Card(self.game.deck.ranks[rank_index - 1], card[1]))
+            if rank_index < 14:
+                adjacents.add(cards.Card(self.game.deck.ranks[rank_index + 1], card[1]))
+        return adjacents
+
+    def get_discard(self):
+        """Determine which card to discard. (cards.Card)"""
+        dangerous = self.get_adjacents(self.foe_draws)
+        possibles = []
+        if self.version == 'absolute':
+            # Check for deadwood.
+            if self.tracking['deadwood']:
+                possibles = [card for card in self.tracking['deadwood'] if card not in dangerous]
+            # Check for partials.
+            if (not possibles) and (self.tracking['part-run'] or self.tracking['part-set']):
+                possibles = sum(self.tracking['part-run'] + self.tracking['part-set'], [])
+                possibles = [card for card in possibles if card not in dangerous]
+            # Check for overly full.
+            if not possibles:
+                melds = self.tracking['full-set'] + self.tracking['full-run']
+                possibles = sum([meld for meld in melds if len(meld) > 3], [])
+                possibles = [card for card in possibles if card not in dangerous]
+            # Return the highest rank.
+            possibles.sort(key = lambda card: card.rank_num)
+            return possibles[-1]
+        else:
+            # Make dangerous deadwood equal to partial melds.
+            for card in self.tracking['deadwood']:
+                possibles.append((14 - card.rank_num + 14 * (card in dangerous)))
+            # Make dangerous partials equal to overly full.
+            for card in sum(self.tracking['part-run'] + self.tracking['part-set'], []):
+                possibles.append((28 - card.rank_num + 14 * (card in dangerous)))
+            # Make dangerous overly fulls worst of all.
+            melds = self.tracking['full-set'] + self.tracking['full-run']
+            for card in sum([meld for meld in melds if len(meld) > 3], []):
+                possibles.append((42 - card.rank_num + 14 * (card in dangerous)))
+            # Return the card with the lowest adjusted rank.
+            possibles.sort()
+            return possibles[0][1]
 
     def set_up(self):
         """Set up the bot for play. (None)"""
         super(TrackingBot, self).set_up()
         self.foe_draws = []
         self.foe_draw_text = '{} drew the '.format(self.game.human.name)
+        self.version = 'absolute'
 
     def tell(self, *args, **kwargs):
         """
-        Recieve informatio from the game. (None)
+        Recieve information from the game. (None)
 
         The parameters are the same as for the print function.
         """
+        # !! does not catch initial discard being drawn.
         if args[0].startswith(self.foe_draw_text):
             self.foe_draws.append(args[0].split()[3])
+            print(args[0], self.foe_draws)
             return None
         elif args[0].endswith(' deals.'):
             self.foe_draws = []
