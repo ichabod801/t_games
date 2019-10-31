@@ -66,6 +66,10 @@ to double their score. Each player then adds 25 bonus points to their game
 score for each hand they won. After all the bonus are added, whoever has the
 highest score wins. Their final score is how much higher their game score is
 than their opponent's.
+
+Options:
+alt-deal (ad): Alternate the deal rather than having the winner deal.
+easy (e): Play the easier bot opponent.
 """
 
 
@@ -198,16 +202,19 @@ class GinBot(player.Bot):
         """Determine if it is time to knock or not. (str)"""
         # Determine discard.
         discard = self.get_discard()
-        # Determine score.
+        # Determine score (if you knock).
         dead = sum(self.tracking['part-run'] + self.tracking['part-set'], []) + self.tracking['deadwood']
         score = sum(self.game.card_values[card.rank] for card in dead)
-        discard_score = self.game.card_values[discard.rank]
-        # Check if knocking is possible.
+        if dead:
+            dead.sort(key = lambda card: card.rank_num)
+            discard_score = self.game.card_values[dead[-1].rank]
+        else:
+            discard_score = self.game.card_values[discard.rank]
+        # Check if knocking is possible/reasonable.
         command = 'discard'
         if score - discard_score <= self.knock_min():
             command = 'knock'
             # Get the knock discard (you may score better discarding from a partial set or run)
-            dead.sort(key = lambda card: card.rank_num)
             if dead:
                 discard = dead[-1]
         # Return the chosen command with the discard.
@@ -655,7 +662,11 @@ class GinRummy(game.Game):
         self.do_scores('', self.human)
         # Redeal.
         if self.scores[winner.name] < self.end:
-            self.dealer, self.deal_cards = winner, True
+            if self.alt_deal:
+                self.dealer = [player for player in self.players if player != self.dealer][0]
+            else:
+                self.dealer = winner
+            self.deal_cards = True
         return False
 
     def do_left(self, arguments):
@@ -757,8 +768,11 @@ class GinRummy(game.Game):
 
     def handle_options(self):
         """Handle the option settings for this game. (None)"""
-        #self.players = [self.human, player.Cyborg(taken_names = [self.human.name])]
-        self.players = [self.human, TrackingBot(taken_names = [self.human.name])]
+        super(GinRummy, self).handle_options()
+        if self.easy:
+            self.players = [self.human, GinBot(taken_names = [self.human.name])]
+        else:
+            self.players = [self.human, TrackingBot(taken_names = [self.human.name])]
 
     def move_cards(self, mod, arguments):
         """
@@ -896,6 +910,11 @@ class GinRummy(game.Game):
             self.card_drawn = True
             go = True
         return go
+
+    def set_options(self):
+        """Define the options for the game. (None)"""
+        self.option_set.add_option('easy', ['e'])
+        self.option_set.add_option('alt-deal', ['ad'])
 
     def set_up(self):
         """Set up the game. (None)"""
