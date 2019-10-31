@@ -718,7 +718,6 @@ class GinRummy(game.Game):
 
     def game_over(self):
         """Check for end of game and calculate the final score. (bool)"""
-        # !! not setting win/loss/draw
         if max(self.scores.values()) >= self.end:
             self.human.tell('\nThe game is over.')
             # Give the ender the game bonus.
@@ -748,6 +747,10 @@ class GinRummy(game.Game):
                 self.scores[player.name] -= self.scores[loser.name]
             # Announce the winner.
             self.human.tell('\n{} won the game by {} points.'.format(winner.name, self.scores[winner.name]))
+            if winner == self.human:
+                self.win_loss_draw[0] += 1
+            else:
+                self.win_loss_draw[1] += 1
             return True
         else:
             return False
