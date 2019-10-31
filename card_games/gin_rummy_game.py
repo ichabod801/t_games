@@ -69,7 +69,15 @@ than their opponent's.
 
 Options:
 alt-deal (ad): Alternate the deal rather than having the winner deal.
-easy (e): Play the easier bot opponent.
+box-bonus = (bb=, line-bonus=, lb=): The extra points at the end of the game
+    for each hand won. Defaults to 25.
+easy (ez): Play the easier bot opponent.
+end= (e=): The number of points needed to end the game.
+game-bonus= (gb=): The number of extra points scored for ending the game.
+    Defaults to 100.
+gin= (g=): The number of extra points scored with gin. Defaults to 25.
+undercut= (uc=): The number of extra points scored for undercutting. Defaults
+    to 25.
 """
 
 
@@ -462,6 +470,7 @@ class TrackingBot(GinBot):
                 possibles = [card for card in possibles if card not in dangerous]
             # Return the highest rank.
             possibles.sort(key = lambda card: card.rank_num)
+            if not possibles: print(self.foe_draws, dangerous)
             return possibles[-1]
         else:
             # Make dangerous deadwood equal to partial melds.
@@ -650,11 +659,11 @@ class GinRummy(game.Game):
         # Score the hands.
         score_diff = defense_score - attack_score
         if not attack_score:
-            winner, score = attacker, 25 + score_diff
+            winner, score = attacker, self.gin + score_diff
         elif score_diff > 0:
             winner, score = attacker, score_diff
         else:
-            winner, score = defender, 25 - score_diff
+            winner, score = defender, self.undercut - score_diff
         # Update the game score.
         self.human.tell('{} scored {} points.'.format(winner.name, score))
         self.scores[winner.name] += score
@@ -709,12 +718,13 @@ class GinRummy(game.Game):
 
     def game_over(self):
         """Check for end of game and calculate the final score. (bool)"""
+        # !! not setting win/loss/draw
         if max(self.scores.values()) >= self.end:
             self.human.tell('\nThe game is over.')
             # Give the ender the game bonus.
             ender = self.players[self.player_index]
-            self.human.tell('{} scores 100 points for ending the game.'.format(ender.name))
-            self.scores[ender.name] += 100
+            self.human.tell('{} scores {} points for ending the game.'.format(ender.name, self.game_bonus))
+            self.scores[ender.name] += self.game_bonus
             # Check for a sweep bonus.
             opponent = self.players[1 - self.player_index]
             if not self.wins[opponent.name]:
@@ -723,7 +733,7 @@ class GinRummy(game.Game):
             # Give each payer 25 points for each win.
             for player in self.players:
                 if self.wins[player.name]:
-                    win_points = 25 * self.wins[player.name]
+                    win_points = self.box_bonus * self.wins[player.name]
                     text = '{} gets {} extra points for winning {} hands.'
                     self.human.tell(text.format(player.name, win_points, self.wins[player.name]))
             # Determine the winner.
@@ -913,8 +923,25 @@ class GinRummy(game.Game):
 
     def set_options(self):
         """Define the options for the game. (None)"""
-        self.option_set.add_option('easy', ['e'])
-        self.option_set.add_option('alt-deal', ['ad'])
+        # to do: gin-layoff, big-gin, match, straight, oklahoma (oklahoma-side), hollywood (triple-score),
+        #   tedesco (high-low, round-the-corner, ace-penalty)
+        # Set the bot options.
+        self.option_set.add_option('easy', ['ez'], question = 'Would you like to play the easy bot? bool')
+        # Set the deal options.
+        self.option_set.add_option('alt-deal', ['ad'],
+            question = 'Should the deal alternate between players? bool')
+        # Set the end of game scoring options.
+        self.option_set.add_option('end', ['e'], int, 100,
+            question = 'How many points should signal the end of the game (return for 100)? ')
+        self.option_set.add_option('box-bonus', ['bb', 'line-bonus', 'lb'], int, 25,
+            question = 'What should the box bonus (points per hand won) be (return for 25)? ')
+        self.option_set.add_option('game-bonus', ['gb'], int, 100,
+            question = 'What should the game bonus (for ending the hand) be (return for 100)? ')
+        # Set the hand scoring options.
+        self.option_set.add_option('gin', ['g'], int, 25,
+            question = 'How many points should you get for gin (return for 25)? ')
+        self.option_set.add_option('undercut', ['uc'], int, 25,
+            question = 'How many points should you get for undercutting (return for 25)? ')
 
     def set_up(self):
         """Set up the game. (None)"""
@@ -924,7 +951,6 @@ class GinRummy(game.Game):
         self.dealer = random.choice(self.players)
         # Set up the tracking variables.
         self.wins = {player.name: 0 for player in self.players}
-        self.end = 100
         self.knock_min = 10
         self.draws = 0
         self.deal_cards = True
@@ -989,6 +1015,7 @@ class GinRummy(game.Game):
                 if len(meld) >= 3:
                     valid = self.validate_meld(meld)
                 # Validate layoffs.
+                # !! can't handle two card layoffs
                 else:
                     for target in attack:
                         valid = self.validate_meld([str(card) for card in target] + meld)
