@@ -759,8 +759,14 @@ class GinRummy(game.Game):
             else:
                 self.win_loss_draw[1] += 1
             if sum(self.win_loss_draw) >= self.match:
+                if self.win_loss_draw[0] > self.win_loss_draw[1]:
+                    self.human.tell('You won the match {} to {}.'.format(*self.win_loss_draw[:2]))
+                else:
+                    self.human.tell('You lost the match {} to {}.'.format(*self.win_loss_draw[:2]))
                 return True
             else:
+                self.human.tell('Your match score is {}-{}.'.format(*self.win_loss_draw[:2]))
+                self.reset()
                 return False
         else:
             return False
@@ -938,6 +944,12 @@ class GinRummy(game.Game):
             go = True
         return go
 
+    def reset(self):
+        """Reset the game. (None)"""
+        self.scores = {player.name: 0 for player in self.players}
+        self.wins = {player.name: 0 for player in self.players}
+        self.deal_cards = True
+
     def set_options(self):
         """Define the options for the game. (None)"""
         # to do: big-gin, match, straight, oklahoma (oklahoma-side), hollywood (triple-score),
@@ -972,10 +984,9 @@ class GinRummy(game.Game):
         self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
         self.dealer = random.choice(self.players)
         # Set up the tracking variables.
-        self.wins = {player.name: 0 for player in self.players}
         self.knock_min = 10
         self.draws = 0
-        self.deal_cards = True
+        self.reset()
 
     def show_melds(self, melds, deadwood, show_to, role):
         """
