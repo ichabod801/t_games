@@ -76,6 +76,7 @@ end= (e=): The number of points needed to end the game.
 game-bonus= (gb=): The number of extra points scored for ending the game.
     Defaults to 100.
 gin= (g=): The number of extra points scored with gin. Defaults to 25.
+gin-layoff (gl): Allows layoff on spreads from a gin hand.
 undercut= (uc=): The number of extra points scored for undercutting. Defaults
     to 25.
 """
@@ -757,7 +758,10 @@ class GinRummy(game.Game):
                 self.win_loss_draw[0] += 1
             else:
                 self.win_loss_draw[1] += 1
-            return True
+            if sum(self.win_loss_draw) >= self.match:
+                return True
+            else:
+                return False
         else:
             return False
 
@@ -788,10 +792,14 @@ class GinRummy(game.Game):
     def handle_options(self):
         """Handle the option settings for this game. (None)"""
         super(GinRummy, self).handle_options()
+        # Set the players.
         if self.easy:
             self.players = [self.human, GinBot(taken_names = [self.human.name])]
         else:
             self.players = [self.human, TrackingBot(taken_names = [self.human.name])]
+        # Handle match play.
+        if self.match > 1:
+            self.flags &= 256
 
     def move_cards(self, mod, arguments):
         """
@@ -932,7 +940,7 @@ class GinRummy(game.Game):
 
     def set_options(self):
         """Define the options for the game. (None)"""
-        # to do: gin-layoff, big-gin, match, straight, oklahoma (oklahoma-side), hollywood (triple-score),
+        # to do: big-gin, match, straight, oklahoma (oklahoma-side), hollywood (triple-score),
         #   tedesco (high-low, round-the-corner, ace-penalty)
         # Set the bot options.
         self.option_set.add_option('easy', ['ez'], question = 'Would you like to play the easy bot? bool')
@@ -953,6 +961,9 @@ class GinRummy(game.Game):
             question = 'How many points should you get for gin (return for 25)? ')
         self.option_set.add_option('undercut', ['uc'], int, 25,
             question = 'How many points should you get for undercutting (return for 25)? ')
+        # Set the match options.
+        self.option_set.add_option('match', ['m'], int, 1,
+            question = 'How many games should be played in the match (return for 1/no match)? ')
 
     def set_up(self):
         """Set up the game. (None)"""
