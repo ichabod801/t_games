@@ -568,7 +568,7 @@ class GinRummy(game.Game):
     categories = ['Card Games']
     credits = CREDITS
     name = 'Gin Rummy'
-    num_options = 13
+    num_options = 14
     rules = RULES
 
     def deal(self):
@@ -585,12 +585,14 @@ class GinRummy(game.Game):
             player.tell('\n{} deals.'.format(self.dealer.name))
         # Discard one card.
         self.deck.discard(self.deck.deal(), up = True)
-        # Handle dibs on the first discard.
-        # Non-dealer gets first chance at the discard.
-        non_dealer = self.players[0] if self.players[1] == self.dealer else self.players[1]
+        # Handle play modifications based on the initial discard.
         discard = self.deck.discards[-1]
         if self.discard_limit:
             self.knock_min = 0 if (self.ace_gin and discard.rank == 'A') else self.card_values[discard.rank]
+        self.doubler = 2 if (self.spade_doubles and discard.suit == 'S') else 1
+        # Handle dibs on the first discard.
+        # Non-dealer gets first chance at the discard.
+        non_dealer = self.players[0] if self.players[1] == self.dealer else self.players[1]
         self.player_index = self.players.index(non_dealer)
         while True:
             non_dealer.tell('Your hand is {}.'.format(self.hands[non_dealer.name]))
@@ -681,11 +683,11 @@ class GinRummy(game.Game):
         score_diff = defense_score - attack_score
         if not attack_score:
             mod = self.big_gin if (self.big_gin and discard == 'BIG') else self.gin
-            winner, score = attacker, score_diff + mod
+            winner, score = attacker, (score_diff + mod) * self.doubler
         elif score_diff > 0:
-            winner, score = attacker, score_diff
+            winner, score = attacker, score_diff * self.doubler
         else:
-            winner, score = defender, self.undercut - score_diff
+            winner, score = defender, (self.undercut - score_diff) * self.doubler
         # Update the game score.
         self.human.tell('{} scored {} points.'.format(winner.name, score))
         self.scores[winner.name] += score
@@ -970,6 +972,9 @@ class GinRummy(game.Game):
         """Define the options for the game. (None)"""
         # to do: oklahoma (discard-limit, side-limit, spade-doubles, ace-gin), hollywood (triple-score),
         #   tedesco (high-low, round-the-corner, ace-penalty)
+        # Set the option groups.
+        self.option_set.add_group('oklahoma', 'discard-limit spade-doubles')
+        self.option_set.add_group('ok', 'discard-limit spade-doubles')
         # Set the bot options.
         self.option_set.add_option('easy', ['ez'], question = 'Would you like to play the easy bot? bool')
         # Set the deal options.
@@ -991,6 +996,8 @@ class GinRummy(game.Game):
             question = 'How many points should you get for undercutting (return for 25)? ')
         self.option_set.add_option('big-gin', ['bg'], int, 0,
             question = 'How many points should you get for big gin (return for 0/no big gin)? ')
+        self.option_set.add_option('spade-doubles', ['sd'],
+            question = 'Should a spade as the initial discard double the score for a hand? bool')
         # Set the end of game scoring options.
         self.option_set.add_option('end', ['e'], int, 100,
             question = 'How many points should signal the end of the game (return for 100)? ')
@@ -1010,6 +1017,7 @@ class GinRummy(game.Game):
         self.dealer = random.choice(self.players)
         # Set up the tracking variables.
         self.draws = 0
+        self.doubler = 1
         self.reset()
 
     def show_melds(self, melds, deadwood, show_to, role):
