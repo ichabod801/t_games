@@ -579,13 +579,15 @@ class GinRummy(game.Game):
         # Handle dibs on the first discard.
         # Non-dealer gets first chance at the discard.
         non_dealer = self.players[0] if self.players[1] == self.dealer else self.players[1]
+        discard = self.deck.discards[-1]
         self.player_index = self.players.index(non_dealer)
         while True:
             non_dealer.tell('Your hand is {}.'.format(self.hands[non_dealer.name]))
-            query = 'Would you like the top card of the discard pile ({})? '.format(self.deck.discards[-1])
+            query = 'Would you like the top card of the discard pile ({})? '.format(discard)
             take_discard = non_dealer.ask(query).lower()
             if take_discard in utility.YES or take_discard == self.deck.discards[-1]:
                 self.hands[non_dealer.name].deal(self.deck.discards.pop())
+                self.dealer.tell('{} drew the {} from the discard pile.'.format(non_dealer.name, discard))
                 self.player_index = self.players.index(self.dealer)
             elif take_discard.split()[0] in ('g', 'group'):
                 self.handle_cmd(take_discard)
@@ -599,6 +601,8 @@ class GinRummy(game.Game):
                 take_discard = self.dealer.ask(query).lower()
                 if take_discard in utility.YES or take_discard == self.deck.discards[-1]:
                     self.hands[self.dealer.name].deal(self.deck.discards.pop())
+                    message = '{} drew the {} from the discard pile.'
+                    non_dealer.tell(message.format(self.dealer.name, discard))
                     self.player_index = self.players.index(non_dealer)
                 elif take_discard.split()[0] in ('g', 'group'):
                     self.handle_cmd(take_discard)
