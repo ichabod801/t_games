@@ -68,12 +68,16 @@ highest score wins. Their final score is how much higher their game score is
 than their opponent's.
 
 Options:
+ace-gin (ag): Any ace used to determine knock limits indicates that gin is
+    required to knock. Has no effect without discard-limit or side-limit.
 alt-deal (ad): Alternate the deal rather than having the winner deal.
 big-gin= (bg=): How many points you get for an eleven card gin. Defaults to 0,
     which means big gin is not allowed. Usually 31 or 50 when used. To
     declare big gin, knock with the discard 'big'.
 box-bonus = (bb=, line-bonus=, lb=): The extra points at the end of the game
     for each hand won. Defaults to 25.
+discard-limit (dl): The first discard each hand determines the maximun number
+    of points you can knock with.
 easy (ez): Play the easier bot opponent.
 end= (e=): The number of points needed to end the game.
 game-bonus= (gb=): The number of extra points scored for ending the game.
@@ -564,7 +568,7 @@ class GinRummy(game.Game):
     categories = ['Card Games']
     credits = CREDITS
     name = 'Gin Rummy'
-    num_options = 11
+    num_options = 13
     rules = RULES
 
     def deal(self):
@@ -585,6 +589,8 @@ class GinRummy(game.Game):
         # Non-dealer gets first chance at the discard.
         non_dealer = self.players[0] if self.players[1] == self.dealer else self.players[1]
         discard = self.deck.discards[-1]
+        if self.discard_limit:
+            self.knock_min = 0 if (self.ace_gin and discard.rank == 'A') else self.card_values[discard.rank]
         self.player_index = self.players.index(non_dealer)
         while True:
             non_dealer.tell('Your hand is {}.'.format(self.hands[non_dealer.name]))
@@ -594,7 +600,7 @@ class GinRummy(game.Game):
                 self.hands[non_dealer.name].deal(self.deck.discards.pop())
                 self.dealer.tell('{} drew the {} from the discard pile.'.format(non_dealer.name, discard))
                 self.player_index = self.players.index(self.dealer)
-            elif take_discard.split()[0] in ('g', 'group'):
+            elif take_discard.split()[0] in ('l', 'left', 'r', 'right'):
                 self.handle_cmd(take_discard)
                 continue
             break
@@ -609,7 +615,7 @@ class GinRummy(game.Game):
                     message = '{} drew the {} from the discard pile.'
                     non_dealer.tell(message.format(self.dealer.name, discard))
                     self.player_index = self.players.index(non_dealer)
-                elif take_discard.split()[0] in ('g', 'group'):
+                elif take_discard.split()[0] in ('l', 'left', 'r', 'right'):
                     self.handle_cmd(take_discard)
                     continue
                 break
@@ -811,8 +817,8 @@ class GinRummy(game.Game):
         if self.easy:
             self.players = [self.human, GinBot(taken_names = [self.human.name])]
         else:
-            self.players = [self.human, player.Cyborg(taken_names = [self.human.name])]
-            #self.players = [self.human, TrackingBot(taken_names = [self.human.name])]
+            #self.players = [self.human, player.Cyborg(taken_names = [self.human.name])]
+            self.players = [self.human, TrackingBot(taken_names = [self.human.name])]
         # Handle match play.
         if self.match > 1:
             self.flags &= 256
@@ -962,7 +968,7 @@ class GinRummy(game.Game):
 
     def set_options(self):
         """Define the options for the game. (None)"""
-        # to do: big-gin, oklahoma (oklahoma-side), hollywood (triple-score),
+        # to do: oklahoma (discard-limit, side-limit, spade-doubles, ace-gin), hollywood (triple-score),
         #   tedesco (high-low, round-the-corner, ace-penalty)
         # Set the bot options.
         self.option_set.add_option('easy', ['ez'], question = 'Would you like to play the easy bot? bool')
@@ -970,7 +976,12 @@ class GinRummy(game.Game):
         self.option_set.add_option('alt-deal', ['ad'],
             question = 'Should the deal alternate between players? bool')
         # Set the play options.
-        self.option_set.add_option('gin-layoff', ['gl'], question = 'Should you be able to layoff on gin? ')
+        self.option_set.add_option('ace-gin', ['ag'],
+            question = 'Should an ace used to determine the knock limit require gin to knock? bool')
+        self.option_set.add_option('discard-limit', ['dl'],
+            question = 'Should the first discard each hand determine the maximum knock points? bool')
+        self.option_set.add_option('gin-layoff', ['gl'],
+            question = 'Should you be able to layoff on gin? bool')
         self.option_set.add_option('straight', ['s'], default = 10, value = 0, target = 'knock_min',
             question = 'Should the game be played straight (you can only knock with gin)? bool')
         # Set the hand scoring options.
