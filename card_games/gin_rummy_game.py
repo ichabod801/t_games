@@ -69,6 +69,9 @@ than their opponent's.
 
 Options:
 alt-deal (ad): Alternate the deal rather than having the winner deal.
+big-gin= (bg=): How many points you get for an eleven card gin. Defaults to 0,
+    which means big gin is not allowed. Usually 31 or 50 when used. To
+    declare big gin, knock with the discard 'big'.
 box-bonus = (bb=, line-bonus=, lb=): The extra points at the end of the game
     for each hand won. Defaults to 25.
 easy (ez): Play the easier bot opponent.
@@ -561,7 +564,7 @@ class GinRummy(game.Game):
     categories = ['Card Games']
     credits = CREDITS
     name = 'Gin Rummy'
-    num_options = 10
+    num_options = 11
     rules = RULES
 
     def deal(self):
@@ -644,12 +647,16 @@ class GinRummy(game.Game):
         defender = self.players[1 - self.player_index]
         # Get the attacker's discard.
         discard = self.get_knock_discard(attacker, argument)
-        self.hands[attacker.name].discard(discard)
-        self.deck.discards[-1].up = True
+        if discard != 'BIG':
+            self.hands[attacker.name].discard(discard)
+            self.deck.discards[-1].up = True
+            knock_min = self.knock_min
+        else:
+            knock_min = 0
         # Spread the dealer's hand.
         attack_melds, attack_deadwood = self.spread(attacker)
         attack_score = sum([self.card_values[card.rank] for card in attack_deadwood])
-        if attack_score > self.knock_min:
+        if attack_score > knock_min:
             if attack_melds:
                 attacker.error('You do not have a low enough score to knock.')
             return False
@@ -667,7 +674,8 @@ class GinRummy(game.Game):
         # Score the hands.
         score_diff = defense_score - attack_score
         if not attack_score:
-            winner, score = attacker, self.gin + score_diff
+            mod = self.big_gin if (self.big_gin and discard == 'BIG') else self.gin
+            winner, score = attacker, score_diff + mod
         elif score_diff > 0:
             winner, score = attacker, score_diff
         else:
@@ -781,7 +789,7 @@ class GinRummy(game.Game):
         argument: The argument to the discard command. (str)
         """
         # Check for it passed as an argument.
-        if argument in self.hands[knocker.name]:
+        if argument in self.hands[knocker.name] or (self.big_gin and argument.lower() == 'big'):
             discard = argument
         else:
             # Warn about invalid arguments.
@@ -790,11 +798,11 @@ class GinRummy(game.Game):
             # Query the user for the card.
             while True:
                 discard = knocker.ask('Which card would you like to discard? ')
-                if discard in self.hands[knocker.name]:
+                if discard in self.hands[knocker.name] or (self.big_gin and argument.lower() == 'big'):
                     break
                 knocker.tell('You do not have that card to discard.')
                 knocker.tell('Your hand is {}.'.format(self.hands[knocker.name]))
-        return discard
+        return discard.upper()
 
     def handle_options(self):
         """Handle the option settings for this game. (None)"""
@@ -803,7 +811,8 @@ class GinRummy(game.Game):
         if self.easy:
             self.players = [self.human, GinBot(taken_names = [self.human.name])]
         else:
-            self.players = [self.human, TrackingBot(taken_names = [self.human.name])]
+            self.players = [self.human, player.Cyborg(taken_names = [self.human.name])]
+            #self.players = [self.human, TrackingBot(taken_names = [self.human.name])]
         # Handle match play.
         if self.match > 1:
             self.flags &= 256
@@ -953,7 +962,7 @@ class GinRummy(game.Game):
 
     def set_options(self):
         """Define the options for the game. (None)"""
-        # to do: big-gin, straight, oklahoma (oklahoma-side), hollywood (triple-score),
+        # to do: big-gin, oklahoma (oklahoma-side), hollywood (triple-score),
         #   tedesco (high-low, round-the-corner, ace-penalty)
         # Set the bot options.
         self.option_set.add_option('easy', ['ez'], question = 'Would you like to play the easy bot? bool')
@@ -964,6 +973,13 @@ class GinRummy(game.Game):
         self.option_set.add_option('gin-layoff', ['gl'], question = 'Should you be able to layoff on gin? ')
         self.option_set.add_option('straight', ['s'], default = 10, value = 0, target = 'knock_min',
             question = 'Should the game be played straight (you can only knock with gin)? bool')
+        # Set the hand scoring options.
+        self.option_set.add_option('gin', ['g'], int, 25,
+            question = 'How many points should you get for gin (return for 25)? ')
+        self.option_set.add_option('undercut', ['uc'], int, 25,
+            question = 'How many points should you get for undercutting (return for 25)? ')
+        self.option_set.add_option('big-gin', ['bg'], int, 0,
+            question = 'How many points should you get for big gin (return for 0/no big gin)? ')
         # Set the end of game scoring options.
         self.option_set.add_option('end', ['e'], int, 100,
             question = 'How many points should signal the end of the game (return for 100)? ')
@@ -971,11 +987,6 @@ class GinRummy(game.Game):
             question = 'What should the box bonus (points per hand won) be (return for 25)? ')
         self.option_set.add_option('game-bonus', ['gb'], int, 100,
             question = 'What should the game bonus (for ending the hand) be (return for 100)? ')
-        # Set the hand scoring options.
-        self.option_set.add_option('gin', ['g'], int, 25,
-            question = 'How many points should you get for gin (return for 25)? ')
-        self.option_set.add_option('undercut', ['uc'], int, 25,
-            question = 'How many points should you get for undercutting (return for 25)? ')
         # Set the match options.
         self.option_set.add_option('match', ['m'], int, 1,
             question = 'How many games should be played in the match (return for 1/no match)? ')
