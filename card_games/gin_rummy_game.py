@@ -85,6 +85,11 @@ game-bonus= (gb=): The number of extra points scored for ending the game.
 gin= (g=): The number of extra points scored with gin. Defaults to 25.
 gin-layoff (gl): Allows layoff on spreads from a gin hand.
 match= (m=): The number of games in the match. Defaults to 1 / no match.
+oklahoma (ok): Equivalent to 'discard-limit spade-doubles'.
+side-limit (sl): The knock limit for each hand is set by drawing a card from a
+    second deck.
+spade-doubles (sd): If the initial discard is a spade, the score of the hand
+    is doubled.
 undercut= (uc=): The number of extra points scored for undercutting. Defaults
     to 25.
 """
@@ -568,11 +573,12 @@ class GinRummy(game.Game):
     categories = ['Card Games']
     credits = CREDITS
     name = 'Gin Rummy'
-    num_options = 14
+    num_options = 15
     rules = RULES
 
     def deal(self):
         """Deal the cards. (None)"""
+        # !! refactor
         # Gather and shuffle all the cards.
         for hand in self.hands.values():
             hand.discard()
@@ -589,7 +595,21 @@ class GinRummy(game.Game):
         discard = self.deck.discards[-1]
         if self.discard_limit:
             self.knock_min = 0 if (self.ace_gin and discard.rank == 'A') else self.card_values[discard.rank]
-        self.doubler = 2 if (self.spade_doubles and discard.suit == 'S') else 1
+            self.human.tell('The maximum knock score is {}.'.format(self.knock_min))
+        elif self.side_limit:
+            self.side_deck.discard(self.side_deck.deal(), up = True)
+            side_discard = self.side_deck.discards[-1]
+            if self.ace_gin and side_discard.rank == 'A':
+                self.knock_min = 0
+            else:
+                self.knock_min = self.card_values[side_discard.rank]
+            text = 'The discard from the side deck was {}, the maximum knock score is {}.'
+            self.human.tell(text.format(side_discard, self.knock_min))
+        if (self.spade_doubles and discard.suit == 'S'):
+            self.doubler = 2
+            self.human.tell('The score for this hand will be doubled.')
+        else:
+            self.doubler = 1
         # Handle dibs on the first discard.
         # Non-dealer gets first chance at the discard.
         non_dealer = self.players[0] if self.players[1] == self.dealer else self.players[1]
@@ -967,11 +987,11 @@ class GinRummy(game.Game):
         self.scores = {player.name: 0 for player in self.players}
         self.wins = {player.name: 0 for player in self.players}
         self.deal_cards = True
+        self.side_deck.shuffle()
 
     def set_options(self):
         """Define the options for the game. (None)"""
-        # to do: oklahoma (discard-limit, side-limit, spade-doubles, ace-gin), hollywood (triple-score),
-        #   tedesco (high-low, round-the-corner, ace-penalty)
+        # to do: hollywood (triple-score), tedesco? (high-low, round-the-corner, ace-penalty)
         # Set the option groups.
         self.option_set.add_group('oklahoma', 'discard-limit spade-doubles')
         self.option_set.add_group('ok', 'discard-limit spade-doubles')
@@ -987,6 +1007,8 @@ class GinRummy(game.Game):
             question = 'Should the first discard each hand determine the maximum knock points? bool')
         self.option_set.add_option('gin-layoff', ['gl'],
             question = 'Should you be able to layoff on gin? bool')
+        self.option_set.add_option('side-limit', ['sl'],
+            question = 'Should a discard from a second deck set the maximum knock points each hand? bool')
         self.option_set.add_option('straight', ['s'], default = 10, value = 0, target = 'knock_min',
             question = 'Should the game be played straight (you can only knock with gin)? bool')
         # Set the hand scoring options.
@@ -1015,6 +1037,7 @@ class GinRummy(game.Game):
         self.deck = cards.Deck()
         self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
         self.dealer = random.choice(self.players)
+        self.side_deck = cards.Deck()
         # Set up the tracking variables.
         self.draws = 0
         self.doubler = 1
