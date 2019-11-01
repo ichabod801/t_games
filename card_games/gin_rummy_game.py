@@ -77,6 +77,7 @@ game-bonus= (gb=): The number of extra points scored for ending the game.
     Defaults to 100.
 gin= (g=): The number of extra points scored with gin. Defaults to 25.
 gin-layoff (gl): Allows layoff on spreads from a gin hand.
+match= (m=): The number of games in the match. Defaults to 1 / no match.
 undercut= (uc=): The number of extra points scored for undercutting. Defaults
     to 25.
 """
@@ -560,7 +561,7 @@ class GinRummy(game.Game):
     categories = ['Card Games']
     credits = CREDITS
     name = 'Gin Rummy'
-    num_options = 0
+    num_options = 10
     rules = RULES
 
     def deal(self):
@@ -952,7 +953,7 @@ class GinRummy(game.Game):
 
     def set_options(self):
         """Define the options for the game. (None)"""
-        # to do: big-gin, match, straight, oklahoma (oklahoma-side), hollywood (triple-score),
+        # to do: big-gin, straight, oklahoma (oklahoma-side), hollywood (triple-score),
         #   tedesco (high-low, round-the-corner, ace-penalty)
         # Set the bot options.
         self.option_set.add_option('easy', ['ez'], question = 'Would you like to play the easy bot? bool')
@@ -961,6 +962,8 @@ class GinRummy(game.Game):
             question = 'Should the deal alternate between players? bool')
         # Set the play options.
         self.option_set.add_option('gin-layoff', ['gl'], question = 'Should you be able to layoff on gin? ')
+        self.option_set.add_option('straight', ['s'], default = 10, value = 0, target = 'knock_min',
+            question = 'Should the game be played straight (you can only knock with gin)? bool')
         # Set the end of game scoring options.
         self.option_set.add_option('end', ['e'], int, 100,
             question = 'How many points should signal the end of the game (return for 100)? ')
@@ -984,7 +987,6 @@ class GinRummy(game.Game):
         self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
         self.dealer = random.choice(self.players)
         # Set up the tracking variables.
-        self.knock_min = 10
         self.draws = 0
         self.reset()
 
