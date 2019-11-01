@@ -653,7 +653,9 @@ class GinRummy(game.Game):
             return False
         self.show_melds(attack_melds, attack_deadwood, defender, 'attacking')
         # Get the defender's melds.
-        if attack_score:
+        if attack_score or self.gin_layoff:
+            if not attack_score:
+                defender.tell('Gin!')
             defense_melds, defense_deadwood = self.spread(defender, attack_melds)
         else:
             defender.tell('Gin! You may not lay off.')
@@ -937,6 +939,8 @@ class GinRummy(game.Game):
         # Set the deal options.
         self.option_set.add_option('alt-deal', ['ad'],
             question = 'Should the deal alternate between players? bool')
+        # Set the play options.
+        self.option_set.add_option('gin-layoff', ['gl'], question = 'Should you be able to layoff on gin? ')
         # Set the end of game scoring options.
         self.option_set.add_option('end', ['e'], int, 100,
             question = 'How many points should signal the end of the game (return for 100)? ')
