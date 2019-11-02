@@ -4,8 +4,10 @@ gin_rummy_game.py
 A game of Gin Rummy.
 
 To Do:
+options
 clean up output
-card tracking bot.
+any remaining double bangs
+double check documentation
 
 Constants:
 CREDITS: The credits for Gin Rummy. (str)
@@ -558,6 +560,7 @@ class GinRummy(game.Game):
     parse_meld: Determine the cards for a given meld specification. (list of str)
     show_melds: Show the opponent's melds to a player. (None)
     spread: Spread cards from a player's hand. (tuple of list of cards.Card)
+    update_score: Add points to a player's score. (None)
 
     Overridden Methods:
     game_over
@@ -710,9 +713,8 @@ class GinRummy(game.Game):
             winner, score = defender, (self.undercut - score_diff) * self.doubler
         # Update the game score.
         self.human.tell('{} scored {} points.'.format(winner.name, score))
-        self.scores[winner.name] += score
-        self.wins[winner.name] += 1
-        self.do_scores('', self.human)
+        self.update_score(winner, score)
+        self.do_score('', self.human)
         # Redeal.
         if self.scores[winner.name] < self.end:
             if self.alt_deal:
@@ -758,43 +760,35 @@ class GinRummy(game.Game):
             reciever = self.players[self.player_index]
         reciever.tell('\nCurrent Scores:')
         for player in self.players:
-            reciever.tell('{}: {}'.format(player.name, self.scores[player.name]))
+            if self.hollywood:
+                scores = [self.scores[game][player.name] for game in range(3)]
+                reciever.tell('{}: {}/{}/{}'.format(player.name, *scores))
+            else:
+                reciever.tell('{}: {}'.format(player.name, self.scores[player.name]))
 
     def game_over(self):
         """Check for end of game and calculate the final score. (bool)"""
-        if max(self.scores.values()) >= self.end:
-            self.human.tell('\nThe game is over.')
-            # Give the ender the game bonus.
-            ender = self.players[self.player_index]
-            self.human.tell('{} scores {} points for ending the game.'.format(ender.name, self.game_bonus))
-            self.scores[ender.name] += self.game_bonus
-            # Check for a sweep bonus.
-            opponent = self.players[1 - self.player_index]
-            if not self.wins[opponent.name]:
-                self.human.tell('{} doubles their score for sweeping the game.'.format(ender.name))
-                self.scores[ender.name] *= 2
-            # Give each payer 25 points for each win.
-            for player in self.players:
-                if self.wins[player.name]:
-                    win_points = self.box_bonus * self.wins[player.name]
-                    text = '{} gets {} extra points for winning {} hands.'
-                    self.human.tell(text.format(player.name, win_points, self.wins[player.name]))
-            # Determine the winner.
-            if self.scores[ender.name] > self.scores[opponent.name]:
-                winner = ender
-                loser = opponent
+        if self.hollywood:
+            for game in range(3):
+                nth = ('first', 'second', 'third')[game]
+                if self.game_on[game] and max(self.scores[game].values()) >= self.end:
+                    self.game_score(self.scores[game], self.wins[game], nth)
+                    self.game_on[game] = False
+            if not self.game_on[2]:
+                for game in range(3):
+                    if self.scores[game][self.human.name]:
+                        self.win_loss_draw[0] += 1
+                    else:
+                        self.win_loss_draw[1] += 1
+                if self.win_loss_draw[0] > self.win_loss_draw[1]:
+                    self.human.tell('You won the match {} to {}.'.format(*self.win_loss_draw[:2]))
+                else:
+                    self.human.tell('You lost the match {} to {}.'.format(*self.win_loss_draw[:2]))
+                return True
             else:
-                winner = opponent
-                loser = ender
-            # Reset the scores.
-            for player in self.players:
-                self.scores[player.name] -= self.scores[loser.name]
-            # Announce the winner.
-            self.human.tell('\n{} won the game by {} points.'.format(winner.name, self.scores[winner.name]))
-            if winner == self.human:
-                self.win_loss_draw[0] += 1
-            else:
-                self.win_loss_draw[1] += 1
+                return False
+        elif max(self.scores.values()) >= self.end:
+            self.game_score(self.scores, self.wins, '')
             if sum(self.win_loss_draw) >= self.match:
                 if self.win_loss_draw[0] > self.win_loss_draw[1]:
                     self.human.tell('You won the match {} to {}.'.format(*self.win_loss_draw[:2]))
@@ -807,6 +801,50 @@ class GinRummy(game.Game):
                 return False
         else:
             return False
+
+    def game_score(self, scores, wins, nth):
+        """
+        Calculate the end of game score. (None)
+
+        Parameters:
+        scores: The total hand scores for the game. (dict of str: int)
+        wins: The number of won hands for the game. (dict of str: int)
+        nth: The ordinal of the game for output. (str)
+        """
+        self.human.tell('\nThe {}game is over.'.format(nth))
+        # Give the ender the game bonus.
+        ender = self.players[self.player_index]
+        text = '{} scores {} points for ending the {}game.'
+        self.human.tell(text.format(ender.name, self.game_bonus, nth))
+        scores[ender.name] += self.game_bonus
+        # Check for a sweep bonus.
+        opponent = self.players[1 - self.player_index]
+        if not wins[opponent.name]:
+            self.human.tell('{} doubles their score for sweeping the {}game.'.format(ender.name, nth))
+            scores[ender.name] *= 2
+        # Give each payer 25 points for each win.
+        for player in self.players:
+            if wins[player.name]:
+                win_points = self.box_bonus * wins[player.name]
+                text = '{} gets {} extra points for winning {} hands.'
+                self.human.tell(text.format(player.name, win_points, self.wins[player.name]))
+        # Determine the winner.
+        if scores[ender.name] > scores[opponent.name]:
+            winner = ender
+            loser = opponent
+        else:
+            winner = opponent
+            loser = ender
+        # Reset the scores.
+        for player in self.players:
+            scores[player.name] -= scores[loser.name]
+        # Announce the winner.
+        text = '\n{} won the {}game by {} points.'
+        self.human.tell(text.format(winner.name, nth, scores[winner.name]))
+        if winner == self.human:
+            self.win_loss_draw[0] += 1
+        else:
+            self.win_loss_draw[1] += 1
 
     def get_knock_discard(self, knocker, argument):
         """
@@ -984,8 +1022,13 @@ class GinRummy(game.Game):
 
     def reset(self):
         """Reset the game. (None)"""
-        self.scores = {player.name: 0 for player in self.players}
-        self.wins = {player.name: 0 for player in self.players}
+        if self.hollywood:
+            self.scores = [{player.name: 0 for player in self.players} for game in range(3)]
+            self.wins = [{player.name: 0 for player in self.players} for game in range(3)]
+            self.game_on = [True, True, True]
+        else:
+            self.scores = {player.name: 0 for player in self.players}
+            self.wins = {player.name: 0 for player in self.players}
         self.deal_cards = True
         self.side_deck.shuffle()
 
@@ -1030,6 +1073,8 @@ class GinRummy(game.Game):
         # Set the match options.
         self.option_set.add_option('match', ['m'], int, 1,
             question = 'How many games should be played in the match (return for 1/no match)? ')
+        self.option_set.add_option('hollywood', ['hw'],
+            question = 'Should the game be run with three scores, Hollywod style? bool')
 
     def set_up(self):
         """Set up the game. (None)"""
@@ -1123,6 +1168,28 @@ class GinRummy(game.Game):
                     player.error('That is not a valid meld{}.'.format(layoff))
         # Return the melds and the deadwood.
         return scoring_sets, cards
+
+    def update_score(self, player, points):
+        """
+        Add points to a player's score. (None)
+
+        Parameters:
+        player: The player to add points to. (player.Player)
+        points: How many points to add to their score. (int)
+        """
+        if self.hollywood:
+            if self.scores[1][player.name]:
+                self.scores[2][player.name] += points
+                self.wins[2][player.name] += 1
+            if self.game_on[1] and self.scores[0][player.name]:
+                self.scores[1][player.name] += points
+                self.wins[1][player.name] += 1
+            if self.game_on[0]:
+                self.scores[0][player.name] += points
+                self.wins[0][player.name] += 1
+        else:
+            self.scores[player.name] += points
+            self.wins[player.name] += 1
 
     def validate_meld(self, meld):
         """
