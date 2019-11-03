@@ -714,9 +714,10 @@ class GinRummy(game.Game):
         # Update the game score.
         self.human.tell('{} scored {} points.'.format(winner.name, score))
         self.update_score(winner, score)
-        self.do_score('', self.human)
-        # Redeal.
-        if self.scores[winner.name] < self.end:
+        self.do_scores('', self.human)
+        # Check for the end of the game.
+        hollywood_end = self.hollywood and self.scores[2][winner.name] < self.end
+        if hollywood_end or (not self.hollywood and self.scores[winner.name] < self.end):
             if self.alt_deal:
                 self.dealer = [player for player in self.players if player != self.dealer][0]
             else:
@@ -770,30 +771,28 @@ class GinRummy(game.Game):
         """Check for end of game and calculate the final score. (bool)"""
         if self.hollywood:
             for game in range(3):
-                nth = ('first', 'second', 'third')[game]
+                nth = ('first ', 'second ', 'third ')[game]
                 if self.game_on[game] and max(self.scores[game].values()) >= self.end:
                     self.game_score(self.scores[game], self.wins[game], nth)
                     self.game_on[game] = False
             if not self.game_on[2]:
-                for game in range(3):
-                    if self.scores[game][self.human.name]:
-                        self.win_loss_draw[0] += 1
-                    else:
-                        self.win_loss_draw[1] += 1
                 if self.win_loss_draw[0] > self.win_loss_draw[1]:
                     self.human.tell('You won the match {} to {}.'.format(*self.win_loss_draw[:2]))
                 else:
                     self.human.tell('You lost the match {} to {}.'.format(*self.win_loss_draw[:2]))
+                self.scores = self.match_scores
                 return True
             else:
                 return False
         elif max(self.scores.values()) >= self.end:
             self.game_score(self.scores, self.wins, '')
             if sum(self.win_loss_draw) >= self.match:
+                win_type = 'game' if self.match == 1 else 'match'
                 if self.win_loss_draw[0] > self.win_loss_draw[1]:
-                    self.human.tell('You won the match {} to {}.'.format(*self.win_loss_draw[:2]))
+                    self.human.tell('You won the {} {} to {}.'.format(win_type, *self.win_loss_draw[:2]))
                 else:
-                    self.human.tell('You lost the match {} to {}.'.format(*self.win_loss_draw[:2]))
+                    self.human.tell('You lost the {} {} to {}.'.format(win_type, *self.win_loss_draw[:2]))
+                self.scores = self.match_scores
                 return True
             else:
                 self.human.tell('Your match score is {}-{}.'.format(*self.win_loss_draw[:2]))
@@ -827,7 +826,7 @@ class GinRummy(game.Game):
             if wins[player.name]:
                 win_points = self.box_bonus * wins[player.name]
                 text = '{} gets {} extra points for winning {} hands.'
-                self.human.tell(text.format(player.name, win_points, self.wins[player.name]))
+                self.human.tell(text.format(player.name, win_points, wins[player.name]))
         # Determine the winner.
         if scores[ender.name] > scores[opponent.name]:
             winner = ender
@@ -841,6 +840,7 @@ class GinRummy(game.Game):
         # Announce the winner.
         text = '\n{} won the {}game by {} points.'
         self.human.tell(text.format(winner.name, nth, scores[winner.name]))
+        self.match_scores[winner.name] += scores[winner.name]
         if winner == self.human:
             self.win_loss_draw[0] += 1
         else:
@@ -1086,6 +1086,7 @@ class GinRummy(game.Game):
         # Set up the tracking variables.
         self.draws = 0
         self.doubler = 1
+        self.match_scores = {player.name: 0 for player in self.players}
         self.reset()
 
     def show_melds(self, melds, deadwood, show_to, role):
@@ -1178,10 +1179,10 @@ class GinRummy(game.Game):
         points: How many points to add to their score. (int)
         """
         if self.hollywood:
-            if self.scores[1][player.name]:
+            if self.scores[1][player.name] or not self.game_on[1]:
                 self.scores[2][player.name] += points
                 self.wins[2][player.name] += 1
-            if self.game_on[1] and self.scores[0][player.name]:
+            if self.game_on[1] and (self.scores[0][player.name] or not self.game_on[0]):
                 self.scores[1][player.name] += points
                 self.wins[1][player.name] += 1
             if self.game_on[0]:
