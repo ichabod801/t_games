@@ -487,6 +487,7 @@ class TrackingBot(GinBot):
             # Return the highest rank.
             possibles.sort(key = lambda card: card.rank_num)
             if not possibles: print(self.foe_draws, dangerous)
+            # !! error when no possibles, have it sort if none.
             return possibles[-1]
         else:
             # Make dangerous deadwood equal to partial melds.
@@ -952,7 +953,7 @@ class GinRummy(game.Game):
                         suit = start[1]
                     else:
                         suit = end[1]
-                except ValueError, IndexError:
+                except (ValueError, IndexError):
                     meld = ['error']
                 else:
                     # Loop through the ranks, creating the card strings.
