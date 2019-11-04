@@ -308,6 +308,7 @@ class GinBot(player.Bot):
         card1: The lower card to check. (cards.Card)
         card1: The higher card to check. (cards.Card)
         """
+        # !! add high/low
         return card1.suit == card2.suit and card1.below(card2)
 
     def set_pair(self, card1, card2):
@@ -1051,6 +1052,8 @@ class GinRummy(game.Game):
             question = 'Should the first discard each hand determine the maximum knock points? bool')
         self.option_set.add_option('gin-layoff', ['gl'],
             question = 'Should you be able to layoff on gin? bool')
+        self.option_set.add_option('high-low', ['hl'],
+            question = 'Should aces be able to be high and low in a run? bool')
         self.option_set.add_option('side-limit', ['sl'],
             question = 'Should a discard from a second deck set the maximum knock points each hand? bool')
         self.option_set.add_option('straight', ['s'], default = 10, value = 0, target = 'knock_min',
@@ -1213,4 +1216,10 @@ class GinRummy(game.Game):
         elif len(set(card[1].upper() for card in meld)) == 1:
             if ''.join(card[0].upper() for card in meld) in self.deck.ranks:
                 valid = True
+            elif self.high_low and meld[0][0].upper() == 'A' and meld[-1][0].upper() == 'K':
+                breaks = 0
+                pairs = ['{}{}'.format(*pair) for pair in zip(meld, meld[1:])]
+                if sum(pair in self.deck.ranks)
+
+        # Check for a high/low run.
         return valid
