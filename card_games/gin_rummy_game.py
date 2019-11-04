@@ -1214,12 +1214,13 @@ class GinRummy(game.Game):
             valid = True
         # Check for a run.
         elif len(set(card[1].upper() for card in meld)) == 1:
+            print(self.high_low, meld)
             if ''.join(card[0].upper() for card in meld) in self.deck.ranks:
                 valid = True
             elif self.high_low and meld[0][0].upper() == 'A' and meld[-1][0].upper() == 'K':
-                breaks = 0
-                pairs = ['{}{}'.format(*pair) for pair in zip(meld, meld[1:])]
-                if sum(pair in self.deck.ranks)
-
+                ranks = [card[0].upper() for card in meld]
+                pairs = ['{}{}'.format(*pair) for pair in zip(ranks, ranks[1:])]
+                if sum([pair not in self.deck.ranks for pair in pairs]) == 1:
+                    valid = True
         # Check for a high/low run.
         return valid
