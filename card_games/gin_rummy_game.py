@@ -4,7 +4,6 @@ gin_rummy_game.py
 A game of Gin Rummy.
 
 To Do:
-options
 clean up output
 any remaining double bangs
 double check documentation
@@ -72,6 +71,7 @@ than their opponent's.
 Options:
 ace-gin (ag): Any ace used to determine knock limits indicates that gin is
     required to knock. Has no effect without discard-limit or side-limit.
+ace-penalty= (ap=): How many points an ace is worth. Defaults to 1.
 alt-deal (ad): Alternate the deal rather than having the winner deal.
 big-gin= (bg=): How many points you get for an eleven card gin. Defaults to 0,
     which means big gin is not allowed. Usually 31 or 50 when used. To
@@ -86,8 +86,14 @@ game-bonus= (gb=): The number of extra points scored for ending the game.
     Defaults to 100.
 gin= (g=): The number of extra points scored with gin. Defaults to 25.
 gin-layoff (gl): Allows layoff on spreads from a gin hand.
+high-low (hl): Allows aces to be high and/or low in runs.
+hollywood (hw): Three games are scored simultaneously. You first score is
+    scored in the first game, your second is scored in the first and second
+    games, and your third score is scored in all three. Once all three games
+    are finished, whoever won the most games wins the match.
 match= (m=): The number of games in the match. Defaults to 1 / no match.
 oklahoma (ok): Equivalent to 'discard-limit spade-doubles'.
+round-the-corner (rtc): Equivalent to 'high-low ace-penalty=15'.
 side-limit (sl): The knock limit for each hand is set by drawing a card from a
     second deck.
 spade-doubles (sd): If the initial discard is a spade, the score of the hand
@@ -578,7 +584,7 @@ class GinRummy(game.Game):
     categories = ['Card Games']
     credits = CREDITS
     name = 'Gin Rummy'
-    num_options = 15
+    num_options = 18
     rules = RULES
 
     def deal(self):
@@ -992,7 +998,7 @@ class GinRummy(game.Game):
         # Handle the player action.
         if self.card_drawn:
             # Get a move
-            move = player.ask('What is your move? ').lower()
+            move = player.ask('What is your move? ').lower()  # !! causing problems. make sure not needed elsewher
             go = self.handle_cmd(move)
             if not go:
                 self.card_drawn = False  # should be true after a knock
@@ -1040,6 +1046,8 @@ class GinRummy(game.Game):
         # Set the option groups.
         self.option_set.add_group('oklahoma', 'discard-limit spade-doubles')
         self.option_set.add_group('ok', 'discard-limit spade-doubles')
+        self.option_set.add_group('round-the-corner', 'high-low ace-penalty=15')
+        self.option_set.add_group('rtc', 'high-low ace-penalty=15')
         # Set the bot options.
         self.option_set.add_option('easy', ['ez'], question = 'Would you like to play the easy bot? bool')
         # Set the deal options.
@@ -1059,6 +1067,8 @@ class GinRummy(game.Game):
         self.option_set.add_option('straight', ['s'], default = 10, value = 0, target = 'knock_min',
             question = 'Should the game be played straight (you can only knock with gin)? bool')
         # Set the hand scoring options.
+        self.option_set.add_option('ace-penalty', ['ap'], int, 1, target = self.card_values,
+            action = 'key=A', question = 'How many points should an ace be worth?')
         self.option_set.add_option('gin', ['g'], int, 25,
             question = 'How many points should you get for gin (return for 25)? ')
         self.option_set.add_option('undercut', ['uc'], int, 25,
@@ -1214,7 +1224,6 @@ class GinRummy(game.Game):
             valid = True
         # Check for a run.
         elif len(set(card[1].upper() for card in meld)) == 1:
-            print(self.high_low, meld)
             if ''.join(card[0].upper() for card in meld) in self.deck.ranks:
                 valid = True
             elif self.high_low and meld[0][0].upper() == 'A' and meld[-1][0].upper() == 'K':
