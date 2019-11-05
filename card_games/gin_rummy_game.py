@@ -277,7 +277,6 @@ class GinBot(player.Bot):
         card: The card to match. (cards.Card)
         groups: The tracked groups to check against. (tuple of str)
         """
-        # !! doesn't handle high/low runs.
         # Loop through the groups.
         for group_type in groups:
             for group in self.tracking[group_type]:
@@ -287,6 +286,9 @@ class GinBot(player.Bot):
                 if group[0].suit == group[-1].suit:
                     if (card.below(group[0]) or card.above(group[-1])) and card.suit == group[0].suit:
                         return group
+                    if self.game.high_low and card.suit == group[0].suit:
+                        if ('A', 'K') in ((card.rank, group[-1].rank), (group[0].rank, card.rank)):
+                            return group
                 # Check for a set match.
                 if group[0].rank == group[-1].rank == card.rank:
                     return group
