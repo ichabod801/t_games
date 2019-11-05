@@ -4,7 +4,6 @@ gin_rummy_game.py
 A game of Gin Rummy.
 
 To Do:
-clean up output
 any remaining double bangs
 double check documentation
 
@@ -143,7 +142,7 @@ class GinBot(player.Bot):
             discard = self.game.deck.discards[-1]
             move = 'yes' if self.discard_check(discard) else 'no'
             if move == 'no':
-                self.game.human.tell('{} rejected the first discard.'.format(self.name))
+                self.game.human.tell('\n{} rejected the first discard.'.format(self.name))
         # Handle discard vs. deck.
         elif prompt.startswith('Would you like to draw from the diScards'):
             discard = self.game.deck.discards[-1]
@@ -151,7 +150,6 @@ class GinBot(player.Bot):
         # Handle knock vs. discard.
         elif prompt == 'What is your move? ':
             self.sort_hand()
-            print(sorted(self.hand.cards, key = lambda card: card.rank_num))
             move = self.knock_check()
             if move.startswith('dis'):
                 self.game.human.tell('{} discarded the {}.'.format(self.name, move[-2:]))
@@ -536,7 +534,7 @@ class TrackingBot(GinBot):
         """Set up the bot for play. (None)"""
         super(TrackingBot, self).set_up()
         self.foe_draws = []
-        self.foe_draw_text = '{} drew the '.format(self.game.human.name)
+        self.foe_draw_text = '\n{} drew the '.format(self.game.human.name)
         self.version = 'absolute'
 
     def tell(self, *args, **kwargs):
@@ -637,12 +635,12 @@ class GinRummy(game.Game):
         non_dealer = self.players[0] if self.players[1] == self.dealer else self.players[1]
         self.player_index = self.players.index(non_dealer)
         while True:
-            non_dealer.tell('Your hand is {}.'.format(self.hands[non_dealer.name]))
+            non_dealer.tell('\nYour hand is {}.'.format(self.hands[non_dealer.name]))
             query = 'Would you like the top card of the discard pile ({})? '.format(discard)
             take_discard = non_dealer.ask(query).lower()
             if take_discard in utility.YES or take_discard == self.deck.discards[-1]:
                 self.hands[non_dealer.name].deal(self.deck.discards.pop())
-                self.dealer.tell('{} drew the {} from the discard pile.'.format(non_dealer.name, discard))
+                self.dealer.tell('\n{} drew the {} from the discard pile.'.format(non_dealer.name, discard))
                 self.player_index = self.players.index(self.dealer)
             elif take_discard.split()[0] in ('l', 'left', 'r', 'right'):
                 self.handle_cmd(take_discard)
@@ -652,11 +650,11 @@ class GinRummy(game.Game):
             # The dealer then gets a chance at the discard.
             self.player_index = self.players.index(self.dealer)
             while True:
-                self.dealer.tell('Your hand is {}.'.format(self.hands[self.dealer.name]))
+                self.dealer.tell('\nYour hand is {}.'.format(self.hands[self.dealer.name]))
                 take_discard = self.dealer.ask(query).lower()
                 if take_discard in utility.YES or take_discard == self.deck.discards[-1]:
                     self.hands[self.dealer.name].deal(self.deck.discards.pop())
-                    message = '{} drew the {} from the discard pile.'
+                    message = '\n{} drew the {} from the discard pile.'
                     non_dealer.tell(message.format(self.dealer.name, discard))
                     self.player_index = self.players.index(non_dealer)
                 elif take_discard.split()[0] in ('l', 'left', 'r', 'right'):
@@ -1025,12 +1023,12 @@ class GinRummy(game.Game):
                 move = player.ask('Would you like to draw from the diScards or the top of the decK? ')
                 move = move.lower()
                 if move in ('discard', 'discards', self.deck.discards[-1], 's'):
-                    draw_text = '{} drew the {} from the discard pile.'
+                    draw_text = '\n{} drew the {} from the discard pile.'
                     foe.tell(draw_text.format(player.name, self.deck.discards[-1]))
                     self.hands[player.name].deal(self.deck.discards.pop())
                     break
                 elif move in ('deck', 'top', 'k'):
-                    foe.tell('{} drew from the deck.'.format(player.name))
+                    foe.tell('\n{} drew from the deck.'.format(player.name))
                     self.hands[player.name].draw()
                     break
                 else:
