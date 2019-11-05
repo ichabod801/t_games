@@ -4,8 +4,8 @@ gin_rummy_game.py
 A game of Gin Rummy.
 
 To Do:
-any remaining double bangs
-double check documentation
+scoring option groups
+interface enhancements? (parse l/r, l/r when deck or discards)
 
 Constants:
 CREDITS: The credits for Gin Rummy. (str)
@@ -67,6 +67,23 @@ score for each hand they won. After all the bonus are added, whoever has the
 highest score wins. Their final score is how much higher their game score is
 than their opponent's.
 
+Commands:
+discard (d): Discard a card given as an argument to the command.
+knock (k): Knock to end the hand. You may specify the card you want to discard
+    as an argument. If you don't, you will be asked to specify it.
+left (l): Move cards to the left side of your hand. Any number of cards may be
+    given as arguments, and are placed in the order specified. Or you can
+    specify one card followed by a slash and a list of cards. The cards after
+    the slash will be placed to the left of the card before the slash.
+right (r): As the left command, but moving cards to the right.
+scores (s): See the current scores for the game.
+
+Meld Specifications:
+When specifying melds while spreading, you can list the individual cards.
+Alternatively, you can give the rank for a run, or the first and last rank of
+a run. So 'T' will take all the tens out as a set. Both '9S-J' and '9-JS' are
+equivalent to '9S TS JS'.
+
 Options:
 ace-gin (ag): Any ace used to determine knock limits indicates that gin is
     required to knock. Has no effect without discard-limit or side-limit.
@@ -97,10 +114,10 @@ side-limit (sl): The knock limit for each hand is set by drawing a card from a
     second deck.
 spade-doubles (sd): If the initial discard is a spade, the score of the hand
     is doubled.
+straight (s): You can only knock if you have gin.
 undercut= (uc=): The number of extra points scored for undercutting. Defaults
     to 25.
 """
-
 
 class GinBot(player.Bot):
     """
@@ -115,19 +132,20 @@ class GinBot(player.Bot):
     Attributes:
     hand: The bot's hand. (cards.Hand)
     listen: A flag for pulling attacking melds from the tell method. (bool)
-    sorted: A flag that the bot has prepped it's hand for play. (bool)
     tracking: A dictionary for tracking cards in the game. (dict of str: list)
 
     Methods:
     discard_check: Determine if drawing a discard is a good idea. (str)
     find_melds: Find any melds of the specified type. (None)
+    get_discard: Determine which card to discard. (cards.Card)
     knock_check: Determine if it is time to knock or not. (str)
-    knock_min: Calculate the minimum hand value to knock with. (int)
+    knock_max: Calculate the minimum hand value to knock with. (int)
     match_check: Find any match between a card and tracked groups of cards. (list)
     next_spread: Get the next meld or layoff to spread. (str)
     run_pair: Check if two cards can be in the same run. (bool)
     set_pair: Check if two cards can be in the same set. (bool)
     sort_hand: Sort out the melds and potential melds in your hand. (None)
+    untrack: Remove a card from the hand tracking. (None)
 
     Overridden Methods:
     ask
@@ -229,6 +247,7 @@ class GinBot(player.Bot):
 
     def get_discard(self):
         """Determine which card to discard. (cards.Card)"""
+        # Get the least useful set of possible discards.
         if self.tracking['deadwood']:
             possibles = self.tracking['deadwood']
         elif self.tracking['part-run'] or self.tracking['part-set']:
@@ -236,7 +255,8 @@ class GinBot(player.Bot):
         else:
             melds = self.tracking['full-set'] + self.tracking['full-run']
             possibles = sum([meld for meld in melds if len(meld) > 3], [])
-        possibles.sort(key = lambda card: card.rank_num)
+        # Discard the one worth the most points.
+        possibles.sort(key = lambda card: self.game.card_values[card.rank])
         return possibles[-1]
 
     def knock_check(self):
@@ -253,7 +273,7 @@ class GinBot(player.Bot):
             discard_score = self.game.card_values[discard.rank]
         # Check if knocking is possible/reasonable.
         command = 'discard'
-        if score - discard_score <= self.knock_min():
+        if score - discard_score <= self.knock_max():
             command = 'knock'
             # Get the knock discard (you may score better discarding from a partial set or run)
             if dead:
@@ -261,9 +281,9 @@ class GinBot(player.Bot):
         # Return the chosen command with the discard.
         return '{} {}'.format(command, discard)
 
-    def knock_min(self):
+    def knock_max(self):
         """Calculate the minimum hand value to knock with. (int)"""
-        return self.game.knock_min
+        return self.game.knock_max
 
     def match_check(self, card, groups = ('full-run', 'full-set', 'part-run', 'part-set')):
         """
@@ -339,7 +359,6 @@ class GinBot(player.Bot):
     def set_up(self):
         """Set up the bot. (None)"""
         self.hand = self.game.hands[self.name]
-        self.sorted = False
         self.listen = False
         self.gin = False
 
@@ -424,8 +443,10 @@ class GinBot(player.Bot):
         Parameters:
         card_text: The name of the card to be removed. (str)
         """
+        # Remove the card from the meld tracking.
         for group in ('full-run', 'full-set', 'part-run', 'part-set'):
             self.tracking[group] = [cards for cards in self.tracking[group] if card_text not in cards]
+        # Remove the card from the deadwood tracking.
         if card_text in self.tracking['deadwood']:
             self.tracking['deadwood'].remove(card_text)
 
@@ -436,13 +457,16 @@ class TrackingBot(GinBot):
 
     Attributes:
     foe_draws: Cards the opponent has drawn. (list of str)
+    foe_draw_text: The text indication that the opponent has drawn. (str)
+    version: What version of discarding it does. (str)
 
-    Methods: Get the cards adjacent to a list of cards. (set of cards.Card)
+    Methods:
+    get_adjacents: Get the cards adjacent to a list of cards. (set of cards.Card)
 
     Overridden Methods:
     discard_check
     get_discard
-    knock_min
+    knock_max
     set_up
     tell
     """
@@ -519,14 +543,14 @@ class TrackingBot(GinBot):
             possibles.sort()
             return possibles[0][1]
 
-    def knock_min(self):
+    def knock_max(self):
         """Calculate the minimum hand value to knock with. (int)"""
         if len(self.game.deck.cards) < 5:
-            knock_min = self.game.knock_min
+            knock_max = self.game.knock_max
         else:
             knock_mod = (len(self.game.deck.discards) + len(self.foe_draws) * 2) // 3
-            knock_min = min(self.game.knock_min, max(2, 11 - knock_mod))
-        return knock_min
+            knock_max = min(self.game.knock_max, max(2, 11 - knock_mod))
+        return knock_max
 
     def set_up(self):
         """Set up the bot for play. (None)"""
@@ -552,12 +576,36 @@ class GinRummy(game.Game):
     """
     A game of Gin Rummy. (game.Game)
 
+    Note that the hollywood option changes the data type of the scores and wins
+    attributes to lists of dictionaries.
+
     Attributes:
+    ace_gin: A flag for an ace discard indicating you must knock with gin. (bool)
+    alt_deal: A flag for alternating deals rather than the winner dealing. (bool)
+    big_gin: How many point an 11 card gin scores. If 0, big gin is banned. (int)
+    box_bonus: The number of points scored at the end per hand won. (int)
     card_drawn: A flag for a card having been drawn this turn. (bool)
     deal_cards: A flag for needing to deal cards on the next turn. (bool)
     deck: The deck of cards used in the game. (cards.Deck)
+    discard_limit: A flag for the first discard to setting the knock limit. (bool)
+    doubler: How much the score for this hand is multiplied by. (int)
+    draws: The number of hands that were drawn this game. (int)
+    easy: A flag for using GinBot as the opponent. (bool)
     end: The number of points that signals the end of a game. (int)
+    game_bonus: The number of points scored for ending a hand. (int)
+    game_on: Which games are still being played under Hollywood rules. (list)
+    gin: How many points are scored for getting gin. (int)
+    gin_layoff: A flag for allowing layoffs after a player gets gin. (bool)
     hands: The players' hands of cards. (dict of str: cards.Hand)
+    high_low: A flag for allowing aces to be high and/or low in runs. (bool)
+    hollywood: A flag for using three game Hollywood style scoring. (bool)
+    knock_max: The maximum number of points you can have when knocking. (int)
+    match: How many games are played to determine the winner. (int)
+    match_scores: The total points scored by each player in the match. (dict)
+    side_limit: A flag for using another deck to set the knock limit. (bool)
+    spade_doubles: A flag for an intial spade discard doubling the score. (bool)
+    straight: A flag for only allowing knocking with gin. (bool)
+    undercut: How many poits are scored for undercutting. (int)
     wins: The number of hands each player has won. (dict of str: int)
 
     Class Attributes:
@@ -565,16 +613,21 @@ class GinRummy(game.Game):
 
     Methods:
     deal: Deal the cards. (None)
+    discard_choice: Give a player a chance to take the first discard. (None)
     do_discard: Discard a card and end your turn. (bool)
     do_knock: Lay out your cards and attempt to win the hand. (bool)
     do_left: Move cards to the left of another card. (bool)
     do_right: Move cards to the right of another card. (bool)
     do_scores: Show the current scores. (bool)
+    game_score: Calculate the end of game score. (None)
+    get_knock_discard: Get the discard from the knocker. (str)
     move_cards: Arrange cards within a player's hand. (None)
     parse_meld: Determine the cards for a given meld specification. (list of str)
+    reset: Reset the game. (None)
     show_melds: Show the opponent's melds to a player. (None)
     spread: Spread cards from a player's hand. (tuple of list of cards.Card)
     update_score: Add points to a player's score. (None)
+    validate_meld: Validate a meld entered by a user. (bool)
 
     Overridden Methods:
     game_over
@@ -610,17 +663,17 @@ class GinRummy(game.Game):
         # Handle play modifications based on the initial discard.
         discard = self.deck.discards[-1]
         if self.discard_limit:
-            self.knock_min = 0 if (self.ace_gin and discard.rank == 'A') else self.card_values[discard.rank]
-            self.human.tell('The maximum knock score is {}.'.format(self.knock_min))
+            self.knock_max = 0 if (self.ace_gin and discard.rank == 'A') else self.card_values[discard.rank]
+            self.human.tell('The maximum knock score is {}.'.format(self.knock_max))
         elif self.side_limit:
             self.side_deck.discard(self.side_deck.deal(), up = True)
             side_discard = self.side_deck.discards[-1]
             if self.ace_gin and side_discard.rank == 'A':
-                self.knock_min = 0
+                self.knock_max = 0
             else:
-                self.knock_min = self.card_values[side_discard.rank]
+                self.knock_max = self.card_values[side_discard.rank]
             text = 'The discard from the side deck was {}, the maximum knock score is {}.'
-            self.human.tell(text.format(side_discard, self.knock_min))
+            self.human.tell(text.format(side_discard, self.knock_max))
         if (self.spade_doubles and discard.suit == 'S'):
             self.doubler = 2
             self.human.tell('The score for this hand will be doubled.')
@@ -694,13 +747,13 @@ class GinRummy(game.Game):
         if discard != 'BIG':
             self.hands[attacker.name].discard(discard)
             self.deck.discards[-1].up = True
-            knock_min = self.knock_min
+            knock_max = self.knock_max
         else:
-            knock_min = 0
+            knock_max = 0
         # Spread the dealer's hand.
         attack_melds, attack_deadwood = self.spread(attacker)
         attack_score = sum([self.card_values[card.rank] for card in attack_deadwood])
-        if attack_score > knock_min:
+        if attack_score > knock_max:
             if attack_melds:
                 attacker.error('You do not have a low enough score to knock.')
             return False
@@ -1069,7 +1122,7 @@ class GinRummy(game.Game):
             question = 'Should aces be able to be high and low in a run? bool')
         self.option_set.add_option('side-limit', ['sl'],
             question = 'Should a discard from a second deck set the maximum knock points each hand? bool')
-        self.option_set.add_option('straight', ['s'], default = 10, value = 0, target = 'knock_min',
+        self.option_set.add_option('straight', ['s'], default = 10, value = 0, target = 'knock_max',
             question = 'Should the game be played straight (you can only knock with gin)? bool')
         # Set the hand scoring options.
         self.option_set.add_option('ace-penalty', ['ap'], int, 1, target = self.card_values,
