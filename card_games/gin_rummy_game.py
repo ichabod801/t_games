@@ -151,6 +151,7 @@ class GinBot(player.Bot):
         # Handle knock vs. discard.
         elif prompt == 'What is your move? ':
             self.sort_hand()
+            print(sorted(self.hand.cards, key = lambda card: card.rank_num))
             move = self.knock_check()
             if move.startswith('dis'):
                 self.game.human.tell('{} discarded the {}.'.format(self.name, move[-2:]))
@@ -201,6 +202,18 @@ class GinBot(player.Bot):
                     current.append(card)
                 else:
                     current = [previous, card]
+                # Check for continuing high/low straights.
+                if card.rank == 'K' and self.game.high_low and 'A' + card.suit in cards:
+                    for meld in full + part:
+                        if 'A' + card.suit in meld and meld[-1].rank != 'A':
+                            current += meld
+                            if meld in full:
+                                full.remove(meld)
+                            else:
+                                part.remove(meld)
+                            break
+                    else:
+                        current.append(cards[cards.index('A' + card.suit)])
             else:
                 # If the current pair is not a meld, store any previous melds and reset.
                 if len(current) >= 3:
@@ -248,8 +261,6 @@ class GinBot(player.Bot):
             if dead:
                 discard = dead[-1]
         # Return the chosen command with the discard.
-        print(self.hand)
-        print(self.tracking)
         return '{} {}'.format(command, discard)
 
     def knock_min(self):
@@ -266,6 +277,7 @@ class GinBot(player.Bot):
         card: The card to match. (cards.Card)
         groups: The tracked groups to check against. (tuple of str)
         """
+        # !! doesn't handle high/low runs.
         # Loop through the groups.
         for group_type in groups:
             for group in self.tracking[group_type]:
@@ -283,7 +295,6 @@ class GinBot(player.Bot):
     def next_spread(self):
         """Get the next meld or layoff to spread. (str)"""
         # !! He had gin, 3xT (no TH), 7-9H, and A-4H. Was tracking the A-4 run but did not spread it.
-        print(self.tracking)
         # Check for melds to return
         if self.tracking['full-set']:
             meld = self.tracking['full-set'].pop()
@@ -314,8 +325,7 @@ class GinBot(player.Bot):
         card1: The lower card to check. (cards.Card)
         card1: The higher card to check. (cards.Card)
         """
-        # !! add high/low
-        return card1.suit == card2.suit and card1.below(card2)
+        return  card1.suit == card2.suit and card1.below(card2)
 
     def set_pair(self, card1, card2):
         """
@@ -341,6 +351,7 @@ class GinBot(player.Bot):
         Note that if a card is in a run and a set, this tracks the run as a meld and
         the set as a potential meld.
         """
+        # !! doesn't recognized high/low straights
         cards = self.hand.cards[:]
         # Check for runs.
         cards.sort(key = lambda card: (card.suit, card.rank_num))
@@ -493,7 +504,6 @@ class TrackingBot(GinBot):
                 possibles = [card for card in possibles if card not in dangerous]
             # Return the highest rank.
             possibles.sort(key = lambda card: card.rank_num)
-            if not possibles: print(self.foe_draws, dangerous)
             # !! error when no possibles, have it sort if none.
             return possibles[-1]
         else:
@@ -536,7 +546,6 @@ class TrackingBot(GinBot):
         # !! does not catch initial discard being drawn.
         if args[0].startswith(self.foe_draw_text):
             self.foe_draws.append(args[0].split()[3])
-            print(args[0], self.foe_draws)
             return None
         elif args[0].endswith(' deals.'):
             self.foe_draws = []
