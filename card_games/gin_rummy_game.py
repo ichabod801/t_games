@@ -294,7 +294,6 @@ class GinBot(player.Bot):
 
     def next_spread(self):
         """Get the next meld or layoff to spread. (str)"""
-        # !! He had gin, 3xT (no TH), 7-9H, and A-4H. Was tracking the A-4 run but did not spread it.
         # Check for melds to return
         if self.tracking['full-set']:
             meld = self.tracking['full-set'].pop()
@@ -351,7 +350,6 @@ class GinBot(player.Bot):
         Note that if a card is in a run and a set, this tracks the run as a meld and
         the set as a potential meld.
         """
-        # !! doesn't recognized high/low straights
         cards = self.hand.cards[:]
         # Check for runs.
         cards.sort(key = lambda card: (card.suit, card.rank_num))
@@ -504,9 +502,9 @@ class TrackingBot(GinBot):
                 possibles = [card for card in possibles if card not in dangerous]
             # Return the highest rank.
             possibles.sort(key = lambda card: card.rank_num)
-            # !! error when no possibles, have it sort if none.
-            return possibles[-1]
-        else:
+            if possibles:
+                return possibles[-1]
+        if not possibles:
             # Make dangerous deadwood equal to partial melds.
             for card in self.tracking['deadwood']:
                 possibles.append((14 - card.rank_num + 14 * (card in dangerous)))
