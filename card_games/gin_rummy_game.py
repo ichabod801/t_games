@@ -507,14 +507,14 @@ class TrackingBot(GinBot):
         if not possibles:
             # Make dangerous deadwood equal to partial melds.
             for card in self.tracking['deadwood']:
-                possibles.append((14 - card.rank_num + 14 * (card in dangerous)))
+                possibles.append((14 - card.rank_num + 14 * (card in dangerous), card))
             # Make dangerous partials equal to overly full.
             for card in sum(self.tracking['part-run'] + self.tracking['part-set'], []):
-                possibles.append((28 - card.rank_num + 14 * (card in dangerous)))
+                possibles.append((28 - card.rank_num + 14 * (card in dangerous), card))
             # Make dangerous overly fulls worst of all.
             melds = self.tracking['full-set'] + self.tracking['full-run']
             for card in sum([meld for meld in melds if len(meld) > 3], []):
-                possibles.append((42 - card.rank_num + 14 * (card in dangerous)))
+                possibles.append((42 - card.rank_num + 14 * (card in dangerous), card))
             # Return the card with the lowest adjusted rank.
             possibles.sort()
             return possibles[0][1]
@@ -541,7 +541,6 @@ class TrackingBot(GinBot):
 
         The parameters are the same as for the print function.
         """
-        # !! does not catch initial discard being drawn.
         if args[0].startswith(self.foe_draw_text):
             self.foe_draws.append(args[0].split()[3])
             return None
@@ -727,7 +726,7 @@ class GinRummy(game.Game):
         else:
             winner, score = defender, (self.undercut - score_diff) * self.doubler
         # Update the game score.
-        self.human.tell('{} scored {} points.'.format(winner.name, score))
+        self.human.tell('\n{} scored {} points.'.format(winner.name, score))
         self.update_score(winner, score)
         self.do_scores('', self.human)
         # Check for the end of the game.
@@ -1005,10 +1004,10 @@ class GinRummy(game.Game):
         # Handle the player action.
         if self.card_drawn:
             # Get a move
-            move = player.ask('What is your move? ').lower()  # !! causing problems. make sure not needed elsewher
+            move = player.ask('What is your move? ')
             go = self.handle_cmd(move)
             if not go:
-                self.card_drawn = False  # should be true after a knock
+                self.card_drawn = False
         elif len(self.deck.cards) == 2:
             self.human.tell('The hand is a draw.')
             self.draws += 1
