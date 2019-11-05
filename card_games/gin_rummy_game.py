@@ -595,7 +595,6 @@ class GinRummy(game.Game):
 
     def deal(self):
         """Deal the cards. (None)"""
-        # !! refactor
         # Gather and shuffle all the cards.
         for hand in self.hands.values():
             hand.discard()
@@ -631,39 +630,39 @@ class GinRummy(game.Game):
         # Non-dealer gets first chance at the discard.
         non_dealer = self.players[0] if self.players[1] == self.dealer else self.players[1]
         self.player_index = self.players.index(non_dealer)
-        while True:
-            non_dealer.tell('\nYour hand is {}.'.format(self.hands[non_dealer.name]))
-            query = 'Would you like the top card of the discard pile ({})? '.format(discard)
-            take_discard = non_dealer.ask(query).lower()
-            if take_discard in utility.YES or take_discard == self.deck.discards[-1]:
-                self.hands[non_dealer.name].deal(self.deck.discards.pop())
-                self.dealer.tell('\n{} drew the {} from the discard pile.'.format(non_dealer.name, discard))
-                self.player_index = self.players.index(self.dealer)
-            elif take_discard.split()[0] in ('l', 'left', 'r', 'right'):
-                self.handle_cmd(take_discard)
-                continue
-            break
+        self.discard_choice(discard, non_dealer, self.dealer)
         if self.deck.discards:
             # The dealer then gets a chance at the discard.
             self.player_index = self.players.index(self.dealer)
-            while True:
-                self.dealer.tell('\nYour hand is {}.'.format(self.hands[self.dealer.name]))
-                take_discard = self.dealer.ask(query).lower()
-                if take_discard in utility.YES or take_discard == self.deck.discards[-1]:
-                    self.hands[self.dealer.name].deal(self.deck.discards.pop())
-                    message = '\n{} drew the {} from the discard pile.'
-                    non_dealer.tell(message.format(self.dealer.name, discard))
-                    self.player_index = self.players.index(non_dealer)
-                elif take_discard.split()[0] in ('l', 'left', 'r', 'right'):
-                    self.handle_cmd(take_discard)
-                    continue
-                break
+            self.discard_choice(discard, self.dealer, non_dealer)
             if self.deck.discards:
                 # If no one wants it, non-dealer starts with the top card off the deck.
                 self.hands[non_dealer.name].draw()
                 self.player_index = self.players.index(self.dealer)
         self.card_drawn = True
         self.deal_cards = False
+
+    def discard_choice(self, discard, chooser, other):
+        """
+        Give a player a chance to take the first discard. (None)
+
+        Parameters:
+        discard: The card to choose. (cards.Card)
+        chooser: The player who gets the choice. (player.Player)
+        other: The player to inform what the choice is. (player.Player)
+        """
+        while True:
+            chooser.tell('\nYour hand is {}.'.format(self.hands[chooser.name]))
+            query = 'Would you like the top card of the discard pile ({})? '.format(discard)
+            take_discard = chooser.ask(query).lower()
+            if take_discard in utility.YES or take_discard == self.deck.discards[-1]:
+                self.hands[chooser.name].deal(self.deck.discards.pop())
+                other.tell('\n{} drew the {} from the discard pile.'.format(chooser.name, discard))
+                self.player_index = self.players.index(other)
+            elif take_discard.split()[0] in ('l', 'left', 'r', 'right'):
+                self.handle_cmd(take_discard)
+                continue
+            break
 
     def do_discard(self, argument):
         """
@@ -1169,7 +1168,6 @@ class GinRummy(game.Game):
                 if len(meld) >= 3:
                     valid = self.validate_meld(meld)
                 # Validate layoffs.
-                # !! can't handle two card layoffs
                 else:
                     for target in attack:
                         valid = self.validate_meld([str(card) for card in target] + meld)
