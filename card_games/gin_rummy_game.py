@@ -1051,7 +1051,8 @@ class GinRummy(game.Game):
             self.deal()
             return False
         # Show the game status.
-        player.tell('\nDiscard Pile: {}'.format(', '.join([str(card) for card in self.deck.discards])))
+        discard_text = ', '.join([str(card) for card in self.deck.discards])
+        player.tell('\nDiscard Pile: {}'.format(discard_text))
         player.tell('Your Hand: {}'.format(self.hands[player.name]))
         # Handle the player action.
         if self.card_drawn:
@@ -1080,6 +1081,10 @@ class GinRummy(game.Game):
                     foe.tell('\n{} drew from the deck.'.format(player.name))
                     self.hands[player.name].draw()
                     break
+                elif move.split()[0] in ('l', 'left', 'r', 'right'):
+                    self.handle_cmd(move)
+                    player.tell('\nDiscard Pile: {}'.format(discard_text))
+                    player.tell('Your Hand: {}'.format(self.hands[player.name]))
                 else:
                     player.tell('I do not undertand. Please enter "discards" or "deck".')
             self.card_drawn = True
