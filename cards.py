@@ -35,6 +35,7 @@ class Card(object):
     The color, rank, and suit attributes are length 1.
 
     Class Attributes:
+    an_ranks: Ranks whose name uses 'an' rather than 'a'. (str)
     card_re: A regular expression to match a card.
     rank_names: The names of the ranks. (list of str)
     ranks: The rank characters. (str)
@@ -448,6 +449,14 @@ class Hand(object):
     def __str__(self):
         """Human readable text representation. (str)"""
         return ', '.join([str(card) for card in self.cards])
+
+    def deal(self, card):
+        """
+        Add a card to the hand. (None)
+
+        card: The card to add to the hand. (Card)
+        """
+        self.cards.append(card)
 
     def draw(self, up = True):
         """
