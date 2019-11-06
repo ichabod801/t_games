@@ -16,10 +16,10 @@ data_to_text: Convert CREDITS_DATA to formatted text. (str)
 
 
 CREDITS_DATA = [('Interface Programming', """Craig O'Brien, Micah Page"""),
-    ('Game Design', """Humans; Paul Alfille, Matt Baker, Richard A. Canfield, Melvin Dresher, Doug Dyment,
-        Charles Fey, Merrill Flood, Michael Keller, Bernard de Marigny, Albert Morehead,
-        Geoffrey Mott-Smith, Craig O'Brien, Ned Strongin, Sid Sackson, John Suckling, Howard Wexler,
-        Gregory Yob"""),
+    ('Game Design', """Humans; Paul Alfille, C. Graham Baker, Elwood T. Baker, Matt Baker,
+        Richard A. Canfield, Melvin Dresher, Doug Dyment, Charles Fey, Merrill Flood, Michael Keller,
+        Bernard de Marigny, Albert Morehead, Geoffrey Mott-Smith, Craig O'Brien, Ned Strongin, Sid Sackson,
+        John Suckling, Howard Wexler, Gregory Yob"""),
     ('Game Programming', """Thomas Ahle, Craig O'Brien, David B. Wilson"""),
     ('Bot Design', """Robert Axelrod, B. Beaufils, S. Braver, K. Deb, J. Delahaye, James Friedman,
         Roger Johnson, Reiner Knizia, J. Komorita, David Kraines, Vivian Kraines, S. Mittal, Todd Neller,

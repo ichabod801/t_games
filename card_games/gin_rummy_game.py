@@ -115,6 +115,7 @@ side-limit (sl): The knock limit for each hand is set by drawing a card from a
 spade-doubles (sd): If the initial discard is a spade, the score of the hand
     is doubled.
 straight (s): You can only knock if you have gin.
+tourney-score (ts): Equivalent to 'end=250 match=5'.
 undercut= (uc=): The number of extra points scored for undercutting. Defaults
     to 25.
 """
@@ -1106,6 +1107,8 @@ class GinRummy(game.Game):
         self.option_set.add_group('ok', 'discard-limit spade-doubles')
         self.option_set.add_group('round-the-corner', 'high-low ace-penalty=15')
         self.option_set.add_group('rtc', 'high-low ace-penalty=15')
+        self.option_set.add_group('tourney-score', 'end=250 match=5')
+        self.option_set.add_group('ts', 'end=250 match=5')
         # Set the bot options.
         self.option_set.add_option('easy', ['ez'], question = 'Would you like to play the easy bot? bool')
         # Set the deal options.
