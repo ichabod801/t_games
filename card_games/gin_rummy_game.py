@@ -4,8 +4,7 @@ gin_rummy_game.py
 A game of Gin Rummy.
 
 To Do:
-scoring option groups
-interface enhancements? (parse l/r, l/r when deck or discards)
+interface enhancements? (l/r when deck or discards)
 
 Constants:
 CREDITS: The credits for Gin Rummy. (str)
@@ -82,7 +81,8 @@ Meld Specifications:
 When specifying melds while spreading, you can list the individual cards.
 Alternatively, you can give the rank for a run, or the first and last rank of
 a run. So 'T' will take all the tens out as a set. Both '9S-J' and '9-JS' are
-equivalent to '9S TS JS'.
+equivalent to '9S TS JS'. Meld abbreviations can also be used for the card to
+move with the left and right commands.
 
 Options:
 ace-gin (ag): Any ace used to determine knock limits indicates that gin is
@@ -109,7 +109,6 @@ hollywood (hw): Three games are scored simultaneously. You first score is
     are finished, whoever won the most games wins the match.
 match= (m=): The number of games in the match. Defaults to 1 / no match.
 oklahoma (ok): Equivalent to 'discard-limit spade-doubles'.
-round-the-corner (rtc): Equivalent to 'high-low ace-penalty=15'.
 side-limit (sl): The knock limit for each hand is set by drawing a card from a
     second deck.
 spade-doubles (sd): If the initial discard is a spade, the score of the hand
@@ -967,7 +966,7 @@ class GinRummy(game.Game):
             target = target.strip()
         else:
             target = ''
-        card_text = arguments.split()
+        card_text = self.parse_meld(arguments, hand.cards)
         # Make sure the target is in the hand.
         if target and target not in hand:
             player.error('You do not have the target card in your hand.')
