@@ -1101,8 +1101,11 @@ class Backgammon(game.Game):
     def do_gipf(self, arguments):
         """
         Connect Four allows you to move a piece vertically.
+
+        Hearts gives you a free turn if you rolled a non-double less than seven.
         """
-        game, losses = self.gipf_check(arguments, ('connect four',))
+        game, losses = self.gipf_check(arguments, ('connect four', 'hearts'))
+        go = True
         # Check for Connect Four edge.
         if game == 'connect four':
             if not losses:
@@ -1126,10 +1129,15 @@ class Backgammon(game.Game):
                 # Make the move.
                 self.board.move(point, target, piece)
                 go = False
+        # Hearts gets you a free turn if your roll sucked.
+        if game == 'hearts':
+            if not losses:
+                roll = self.dice.values[:]
+                if roll[0] != roll[1] and sum(roll) < 7:
+                    self.free_turn = True
         # I'm confused.
         else:
             player.tell("I'm sorry, I didn't catch that.")
-            go = True
         return go
 
     def do_pips(self, argument):
@@ -1348,6 +1356,9 @@ class Backgammon(game.Game):
         else:
             return True
         # Continue if there are still rolls to handle.
+        if not self.rolls and self.free_turn:
+            self.player_index -= 1
+            self.free_turn = False
         return self.rolls
 
     def reset(self):
@@ -1368,6 +1379,7 @@ class Backgammon(game.Game):
             self.flags |= 256
         self.turns = 0
         self.win_count = sum(count for point, count in self.layout)
+        self.free_turn = False
 
     def set_options(self):
         """Define the options for the game. (None)"""
