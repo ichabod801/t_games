@@ -188,6 +188,8 @@ class CalvinCards(solitaire.Solitaire):
     def do_gipf(self, arguments):
         """
         Gin Rummy forces a change in the rules for building on the tableau.
+
+        Rock-Paper-Scissors flips half of the tableau cards face up.
         """
         game, losses = self.gipf_check(arguments, ('gin rummy', 'rock-paper-scissors'))
         # Gin Rummy forces the build rules to change.

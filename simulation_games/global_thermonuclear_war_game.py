@@ -200,16 +200,27 @@ class GlobalThermonuclearWar(game.Game):
     def do_gipf(self, arguments):
         """
         Hamurabi removes the death toll in your own country.
+
+        Gin Rummy give you 108 more bombs.
         """
-        game, losses = self.gipf_check(arguments, ('hamurabi',))
+        game, losses = self.gipf_check(arguments, ('hamurabi', 'gin rummy'))
         go = True
+        # Hamurabi removes the death toll in your country.
         if game == 'hamurabi':
             if not losses:
                 self.countries[self.human_country.lower()]['death_toll'] = 0
                 text = '\nTHE MILITARY HAS CLASSIFIED THE CURRENT DEATH TOLL IN {}.'
                 self.human.tell(text.format(self.human_country.upper()))
+        # Gin Rummy gives you more bombs.
+        elif game == 'gin rummy':
+            if not losses:
+                self.human.arsenal_left += 108
+                text = '\nYOU PRODUCED AN EXTRA 108 MISSILES. YOU NOW HAVE {} MISSILES.'
+                self.human.tell(text.format(self.human.arsenal_left))
+        # Otherwise I'm confused.
         else:
             self.human.tell("\nI DO NOT RECOGNIZE THAT COUNTRY.")
+        return go
 
     def game_over(self):
         """Check for the end of the world. (bool)"""
