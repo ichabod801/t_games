@@ -183,7 +183,9 @@ class HeartBot(player.Bot):
             playable.sort(key = lambda card: card.rank_num)
             losers = [card for card in playable if card.rank_num < trick_max.rank_num]
             # Play the highest possible loser, or the lowest possible card in hopes of losing.
-            if losers and 'QS' in losers:
+            if self.game.random_move:
+                card = random.choice(playable)
+            elif losers and 'QS' in losers:
                 card = 'QS'
             elif losers and last_player and not point_cards:
                 card = playable[-1]
@@ -200,8 +202,11 @@ class HeartBot(player.Bot):
             else:
                 card = playable[0]
         else:
+            # Check for random play.
+            if self.game.random_move:
+                card = random.choice(self.hand.cards)
             # Get rid of the queen if you can.
-            if 'QS' in self.hand:
+            elif 'QS' in self.hand:
                 card = 'QS'
             # Otherwise get rid of hearts if you can.
             else:
@@ -435,7 +440,7 @@ class SmeartBot(HeartBot):
     def play(self):
         """Play a card to a trick. (cards.Card)"""
         self.strategy_check()
-        if self.strategy == 'standard':
+        if self.strategy == 'standard' or self.game.random_move:
             return super(SmeartBot, self).play()
         elif self.strategy == 'shoot':
             return self.shoot()
@@ -580,6 +585,18 @@ class Hearts(game.Game):
                 self.num_pass = dealer.ask_int('How many cards should be passed? ', low = 1, high = 4)
             # Yield the direction.
             yield pass_dir
+
+    def do_gipf(self, arguments):
+        """
+        Calvin Cards randomized the rest of the plays this round.
+        """
+        # Run the edge, if possible.
+        game, losses = self.gipf_check(arguments, ('calvin cards',))
+        # Winning Yacht gives you an extra pass through the deck.
+        if game == 'calvin cards':
+            if not losses:
+                self.random_move = True
+        return True
 
     def do_pass(self, arguments):
         """
@@ -1098,6 +1115,7 @@ class Hearts(game.Game):
         # Set up the tracking variables.
         self.set_pass()
         self.tricks = 0
+        self.random_move = False
 
     def trick_winner(self):
         """Determine who won the trick. (None)"""
@@ -1130,6 +1148,7 @@ class Hearts(game.Game):
         self.last_trick = self.trick
         self.last_winner = winner
         self.trick = cards.Hand(self.deck)
+        self.random_move = False
         # Check for the end of the round.
         if not self.hands[self.human.name]:
             self.score_round()
