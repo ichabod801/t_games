@@ -596,6 +596,9 @@ class Hearts(game.Game):
         if game == 'calvin cards':
             if not losses:
                 self.random_move = True
+        # Otherwise I'm confused.
+        else:
+            self.human.tell('Bless your heart.')
         return True
 
     def do_pass(self, arguments):
