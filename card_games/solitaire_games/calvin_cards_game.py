@@ -128,11 +128,17 @@ class CalvinCards(solitaire.Solitaire):
             self.message = ''
         return text
 
-    def change_rules(self):
-        """Change the rules of the game randomly. (None)"""
+    def change_rules(self, change = ''):
+        """
+        Change the rules of the game randomly. (None)
+
+        Parameters:
+        change: The rule to change. (str)
+        """
         # Keep choosing rule categories until a valid change is found.
         while True:
-            change = random.choice(('build', 'sort', 'turn', 'free', 'reserve', 'tableau'))
+            if not change:
+                change = random.choice(('build', 'sort', 'turn', 'free', 'reserve', 'tableau'))
             if change == 'build':
                 # Change the build rules.
                 self.randomize_build()
@@ -178,6 +184,26 @@ class CalvinCards(solitaire.Solitaire):
         action = random.choice(('been bonked by', 'scored with', 'stumbled into', 'taken', 'lost'))
         of = random.choice(self.ofs)
         self.message = 'You have {} the {} of {}.'.format(action, item, of)
+
+    def do_gipf(self, arguments):
+        """
+        Gin Rummy forces a change in the rules for building on the tableau.
+        """
+        game, losses = self.gipf_check(arguments, ('gin rummy', 'rock-paper-scissors'))
+        # Gin Rummy forces the build rules to change.
+        if game == 'gin rummy':
+            self.change_rules('build')
+            self.keep_rules = 8
+        # RPS flips half the cards face up.
+        elif game == 'rock-paper-scissors':
+            for pile in self.tableau:
+                for card in pile:
+                    if not card.up and random.randrange(2):
+                        card.up = True
+        # Otherwise I'm confused.
+        else:
+            self.human.tell('You have stumbled past the perimeter of confusion.')
+        return True
 
     def do_undo(self):
         """
