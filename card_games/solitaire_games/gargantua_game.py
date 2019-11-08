@@ -60,14 +60,19 @@ class Gargantua(solitaire.MultiSolitaire):
     def do_gipf(self, arguments):
         """
         Mate turns all of the aces face up.
+
+        Calvin Cards gives you another pass through the deck.
         """
-        game, losses = self.gipf_check(arguments, ('mate',))
+        game, losses = self.gipf_check(arguments, ('mate', 'calvin cards'))
         # Mate turns all of the aces face up.
         if game == 'mate':
             if not losses:
                 for card in self.deck.in_play:
                     if card.rank == 'A':
                         card.up = True
+        if game == 'calvin cards':
+            if not losses:
+                self.max_passes += 1
         # Otherwise I'm confused.
         else:
             self.human.tell("Gargantua decidedly dislikes miniscule linguistic particulates.")
