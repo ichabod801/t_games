@@ -602,6 +602,7 @@ class GinRummy(game.Game):
     knock_max: The maximum number of points you can have when knocking. (int)
     match: How many games are played to determine the winner. (int)
     match_scores: The total points scored by each player in the match. (dict)
+    reset_deck: A flag for getting a new deck after the hand is done. (bool)
     side_limit: A flag for using another deck to set the knock limit. (bool)
     spade_doubles: A flag for an intial spade discard doubling the score. (bool)
     straight: A flag for only allowing knocking with gin. (bool)
@@ -651,6 +652,10 @@ class GinRummy(game.Game):
         # Gather and shuffle all the cards.
         for hand in self.hands.values():
             hand.discard()
+        # Check for getting a new deck of cards.
+        if self.reset_deck:
+            self.deck = cards.Deck()
+            self.reset_deck = False
         self.deck.shuffle()
         # Deal 10 cards to each player.
         for card in range(10):
@@ -734,6 +739,62 @@ class GinRummy(game.Game):
             # Give a warning if the card is not valid.
             player.error('You do not have that card to discard.')
             return True
+
+    def do_gipf(self, arguments):
+        """
+        Chess allows you to change the rank of one card in your hand.
+
+        Liar's Dice allows you to change the suit of one card in your hand.
+        """
+        game, losses = self.gipf_check(arguments, ('chess', "liar's dice"))
+        # Chess changes one card's rank.
+        if game == 'chess':
+            if not losses:
+                hand = self.hands[self.human.name]
+                self.human.tell('\nYour hand is: {}.'.format(hand))
+                while True:
+                    card = self.human.ask('What card do you want to change the rank of? ').upper()
+                    if card in hand:
+                        break
+                    else:
+                        self.human.error('You do not have the {} in your hand.'.format(card))
+                while True:
+                    rank = self.human.ask('What do you want the new rank to be? ').upper()
+                    if rank in self.deck.ranks:
+                        break
+                    else:
+                        self.human.error('{!r} is not a valid rank.'.format(rank))
+                card_index = hand.cards.index(card)
+                new_card = cards.Card(rank, card[1])
+                new_card.up = True
+                hand.cards[card_index] = new_card
+                self.reset_deck = True
+        # Liar's Dice changes one card's suit.
+        elif game == "liar's dice":
+            if not losses:
+                hand = self.hands[self.human.name]
+                self.human.tell('\nYour hand is: {}.'.format(hand))
+                while True:
+                    card = self.human.ask('What card do you want to change the suit of? ').upper()
+                    if card in hand:
+                        break
+                    else:
+                        self.human.error('You do not have the {} in your hand.'.format(card))
+                while True:
+                    suit = self.human.ask('What do you want the new suit to be? ').upper()
+                    if suit in self.deck.suits:
+                        break
+                    else:
+                        self.human.error('{!r} is not a valid suit.'.format(suit))
+                card_index = hand.cards.index(card)
+                new_card = cards.Card(card[0], suit)
+                new_card.up = True
+                hand.cards[card_index] = new_card
+                self.reset_deck = True
+        # Otherwise I'm confused.
+        else:
+            self.human.tell("I think you've had a bit too much to drink.")
+        return True
 
     def do_knock(self, argument):
         """
@@ -1093,6 +1154,7 @@ class GinRummy(game.Game):
 
     def reset(self):
         """Reset the game. (None)"""
+        # Reset the scores based on the options.
         if self.hollywood:
             self.scores = [{player.name: 0 for player in self.players} for game in range(3)]
             self.wins = [{player.name: 0 for player in self.players} for game in range(3)]
@@ -1100,6 +1162,7 @@ class GinRummy(game.Game):
         else:
             self.scores = {player.name: 0 for player in self.players}
             self.wins = {player.name: 0 for player in self.players}
+        # Reset the tracking variables.
         self.deal_cards = True
         self.side_deck.shuffle()
 
@@ -1165,6 +1228,7 @@ class GinRummy(game.Game):
         # Set up the tracking variables.
         self.draws = 0
         self.doubler = 1
+        self.reset_deck = False
         self.match_scores = {player.name: 0 for player in self.players}
         self.reset()
 
