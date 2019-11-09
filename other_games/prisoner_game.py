@@ -441,6 +441,8 @@ class PrisonersDilemma(game.Game):
     def do_gipf(self, arguments):
         """
         The Dollar Game lets you defect, but your opponent thinks you cooperated.
+
+        Hangman gives you the temptation score no matter what you do.
         """
         game, losses = self.gipf_check(arguments, ('the dollar game', 'hangman'))
         # The Dollar Game lets you defect but seem to cooperate
@@ -548,6 +550,7 @@ class PrisonersDilemma(game.Game):
             for player, round_score in zip(sub_players, round_scores):
                 if self.temp_bonus and player == self.human:
                     self.scores[player.name] += self.points['temptation']
+                    self.temp_bonus = False
                 else:
                     self.scores[player.name] += round_score
                 foe_index = 1 - sub_players.index(player)
