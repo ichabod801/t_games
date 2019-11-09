@@ -128,16 +128,18 @@ class CalvinCards(solitaire.Solitaire):
             self.message = ''
         return text
 
-    def change_rules(self, change = ''):
+    def change_rules(self, force_change = ''):
         """
         Change the rules of the game randomly. (None)
 
         Parameters:
-        change: The rule to change. (str)
+        force_change: The rule to change. (str)
         """
         # Keep choosing rule categories until a valid change is found.
         while True:
-            if not change:
+            if force_change:
+                change = force_change
+            else:
                 change = random.choice(('build', 'sort', 'turn', 'free', 'reserve', 'tableau'))
             if change == 'build':
                 # Change the build rules.
