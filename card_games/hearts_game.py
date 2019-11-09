@@ -434,7 +434,7 @@ class SmeartBot(HeartBot):
                 to_pass.remove('AC')
             if 'AD' in to_pass and len(to_pass) > self.game.num_pass:
                 to_pass.remove('AD')
-            print(self.name, to_pass)
+            #print(self.name, to_pass)
         return to_pass[:self.game.num_pass]
 
     def play(self):
