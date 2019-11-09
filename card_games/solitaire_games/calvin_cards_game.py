@@ -207,7 +207,7 @@ class CalvinCards(solitaire.Solitaire):
             self.human.tell('You have stumbled past the perimeter of confusion.')
         return True
 
-    def do_undo(self):
+    def do_undo(self, arguments):
         """
         You may not undo moves in Calvin Cards.
         """
