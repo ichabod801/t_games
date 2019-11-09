@@ -1196,7 +1196,7 @@ class GinRummy(game.Game):
             question = 'Should the game be played straight (you can only knock with gin)? bool')
         # Set the hand scoring options.
         self.option_set.add_option('ace-penalty', ['ap'], int, 1, target = self.card_values,
-            action = 'key=A', question = 'How many points should an ace be worth?')
+            action = 'key=A', question = 'How many points should an ace be worth (return for 1)? ')
         self.option_set.add_option('gin', ['g'], int, 25,
             question = 'How many points should you get for gin (return for 25)? ')
         self.option_set.add_option('undercut', ['uc'], int, 25,
