@@ -58,6 +58,9 @@ the current deal.
 Options:
 all-break (ab): Hearts may not lead a trick before a penalty card has been
     played.
+bonus= (b=): The card (usually the JD) that removes up to 10 points from your
+    score. The points are removed from the current hand score, and cannot
+    make your hand score negative.
 break-hearts (bh): Hearts may not lead a trick before a heart has been played.
 easy= (ez=): The number of easy bots to play against.
 end= (e=): The points one players needs to stop the game, defaults to 100.
@@ -531,7 +534,7 @@ class Hearts(game.Game):
     categories = ['Card Games']
     credits = CREDITS
     name = 'Hearts'
-    num_options = 15
+    num_options = 16
     pass_aliases = {'l': 'left', 'r': 'right', 'rl': 'right-left', 'lr': 'left-right', '@': 'rot-left',
         'c': 'central', 'd': 'dealer', 'n': 'not', 's': 'scatter'}
     pass_dirs = {'left': ('left',), 'right': ('right',), 'left-right': ('left', 'right'),
@@ -1034,7 +1037,7 @@ class Hearts(game.Game):
         # Set the deal/card options.
         self.option_set.add_option('extras', ['x'], default = 'ditch',
             valid = ('d', 'ditch', 'f', 'first', 'h', 'heart', 'j', 'joker'),
-            question = 'How should extra cards be handled (return for ditch them)? ',
+            question = 'How should extra cards be handled (return or ditch them)? ',
             error_text = 'Please choose ditch, first, heart, or joker.')
         self.option_set.add_option('jokers-follow', ['jf'],
             question = 'Should jokers not be allowed to lead? bool')
@@ -1060,7 +1063,7 @@ class Hearts(game.Game):
             question = 'Should the lowest club lead the first trick of each deal? bool')  # !! interaction with kitty
         # Set the score options.
         self.option_set.add_option('heart-score', ['hs'], str.lower, 'one',
-            valid = ('o', 'one', 'p', 'pip', 'r', 'rank', 'f', 'face'),
+            valid = ('o', 'one', 'p', 'pips', 'r', 'rank', 'f', 'face'),
             question = 'How should hearts be scored (one, face, pip or rank, return for one)? ')
         self.option_set.add_option('lady-score', ['ls'], int, 13, valid = range(0, 50),
             target = 'lady_points',
