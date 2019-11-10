@@ -375,7 +375,7 @@ class SmeartBot(HeartBot):
             if ('QH' in self.hand and by_suit['H'] > 4) or by_suit['H'] > 5:
                 self.strategy = 'shoot'
                 to_pass = self.hand.cards[:]
-                to_pass.sort(key = lambda card: card.rank_num + 2 * card.suit in ('HS'))
+                to_pass.sort(key = lambda card: card.rank_num + 2 * (card.suit in ('HS')))
         if self.strategy == 'standard':
             to_pass = []
             # Don't pass spades unless you have high ones and few spades.
@@ -402,6 +402,10 @@ class SmeartBot(HeartBot):
                     suits = 'DC'
                 to_pass.extend(card for card in self.hand if card.suit == suits[0])
                 to_pass.extend(card for card in self.hand if card.suit == suits[1])
+                if len(to_pass) < self.game.num_pass:
+                    to_pass.extend(card for card in self.hand if card.suit == 'S')
+                    if len(to_pass) < self.game.num_pass:
+                        to_pass.extend(card for card in self.hand if card.suit == 'H')
             # Never pass QS to you left.
             if self.game.this_pass == 'left' and 'QS' in to_pass and len(to_pass) > self.game.num_pass:
                 to_pass.remove('QS')
