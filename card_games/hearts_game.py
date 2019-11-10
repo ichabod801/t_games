@@ -317,8 +317,10 @@ class SmeartBot(HeartBot):
     Methods:
     defend: Make a move to stop a player from shooting the moon. (cards.Card)
     shoot: Make a move trying to shoot the moon. (cards.Card)
+    strategy_check: See if the bot's strategy needs revision. (None)
 
     Overridden Methods:
+    pass_cards
     play
     set_up
     """
@@ -361,36 +363,6 @@ class SmeartBot(HeartBot):
         else:
             return standard
 
-    def shoot(self):
-        """Make a move trying to shoot the moon. (cards.Card)"""
-        self.hand.cards.sort(key = lambda card: card.rank_num)
-        if self.game.trick:
-            return [card for card in self.hand if card.suit == self.game.trick.cards[0].suit][-1]
-        else:
-            return self.hand.cards[-1]
-
-    def strategy_check(self):
-        """See if the bot's strategy needs revision. (cards.Card)"""
-        # Update the tracking variables.
-        self.tricks += 1
-        if self.game.last_trick:
-            # Get the points from the last trick.
-            last_penalties = [card for card in self.game.last_trick if card.suit == 'H']
-            if self.game.joker_points:
-                last_penalties.extend([card for card in self.game.last_trick if card.rank == 'X'])
-            # Update who has scored points.
-            if last_penalties or 'QS' in self.game.last_trick:
-                self.got_points[self.game.last_winner.name] = True
-        # Look for signs of someone trying to shoot (leading a high card early).
-        if self.strategy == 'standard':
-            if self.game.trick and self.game.trick.cards[0] in self.danger_cards and self.tricks < 5:
-                self.strategy = 'defend'
-                self.shooter = self.game.players[self.game.player_index - len(self.game.trick)].name
-        # Go back to avoidance if more than one person has points.
-        if self.strategy in ('defend', 'shoot'):
-            if sum(self.got_points.values()) > 1:
-                self.strategy = 'standard'
-
     def pass_cards(self):
         """
         Determine which cards to pass. (list of card.Card)
@@ -400,9 +372,10 @@ class SmeartBot(HeartBot):
         self.set_tracking()
         by_suit = collections.Counter(card.suit for card in self.hand)
         if len(set(['QS', 'KS', 'AS', 'KH', 'AH']).intersection(self.hand)) >= 4:
-            if ('QH' in hand and by_suit['H'] > 4) or by_suit['H'] > 5:
+            if ('QH' in self.hand and by_suit['H'] > 4) or by_suit['H'] > 5:
                 self.strategy = 'shoot'
-                to_pass = sorted(cards, key = lambda card: card.rank_num + 2 * card.suit in ('HS'))
+                to_pass = self.hand.cards[:]
+                to_pass.sort(key = lambda card: card.rank_num + 2 * card.suit in ('HS'))
         if self.strategy == 'standard':
             to_pass = []
             # Don't pass spades unless you have high ones and few spades.
@@ -461,6 +434,36 @@ class SmeartBot(HeartBot):
         """Get the bot ready to play. (None)"""
         super(SmeartBot, self).set_up()
         self.set_tracking()
+
+    def shoot(self):
+        """Make a move trying to shoot the moon. (cards.Card)"""
+        self.hand.cards.sort(key = lambda card: card.rank_num)
+        if self.game.trick:
+            return [card for card in self.hand if card.suit == self.game.trick.cards[0].suit][-1]
+        else:
+            return self.hand.cards[-1]
+
+    def strategy_check(self):
+        """See if the bot's strategy needs revision. (None)"""
+        # Update the tracking variables.
+        self.tricks += 1
+        if self.game.last_trick:
+            # Get the points from the last trick.
+            last_penalties = [card for card in self.game.last_trick if card.suit == 'H']
+            if self.game.joker_points:
+                last_penalties.extend([card for card in self.game.last_trick if card.rank == 'X'])
+            # Update who has scored points.
+            if last_penalties or 'QS' in self.game.last_trick:
+                self.got_points[self.game.last_winner.name] = True
+        # Look for signs of someone trying to shoot (leading a high card early).
+        if self.strategy == 'standard':
+            if self.game.trick and self.game.trick.cards[0] in self.danger_cards and self.tricks < 5:
+                self.strategy = 'defend'
+                self.shooter = self.game.players[self.game.player_index - len(self.game.trick)].name
+        # Go back to avoidance if more than one person has points.
+        if self.strategy in ('defend', 'shoot'):
+            if sum(self.got_points.values()) > 1:
+                self.strategy = 'standard'
 
 
 class Hearts(game.Game):
