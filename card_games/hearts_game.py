@@ -417,7 +417,7 @@ class SmeartBot(HeartBot):
                 to_pass.extend(high_hearts)
             # Pass the low club if it's the starter card.
             if self.game.low_club and self.game.low_club in self.hand:
-                to_pass.extend(self.game.low_club)
+                to_pass.append(self.game.low_club)
             # Always pass QS to your right.
             if self.game.this_pass == 'right' and 'QS' in self.hand and 'QS' not in to_pass:
                 to_pass.append('QS')
@@ -893,8 +893,8 @@ class Hearts(game.Game):
                 player.tell('You lead the trick.')
             player.tell('Your hand is: {}.'.format(self.hands[player.name]))
             if self.low_club and self.low_club in self.hands[player.name]:
-                text = 'You must play the {1}.' if player == self.human else '{0} plays the {1}.'
-                self.human.tell(text.format(player, self.low_club))
+                if player == self.human:
+                    self.human.tell('You must play the {}.'.format(self.low_club))
                 move = self.low_club.up_text
             else:
                 move = player.ask('What is your play? ')
