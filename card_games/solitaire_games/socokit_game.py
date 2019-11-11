@@ -438,7 +438,7 @@ class SoCoKit(game.Game):
                     setattr(self, attr, game_info[key])
                 self.dealers = game_info['dealers']
         # Return the initialized game.
-        return ConstructedGame(self.human, '')
+        return ConstructedGame(self.human, '', self.interface)
 
     def modify_checkers(self, game_info, text, key):
         """
