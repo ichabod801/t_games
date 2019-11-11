@@ -396,6 +396,9 @@ class SmeartBot(HeartBot):
             # Always pass QS to your right.
             if self.game.this_pass == 'right' and 'QS' in self.hand and 'QS' not in to_pass:
                 to_pass.append('QS')
+            # Watch out for the keep-spades option.
+            if self.game.keep_spades:
+                to_pass = [card for card in to_pass if card not in ('QS', 'KS', 'AS')]
             # Fill out the cards to pass.
             if len(to_pass) < self.game.num_pass:
                 if by_suit['C'] < by_suit['D'] and not self.game.low_club:
@@ -406,6 +409,8 @@ class SmeartBot(HeartBot):
                 to_pass.extend(card for card in self.hand if card.suit == suits[1])
                 if len(to_pass) < self.game.num_pass:
                     to_pass.extend(card for card in self.hand if card.suit == 'S')
+                    if self.game.keep_spades:
+                        to_pass = [card for card in to_pass if card not in ('QS', 'KS', 'AS')]
                     if len(to_pass) < self.game.num_pass:
                         to_pass.extend(card for card in self.hand if card.suit == 'H')
             # Never pass QS to you left.
