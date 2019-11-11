@@ -255,6 +255,8 @@ class HeartBot(player.Bot):
         # If that's not enough, get rid of other high cards.
         if len(to_pass) < self.game.num_pass:
             other = [card for card in self.hand if card not in to_pass]
+            if self.game.keep_spades:
+                other = [card for card in other if card not in ('QS', 'KS', 'AS')]
             other.sort(key = lambda card: card.rank_num, reverse = True)
             to_pass.extend(other)
         return to_pass[:self.game.num_pass]
