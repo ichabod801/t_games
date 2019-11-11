@@ -623,7 +623,7 @@ class SoCoKit(game.Game):
             if make_it in utility.YES:
                 # Create the shortcut if user approves.
                 shortcut_value = 'socokit / {} no-build'.format(self.game.option_set.settings_text)
-                self.human.shortcuts[shortcut_name] = shortcut_value
+                self.human.store_shortcut(shortcut_name, shortcut_value)
                 self.human.tell('The shortcut for this game is {!r}.'.format(shortcut_name))
         return results
 
