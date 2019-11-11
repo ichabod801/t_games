@@ -443,8 +443,21 @@ class SmeartBot(HeartBot):
         """Make a move trying to shoot the moon. (cards.Card)"""
         self.hand.cards.sort(key = lambda card: card.rank_num)
         if self.game.trick:
-            return [card for card in self.hand if card.suit == self.game.trick.cards[0].suit][-1]
+            # Try to win the trick.
+            matching = [card for card in self.hand if card.suit == self.game.trick.cards[0].suit]
+            if matching:
+                return matching[-1]
+            else:
+                # If you can't win the trick, lose without giving points while maintaining high cards.
+                not_hearts = [card for card in self.hand if card.suit != 'H']
+                if not_hearts:
+                    return not_hearts[0]
+                else:
+                    # If you must play a heart, switch back to a standard strategy.
+                    self.strategy = 'standard'
+                    return self.hand.cards[-1]
         else:
+            # Lead to win the trick.
             return self.hand.cards[-1]
 
     def strategy_check(self):
