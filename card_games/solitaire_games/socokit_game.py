@@ -69,10 +69,10 @@ addition, every sequential pair of cards in a stack being moved on the tableau
 (eithet building or laning) must follow the pair rules.
 
 For example, in Yukon there are build rules but no pair rules. The base card
-and the card it is being moved to matter, but what cards are in the stack don't
-matter. However, FreeCell's only build rule is about moves being doable one
-card at a time. The pair rules enforce the alternate color/desceding rank to
-make sure only valid stacks are moved.
+and the card it is being moved onto matter, but what cards are in the stack
+don't matter. However, FreeCell's only build rule is about moves being doable
+one card at a time. The pair rules enforce the alternate color/desceding rank
+to make sure only valid stacks are moved.
 
 While rules typically only apply to the moving card and the card being moved
 onto (and sometimes the stack on top of the moving card), they can access other
@@ -165,6 +165,10 @@ Klondike with the switch-one option as the base game, adds two free cells, and
 goes straight to playing the game (although you will be asked for a name). The
 last one uses Klondike with no options as the base game, but adds two free
 cells and gives the game the name 'Horns'.
+
+There is no double checking done on the rules or attributes you choose for your
+game. So it is entirely possible to create a game that is not winnable. Watch
+out for that.
 """
 
 
