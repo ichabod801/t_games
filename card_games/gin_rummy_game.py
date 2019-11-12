@@ -1297,7 +1297,8 @@ class GinRummy(game.Game):
                     for target in attack:
                         valid = self.validate_meld([str(card) for card in target] + meld)
                         if valid:
-                            target.extend()
+                            target.extend([cards.Card(*card.upper()) for card in meld])
+                            target.sort(key = lambda card: card.rank_num)
                             break
                 # Handle the cards.
                 if valid:
@@ -1347,7 +1348,7 @@ class GinRummy(game.Game):
         # Sort the cards.
         try:
             meld.sort(key = lambda card: self.deck.ranks.index(card[0].upper()))
-        except IndexError:
+        except ValueError:
             return False
         # Check for a set.
         if len(set(card[0].upper() for card in meld)) == 1:
