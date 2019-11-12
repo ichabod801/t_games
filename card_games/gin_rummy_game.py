@@ -1266,7 +1266,6 @@ class GinRummy(game.Game):
         # Get the melds and layoffs.
         scoring_sets = []
         while True:
-            valid = False
             card_text = ', '.join(str(card) for card in cards)
             player.tell('\nThe following cards are still in your hand: {}'.format(card_text))
             meld_text = player.ask('Enter a set of cards to score (return to finish, cancel to abort): ')
@@ -1285,11 +1284,13 @@ class GinRummy(game.Game):
             elif meld == ['error']:
                 player.error('\nInvalid meld specification: {!r}.'.format(meld_text))
             else:
+                valid = False
                 # Validate cards
-                if not all(card in cards for card in meld):
+                has_cards = all(card in cards for card in meld)
+                if not has_cards:
                     player.error('You do not have all of those cards.')
                 # Validate melds.
-                if len(meld) >= 3:
+                elif len(meld) >= 3:
                     valid = self.validate_meld(meld)
                 # Validate layoffs.
                 else:
@@ -1305,7 +1306,7 @@ class GinRummy(game.Game):
                         scoring_sets[-1].append(cards.pop(cards.index(card)))
                     if not cards:
                         break
-                else:
+                elif has_cards:   # only print one error message.
                     # Warn if the meld or layoff is invalid.
                     layoff = ' or layoff' if attack else ''
                     player.error('That is not a valid meld{}.'.format(layoff))
