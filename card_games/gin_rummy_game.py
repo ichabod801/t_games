@@ -1066,7 +1066,7 @@ class GinRummy(game.Game):
         meld: The split input from the user. (list of str)
         cards: The cards in hand at the moment. (list of card.Card)
         """
-        meld = meld.lower().replace(' -', '-').replace('- ', '-').split()
+        meld = meld.lower().replace(' -', '-').replace('- ', '-').split()   # !! this should be a regex
         # Check for shorthand.
         if len(meld) == 1:
             # Check for run shorthand.
