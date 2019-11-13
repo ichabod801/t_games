@@ -4,6 +4,9 @@ gin_rummy_test.py
 Unit testing of gin_rummy_game.py
 
 Classes:
+ParseMeldTest: Test parsing melds by input by a player. (unittest.TestCase)
+SpreadTest: Tests of spreading cards at the end of a hand. (unittest.TestCase)
+ValidateMeldTest: Test of validating melds. (unittest.TestCase)
 """
 
 
@@ -14,7 +17,7 @@ from t_games.card_games import gin_rummy_game as gin
 from t_games.t_tests import unitility
 
 
-class ParseMeldsTest(unittest.TestCase):
+class ParseMeldTest(unittest.TestCase):
     """Test parsing melds by input by a player. (unittest.TestCase)"""
 
     def setUp(self):
@@ -101,6 +104,71 @@ class ParseMeldsTest(unittest.TestCase):
         """Test parsing a shorthand set using a number rank."""
         hand = [cards.Card(*text) for text in ('AS', '2S', 'KS', 'AC', '6D', '6H', '6S', 'QS')]
         self.assertEqual(['6D', '6H', '6S'], self.game.parse_meld('6', hand))
+
+class SpreadTest(unittest.TestCase):
+    """Tests of spreading cards at the end of a hand. (unittest.TestCase)"""
+    pass
+
+
+class ValidateMeldTest(unittest.TestCase):
+    """Test of validating melds entered by players. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.human = unitility.AutoBot()
+        self.game = gin.GinRummy(self.human, 'none')
+        self.game.set_up()
+
+    def testAceKingFail(self):
+        """Test an ace-king run without the high-low option."""
+        self.assertFalse(self.game.validate_meld(['qs', 'ks', 'as']))
+
+    def testBasicRun(self):
+        """Test a basic run."""
+        self.assertTrue(self.game.validate_meld(['2s', '3s', '4s']))
+
+    def testBasicRunAlpha(self):
+        """Test a basic run with alphabetical ranks."""
+        self.assertTrue(self.game.validate_meld(['js', 'qs', 'ks']))
+
+    def testBasicRunNumAlpha(self):
+        """Test a basic run crossing the 9/T ranks."""
+        self.assertTrue(self.game.validate_meld(['8C', '9C', 'TC']))
+
+    def testBasicSet(self):
+        """Test a basic run."""
+        self.assertTrue(self.game.validate_meld(['5C', '5D', '5H']))
+
+    def testBrokenRun(self):
+        """Test a broken run."""
+        self.assertFalse(self.game.validate_meld(['3H', '5H', '6H']))
+
+    def testEightRun(self):
+        """Test a four card run."""
+        self.assertTrue(self.game.validate_meld(['ah', '2h', '3h', '4h', '5h', '6h', '7h', '8h']))
+
+    def testFourRun(self):
+        """Test a four card run."""
+        self.assertTrue(self.game.validate_meld(['6d', '7d', '8d', '9d']))
+
+    def testFourSet(self):
+        """Test a four card set."""
+        self.assertTrue(self.game.validate_meld(['AC', 'AD', 'AS', 'AH']))
+
+    def testHinge(self):
+        """Test three cards making a partial set and a partial run."""
+        self.assertFalse(self.game.validate_meld(['ac', 'ad', '2d']))
+
+    def testShortRun(self):
+        """Test a two card run."""
+        self.assertTrue(self.game.validate_meld(['9C', 'TC']))
+
+    def testShortSet(self):
+        """Test a two card set."""
+        self.assertTrue(self.game.validate_meld(['jd', 'jh']))
+
+    def testSingleton(self):
+        """Test one card."""
+        self.assertTrue(self.game.validate_meld(['QS']))
 
 
 if __name__ == '__main__':
