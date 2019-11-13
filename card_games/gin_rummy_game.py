@@ -1094,7 +1094,7 @@ class GinRummy(game.Game):
             elif len(meld[0]) == 1:
                 rank = meld[0].upper()
                 if rank in self.deck.ranks:
-                    meld = [str(card) for card in cards if card.rank == meld[0].upper()]
+                    meld = [card.up_text for card in cards if card.rank == meld[0].upper()]
                 else:
                     meld = ['error']
         # Return other melds unprocessed.
