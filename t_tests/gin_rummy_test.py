@@ -52,6 +52,16 @@ class ParseMeldsTest(unittest.TestCase):
         hand = [cards.Card(*text) for text in ('AS', '2S', 'KS', 'AC', '6D', '6H', '7D', '8D')]
         self.assertEqual(['6D', '7D', '8D'], self.game.parse_meld('6-8D', hand))
 
+    def testShortRunErrorRank(self):
+        """Test parsing a shorthand run with a band rank."""
+        hand = [cards.Card(*text) for text in ('AS', '2S', 'KS', 'AC', '6D', '6H', '7D', '8D')]
+        self.assertEqual(['error'], self.game.parse_meld('6-FD', hand))
+
+    def testShortRunErrorSuitless(self):
+        """Test parsing a shorthand run with a bad suit."""
+        hand = [cards.Card(*text) for text in ('AS', '2S', 'KS', 'AC', '6D', '6H', '7D', '8D')]
+        self.assertEqual(['error'], self.game.parse_meld('6-8', hand))
+
     def testShortRunNumAlpha(self):
         """Test parsing a shorthand run crossing the 9/T line."""
         hand = [cards.Card(*text) for text in ('AS', '2S', 'TS', 'AC', '6D', '6H', 'JS', '9S')]
@@ -76,6 +86,16 @@ class ParseMeldsTest(unittest.TestCase):
         """Test parsing a shorthand set."""
         hand = [cards.Card(*text) for text in ('AS', '2S', 'KS', 'AC', '6D', 'AH', 'JS', 'QS')]
         self.assertEqual(['AS', 'AC', 'AH'], self.game.parse_meld('a', hand))
+
+    def testShortSetErrorBad(self):
+        """Test parsing a shorthand set with a bad rank."""
+        hand = [cards.Card(*text) for text in ('AS', '2S', 'KS', 'AC', '6D', 'AH', 'JS', 'QS')]
+        self.assertEqual(['error'], self.game.parse_meld('i', hand))
+
+    def testShortSetErrorMissing(self):
+        """Test parsing a shorthand set with a rank not in hand."""
+        hand = [cards.Card(*text) for text in ('AS', '2S', 'KS', 'AC', '6D', 'AH', 'JS', 'QS')]
+        self.assertEqual([], self.game.parse_meld('8', hand))
 
     def testShortSetNumber(self):
         """Test parsing a shorthand set using a number rank."""
