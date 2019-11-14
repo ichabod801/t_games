@@ -122,6 +122,16 @@ class ValidateMeldTest(unittest.TestCase):
         """Test an ace-king run without the high-low option."""
         self.assertFalse(self.game.validate_meld(['qs', 'ks', 'as']))
 
+    def testAceKingPass(self):
+        """Test an ace-king run without the high-low option."""
+        self.game = gin.GinRummy(self.human, 'high-low')
+        self.game.set_up()
+        self.assertTrue(self.game.validate_meld(['QC', 'KC', 'AC']))
+
+    def testBadRank(self):
+        """Test a rank that isn't in the deck."""
+        self.assertFalse(self.game.validate_meld(['2d', '3d', 'fd']))
+
     def testBasicRun(self):
         """Test a basic run."""
         self.assertTrue(self.game.validate_meld(['2s', '3s', '4s']))
