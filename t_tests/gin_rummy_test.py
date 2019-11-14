@@ -193,7 +193,6 @@ class SpreadTest(unittest.TestCase):
         deadwood = []
         attack = [self.cardText('tc jc qc')]
         actual = self.game.spread(self.human, attack)
-        print(attack, self.human.errors)
         self.assertEqual((spreads, deadwood), actual)
 
     def testLayoffLow(self):
@@ -307,6 +306,10 @@ class ValidateMeldTest(unittest.TestCase):
     def testHinge(self):
         """Test three cards making a partial set and a partial run."""
         self.assertFalse(self.game.validate_meld(['ac', 'ad', '2d']))
+
+    def testMixedCase(self):
+        """Test a run with mixed case."""
+        self.assertTrue(self.game.validate_meld(['TC', 'JC', 'QC', 'kc']))
 
     def testShortRun(self):
         """Test a two card run."""

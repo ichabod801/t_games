@@ -1295,7 +1295,7 @@ class GinRummy(game.Game):
                 # Validate layoffs.
                 else:
                     for target in attack:
-                        valid = self.validate_meld([str(card) for card in target] + meld)
+                        valid = self.validate_meld([card.up_text for card in target] + meld)
                         if valid:
                             target.extend([cards.Card(*card.upper()) for card in meld])
                             target.sort(key = lambda card: card.rank_num)
