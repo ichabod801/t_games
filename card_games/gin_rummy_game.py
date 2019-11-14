@@ -1311,7 +1311,8 @@ class GinRummy(game.Game):
                 elif has_cards:   # only print one error message.
                     # Warn if the meld or layoff is invalid.
                     layoff = ' or layoff' if attack else ''
-                    player.error('That is not a valid meld{}.'.format(layoff), meld, unspread, attack, sep = '\n')
+                    #player.error('That is not a valid meld{}.'.format(layoff), meld, unspread, attack, sep = '\n')
+                    player.error('That is not a valid meld{}.'.format(layoff))
         # Return the melds and the deadwood.
         return scoring_sets, unspread
 
