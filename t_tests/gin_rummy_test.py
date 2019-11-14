@@ -132,6 +132,15 @@ class SpreadTest(unittest.TestCase):
         self.game = gin.GinRummy(self.human, 'none')
         self.game.set_up()
 
+    def testBadMeld(self):
+        """Test spreading with a bad meld specification."""
+        self.setHand('qh qs qc ad 2d 3d 4h 4s 4c 5d')
+        self.human.replies = ['q', 'a-3', 'ad-3', '4', '']
+        spreads = [self.cardText(spread) for spread in ('qh qs qc', 'ad 2d 3d', '4h 4s 4c')]
+        deadwood = [cards.Card(*'5D')]
+        self.assertEqual((spreads, deadwood), self.game.spread(self.human))
+        self.assertEqual(["\nInvalid meld specification: 'a-3'.\n"], self.human.errors)
+
     def testBasic(self):
         """Test spreading some basic runs and sets."""
         self.setHand('ac 2c 3c 4d 4h 4s 5c 6c 7c 8d')
@@ -160,12 +169,29 @@ class SpreadTest(unittest.TestCase):
         self.assertEqual(['\nThe defending player may not cancel.\n'], self.human.errors)
 
     def testGin(self):
-        """Test spreading some a basic gin hand."""
+        """Test spreading a basic gin hand."""
         self.setHand('9h 9s 9c 9d th jh qh ks kc kd')
         self.human.replies = ['9h 9s 9c 9d', 'th jh qh', 'ks kc kd', '']
         spreads = [self.cardText(spread) for spread in self.human.replies[:-1]]
         deadwood = []
         self.assertEqual((spreads, deadwood), self.game.spread(self.human))
+
+    def testMultiDead(self):
+        """Test spreading with multiple dead cards."""
+        self.setHand('4c 4d 4h 5s 6s 7s 8h 9s tc jd')
+        self.human.replies = ['4', '5s-7s', '']
+        spreads = [self.cardText(spread) for spread in ('4c 4d 4h', '5s 6s 7s')]
+        deadwood = self.cardText('8h 9s tc jd')
+        self.assertEqual((spreads, deadwood), self.game.spread(self.human))
+
+    def testNoCards(self):
+        """Test spreading without the cards in hand."""
+        self.setHand('6h 7h 8h ks kd kh 9c tc jc qd')
+        self.human.replies = ['6h-7', 'k', '9h-j', '9c-j', '']
+        spreads = [self.cardText(spread) for spread in ('6h 7h 8h', 'ks kd kh', '9c tc jc')]
+        deadwood = [cards.Card(*'QD')]
+        self.assertEqual((spreads, deadwood), self.game.spread(self.human))
+        self.assertEqual(["You do not have all of those cards.\n"], self.human.errors)
 
     def testReset(self):
         """Test resetting during spreading."""
