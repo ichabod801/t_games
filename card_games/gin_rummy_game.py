@@ -1277,7 +1277,7 @@ class GinRummy(game.Game):
                 if player == self.players[self.player_index]:
                     return [], self.hands[player.name].cards[:]
                 else:
-                    player.tell('\nThe defending player may not cancel.')
+                    player.error('\nThe defending player may not cancel.')
             elif meld == ['reset']:
                 unspread = self.hands[player.name].cards[:]
                 scoring_sets = []

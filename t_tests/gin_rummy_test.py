@@ -105,9 +105,83 @@ class ParseMeldTest(unittest.TestCase):
         hand = [cards.Card(*text) for text in ('AS', '2S', 'KS', 'AC', '6D', '6H', '6S', 'QS')]
         self.assertEqual(['6D', '6H', '6S'], self.game.parse_meld('6', hand))
 
+
 class SpreadTest(unittest.TestCase):
     """Tests of spreading cards at the end of a hand. (unittest.TestCase)"""
-    pass
+
+    def cardText(self, text):
+        """
+        Create a list of cards from a string. (list of cards.Card)
+
+        Parameters:
+        text: A space delimited list of cards. (str)
+        """
+        return [cards.Card(*card_text.upper()) for card_text in text.split()]
+
+    def setHand(self, text):
+        """
+        Set up a hand of cards for a test. (None)
+
+        Parameters:
+        text: A space delimited list of cards. (str)
+        """
+        self.game.hands[self.human.name].cards = self.cardText(text)
+
+    def setUp(self):
+        self.human = unitility.AutoBot()
+        self.game = gin.GinRummy(self.human, 'none')
+        self.game.set_up()
+
+    def testBasic(self):
+        """Test spreading some basic runs and sets."""
+        self.setHand('ac 2c 3c 4d 4h 4s 5c 6c 7c 8d')
+        self.human.replies = ['ac 2c 3c', '4d 4h 4s', '5c 6c 7c', '']
+        spreads = [self.cardText(spread) for spread in self.human.replies[:-1]]
+        deadwood = [cards.Card(*'8D')]
+        self.assertEqual((spreads, deadwood), self.game.spread(self.human))
+
+    def testCancel(self):
+        """Test resetting during spreading."""
+        self.setHand('qh qs qc kd ah 2s 3c 4d 5h 6s')
+        self.human.replies = ['q', 'cancel']
+        self.game.player_index = 0
+        self.assertEqual(([], self.cardText('qh qs qc kd ah 2s 3c 4d 5h 6s')), self.game.spread(self.human))
+
+    def testCancelFail(self):
+        """Test resetting during spreading."""
+        self.setHand('7c 8c 9c td jh qs kc ad 2h 3s')
+        self.human.replies = ['7c-9', 'cancel', '']
+        self.game.player_index = 1
+        self.game.players.append(unitility.AutoBot())
+        self.game.players[-1].name = 'Not {}'.format(self.human.name)
+        spreads = [self.cardText('7c 8c 9c')]
+        deadwood = self.cardText('td jh qs kc ad 2h 3s')
+        self.assertEqual((spreads, deadwood), self.game.spread(self.human))
+        self.assertEqual(['\nThe defending player may not cancel.\n'], self.human.errors)
+
+    def testGin(self):
+        """Test spreading some a basic gin hand."""
+        self.setHand('9h 9s 9c 9d th jh qh ks kc kd')
+        self.human.replies = ['9h 9s 9c 9d', 'th jh qh', 'ks kc kd', '']
+        spreads = [self.cardText(spread) for spread in self.human.replies[:-1]]
+        deadwood = []
+        self.assertEqual((spreads, deadwood), self.game.spread(self.human))
+
+    def testReset(self):
+        """Test resetting during spreading."""
+        self.setHand('7h 7s 7c 7d 8d 9d th ts tc jd')
+        self.human.replies = ['7', 'reset', '7h 7s 7c', '7d 8d 9d', 'th ts tc', '']
+        spreads = [self.cardText(spread) for spread in self.human.replies[2:-1]]
+        deadwood = [cards.Card(*'JD')]
+        self.assertEqual((spreads, deadwood), self.game.spread(self.human))
+
+    def testShorthand(self):
+        """Test spreading using shorthand."""
+        self.setHand('ah as ac 2d 3d 4d 5h 5s 5c 6d')
+        self.human.replies = ['a', '2d-4', '5', '']
+        spreads = [self.cardText(spread) for spread in ('ah as ac', '2d 3d 4d', '5h 5s 5c')]
+        deadwood = [cards.Card(*'6D')]
+        self.assertEqual((spreads, deadwood), self.game.spread(self.human))
 
 
 class ValidateMeldTest(unittest.TestCase):
