@@ -215,6 +215,24 @@ class SpreadTest(unittest.TestCase):
         actual = self.game.spread(self.human, attack)
         self.assertEqual((spreads, deadwood), actual)
 
+    def testLayoffTwo(self):
+        """Test laying off two cards onto a run."""
+        self.setHand('2c 3c 4c 5d 5h 5s 6c 7c 8d 9h')
+        self.human.replies = ['2c 3c 4c', '5d 5h 5s', '6c 7c', '']
+        spreads = [self.cardText(spread) for spread in self.human.replies[:-1]]
+        deadwood = self.cardText('8d 9h')
+        attack = [self.cardText('8c 9c tc')]
+        self.assertEqual((spreads, deadwood), self.game.spread(self.human, attack))
+
+    def testLayoffTwoSplit(self):
+        """Test laying off two cards onto a run one at a time."""
+        self.setHand('ts js qs kc kd kh 4h 5h ad 2c')
+        self.human.replies = ['ts js qs', 'kc kd kh', '4h', '5h', '']
+        spreads = [self.cardText(spread) for spread in self.human.replies[:-1]]
+        deadwood = self.cardText('ad 2c')
+        attack = [self.cardText('ah 2h 3h')]
+        self.assertEqual((spreads, deadwood), self.game.spread(self.human, attack))
+
     def testMultiDead(self):
         """Test spreading with multiple dead cards."""
         self.setHand('4c 4d 4h 5s 6s 7s 8h 9s tc jd')
