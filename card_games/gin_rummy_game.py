@@ -149,6 +149,7 @@ class GinBot(player.Bot):
 
     Overridden Methods:
     ask
+    error
     set_up
     tell
     """
@@ -187,6 +188,9 @@ class GinBot(player.Bot):
         Parameters:
         card: The discard to check. (cards.Card)
         """
+        if len(self.hand) != 10:
+            text = 'Invalid number of cards before drawing ({}).\nDiscard pile: {}.\nScores: {}'
+            self.error(text.format(len(self.hand), self.game.deck.discards, self.game.scores))
         # Draw the discard if it creates or adds to a meld.
         if self.match_check(card):
             return True
@@ -196,6 +200,22 @@ class GinBot(player.Bot):
         # Otherwise draw from the deck
         else:
             return False
+
+    def error(self, *args, **kwargs):
+        """
+        Stop play due to a bot malfunction. (None)
+
+        Parameters:
+        The parameters are the same as the built-in bot function.
+        """
+        # Get the base text.
+        kwargs['sep'] = kwargs.get('sep', ' ')
+        kwargs['end'] = kwargs.get('end', '\n')
+        text = kwargs['sep'].join([str(arg) for arg in args]) + kwargs['end']
+        # Add the hand information.
+        full_text = '{}\nHand: {}\nTracking: {}'.format(text.strip(), self.hand, self.tracking)
+        # Raise an error.
+        raise player.BotError(full_text)
 
     def find_melds(self, cards, check_function):
         """
@@ -257,6 +277,8 @@ class GinBot(player.Bot):
             possibles = sum([meld for meld in melds if len(meld) > 3], [])
         # Discard the one worth the most points.
         possibles.sort(key = lambda card: self.game.card_values[card.rank])
+        if not possibles:
+            raise player.BotError("Can't find discard with {}.".format(self.hand))
         return possibles[-1]
 
     def knock_check(self):
