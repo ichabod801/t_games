@@ -38,11 +38,48 @@ class GinBotSortTest(unittest.TestCase):
         self.check = {'attacks': [], 'full-run': [], 'full-set': [], 'part-run': [],
             'part-set': [], 'deadwood': []}
 
+    def testAllCategories(self):
+        """Test a hand with something in each tracking list."""
+        self.setHand('2c 3c 4c ad ah as 6d 7d 5h 5s')
+        self.check['full-run'] = [self.bot.hand.cards[:3]]
+        self.check['full-set'] = [self.bot.hand.cards[3:6]]
+        self.check['part-run'] = [self.bot.hand.cards[6:8]]
+        self.check['part-set'] = [self.bot.hand.cards[8:]]
+        self.bot.sort_hand()
+        self.assertEqual(self.check, self.bot.tracking)
+
     def testFullRun(self):
         """Test tracking a full run."""
         self.setHand('ac 2c 3c 4d 5h 6s 7c 8d 9h ts')
         self.check['full-run'] = [self.bot.hand.cards[:3]]
         self.check['deadwood'] = self.bot.hand.cards[3:]
+        self.check['deadwood'].sort(key = lambda card: (card.suit, card.rank_num))
+        self.bot.sort_hand()
+        self.assertEqual(self.check, self.bot.tracking)
+
+    def testFullSet(self):
+        """Test tracking a full set."""
+        self.setHand('jc jd jh qs kc ad 2h 3s 4c 5d')
+        self.check['full-set'] = [self.bot.hand.cards[:3]]
+        self.check['deadwood'] = self.bot.hand.cards[3:]
+        self.check['deadwood'].sort(key = lambda card: (card.suit, card.rank_num))
+        self.bot.sort_hand()
+        self.assertEqual(self.check, self.bot.tracking)
+
+    def testPartialRun(self):
+        """Test tracking a partial run."""
+        self.setHand('6h 7h 8s 9c td jh qs kc ad 2h')
+        self.check['part-run'] = [self.bot.hand.cards[:2]]
+        self.check['deadwood'] = self.bot.hand.cards[2:]
+        self.check['deadwood'].sort(key = lambda card: (card.suit, card.rank_num))
+        self.bot.sort_hand()
+        self.assertEqual(self.check, self.bot.tracking)
+
+    def testPartialset(self):
+        """Test tracking a partial set."""
+        self.setHand('3c 3s 4d 5h 6s 7c 8d 9h ts jc')
+        self.check['part-set'] = [self.bot.hand.cards[:2]]
+        self.check['deadwood'] = self.bot.hand.cards[2:]
         self.check['deadwood'].sort(key = lambda card: (card.suit, card.rank_num))
         self.bot.sort_hand()
         self.assertEqual(self.check, self.bot.tracking)
