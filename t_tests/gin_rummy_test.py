@@ -20,6 +20,7 @@ from t_games.t_tests import unitility
 
 class GinBotSortTest(unittest.TestCase):
     """Tests of sorting a hand by the bot. (unittest.TestCase)"""
+    # Note that order is massaged in the check values for these tests, because it doesn't matter.
 
     def setHand(self, text):
         """
@@ -32,9 +33,10 @@ class GinBotSortTest(unittest.TestCase):
 
     def setUp(self):
         self.maxDiff = None
-        self.bot = gin.GinBot()
-        self.deck = cards.Deck()
-        self.bot.hand = cards.Hand(self.deck)
+        self.game = gin.GinRummy(unitility.AutoBot(), 'easy')
+        self.game.set_up()
+        self.bot = self.game.players[1]
+        self.bot.set_up()
         self.check = {'attacks': [], 'full-run': [], 'full-set': [], 'part-run': [],
             'part-set': [], 'deadwood': []}
 
@@ -75,11 +77,61 @@ class GinBotSortTest(unittest.TestCase):
         self.bot.sort_hand()
         self.assertEqual(self.check, self.bot.tracking)
 
-    def testPartialset(self):
+    def testPartialSet(self):
         """Test tracking a partial set."""
         self.setHand('3c 3s 4d 5h 6s 7c 8d 9h ts jc')
         self.check['part-set'] = [self.bot.hand.cards[:2]]
         self.check['deadwood'] = self.bot.hand.cards[2:]
+        self.check['deadwood'].sort(key = lambda card: (card.suit, card.rank_num))
+        self.bot.sort_hand()
+        self.assertEqual(self.check, self.bot.tracking)
+
+    def testRunFourVsSetHigh(self):
+        """Test a set intersecting the high end of a four-card run."""
+        self.setHand('5c 6c 7c 8d 8h 8c 9s tc jd qh')
+        self.check['full-run'] = [self.bot.hand.cards[:3]]
+        self.check['full-set'] = [self.bot.hand.cards[3:6]]
+        self.check['deadwood'] = self.bot.hand.cards[6:]
+        self.check['deadwood'].sort(key = lambda card: (card.suit, card.rank_num))
+        self.bot.sort_hand()
+        self.assertEqual(self.check, self.bot.tracking)
+
+    def testRunFourVsSetLow(self):
+        """Test a set intersecting the low end of a four-card run."""
+        self.setHand('ts js qs kc kd ks ah 2s 3c 4d')
+        self.check['full-run'] = [self.bot.hand.cards[:3]]
+        self.check['full-set'] = [self.bot.hand.cards[3:6]]
+        self.check['deadwood'] = self.bot.hand.cards[6:]
+        self.check['deadwood'].sort(key = lambda card: (card.suit, card.rank_num))
+        self.bot.sort_hand()
+        self.assertEqual(self.check, self.bot.tracking)
+
+    def testRunVsSetHigh(self):
+        """Test a set intersecting the high end of a run."""
+        self.setHand('3c 4c 5d 5h 5c 6s 7c 8d 9h ts')
+        self.check['part-run'] = [self.bot.hand.cards[:2]]
+        self.check['full-set'] = [self.bot.hand.cards[2:5]]
+        self.check['deadwood'] = self.bot.hand.cards[5:]
+        self.check['deadwood'].sort(key = lambda card: (card.suit, card.rank_num))
+        self.bot.sort_hand()
+        self.assertEqual(self.check, self.bot.tracking)
+
+    def testRunVsSetLow(self):
+        """Test a set intersecting the low end of a run."""
+        self.setHand('8c 9c tc 8d 8h js qc kd ah 2s')
+        self.check['full-run'] = [self.bot.hand.cards[:3]]
+        self.check['part-set'] = [self.bot.hand.cards[3:5]]
+        self.check['deadwood'] = self.bot.hand.cards[5:]
+        self.check['deadwood'].sort(key = lambda card: (card.suit, card.rank_num))
+        self.bot.sort_hand()
+        self.assertEqual(self.check, self.bot.tracking)
+
+    def testRunVsSetMiddle(self):
+        """Test a set intersecting the middle of a run."""
+        self.setHand('jc qc kc qd qh as 2c 3d 4h 5s')
+        self.check['full-run'] = [self.bot.hand.cards[:3]]
+        self.check['part-set'] = [self.bot.hand.cards[3:5]]
+        self.check['deadwood'] = self.bot.hand.cards[5:]
         self.check['deadwood'].sort(key = lambda card: (card.suit, card.rank_num))
         self.bot.sort_hand()
         self.assertEqual(self.check, self.bot.tracking)
