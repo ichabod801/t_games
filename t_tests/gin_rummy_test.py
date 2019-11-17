@@ -37,6 +37,7 @@ class GinBotSortTest(unittest.TestCase):
         self.game.set_up()
         self.bot = self.game.players[1]
         self.bot.set_up()
+        self.bot.debug = False
         self.check = {'attacks': [], 'full-run': [], 'full-set': [], 'part-run': [],
             'part-set': [], 'deadwood': []}
 
@@ -47,6 +48,16 @@ class GinBotSortTest(unittest.TestCase):
         self.check['full-set'] = [self.bot.hand.cards[3:6]]
         self.check['part-run'] = [self.bot.hand.cards[6:8]]
         self.check['part-set'] = [self.bot.hand.cards[8:]]
+        self.bot.sort_hand()
+        self.assertEqual(self.check, self.bot.tracking)
+
+    def testDoubleBreak(self):
+        """Test breaking a run only once."""
+        self.setHand('as 2s 3s 4s ac ad 4c 4d 5h 6s')
+        self.check['full-set'] = [card_text('4c 4d 4s')]
+        self.check['full-run'] = [card_text('as 2s 3s')]
+        self.check['part-set'] = [card_text('ac ad')]
+        self.check['deadwood'] = card_text('5h 6s')
         self.bot.sort_hand()
         self.assertEqual(self.check, self.bot.tracking)
 
@@ -83,6 +94,16 @@ class GinBotSortTest(unittest.TestCase):
         self.check['part-set'] = [self.bot.hand.cards[:2]]
         self.check['deadwood'] = self.bot.hand.cards[2:]
         self.check['deadwood'].sort(key = lambda card: (card.suit, card.rank_num))
+        self.bot.sort_hand()
+        self.assertEqual(self.check, self.bot.tracking)
+
+    def testRunFiveVsSetMiddle(self):
+        """Test a set intersecting the middle of a five-card run."""
+        self.setHand('6d 7d 8d 8h 8s 9d td jc jd js')
+        self.bot.debug = True
+        self.check['full-run'] = [self.bot.hand.cards[:3] + self.bot.hand.cards[5:7]]
+        self.check['full-set'] = [card_text('jc js jd')]
+        self.check['part-set'] = [self.bot.hand.cards[3:5]]
         self.bot.sort_hand()
         self.assertEqual(self.check, self.bot.tracking)
 

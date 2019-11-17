@@ -416,15 +416,16 @@ class GinBot(player.Bot):
                     if run_score - remainder_score - rank_score < 2 * rank_score:
                         full_set = part_set + [card for card in run if card.rank == part_set[0].rank]
                         breaks.append((full_set, part_set, run, remainder))
+        breaks.reverse()    # reverse breaks so highest sets break first
         # Remove and replace any broken runs.
         for full_set, part_set, full_run, remainder in breaks:
-            full_sets.append(full_set)
-            # Watch out for multiple matches.
-            if part_set in part_sets:
-                part_sets.remove(part_set)
-            if full_run in full_runs:
+            if full_run in full_runs:        # Only break each run once.
+                full_sets.append(full_set)
+                # Watch out for multiple matches.
+                if part_set in part_sets:
+                    part_sets.remove(part_set)
                 full_runs.remove(full_run)
-            full_runs.extend(remainder)
+                full_runs.extend(remainder)
         # Find the partial runs with the remaining cards.
         used = set(sum(full_sets + full_runs + part_sets, []))
         cards = [card for card in self.hand if card not in used]
