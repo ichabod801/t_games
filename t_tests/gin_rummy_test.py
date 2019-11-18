@@ -79,6 +79,14 @@ class GinBotSortTest(unittest.TestCase):
         self.bot.sort_hand()
         self.assertEqual(self.check, self.bot.tracking)
 
+    def testGin(self):
+        """Test tracking gin."""
+        self.setHand('4h 5h 6h 7h, qc qd qh kc kd kh')
+        self.check['full-run'] = [self.bot.hand.cards[:4]]
+        self.check['full-set'] = [self.bot.hand.cards[4:7], self.bot.hand.cards[7:]]
+        self.bot.sort_hand()
+        self.assertEqual(self.check, self.bot.tracking)
+
     def testPartialRun(self):
         """Test tracking a partial run."""
         self.setHand('6h 7h 8s 9c td jh qs kc ad 2h')

@@ -839,7 +839,7 @@ class GinRummy(game.Game):
         attack_score = sum([self.card_values[card.rank] for card in attack_deadwood])
         if attack_score > knock_max:
             if attack_melds:
-                attacker.error('You do not have a low enough score to knock.')
+                attacker.error('You do not have a low enough score to knock.', attack_melds, attack_deadwood)
             return False
         self.show_melds(attack_melds, attack_deadwood, defender, 'attacking')
         # Get the defender's melds.
