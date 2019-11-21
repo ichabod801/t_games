@@ -336,7 +336,6 @@ class GinBot(player.Bot):
 
     def next_spread(self):
         """Get the next meld or layoff to spread. (str)"""
-        print(self.tracking)
         # Check for melds to return
         if self.tracking['full-set']:
             meld = self.tracking['full-set'].pop()
