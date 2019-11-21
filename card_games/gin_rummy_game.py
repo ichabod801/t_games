@@ -463,12 +463,29 @@ class GinBot(player.Bot):
         """
         Remove a card from the hand tracking. (None)
 
+        !! I am not happy with this, it feels like a kludge. I would like to try to
+        redo the whole game so that the bot tracking of hands is simpler and smoother.
+
         Parameters:
         card_text: The name of the card to be removed. (str)
         """
-        # Remove the card from the meld tracking.
-        for group in ('full-run', 'full-set', 'part-run', 'part-set'):
-            self.tracking[group] = [cards for cards in self.tracking[group] if card_text not in cards]
+        # Check each type of meld tracking for the card.
+        for key in ('run', 'set'):
+            full_key = 'full-{}'.format(key)
+            part_key = 'part-{}'.format(key)
+            # Remove the card from full melds.
+            new_groups = []
+            for group in self.tracking[full_key]:
+                if card_text in group:
+                    group.remove(card_text)
+                # Downgrade full melds to partial melds if necessary.
+                if len(group) < 3:
+                    self.tracking[part_key].append(group)
+                else:
+                    new_groups.append(group)
+            self.tracking[full_key] = new_groups
+            # Remove partial melds containing the card.
+            self.tracking[part_key] = [group for group in self.tracking[part_key] if card_text not in group]
         # Remove the card from the deadwood tracking.
         if card_text in self.tracking['deadwood']:
             self.tracking['deadwood'].remove(card_text)
@@ -839,7 +856,8 @@ class GinRummy(game.Game):
         attack_score = sum([self.card_values[card.rank] for card in attack_deadwood])
         if attack_score > knock_max:
             if attack_melds:
-                attacker.error('You do not have a low enough score to knock.', attack_melds, attack_deadwood)
+                text = 'You need {} points or less to knock, but you have {}.'
+                attacker.error(text.format(knock_max, attack_score), attack_melds, attack_deadwood, end = '\n')
             return False
         self.show_melds(attack_melds, attack_deadwood, defender, 'attacking')
         # Get the defender's melds.
