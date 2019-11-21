@@ -18,6 +18,9 @@ from t_games.card_games import gin_rummy_game as gin
 from t_games.t_tests import unitility
 
 
+BotTest = unitility.bot_test(gin.GinRummy, [gin.GinBot, gin.TrackingBot], 10, [2])
+
+
 class GinBotSortTest(unittest.TestCase):
     """Tests of sorting a hand by the bot. (unittest.TestCase)"""
     # Note that order is massaged in the check values for these tests, because it doesn't matter.
