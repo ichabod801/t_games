@@ -165,6 +165,16 @@ class GinBotSortTest(unittest.TestCase):
         self.bot.sort_hand()
         self.assertEqual(self.check, self.bot.tracking)
 
+    def testSetFourVsTwoRun(self):
+        """Test a set intersecting with two runs."""
+        self.setHand('5c 6c 7c 5d 6d 7h 7s 7d 2s 3h')
+        self.check['full-run'] = [self.bot.hand.cards[:3]]
+        self.check['part-run'] = [self.bot.hand.cards[3:5]]
+        self.check['full-set'] = [self.bot.hand.cards[5:8]]
+        self.check['deadwood'] = list(reversed(self.bot.hand.cards[8:]))
+        self.bot.sort_hand()
+        self.assertEqual(self.check, self.bot.tracking)
+
 
 class ParseMeldTest(unittest.TestCase):
     """Test parsing melds by input by a player. (unittest.TestCase)"""

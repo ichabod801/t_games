@@ -336,6 +336,7 @@ class GinBot(player.Bot):
 
     def next_spread(self):
         """Get the next meld or layoff to spread. (str)"""
+        print(self.tracking)
         # Check for melds to return
         if self.tracking['full-set']:
             meld = self.tracking['full-set'].pop()
@@ -419,11 +420,9 @@ class GinBot(player.Bot):
         breaks.reverse()    # reverse breaks so highest sets break first
         # Remove and replace any broken runs.
         for full_set, part_set, full_run, remainder in breaks:
-            if full_run in full_runs:        # Only break each run once.
+            if full_run in full_runs and part_set in part_sets:        # Only break each run once.
                 full_sets.append(full_set)
-                # Watch out for multiple matches.
-                if part_set in part_sets:
-                    part_sets.remove(part_set)
+                part_sets.remove(part_set)
                 full_runs.remove(full_run)
                 full_runs.extend(remainder)
         # Find the partial runs with the remaining cards.
