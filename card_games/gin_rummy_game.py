@@ -953,12 +953,12 @@ class GinRummy(game.Game):
         elif max(self.scores.values()) >= self.end:
             self.game_score(self.scores, self.wins, '')
             if sum(self.win_loss_draw) >= self.match:
-                win_type = 'game' if self.match == 1 else 'match'
-                if self.win_loss_draw[0] > self.win_loss_draw[1]:
-                    self.human.tell('You won the {} {} to {}.'.format(win_type, *self.win_loss_draw[:2]))
-                else:
-                    self.human.tell('You lost the {} {} to {}.'.format(win_type, *self.win_loss_draw[:2]))
-                self.scores = self.match_scores
+                if self.match > 1:
+                    if self.win_loss_draw[0] > self.win_loss_draw[1]:
+                        self.human.tell('You won the match {} to {}.'.format(*self.win_loss_draw[:2]))
+                    else:
+                        self.human.tell('You lost the match {} to {}.'.format(*self.win_loss_draw[:2]))
+                    self.scores = self.match_scores
                 return True
             else:
                 self.human.tell('Your match score is {}-{}.'.format(*self.win_loss_draw[:2]))
