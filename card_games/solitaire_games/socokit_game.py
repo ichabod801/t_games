@@ -379,6 +379,8 @@ class SoCoKit(game.Game):
             attribute = '{}_checkers'.format(check_type)
             game_info[key] = getattr(self.base_game, attribute)
         game_info['dealers'] = self.base_game.dealers
+        # Get the option set for attributes derived from options.
+        game_info['option-set'] = self.base_game.option_set
         return game_info
 
     def handle_options(self):
@@ -430,6 +432,10 @@ class SoCoKit(game.Game):
             def handle_options(self):
                 # Use the game definition for the options.
                 self.options = game_info
+                self.option_set = game_info['option-set']
+                for option, setting in self.option_set.settings.items():
+                    if option != 'bots':
+                        setattr(self, option, setting)
             def set_checkers(self):
                 # Extract the rule checkers and the dealers.
                 for checker_type in 'build free lane match pair sort'.split():
