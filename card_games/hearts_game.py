@@ -656,18 +656,6 @@ class Hearts(game.Game):
             # Shift the cards to their passing stack.
             for card in cards:
                 hand.shift(card, self.passes[player.name])
-            # If everyone has set up a passing stack, actually pass the cards.
-            if all(self.passes.values()):
-                self.pass_cards()
-                self.phase = 'trick'
-                # Set the first player.
-                if self.low_club:
-                    for player in self.players:
-                        if self.low_club in self.hands[player.name]:
-                            break
-                    self.player_index = self.players.index(player) - 1
-                else:
-                    self.player_index = self.players.index(self.dealer) - 1
 
     def do_play(self, arguments):
         """
@@ -906,7 +894,20 @@ class Hearts(game.Game):
             move = player.ask(query.format(utility.number_plural(self.num_pass, 'card'), pass_text))
             # If the correct number of cards are found, pass them.
             if len(self.card_re.findall(move)) == self.num_pass:
-                return self.do_pass(move)
+                go = self.do_pass(move)
+                # If everyone has set up a passing stack, actually pass the cards.
+                if all(self.passes.values()):
+                    self.pass_cards()
+                    self.phase = 'trick'
+                    # Set the first player.
+                    if self.low_club:
+                        for player in self.players:
+                            if self.low_club in self.hands[player.name]:
+                                break
+                        self.player_index = self.players.index(player) - 1
+                    else:
+                        self.player_index = self.players.index(self.dealer) - 1
+                return go
             else:
                 # If incorrect number of cards, try to run a command.
                 return self.handle_cmd(move)

@@ -462,8 +462,7 @@ class GinBot(player.Bot):
         """
         Remove a card from the hand tracking. (None)
 
-        !! I am not happy with this, it feels like a kludge. I would like to try to
-        redo the whole game so that the bot tracking of hands is simpler and smoother.
+        !! At this point, I think this may be a useless function.
 
         Parameters:
         card_text: The name of the card to be removed. (str)
