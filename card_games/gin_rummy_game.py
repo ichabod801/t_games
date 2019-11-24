@@ -1301,13 +1301,13 @@ class GinRummy(game.Game):
         attack: The melds that were spread by the attacking player. (list of list)
         """
         # Get the available cards.
-        unspread = self.hands[player.name].cards[:]
+        unspread = self.hands[player.name]
+        spread = cards.Hand(self.deck)
         # Get the melds and layoffs.
         scoring_sets = []
         while True:
-            card_text = ', '.join(str(card) for card in unspread)
-            player.tell('\nThe following cards are still in your hand: {}'.format(card_text))
-            meld_text = player.ask('Enter a set of cards to score (return to finish, cancel to abort): ')
+            player.tell('\nThe following cards are still in your hand: {}'.format(unspread))
+            meld_text = player.ask('Enter a set of cards to spread (return to finish, cancel to abort): ')
             meld = self.parse_meld(meld_text, unspread)
             # Check for no more scoring cards.
             if not meld:
@@ -1318,7 +1318,8 @@ class GinRummy(game.Game):
                 else:
                     player.error('\nThe defending player may not cancel.')
             elif meld == ['reset']:
-                unspread = self.hands[player.name].cards[:]
+                unspread.cards.extend(spread.cards)
+                spread.cards = []
                 scoring_sets = []
             elif meld == ['error']:
                 player.error('\nInvalid meld specification: {!r}.'.format(meld_text))
@@ -1344,7 +1345,8 @@ class GinRummy(game.Game):
                     # Shift cards out of the temporary hand.
                     scoring_sets.append([])
                     for card in meld:
-                        scoring_sets[-1].append(unspread.pop(unspread.index(card)))
+                        unspread.shift(card, spread)
+                        scoring_sets[-1].append(spread.cards[-1])
                     if not unspread:
                         break
                 elif has_cards:   # only print one error message.
