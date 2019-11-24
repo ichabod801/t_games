@@ -175,6 +175,7 @@ class GinBot(player.Bot):
             self.untrack(move[-2:])
         # Handle spreading.
         elif prompt.startswith('Enter a set of cards'):
+            self.sort_hand()
             move = self.next_spread()
         # Handle unforseen questions.
         else:
@@ -349,7 +350,6 @@ class GinBot(player.Bot):
             match = self.match_check(card, groups = ('attacks',))
             if match:
                 # Move tracking of matched cards to the meld
-                self.untrack(card)
                 if card.below(match[0]):
                     match.insert(0, card)
                 else:
