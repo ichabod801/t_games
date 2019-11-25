@@ -399,20 +399,6 @@ class SmeartBot(HeartBot):
             # Watch out for the keep-spades option.
             if self.game.keep_spades:
                 to_pass = [card for card in to_pass if card not in ('QS', 'KS', 'AS')]
-            # Fill out the cards to pass.
-            if len(to_pass) < self.game.num_pass:
-                if by_suit['C'] < by_suit['D'] and not self.game.low_club:
-                    suits = 'CD'
-                else:
-                    suits = 'DC'
-                to_pass.extend(card for card in self.hand if card.suit == suits[0])
-                to_pass.extend(card for card in self.hand if card.suit == suits[1])
-                if len(to_pass) < self.game.num_pass:
-                    to_pass.extend(card for card in self.hand if card.suit == 'S')
-                    if self.game.keep_spades:
-                        to_pass = [card for card in to_pass if card not in ('QS', 'KS', 'AS')]
-                    if len(to_pass) < self.game.num_pass:
-                        to_pass.extend(card for card in self.hand if card.suit == 'H')
             # Never pass QS to you left.
             if self.game.this_pass == 'left' and 'QS' in to_pass and len(to_pass) > self.game.num_pass:
                 to_pass.remove('QS')
@@ -421,7 +407,29 @@ class SmeartBot(HeartBot):
                 to_pass.remove('AC')
             if 'AD' in to_pass and len(to_pass) > self.game.num_pass:
                 to_pass.remove('AD')
-            #print(self.name, to_pass)
+            # Fill out the cards to pass.
+            if len(to_pass) < self.game.num_pass:
+                if by_suit['C'] < by_suit['D'] and not self.game.low_club:
+                    suits = 'CD'
+                else:
+                    suits = 'DC'
+                to_pass.extend(card for card in self.hand if card.suit == suits[0] and card not in to_pass)
+                to_pass.extend(card for card in self.hand if card.suit == suits[1] and card not in to_pass)
+                if len(to_pass) < self.game.num_pass:
+                    to_pass.extend(card for card in self.hand if card.suit == 'S' and card not in to_pass)
+                    if self.game.keep_spades:
+                        to_pass = [card for card in to_pass if card not in ('QS', 'KS', 'AS')]
+                    if len(to_pass) < self.game.num_pass:
+                        to_pass.extend(card for card in self.hand if card.suit == 'H')
+            # Remove duplicates while maintaining order.
+            new_pass = []
+            for card in to_pass:
+                if card not in new_pass:
+                    new_pass.append(card)
+            to_pass = new_pass
+            # Check for valid pass.
+            if len(to_pass) < self.game.num_pass:
+                raise player.BotError('Invalid pass ({}) with hand = {}.'.format(to_pass, self.hand))
         return to_pass[:self.game.num_pass]
 
     def play(self):
