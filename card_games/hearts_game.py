@@ -339,6 +339,8 @@ class SmeartBot(HeartBot):
         if base_check or (self.game.joker_points and standard.rank == 'X'):
             suit_cards = [card for card in self.game.trick if card.suit == self.game.trick.cards[0].suit]
             suit_cards.sort(key = lambda card: card.rank_num)
+            if not suit_cards:
+                return standard
             best_card = suit_cards[-1]
             best_index = self.game.trick.cards.index(best_card)
             best_player = self.game.players[self.game.player_index - len(self.game.trick) + best_index]
