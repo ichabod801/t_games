@@ -587,7 +587,7 @@ class SoCoKit(game.Game):
         slash_index = self.raw_options.find('/')
         pipe_index = self.raw_options.find('|')
         # Only count slashes before the build options.
-        slash_index = slash_index if slash_index < pipe_index else -1
+        slash_index = slash_index if (pipe_index == -1 or slash_index < pipe_index) else -1
         # Game and build options
         if slash_index != -1 and pipe_index != -1:
             self.base_name = self.raw_options[:slash_index].strip()
