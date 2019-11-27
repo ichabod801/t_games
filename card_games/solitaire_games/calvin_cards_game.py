@@ -26,26 +26,26 @@ Game Programming: Craig "Ichabod" O'Brien
 OPTION_HELP = """
 deal_up= (du=): The probability that cards are dealt face up. Defaults to
     0.667.
-down_chance= (do=): The probability that a card will be turned face down.
+down-chance= (do=): The probability that a card will be turned face down.
     Defaults to 0.5.
-drop_chance= (dr=): The probability that a cell or pile will be dropped.
+drop-chance= (dr=): The probability that a cell or pile will be dropped.
     Defaults to 0.33.
-flip_half= (fh=): The probability that half the dealt cards are flipped face
+flip-half= (fh=): The probability that half the dealt cards are flipped face
     down. Defaults to 0.5
-max_cells= (xc=): The maximum number of initial free cells. Defaults to 2.
-max_pass= (xp=): The maximum number of initial passes through the deck.
+max-cells= (xc=): The maximum number of initial free cells. Defaults to 2.
+max-pass= (xp=): The maximum number of initial passes through the deck.
     Defaults to 3.
-max_reserve= (xr=): The maximum number of initial reserve piles. Defaults to 3.
-max_tableau= (xt=): The maximum number of initial tableau piles. Defaults to
+max-reserve= (xr=): The maximum number of initial reserve piles. Defaults to 3.
+max-tableau= (xt=): The maximum number of initial tableau piles. Defaults to
     10.
-max_turn= (xu=): The maximum number of initial cards turned over by the turn
+max-turn= (xu=): The maximum number of initial cards turned over by the turn
     command. Defaults to 4.
-min_cells= (nc=): The minimum number of initial free cells. Defaults to 0.
-min_pass= (np=): The minimum number of initial passes through the deck.
+min-cells= (nc=): The minimum number of initial free cells. Defaults to 0.
+min-pass= (np=): The minimum number of initial passes through the deck.
     Defaults to 0, which converts to -1, which is treated as infinite.
-min_reserve= (nr=): The minimum number of initial reserve piles. Defaults to 1.
-min_tableau= (nt=): The minimum number of initial tableau piles. Defaults to 5.
-min_turn= (nu=): The minimum number of initial cards turned over by the turn
+min-reserve= (nr=): The minimum number of initial reserve piles. Defaults to 1.
+min-tableau= (nt=): The minimum number of initial tableau piles. Defaults to 5.
+min-turn= (nu=): The minimum number of initial cards turned over by the turn
     command. Defaults to 1.
 move-chance= (mv=): The probability that two cards will be swapped. Defaults to
     0.33.
@@ -228,6 +228,11 @@ class CalvinCards(solitaire.Solitaire):
         if not self.raw_options.strip():
             self.raw_options = 'none'
         super(CalvinCards, self).handle_options()
+        # Check that mins are not greater than maxes.
+        for option in ('cells', 'pass', 'reserve', 'tableau', 'turn'):
+            low = getattr(self, 'min_{}'.format(option))
+            if low > getattr(self, 'max_{}'.format(option)):
+                setattr(self, 'max_{}'.format(option), low)
 
     def increase_sorting_base(self):
         """Increase the base card for sorting. (None)"""
@@ -355,9 +360,11 @@ class CalvinCards(solitaire.Solitaire):
 
     def set_options(self):
         """Set the options for the game. (None)"""
+        def is_probability(num):
+            return 0 <= num <= 1
         # Set the deal options.
-        self.option_set.add_option('deal-up', ['du'], float, 0.667)
-        self.option_set.add_option('flip-half', ['fh'], float, 0.5)
+        self.option_set.add_option('deal-up', ['du'], float, 0.667, check = is_probability)
+        self.option_set.add_option('flip-half', ['fh'], float, 0.5, check = is_probability)
         # Set the layout options
         self.option_set.add_option('min-cells', ['nc'], int, 0)
         self.option_set.add_option('max-cells', ['xc'], int, 2)
@@ -370,10 +377,10 @@ class CalvinCards(solitaire.Solitaire):
         self.option_set.add_option('min-turn', ['nu'], int, 1)
         self.option_set.add_option('max-turn', ['xu'], int, 4)
         # Set the card movement options.
-        self.option_set.add_option('down-chance', ['do'], float, 0.5)
-        self.option_set.add_option('drop-chance', ['dr'], float, 0.33)
-        self.option_set.add_option('move-chance', ['mv'], float, 0.33)
-        self.option_set.add_option('up-chance', ['up'], float, 0.33)
+        self.option_set.add_option('down-chance', ['do'], float, 0.5, check = is_probability)
+        self.option_set.add_option('drop-chance', ['dr'], float, 0.33, check = is_probability)
+        self.option_set.add_option('move-chance', ['mv'], float, 0.33, check = is_probability)
+        self.option_set.add_option('up-chance', ['up'], float, 0.33, check = is_probability)
 
     def set_solitaire(self):
         """Randomize the beginning of the solitaire game. (None)"""
