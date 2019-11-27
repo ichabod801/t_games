@@ -1310,7 +1310,8 @@ class GinRummy(game.Game):
                 break
             elif meld == ['cancel']:
                 if player == self.players[self.player_index]:
-                    return [], self.hands[player.name].cards[:]
+                    unspread.cards.extend(spread.cards)
+                    return [], self.hands[player.name].cards[:], []
                 else:
                     player.error('\nThe defending player may not cancel.')
             elif meld == ['reset']:
