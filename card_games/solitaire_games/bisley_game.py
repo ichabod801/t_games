@@ -61,9 +61,11 @@ class Bisley(solitaire.Solitaire):
     def __str__(self):
         """Human readable text representation. (str)"""
         # Mix the foundation text in with the tableau text.
-        cell_text = '{}\n\n'.format(self.cell_text()) if self.num_cells else ''
-        reserve_text = '\n\n{}\n'.format(self.reserve_text()) if self.reserve else ''
-        return '\n{}{}{}{}'.format(cell_text, self.foundation_text(), self.tableau_text(), reserve_text)
+        text = '{}\n\n'.format(self.cell_text()) if self.num_cells else ''
+        text = '\n{}{}{}'.format(text, self.foundation_text(), self.tableau_text())
+        reserve_text = '\n\n{}'.format(self.reserve_text()) if self.reserve else ''
+        waste_text = '\n\n{}'.format(self.stock_text()) if (self.stock or self.waste) else ''
+        return '{}{}{}'.format(text, reserve_text, waste_text)
 
     def do_gipf(self, arguments):
         """
