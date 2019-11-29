@@ -10,6 +10,7 @@ RULE_HELP: Help text for changing rule functions. (str)
 RULES: Basic instructions for the Solitaire Construction Kit. (str)
 
 Classes:
+OptBlocker: A class to block the MRO for handle_options. (object)
 SoCoKit: A way to design a solitiare game on the fly. (game.Game)
 """
 
@@ -170,6 +171,19 @@ There is no double checking done on the rules or attributes you choose for your
 game. So it is entirely possible to create a game that is not winnable. Watch
 out for that.
 """
+
+
+class OptBlocker(object):
+    """
+    A class to block the MRO for handle_options. (object)
+
+    Methods:
+    handle_options: Do nothing. (None)
+    """
+
+    def handle_options(self):
+        """Do nothing. (None)"""
+        pass
 
 
 class SoCoKit(game.Game):
@@ -426,7 +440,7 @@ class SoCoKit(game.Game):
         game_info: The definition of the game.
         """
         # Use the base game to determine solitaire vs. multisolitaire.
-        class ConstructedGame(self.base_class):
+        class ConstructedGame(self.base_class, OptBlocker):
             categories = ['Card Games', 'Solitaire Games']
             name = game_info['name']
             def handle_options(self):
@@ -436,6 +450,7 @@ class SoCoKit(game.Game):
                 for option, setting in self.option_set.settings.items():
                     if option != 'bots':
                         setattr(self, option, setting)
+                super(ConstructedGame, self).handle_options()
             def set_checkers(self):
                 # Extract the rule checkers and the dealers.
                 for checker_type in 'build free lane match pair sort'.split():
