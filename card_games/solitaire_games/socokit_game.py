@@ -173,7 +173,7 @@ out for that.
 """
 
 
-class OptBlocker(object):
+class OptBlocker(solitaire.Solitaire):
     """
     A class to block the MRO for handle_options. (object)
 
