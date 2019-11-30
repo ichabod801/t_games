@@ -439,27 +439,21 @@ class SoCoKit(game.Game):
         Parameters:
         game_info: The definition of the game.
         """
-        # Use the base game to determine solitaire vs. multisolitaire.
-        class ConstructedGame(self.base_class, OptBlocker):
-            categories = ['Card Games', 'Solitaire Games']
-            name = game_info['name']
-            def handle_options(self):
-                # Use the game definition for the options.
-                self.options = game_info
-                self.option_set = game_info['option-set']
-                for option, setting in self.option_set.settings.items():
-                    if option != 'bots':
-                        setattr(self, option, setting)
-                super(ConstructedGame, self).handle_options()
-            def set_checkers(self):
-                # Extract the rule checkers and the dealers.
-                for checker_type in 'build free lane match pair sort'.split():
-                    attr = '{}_checkers'.format(checker_type)
-                    key = '{}-checkers'.format(checker_type)
-                    setattr(self, attr, game_info[key])
-                self.dealers = game_info['dealers']
-        # Return the initialized game.
-        return ConstructedGame(self.human, '', self.interface)
+        self.base_game.categories = ['Card Games', 'Solitaire Games']
+        self.base_game.name = game_info['name']
+        # Use the game definition for the options.
+        self.base_game.options = game_info
+        self.base_game.option_set = game_info['option-set']
+        for option, setting in self.base_game.option_set.settings.items():
+            if option != 'bots':
+                setattr(self.base_game, option, setting)
+        # Extract the rule checkers and the dealers.
+        for checker_type in 'build free lane match pair sort'.split():
+            attr = '{}_checkers'.format(checker_type)
+            key = '{}-checkers'.format(checker_type)
+            setattr(self.base_game, attr, game_info[key])
+        self.base_game.dealers = game_info['dealers']
+        return self.base_game
 
     def modify_checkers(self, game_info, text, key):
         """
