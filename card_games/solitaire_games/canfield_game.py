@@ -126,7 +126,7 @@ class Canfield(solitaire.Solitaire):
         This command takes one argument: the card to move.
         """
         go = super(Canfield, self).do_lane(card)
-        if not go:
+        if not go and not self.free_lane:
             self.lane_checkers = [solitaire.lane_reserve_waste]
         return go
 
