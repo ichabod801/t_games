@@ -63,7 +63,6 @@ class FortyThieves(solitaire.MultiSolitaire):
     streets: A flag for building by alternating colors. (bool)
 
     Overridden Methods:
-    handle_options
     set_checkers
     set_options
     stock_text
@@ -106,10 +105,6 @@ class FortyThieves(solitaire.MultiSolitaire):
         # Otherwise I'm confused.
         else:
             self.human.tell("I'm sorry, I quit gipfing for Lent.")
-
-    def handle_options(self):
-        """Handle the game options. (None)"""
-        super(FortyThieves, self).handle_options()
 
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
