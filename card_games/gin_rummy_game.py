@@ -3,8 +3,8 @@ gin_rummy_game.py
 
 A game of Gin Rummy.
 
-To Do:
-interface enhancements? (l/r when deck or discards)
+Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
+See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Gin Rummy. (str)
