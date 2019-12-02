@@ -4,7 +4,7 @@ dollar_game.py
 The Dollar Game, as specified in this Numberphile video:
 https://www.youtube.com/watch?v=U33dsEcKgeQ&t=3s
 
-Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
