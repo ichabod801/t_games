@@ -56,7 +56,7 @@ You can get this help text by typing help or ?
 
 # Info on the GPLv3 license that t_games uses.
 LICENSE = """
-Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
@@ -359,7 +359,7 @@ class Interface(other_cmd.OtherCmd):
         num_options = sum(game.num_options for game in unique_games)
         count_text = 'Currently hosting {} different games with {} settable options.\n'
         self.human.tell(count_text.format(len(unique_games), num_options))
-        self.human.tell("Copyright (C) 2018 by Craig O'Brien and the t_games contributors.")
+        self.human.tell("Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.")
         self.human.tell("For more details type 'help' or 'help license'.")
         # Loop through player choices.
         while True:
