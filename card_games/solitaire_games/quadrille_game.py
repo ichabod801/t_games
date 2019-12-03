@@ -3,7 +3,7 @@ quadrille_game.py
 
 A game of Quadrille.
 
-Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
@@ -103,6 +103,14 @@ class Quadrille(solitaire.Solitaire):
             if not losses:
                 self.max_passes += 1
                 self.human.tell('\nYou have gained an extra pass through the deck.')
+        elif game == 'hearts':
+            if not losses:
+                bottom_heart = self.foundations[2][-1]
+                self.deck.find(self.deck.ranks[bottom_heart.rank_num - 1] + 'H')
+                self.transfer([bottom_heart], self.waste)
+                top_heart = self.foundations[2][-1]
+                self.deck.find(self.deck.ranks[top_heart.rank_num + 1] + 'H')
+                self.transfer([top_heart], self.waste)
         # Otherwise I'm confused.
         else:
             self.human.tell("I don't know that dance.")

@@ -3,6 +3,9 @@ calvin_cards_game.py
 
 A game of Calvin Cards.
 
+Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
+See the top level __init__.py file for details on the t_games license.
+
 Constants:
 CREDITS: The credits for Calvin Cards. (str)
 RULES: The (lack of) rules for Calvin Cards. (str)
@@ -26,26 +29,26 @@ Game Programming: Craig "Ichabod" O'Brien
 OPTION_HELP = """
 deal_up= (du=): The probability that cards are dealt face up. Defaults to
     0.667.
-down_chance= (do=): The probability that a card will be turned face down.
+down-chance= (do=): The probability that a card will be turned face down.
     Defaults to 0.5.
-drop_chance= (dr=): The probability that a cell or pile will be dropped.
+drop-chance= (dr=): The probability that a cell or pile will be dropped.
     Defaults to 0.33.
-flip_half= (fh=): The probability that half the dealt cards are flipped face
+flip-half= (fh=): The probability that half the dealt cards are flipped face
     down. Defaults to 0.5
-max_cells= (xc=): The maximum number of initial free cells. Defaults to 2.
-max_pass= (xp=): The maximum number of initial passes through the deck.
+max-cells= (xc=): The maximum number of initial free cells. Defaults to 2.
+max-pass= (xp=): The maximum number of initial passes through the deck.
     Defaults to 3.
-max_reserve= (xr=): The maximum number of initial reserve piles. Defaults to 3.
-max_tableau= (xt=): The maximum number of initial tableau piles. Defaults to
+max-reserve= (xr=): The maximum number of initial reserve piles. Defaults to 3.
+max-tableau= (xt=): The maximum number of initial tableau piles. Defaults to
     10.
-max_turn= (xu=): The maximum number of initial cards turned over by the turn
+max-turn= (xu=): The maximum number of initial cards turned over by the turn
     command. Defaults to 4.
-min_cells= (nc=): The minimum number of initial free cells. Defaults to 0.
-min_pass= (np=): The minimum number of initial passes through the deck.
+min-cells= (nc=): The minimum number of initial free cells. Defaults to 0.
+min-pass= (np=): The minimum number of initial passes through the deck.
     Defaults to 0, which converts to -1, which is treated as infinite.
-min_reserve= (nr=): The minimum number of initial reserve piles. Defaults to 1.
-min_tableau= (nt=): The minimum number of initial tableau piles. Defaults to 5.
-min_turn= (nu=): The minimum number of initial cards turned over by the turn
+min-reserve= (nr=): The minimum number of initial reserve piles. Defaults to 1.
+min-tableau= (nt=): The minimum number of initial tableau piles. Defaults to 5.
+min-turn= (nu=): The minimum number of initial cards turned over by the turn
     command. Defaults to 1.
 move-chance= (mv=): The probability that two cards will be swapped. Defaults to
     0.33.
@@ -105,6 +108,7 @@ class CalvinCards(solitaire.Solitaire):
     handle_options
     player_action
     set_checkers
+    set_options
     set_solitaire
     set_up
     """
@@ -128,11 +132,19 @@ class CalvinCards(solitaire.Solitaire):
             self.message = ''
         return text
 
-    def change_rules(self):
-        """Change the rules of the game randomly. (None)"""
+    def change_rules(self, force_change = ''):
+        """
+        Change the rules of the game randomly. (None)
+
+        Parameters:
+        force_change: The rule to change. (str)
+        """
         # Keep choosing rule categories until a valid change is found.
         while True:
-            change = random.choice(('build', 'sort', 'turn', 'free', 'reserve', 'tableau'))
+            if force_change:
+                change = force_change
+            else:
+                change = random.choice(('build', 'sort', 'turn', 'free', 'reserve', 'tableau'))
             if change == 'build':
                 # Change the build rules.
                 self.randomize_build()
@@ -179,7 +191,29 @@ class CalvinCards(solitaire.Solitaire):
         of = random.choice(self.ofs)
         self.message = 'You have {} the {} of {}.'.format(action, item, of)
 
-    def do_undo(self):
+    def do_gipf(self, arguments):
+        """
+        Gin Rummy forces a change in the rules for building on the tableau.
+
+        Rock-Paper-Scissors flips half of the tableau cards face up.
+        """
+        game, losses = self.gipf_check(arguments, ('gin rummy', 'rock-paper-scissors'))
+        # Gin Rummy forces the build rules to change.
+        if game == 'gin rummy':
+            self.change_rules('build')
+            self.keep_rules = 8
+        # RPS flips half the cards face up.
+        elif game == 'rock-paper-scissors':
+            for pile in self.tableau:
+                for card in pile:
+                    if not card.up and random.randrange(2):
+                        card.up = True
+        # Otherwise I'm confused.
+        else:
+            self.human.tell('You have stumbled past the perimeter of confusion.')
+        return True
+
+    def do_undo(self, arguments):
         """
         You may not undo moves in Calvin Cards.
         """
@@ -198,6 +232,11 @@ class CalvinCards(solitaire.Solitaire):
         if not self.raw_options.strip():
             self.raw_options = 'none'
         super(CalvinCards, self).handle_options()
+        # Check that mins are not greater than maxes.
+        for option in ('cells', 'pass', 'reserve', 'tableau', 'turn'):
+            low = getattr(self, 'min_{}'.format(option))
+            if low > getattr(self, 'max_{}'.format(option)):
+                setattr(self, 'max_{}'.format(option), low)
 
     def increase_sorting_base(self):
         """Increase the base card for sorting. (None)"""
@@ -325,9 +364,11 @@ class CalvinCards(solitaire.Solitaire):
 
     def set_options(self):
         """Set the options for the game. (None)"""
+        def is_probability(num):
+            return 0 <= num <= 1
         # Set the deal options.
-        self.option_set.add_option('deal-up', ['du'], float, 0.667)
-        self.option_set.add_option('flip-half', ['fh'], float, 0.5)
+        self.option_set.add_option('deal-up', ['du'], float, 0.667, check = is_probability)
+        self.option_set.add_option('flip-half', ['fh'], float, 0.5, check = is_probability)
         # Set the layout options
         self.option_set.add_option('min-cells', ['nc'], int, 0)
         self.option_set.add_option('max-cells', ['xc'], int, 2)
@@ -340,10 +381,10 @@ class CalvinCards(solitaire.Solitaire):
         self.option_set.add_option('min-turn', ['nu'], int, 1)
         self.option_set.add_option('max-turn', ['xu'], int, 4)
         # Set the card movement options.
-        self.option_set.add_option('down-chance', ['do'], float, 0.5)
-        self.option_set.add_option('drop-chance', ['dr'], float, 0.33)
-        self.option_set.add_option('move-chance', ['mv'], float, 0.33)
-        self.option_set.add_option('up-chance', ['up'], float, 0.33)
+        self.option_set.add_option('down-chance', ['do'], float, 0.5, check = is_probability)
+        self.option_set.add_option('drop-chance', ['dr'], float, 0.33, check = is_probability)
+        self.option_set.add_option('move-chance', ['mv'], float, 0.33, check = is_probability)
+        self.option_set.add_option('up-chance', ['up'], float, 0.33, check = is_probability)
 
     def set_solitaire(self):
         """Randomize the beginning of the solitaire game. (None)"""

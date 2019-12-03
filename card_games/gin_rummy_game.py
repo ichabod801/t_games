@@ -3,8 +3,8 @@ gin_rummy_game.py
 
 A game of Gin Rummy.
 
-To Do:
-interface enhancements? (l/r when deck or discards)
+Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
+See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Gin Rummy. (str)
@@ -149,6 +149,7 @@ class GinBot(player.Bot):
 
     Overridden Methods:
     ask
+    error
     set_up
     tell
     """
@@ -174,6 +175,7 @@ class GinBot(player.Bot):
             self.untrack(move[-2:])
         # Handle spreading.
         elif prompt.startswith('Enter a set of cards'):
+            self.sort_hand()
             move = self.next_spread()
         # Handle unforseen questions.
         else:
@@ -187,6 +189,9 @@ class GinBot(player.Bot):
         Parameters:
         card: The discard to check. (cards.Card)
         """
+        if len(self.hand) != 10:
+            text = 'Invalid number of cards before drawing ({}).\nDiscard pile: {}.\nScores: {}'
+            self.error(text.format(len(self.hand), self.game.deck.discards, self.game.scores))
         # Draw the discard if it creates or adds to a meld.
         if self.match_check(card):
             return True
@@ -196,6 +201,22 @@ class GinBot(player.Bot):
         # Otherwise draw from the deck
         else:
             return False
+
+    def error(self, *args, **kwargs):
+        """
+        Stop play due to a bot malfunction. (None)
+
+        Parameters:
+        The parameters are the same as the built-in bot function.
+        """
+        # Get the base text.
+        kwargs['sep'] = kwargs.get('sep', ' ')
+        kwargs['end'] = kwargs.get('end', '\n')
+        text = kwargs['sep'].join([str(arg) for arg in args]) + kwargs['end']
+        # Add the hand information.
+        full_text = '{}\nHand: {}\nTracking: {}'.format(text.strip(), self.hand, self.tracking)
+        # Raise an error.
+        raise player.BotError(full_text)
 
     def find_melds(self, cards, check_function):
         """
@@ -257,6 +278,8 @@ class GinBot(player.Bot):
             possibles = sum([meld for meld in melds if len(meld) > 3], [])
         # Discard the one worth the most points.
         possibles.sort(key = lambda card: self.game.card_values[card.rank])
+        if not possibles:
+            raise player.BotError("Can't find discard with {}.".format(self.hand))
         return possibles[-1]
 
     def knock_check(self):
@@ -327,7 +350,6 @@ class GinBot(player.Bot):
             match = self.match_check(card, groups = ('attacks',))
             if match:
                 # Move tracking of matched cards to the meld
-                self.untrack(card)
                 if card.below(match[0]):
                     match.insert(0, card)
                 else:
@@ -360,7 +382,6 @@ class GinBot(player.Bot):
         """Set up the bot. (None)"""
         self.hand = self.game.hands[self.name]
         self.listen = False
-        self.gin = False
 
     def sort_hand(self):
         """
@@ -394,15 +415,14 @@ class GinBot(player.Bot):
                     if run_score - remainder_score - rank_score < 2 * rank_score:
                         full_set = part_set + [card for card in run if card.rank == part_set[0].rank]
                         breaks.append((full_set, part_set, run, remainder))
+        breaks.reverse()    # reverse breaks so highest sets break first
         # Remove and replace any broken runs.
         for full_set, part_set, full_run, remainder in breaks:
-            full_sets.append(full_set)
-            # Watch out for multiple matches.
-            if part_set in part_sets:
+            if full_run in full_runs and part_set in part_sets:        # Only break each run once.
+                full_sets.append(full_set)
                 part_sets.remove(part_set)
-            if full_run in full_runs:
                 full_runs.remove(full_run)
-            full_runs.extend(remainder)
+                full_runs.extend(remainder)
         # Find the partial runs with the remaining cards.
         used = set(sum(full_sets + full_runs + part_sets, []))
         cards = [card for card in self.hand if card not in used]
@@ -434,18 +454,35 @@ class GinBot(player.Bot):
         elif self.listen:
             self.tracking['attacks'].append([cards.Card(*word.upper()) for word in args[0].split()])
         elif args[0].endswith('deals.'):
+            self.hand = self.game.hands[self.name]
             self.sort_hand()
 
     def untrack(self, card_text):
         """
         Remove a card from the hand tracking. (None)
 
+        !! At this point, I think this may be a useless function.
+
         Parameters:
         card_text: The name of the card to be removed. (str)
         """
-        # Remove the card from the meld tracking.
-        for group in ('full-run', 'full-set', 'part-run', 'part-set'):
-            self.tracking[group] = [cards for cards in self.tracking[group] if card_text not in cards]
+        # Check each type of meld tracking for the card.
+        for key in ('run', 'set'):
+            full_key = 'full-{}'.format(key)
+            part_key = 'part-{}'.format(key)
+            # Remove the card from full melds.
+            new_groups = []
+            for group in self.tracking[full_key]:
+                if card_text in group:
+                    group.remove(card_text)
+                # Downgrade full melds to partial melds if necessary.
+                if len(group) < 3:
+                    self.tracking[part_key].append(group)
+                else:
+                    new_groups.append(group)
+            self.tracking[full_key] = new_groups
+            # Remove partial melds containing the card.
+            self.tracking[part_key] = [group for group in self.tracking[part_key] if card_text not in group]
         # Remove the card from the deadwood tracking.
         if card_text in self.tracking['deadwood']:
             self.tracking['deadwood'].remove(card_text)
@@ -541,6 +578,9 @@ class TrackingBot(GinBot):
                 possibles.append((42 - card.rank_num + 14 * (card in dangerous), card))
             # Return the card with the lowest adjusted rank.
             possibles.sort()
+            if not possibles:
+                print(self.hand)
+                print(self.tracking)
             return possibles[0][1]
 
     def knock_max(self):
@@ -586,6 +626,7 @@ class GinRummy(game.Game):
     box_bonus: The number of points scored at the end per hand won. (int)
     card_drawn: A flag for a card having been drawn this turn. (bool)
     deal_cards: A flag for needing to deal cards on the next turn. (bool)
+    dealer: The player who should deal the next hand. (player.Player)
     deck: The deck of cards used in the game. (cards.Deck)
     discard_limit: A flag for the first discard to setting the knock limit. (bool)
     doubler: How much the score for this hand is multiplied by. (int)
@@ -602,6 +643,7 @@ class GinRummy(game.Game):
     knock_max: The maximum number of points you can have when knocking. (int)
     match: How many games are played to determine the winner. (int)
     match_scores: The total points scored by each player in the match. (dict)
+    side_deck: A deck of cards for determining knock limits. (cards.Deck)
     side_limit: A flag for using another deck to set the knock limit. (bool)
     spade_doubles: A flag for an intial spade discard doubling the score. (bool)
     straight: A flag for only allowing knocking with gin. (bool)
@@ -648,9 +690,9 @@ class GinRummy(game.Game):
 
     def deal(self):
         """Deal the cards. (None)"""
-        # Gather and shuffle all the cards.
-        for hand in self.hands.values():
-            hand.discard()
+        # Rest the deck and the hands.
+        self.deck = cards.Deck()
+        self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
         self.deck.shuffle()
         # Deal 10 cards to each player.
         for card in range(10):
@@ -735,6 +777,60 @@ class GinRummy(game.Game):
             player.error('You do not have that card to discard.')
             return True
 
+    def do_gipf(self, arguments):
+        """
+        Chess allows you to change the rank of one card in your hand.
+
+        Liar's Dice allows you to change the suit of one card in your hand.
+        """
+        game, losses = self.gipf_check(arguments, ('chess', "liar's dice"))
+        # Chess changes one card's rank.
+        if game == 'chess':
+            if not losses:
+                hand = self.hands[self.human.name]
+                self.human.tell('\nYour hand is: {}.'.format(hand))
+                while True:
+                    card = self.human.ask('What card do you want to change the rank of? ').upper()
+                    if card in hand:
+                        break
+                    else:
+                        self.human.error('You do not have the {} in your hand.'.format(card))
+                while True:
+                    rank = self.human.ask('What do you want the new rank to be? ').upper()
+                    if rank in self.deck.ranks:
+                        break
+                    else:
+                        self.human.error('{!r} is not a valid rank.'.format(rank))
+                card_index = hand.cards.index(card)
+                new_card = cards.Card(rank, card[1])
+                new_card.up = True
+                hand.cards[card_index] = new_card
+        # Liar's Dice changes one card's suit.
+        elif game == "liar's dice":
+            if not losses:
+                hand = self.hands[self.human.name]
+                self.human.tell('\nYour hand is: {}.'.format(hand))
+                while True:
+                    card = self.human.ask('What card do you want to change the suit of? ').upper()
+                    if card in hand:
+                        break
+                    else:
+                        self.human.error('You do not have the {} in your hand.'.format(card))
+                while True:
+                    suit = self.human.ask('What do you want the new suit to be? ').upper()
+                    if suit in self.deck.suits:
+                        break
+                    else:
+                        self.human.error('{!r} is not a valid suit.'.format(suit))
+                card_index = hand.cards.index(card)
+                new_card = cards.Card(card[0], suit)
+                new_card.up = True
+                hand.cards[card_index] = new_card
+        # Otherwise I'm confused.
+        else:
+            self.human.tell("I think you've had a bit too much to drink.")
+        return True
+
     def do_knock(self, argument):
         """
         Set out your cards in an attempt to win the hand. (k)
@@ -751,21 +847,23 @@ class GinRummy(game.Game):
         else:
             knock_max = 0
         # Spread the dealer's hand.
-        attack_melds, attack_deadwood = self.spread(attacker)
+        attack_melds, attack_deadwood, attack_spread = self.spread(attacker)
         attack_score = sum([self.card_values[card.rank] for card in attack_deadwood])
         if attack_score > knock_max:
             if attack_melds:
-                attacker.error('You do not have a low enough score to knock.')
+                text = 'You need {} points or less to knock, but you have {}.'
+                attacker.error(text.format(knock_max, attack_score), attack_melds, attack_deadwood, end = '\n')
+                self.hands[attacker.name].cards.extend(attack_spread.cards)
             return False
         self.show_melds(attack_melds, attack_deadwood, defender, 'attacking')
         # Get the defender's melds.
         if attack_score or self.gin_layoff:
             if not attack_score:
                 defender.tell('Gin!')
-            defense_melds, defense_deadwood = self.spread(defender, attack_melds)
+            defense_melds, defense_deadwood, defense_spread = self.spread(defender, attack_melds)
         else:
             defender.tell('Gin! You may not lay off.')
-            defense_melds, defense_deadwood = self.spread(defender)
+            defense_melds, defense_deadwood, defense_spread = self.spread(defender)
         defense_score = sum([self.card_values[card.rank] for card in defense_deadwood])
         self.show_melds(defense_melds, defense_deadwood, attacker, 'defending')
         # Score the hands.
@@ -853,12 +951,12 @@ class GinRummy(game.Game):
         elif max(self.scores.values()) >= self.end:
             self.game_score(self.scores, self.wins, '')
             if sum(self.win_loss_draw) >= self.match:
-                win_type = 'game' if self.match == 1 else 'match'
-                if self.win_loss_draw[0] > self.win_loss_draw[1]:
-                    self.human.tell('You won the {} {} to {}.'.format(win_type, *self.win_loss_draw[:2]))
-                else:
-                    self.human.tell('You lost the {} {} to {}.'.format(win_type, *self.win_loss_draw[:2]))
-                self.scores = self.match_scores
+                if self.match > 1:
+                    if self.win_loss_draw[0] > self.win_loss_draw[1]:
+                        self.human.tell('You won the match {} to {}.'.format(*self.win_loss_draw[:2]))
+                    else:
+                        self.human.tell('You lost the match {} to {}.'.format(*self.win_loss_draw[:2]))
+                    self.scores = self.match_scores
                 return True
             else:
                 self.human.tell('Your match score is {}-{}.'.format(*self.win_loss_draw[:2]))
@@ -1005,7 +1103,7 @@ class GinRummy(game.Game):
         meld: The split input from the user. (list of str)
         cards: The cards in hand at the moment. (list of card.Card)
         """
-        meld = meld.lower().replace(' -', '-').replace('- ', '-').split()
+        meld = meld.lower().replace(' -', '-').replace('- ', '-').split()   # !! this should be a regex
         # Check for shorthand.
         if len(meld) == 1:
             # Check for run shorthand.
@@ -1033,7 +1131,7 @@ class GinRummy(game.Game):
             elif len(meld[0]) == 1:
                 rank = meld[0].upper()
                 if rank in self.deck.ranks:
-                    meld = [str(card) for card in cards if card.rank == meld[0].upper()]
+                    meld = [card.up_text for card in cards if card.rank == meld[0].upper()]
                 else:
                     meld = ['error']
         # Return other melds unprocessed.
@@ -1093,6 +1191,7 @@ class GinRummy(game.Game):
 
     def reset(self):
         """Reset the game. (None)"""
+        # Reset the scores based on the options.
         if self.hollywood:
             self.scores = [{player.name: 0 for player in self.players} for game in range(3)]
             self.wins = [{player.name: 0 for player in self.players} for game in range(3)]
@@ -1100,6 +1199,7 @@ class GinRummy(game.Game):
         else:
             self.scores = {player.name: 0 for player in self.players}
             self.wins = {player.name: 0 for player in self.players}
+        # Reset the tracking variables.
         self.deal_cards = True
         self.side_deck.shuffle()
 
@@ -1133,7 +1233,7 @@ class GinRummy(game.Game):
             question = 'Should the game be played straight (you can only knock with gin)? bool')
         # Set the hand scoring options.
         self.option_set.add_option('ace-penalty', ['ap'], int, 1, target = self.card_values,
-            action = 'key=A', question = 'How many points should an ace be worth?')
+            action = 'key=A', question = 'How many points should an ace be worth (return for 1)? ')
         self.option_set.add_option('gin', ['g'], int, 25,
             question = 'How many points should you get for gin (return for 25)? ')
         self.option_set.add_option('undercut', ['uc'], int, 25,
@@ -1198,55 +1298,62 @@ class GinRummy(game.Game):
         attack: The melds that were spread by the attacking player. (list of list)
         """
         # Get the available cards.
-        cards = self.hands[player.name].cards[:]
+        unspread = self.hands[player.name]
+        spread = cards.Hand(self.deck)
         # Get the melds and layoffs.
         scoring_sets = []
         while True:
-            valid = False
-            card_text = ', '.join(str(card) for card in cards)
-            player.tell('\nThe following cards are still in your hand: {}'.format(card_text))
-            meld_text = player.ask('Enter a set of cards to score (return to finish, cancel to abort): ')
-            meld = self.parse_meld(meld_text, cards)
+            player.tell('\nThe following cards are still in your hand: {}'.format(unspread))
+            meld_text = player.ask('Enter a set of cards to spread (return to finish, cancel to abort): ')
+            meld = self.parse_meld(meld_text, unspread)
             # Check for no more scoring cards.
             if not meld:
                 break
             elif meld == ['cancel']:
                 if player == self.players[self.player_index]:
-                    return [], self.hands[player.name].cards[:]
+                    unspread.cards.extend(spread.cards)
+                    return [], self.hands[player.name].cards[:], []
                 else:
-                    player.tell('\nThe defending player may not cancel.')
+                    player.error('\nThe defending player may not cancel.')
             elif meld == ['reset']:
-                cards = self.hands[player.name].cards[:]
+                unspread.cards.extend(spread.cards)
+                spread.cards = []
                 scoring_sets = []
             elif meld == ['error']:
                 player.error('\nInvalid meld specification: {!r}.'.format(meld_text))
             else:
+                valid = False
                 # Validate cards
-                if not all(card in cards for card in meld):
+                has_cards = all(card in unspread for card in meld)
+                if not has_cards:
                     player.error('You do not have all of those cards.')
                 # Validate melds.
-                if len(meld) >= 3:
+                elif len(meld) >= 3:
                     valid = self.validate_meld(meld)
                 # Validate layoffs.
                 else:
                     for target in attack:
-                        valid = self.validate_meld([str(card) for card in target] + meld)
+                        valid = self.validate_meld([card.up_text for card in target] + meld)
                         if valid:
+                            target.extend([cards.Card(*card.upper()) for card in meld])
+                            target.sort(key = lambda card: card.rank_num)
                             break
                 # Handle the cards.
                 if valid:
                     # Shift cards out of the temporary hand.
                     scoring_sets.append([])
                     for card in meld:
-                        scoring_sets[-1].append(cards.pop(cards.index(card)))
-                    if not cards:
+                        unspread.shift(card, spread)
+                        scoring_sets[-1].append(spread.cards[-1])
+                    if not unspread:
                         break
-                else:
+                elif has_cards:   # only print one error message.
                     # Warn if the meld or layoff is invalid.
                     layoff = ' or layoff' if attack else ''
+                    #player.error('That is not a valid meld{}.'.format(layoff), meld, unspread, attack, sep = '\n')
                     player.error('That is not a valid meld{}.'.format(layoff))
         # Return the melds and the deadwood.
-        return scoring_sets, cards
+        return scoring_sets, unspread, spread
 
     def update_score(self, player, points):
         """
@@ -1281,7 +1388,7 @@ class GinRummy(game.Game):
         # Sort the cards.
         try:
             meld.sort(key = lambda card: self.deck.ranks.index(card[0].upper()))
-        except IndexError:
+        except ValueError:
             return False
         # Check for a set.
         if len(set(card[0].upper() for card in meld)) == 1:

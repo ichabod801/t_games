@@ -3,7 +3,7 @@ canfield_game.py
 
 A game of Canfield.
 
-Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
@@ -126,7 +126,7 @@ class Canfield(solitaire.Solitaire):
         This command takes one argument: the card to move.
         """
         go = super(Canfield, self).do_lane(card)
-        if not go:
+        if not go and not self.free_lane:
             self.lane_checkers = [solitaire.lane_reserve_waste]
         return go
 

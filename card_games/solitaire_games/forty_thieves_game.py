@@ -3,7 +3,7 @@ forty_thieves_game.py
 
 A game of Forty Thieves.
 
-Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
@@ -63,7 +63,6 @@ class FortyThieves(solitaire.MultiSolitaire):
     streets: A flag for building by alternating colors. (bool)
 
     Overridden Methods:
-    handle_options
     set_checkers
     set_options
     stock_text
@@ -106,10 +105,6 @@ class FortyThieves(solitaire.MultiSolitaire):
         # Otherwise I'm confused.
         else:
             self.human.tell("I'm sorry, I quit gipfing for Lent.")
-
-    def handle_options(self):
-        """Handle the game options. (None)"""
-        super(FortyThieves, self).handle_options()
 
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
