@@ -310,17 +310,18 @@ class SmeartBot(HeartBot):
     """
     A bot for Hearts that understands shooting the Moon. (HeartBot)
 
-    Class Attributes:
-    danger_cards: Cards that signal trying to shoot the moon. (list of str)
-
     Attributes:
     got_points: Which players have score points this deal. (dict of str: int)
     shooter: The name of the player trying to shoot the moon. (str)
     strategy: The strategy the bot is usingto make moves. (str)
     tricks: The number of tricks played this deal. (int)
 
+    Class Attributes:
+    danger_cards: Cards that signal trying to shoot the moon. (list of str)
+
     Methods:
     defend: Make a move to stop a player from shooting the moon. (cards.Card)
+    set_tracking: Set up the tracking variables for a new deal. (None)
     shoot: Make a move trying to shoot the moon. (cards.Card)
     strategy_check: See if the bot's strategy needs revision. (None)
 
@@ -510,6 +511,7 @@ class Hearts(game.Game):
 
     Attributes:
     all_break: A flag for any penalty card breaking hearts. (bool)
+    bonus: The card that removes 10 points from a player's score. (cards.Card)
     break_hearts: A flag for hearts needing to be played before leading. (bool)
     breakers: The cards that can break hearts. (set of cards.Card)
     dealer: The next player to deal cards. (player.Player)
@@ -524,15 +526,23 @@ class Hearts(game.Game):
     jokers_follow: A flag for jokers being unable to lead tricks. (bool)
     joker_points: A flag for jokers being worth a point. (bool)
     keep_spades: A flag preventing the passing of high spades. (bool)
+    kitty: How extra cards are handled during the deal. (str)
     lady_points: How many points the QS scores. (int)
     last_trick: The last trick won by a player. (cards.Hand)
     low_club: The club that must lead each round. (cards.Card or False)
+    max_score: The maximum possible score for a hand. (int)
     medium: The number of medium hard bots in the game. (int)
+    moon: How shooting the moon is scored. (str)
+    no_tricks: How many points you get for not winning any tricks. (int)
+    not_warning: A flag for warning that there is no passing this trick. (bool)
     num_pass: The number of cards each player passes. (int)
     pass_dir: The direction(s) that cards are passed. (generator)
+    pass_to: Who is passing to who. (dict of str: str)
     passes: The cards passed by each player. (dict of str: cards.Hand)
     phase: Whether the players are passing cards or playing tricks. (str)
+    random_move: A flag for the rest of the trick being played randomly. (bool)
     taken: The cards from the tricks each player has taken. (dict)
+    this_pass: How cards are passed this hand. (str)
     trick: The cards in the current trick. (cards.Hand)
     tricks: The number of trick played so far. (int)
     this_pass: Then direction to pass cards for this hand. (str)
@@ -566,6 +576,7 @@ class Hearts(game.Game):
     game_over
     handle_options
     player_action
+    set_options
     set_up
     """
 
@@ -598,7 +609,6 @@ class Hearts(game.Game):
         # Eldest hand starts, and is the next dealer.
         self.dealer = self.players[player_index]
         self.hearts_broken = not (self.break_hearts or self.all_break)
-        #print('dealer set to {}.'.format(self.dealer))
 
     def dealers_choice(self):
         """Generator for dealer's choice of passing. (generator)"""
@@ -636,7 +646,7 @@ class Hearts(game.Game):
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('calvin cards',))
-        # Winning Yacht gives you an extra pass through the deck.
+        # Winning Calvin Cards randomizes moves for the rest of the trick.
         if game == 'calvin cards':
             if not losses:
                 self.random_move = True
