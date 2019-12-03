@@ -382,7 +382,6 @@ class GinBot(player.Bot):
         """Set up the bot. (None)"""
         self.hand = self.game.hands[self.name]
         self.listen = False
-        self.gin = False
 
     def sort_hand(self):
         """
@@ -627,6 +626,7 @@ class GinRummy(game.Game):
     box_bonus: The number of points scored at the end per hand won. (int)
     card_drawn: A flag for a card having been drawn this turn. (bool)
     deal_cards: A flag for needing to deal cards on the next turn. (bool)
+    dealer: The player who should deal the next hand. (player.Player)
     deck: The deck of cards used in the game. (cards.Deck)
     discard_limit: A flag for the first discard to setting the knock limit. (bool)
     doubler: How much the score for this hand is multiplied by. (int)
@@ -643,6 +643,7 @@ class GinRummy(game.Game):
     knock_max: The maximum number of points you can have when knocking. (int)
     match: How many games are played to determine the winner. (int)
     match_scores: The total points scored by each player in the match. (dict)
+    side_deck: A deck of cards for determining knock limits. (cards.Deck)
     side_limit: A flag for using another deck to set the knock limit. (bool)
     spade_doubles: A flag for an intial spade discard doubling the score. (bool)
     straight: A flag for only allowing knocking with gin. (bool)
