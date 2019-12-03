@@ -3,7 +3,7 @@ full_credits.py
 
 Generate the full credits for tgames.
 
-Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
@@ -16,19 +16,19 @@ data_to_text: Convert CREDITS_DATA to formatted text. (str)
 
 
 CREDITS_DATA = [('Interface Programming', """Craig O'Brien, Micah Page"""),
-    ('Game Design', """Humans; Paul Alfille, Matt Baker, Richard A. Canfield, Melvin Dresher, Doug Dyment,
-        Charles Fey, Merrill Flood, Michael Keller, Bernard de Marigny, Albert Morehead,
-        Geoffrey Mott-Smith, Craig O'Brien, Ned Strongin, Sid Sackson, John Suckling, Howard Wexler,
-        Gregory Yob"""),
+    ('Game Design', """Humans; Paul Alfille, C. Graham Baker, Elwood T. Baker, Matt Baker,
+        Richard A. Canfield, Melvin Dresher, Doug Dyment, Charles Fey, Merrill Flood, Michael Keller,
+        Bernard de Marigny, Albert Morehead, Geoffrey Mott-Smith, Craig O'Brien, Ned Strongin, Sid Sackson,
+        John Suckling, Howard Wexler, Gregory Yob"""),
     ('Game Programming', """Thomas Ahle, Craig O'Brien, David B. Wilson"""),
     ('Bot Design', """Robert Axelrod, B. Beaufils, S. Braver, K. Deb, J. Delahaye, James Friedman,
         Roger Johnson, Reiner Knizia, J. Komorita, David Kraines, Vivian Kraines, S. Mittal, Todd Neller,
         Craig O'Brien, Mathieu Our, Clifton Presser, Anatol Rapoport, J. Sheposh, Gerry Tesauro"""),
     ('Bot Programming', """Craig "Ichabod" O'Brien"""),
     ('Documentation', """wma, Craig O'Brien"""),
-    ('Play Testing', """Doug Edmunds, Craig O'Brien, Micah Page"""),
+    ('Play Testing', """Doug Edmunds, Craig O'Brien, Micah Page, Dustin Roberts"""),
     ('Special Thanks', """Guido van Rossum; python-forum.io, github.com, Wikipedia, pagat.com;
-        Alan Beale, Kris Burm, George Carlin, Matt Groening, Lawrence Lasker, Walter F. Parks,
+        Alan Beale, Bill Budge, Kris Burm, George Carlin, Matt Groening, Lawrence Lasker, Walter F. Parks,
         David Parlett""")]
 
 

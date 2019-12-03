@@ -3,7 +3,7 @@ ten_thousand_game.py
 
 A game of Ten Thousand.
 
-Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
@@ -823,6 +823,7 @@ class TenThousand(game.Game):
         scoring dice are held. You can only hold scoring dice. For taking a second
         chance to score, use the second command.
         """
+        # !! refactor
         player = self.players[self.player_index]
         possibles = [die.value for die in self.dice if not die.held]
         counts = [possibles.count(value) for value in range(7)]
@@ -878,8 +879,9 @@ class TenThousand(game.Game):
                         self.must_roll = "you scored three or more {}'s".format(first)
         # Score the held dice.
         held_score = self.score_dice(values)
-        if held_score == -1:
-            # !! this will cause a name error.
+        if held_score < 0:
+            possible = abs(held_score)
+            count = values.count(possible)
             error = "{} {}'s do not score and cannot be held"
             player.error(error.format(utility.number_word(count), possible))
             return True
@@ -1356,7 +1358,7 @@ class TenThousand(game.Game):
                 if count and not sub_score:
                     if validate:
                         # Return error code for invalid dice if validating.
-                        return -1
+                        return -possible
                     else:
                         # Otherwise, check for smaller sets that score.
                         for sub_count in range(count, 0, -1):

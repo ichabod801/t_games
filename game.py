@@ -3,7 +3,7 @@ game.py
 
 The base game object for t_games.
 
-Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Classes:
@@ -77,6 +77,7 @@ class Game(OtherCmd):
     option_set: The definitions of allowed options for the game (OptionSet)
     raw_options: The options as given by the play command. (str)
     scores: The players' scores in the game. (dict of str: int)
+    silent: A flag for suppressing pre-game output. (bool)
     turns: The number of turns played in the game. (int)
     win_loss_draw: A list of the player's results in the game. (list of int)
 
@@ -121,18 +122,20 @@ class Game(OtherCmd):
         'sin': (math.sin, 1), 'V': (math.sqrt, 1), 'tan': (math.tan, 1)}
     rules = 'No rules have been specified for this game.'
 
-    def __init__(self, human, raw_options, interface = None):
+    def __init__(self, human, raw_options, interface = None, silent = False):
         """
         Set up the game. (None)
 
         human: The primary player of the game. (player.Player)
         raw_options: The user's option choices as provided by the interface. (str)
         interface: The interface that started the game playing. (interface.Interface)
+        silent: A flag for supressing the greeting. (bool)
         """
         # Set the specified attributes.
         self.human = human
         self.interface = interface
         self.raw_options = raw_options.strip()
+        self.silent = silent
         # Set the default attributes.
         self.flags = 0
         self.gipfed = []
@@ -145,7 +148,7 @@ class Game(OtherCmd):
             if hasattr(cls, 'help_text'):
                 self.help_text.update(cls.help_text)
         # Introduce yourself.
-        if self.name != 'Fireball':
+        if self.name != 'Fireball' and not self.silent:
             self.human.tell('\nWelcome to a game of {}, {}.'.format(self.name, self.human.name))
         # Define and process the game options.
         self.option_set = options.OptionSet(self)
@@ -567,8 +570,9 @@ class Flip(Game):
                     self.human.tell('You beat {} with {} heads!'.format(self.bot.name, winning_score))
                 else:
                     self.win_loss_draw[1] = 1
-                    message = 'You lost to {} win {} heads.'
+                    message = 'You lost to {} with {} heads.'
                     self.human.tell(message.format(self.bot.name, winning_score - 2))
+                return True
 
     def handle_options(self):
         """Handle game options and set the player list. (None)"""

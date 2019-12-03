@@ -3,7 +3,7 @@ solitaire_game.py
 
 Base class for solitaire games.
 
-Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
@@ -126,6 +126,7 @@ class Solitaire(game.Game):
     options: The standard solitaire options for this game. (dict of str: object)
     pair_checkers: Functions for validating pairs in tableau stacks. (list)
     reserve: Piles where building is not permitted. (list of list of Card)
+    silent: A flag for supressing deal number questions. (bool)
     sort_checkers: Functions for validating foundation moves. (list of callable)
     stock: A face down pile of cards for later play. (list of Card)
     stock_passes: The number of times the waste has been gone through. (int)
@@ -791,7 +792,7 @@ class Solitaire(game.Game):
         deal_text_index = self.option_set.settings_text.find('deal-num')
         if deal_text_index != -1:
             self.option_set.settings_text = self.option_set.settings_text[:(deal_text_index - 1)]
-        if self.raw_options.lower() != 'none':
+        if self.raw_options.lower() != 'none' and not self.silent:
             prompt = '\nEnter the deal number, or return for a random deal: '
             deal_num = self.human.ask_int(prompt, low = 0, default = -1, cmd = False)
         if deal_num == -1:
@@ -1448,7 +1449,7 @@ class MultiSolitaire(Solitaire):
         deal_text_index = self.option_set.settings_text.find('deal-num')
         if deal_text_index != -1:
             self.option_set.settings_text = self.option_set.settings_text[:(deal_text_index - 1)]
-        if self.raw_options.lower() != 'none':
+        if self.raw_options.lower() != 'none' and not self.silent:
             prompt = '\nEnter the deal number, or return for a random deal: '
             deal_num = self.human.ask_int(prompt, low = 0, default = -1, cmd = False)
         if deal_num == -1:

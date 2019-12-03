@@ -3,7 +3,7 @@ hamurabi_game.py
 
 The computer classic Hamurabi. No, it is not misspelled.
 
-Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:

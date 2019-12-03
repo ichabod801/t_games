@@ -3,7 +3,7 @@ freecell_game.py
 
 FreeCell and related games.
 
-Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
@@ -145,16 +145,17 @@ class FreeCell(solitaire.Solitaire):
             self.pair_checkers[1] = solitaire.pair_suit
         self.sort_checkers = [solitaire.sort_ace, solitaire.sort_up]
         # Set the dealers
+        max_cards = (52 - self.num_cells) if self.fill_free else 52
         if self.challenge:
-            self.dealers = [solitaire.deal_twos, solitaire.deal_aces, solitaire.deal_all]
+            self.dealers = [solitaire.deal_twos, solitaire.deal_aces, solitaire.deal_n(max_cards - 8)]
         elif self.egnellahc:
-            self.dealers = [solitaire.deal_aces, solitaire.deal_twos, solitaire.deal_all]
+            self.dealers = [solitaire.deal_aces, solitaire.deal_twos, solitaire.deal_n(max_cards - 8)]
         else:
-            self.dealers = [solitaire.deal_all]
+            self.dealers = [solitaire.deal_n(max_cards)]
         if self.fill_free:
             self.dealers.append(solitaire.deal_free)
         if self.supercell:
-            self.dealers.append(solitaire.flip_random)
+            self.dealers.append(solitaire.deal_flip_random)
 
     def set_options(self):
         """Set the game options. (None)"""

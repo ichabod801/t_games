@@ -3,7 +3,7 @@ hangman_game.py
 
 A game of hangman.
 
-Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
@@ -236,10 +236,14 @@ class Hangman(game.Game):
             # Start computer guessing.
             if not self.word:
                 query = '\nThink of a word for me to guess. How many letters are in it? '
-                self.word_length = player.ask_int(query, low = 1)
-                self.guess = '_' * self.word_length
-                self.word = '???'
-                self.possibles = [word for word in self.words if len(word) == self.word_length]
+                word_length = player.ask_int(query, low = 1)
+                if isinstance(word_length, int):
+                    self.word_length = word_length
+                    self.guess = '_' * self.word_length
+                    self.word = '???'
+                    self.possibles = [word for word in self.words if len(word) == self.word_length]
+                else:
+                    return self.handle_cmd(word_length)
             # Handle computer guessing.
             self.human.tell(self)
             return self.player_answer()

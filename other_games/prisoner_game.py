@@ -3,7 +3,7 @@ prisoner_game.py
 
 An implementation of the Iterated Prisoner's Dilemma.
 
-Copyright (C) 2018 by Craig O'Brien and the t_games contributors.
+Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
@@ -441,12 +441,20 @@ class PrisonersDilemma(game.Game):
     def do_gipf(self, arguments):
         """
         The Dollar Game lets you defect, but your opponent thinks you cooperated.
+
+        Hangman gives you the temptation score no matter what you do.
         """
-        game, losses = self.gipf_check(arguments, ('the dollar game',))
+        game, losses = self.gipf_check(arguments, ('the dollar game', 'hangman'))
+        # The Dollar Game lets you defect but seem to cooperate
         if game == 'the dollar game':
             if not losses:
                 self.human.tell('\nYour next move can be a defect your opponent thinks is cooperation.\n')
                 self.hypno = True
+        elif game == 'hangman':
+            if not losses:
+                self.human.tell('\nYou get the temptation score next round no matter what you do.\n')
+                self.temp_bonus = True
+        # Otherwise I'm confused.
         else:
             self.human.tell("\nDude, Gipf got parole last year. I'm Gorf.")
         return True
@@ -540,7 +548,11 @@ class PrisonersDilemma(game.Game):
                 round_scores = [self.points['punishment'], self.points['punishment']]
             # Score the points and inform the players
             for player, round_score in zip(sub_players, round_scores):
-                self.scores[player.name] += round_score
+                if self.temp_bonus and player == self.human:
+                    self.scores[player.name] += self.points['temptation']
+                    self.temp_bonus = False
+                else:
+                    self.scores[player.name] += round_score
                 foe_index = 1 - sub_players.index(player)
                 foe_name = sub_players[foe_index].name
                 if self.hypno and foe_name == self.human.name:
@@ -602,3 +614,4 @@ class PrisonersDilemma(game.Game):
     def set_up(self):
         """Set up the game. (None)"""
         self.hypno = False
+        self.temp_bonus = False
