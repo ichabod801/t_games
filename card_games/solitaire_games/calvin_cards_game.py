@@ -108,6 +108,7 @@ class CalvinCards(solitaire.Solitaire):
     handle_options
     player_action
     set_checkers
+    set_options
     set_solitaire
     set_up
     """
