@@ -1207,12 +1207,9 @@ class GinRummy(game.Game):
         """Define the options for the game. (None)"""
         # to do: hollywood (triple-score), tedesco? (high-low, round-the-corner, ace-penalty)
         # Set the option groups.
-        self.option_set.add_group('oklahoma', 'discard-limit spade-doubles')
-        self.option_set.add_group('ok', 'discard-limit spade-doubles')
-        self.option_set.add_group('round-the-corner', 'high-low ace-penalty=15')
-        self.option_set.add_group('rtc', 'high-low ace-penalty=15')
-        self.option_set.add_group('tourney-score', 'end=250 match=5')
-        self.option_set.add_group('ts', 'end=250 match=5')
+        self.option_set.add_group('oklahoma', ['ok'], 'discard-limit spade-doubles')
+        self.option_set.add_group('round-the-corner', ['rtc'], 'high-low ace-penalty=15')
+        self.option_set.add_group('tourney-score', ['ts'], 'end=250 match=5')
         # Set the bot options.
         self.option_set.add_option('easy', ['ez'], question = 'Would you like to play the easy bot? bool')
         # Set the deal options.
