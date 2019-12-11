@@ -117,6 +117,7 @@ class Interface(other_cmd.OtherCmd):
     default
     """
 
+    cell_defaults = {'hood': 3, 'length': 27, 'rule': 110, 'start': 'random', 'symbol': '@', 'width': 79}
     help_text = {'help': HELP_TEXT, 'license': LICENSE}
     rules = RULES
     word_list = 'other_games/3of6game.txt'
@@ -171,6 +172,61 @@ class Interface(other_cmd.OtherCmd):
             self.do_play(line)
         else:
             self.human.error('\nThat is an invalid selection.')
+
+    def do_cell(self, arguments):
+        """
+        Run an elementary cellular automaton.
+        """
+        # Parse arguments.
+        words = arguments.replace('=', ' ').split()
+        parsed = {}
+        while words:
+            value = words.pop()
+            # watch for invalid pairs.
+            if words:
+                key = words.pop()
+                if key in ('width', 'rule'):
+                    parsed[key] = int(value)
+                else:
+                    parsed[key] = value
+        # Update from the default arguments.
+        args = self.cell_defaults.copy()
+        args.update(parsed)
+        # Set the starting population.
+        if args['start'] == 'random':
+            # Start with a random population.
+            last = ''
+            for cell in range(args['width']):
+                if random.random() < 0.5:
+                    last += args['symbol']
+                else:
+                    last += ' '
+        elif set(args['start']) == set('.@'):
+            # Start with a default population.
+            last = ''.join(' ' if char == '.' else args['symbol'] for char in args['start'])
+            last = last.center(args['width'])
+        else:
+            # Start with a single live cell.
+            last = args['symbol'].center(args['width'])
+        # Generate the rule dictionary.
+        numbers = {}
+        for digit in range(2 ** args['hood']):
+            match = bin(digit + 2 ** args['hood'])[3:].replace('0', ' ').replace('1', args['symbol'])
+            numbers[match] = 2 ** digit
+        # Run the automaton for the specified number of generations.
+        self.human.tell()
+        for generation in range(args['length']):
+            self.human.tell(last)
+            last = ' {} '.format(last)
+            current = ''
+            for index in range(len(last) - 2):
+                if args['rule'] & numbers[last[index:index + 3]]:
+                    current += args['symbol']
+                else:
+                    current += ' '
+            last = current
+        # Let the user peruse the results before going back to the menu.
+        self.human.ask('\nPress enter to continue: ')
 
     def do_credits(self, arguments):
         """
