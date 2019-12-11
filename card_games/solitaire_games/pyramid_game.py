@@ -47,9 +47,9 @@ foundation.
 
 Options:
 cells= (c): The number of free cells available. 0 to 10, defaults to 0.
-giza: Fully open game with 8 reserve piles. Equivalent to 'reserve=8
+giza (g): Fully open game with 8 reserve piles. Equivalent to 'reserve=8
     reserve-rows=3'.
-klondike: Klondike style stock and waste. Equivalent to 'passes=-1
+klondike (k): Klondike style stock and waste. Equivalent to 'passes=-1
     turn-count=3'.
 passes= (p): The number of passes through the stock you get. -1 gives
     unlimited passes. If this is not one, the standard-turn option is in
@@ -249,8 +249,8 @@ class Pyramid(solitaire.Solitaire):
         # Set the solitaire options.
         self.options = {'max-passes': 1, 'num-foundations': 1, 'num-tableau': 7, 'turn-count': 1}
         # Set the option groups.
-        self.option_set.add_group('giza', 'reserve=8 reserve-rows=3')
-        self.option_set.add_group('klondike', 'passes=-1 turn-count=3')
+        self.option_set.add_group('giza', ['g'], 'reserve=8 reserve-rows=3')
+        self.option_set.add_group('klondike', ['k'], 'passes=-1 turn-count=3')
         # Set the game options.
         # Set the stock and waste options.
         self.option_set.add_option('passes', ['p'], int, action = "key=max-passes", default = 1,

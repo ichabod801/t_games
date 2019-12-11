@@ -1218,14 +1218,10 @@ class TenThousand(game.Game):
         """Set the options for the game. (None)"""
         # Note that cosmic wimpout is zilch / cc cr d0 e=350 5d fc f6 m=0 ns ss tw wild w=5000
         # Add name variants.
-        self.option_set.add_group('5000', 'w=5000')
-        self.option_set.add_group('5k', 'w=5000')
-        wimpout = '5d e=350 5m=1000 wd fc cc f6 w=5000 ms'
-        self.option_set.add_group('wimpout', wimpout)
-        self.option_set.add_group('wo', wimpout)
+        self.option_set.add_group('5000', ['5k'], 'w=5000')
+        self.option_set.add_group('wimpout', ['wo'], '5d e=350 5m=1000 wd fc cc f6 w=5000 ms')
         gonzo = '3p=600 s=1500 fh=250 4m=200 5m=400 6m=800 3s=500 tw co cc fc f6 e=350 mg 2c ex iw wd'
-        self.option_set.add_group('gonzo', gonzo)
-        self.option_set.add_group('gz', gonzo)
+        self.option_set.add_group('gonzo', ['gz'], gonzo)
         # Set the bot options.
         self.option_set.default_bots = ((ProbabilityBot, ()), (ValueBot, ()), (ModifierBot, ()))
         self.option_set.add_option('base-pace', ['bp'],  action = 'bot', target = 'base-pace', value = (),

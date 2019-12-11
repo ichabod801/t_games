@@ -79,9 +79,10 @@ cards= (c=): The number of cards dealt (default = 6).
 discards= (d=): The number of cards discarded (default = 2).
 double-skunk= (ds=): The score needed to avoid a double skunk (default = 0).
 fast: Equivalent to auto-go auto-score no-cut no-pick.
-five-card (5-card): equivalent to one-go cards=5 discards=1 target-score=61
+five-card (5-card, 5c): equivalent to one-go cards=5 discards=1 target-score=61
     skunk=31 last=3
-four-partners (4-partners): equivalent to n-bots=3 partners cards=5 discards=1
+four-partners (4-partners, 4p): equivalent to n-bots=3 partners cards=5
+    discards=1
 last= (l=): The initial score of the last player to play (default = 0).
 match= (m=): The number of games to play in a match. (default = 1).
     Match results only make sense for two player games.
@@ -90,7 +91,7 @@ no-cut (!c): Skip cutting the deck before the deal.
 no-pick (!p): Skip picking a card to see who deals first.
 one-go (1g): There is only one round of play, that is, only one go.
 partners (p): Pair players off into teams.
-seven-card (7-card): equivalent to cards=7 target-score=181 skunk=151
+seven-card (7-card, 7c): equivalent to cards=7 target-score=181 skunk=151
 skunk= (s=): The score to avoid a skunk (defualt = 91, only in match play).
 skunk-scores= (ss=): How to score wins/skunks/double skunks
     acc: 2/3/3
@@ -102,8 +103,8 @@ skunk-scores= (ss=): How to score wins/skunks/double skunks
 solo (1): The players are teamed against the dealer, and the dealer can swap
     cards with the crib. The dealer scores first, along with the crib.
 target-score= (win=): The score needed to win (default = 121).
-three-solo (3-solo): Equivalent to one-go cards=5 discards=1 win=61 skunk=31
-    n-bots=2 solo
+three-solo (3-solo, 3s): Equivalent to one-go cards=5 discards=1 win=61
+    skunk=31 n-bots=2 solo
 """
 
 
@@ -807,17 +808,12 @@ class Cribbage(game.Game):
             default = 'acc', question = 'Should match scores be ACC, long, free, or triple? ')
         # Set the variant groups.
         five_card = 'one-go cards=5 discards=1 win=61 skunk=31 last=3'
-        self.option_set.add_group('five-card', five_card)
-        self.option_set.add_group('5-card', five_card)
-        seven_card = 'cards=7 win=181 skunk=151'
-        self.option_set.add_group('seven-card', seven_card)
-        self.option_set.add_group('7-card', seven_card)
+        self.option_set.add_group('five-card', ['5-card', '5c'], five_card)
+        self.option_set.add_group('seven-card', ['7-card', '7c'], 'cards=7 win=181 skunk=151')
         four_partners = 'n-bots=3 partners cards=5 discards=1'
-        self.option_set.add_group('four-partners', four_partners)
-        self.option_set.add_group('4-partners', four_partners)
+        self.option_set.add_group('four-partners', ['4-partners', '4p'], four_partners)
         three_solo = 'one-go cards=5 discards=1 win=61 skunk=31 n-bots=2 solo'
-        self.option_set.add_group('three-solo', three_solo)
-        self.option_set.add_group('3-solo', three_solo)
+        self.option_set.add_group('three-solo', ['3-solo', '3s'], three_solo)
         # Interface options (do not count in num_options)
         self.option_set.add_group('fast', 'auto-go auto-score no-cut no-pick')
         self.option_set.add_option('auto-go', ['ag'],
@@ -1076,7 +1072,7 @@ class CribCard(cards.Card):
     __sub__
     """
 
-    def __init__(self, rank, suit):
+    def __init__(self, rank, suit, down_text = '??', ace_high = False):
         """
         Set up the card. (None)
 
@@ -1084,7 +1080,7 @@ class CribCard(cards.Card):
         rank: The rank of the card. (str)
         suit: The suit of the card. (str)
         """
-        super(CribCard, self).__init__(rank, suit)
+        super(CribCard, self).__init__(rank, suit, down_text, ace_high)
         self.value = min(self.ranks.index(self.rank), 10)
 
     def __add__(self, other):

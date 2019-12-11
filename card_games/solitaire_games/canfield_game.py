@@ -41,22 +41,22 @@ Stacks on the tableau may be moved, but only if the whole stack is moved.
 
 Options:
 build= (b): How tableau piles are built by suit. (alt-color, suit, or any)
-chameleon: Equivalent to 'build=any max-passes=1 partial-move reserve=12
+chameleon (ch): Equivalent to 'build=any max-passes=1 partial-move reserve=12
     tableau=3 turn-count=1'
 foundation= (f): The rank to start the foundations with.
 free-lane (fl): Empty tableau piles may be filled by any card.
 max-passes= (mp): How many passes you get through the deck, -1 for infinite.
 partial-move (pm): Parts of piles may be moved on the tableau.
-rainbow: Equivalent to 'build=any'.
-rainbow-one: Equivalent to 'build=any max-passes=2 turn-count=1'.
+rainbow (rb): Equivalent to 'build=any'.
+rainbow-one (rb1): Equivalent to 'build=any max-passes=2 turn-count=1'.
 reserve-size= (rs): How many cards go into the reserve. (10-15)
 selective (s): Deal five cards, choose which goes on a foundation.
-storehouse: Equivalent to 'build=suit foundation=2 max-passes=2 turn-count=1'.
-superior: Equivalent to 'visible-reserve free-lane'.
+storehouse (sh): Equivalent to 'build=suit foundation=2 max-passes=2 turn-count=1'.
+superior (sup): Equivalent to 'visible-reserve free-lane'.
 tableau= (t): How many tableau piles there are. (3-5)
 turn-count= (tc): How many cards get turned over from the stock at a time.
-two-by-one: Equivalent to 'max-passes=2 turn-count=1'
-visible-reserve: Deal the reserve face up.
+two-by-one (2x1): Equivalent to 'max-passes=2 turn-count=1'
+visible-reserve (vr): Deal the reserve face up.
 """
 
 
@@ -200,13 +200,13 @@ class Canfield(solitaire.Solitaire):
         self.option_set.add_option('partial-move', ['pm'],
             question = 'Should you be able to move partial stacks? bool')
         # Set the option groups.
-        self.option_set.add_group('chameleon',
+        self.option_set.add_group('chameleon', ['ch'],
             'build=any max-passes=1 partial-move reserve-size=12 tableau=3 turn-count=1')
-        self.option_set.add_group('rainbow', 'build=any')
-        self.option_set.add_group('rainbow-one', 'build=any max-passes=2 turn-count=1')
-        self.option_set.add_group('storehouse', 'build=suit foundation=2 max-passes=2 turn-count=1')
-        self.option_set.add_group('superior', 'visible-reserve free-lane')
-        self.option_set.add_group('two-by-one', 'max-passes=2 turn-count=1')
+        self.option_set.add_group('rainbow', ['rb'], 'build=any')
+        self.option_set.add_group('rainbow-one', ['rb1'], 'build=any max-passes=2 turn-count=1')
+        self.option_set.add_group('storehouse', ['sh'], 'build=suit foundation=2 max-passes=2 turn-count=1')
+        self.option_set.add_group('superior', ['sup'], 'visible-reserve free-lane')
+        self.option_set.add_group('two-by-one', ['2x1'], 'max-passes=2 turn-count=1')
 
     def superior_text(self):
         """Generate text for the reserve in the superior variant. (str)"""
