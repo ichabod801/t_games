@@ -203,7 +203,7 @@ class Interface(other_cmd.OtherCmd):
             # watch for invalid pairs.
             if words:
                 key = words.pop()
-                if key in ('length', 'rule', 'width'):
+                if key in ('hood', 'length', 'rule', 'width'):
                     if value.isdigit():
                         parsed[key] = int(value)
                 else:
@@ -233,13 +233,14 @@ class Interface(other_cmd.OtherCmd):
             match = bin(digit + 2 ** args['hood'])[3:].replace('0', ' ').replace('1', args['symbol'])
             numbers[match] = 2 ** digit
         # Run the automaton for the specified number of generations.
+        padding = ' ' * (args['hood'] // 2)
         self.human.tell()
         for generation in range(args['length']):
             self.human.tell(last)
-            last = ' {} '.format(last)
+            last = '{}{}{}'.format(padding, last, padding)
             current = ''
-            for index in range(len(last) - 2):
-                if args['rule'] & numbers[last[index:index + 3]]:
+            for index in range(len(last) - 2 * len(padding)):
+                if args['rule'] & numbers[last[index:index + args['hood']]]:
                     current += args['symbol']
                 else:
                     current += ' '
