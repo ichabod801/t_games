@@ -154,6 +154,30 @@ class Interface(other_cmd.OtherCmd):
             search.extend(list(category['sub-categories'].values()))
         return games
 
+    def cell_start(self, args):
+        """
+        Set the starting population for the cell command. (str)
+
+        Parameters:
+        args: The arguments to the cell command. (dict)
+        """
+        if args['start'] == 'random':
+            # Start with a random population.
+            start = ''
+            for cell in range(args['width']):
+                if random.random() < 0.5:
+                    start += args['symbol']
+                else:
+                    start += ' '
+        elif set(args['start']) == set('.@'):
+            # Start with a default population.
+            start = ''.join(' ' if char == '.' else args['symbol'] for char in args['start'])
+            start = start.center(args['width'])
+        else:
+            # Start with a single live cell.
+            start = args['symbol'].center(args['width'])
+        return start
+
     def default(self, line):
         """
         Handle unrecognized user input. (bool)
@@ -181,19 +205,21 @@ class Interface(other_cmd.OtherCmd):
         otherwise you might not get what you expected. Arguments available are:
 
         hood: The size of the neighbor hood. Defaults to 3, which has 256 possible
-            rules. Moving it up to 5 results in over 4 billion possible rules.
+            rules. Moving it up to 5 results in over 4 billion possible rules. Changing
+            hood to 4 results in 65536 possible rules, but it is asymetrical, biasing
+            to the left.
         length: The number of generations calculated (rows printed). Defaults to 27.
         rule: The rule to use, in Wolfram code. Defaults to 110.
         start: The starting population. It can be:
             'random': 50% chance of any cell being alive (the default)
             a popluation string: A string of . (dead) and @ (alive). Populations
                 shorter than the width gets centered in the output.
-            anything else: Anything the computer doesn't understand becomes on live
+            anything else: Anything the computer doesn't understand becomes one live
                 cell in the middle. Equivalent to 'start = @'.
         symbol: The symbol to use for live cells. Defaults to '@'.
         width: How many characters across the rows should be. Defaults to 79.
 
-        Non-integer values for length, rule, or width will be ignored.
+        Non-integer values for hood, length, rule, or width will be ignored.
         """
         # Parse arguments.
         words = arguments.replace('=', ' ').split()
@@ -212,21 +238,7 @@ class Interface(other_cmd.OtherCmd):
         args = self.cell_defaults.copy()
         args.update(parsed)
         # Set the starting population.
-        if args['start'] == 'random':
-            # Start with a random population.
-            last = ''
-            for cell in range(args['width']):
-                if random.random() < 0.5:
-                    last += args['symbol']
-                else:
-                    last += ' '
-        elif set(args['start']) == set('.@'):
-            # Start with a default population.
-            last = ''.join(' ' if char == '.' else args['symbol'] for char in args['start'])
-            last = last.center(args['width'])
-        else:
-            # Start with a single live cell.
-            last = args['symbol'].center(args['width'])
+        last = self.cell_start(args)
         # Generate the rule dictionary.
         numbers = {}
         for digit in range(2 ** args['hood']):
@@ -239,7 +251,7 @@ class Interface(other_cmd.OtherCmd):
             self.human.tell(last)
             last = '{}{}{}'.format(padding, last, padding)
             current = ''
-            for index in range(len(last) - 2 * len(padding)):
+            for index in range(args['width']):
                 if args['rule'] & numbers[last[index:index + args['hood']]]:
                     current += args['symbol']
                 else:
