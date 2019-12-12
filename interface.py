@@ -117,7 +117,8 @@ class Interface(other_cmd.OtherCmd):
     default
     """
 
-    cell_defaults = {'hood': 3, 'length': 27, 'rule': 110, 'start': 'random', 'symbol': '@', 'width': 79}
+    cell_defaults = {'border': 'dead', 'hood': 3, 'length': 27, 'rule': 110, 'start': 'random',
+        'symbol': '@', 'width': 79}
     help_text = {'help': HELP_TEXT, 'license': LICENSE}
     rules = RULES
     word_list = 'other_games/3of6game.txt'
@@ -204,6 +205,9 @@ class Interface(other_cmd.OtherCmd):
         Arguments call be given in 'key = value' pairs. Be sure to use pairs, because
         otherwise you might not get what you expected. Arguments available are:
 
+        border: The behavior of the cells just outside the population. It can be 'dead'
+            (the default), 'live' (the border cells are permanently alive), or 'wrap'
+            (the left border is adjacent to the right border).
         hood: The size of the neighbor hood. Defaults to 3, which has 256 possible
             rules. Moving it up to 5 results in over 4 billion possible rules. Changing
             hood to 4 results in 65536 possible rules, but it is asymetrical, biasing
@@ -244,12 +248,22 @@ class Interface(other_cmd.OtherCmd):
         for digit in range(2 ** args['hood']):
             match = bin(digit + 2 ** args['hood'])[3:].replace('0', ' ').replace('1', args['symbol'])
             numbers[match] = 2 ** digit
+        # Set the behavior of the border cells
+        border = 0
+        if args['border'] == 'live':
+            padding = args['symbol'] * (args['hood'] // 2)
+        elif args['border'] == 'wrap':
+            border = args['hood'] // 2
+        else:
+            padding = ' ' * (args['hood'] // 2)
         # Run the automaton for the specified number of generations.
-        padding = ' ' * (args['hood'] // 2)
         self.human.tell()
         for generation in range(args['length']):
             self.human.tell(last)
-            last = '{}{}{}'.format(padding, last, padding)
+            if border:
+                last = '{}{}{}'.format(last[-border:], last, last[:border])
+            else:
+                last = '{}{}{}'.format(padding, last, padding)
             current = ''
             for index in range(args['width']):
                 if args['rule'] & numbers[last[index:index + args['hood']]]:
