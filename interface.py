@@ -191,7 +191,9 @@ class Interface(other_cmd.OtherCmd):
             anything else: Anything the computer doesn't understand becomes on live
                 cell in the middle. Equivalent to 'start = @'.
         symbol: The symbol to use for live cells. Defaults to '@'.
-        width: How many characters across the rows should be. Defaults to 79
+        width: How many characters across the rows should be. Defaults to 79.
+
+        Non-integer values for length, rule, or width will be ignored.
         """
         # Parse arguments.
         words = arguments.replace('=', ' ').split()
@@ -201,8 +203,9 @@ class Interface(other_cmd.OtherCmd):
             # watch for invalid pairs.
             if words:
                 key = words.pop()
-                if key in ('width', 'rule'):
-                    parsed[key] = int(value)
+                if key in ('length', 'rule', 'width'):
+                    if value.isdigit():
+                        parsed[key] = int(value)
                 else:
                     parsed[key] = value
         # Update from the default arguments.
