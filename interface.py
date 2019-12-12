@@ -100,6 +100,8 @@ class Interface(other_cmd.OtherCmd):
 
     Methods:
     category_games: Get the games in the current category. (list of game.Game)
+    cell_start: Set the starting population for the cell command. (str)
+    do_cell: Run an elementary cellular automaton. (bool)
     do_credits: Show the programming credits for the interface. (bool)
     do_games: List the available games. (bool)
     do_home: Go to the top of the menu tree. (bool)
@@ -174,6 +176,24 @@ class Interface(other_cmd.OtherCmd):
             # Start with a default population.
             start = ''.join(' ' if char == '.' else args['symbol'] for char in args['start'])
             start = start.center(args['width'])
+        elif args['start'].isdigit():
+            # Start with a set number of live cells, randomly dispersed.
+            live = min(int(args['start']), args['width'])
+            cells = [args['symbol']] * live + [' '] * (args['width'] - live)
+            random.shuffle(cells)
+            start = ''.join(cells)
+        elif args['start'] in ('primes', 'fibonacci'):
+            # Start with the prime numbers or the fibonacci numbers.
+            if args['start'] == 'primes':
+                numbers = utility.PRIMES
+            else:
+                numbers = utility.FIBONACCI
+            cells = [' '] * args['width']
+            for number in numbers:
+                if number > args['width']:
+                    break
+                cells[number - 1] = args['symbol']
+            start = ''.join(cells)
         else:
             # Start with a single live cell.
             start = args['symbol'].center(args['width'])
@@ -216,6 +236,10 @@ class Interface(other_cmd.OtherCmd):
         rule: The rule to use, in Wolfram code. Defaults to 110.
         start: The starting population. It can be:
             'random': 50% chance of any cell being alive (the default)
+            'fibonacci': Live cells in the positions of the fibonnacci numbers (up to
+                200).
+            'primes': Live cells in the positions of the prime numbers (up to 200).
+            an integer: That many live cells randomly dispersed in the population.
             a popluation string: A string of . (dead) and @ (alive). Populations
                 shorter than the width gets centered in the output.
             anything else: Anything the computer doesn't understand becomes one live
