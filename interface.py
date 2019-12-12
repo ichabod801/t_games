@@ -176,6 +176,22 @@ class Interface(other_cmd.OtherCmd):
     def do_cell(self, arguments):
         """
         Run an elementary cellular automaton.
+
+        Arguments call be given in 'key = value' pairs. Be sure to use pairs, because
+        otherwise you might not get what you expected. Arguments available are:
+
+        hood: The size of the neighbor hood. Defaults to 3, which has 256 possible
+            rules. Moving it up to 5 results in over 4 billion possible rules.
+        length: The number of generations calculated (rows printed). Defaults to 27.
+        rule: The rule to use, in Wolfram code. Defaults to 110.
+        start: The starting population. It can be:
+            'random': 50% chance of any cell being alive (the default)
+            a popluation string: A string of . (dead) and @ (alive). Populations
+                shorter than the width gets centered in the output.
+            anything else: Anything the computer doesn't understand becomes on live
+                cell in the middle. Equivalent to 'start = @'.
+        symbol: The symbol to use for live cells. Defaults to '@'.
+        width: How many characters across the rows should be. Defaults to 79
         """
         # Parse arguments.
         words = arguments.replace('=', ' ').split()
