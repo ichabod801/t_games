@@ -84,6 +84,7 @@ class Game(OtherCmd):
     Methods:
     clean_up: Handle any end of game tasks. (None)
     do_credits: Show the credits. (bool)
+    do_info: Show the rules, credits, and options. (bool)
     do_options: Show the options text. (bool)
     do_quit: Quit the game, which counts as a loss. (bool)
     do_quit_quit: Quit the game and the t_games interface. (bool)
@@ -195,6 +196,15 @@ class Game(OtherCmd):
         """
         self.flags |= 2
         return super(Game, self).do_debug(arguments)
+
+    def do_info(self, arguments):
+        """
+        Show the rules, credits, and options for the game.
+        """
+        template = '\nRULES:\n\n{}\n\nCREDITS:\n\n{}\n\nOPTIONS:\n\n{}'
+        info = (self.rules.strip(), self.credits.strip(), self.options.strip())
+        self.human.tell(template.format(*info))
+        return True
 
     def do_options(self, arguments):
         """
