@@ -84,6 +84,7 @@ class Game(OtherCmd):
     Methods:
     clean_up: Handle any end of game tasks. (None)
     do_credits: Show the credits. (bool)
+    do_options: Show the options text. (bool)
     do_quit: Quit the game, which counts as a loss. (bool)
     do_quit_quit: Quit the game and the t_games interface. (bool)
     do_rpn: Process reverse Polish notation statements to do calculations. (None)
@@ -107,7 +108,7 @@ class Game(OtherCmd):
     aka = []
     aliases = {'!!': 'quit_quit', '=': 'rpn', '!': 'quit'}
     categories = ['Test Games']
-    credits = 'No credits have been specified for this game.'
+    credits = '\nNo credits have been specified for this game.'
     help_text = {'help': '\nUse the rules command for instructions on how to play.'}
     int_re = re.compile('-?\d*$')
     float_re = re.compile('-?\d*\.\d+')
@@ -120,7 +121,8 @@ class Game(OtherCmd):
         '/': (operator.truediv, 2), 'ab/c': (lambda a, b, c: a + b / c, 3), 'cos': (math.cos, 1),
         'ln': (math.log, 1), 'log': (math.log10, 1), 'R': (random.random, 0), 'F': (utility.flip, 0),
         'sin': (math.sin, 1), 'V': (math.sqrt, 1), 'tan': (math.tan, 1)}
-    rules = 'No rules have been specified for this game.'
+    options = '\nNo options have been specified for this game.'
+    rules = '\nNo rules have been specified for this game.'
 
     def __init__(self, human, raw_options, interface = None, silent = False):
         """
@@ -193,6 +195,13 @@ class Game(OtherCmd):
         """
         self.flags |= 2
         return super(Game, self).do_debug(arguments)
+
+    def do_options(self, arguments):
+        """
+        Show the options for the game.
+        """
+        self.human.tell(self.options.rstrip())
+        return True
 
     def do_quit(self, arguments):
         """
@@ -662,6 +671,7 @@ class Fireball(Game):
     credits = '\nDesign and programming by Craig "Ichabod" O''Brien.'
     name = 'Fireball'
     num_options = 1
+    options = '\nAnything you specify as an option will become your target.'
     rules = '\nPlay more games.'
 
     def game_over(self):
@@ -743,6 +753,7 @@ class Sorter(Game):
     credits = '\nDesign and programming by Craig "Ichabod" O''Brien.'
     name = 'Sorter'
     num_options = 1
+    options = '\nAn integer provided as an option will determine the length of the sequence.'
     rules = '\nEach turn, swap two numbers. If you can sort the list with a minimum of swaps, you win.'
 
     def game_over(self):
