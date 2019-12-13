@@ -100,6 +100,8 @@ class Interface(other_cmd.OtherCmd):
 
     Methods:
     category_games: Get the games in the current category. (list of game.Game)
+    cell_start: Set the starting population for the cell command. (str)
+    do_cell: Run an elementary cellular automaton. (bool)
     do_credits: Show the programming credits for the interface. (bool)
     do_games: List the available games. (bool)
     do_home: Go to the top of the menu tree. (bool)
@@ -117,6 +119,8 @@ class Interface(other_cmd.OtherCmd):
     default
     """
 
+    cell_defaults = {'border': 'dead', 'hood': 3, 'length': 27, 'rule': 110, 'start': 'random',
+        'symbol': '@', 'width': 79}
     help_text = {'help': HELP_TEXT, 'license': LICENSE}
     rules = RULES
     word_list = 'other_games/3of6game.txt'
@@ -153,6 +157,48 @@ class Interface(other_cmd.OtherCmd):
             search.extend(list(category['sub-categories'].values()))
         return games
 
+    def cell_start(self, args):
+        """
+        Set the starting population for the cell command. (str)
+
+        Parameters:
+        args: The arguments to the cell command. (dict)
+        """
+        if args['start'] == 'random':
+            # Start with a random population.
+            start = ''
+            for cell in range(args['width']):
+                if random.random() < 0.5:
+                    start += args['symbol']
+                else:
+                    start += ' '
+        elif set(args['start']) == set('.@'):
+            # Start with a default population.
+            start = ''.join(' ' if char == '.' else args['symbol'] for char in args['start'])
+            start = start.center(args['width'])
+        elif args['start'].isdigit():
+            # Start with a set number of live cells, randomly dispersed.
+            live = min(int(args['start']), args['width'])
+            cells = [args['symbol']] * live + [' '] * (args['width'] - live)
+            random.shuffle(cells)
+            start = ''.join(cells)
+        elif args['start'] in ('primes', 'fibonacci'):
+            # Start with the prime numbers or the fibonacci numbers.
+            if args['start'] == 'primes':
+                numbers = utility.PRIMES
+            else:
+                numbers = utility.FIBONACCI
+            cells = [' '] * args['width']
+            for number in numbers:
+                if number > args['width']:
+                    break
+                cells[number - 1] = args['symbol']
+            start = ''.join(cells)
+        else:
+            # Start with a single live cell.
+            start = args['symbol'].center(args['width'])
+        return start
+
     def default(self, line):
         """
         Handle unrecognized user input. (bool)
@@ -171,6 +217,86 @@ class Interface(other_cmd.OtherCmd):
             self.do_play(line)
         else:
             self.human.error('\nThat is an invalid selection.')
+
+    def do_cell(self, arguments):
+        """
+        Run an elementary cellular automaton.
+
+        Arguments call be given in 'key = value' pairs. Be sure to use pairs, because
+        otherwise you might not get what you expected. Arguments available are:
+
+        border: The behavior of the cells just outside the population. It can be 'dead'
+            (the default), 'live' (the border cells are permanently alive), or 'wrap'
+            (the left border is adjacent to the right border).
+        hood: The size of the neighbor hood. Defaults to 3, which has 256 possible
+            rules. Moving it up to 5 results in over 4 billion possible rules. Changing
+            hood to 4 results in 65536 possible rules, but it is asymetrical, biasing
+            to the left.
+        length: The number of generations calculated (rows printed). Defaults to 27.
+        rule: The rule to use, in Wolfram code. Defaults to 110.
+        start: The starting population. It can be:
+            'random': 50% chance of any cell being alive (the default)
+            'fibonacci': Live cells in the positions of the fibonnacci numbers (up to
+                200).
+            'primes': Live cells in the positions of the prime numbers (up to 200).
+            an integer: That many live cells randomly dispersed in the population.
+            a popluation string: A string of . (dead) and @ (alive). Populations
+                shorter than the width gets centered in the output.
+            anything else: Anything the computer doesn't understand becomes one live
+                cell in the middle. Equivalent to 'start = @'.
+        symbol: The symbol to use for live cells. Defaults to '@'.
+        width: How many characters across the rows should be. Defaults to 79.
+
+        Non-integer values for hood, length, rule, or width will be ignored.
+        """
+        # Parse arguments.
+        words = arguments.replace('=', ' ').split()
+        parsed = {}
+        while words:
+            value = words.pop()
+            # watch for invalid pairs.
+            if words:
+                key = words.pop()
+                if key in ('hood', 'length', 'rule', 'width'):
+                    if value.isdigit():
+                        parsed[key] = int(value)
+                else:
+                    parsed[key] = value
+        # Update from the default arguments.
+        args = self.cell_defaults.copy()
+        args.update(parsed)
+        # Set the starting population.
+        last = self.cell_start(args)
+        # Generate the rule dictionary.
+        numbers = {}
+        for digit in range(2 ** args['hood']):
+            match = bin(digit + 2 ** args['hood'])[3:].replace('0', ' ').replace('1', args['symbol'])
+            numbers[match] = 2 ** digit
+        # Set the behavior of the border cells
+        border = 0
+        if args['border'] == 'live':
+            padding = args['symbol'] * (args['hood'] // 2)
+        elif args['border'] == 'wrap':
+            border = args['hood'] // 2
+        else:
+            padding = ' ' * (args['hood'] // 2)
+        # Run the automaton for the specified number of generations.
+        self.human.tell()
+        for generation in range(args['length']):
+            self.human.tell(last)
+            if border:
+                last = '{}{}{}'.format(last[-border:], last, last[:border])
+            else:
+                last = '{}{}{}'.format(padding, last, padding)
+            current = ''
+            for index in range(args['width']):
+                if args['rule'] & numbers[last[index:index + args['hood']]]:
+                    current += args['symbol']
+                else:
+                    current += ' '
+            last = current
+        # Let the user peruse the results before going back to the menu.
+        self.human.ask('\nPress enter to continue: ')
 
     def do_credits(self, arguments):
         """
