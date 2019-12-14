@@ -10,6 +10,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Chess. (str)
+OPTIONS: The options for Chess. (str)
 RULES: The rules of Chess. (str)
 
 Classes:
@@ -32,6 +33,21 @@ CREDITS = """
 Game Design: Traditional
 Game Programmming: Thomas Ahle (Sunfish chess engine)
     Craig O'Brien (t_games wrapper for Sunfish)
+"""
+
+OPTIONS = """
+black (b): Play as black. If neither black are or white options are used, the
+    color of your pieces is determined randomly.
+difficulty= (d=): How many tenths of a second the computer player gets to
+    choose their move (defaults to 20).
+fen= (f=): The FEN for the starting position. Note that any spaces in the FEN
+    string must be replaced with pipes (|).
+opening= (o=): The opening position to start with. Options include Caro-Kann,
+    French, Indian, Italian, Pirc, Queens-Gambit, Ruy-Lopez, and Sicilian.
+unicode (uni, u): Show the unicode chess piece characters, if your terminal
+    supports them.
+white (w): Play as white. If neither black are or white options are used, the
+    color of your pieces is determined randomly.
 """
 
 RULES = """
@@ -77,20 +93,6 @@ letters along the bottom and the numbers along the side. So the white king
 starts on e1. To move a piece, simply enter the square it is on and the
 square you want to move it to. Alternatively you can use algebraic notation or
 ICCF numeric notation.
-
-Options:
-black (b): Play as black. If neither black are or white options are used, the
-    color of your pieces is determined randomly.
-difficulty= (d=): How many tenths of a second the computer player gets to
-    choose their move (defaults to 20).
-fen= (f=): The FEN for the starting position. Note that any spaces in the FEN
-    string must be replaced with pipes (|).
-opening= (o=): The opening position to start with. Options include Caro-Kann,
-    French, Indian, Italian, Pirc, Queens-Gambit, Ruy-Lopez, and Sicilian.
-unicode (uni, u): Show the unicode chess piece characters, if your terminal
-    supports them.
-white (w): Play as white. If neither black are or white options are used, the
-    color of your pieces is determined randomly.
 """
 
 
@@ -155,6 +157,7 @@ class Chess(game.Game):
         'ruy-lopez': 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R|w|KQkq|-|0|3',
         'sicilian': 'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/RNBQKBNR|w|KQkq|-|0|2',
         'mate-test': '8/5K1k/8/6Q1/8/8/8/8|w|-|-|0|81'}
+    options = OPTIONS
     unicode_pieces = {'R':'♜', 'N':'♞', 'B':'♝', 'Q':'♛', 'K':'♚', 'P':'♟',
         'r':'♖', 'n':'♘', 'b':'♗', 'q':'♕', 'k':'♔', 'p':'♙', '.':'·'}
 

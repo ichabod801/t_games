@@ -14,6 +14,7 @@ Constants:
 ADJACENT: Adjacent points on a dodecahedron. (list of tuple of int)
 CREDITS: The game design and programming credits. (str)
 DESCRIPTIONS: The room descriptions. (list of str)
+OPTIONS: The options for Hunt the Wumpus. (str)
 RULES: Text describing the game. (str)
 
 Classes:
@@ -45,6 +46,10 @@ DESCRIPTIONS = ['wumpus dung in the corner', '', '', '', '', 'ants crawling all 
     'several notches marked on the wall', 'an obelisk carved out of a stalagmite', 'a tall roof',
     'a skull on the floor', 'a big red X marked on the floor']
 
+OPTIONS = """
+arrows= (a=): How many arrows you get. (1 to 5, defaults to 5)
+"""
+
 RULES = """
 The goal is to search the cave system for the wumpus, a large and heavy beast
 with a gaping maw and wall-climbing suckers it's claws. You also have to watch
@@ -63,10 +68,6 @@ The commands are:
    SHOOT: Shoot a crooked arrow. You can provide 1-3 directions for the arrow
       to travel through the passages (frex, SHOOT LRL).
    RULES: Read these fascinating, well written instructions again.
-"""
-
-OPTIONS = """
-arrows= (a=): How many arrows you get. (1 to 5, defaults to 5)
 """
 
 

@@ -17,6 +17,7 @@ CONTACT_WEIGHTS: Weights for PubEvalBot while there's' contact. (list of float)
 CREDITS: The credits for the game. (str)
 FRAME_HIGH: The top of the frame for displaying the board. (list of str)
 FRAME_LOW: The bottom of the frame for displaying the board. (list of str)
+OPTIONS: The options for Backgammon. (str)
 OUT: The index for pieces born off the board. (int)
 RACE_WEIGHTS: Weights for PubEvalBot while it's a race. (list of float)
 RULES: The rules of Backgammon. (str)
@@ -71,6 +72,13 @@ FRAME_HIGH = ['  1 1 1 1 1 1   1 2 2 2 2 2  ', '  3 4 5 6 7 8   9 0 1 2 3 4  ',
 
 FRAME_LOW = ['+-------------+-------------+', '  1 1 1                      ',
     '  2 1 0 9 8 7   6 5 4 3 2 1  ']
+
+OPTIONS = """
+o: The human player plays with the red (O) pieces.
+layout (l): Which layout to use: long (lg), standard (st), nack (nk), or
+    hyper (hy).
+match (m): The winning match score. Defaults to 1, or non-match play.
+"""
 
 OUT = -2
 
@@ -140,12 +148,6 @@ the stakes, control of the doubling die goes to the player who accepted the
 doubling of the stakes, and only they can double the stakes again.
 
 You may get both players' pip counts at any time with the pips command.
-
-Options:
-o: The human player plays with the red (O) pieces.
-layout (l): Which layout to use: long (lg), standard (st), nack (nk), or
-    hyper (hy).
-match (m): The winning match score. Defaults to 1, or non-match play.
 """
 
 START = -3
@@ -896,6 +898,7 @@ class Backgammon(game.Game):
         'st': ((6, 5), (8, 3), (13, 5), (24, 2))}
     name = 'Backgammon'
     num_options = 3
+    options = OPTIONS
     rules = RULES
 
     def auto_bear(self, player, piece):

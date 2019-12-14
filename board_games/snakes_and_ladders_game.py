@@ -6,6 +6,11 @@ A game of Snakes and Ladders
 Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
+Constants:
+CREDITS: The credits for ConnectFour. (str)
+OPTIONS: The options for ConnectFour. (str)
+RULES: The rules for ConnectFour. (str)
+
 Classes:
 SnakeBoard: A boustrophedon baord for Snakes and Ladders. (board.Lineboard)
 SnakeBot: A basic bot for Snakes and Ladders. (player.Bot)
@@ -27,16 +32,7 @@ Game Design: Traditional (India)
 Game Programming: Craig "Ichabod" O'Brien
 """
 
-RULES = """
-The game consists of a square grid of numbered squares, with snakes and
-laddders connecting non-adjacent squares. The board follows a boustrophedon
-(back and forth ox-plow) path from the bottom to the top. Each turn you roll
-a die, which determines how many squares forward you move. If you roll a 6
-you get to roll again. If you end any move at the top of a snake or the
-bottom of a ladder, you move down the snake or up the ladder to the square at
-the other end. The first one to get to or past the end of the board wins.
-
-Options:
+OPTIONS = """
 bots= (b=): How many bots you play against. (1-11, default is 3)
 exact= (x=): You must land on the last space exactly to win. If exact is
     'bounce', you bounce back from the last space if you roll too high. If it
@@ -45,6 +41,16 @@ exact= (x=): You must land on the last space exactly to win. If exact is
 layout= (l=): The layout can be 'milton' (the layout of Milton-Bradley's Chutes
     and Ladders), 'nepal' (a Nepalese version of the board) or 'easy'/'medium'/
     'hard' (random layouts of varying difficutly)
+"""
+
+RULES = """
+The game consists of a square grid of numbered squares, with snakes and
+laddders connecting non-adjacent squares. The board follows a boustrophedon
+(back and forth ox-plow) path from the bottom to the top. Each turn you roll
+a die, which determines how many squares forward you move. If you roll a 6
+you get to roll again. If you end any move at the top of a snake or the
+bottom of a ladder, you move down the snake or up the ladder to the square at
+the other end. The first one to get to or past the end of the board wins.
 """
 
 
@@ -279,6 +285,7 @@ class SnakesAndLadders(game.Game):
     credits = CREDITS
     name = 'Snakes and Ladders'
     num_options = 3
+    options = OPTIONS
     rules = RULES
 
     def do_auto(self, arguments):
