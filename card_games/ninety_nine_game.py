@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Ninety-Nine. (str)
+OPTIONS: The options for Ninety-Nine. (str)
 RULES: The rules of Ninety-Nine.
 
 Classes:
@@ -32,27 +33,7 @@ Game Design: Traditional (Romani)
 Game Programming: Craig "Ichabod" O'Brien
 """
 
-RULES = """
-Each turn you play a card, adding it's value to the running total. You must
-correctly state the new total when you play a card. For example, if the total
-to you is 81, and you wanted to play the five of diamonds, you would enter
-'5d 86' If you can't play a card without taking the total over 99, you must
-pass, and lose one of your three tokens. At that point the hands are redealt
-and the total is reset to zero. If you lose all of your tokens, you are out
-of the game. The last player with tokens wins.
-
-Cards are face value with face cards being 10, with the following exceptions:
-    A: 1 or 11
-    4: 0
-    10: -10 or 10
-    K: 0
-
-In addition, a 4 reverses the order of play and a 3 skips the next player's
-turn. Nines take the total to 99, no matter what the previous total was.
-
-The tokens command will show you how many tokens each player has left.
-
-Options:
+OPTIONS = """
 99=: The ranks that take the total to 99. It can be one rank or multiple ranks
     separated by slashes. (default is 9)
 chicago (chi): Equivalent to zero=4/9 skip=9 99=K minus=T plus-minus=!
@@ -72,6 +53,27 @@ zero= (0=): The ranks valued at 0. It can be one rank or multiple ranks separate
     by slashes.
 
 To set a rank option to no rank, use ! instead of a rank character.
+"""
+
+RULES = """
+Each turn you play a card, adding it's value to the running total. You must
+correctly state the new total when you play a card. For example, if the total
+to you is 81, and you wanted to play the five of diamonds, you would enter
+'5d 86' If you can't play a card without taking the total over 99, you must
+pass, and lose one of your three tokens. At that point the hands are redealt
+and the total is reset to zero. If you lose all of your tokens, you are out
+of the game. The last player with tokens wins.
+
+Cards are face value with face cards being 10, with the following exceptions:
+    A: 1 or 11
+    4: 0
+    10: -10 or 10
+    K: 0
+
+In addition, a 4 reverses the order of play and a 3 skips the next player's
+turn. Nines take the total to 99, no matter what the previous total was.
+
+The tokens command will show you how many tokens each player has left.
 """
 
 
@@ -122,6 +124,7 @@ class NinetyNine(game.Game):
     name = 'Ninety-Nine'
     ninety_nine_re = re.compile('([1-9atjqkx][cdhs]).*?(-?\d\d?)', re.I)
     num_options = 7
+    options = OPTIONS
     rules = RULES
 
     def clean_up(self):
