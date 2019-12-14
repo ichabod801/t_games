@@ -373,7 +373,7 @@ class Interface(other_cmd.OtherCmd):
         elif arguments in self.games:
             # Show options for a specific game.
             self.human.tell(self.games[arguments].options)
-            self.human.ask('\nPress Enter to continue: ')
+            self.human.ask('Press Enter to continue: ')
         else:
             # Show an error.
             self.human.error("\nI do not know the options to that game.")
@@ -439,7 +439,7 @@ class Interface(other_cmd.OtherCmd):
         elif arguments in self.games:
             # Show rules for a specific game.
             self.human.tell(self.games[arguments].rules)
-            self.human.ask('\nPress Enter to continue: ')
+            self.human.ask('Press Enter to continue: ')
         else:
             # Show an error.
             self.human.error("\nI do not know the rules to that game.")

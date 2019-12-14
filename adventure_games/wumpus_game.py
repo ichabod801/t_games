@@ -63,8 +63,9 @@ The commands are:
    SHOOT: Shoot a crooked arrow. You can provide 1-3 directions for the arrow
       to travel through the passages (frex, SHOOT LRL).
    RULES: Read these fascinating, well written instructions again.
+"""
 
-Options:
+OPTIONS = """
 arrows= (a=): How many arrows you get. (1 to 5, defaults to 5)
 """
 
@@ -321,6 +322,7 @@ class Wumpus(game.Game):
     credits = CREDITS
     name = 'Hunt the Wumpus'
     num_options = 1
+    options = OPTIONS
     rules = RULES
 
     def do_gipf(self, argument):
