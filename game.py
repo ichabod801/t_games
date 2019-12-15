@@ -122,8 +122,8 @@ class Game(OtherCmd):
         '/': (operator.truediv, 2), 'ab/c': (lambda a, b, c: a + b / c, 3), 'cos': (math.cos, 1),
         'ln': (math.log, 1), 'log': (math.log10, 1), 'R': (random.random, 0), 'F': (utility.flip, 0),
         'sin': (math.sin, 1), 'V': (math.sqrt, 1), 'tan': (math.tan, 1)}
-    options = '\nNo options have been specified for this game.'
-    rules = '\nNo rules have been specified for this game.'
+    options = '\nNo options have been specified for this game.\n'
+    rules = '\nNo rules have been specified for this game.\n'
 
     def __init__(self, human, raw_options, interface = None, silent = False):
         """

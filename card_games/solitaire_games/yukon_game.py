@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: Credits for Yukon. (str)
+OPTIONS: Options for Yukon. (str)
 RULES: Rules for Yukon. (str)
 
 Class:
@@ -33,8 +34,9 @@ cards are deal face up, left to right, on all stacks but the first.
 Any stack of cards may be moved, as long as the bottom card in the stack is one
 rank below and a different color than the card it is being moved onto. Empty
 tableau piles may be filled with a king or any stack starting with a king.
+"""
 
-Options:
+OPTIONS = """
 piles= (p=): How many tableau piles there should be.
 suits (s, russian): Cards must be matched by suit, not alternating color.
 """
@@ -54,6 +56,7 @@ class Yukon(solitaire.Solitaire):
     credits = CREDITS
     name = 'Yukon'
     num_options = 2
+    options = OPTIONS
     rules = RULES
 
     def do_gipf(self, arguments):

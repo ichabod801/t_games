@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Thoughtful Solitaire. (str)
+OPTIONS: The options for Thoughtful Solitaire. (str)
 RULES: The rules of Thoughtful Solitaire. (str)
 
 Classes:
@@ -39,8 +40,9 @@ However, once you pull a card from a reserve pile, all the reserve piles to the
 left of that reserve pile will be blocked (as indicated by an XX at the bottom
 of the pile). They can be unblocked with the turn command. This simulates going
 through the stock three cards at a time as in normal Klondike.
+"""
 
-Options:
+OPTIONS = """
 unblocked (u): There are no blocked reserve piles.
 """
 
@@ -72,6 +74,7 @@ class Thoughtful(solitaire.Solitaire):
     credits = CREDITS
     name = 'Thoughtful Solitaire'
     num_options = 1
+    options = OPTIONS
     rules = RULES
 
     def card_shift(self, piles, pile_type):

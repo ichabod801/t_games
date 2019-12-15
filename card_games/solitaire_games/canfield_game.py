@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: Credits for Canfield. (str)
+OPTIONS: Options for Canfield. (str)
 RULES: Rules for Canfield. (str)
 
 Classes:
@@ -38,8 +39,9 @@ tableau may only be filled from the reserve. If the reserve is empty, cards
 from the waste may be used to fill empty spots on the tableau.
 
 Stacks on the tableau may be moved, but only if the whole stack is moved.
+"""
 
-Options:
+OPTIONS = """
 build= (b): How tableau piles are built by suit. (alt-color, suit, or any)
 chameleon (ch): Equivalent to 'build=any max-passes=1 partial-move reserve=12
     tableau=3 turn-count=1'
@@ -87,6 +89,7 @@ class Canfield(solitaire.Solitaire):
     credits = CREDITS
     name = 'Canfield'
     num_options = 10
+    options = OPTIONS
     rules = RULES
 
     def do_gipf(self, arguments):

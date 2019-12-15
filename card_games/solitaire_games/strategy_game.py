@@ -6,6 +6,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Strategy. (str)
+OPTIONS: The options for Strategy. (str)
 RULES: The rules for Strategy. (str)
 
 Classes:
@@ -28,8 +29,9 @@ appear, but no other card may be sorted until the reserve is empty.
 
 Parlett suggests that each time you win, play again with one less tableau
 pile.
+"""
 
-Options:
+OPTIONS = """
 piles= (p=): The number of tableau piles (1-8).
 """
 
@@ -48,6 +50,7 @@ class Strategy(solitaire.Solitaire):
     categories = ['Card Games', 'Solitaire Games', 'Revealing Games']
     name = 'Strategy'
     num_options = 1
+    options = OPTIONS
     rules = RULES
 
     def do_gipf(self, arguments):

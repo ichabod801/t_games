@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: Credits for Forty Thieves. (str)
+OPTIONS: Options for Forty Thieves. (str)
 RULES: Rules for Forty Thieves. (str)
 
 Classes:
@@ -30,8 +31,9 @@ suit. You may only move one card at a time. Building on the tableau is down
 in rank by suit. You may turn over one card from the stock at a time, and
 place it in a waste pile. The top card of the waste pile is available for
 building or sorting. You may only go through the stock once.
+"""
 
-OPTIONS:
+OPTIONS = """
 alt-color (streets, ac): The tableau is built down in rank by alternating
     color.
 columns= (c=): The number of tableau columns (stacks) dealt.
@@ -74,6 +76,7 @@ class FortyThieves(solitaire.MultiSolitaire):
     credits = CREDITS
     name = 'Forty Thieves'
     num_options = 7
+    options = OPTIONS
     rules = RULES
 
     def do_gipf(self, arguments):

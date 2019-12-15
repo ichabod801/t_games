@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Monte Carlo. (str)
+OPTIONS: The options for Monte Carlo. (str)
 RULES: The rules for Monte Carlo. (str)
 
 Classes:
@@ -35,8 +36,9 @@ cards to the right and up, so that all empty spots are on the bottom right.
 Then cards will be added from the stock to fill in the blanks.
 
 Use the match command to pair two cards and sort them to the foundation.
+"""
 
-Options:
+OPTIONS = """
 thirteen (13): Pairs adding to thirteen can be matched, kings can be sorted to the
     foundation.
 rows= (r=): The number of rows dealt (defaults to 5).
@@ -64,6 +66,7 @@ class MonteCarlo(solitaire.Solitaire):
     credits = CREDITS
     name = 'Monte Carlo'
     num_options = 2
+    options = OPTIONS
     rules = RULES
 
     def do_gipf(self, arguments):

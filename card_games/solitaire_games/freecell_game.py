@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: Credits for FreeCell. (str)
+OPTIONS: Options for FreeCell. (str)
 RULES: Rules for FreeCell. (str)
 STACK_HELP: Help on how many cards can be moved at one time. (str)
 
@@ -41,8 +42,9 @@ cells, you can move a stack of three cards one at a time: one each to a free
 cell, then third to the destination card, then the two cards back off the free
 cells. So if you have two empty free cells, the game lets you move three cards
 as one.
+"""
 
-Options:
+OPTIONS = """
 baker (b): Building is done by suit (Baker's Game).
 cells= (c=): The number of free cells available. 1-10, defaults to 4.
 challenge (ch): The twos then the aces are dealt on the bottom row.
@@ -98,6 +100,7 @@ class FreeCell(solitaire.Solitaire):
     help_text = {'moving-stacks': STACK_HELP}
     name = 'FreeCell'
     num_options = 8
+    options = OPTIONS
     rules = RULES
 
     def do_gipf(self, arguments):

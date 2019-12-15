@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Pyramid. (str)
+OPTIONS: The options for Pyramid. (str)
 RULES: The rules for Pyramid. (str)
 
 Classes:
@@ -44,8 +45,9 @@ Any pair that totals thirteen may be matched to the foundation. Jacks count as
 foundation). The stock may be turned over one at a time to be matched with
 cards on the tableau. However, any unused waste cards are sorted to the
 foundation.
+"""
 
-Options:
+OPTIONS = """
 cells= (c): The number of free cells available. 0 to 10, defaults to 0.
 giza (g): Fully open game with 8 reserve piles. Equivalent to 'reserve=8
     reserve-rows=3'.
@@ -95,6 +97,7 @@ class Pyramid(solitaire.Solitaire):
     credits = CREDITS
     name = 'Pyramid'
     num_options = 8
+    options = OPTIONS
     rules = RULES
 
     def do_auto(self, max_rank):

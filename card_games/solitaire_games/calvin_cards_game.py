@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Calvin Cards. (str)
+OPTIONS: Options for Calvin Cards. (str)
 RULES: The (lack of) rules for Calvin Cards. (str)
 
 Classes:
@@ -120,6 +121,7 @@ class CalvinCards(solitaire.Solitaire):
     help_text = {'options': OPTION_HELP}
     name = 'Calvin Cards'
     ofs = ('wisdom', 'bonuses', 'songs', 'spinning', 'secrets', 'opposites', 'time')
+    options = OPTION_HELP
     rules = RULES
     sort_to_lane = dict(zip('A23456789TJQK', 'KA23456789TJQ'))
 

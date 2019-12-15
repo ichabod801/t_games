@@ -8,7 +8,8 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: Credits for Klondike. (str)
-EASY_FREE: Easy FreeCell deals for testing Klonbot. (list of it)
+EASY_FREE: Easy FreeCell deals for testing Klonbot. (list of int)
+OPTIONS: Options for Klondike. (str)
 RULES: Rules for Klondike. (str)
 
 Classes:
@@ -51,8 +52,9 @@ be filled with a king or a stack starting with a king.
 
 Cards from the stock are turned over three at a time. The stock may be gone
 through as many times as you wish.
+"""
 
-Options:
+OPTIONS = """
 piles= (p=): How many tableau piles there should be.
 switch-one (s1): You can switch to turning over one card at a time, but only for
     one last pass through the deck. (use the switch command)
@@ -249,6 +251,7 @@ class Klondike(solitaire.Solitaire):
     credits = CREDITS
     name = 'Klondike'
     num_options = 3
+    options = OPTIONS
     rules = RULES
 
     def do_gipf(self, arguments):
