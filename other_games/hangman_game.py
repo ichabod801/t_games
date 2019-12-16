@@ -11,6 +11,7 @@ BODY_PARTS: The symbols for the parts of the hanging body, in order. (str)
 CREDITS: The credits for Hangman. (str)
 DIAGRAM: The format method ready diagram of the hanging body. (str)
 NUMBERS: Digits for the guess. (str)
+OPTIONS: The options for Hangman. (str)
 RULES: The rules to Hangman. (str)
 
 Classes:
@@ -46,6 +47,11 @@ DIAGRAM = """
 
 NUMBERS = '1234567890' * 3
 
+OPTIONS = """
+difficulty= (d=): The difficulty of the game, from 1 to 10 (default = 5).
+status (s): See the status of the computer's thinking.
+"""
+
 RULES = """
 Hangman is a word guessing game. Each player takes a turn thinking of a secret
 word that the other player must guess letter by letter. To start with, you only
@@ -59,10 +65,6 @@ game. Otherwise, the game is a draw.
 COMMANDS:
 frequency (freq): Get a frequency list of letters in dictionary words.
 guess: Guess the whole word. An incorrect word earns a body part.
-
-OPTIONS:
-difficulty= (d=): The difficulty of the game, from 1 to 10 (default = 5).
-status (s): See the status of the computer's thinking.
 """
 
 
@@ -110,6 +112,7 @@ class Hangman(game.Game):
     credits = CREDITS
     name = 'Hangman'
     num_options = 2
+    options = OPTIONS
     rules = RULES
 
     def __str__(self):

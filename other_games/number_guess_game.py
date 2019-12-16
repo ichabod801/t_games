@@ -6,6 +6,11 @@ A classic number guessing game.
 Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
+Constants:
+CREDITS: The credits for the Number Guessing Game.
+OPTIONS: The options for the Number Guessing Game.
+RULES: The rules for the Number Guessing Game.
+
 Classes:
 GuessBot: A number guessing bot using a random strategy. (player.Bot)
 GuessBotter: A number guessing bot using a binary search. (GuessBot)
@@ -25,15 +30,16 @@ Game Design: Traditional
 Game Programming: Craig "Ichabod" O'Brien
 """
 
+OPTIONS = """
+easy (e): Play against a random opponent.
+high (h): The highest possible secret number (defaults to 108).
+low (l): The lowest possible secret number (defaults to 1).
+"""
+
 RULES = """
 Each turn you guess a number chosen in secret by the computer. Then the
 computer tries to guess a number you choose. Whoever guesses correctly with the
 least number of guesses wins.
-
-Options:
-easy (e): Play against a random opponent.
-high (h): The highest possible secret number (defaults to 108).
-low (l): The lowest possible secret number (defaults to 1).
 """
 
 
@@ -190,6 +196,7 @@ class NumberGuess(game.Game):
     info_types = {'high-low': (True, False), 'warm-cold': (False, True), 'both': (True, True)}
     name = 'Number Guessing Game'
     num_options = 3
+    options = OPTIONS
     rules = RULES
 
     def default(self, line):

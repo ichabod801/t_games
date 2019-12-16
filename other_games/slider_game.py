@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Slider Puzzle.
+OPTIONS: The options for Slider Puzzle.
 RULES: The rules to Slider Puzzle.
 
 Classes:
@@ -29,6 +30,14 @@ Game Design: Traditional
 Game Programming: Craig "Ichabod" O'Brien
 """
 
+OPTIONS = """
+columns= (c=): The number of columns in the puzzle.
+rows= (r=): The number of rows in the puzzle.
+size= (s=): The number of columns and rows in the table.
+shuffle= (sh=): The number of times to shuffle the solved puzzle before play.
+text= (t=): The text to use in the puzzle.
+"""
+
 RULES = """
 The board has one empty space. Any tile horizontally or vertically adjacent to
 that space may be slid into that space. The goal is to get all of the tiles in
@@ -44,13 +53,6 @@ spot with the north command (n). Similar commands exist for east (e), south
 (s), and west (w). You can give a string of directional commands as an argument
 to another directional command. For example 'e nsw' would move the eastern
 tile, then the northern, southern, and western tiles.
-
-Options:
-columns= (c=): The number of columns in the puzzle.
-rows= (r=): The number of rows in the puzzle.
-size= (s=): The number of columns and rows in the table.
-shuffle= (sh=): The number of times to shuffle the solved puzzle before play.
-text= (t=): The text to use in the puzzle.
 """
 
 
@@ -92,8 +94,11 @@ class Slider(game.Game):
     aka = ['Slider', 'slpu']
     aliases = {'e': 'east', 'm': 'move', 'n': 'north', 's': 'south', 'w': 'west'}
     categories = ['Other Games']
+    credits = CREDITS
     name = 'Slider Puzzle'
     num_options = 4
+    options = OPTIONS
+    rules = RULES
     tiles = '123456789' + string.ascii_uppercase + string.ascii_lowercase
 
     def direction_move(self, offset, direction, argument):
