@@ -9,6 +9,7 @@ See the top level __init__.py file for details on the t_games license.
 Constants:
 CREDITS: The credits for Hamurabi. (str)
 IMMIGRATION_HELP: Help text for factors driving immigration. (str)
+OPTIONS: The options for Hamurabi. (str)
 RULES: The basic rules of Hamurabi. (str)
 WINNING_HELP: Help text for how winning is calculated. (str)
 
@@ -34,6 +35,13 @@ immigration will be. The more people you have, the lower your immigration will
 be.
 """
 
+OPTIONS = """
+plague-chance= (pc=): The chance of plague. 0 to 100, defaults to 15.
+rat-chance= (rc=): The chance of rats eating grain. 0 to 100, defaults to 40.
+steady-grain (sg): Grain yields are more likely to be average.
+steady-land (sl): Land prices are more likely to be average.
+"""
+
 RULES = """
 You have ten turns to run ancient Sumeria. Each turn you can buy or sell land,
 buy or sell grain, decide how much to feed your people, and decide how much
@@ -45,12 +53,6 @@ feed (f): Release the specified number of bales of grain to the people.
 next (n): Finish your turn and go to the next year.
 plant (p): Plant seed in the specified number of acres.
 sell (s): Sell the specified number of acres.
-
-Options:
-plague-chance= (pc=): The chance of plague. 0 to 100, defaults to 15.
-rat-chance= (rc=): The chance of rats eating grain. 0 to 100, defaults to 40.
-steady-grain (sg): Grain yields are more likely to be average.
-steady-land (sl): Land prices are more likely to be average.
 """
 
 WINNING_HELP = """
@@ -125,6 +127,7 @@ class Hamurabi(game.Game):
     help_text = {'immigration': IMMIGRATION_HELP, 'winning': WINNING_HELP}
     name = 'Hamurabi'
     num_options = 4
+    options = OPTIONS
     rules = RULES
     year_intro = '\nHamurabi, I beg to report to you, in year {}, {} people starved and {} came to the '
     year_intro += 'city.\nYou havested {} bushels per acre.\nRats ate {} bushels.'
