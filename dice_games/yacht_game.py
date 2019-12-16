@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Yacht. (str)
+OPTIONS: The options for Yacht. (str)
 RULES: The rules and options for Yacht. (str)
 
 Scoring Functions:
@@ -49,37 +50,8 @@ Game Design: Traditional
 Game Programming: Craig "Ichabod" O'Brien
 """
 
-# The rules and options for Yacht.
-RULES = """
-You start by rolling five dice. You may set any number of the dice aside and
-reroll the rest. You may set aside a second time and roll a third time. Dice
-that are set aside may not be rerolled that turn. Once you get a final roll,
-you choose a category to score it in. Each category may be scored only once.
-If you do not meet the criteria for the category, you may still score it, but
-it is worth zero points. The game is over when everyone has scored all of the
-categories.
-
-To set aside dice, use the hold (h) command, follow by a list of the values
-you want to set asside. To roll again, use the roll (r) command. To score, use
-the score (s) command followed by either the name of the category or the
-character preceding the category in the score table.
-
-The categories (and their scores) are:
-
-Yacht: Five of a kind (50)
-Big Straight: 2-3-4-5-6 (30)
-Little Straight: 1-2-3-4-5 (30)
-Four of a Kind: Four of the same number. (Sum of the four of a kind)
-Full House: Two of one number and three of another. (Sum of the dice)
-Chance: Any roll. (Sum of the dice)
-Sixes: As many sixes as possible. (Sum of the sixes)
-Fives: As many fives as possible. (Sum of the fives)
-Fours: As many fours as possible. (Sum of the fours)
-Threes: As many threes as possible. (Sum of the threes)
-Twos: As many twos as possible. (Sum of the twos)
-Ones: As many ones as possible. (Sum of the ones)
-
-Options:
+# The options for Yacht.
+OPTIONS = """
 easy= (e=): How many easy bots you want to play against.
 extra-five= (e5=): Each player's second and later five of a kinds score bonus
     points equal to this option.
@@ -123,6 +95,37 @@ yahtzee: Equivalent to five-name=Yahtzee big-straight=40 full-house=25
 yam: Equivalent to five-name=Yam five-kind=total+40 big-straight=total+30
     full-house=total+20 low-chance=total low-straight=0 four-kind=0
     n-bonus=30/60
+"""
+
+# The rules and options for Yacht.
+RULES = """
+You start by rolling five dice. You may set any number of the dice aside and
+reroll the rest. You may set aside a second time and roll a third time. Dice
+that are set aside may not be rerolled that turn. Once you get a final roll,
+you choose a category to score it in. Each category may be scored only once.
+If you do not meet the criteria for the category, you may still score it, but
+it is worth zero points. The game is over when everyone has scored all of the
+categories.
+
+To set aside dice, use the hold (h) command, follow by a list of the values
+you want to set asside. To roll again, use the roll (r) command. To score, use
+the score (s) command followed by either the name of the category or the
+character preceding the category in the score table.
+
+The categories (and their scores) are:
+
+Yacht: Five of a kind (50)
+Big Straight: 2-3-4-5-6 (30)
+Little Straight: 1-2-3-4-5 (30)
+Four of a Kind: Four of the same number. (Sum of the four of a kind)
+Full House: Two of one number and three of another. (Sum of the dice)
+Chance: Any roll. (Sum of the dice)
+Sixes: As many sixes as possible. (Sum of the sixes)
+Fives: As many fives as possible. (Sum of the fives)
+Fours: As many fours as possible. (Sum of the fours)
+Threes: As many threes as possible. (Sum of the threes)
+Twos: As many twos as possible. (Sum of the twos)
+Ones: As many ones as possible. (Sum of the ones)
 """
 
 SCORE_HELP = """
@@ -754,6 +757,7 @@ class Yacht(game.Game):
     letters = '123456ABCDEFGH'
     name = 'Yacht'
     num_options = 16
+    options = OPTIONS
     rules = RULES
     score_cats = [ScoreCategory('Ones', 'As many ones as possible', score_number(1)),
         ScoreCategory('Twos', 'As many twos as possible', score_number(2)),
