@@ -48,6 +48,7 @@ DESCRIPTIONS = ['wumpus dung in the corner', '', '', '', '', 'ants crawling all 
 
 OPTIONS = """
 arrows= (a=): How many arrows you get. (1 to 5, defaults to 5)
+gonzo (gz): Equivalent to 'arrows = 1'.
 """
 
 RULES = """
@@ -440,6 +441,7 @@ class Wumpus(game.Game):
         """Set the possible options for the game. (None)"""
         self.option_set.add_option('arrows', ['a'], int, valid = (1, 2, 3, 4, 5), default = 5,
             question = "How many arrows should you get (1 to 5, return for 5)? ")
+        self.option_set.add_group('gonzo', ['gz'], 'arrows = 1')
 
     def set_up(self):
         """Set up the caves and the tracking variables. (None)"""
