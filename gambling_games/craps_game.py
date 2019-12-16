@@ -10,6 +10,7 @@ Constants:
 BUY_ODDS: The odds for buy bets. (dict of int: tuple of int)
 CREDITS: The credits for Craps. (str)
 HOUSE_HELP: Help text for the house edge. (str)
+OPTIONS: The options for Craps. (str)
 PLACE_ODDS: The odds for place bets. (dict of int: tuple of int)
 RULES: The rules for Craps. (str)
 
@@ -84,6 +85,19 @@ tl;dr: Odds bets are the best, and proposition bets on 2, 7, or 12 are the
 worst. The best strategy is obviously to make Don't Pass bets with odds.
 However, Don't Pass bets are considered rude. Stick to don't come bets, or
 the bots will cry.
+"""
+
+OPTIONS = """
+cars-pay-3 (c3): Make 12 (boxcars) pay 3:1 on a field bet.
+lazy-hard (lh): Turns hard way bets off during the come out roll.
+limit= (l=): The maximum ammount that can be bet (20).
+max-payout= (m$=): The multiple of the limit that is the maximum payout (3).
+max-players= (mp=): The maximum number of players at the table (7).
+odds-max= (om=): The multiple of the limit for odds bets. If odds-max = 345,
+    the maximum is 3x the limit for 4 or 10, 4x the limit for 5 or 9, and 5x
+    the limit for 6 or 10. (345)
+stake= (s=): The ammount of money the player starts with (250).
+yo-pays-2 (y2): Makes 11 (yo) pay 2:1 on a field bet.
 """
 
 PLACE_ODDS = {4: (9, 5), 5: (7, 5), 6: (7, 6), 8: (7, 6), 9: (7, 5), 10: (9, 5)}
@@ -174,18 +188,6 @@ Done (d): Finish betting on the next roll.
 Remove (x): Some bets can be taken back after being made. This command will
     show you your removable bets and allow you to take them back.
 Roll (r): Finish betting and roll the dice.
-
-OPTIONS:
-cars-pay-3 (c3): Make 12 (boxcars) pay 3:1 on a field bet.
-lazy-hard (lh): Turns hard way bets off during the come out roll.
-limit= (l=): The maximum ammount that can be bet (20).
-max-payout= (m$=): The multiple of the limit that is the maximum payout (3).
-max-players= (mp=): The maximum number of players at the table (7).
-odds-max= (om=): The multiple of the limit for odds bets. If odds-max = 345,
-    the maximum is 3x the limit for 4 or 10, 4x the limit for 5 or 9, and 5x
-    the limit for 6 or 10. (345)
-stake= (s=): The ammount of money the player starts with (250).
-yo-pays-2 (y2): Makes 11 (yo) pay 2:1 on a field bet.
 """
 
 class Craps(game.Game):
@@ -247,6 +249,7 @@ class Craps(game.Game):
     name = 'Craps'
     num_options = 8
     odds_multiples = {4: 3, 5: 4, 6: 5, 8: 5, 9: 4, 10: 3}
+    options = OPTIONS
     rules = RULES
 
     def __str__(self):

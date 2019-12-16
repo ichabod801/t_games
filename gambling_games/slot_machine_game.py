@@ -7,8 +7,12 @@ Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
+AMPERSAND_PAYOUTS: The payouts for the Ampersand machine. (str)
 CREDITS: The credits for slot machines. (str)
+EIGHT_BALL_PAYOUTS: The payouts for the Eight Ball machine. (str)
+OPTIONS: The options for playing slot machines. (str)
 RULES: The rules for playing slot machines. (str)
+SEVEN_WORDS_PAYOUTS: The payouts for the Seven Words machine. (str)
 
 Classes:
 Machine: A slot machine. (object)
@@ -122,6 +126,10 @@ X-y-Z-z-Y
 
 With the above three rows, the up angle play would be !-y-3-z-%, and the down
 angle play would be 1-y-#-z-5.
+"""
+
+OPTIONS = """
+stake (s): How much money you start with (defaults to 100).
 """
 
 RULES = """
@@ -654,6 +662,7 @@ class Slots(game.Game):
     categories = ['Gambling Games']
     name = 'Slot Machines'
     num_options = 1
+    options = OPTIONS
     rules = RULES
 
     def __str__(self):

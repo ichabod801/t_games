@@ -5,9 +5,10 @@ Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
-CREDITS: The credits for roulette. (str)
+CREDITS: The credits for Roulette. (str)
 HOUSE_HELP: Help text for the house edge. (str)
-RULES: The rules of roulette. (str)
+OPTIONS: The options for Roulette. (str)
+RULES: The rules of Roulette. (str)
 
 Classes:
 Roulette: A game of roulette. (game.Game)
@@ -31,6 +32,14 @@ HOUSE_HELP = """
 The house edge for all bets is 5.26% for the American layout and 2.70% for the
 French layout. The one exception is the top line bet on the American layout,
 which has a house edge of 7.89%.
+"""
+
+OPTIONS = """
+american (a): Use the American layout (the default).
+french (f): Use the French layout.
+limit= (l=): The maximum bet for any single bet, defaults to 10.
+stake= (s=): How much money you start with, defaults to 100.
+uk-rule (uk): Outside bets on half the numbers only lose half the bet.
 """
 
 RULES = """
@@ -109,13 +118,6 @@ OTHER COMMANDS:
 Bets: Show a numbered list of the current bets.
 Layout: Show the current layout, with colors marked.
 Remove: Remove a bet, using the number from the bets command.
-
-OPTIONS:
-american (a): Use the American layout (the default).
-french (f): Use the French layout.
-limit= (l=): The maximum bet for any single bet, defaults to 10.
-stake= (s=): How much money you start with, defaults to 100.
-uk-rule (uk): Outside bets on half the numbers only lose half the bet.
 """
 
 
@@ -208,6 +210,7 @@ class Roulette(game.Game):
     int_re = re.compile('\d+')
     name = 'Roulette'
     num_options = 4
+    options = OPTIONS
     red = ['1', '3', '5', '7', '9', '12', '14', '16', '18', '19', '21', '23', '25', '27', '30', '32', '34',
         '36']
     rules = RULES
