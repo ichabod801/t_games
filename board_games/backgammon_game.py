@@ -74,10 +74,11 @@ FRAME_LOW = ['+-------------+-------------+', '  1 1 1                      ',
     '  2 1 0 9 8 7   6 5 4 3 2 1  ']
 
 OPTIONS = """
-o: The human player plays with the red (O) pieces.
+gonzo (gz): Equivalent to 'layout = hyper match = 18'.
 layout (l): Which layout to use: long (lg), standard (st), nack (nk), or
     hyper (hy).
 match (m): The winning match score. Defaults to 1, or non-match play.
+o: The human player plays with the red (O) pieces.
 """
 
 OUT = -2
@@ -1387,12 +1388,13 @@ class Backgammon(game.Game):
     def set_options(self):
         """Define the options for the game. (None)"""
         self.option_set.default_bots = [(AdditiveBot, ())]
-        self.option_set.add_option('o', target = 'human_piece', value = 'O', default = 'X',
-            question = 'Would you like to play with the O piece? bool')
         self.option_set.add_option('match', ['m'], int, 1, check = lambda x: x > 0,
             question = 'What should be the winning match score (return for 1)? ')
         self.option_set.add_option('layout', ['l'], options.lower, action = 'map', value = self.layouts,
             default = 'standard', question = 'What layout would you like to use (return for standard)? ')
+        self.option_set.add_option('o', target = 'human_piece', value = 'O', default = 'X',
+            question = 'Would you like to play with the O piece? bool')
+        self.option_set.add_group('gonzo', ['gz'], 'layout = hyper match = 18')
 
     def set_up(self):
         """Set up the game. (None)"""
