@@ -43,6 +43,7 @@ OPTIONS = """
 bot-level= (b=): How good the computer opponent is. Can be easy (e),
     medium (m), or hard (h). The default is medium.
 columns (c): How many columns the board should have (4-35, default 7).
+gonzo: Equivalent to 'columns = 17 rows = 18 pop'.
 pop (p): Allow pop moves, where you remove a piece of yours that is at the
     bottom of a column.
 rows: (r): How many rows the board should have (4-20, default 6).
@@ -617,6 +618,8 @@ class ConnectFour(game.Game):
         self.option_set.add_option('bot-level', ['b'],
             valid = ['easy', 'e', 'medium', 'm', 'hard', 'h'], default = 'medium',
             question = 'How hard of a bot do you want to play against (return for medium)? ')
+        # Set the option groups.
+        self.option_set.add_group('gonzo', ['gz'], 'rows = 18 pop')
 
     def player_action(self, now_player):
         """
