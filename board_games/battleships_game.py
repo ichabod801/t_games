@@ -50,6 +50,7 @@ inventories give the following ships (name size x count):
         Submarine 3x1.
     Bednar/Bd: Carrier 5x1, Battleship 4x1, Cruiser 3x1, Destroyer 2x2,
         Submarine 1x2.
+    Gonzo/Gz: Battleship 7x1, Submarine 2x1
     Ichabod/Ik: Carrier 5x1, Battleship 4x2, Cruiser 3x3, Destroyer 2x4,
         Submarine 1x1.
     Wikipedia/Wk: Carrier 6x1, Battleship 4x2, Cruiser 3x3, Destroyer 2x4,
@@ -60,6 +61,7 @@ INVENTORIES = {'bradley': {'Carrier': (5, 1), 'Battleship': (4, 1), 'Cruiser': (
         'Destroyer': (2, 1), 'Submarine': (3, 1)},
     'bednar': {'Carrier': (5, 1), 'Battleship': (4, 1), 'Cruiser': (3, 1),
         'Destroyer': (2, 2), 'Submarine': (1, 2)},
+    'gonzo': {'Battleship': (7, 1), 'Submarine': (2, 1)},
     'ichabod': {'Carrier': (5, 1), 'Battleship': (4, 2), 'Cruiser': (3, 3),
         'Destroyer': (2, 4), 'Submarine': (1, 1)},
     'wikipedia': {'Carrier': (6, 1), 'Battleship': (4, 2), 'Cruiser': (3, 3),
@@ -114,7 +116,7 @@ class Battleships(game.Game):
     aka = ['Battleship', 'Sea Battle', 'Broadsides', 'Batt']
     categories = ['Board Games']
     credits = CREDITS
-    inventory_aliases = {'br': 'bradley', 'bd': 'bednar', 'ik': 'ichabod', 'wk': 'wikipedia'}
+    inventory_aliases = {'br': 'bradley', 'bd': 'bednar', 'gz': 'gonzo', 'ik': 'ichabod', 'wk': 'wikipedia'}
     name = 'Battleships'
     num_options = 2
     options = OPTIONS
@@ -279,12 +281,13 @@ class Battleships(game.Game):
         """Define the options for the game. (None)"""
         self.option_set.add_option('inventory', ['i'], converter = options.lower, default = 'bradley',
             target = 'inventory_name',
-            valid = ['bradley', 'br', 'bednar', 'bd', 'ichabod', 'ik', 'wikipedia', 'wk'],
+            valid = ['bradley', 'br', 'bednar', 'bd', 'gz', 'gonzo', 'ichabod', 'ik', 'wikipedia', 'wk'],
             question = 'Which inventory would you like to use (return for Bradley)? ',
             error_text = 'The available inventories are Bradley, Bednar, Ichabod, and Wikipedia')
         self.option_set.add_option('bot-level', ['b'], converter = options.lower, default = 'medium',
             valid = ['e', 'easy', 'm', 'medium'],
             question = 'How hard should the bot be (Easy, Medium, or Hard, return for medium)? ')
+        self.option_set.add_group('gonzo', ['gz'], 'inventory = gonzo')
 
     def set_up(self):
         """Set up a board for each player. (None)"""
