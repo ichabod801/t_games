@@ -40,10 +40,12 @@ black (b): Play as black. If neither black are or white options are used, the
     color of your pieces is determined randomly.
 difficulty= (d=): How many tenths of a second the computer player gets to
     choose their move (defaults to 20).
+gonzo (gz): Play the Orangutan as white.
 fen= (f=): The FEN for the starting position. Note that any spaces in the FEN
     string must be replaced with pipes (|).
 opening= (o=): The opening position to start with. Options include Caro-Kann,
-    French, Indian, Italian, Pirc, Queens-Gambit, Ruy-Lopez, and Sicilian.
+    French, Indian, Italian, Orangutan, Pirc, Queens-Gambit, Ruy-Lopez, and
+    Sicilian.
 unicode (uni, u): Show the unicode chess piece characters, if your terminal
     supports them.
 white (w): Play as white. If neither black are or white options are used, the
@@ -152,6 +154,7 @@ class Chess(game.Game):
         'french': 'rnbqkbnr/ppp2ppp/4p3/3p4/3PP3/8/RNBQKBNR|w|KQkq|-|0|3',
         'indian': 'rnbqkb1r/5n2/8/3P4/8/PPP1PPPP/RNBQKBNR|w|KQkq|-|0|2',
         'italian': 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R|w|KQkq|-|0|3',
+        'orangutan': 'rnbqkbnr/pppppppp/8/8/1P6/8/P1PPPPPP/RNBQKBNR|b|KQkq|-|0|1',
         'pirc': 'rnbqkb1r/3p1n2/8/3PP3/2N5/PPP2PPP/R1BQKBNR|b|KQkq|-|0|3',
         'queens-gambit': 'rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/RNBQKBNR|b|KQkq|-|0|2',
         'ruy-lopez': 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R|w|KQkq|-|0|3',
@@ -554,6 +557,8 @@ class Chess(game.Game):
         # Set play options.
         self.option_set.add_option('difficulty', ['d'], int, 20,
             question = 'How many tenths of a second should the bot get to think (return for 20)? ')
+        # Option groups.
+        self.option_set.add_group('gonzo', ['gz'], 'white opening = Orangutan')
 
     def set_up(self):
         """Set up the game. (None)"""
