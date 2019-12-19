@@ -69,6 +69,7 @@ class SnakeBoard(board.LineBoard):
     ladders: The ladders on the board. (dict of int: int)
     rows: How many rows the board has.
     snakes: The snakes on the board. (dict of int: int)
+    stomp: A flag for landing on a piece sending it to where you started. (bool)
 
     Class Attributes:
     layouts: Diffent layouts for the board. (dict of str: list)
@@ -88,16 +89,18 @@ class SnakeBoard(board.LineBoard):
         (47, 26), (49, 11), (51, 67), (56, 53), (62, 19), (64, 60), (71, 91), (80, 100), (87, 24), (93, 73),
         (95, 75), (98, 78)]}
 
-    def __init__(self, name = 'milton', exact = 'no'):
+    def __init__(self, name = 'milton', exact = 'no', stomp = False):
         """
         Set up the board. (None)
 
         Parameters:
         name: The name of the layout. (str)
         exact: Whether an exact roll is needed for a win. (str)
+        stomp: Whether landing on a piece sends it back to where you started. (bool)
         """
         # Set up the basic attributes.
         self.exact = exact
+        self.stomp = stomp
         self.die = dice.Die()
         # Get the layout.
         if name in ('easy', 'medium', 'hard'):
@@ -219,7 +222,10 @@ class SnakeBoard(board.LineBoard):
             new_end = self.snakes[end]
             player.tell('Square #{} is a snake down to square #{}.'.format(end, new_end))
             end = new_end
-        # Place the piece in the new square.
+        # Place the piece in the new square, checking for the stomp option.
+        if self.stomp and self.cells[end].contents:
+            foe = self.cells[end].contents.pop()
+            self.cells[location].add_piece(foe)
         self.cells[end].add_piece(piece)
         # Check for getting another roll after a six.
         if roll == 6 and end != self.columns * self.rows:
@@ -250,7 +256,7 @@ class SnakeBot(player.Bot):
             return ''
         # Choose a piece.
         elif prompt.startswith('\nWhat symbol'):
-            return random.choice('!@#$%^&*<>?')
+            return random.choice('!@#$%^&*<>?OXZH')
 
     def tell(self, *args, **kwargs):
         """
@@ -267,6 +273,12 @@ class SnakeBot(player.Bot):
 class SnakesAndLadders(game.Game):
     """
     A game of Snakes and Ladders. (game.Game)
+
+    Attributes:
+    bots: How many computer opponents there are in the game. (int)
+    exact: The behavior when rolling over the end of the board. (str)
+    layout: The name of the board layout to be used. (str)
+    stomp: A flag for landing on a piece sending it to where you started. (bool)
 
     Methods:
     do_roll: Roll and move on the board.
@@ -335,6 +347,12 @@ class SnakesAndLadders(game.Game):
         location = self.scores[player.name]
         piece = self.pieces[player.name]
         self.scores[player.name] = self.board.roll(player, location, piece, self.force)
+        # Check for player's getting stomped:
+        if self.stomp:
+            for name, score in self.scores.items():
+                if name != player.name and score == self.scores[player.name]:
+                    self.scores[name] = location
+                    self.human.tell('{} was moved back to square #{}'.format(name, location))
         self.force = 0
         # Check for turning off automatic play.
         if self.scores[player.name] >= self.auto:
@@ -410,6 +428,8 @@ class SnakesAndLadders(game.Game):
             question = 'What board layout should be used (return for milton)? ')
         self.option_set.add_option('exact', ['x'], str.lower, 'no', valid = ['no', 'stop', 'bounce'],
             question = 'What happens if you roll over 100 (stop, bounce, or return for no)? ')
+        self.option_set.add_option('stomp', ['s'],
+            question = 'Should landing on a piece send it back to where you started? bool')
 
     def set_up(self):
         """Set up the game."""
@@ -424,7 +444,7 @@ class SnakesAndLadders(game.Game):
                     # All symbols must be visible and unique.
                     if piece in taken_pieces:
                         player.tell('That symbol is already taken, please choose another.')
-                    elif not piece:
+                    elif not piece.strip():
                         player.tell('You are not allowed to be invisible.')
                     # Store the symbol and go to the next player.
                     else:
@@ -432,7 +452,7 @@ class SnakesAndLadders(game.Game):
                         taken_pieces.add(piece[0])
                         break
         # Set up the board and player tracking.
-        self.board = SnakeBoard(self.layout, self.exact)
+        self.board = SnakeBoard(self.layout, self.exact, self.stomp)
         for player in self.players:
             self.board.cells[0].add_piece(self.pieces[player.name])
         # Set up the other tracking variables.
