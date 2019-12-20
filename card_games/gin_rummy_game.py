@@ -49,6 +49,8 @@ game-bonus= (gb=): The number of extra points scored for ending the game.
     Defaults to 100.
 gin= (g=): The number of extra points scored with gin. Defaults to 25.
 gin-layoff (gl): Allows layoff on spreads from a gin hand.
+gonzo (gz): Equivalent to ace-gin big-gin discard-limit high-low hollywood
+    spade-doubles
 high-low (hl): Allows aces to be high and/or low in runs.
 hollywood (hw): Three games are scored simultaneously. You first score is
     scored in the first game, your second is scored in the first and second
@@ -1210,6 +1212,8 @@ class GinRummy(game.Game):
         """Define the options for the game. (None)"""
         # to do: hollywood (triple-score), tedesco? (high-low, round-the-corner, ace-penalty)
         # Set the option groups.
+        gonzo = 'ace-gin big-gin discard-limit high-low hollywood spade-doubles'
+        self.option_set.add_group('gonzo', ['gz'], gonzo)
         self.option_set.add_group('oklahoma', ['ok'], 'discard-limit spade-doubles')
         self.option_set.add_group('round-the-corner', ['rtc'], 'high-low ace-penalty=15')
         self.option_set.add_group('tourney-score', ['ts'], 'end=250 match=5')
