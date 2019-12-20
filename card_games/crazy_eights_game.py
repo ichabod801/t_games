@@ -51,7 +51,8 @@ multi-score (ms): Each players scores the points in the largest hand minus the
     points in their own hand.
 one-alert (1a): A warning is given when a player has one card.
 one-round (1r): Only play one round.
-psychotic (@): The four special ranks are set randomly, and change every deal.
+psychotic (@, gonzo, gz): The four special ranks are set randomly, and change
+    every deal.
 reverse= (r): The rank, typically A, that reverses the order of play.
 skip= (s): The rank, typically Q, that skips the next player.
 
@@ -758,7 +759,7 @@ class CrazyEights(game.Game):
         self.option_set.add_option('skip', ['s'], convert_rank, '', valid = cards.Card.ranks,
             question = 'What rank should skip the next player? ', error_text = rank_error,
             target = 'skip_rank')
-        self.option_set.add_option('psychotic', ['@'],
+        self.option_set.add_option('psychotic', ['@', 'gonzo', 'gz'],
             question = 'Are you mentally divergent, friend? bool')
         # Set the bot options.
         self.option_set.add_option('easy', ['e'], int, 2, valid = range(10), target = 'num_easy',
