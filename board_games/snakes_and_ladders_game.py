@@ -38,9 +38,12 @@ exact= (x=): You must land on the last space exactly to win. If exact is
     'bounce', you bounce back from the last space if you roll too high. If it
     is 'stop', you just don't move. The default is 'no', which means rolling
     too high is still a win.
+gonzo (gz): Equivalent to 'bots = 11 exact = bounce stomp'.
 layout= (l=): The layout can be 'milton' (the layout of Milton-Bradley's Chutes
     and Ladders), 'nepal' (a Nepalese version of the board) or 'easy'/'medium'/
     'hard' (random layouts of varying difficutly)
+stomp (s): If you land on another player, they are sent back to where you
+    started.
 """
 
 RULES = """
@@ -89,24 +92,25 @@ class SnakeBoard(board.LineBoard):
         (47, 26), (49, 11), (51, 67), (56, 53), (62, 19), (64, 60), (71, 91), (80, 100), (87, 24), (93, 73),
         (95, 75), (98, 78)]}
 
-    def __init__(self, name = 'milton', exact = 'no', stomp = False):
+    def __init__(self, game):
         """
         Set up the board. (None)
 
         Parameters:
-        name: The name of the layout. (str)
-        exact: Whether an exact roll is needed for a win. (str)
-        stomp: Whether landing on a piece sends it back to where you started. (bool)
+        game: The game the board is being used for. (SnakesAndLadders)
         """
         # Set up the basic attributes.
-        self.exact = exact
-        self.stomp = stomp
+        self.game = game
+        self.exact = game.exact
+        self.stomp = game.stomp
         self.die = dice.Die()
+        # Get the piece to player mapping.
+        self.piece_to_player = {piece: name for name, piece in game.pieces.items()}
         # Get the layout.
-        if name in ('easy', 'medium', 'hard'):
-            layout = self.random_layout(name)
+        if game.layout in ('easy', 'medium', 'hard'):
+            layout = self.random_layout(game.layout)
         else:
-            layout = self.layouts[name]
+            layout = self.layouts[game.layout]
         # Initialize the base line board.
         self.columns, self.rows = layout[0]
         super(SnakeBoard, self).__init__(self.columns * self.rows, extra_cells = [0])
@@ -222,15 +226,27 @@ class SnakeBoard(board.LineBoard):
             new_end = self.snakes[end]
             player.tell('Square #{} is a snake down to square #{}.'.format(end, new_end))
             end = new_end
-        # Place the piece in the new square, checking for the stomp option.
-        if self.stomp and self.cells[end].contents:
-            foe = self.cells[end].contents.pop()
-            self.cells[location].add_piece(foe)
-        self.cells[end].add_piece(piece)
         # Check for getting another roll after a six.
         if roll == 6 and end != self.columns * self.rows:
             player.tell('{} rolled a 6, so they get to roll again.'.format(player.name))
+            self.cells[end].add_piece(piece)
             end = self.roll(player, end, piece)
+        # Calculate the moves.
+        else:
+            # Check for stomp moves.
+            if self.stomp and self.cells[end].contents:
+                # Move the stomped piece back.
+                start = self.game.scores[player.name]
+                foe = self.cells[end].contents.pop()
+                self.cells[start].add_piece(foe)
+                # Update the score.
+                foe_name = self.piece_to_player[foe]
+                self.game.scores[foe_name] = start
+                # Inform the human
+                self.game.human.tell('{} was moved back to space #{}.'.format(foe_name, start))
+            # Move the piece.
+            self.cells[end].add_piece(piece)
+            self.game.scores[player.name] = end
         # Return the final square for game tracking.
         return end
 
@@ -346,13 +362,7 @@ class SnakesAndLadders(game.Game):
         # Roll and move the player's piece.
         location = self.scores[player.name]
         piece = self.pieces[player.name]
-        self.scores[player.name] = self.board.roll(player, location, piece, self.force)
-        # Check for player's getting stomped:
-        if self.stomp:
-            for name, score in self.scores.items():
-                if name != player.name and score == self.scores[player.name]:
-                    self.scores[name] = location
-                    self.human.tell('{} was moved back to square #{}'.format(name, location))
+        end = self.board.roll(player, location, piece, self.force)
         self.force = 0
         # Check for turning off automatic play.
         if self.scores[player.name] >= self.auto:
@@ -430,6 +440,7 @@ class SnakesAndLadders(game.Game):
             question = 'What happens if you roll over 100 (stop, bounce, or return for no)? ')
         self.option_set.add_option('stomp', ['s'],
             question = 'Should landing on a piece send it back to where you started? bool')
+        self.option_set.add_group('gonzo', ['gz'], 'bots = 11 exact = bounce stomp')
 
     def set_up(self):
         """Set up the game."""
@@ -452,7 +463,7 @@ class SnakesAndLadders(game.Game):
                         taken_pieces.add(piece[0])
                         break
         # Set up the board and player tracking.
-        self.board = SnakeBoard(self.layout, self.exact, self.stomp)
+        self.board = SnakeBoard(self)
         for player in self.players:
             self.board.cells[0].add_piece(self.pieces[player.name])
         # Set up the other tracking variables.
