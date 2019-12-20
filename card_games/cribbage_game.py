@@ -47,6 +47,8 @@ five-card (5-card, 5c): equivalent to one-go cards=5 discards=1 target-score=61
     skunk=31 last=3
 four-partners (4-partners, 4p): equivalent to n-bots=3 partners cards=5
     discards=1
+gonzo (gz): equivalent to target-score=61 match=5 skunk=41 double-skunk=21
+    skunk-scores=four
 last= (l=): The initial score of the last player to play (default = 0).
 match= (m=): The number of games to play in a match. (default = 1).
     Match results only make sense for two player games.
@@ -817,6 +819,8 @@ class Cribbage(game.Game):
         self.option_set.add_group('four-partners', ['4-partners', '4p'], four_partners)
         three_solo = 'one-go cards=5 discards=1 win=61 skunk=31 n-bots=2 solo'
         self.option_set.add_group('three-solo', ['3-solo', '3s'], three_solo)
+        gonzo = 'target-score=49 match=5 skunk=31 double-skunk=18 skunk-scores=four'
+        self.option_set.add_group('gonzo', ['gz'], gonzo)
         # Interface options (do not count in num_options)
         self.option_set.add_group('fast', 'auto-go auto-score no-cut no-pick')
         self.option_set.add_option('auto-go', ['ag'],
