@@ -47,6 +47,8 @@ chameleon (ch): Equivalent to 'build=any max-passes=1 partial-move reserve=12
     tableau=3 turn-count=1'
 foundation= (f): The rank to start the foundations with.
 free-lane (fl): Empty tableau piles may be filled by any card.
+gonzo (gz): Equivalent to 'max-passes=2 partial-move selective turn-count=1
+    visible-reserve'
 max-passes= (mp): How many passes you get through the deck, -1 for infinite.
 partial-move (pm): Parts of piles may be moved on the tableau.
 rainbow (rb): Equivalent to 'build=any'.
@@ -205,6 +207,8 @@ class Canfield(solitaire.Solitaire):
         # Set the option groups.
         self.option_set.add_group('chameleon', ['ch'],
             'build=any max-passes=1 partial-move reserve-size=12 tableau=3 turn-count=1')
+        self.option_set.add_group('gonzo', ['gz'],
+            'max-passes=2 partial-move selective turn-count=1 visible-reserve')
         self.option_set.add_group('rainbow', ['rb'], 'build=any')
         self.option_set.add_group('rainbow-one', ['rb1'], 'build=any max-passes=2 turn-count=1')
         self.option_set.add_group('storehouse', ['sh'], 'build=suit foundation=2 max-passes=2 turn-count=1')
