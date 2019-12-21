@@ -36,6 +36,9 @@ drop-chance= (dr=): The probability that a cell or pile will be dropped.
     Defaults to 0.33.
 flip-half= (fh=): The probability that half the dealt cards are flipped face
     down. Defaults to 0.5
+gonzo (gz): Equivalent to 'deal_up = 1 down-chance = 0.2 max-cells = 1
+    max-reserve = 2 max-tableau = 7 min-pass = 1 move-chance = 0.9
+    up-chance = 0.2'
 max-cells= (xc=): The maximum number of initial free cells. Defaults to 2.
 max-pass= (xp=): The maximum number of initial passes through the deck.
     Defaults to 3.
@@ -387,6 +390,10 @@ class CalvinCards(solitaire.Solitaire):
         self.option_set.add_option('drop-chance', ['dr'], float, 0.33, check = is_probability)
         self.option_set.add_option('move-chance', ['mv'], float, 0.33, check = is_probability)
         self.option_set.add_option('up-chance', ['up'], float, 0.33, check = is_probability)
+        # Set the option groups.
+        gonzo = 'deal-up = 1 down-chance = 0.2 max-cells = 1 max-reserve = 2 max-tableau = 7 min-pass = 1 '
+        gonzo += 'move-chance = 0.9 up-chance = 0.2'
+        self.option_set.add_group('gonzo', ['gz'], gonzo)
 
     def set_solitaire(self):
         """Randomize the beginning of the solitaire game. (None)"""
