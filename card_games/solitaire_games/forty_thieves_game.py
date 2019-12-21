@@ -42,6 +42,7 @@ dress-parade (rank-and-file, dp, rf) Equivalent to 'alt-color down-rows=3
     move-seq'.
 emperor (deauville, em, dv): Equivalent to 'alt-color down-rows=3'.
 found-aces (fa): Start the game with the aces on the foundations.
+gonzo (gz): Equivalent to 'columns=8 down-rows=4 move-seq rows=5'.
 indian: Equivalent to 'down-rows=1 c=10 r=3 not-suit'.
 limited (ltd): Equivalent to 'c=12 r=3'.
 lucas: Equivalent to 'found-aces c=13 r=3'.
@@ -145,6 +146,7 @@ class FortyThieves(solitaire.MultiSolitaire):
         self.option_set.add_group('emperor', ['deauville', 'dv', 'em'], 'streets down-rows=3')
         self.option_set.add_group('dress-parade', ['dp', 'rf', 'rank-and-file'],
             'streets down-rows=3 move-seq')
+        self.option_set.add_group('gonzo', ['gz'], 'columns=8 down-rows=4 move-seq rows=5')
         self.option_set.add_group('lucas', 'found-aces c=13 r=3')
         self.option_set.add_group('maria', 'alt-color c=9 r=4')
         self.option_set.add_group('limited', ['ltd'], 'c=12 r=3')
