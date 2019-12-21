@@ -51,6 +51,8 @@ extras= (x=): How do deal with extra cards where there are not four players.
     heart (h): The extra cards form a kitty that goes to the winner of the
         first heart.
     jokers (j): Jokers are added to the deck to even out the hands.
+gonzo: Equivalent to 'bonus = jd break-hearts heart-score = face low-club
+    no-tricks = 5 pass-dir = rot-left'. b=jd bh hs=f lc nt=5 pd=@
 heart-score= (hs=): How hearts are scored. Valid setting are:
     face (f): Hearts score 1, face cards score more: J = 2, Q = 3, K = 4, A =5.
     one (o): Hearts score one point each.
@@ -1131,6 +1133,9 @@ class Hearts(game.Game):
             question = 'How many points should be taken off if a player wins no tricks? ')
         self.option_set.add_option('end', ['e'], int, 100, valid = range(50, 1000),
             question = 'How many points for one player should end the game (return for 100)? ')
+        # Set the option groups.
+        gonzo = 'bonus = jd break-hearts heart-score = face low-club no-tricks = 5 pass-dir = rot-left'
+        self.option_set.add_group('gonzo', ['gz'], gonzo)
 
     def set_pass(self):
         """Set up the passing of cards for this hand. (None)"""
