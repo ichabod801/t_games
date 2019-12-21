@@ -144,11 +144,21 @@ class Bisley(solitaire.Solitaire):
                 words.append(' ')
         return ''.join(words)
 
+    def handle_options(self):
+        """Handle the options for the game. (None)"""
+        super(Bisley, self).handle_options()
+        if self.reserved:
+            self.options['num-reserve'] = 1
+            self.options['num-tableau'] = 12
+
     def set_checkers(self):
         """Set the game specific rules. (None)"""
         super(Bisley, self).set_checkers()
         # Set up the dealers.
-        self.dealers = [solitaire.deal_aces_up, solitaire.deal_bisley]
+        if self.reserved:
+            self.dealers = [solitaire.deal_aces_up, solitaire.deal_reserve_n(4), solitaire.deal_bisley]
+        else:
+            self.dealers = [solitaire.deal_aces_up, solitaire.deal_bisley]
         # Set up the rule checkers.
         self.build_checkers = [solitaire.build_one]
         self.lane_checkers = [solitaire.lane_none]
@@ -158,6 +168,9 @@ class Bisley(solitaire.Solitaire):
     def set_options(self):
         """Set up the possible options for the game. (None)"""
         self.options = {'num-foundations': 8, 'num-tableau': 13}
+        self.option_set.add_group('gonzo', ['gz'], 'reserved')
+        self.option_set.add_option('reserved', ['r'],
+            question = 'Should one tableau pile be made into a reserve pile? bool')
 
     def tableau_text(self):
         """Generate the text representation of the foundations."""
@@ -171,7 +184,7 @@ class Bisley(solitaire.Solitaire):
         for row_index in range(row_max):
             # Add a row and loop through the columns.
             rows.append([])
-            for column_index in range(13):
+            for column_index in range(len(self.tableau)):
                 # Shift the first four columns under the ace foundations
                 if row_index == 0 and column_index < 4:
                     continue
