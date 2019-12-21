@@ -51,6 +51,7 @@ challenge (ch): The twos then the aces are dealt on the bottom row.
 egnellahc (eg): The aces then the twos are dealt on the bottom row.
 fill-free (ff): The free cells are filled with the last four cards from the
     deck.
+gonzo (gz): Equivalent to 'cells = 2 fill-free piles = 10 supercell'
 kings-only (ko): Only kings can be used to fill free cells.
 piles= (p=): The number of tableau piles. 4-10, defaults to 8.
 supercell (sc): One random card in each pile is turned face down.
@@ -184,3 +185,5 @@ class FreeCell(solitaire.Solitaire):
             question = 'Should the kings be the only card playable to empty lanes? bool')
         self.option_set.add_option('baker', ['b'],
             question = "Should tableau cards be built by suit (Baker's Game)? bool")
+        # Set the option groups.
+        self.option_set.add_group('gonzo', ['gz'], 'cells = 2 fill-free piles = 10 supercell')
