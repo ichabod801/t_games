@@ -39,6 +39,7 @@ through twice.
 
 OPTIONS = """
 harp (h): Equivalent to max-passes = 4.
+gonzo (gz): Equivalent to max-passes = -1 piles = 10.
 max-passes= (mp=): How many times you can go through the stock.
 piles= (p=): How many tableau piles there should be.
 """
@@ -98,4 +99,5 @@ class Gargantua(solitaire.MultiSolitaire):
             default = 9, converter = int, question = 'How many tableau piles should their be? ')
         self.option_set.add_option('max-passes', ['mp'], action = 'key=max-passes', target = self.options,
         	default = 2, converter = int, question = 'How many time can you go through the stock? ')
+        self.option_set.add_group('gonzo', ['gz'], 'max-passes = -1 piles = 10')
         self.option_set.add_group('harp', ['h'], 'max-passes=4')
