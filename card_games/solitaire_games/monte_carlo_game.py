@@ -39,6 +39,7 @@ Use the match command to pair two cards and sort them to the foundation.
 """
 
 OPTIONS = """
+gonzo (gz): Equivalent to rows=3.
 thirteen (13): Pairs adding to thirteen can be matched, kings can be sorted to the
     foundation.
 rows= (r=): The number of rows dealt (defaults to 5).
@@ -160,8 +161,9 @@ class MonteCarlo(solitaire.Solitaire):
         self.options = {'num-foundations': 1}
         self.option_set.add_option('thirteen', ['13'], question = 'Do you want to match sums of 13? bool')
         self.option_set.add_option('rows', ['r'], action = "key=num-tableau",
-            converter = lambda x: int(x) * 5, default = 25, valid = (20, 25, 30), target = self.options,
+            converter = lambda x: int(x) * 5, default = 25, valid = (15, 20, 25, 30), target = self.options,
             question = 'How many rows should be dealt (4-6, return for 5)? ')
+        self.option_set.add_group('gonzo', ['gz'], 'rows=3')
 
     def tableau_text(self):
         """Generate the text representation of the tableau piles. (str)"""
