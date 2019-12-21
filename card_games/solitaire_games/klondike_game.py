@@ -55,6 +55,7 @@ through as many times as you wish.
 """
 
 OPTIONS = """
+gonzo (gz) Equivalent to 'piles=8 switch-one'.
 piles= (p=): How many tableau piles there should be.
 switch-one (s1): You can switch to turning over one card at a time, but only for
     one last pass through the deck. (use the switch command)
@@ -370,6 +371,8 @@ class Klondike(solitaire.Solitaire):
         self.option_set.add_option('turn-one', ['t1'], action = 'key=turn-count', target = self.options,
             value = 1, default = 3,
             question = 'Would you like to go through the stock one card at a time? bool')
+        # Set the option groups.
+        self.option_set.add_group('gonzo', ['gz'], 'piles=8 switch-one')
 
 
 def sim_test(start = 1, end = 100):
