@@ -312,7 +312,7 @@ class SnakesAndLadders(game.Game):
     categories = ['Board Games']
     credits = CREDITS
     name = 'Snakes and Ladders'
-    num_options = 3
+    num_options = 4
     options = OPTIONS
     rules = RULES
 

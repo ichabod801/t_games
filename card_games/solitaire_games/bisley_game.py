@@ -56,6 +56,7 @@ class Bisley(solitaire.Solitaire):
     categories = ['Card Games', 'Solitaire Games', 'Open Games']
     credits = CREDITS
     name = 'Bisley'
+    num_options = 1
     rules = RULES
 
     def __str__(self):
