@@ -126,3 +126,4 @@ class Strategy(solitaire.Solitaire):
         self.option_set.add_option('piles', ['p'], action = 'key=num-tableau', converter = int,
             default = 8, valid = range(1, 9), target = self.options,
             question = 'How many tableau piles (1-8, return for 8)? ')
+        self.option_set.add_group('gonzo', ['gz'], 'piles = 6')
