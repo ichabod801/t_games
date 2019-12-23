@@ -241,6 +241,7 @@ class Thoughtful(solitaire.Solitaire):
         self.option_set.add_option('piles', ['p'], action = 'key=num-tableau', converter = int,
             default = 7, valid = range(4, 10), target = self.options,
             question = 'How many tableau piles (4-9, return for 7)? ')
+        self.option_set.add_group('gonzo', ['gz'], 'piles = 6')
 
     def set_up(self):
         """Set up the game. (None)"""
