@@ -37,6 +37,7 @@ tableau piles may be filled with a king or any stack starting with a king.
 """
 
 OPTIONS = """
+gonzo (gz): Equivalent to 'piles = 8'.
 piles= (p=): How many tableau piles there should be.
 suits (s, russian): Cards must be matched by suit, not alternating color.
 """
@@ -141,3 +142,5 @@ class Yukon(solitaire.Solitaire):
             default = 7, converter = int, question = 'How many tableau piles should their be?')
         self.option_set.add_option('suits', ['s', 'russian'],
             question = 'Should building be done by suits instead of alternating colors? bool')
+        # Set the option groups.
+        self.option_set.add_group('gonzo', ['gz'], 'piles = 8')
