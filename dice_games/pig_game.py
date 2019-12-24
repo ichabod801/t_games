@@ -48,6 +48,7 @@ Bot Design: Roger Johnson, Reiner Knizia, Todd Neller, Craig O'Brien,
 
 OPTIONS = """
 even-turns (et): Everyone gets the same number of turns.
+gonzo (gz): Equivalent to 'even-turns shuffle=3' with all of the preset bots.
 shuffle= (sh=): Use a shuffle die with the specified number of repeats.
 six-bad (6b): Turns end with no score on a six instead of a one.
 
@@ -699,6 +700,8 @@ class Pig(game.Game):
             default = None)
         # Default bots.
         self.option_set.default_bots = [(PigBotBasePaceRace, ())]
+        # Set the option groups.
+        self.option_set.add_group('gonzo', ['gz'], 'even-turns shuffle=3 st e m h i k 666 x')
 
     def set_up(self):
         """Set up the game. (None)"""
