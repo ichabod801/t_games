@@ -31,6 +31,7 @@ Game Programming: Craig "Ichabod" O'Brien
 OPTIONS = """
 bot-level (bl): Set the difficulty of the bot. Can be stupid (s), easy (e), or
     medium (m).
+gonzo (gz): Equivalent to 'one-pawn win=32'.
 one-pawn (1p): Have only one pawn on each die instead of two.
 win= (w=): How many points it takes to win (defaults to 64).
 """
@@ -333,6 +334,7 @@ class Mate(game.Game):
             question = 'Should there only be one pawn on the dice (return for two)? bool')
         self.option_set.add_option('win', ['w'], int, default = 64,
             question = 'How many points should it take to win (return for 64)? ')
+        self.option_set.add_group('gonzo', ['gz'], 'one-pawn win=32')
 
     def set_up(self):
         """Set up the game. (None)"""
