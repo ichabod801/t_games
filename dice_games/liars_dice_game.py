@@ -43,6 +43,7 @@ betting (b): Instead of tokens going out of the game, they go to the winner of
     the challenge.
 challenge (chal): Add a bot with different challenge heuristics to the game.
 double (dbl): Add a double trouble (challenger + liar) bot to the game.
+gonzo (gz): Equivalent to 'betting tokens=1 two-rerolls'.
 honest (abe): Add an honest (mostly) bot to the game.
 liar (lr): Add a dishonest (sometimes) bot to the game.
 tokens= (t=): Change the number of tokens each player has. (default = 3)
@@ -828,6 +829,8 @@ class LiarsDice(game.Game):
         self.option_set.add_option('double', ['dbl'], action = 'bot', value = (), default = None)
         # Set the default bots.
         self.option_set.default_bots = [(ABBot, ()), (Challenger, ()), (Liar, ()), (DoubleTrouble, ())]
+        # Set the option groups.
+        self.option_set.add_group('gonzo', ['gz'], 'betting tokens=1 two-rerolls')
 
     def set_up(self):
         """Set up the game. (None)"""
