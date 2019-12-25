@@ -88,6 +88,8 @@ cheerio: Equivalent to five-name=Cheerio big-straight=25 low-straight=20
 general: Equivalent to five-name=Small_General five-kind=60 four-kind=45/40
     full-house=35/30 big-straight=25/20 low-straight=0 chance=0 super-five
     wild-straight
+gonzo: Equivalent to five-name=Gonzo three-kind=sub-total low-chance=total
+    n-bonus=40/65 super-five wild-straight
 hindenberg: Equivalent to five-name=Hindenberg five-kind=30 big-straight=20
     low-straight=15 four-kind=0 chance=0
 yahtzee: Equivalent to five-name=Yahtzee big-straight=40 full-house=25
@@ -907,10 +909,6 @@ class Yacht(game.Game):
                 except TypeError:
                     # Any unscored categories will send the code here.
                     pass
-            # Reset the dice for the next player.
-            self.roll_count = 1
-            self.dice.release()
-            self.dice.roll()
             # Check for instant win.
             if self.super_five and score and category == self.score_cats[-1] and self.roll_count == 1:
                 self.force_end = True
@@ -925,6 +923,10 @@ class Yacht(game.Game):
                     elif self.scores[player.name] == human_score:
                         self.win_loss_draw[1] += 1
                         self.win_loss_draw[2] -= 1
+            # Reset the dice for the next player.
+            self.roll_count = 1
+            self.dice.release()
+            self.dice.roll()
             return False
         # Check for secondary fives of a kind.
         elif self.extra_five and self.score_cats[-1] == category:
@@ -1089,6 +1091,8 @@ class Yacht(game.Game):
         self.option_set.add_group('general', ['gen'],
             'five-name=Small_General five-kind=60 four-kind=45/40 full-house=35/30 big-straight=25/20 ' +
             'low-straight=0 chance=0 super-five wild-straight')
+        self.option_set.add_group('gonzo', ['gz'],
+            'five-name=Gonzo three-kind=sub-total low-chance=total n-bonus=65/40 super-five wild-straight')
         self.option_set.add_group('hindenberg', ['hin'],
             'five-name=Hindenberg five-kind=30 big-straight=20 low-straight=15 four-kind=0 chance=0')
         self.option_set.add_group('yahtzee', ['zee'],
