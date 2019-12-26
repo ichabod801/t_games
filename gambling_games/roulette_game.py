@@ -37,6 +37,7 @@ which has a house edge of 7.89%.
 OPTIONS = """
 american (a): Use the American layout (the default).
 french (f): Use the French layout.
+gonzo (gz): Equvalent to 'limit=1000 uk-rule'.
 limit= (l=): The maximum bet for any single bet, defaults to 10.
 stake= (s=): How much money you start with, defaults to 100.
 uk-rule (uk): Outside bets on half the numbers only lose half the bet.
@@ -1356,6 +1357,8 @@ class Roulette(game.Game):
         # Set the payout options.
         self.option_set.add_option('uk-rule', ['uk'],
             question = 'Should the UK rule (1/2 back on lost 1:1 bets) be in effect? bool')
+        # Set the option groups.
+        self.option_set.add_group('gonzo', ['gz'], 'limit=1000 uk-rule')
 
     def set_up(self):
         """Set up the game. (None)"""
