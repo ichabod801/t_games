@@ -89,6 +89,8 @@ the bots will cry.
 
 OPTIONS = """
 cars-pay-3 (c3): Make 12 (boxcars) pay 3:1 on a field bet.
+gonzo (gz): Equivalent to 'cars-pay-3 limit=1000 max-payout=5 odds-max=81
+    yo-pays-2'.
 lazy-hard (lh): Turns hard way bets off during the come out roll.
 limit= (l=): The maximum ammount that can be bet (20).
 max-payout= (m$=): The multiple of the limit that is the maximum payout (3).
@@ -153,7 +155,7 @@ Place: A bet that a specific number (4, 5, 6, 8, 9, or 10) will be rolled
     before a 7. Pays 9:5 on 4 or 10, 7:5 on 5 or 9, and 7:6 on 6 or 8.
 Buy Bet: A place bet that pays true odds. However, you must pay a 5%
     commission to make the bet. Pays out as Odds bet.
-Lay Bet: The revers of a buy bet, betting that a 7 will be rolled first. It
+Lay Bet: The reverse of a buy bet, betting that a 7 will be rolled first. It
     also pays true odds (as a don't pass odds bet), and requires a 5%
     commission to be paid.
 Hard Way (Hard): A hard way bet can be played on 4, 6, 8, or 10. It is a bet
@@ -642,6 +644,9 @@ class Craps(game.Game):
         # Set the bot options.
         self.option_set.add_option('max-players', ['mp'], int, 7, valid = range(1, 21),
             question = 'How many players should be able to play (return for 7)? ')
+        # Set the option groups.
+        gonzo = 'cars-pay-3 limit=1000 max-payout=5 odds-max=81 yo-pays-2'
+        self.option_set.add_group('gonzo', ['gz'], gonzo)
 
     def set_up(self):
         """Set up the game. (None)"""
