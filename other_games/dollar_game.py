@@ -32,8 +32,9 @@ Game Programming: Craig O'Brien, David B. Wilson
 
 OPTIONS = """
 ease= (e=): How easy the graph is to solve (1-5, defaults to 2).
-from-zero (fz, f0): Calculates the inital values from 0 (see above).
-genus= (g=): The genus of the graph (#edges - #nodes + 1).
+from-zero (fz, f0): Calculates the inital values from 0 (see rules).
+genus= (g=): The genus of the graph (#edges - #nodes + 1, defaults to 3).
+gonzo (gz): Equivalent to 'genus=8 nodes=23 ease=1'.
 nodes= (n=): The number of nodes in the graph. Defaults to 5-10 at random.
 """
 
@@ -197,6 +198,7 @@ class DollarGame(game.Game):
         self.option_set.add_option('ease', ['e'], int, 2, valid = (1, 2, 3, 4, 5),
             question = 'How easy should the graph be (return for 3)? ')
         self.option_set.add_option('from-zero', ['fz', 'f0'])
+        self.option_set.add_group('gonzo', ['gz'], 'genus=8 nodes=23 ease=1')
 
     def set_up(self):
         """Set up the game. (None)"""
