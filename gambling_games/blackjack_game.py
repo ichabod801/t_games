@@ -39,6 +39,7 @@ Sp10S10Sp5S1Sp2S2Sp16H4Sp5H5Dh8H5Sp2H5Sp6H4Sp6H4"""
 
 OPTIONS = """
 decks= (d=): The number of decks in the shoe. (1, 2, 4 (default), 6 or 8)
+gonzo (gz): Equivalent to 'decks=8 hands=3 hit-split-ace limit=1000 surrender'.
 hands= (h=): The number hands simultaneously played. (1 (default), 2, or 3)
 hit-split-ace (hsa): You can hit a split ace.
 limit= (l=): The maximum bet. (defaults to 8)
@@ -783,6 +784,8 @@ class Blackjack(game.Game):
             question = 'Should you be able to surrender hands? bool')
         self.option_set.add_option('s17', value = False, default = True, target = 'hit_soft_17',
             question = 'Should the dealer be able to stand on a soft 17? bool')
+        # Set the option groups.
+        self.option_set.add_group('gonzo', ['gz'], 'decks=8 hands=3 hit-split-ace limit=1000 surrender')
 
     def set_up(self):
         """Set up the game. (None)"""
