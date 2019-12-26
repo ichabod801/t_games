@@ -129,6 +129,7 @@ angle play would be 1-y-#-z-5.
 """
 
 OPTIONS = """
+gonzo (gz): Equivalent to 'stake=1'.
 stake (s): How much money you start with (defaults to 100).
 """
 
@@ -861,6 +862,8 @@ class Slots(game.Game):
         # Set the betting options.
         self.option_set.add_option('stake', ['s'], int, 100, check = lambda bucks: bucks > 0,
             question = 'How much money would you like to start with (return for 100)? ')
+        # Set the option groups.
+        self.option_set.add_group('gonzo', ['gz'], 'stake=1')
 
     def set_up(self):
         """Set up the slot machines. (None)"""
