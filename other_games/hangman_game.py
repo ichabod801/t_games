@@ -49,6 +49,7 @@ NUMBERS = '1234567890' * 3
 
 OPTIONS = """
 difficulty= (d=): The difficulty of the game, from 1 to 10 (default = 5).
+gonzo (gz): Equivalent to 'difficulty=10'.
 status (s): See the status of the computer's thinking.
 """
 
@@ -348,6 +349,7 @@ class Hangman(game.Game):
             question = "Would you like updates on the computer's thinking? bool")
         self.option_set.add_option('difficulty', ['diff', 'd'], int, valid = range(1, 11), default = 5,
             question = "What difficulty level from 1 to 10 would you like to play at (return for 5)? ")
+        self.option_set.add_group('gonzo', ['gz'], 'difficulty=10')
 
     def set_up(self):
         """Set up the game. (None)"""
