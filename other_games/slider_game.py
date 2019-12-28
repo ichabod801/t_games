@@ -321,7 +321,7 @@ class Slider(game.Game):
             question = 'What text should the solution be (return for numbers + letters)? ')
         self.option_set.add_option('shuffles', ['sh'], default = 3, check = lambda x: x > 0,
             question = 'How many times should the puzzle be shuffled (return for 3)? ')
-        #self.option_set.add_group('gonzo', ['gz'], 'columns=6 rows=10')
+        self.option_set.add_group('gonzo', ['gz'], 'columns=6 rows=10')
 
     def set_up(self):
         """Set up the board for the game. (None)"""
