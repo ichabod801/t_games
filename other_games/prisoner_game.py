@@ -38,12 +38,14 @@ Bot Design: Robert Axelrod, B. Beaufils, S. Braver, K. Deb, J. Delahaye, James
 """
 
 OPTIONS = """
-iterations= (i=): The number of rounds played (defaults to 10).
+num-turns= (nt=): The number of rounds played (defaults to 10).
 punishment= (p=): The punishment score. It must be higher than the sucker bet.
 reward= (r=): The reward score. It must be higher than the punishment score.
 sucker= (s=): The sucker bet score. It must be lower than the punishment score.
 temptation= (t=): The temptation score. It must be higher than the reward
     score.
+gonzo (gz): Equivalent to 'iterations=12 hard-majr grim pavlov prober random
+    soft-majr tit-tat tit-2tat 2tit-tat'.
 
 Bot Options:
 all-co (ac): Add an Always Cooperate bot.
@@ -613,6 +615,9 @@ class PrisonersDilemma(game.Game):
         # Set the turn options
         self.option_set.add_option('num-turns', ['nt'], int, default = 10,
             question = 'How many turns should be played (return for 10)? ')
+        # Set the option groups.
+        gonzo = 'num-turns=12 hard-majr grim pavlov prober random soft-majr tit-tat tit-2tat 2tit-tat'
+        self.option_set.add_group('gonzo', ['gz'], gonzo)
 
     def set_up(self):
         """Set up the game. (None)"""
