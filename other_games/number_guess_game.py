@@ -32,8 +32,9 @@ Game Programming: Craig "Ichabod" O'Brien
 
 OPTIONS = """
 easy (e): Play against a random opponent.
-high (h): The highest possible secret number (defaults to 108).
-low (l): The lowest possible secret number (defaults to 1).
+gonzo (gz): Equivalent to 'high=1001'.
+high= (h=): The highest possible secret number (defaults to 108).
+low= (l=): The lowest possible secret number (defaults to 1).
 """
 
 RULES = """
@@ -360,6 +361,7 @@ class NumberGuess(game.Game):
             question = 'What should the lowest possible number be (return for 1)? ')
         self.option_set.add_option('high', ['h'], int, 108,
             question = 'What should the highest possible number be (return for 108)? ')
+        self.option_set.add_group('gonzo', ['gz'], 'high=1001')
 
     def set_up(self):
         """Set up the game. (None)"""
