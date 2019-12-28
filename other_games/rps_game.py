@@ -39,6 +39,7 @@ Special Thanks: Matt Groening
 OPTIONS = """
 bot= (b=): The bot you will play against. The valid bots are bart (b), lisa
     (l), memor (m), and Randy (r). Defaults to Memor.
+gonzo (gz): Equivalent to 'bot=randy lizard-spock match=23'.
 lizard-spock (ls): Add the lizard and Spock moves.
 match= (m=): The number of rounds played. Defaults to 3.
 """
@@ -421,6 +422,8 @@ class RPS(game.Game):
             default = None, question = 'Would you like to play with lizard and Spock? bool')
         self.option_set.add_option('match', ['m'], int, default = 3, check = lambda x: x > 0,
             question = 'How many games should there be in the match? (return for 3)? ')
+        # Set the option groups.
+        self.option_set.add_group('gonzo', ['gz'], 'bot=randy lizard-spock match=23')
 
     def set_up(self):
         """Set up the game. (None)"""
