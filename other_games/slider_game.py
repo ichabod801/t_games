@@ -32,6 +32,7 @@ Game Programming: Craig "Ichabod" O'Brien
 
 OPTIONS = """
 columns= (c=): The number of columns in the puzzle.
+gonzo (gz): Equivalent to 'columns=6 rows=10'.
 rows= (r=): The number of rows in the puzzle.
 size= (s=): The number of columns and rows in the table.
 shuffle= (sh=): The number of times to shuffle the solved puzzle before play.
@@ -314,12 +315,13 @@ class Slider(game.Game):
             question = 'How many columns should the board have (return for 4)? ')
         self.option_set.add_option('rows', ['r'], int, 4, check = lambda x: x > 0,
             question = 'How many columns should the board have (return for 4)? ')
-        self.option_set.add_option('size', ['s'], int, 4, check = lambda x: x > 0,
+        self.option_set.add_option('size', ['s'], int, 0, check = lambda x: x > 0,
             question = 'How many columns and rows should the board have (return for 4)? ')
         self.option_set.add_option('text', ['t'], default = '',
             question = 'What text should the solution be (return for numbers + letters)? ')
         self.option_set.add_option('shuffles', ['sh'], default = 3, check = lambda x: x > 0,
             question = 'How many times should the puzzle be shuffled (return for 3)? ')
+        #self.option_set.add_group('gonzo', ['gz'], 'columns=6 rows=10')
 
     def set_up(self):
         """Set up the board for the game. (None)"""
