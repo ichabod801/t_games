@@ -36,6 +36,7 @@ be.
 """
 
 OPTIONS = """
+gonzo (gz): Equivalent to 'plague-chance=30 rat-chance=80'.
 plague-chance= (pc=): The chance of plague. 0 to 100, defaults to 15.
 rat-chance= (rc=): The chance of rats eating grain. 0 to 100, defaults to 40.
 steady-grain (sg): Grain yields are more likely to be average.
@@ -389,6 +390,8 @@ class Hamurabi(game.Game):
             question = 'Should land prices be steadier? bool')
         self.option_set.add_option('steady-grain', ['sg'],
             question = 'Should grain yields be steadier? bool')
+        # Set option groups.
+        self.option_set.add_group('gonzo', ['gz'], 'plague-chance=30 rat-chance=80')
 
     def set_up(self):
         """Set up the game. (None)"""
