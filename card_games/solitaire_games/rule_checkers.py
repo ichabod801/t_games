@@ -55,7 +55,8 @@ deal_pyramid: Deal a pyramid of overlapping cards. (None)
 deal_queens_out: Discard the queensl (None)
 deal_random_n: Create a dealer to deal n cards into random piles. (None)
 deal_rank_foundations: Deal a specific rank to the foundations. (None)
-deal_reserve_n: Create a dealer that deals n cards to the reserve (None)
+deal_reserve_by_n: Create a dealer of n-card piles to the reserve. (function)
+deal_reserve_n: Create a dealer that deals n cards to the reserve (function)
 deal_selective: Deal tableau cards with selection of foundation rank. (None)
 deal_start_foundation: Deal an initial foundation card. (None)
 deal_stock_all: Move the rest of the deck into the stock. (None)
@@ -553,15 +554,40 @@ def deal_rank_foundations(rank):
     return dealer
 
 
+def deal_reserve_by_n(n, up = False):
+    """
+    Create a dealer that deals piles of n cards to the reserve. (function)
+
+    The top card is always dealt face up.
+
+    Parameters:
+    n: The number cards to deal to each reserve pile. (int)
+    up: A flag for dealing the cards face up. (bool)
+    """
+    def dealer(game):
+        # Deal the cards
+        pile_index = 0
+        while game.deck.cards and pile_index < len(game.reserve):
+            for card in range(n):
+                game.deck.deal(game.reserve[pile_index], up)
+                if not game.deck.cards:
+                    break
+            pile_index += 1
+        # Flip cards face up.
+        for pile in game.reserve:
+            pile[-1].up = True
+    return dealer
+
+
 def deal_reserve_n(n, up = False):
     """
-    Create a dealer that deals n cards to the reserve (function)
+    Create a dealer that deals n cards to the reserve. (function)
 
     The top card is always dealt face up.
 
     Parameters:
     n: The number of cards to deal to the reserve. (int)
-    up: A flag for dealing the cards face up. (str)
+    up: A flag for dealing the cards face up. (bool)
     """
     def dealer(game):
         # Deal the cards.

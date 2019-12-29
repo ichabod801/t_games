@@ -9,6 +9,7 @@ See the top level __init__.py file for details on the t_games license.
 Constants:
 CREDITS: The credits for the game. (str)
 INITIAL_PURCHASES: The text shown before making the initial purchases. (str)
+OPTIONS: The options for the game. (str)
 RULES: The rules of the game. (str)
 TACTICS: The possible tactics options against riders. (str)
 
@@ -43,6 +44,13 @@ You have ${} to spend on the following items:
       face in the mountains.
     * Miscellaneous Supplies: This includes medicine and other things you
       will need for sickness and emergency repairs.
+"""
+
+OPTIONS = """
+fort-mod= (fm=): The maximum the forts can overcharge. Defaults to 0.5 (50%).
+gonzo: Equivalent to 'money = 550 fort-mod = 1 max-bang = 4'.
+max-bang= (mb=): How hard it is too shoot. 1-7, 1 is hardest, defaults to 7.
+money= (m=, $=): How much money you start with. $400 - $1000, defaults to $700.
 """
 
 RULES = """
@@ -156,6 +164,8 @@ class OregonTrail(game.Game):
         'October', 'November', 'December']
     name = 'Oregon Trail'
     num_options = 3
+    options = OPTIONS
+    rules = RULES
     tactics_map = {'1': 'attack', '2': 'retreat', '3': 'continue', '4': 'circle', 'a': 'attack',
         'r': 'retreat', 'c': 'continue', 'w': 'circle'}
 
@@ -718,6 +728,7 @@ class OregonTrail(game.Game):
             question = 'How hard should it be to shoot (lower is harder, return for 7)? ')
         self.option_set.add_option('fort-mod', ['fm'], float, 0.5, check = lambda x: 0 <= x <= 1,
             question = 'What is the maximum forts can stiff you (%, return for 0.5)? ')
+        self.option_set.add_group('gonzo', ['gz'], 'money = 550 fort-mod = 1 max-bang = 4')
 
     def set_up(self):
         """Set up the game. (None)"""

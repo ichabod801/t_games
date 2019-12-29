@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: Credits for Canfield. (str)
+OPTIONS: Options for Canfield. (str)
 RULES: Rules for Canfield. (str)
 
 Classes:
@@ -38,13 +39,16 @@ tableau may only be filled from the reserve. If the reserve is empty, cards
 from the waste may be used to fill empty spots on the tableau.
 
 Stacks on the tableau may be moved, but only if the whole stack is moved.
+"""
 
-Options:
+OPTIONS = """
 build= (b): How tableau piles are built by suit. (alt-color, suit, or any)
 chameleon (ch): Equivalent to 'build=any max-passes=1 partial-move reserve=12
     tableau=3 turn-count=1'
 foundation= (f): The rank to start the foundations with.
 free-lane (fl): Empty tableau piles may be filled by any card.
+gonzo (gz): Equivalent to 'max-passes=2 partial-move selective turn-count=1
+    visible-reserve'
 max-passes= (mp): How many passes you get through the deck, -1 for infinite.
 partial-move (pm): Parts of piles may be moved on the tableau.
 rainbow (rb): Equivalent to 'build=any'.
@@ -87,6 +91,7 @@ class Canfield(solitaire.Solitaire):
     credits = CREDITS
     name = 'Canfield'
     num_options = 10
+    options = OPTIONS
     rules = RULES
 
     def do_gipf(self, arguments):
@@ -202,6 +207,8 @@ class Canfield(solitaire.Solitaire):
         # Set the option groups.
         self.option_set.add_group('chameleon', ['ch'],
             'build=any max-passes=1 partial-move reserve-size=12 tableau=3 turn-count=1')
+        self.option_set.add_group('gonzo', ['gz'],
+            'max-passes=2 partial-move selective turn-count=1 visible-reserve')
         self.option_set.add_group('rainbow', ['rb'], 'build=any')
         self.option_set.add_group('rainbow-one', ['rb1'], 'build=any max-passes=2 turn-count=1')
         self.option_set.add_group('storehouse', ['sh'], 'build=suit foundation=2 max-passes=2 turn-count=1')

@@ -40,8 +40,10 @@ whole stack will automatically be sorted.
 Turning cards over from the stock deals one face up card to the top of each
 tableau pile. You may not turn over cards from the stock if you have any empty
 tableau piles.
+"""
 
-Options:
+OPTIONS = """
+gonzo (gz): Equivalent to 'open relaxed-turn'.
 one-suit (1s): The deck is all one suit (spades).
 open (o): All tableau cards are dealt face up.
 relaxed-turn (relaxed, rt): You may turn over cards from the deck when you
@@ -74,6 +76,7 @@ class Spider(solitaire.MultiSolitaire):
     credits = CREDITS
     name = 'Spider'
     num_options = 4
+    options = OPTIONS
     rules = RULES
 
     def auto_sort_check(self):
@@ -192,3 +195,5 @@ class Spider(solitaire.MultiSolitaire):
         # Set the play options.
         self.option_set.add_option('relaxed-turn', ['relaxed', 'rt'],
             question = 'Should you be able to turn over cards with empty lanes? bool')
+        # Set the option groups.
+        self.option_set.add_group('gonzo', ['gz'], 'open relaxed-turn')

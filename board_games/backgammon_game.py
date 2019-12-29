@@ -17,6 +17,7 @@ CONTACT_WEIGHTS: Weights for PubEvalBot while there's' contact. (list of float)
 CREDITS: The credits for the game. (str)
 FRAME_HIGH: The top of the frame for displaying the board. (list of str)
 FRAME_LOW: The bottom of the frame for displaying the board. (list of str)
+OPTIONS: The options for Backgammon. (str)
 OUT: The index for pieces born off the board. (int)
 RACE_WEIGHTS: Weights for PubEvalBot while it's a race. (list of float)
 RULES: The rules of Backgammon. (str)
@@ -71,6 +72,14 @@ FRAME_HIGH = ['  1 1 1 1 1 1   1 2 2 2 2 2  ', '  3 4 5 6 7 8   9 0 1 2 3 4  ',
 
 FRAME_LOW = ['+-------------+-------------+', '  1 1 1                      ',
     '  2 1 0 9 8 7   6 5 4 3 2 1  ']
+
+OPTIONS = """
+gonzo (gz): Equivalent to 'layout = hyper match = 18'.
+layout (l): Which layout to use: long (lg), standard (st), nack (nk), or
+    hyper (hy).
+match (m): The winning match score. Defaults to 1, or non-match play.
+o: The human player plays with the red (O) pieces.
+"""
 
 OUT = -2
 
@@ -140,12 +149,6 @@ the stakes, control of the doubling die goes to the player who accepted the
 doubling of the stakes, and only they can double the stakes again.
 
 You may get both players' pip counts at any time with the pips command.
-
-Options:
-o: The human player plays with the red (O) pieces.
-layout (l): Which layout to use: long (lg), standard (st), nack (nk), or
-    hyper (hy).
-match (m): The winning match score. Defaults to 1, or non-match play.
 """
 
 START = -3
@@ -896,6 +899,7 @@ class Backgammon(game.Game):
         'st': ((6, 5), (8, 3), (13, 5), (24, 2))}
     name = 'Backgammon'
     num_options = 3
+    options = OPTIONS
     rules = RULES
 
     def auto_bear(self, player, piece):
@@ -1384,12 +1388,13 @@ class Backgammon(game.Game):
     def set_options(self):
         """Define the options for the game. (None)"""
         self.option_set.default_bots = [(AdditiveBot, ())]
-        self.option_set.add_option('o', target = 'human_piece', value = 'O', default = 'X',
-            question = 'Would you like to play with the O piece? bool')
         self.option_set.add_option('match', ['m'], int, 1, check = lambda x: x > 0,
             question = 'What should be the winning match score (return for 1)? ')
         self.option_set.add_option('layout', ['l'], options.lower, action = 'map', value = self.layouts,
             default = 'standard', question = 'What layout would you like to use (return for standard)? ')
+        self.option_set.add_option('o', target = 'human_piece', value = 'O', default = 'X',
+            question = 'Would you like to play with the O piece? bool')
+        self.option_set.add_group('gonzo', ['gz'], 'layout = hyper match = 18')
 
     def set_up(self):
         """Set up the game. (None)"""

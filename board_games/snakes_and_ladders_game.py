@@ -6,6 +6,11 @@ A game of Snakes and Ladders
 Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
+Constants:
+CREDITS: The credits for ConnectFour. (str)
+OPTIONS: The options for ConnectFour. (str)
+RULES: The rules for ConnectFour. (str)
+
 Classes:
 SnakeBoard: A boustrophedon baord for Snakes and Ladders. (board.Lineboard)
 SnakeBot: A basic bot for Snakes and Ladders. (player.Bot)
@@ -27,6 +32,20 @@ Game Design: Traditional (India)
 Game Programming: Craig "Ichabod" O'Brien
 """
 
+OPTIONS = """
+bots= (b=): How many bots you play against. (1-11, default is 3)
+exact= (x=): You must land on the last space exactly to win. If exact is
+    'bounce', you bounce back from the last space if you roll too high. If it
+    is 'stop', you just don't move. The default is 'no', which means rolling
+    too high is still a win.
+gonzo (gz): Equivalent to 'bots = 11 exact = bounce stomp'.
+layout= (l=): The layout can be 'milton' (the layout of Milton-Bradley's Chutes
+    and Ladders), 'nepal' (a Nepalese version of the board) or 'easy'/'medium'/
+    'hard' (random layouts of varying difficutly)
+stomp (s): If you land on another player, they are sent back to where you
+    started.
+"""
+
 RULES = """
 The game consists of a square grid of numbered squares, with snakes and
 laddders connecting non-adjacent squares. The board follows a boustrophedon
@@ -35,16 +54,6 @@ a die, which determines how many squares forward you move. If you roll a 6
 you get to roll again. If you end any move at the top of a snake or the
 bottom of a ladder, you move down the snake or up the ladder to the square at
 the other end. The first one to get to or past the end of the board wins.
-
-Options:
-bots= (b=): How many bots you play against. (1-11, default is 3)
-exact= (x=): You must land on the last space exactly to win. If exact is
-    'bounce', you bounce back from the last space if you roll too high. If it
-    is 'stop', you just don't move. The default is 'no', which means rolling
-    too high is still a win.
-layout= (l=): The layout can be 'milton' (the layout of Milton-Bradley's Chutes
-    and Ladders), 'nepal' (a Nepalese version of the board) or 'easy'/'medium'/
-    'hard' (random layouts of varying difficutly)
 """
 
 
@@ -63,6 +72,7 @@ class SnakeBoard(board.LineBoard):
     ladders: The ladders on the board. (dict of int: int)
     rows: How many rows the board has.
     snakes: The snakes on the board. (dict of int: int)
+    stomp: A flag for landing on a piece sending it to where you started. (bool)
 
     Class Attributes:
     layouts: Diffent layouts for the board. (dict of str: list)
@@ -82,22 +92,25 @@ class SnakeBoard(board.LineBoard):
         (47, 26), (49, 11), (51, 67), (56, 53), (62, 19), (64, 60), (71, 91), (80, 100), (87, 24), (93, 73),
         (95, 75), (98, 78)]}
 
-    def __init__(self, name = 'milton', exact = 'no'):
+    def __init__(self, game):
         """
         Set up the board. (None)
 
         Parameters:
-        name: The name of the layout. (str)
-        exact: Whether an exact roll is needed for a win. (str)
+        game: The game the board is being used for. (SnakesAndLadders)
         """
         # Set up the basic attributes.
-        self.exact = exact
+        self.game = game
+        self.exact = game.exact
+        self.stomp = game.stomp
         self.die = dice.Die()
+        # Get the piece to player mapping.
+        self.piece_to_player = {piece: name for name, piece in game.pieces.items()}
         # Get the layout.
-        if name in ('easy', 'medium', 'hard'):
-            layout = self.random_layout(name)
+        if game.layout in ('easy', 'medium', 'hard'):
+            layout = self.random_layout(game.layout)
         else:
-            layout = self.layouts[name]
+            layout = self.layouts[game.layout]
         # Initialize the base line board.
         self.columns, self.rows = layout[0]
         super(SnakeBoard, self).__init__(self.columns * self.rows, extra_cells = [0])
@@ -213,12 +226,27 @@ class SnakeBoard(board.LineBoard):
             new_end = self.snakes[end]
             player.tell('Square #{} is a snake down to square #{}.'.format(end, new_end))
             end = new_end
-        # Place the piece in the new square.
-        self.cells[end].add_piece(piece)
         # Check for getting another roll after a six.
         if roll == 6 and end != self.columns * self.rows:
             player.tell('{} rolled a 6, so they get to roll again.'.format(player.name))
+            self.cells[end].add_piece(piece)
             end = self.roll(player, end, piece)
+        # Calculate the moves.
+        else:
+            # Check for stomp moves.
+            if self.stomp and self.cells[end].contents:
+                # Move the stomped piece back.
+                start = self.game.scores[player.name]
+                foe = self.cells[end].contents.pop()
+                self.cells[start].add_piece(foe)
+                # Update the score.
+                foe_name = self.piece_to_player[foe]
+                self.game.scores[foe_name] = start
+                # Inform the human
+                self.game.human.tell('{} was moved back to space #{}.'.format(foe_name, start))
+            # Move the piece.
+            self.cells[end].add_piece(piece)
+            self.game.scores[player.name] = end
         # Return the final square for game tracking.
         return end
 
@@ -244,7 +272,7 @@ class SnakeBot(player.Bot):
             return ''
         # Choose a piece.
         elif prompt.startswith('\nWhat symbol'):
-            return random.choice('!@#$%^&*<>?')
+            return random.choice('!@#$%^&*<>?OXZH')
 
     def tell(self, *args, **kwargs):
         """
@@ -262,6 +290,12 @@ class SnakesAndLadders(game.Game):
     """
     A game of Snakes and Ladders. (game.Game)
 
+    Attributes:
+    bots: How many computer opponents there are in the game. (int)
+    exact: The behavior when rolling over the end of the board. (str)
+    layout: The name of the board layout to be used. (str)
+    stomp: A flag for landing on a piece sending it to where you started. (bool)
+
     Methods:
     do_roll: Roll and move on the board.
 
@@ -278,7 +312,8 @@ class SnakesAndLadders(game.Game):
     categories = ['Board Games']
     credits = CREDITS
     name = 'Snakes and Ladders'
-    num_options = 3
+    num_options = 4
+    options = OPTIONS
     rules = RULES
 
     def do_auto(self, arguments):
@@ -327,7 +362,7 @@ class SnakesAndLadders(game.Game):
         # Roll and move the player's piece.
         location = self.scores[player.name]
         piece = self.pieces[player.name]
-        self.scores[player.name] = self.board.roll(player, location, piece, self.force)
+        end = self.board.roll(player, location, piece, self.force)
         self.force = 0
         # Check for turning off automatic play.
         if self.scores[player.name] >= self.auto:
@@ -403,6 +438,9 @@ class SnakesAndLadders(game.Game):
             question = 'What board layout should be used (return for milton)? ')
         self.option_set.add_option('exact', ['x'], str.lower, 'no', valid = ['no', 'stop', 'bounce'],
             question = 'What happens if you roll over 100 (stop, bounce, or return for no)? ')
+        self.option_set.add_option('stomp', ['s'],
+            question = 'Should landing on a piece send it back to where you started? bool')
+        self.option_set.add_group('gonzo', ['gz'], 'bots = 11 exact = bounce stomp')
 
     def set_up(self):
         """Set up the game."""
@@ -417,7 +455,7 @@ class SnakesAndLadders(game.Game):
                     # All symbols must be visible and unique.
                     if piece in taken_pieces:
                         player.tell('That symbol is already taken, please choose another.')
-                    elif not piece:
+                    elif not piece.strip():
                         player.tell('You are not allowed to be invisible.')
                     # Store the symbol and go to the next player.
                     else:
@@ -425,7 +463,7 @@ class SnakesAndLadders(game.Game):
                         taken_pieces.add(piece[0])
                         break
         # Set up the board and player tracking.
-        self.board = SnakeBoard(self.layout, self.exact)
+        self.board = SnakeBoard(self)
         for player in self.players:
             self.board.cells[0].add_piece(self.pieces[player.name])
         # Set up the other tracking variables.

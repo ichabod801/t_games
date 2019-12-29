@@ -105,6 +105,8 @@ class Interface(other_cmd.OtherCmd):
     do_credits: Show the programming credits for the interface. (bool)
     do_games: List the available games. (bool)
     do_home: Go to the top of the menu tree. (bool)
+    do_info: Show the information for the game specified as an argument. (bool)
+    do_options: Show the options for the specified game. (bool)
     do_play: Play a game with the specified options, if any. (bool)
     do_random: Play a random game. (bool)
     do_rules: Show the rules for the specified game. (bool)
@@ -122,6 +124,7 @@ class Interface(other_cmd.OtherCmd):
     cell_defaults = {'border': 'dead', 'hood': 3, 'length': 27, 'rule': 110, 'start': 'random',
         'symbol': '@', 'width': 79}
     help_text = {'help': HELP_TEXT, 'license': LICENSE}
+    options = '\nOptions have not been implemented for the interface.'
     rules = RULES
     word_list = 'other_games/3of6game.txt'
 
@@ -332,6 +335,49 @@ class Interface(other_cmd.OtherCmd):
         self.focus = self.categories
         self.previous = []
         self.titles = ['Home Menu']
+
+    def do_info(self, arguments):
+        """
+        Show the rules, credits, and options for the game specified as an argument.
+
+        Without a game specified, this just shows the info for the current game.
+        """
+        arguments = arguments.lower()
+        if not arguments:
+            # Show the general options.
+            info = (self.rules.strip(), full_credits.FULL_CREDITS[1:], self.options.strip())
+        elif arguments in self.games:
+            # Show options for a specific game.
+            info = (self.games[arguments].rules, self.games[arguments].credits,
+                self.games[arguments].options)
+            info = (text.strip() for text in info)
+        else:
+            # Show an error.
+            self.human.error("\nI do not know the information for that game.")
+            return True
+        template = '\nRULES:\n\n{}\n\nCREDITS:\n\n{}\n\nOPTIONS:\n\n{}'
+        self.human.tell(template.format(*info))
+        self.human.ask('\nPress Enter to continue: ')
+        return True
+
+    def do_options(self, arguments):
+        """
+        Show the options for the game specified as an argument.
+
+        Without a game specified, this just shows the options for the current game.
+        """
+        arguments = arguments.lower()
+        if not arguments:
+            # Show the general options.
+            print(self.options)
+        elif arguments in self.games:
+            # Show options for a specific game.
+            self.human.tell(self.games[arguments].options)
+            self.human.ask('Press Enter to continue: ')
+        else:
+            # Show an error.
+            self.human.error("\nI do not know the options to that game.")
+        return True
 
     def do_play(self, arguments):
         """

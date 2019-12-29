@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Qualdrille. (str)
+OPTIONS: The options for Quadrille. (str)
 RULES: The rules for Quadrille. (str)
 
 Classes:
@@ -24,6 +25,14 @@ from . import solitaire_game as solitaire
 CREDITS = """
 Game Design: Traditional
 Game Programming: Craig "Ichabod" O'Brien
+"""
+
+# The options for Quadrille.
+OPTIONS = """
+cells= (c=): The number of free cells available. One to four, defaults to zero.
+gonzo (gz): Equivalent to 'max-passes=2 cells=1'
+max-passes= (mp=): The number of times you can go through the stock. Defaults
+    to 3, -1 counts as infinite.
 """
 
 # The rules for Quadrille.
@@ -60,12 +69,20 @@ class Quadrille(solitaire.Solitaire):
     categories = ['Card Games', 'Solitaire Games', 'Revealing Games']
     credits = CREDITS
     name = 'Quadrille'
+    num_options = 2
+    options = OPTIONS
     rules = RULES
 
     def __str__(self):
         """Generate a human readable text representation. (str)"""
         piles = self.foundations
-        lines = ['', '      {}'.format(piles[2][-1])]
+        lines = ['']
+        if self.options['num-cells']:
+            cards = [str(card) for card in self.cells]
+            blanks = ['--' for blank in range(self.options['num-cells'] - len(self.cells))]
+            lines.append(' '.join(cards + blanks))
+            lines.append('')
+        lines.append('      {}'.format(piles[2][-1]))
         lines.append('  {}      {}'.format(piles[5][-1], piles[6][-1]))
         lines.append('      QH')
         lines.append('{}  QD  QS  {}'.format(piles[1][-1], piles[3][-1]))
@@ -184,3 +201,10 @@ class Quadrille(solitaire.Solitaire):
         """Set the available game options."""
         self.options = {'num-foundations': 8, 'num-reserve': 4, 'turn-count': 1, 'max-passes': 3,
             'wrap-ranks': True}
+        self.option_set.add_option('cells', ['c'], action = 'key=num-cells', converter = int,
+            default = 0, valid = range(1, 5), target = self.options,
+            question = 'How many free cells (1-4, return for 4)? ')
+        self.option_set.add_option('max-passes', ['mp'], action = 'key=max-passes', converter = int,
+            default = 3, valid = range(-1, 11), target = self.options,
+            question = 'How many free cells (-1(infinite)-10, return for 3)? ')
+        self.option_set.add_group('gonzo', ['gz'], 'cells=1 max-passes=2')

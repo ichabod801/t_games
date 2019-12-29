@@ -10,6 +10,7 @@ Constants:
 BUY_ODDS: The odds for buy bets. (dict of int: tuple of int)
 CREDITS: The credits for Craps. (str)
 HOUSE_HELP: Help text for the house edge. (str)
+OPTIONS: The options for Craps. (str)
 PLACE_ODDS: The odds for place bets. (dict of int: tuple of int)
 RULES: The rules for Craps. (str)
 
@@ -86,6 +87,21 @@ However, Don't Pass bets are considered rude. Stick to don't come bets, or
 the bots will cry.
 """
 
+OPTIONS = """
+cars-pay-3 (c3): Make 12 (boxcars) pay 3:1 on a field bet.
+gonzo (gz): Equivalent to 'cars-pay-3 limit=1000 max-payout=5 odds-max=81
+    yo-pays-2'.
+lazy-hard (lh): Turns hard way bets off during the come out roll.
+limit= (l=): The maximum ammount that can be bet (20).
+max-payout= (m$=): The multiple of the limit that is the maximum payout (3).
+max-players= (mp=): The maximum number of players at the table (7).
+odds-max= (om=): The multiple of the limit for odds bets. If odds-max = 345,
+    the maximum is 3x the limit for 4 or 10, 4x the limit for 5 or 9, and 5x
+    the limit for 6 or 10. (345)
+stake= (s=): The ammount of money the player starts with (250).
+yo-pays-2 (y2): Makes 11 (yo) pay 2:1 on a field bet.
+"""
+
 PLACE_ODDS = {4: (9, 5), 5: (7, 5), 6: (7, 6), 8: (7, 6), 9: (7, 5), 10: (9, 5)}
 
 RULES = """
@@ -139,7 +155,7 @@ Place: A bet that a specific number (4, 5, 6, 8, 9, or 10) will be rolled
     before a 7. Pays 9:5 on 4 or 10, 7:5 on 5 or 9, and 7:6 on 6 or 8.
 Buy Bet: A place bet that pays true odds. However, you must pay a 5%
     commission to make the bet. Pays out as Odds bet.
-Lay Bet: The revers of a buy bet, betting that a 7 will be rolled first. It
+Lay Bet: The reverse of a buy bet, betting that a 7 will be rolled first. It
     also pays true odds (as a don't pass odds bet), and requires a 5%
     commission to be paid.
 Hard Way (Hard): A hard way bet can be played on 4, 6, 8, or 10. It is a bet
@@ -174,18 +190,6 @@ Done (d): Finish betting on the next roll.
 Remove (x): Some bets can be taken back after being made. This command will
     show you your removable bets and allow you to take them back.
 Roll (r): Finish betting and roll the dice.
-
-OPTIONS:
-cars-pay-3 (c3): Make 12 (boxcars) pay 3:1 on a field bet.
-lazy-hard (lh): Turns hard way bets off during the come out roll.
-limit= (l=): The maximum ammount that can be bet (20).
-max-payout= (m$=): The multiple of the limit that is the maximum payout (3).
-max-players= (mp=): The maximum number of players at the table (7).
-odds-max= (om=): The multiple of the limit for odds bets. If odds-max = 345,
-    the maximum is 3x the limit for 4 or 10, 4x the limit for 5 or 9, and 5x
-    the limit for 6 or 10. (345)
-stake= (s=): The ammount of money the player starts with (250).
-yo-pays-2 (y2): Makes 11 (yo) pay 2:1 on a field bet.
 """
 
 class Craps(game.Game):
@@ -247,6 +251,7 @@ class Craps(game.Game):
     name = 'Craps'
     num_options = 8
     odds_multiples = {4: 3, 5: 4, 6: 5, 8: 5, 9: 4, 10: 3}
+    options = OPTIONS
     rules = RULES
 
     def __str__(self):
@@ -639,6 +644,9 @@ class Craps(game.Game):
         # Set the bot options.
         self.option_set.add_option('max-players', ['mp'], int, 7, valid = range(1, 21),
             question = 'How many players should be able to play (return for 7)? ')
+        # Set the option groups.
+        gonzo = 'cars-pay-3 limit=1000 max-payout=5 odds-max=81 yo-pays-2'
+        self.option_set.add_group('gonzo', ['gz'], gonzo)
 
     def set_up(self):
         """Set up the game. (None)"""

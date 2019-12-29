@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Hearts. (str)
+OPTIONS: The options for Hearts. (str)
 RULES: The rules to Hearts. (str)
 
 Classes:
@@ -33,32 +34,7 @@ Game Design: Traditional
 Game Programming: Craig "Ichabod" O'Brien
 """
 
-RULES = """
-In the standard four player game, 13 cards are dealt to each player. Each
-player chooses three cards to pass to their right, and recieves three cards
-from their left.
-
-The player to the left of the dealer starts by playing a card. Each player in
-turn must play a card, matching the suit of the first card if they can. Whoever
-plays the highest card in the suit of the first card (the suit led) wins the
-trick and all of the cards.
-
-When all the cards are played the round is scored. Each heart won in a trick
-scores one point, and the Queen of Spades scores 13 points. Note that points
-are bad: you want to have a low score. Cards that give points are called
-penalty cards. If one player manages to get all of the penalty cards, they
-shoot the Moon. Instead of getting 26 points, they get no points and every
-other player gets 26 points.
-
-After scoring the round, the deal shifts to the left, and a new hand is dealt.
-The game ends when anyone's score goes over 100 points. Whoever has the least
-points at that time wins the game.
-
-You can use the scores command to see the current game score for each player,
-and you can use the taken command to see the cards you have taken so far in
-the current deal.
-
-Options:
+OPTIONS = """
 all-break (ab): Hearts may not lead a trick before a penalty card has been
     played.
 bonus= (b=): The card (usually the JD) that removes up to 10 points from your
@@ -75,6 +51,8 @@ extras= (x=): How do deal with extra cards where there are not four players.
     heart (h): The extra cards form a kitty that goes to the winner of the
         first heart.
     jokers (j): Jokers are added to the deck to even out the hands.
+gonzo: Equivalent to 'bonus = jd break-hearts heart-score = face low-club
+    no-tricks = 5 pass-dir = rot-left'. b=jd bh hs=f lc nt=5 pd=@
 heart-score= (hs=): How hearts are scored. Valid setting are:
     face (f): Hearts score 1, face cards score more: J = 2, Q = 3, K = 4, A =5.
     one (o): Hearts score one point each.
@@ -111,6 +89,33 @@ pass-dir= (pd=): The direction in which cards are passed. Valid settings are:
         round. Start to the left, and when passing to yourself just don't pass.
     scatter (s): Each player passes one other card to each other player.
 """
+
+RULES = """
+In the standard four player game, 13 cards are dealt to each player. Each
+player chooses three cards to pass to their right, and recieves three cards
+from their left.
+
+The player to the left of the dealer starts by playing a card. Each player in
+turn must play a card, matching the suit of the first card if they can. Whoever
+plays the highest card in the suit of the first card (the suit led) wins the
+trick and all of the cards.
+
+When all the cards are played the round is scored. Each heart won in a trick
+scores one point, and the Queen of Spades scores 13 points. Note that points
+are bad: you want to have a low score. Cards that give points are called
+penalty cards. If one player manages to get all of the penalty cards, they
+shoot the Moon. Instead of getting 26 points, they get no points and every
+other player gets 26 points.
+
+After scoring the round, the deal shifts to the left, and a new hand is dealt.
+The game ends when anyone's score goes over 100 points. Whoever has the least
+points at that time wins the game.
+
+You can use the scores command to see the current game score for each player,
+and you can use the taken command to see the cards you have taken so far in
+the current deal.
+"""
+
 
 class HeartBot(player.Bot):
     """
@@ -587,6 +592,7 @@ class Hearts(game.Game):
     credits = CREDITS
     name = 'Hearts'
     num_options = 16
+    options = OPTIONS
     pass_aliases = {'l': 'left', 'r': 'right', 'rl': 'right-left', 'lr': 'left-right', '@': 'rot-left',
         'c': 'central', 'd': 'dealer', 'n': 'not', 's': 'scatter'}
     pass_dirs = {'left': ('left',), 'right': ('right',), 'left-right': ('left', 'right'),
@@ -1127,6 +1133,9 @@ class Hearts(game.Game):
             question = 'How many points should be taken off if a player wins no tricks? ')
         self.option_set.add_option('end', ['e'], int, 100, valid = range(50, 1000),
             question = 'How many points for one player should end the game (return for 100)? ')
+        # Set the option groups.
+        gonzo = 'bonus = jd break-hearts heart-score = face low-club no-tricks = 5 pass-dir = rot-left'
+        self.option_set.add_group('gonzo', ['gz'], gonzo)
 
     def set_pass(self):
         """Set up the passing of cards for this hand. (None)"""

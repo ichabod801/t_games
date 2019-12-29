@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Gin Rummy. (str)
+OPTIONS: The options for Gin Rummy. (str)
 RULES: The rules for Gin Rummy. (str)
 
 Classes:
@@ -28,6 +29,43 @@ from .. import utility
 CREDITS = """
 Game Design: Elwood T. Baker and C. Graham Baker
 Game Programming: Craig "Ichabod" O'Brien
+"""
+
+OPTIONS = """
+ace-gin (ag): Any ace used to determine knock limits indicates that gin is
+    required to knock. Has no effect without discard-limit or side-limit.
+ace-penalty= (ap=): How many points an ace is worth. Defaults to 1.
+alt-deal (ad): Alternate the deal rather than having the winner deal.
+big-gin= (bg=): How many points you get for an eleven card gin. Defaults to 0,
+    which means big gin is not allowed. Usually 31 or 50 when used. To
+    declare big gin, knock with the discard 'big'.
+box-bonus = (bb=, line-bonus=, lb=): The extra points at the end of the game
+    for each hand won. Defaults to 25.
+discard-limit (dl): The first discard each hand determines the maximun number
+    of points you can knock with.
+easy (ez): Play the easier bot opponent.
+end= (e=): The number of points needed to end the game.
+game-bonus= (gb=): The number of extra points scored for ending the game.
+    Defaults to 100.
+gin= (g=): The number of extra points scored with gin. Defaults to 25.
+gin-layoff (gl): Allows layoff on spreads from a gin hand.
+gonzo (gz): Equivalent to ace-gin big-gin discard-limit high-low hollywood
+    spade-doubles
+high-low (hl): Allows aces to be high and/or low in runs.
+hollywood (hw): Three games are scored simultaneously. You first score is
+    scored in the first game, your second is scored in the first and second
+    games, and your third score is scored in all three. Once all three games
+    are finished, whoever won the most games wins the match.
+match= (m=): The number of games in the match. Defaults to 1 / no match.
+oklahoma (ok): Equivalent to 'discard-limit spade-doubles'.
+side-limit (sl): The knock limit for each hand is set by drawing a card from a
+    second deck.
+spade-doubles (sd): If the initial discard is a spade, the score of the hand
+    is doubled.
+straight (s): You can only knock if you have gin.
+tourney-score (ts): Equivalent to 'end=250 match=5'.
+undercut= (uc=): The number of extra points scored for undercutting. Defaults
+    to 25.
 """
 
 RULES = """
@@ -83,40 +121,6 @@ Alternatively, you can give the rank for a run, or the first and last rank of
 a run. So 'T' will take all the tens out as a set. Both '9S-J' and '9-JS' are
 equivalent to '9S TS JS'. Meld abbreviations can also be used for the card to
 move with the left and right commands.
-
-Options:
-ace-gin (ag): Any ace used to determine knock limits indicates that gin is
-    required to knock. Has no effect without discard-limit or side-limit.
-ace-penalty= (ap=): How many points an ace is worth. Defaults to 1.
-alt-deal (ad): Alternate the deal rather than having the winner deal.
-big-gin= (bg=): How many points you get for an eleven card gin. Defaults to 0,
-    which means big gin is not allowed. Usually 31 or 50 when used. To
-    declare big gin, knock with the discard 'big'.
-box-bonus = (bb=, line-bonus=, lb=): The extra points at the end of the game
-    for each hand won. Defaults to 25.
-discard-limit (dl): The first discard each hand determines the maximun number
-    of points you can knock with.
-easy (ez): Play the easier bot opponent.
-end= (e=): The number of points needed to end the game.
-game-bonus= (gb=): The number of extra points scored for ending the game.
-    Defaults to 100.
-gin= (g=): The number of extra points scored with gin. Defaults to 25.
-gin-layoff (gl): Allows layoff on spreads from a gin hand.
-high-low (hl): Allows aces to be high and/or low in runs.
-hollywood (hw): Three games are scored simultaneously. You first score is
-    scored in the first game, your second is scored in the first and second
-    games, and your third score is scored in all three. Once all three games
-    are finished, whoever won the most games wins the match.
-match= (m=): The number of games in the match. Defaults to 1 / no match.
-oklahoma (ok): Equivalent to 'discard-limit spade-doubles'.
-side-limit (sl): The knock limit for each hand is set by drawing a card from a
-    second deck.
-spade-doubles (sd): If the initial discard is a spade, the score of the hand
-    is doubled.
-straight (s): You can only knock if you have gin.
-tourney-score (ts): Equivalent to 'end=250 match=5'.
-undercut= (uc=): The number of extra points scored for undercutting. Defaults
-    to 25.
 """
 
 class GinBot(player.Bot):
@@ -686,6 +690,7 @@ class GinRummy(game.Game):
     credits = CREDITS
     name = 'Gin Rummy'
     num_options = 18
+    options = OPTIONS
     rules = RULES
 
     def deal(self):
@@ -1207,6 +1212,8 @@ class GinRummy(game.Game):
         """Define the options for the game. (None)"""
         # to do: hollywood (triple-score), tedesco? (high-low, round-the-corner, ace-penalty)
         # Set the option groups.
+        gonzo = 'ace-gin big-gin discard-limit high-low hollywood spade-doubles'
+        self.option_set.add_group('gonzo', ['gz'], gonzo)
         self.option_set.add_group('oklahoma', ['ok'], 'discard-limit spade-doubles')
         self.option_set.add_group('round-the-corner', ['rtc'], 'high-low ace-penalty=15')
         self.option_set.add_group('tourney-score', ['ts'], 'end=250 match=5')

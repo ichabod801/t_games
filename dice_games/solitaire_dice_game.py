@@ -43,14 +43,11 @@ If a total has been rolled zero OR five times, it scores nothing. If it has
 been rolled one to four times, it scores -200 points. If it has been rolled
 six to ten times, it scores the number of times it's been rolled over five
 times a value based on the total: 2 and 12 score 100, 3 and 11 score 70, 4
-and 10 score 60, 5 and 9 score 50, 6 and 8 score 40, and 7 scores 30.
+and 10 score 60, 5 and 9 score 50, 6 and 8 score 40, and 7 scores 30. Rolling a
+total eleven or more times results in the same score as rolling it ten times.
 
 Any score under 0 is recorded as a loss, any non-negative score up to 500 is
 recorded as a draw, and any score over 500 is recorded as a win.
-
-Note that when you type in your discard, you can type in three numbers instead
-of one. The second and third numbers are assumed to be your split. This allows
-you to enter your discard and your split at the same time.
 """
 
 SUM_LEADS = ['Pts   Sum Count', '---   --- -----', '(100)  2:', ' (70)  3:',
@@ -202,6 +199,11 @@ class SolitaireDice(game.Game):
         # Set tracking variables.
         self.mode = 'discard'
         self.message = ''
+
+    def set_options(self):
+        """Set the possible options for the game. (None)"""
+        # Add a dummy option group.
+        self.option_set.add_group('gonzo', ['gz'], '')
 
     def set_up(self):
         """Set up the game. (None)"""

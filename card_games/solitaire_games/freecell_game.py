@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: Credits for FreeCell. (str)
+OPTIONS: Options for FreeCell. (str)
 RULES: Rules for FreeCell. (str)
 STACK_HELP: Help on how many cards can be moved at one time. (str)
 
@@ -41,14 +42,16 @@ cells, you can move a stack of three cards one at a time: one each to a free
 cell, then third to the destination card, then the two cards back off the free
 cells. So if you have two empty free cells, the game lets you move three cards
 as one.
+"""
 
-Options:
+OPTIONS = """
 baker (b): Building is done by suit (Baker's Game).
 cells= (c=): The number of free cells available. 1-10, defaults to 4.
 challenge (ch): The twos then the aces are dealt on the bottom row.
 egnellahc (eg): The aces then the twos are dealt on the bottom row.
 fill-free (ff): The free cells are filled with the last four cards from the
     deck.
+gonzo (gz): Equivalent to 'cells = 2 fill-free piles = 10 supercell'
 kings-only (ko): Only kings can be used to fill free cells.
 piles= (p=): The number of tableau piles. 4-10, defaults to 8.
 supercell (sc): One random card in each pile is turned face down.
@@ -98,6 +101,7 @@ class FreeCell(solitaire.Solitaire):
     help_text = {'moving-stacks': STACK_HELP}
     name = 'FreeCell'
     num_options = 8
+    options = OPTIONS
     rules = RULES
 
     def do_gipf(self, arguments):
@@ -181,3 +185,5 @@ class FreeCell(solitaire.Solitaire):
             question = 'Should the kings be the only card playable to empty lanes? bool')
         self.option_set.add_option('baker', ['b'],
             question = "Should tableau cards be built by suit (Baker's Game)? bool")
+        # Set the option groups.
+        self.option_set.add_group('gonzo', ['gz'], 'cells = 2 fill-free piles = 10 supercell')

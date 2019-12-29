@@ -9,6 +9,7 @@ See the top level __init__.py file for details on the t_games license.
 Constants:
 CHOOSE_SIDE: The input prompt for choosing a side. (str)
 CREDITS: The credits for Global Thermonuclear War. (str)
+OPTIONS: The options for Global Thermonuclear War. (str)
 RULES: The rules for Global Thermonuclear War. (str)
 
 Classes:
@@ -44,6 +45,15 @@ Game Design: Craig "Ichabod" O'Brien (based on the movie War Games)
 Game Programming: Craig "Ichabod" O'Brien
 """
 
+OPTIONS = """
+failure-rate= (fr=): The probability a missile will fail. (0 to 0.5, default
+    0.07)
+fast (f): Eliminate pauses while displaying missile actions.
+gonzo (gz): Equivalent to 'failure-rate=0.5'.
+russia (r): Play as Russia.
+united-states (us): Play as the United States of America.
+"""
+
 RULES = """
 Each turn you can select primary targets (to fire 5 missiles at) and secondary
 targets (to fire 2 missiles at). Targets are cities. The game has a database of
@@ -57,13 +67,6 @@ an argument, and returns information on that country.
 
 To win, you just need to make sure that no one dies in either your country or
 any of your allies' countries.
-
-Options:
-failure-rate= (fr=): The probability a missile will fail. (0 to 0.5, default
-    0.07)
-fast (f): Eliminate pauses while displaying missile actions.
-russia (r): Play as Russia.
-united-states (us): Play as the United States of America.
 """
 
 
@@ -117,6 +120,7 @@ class GlobalThermonuclearWar(game.Game):
     earth_radius = 3957
     name = 'Global Thermonuclear War'
     num_options = 2
+    options = OPTIONS
     rules = RULES
     world_population = 7700000000
 
@@ -415,10 +419,11 @@ class GlobalThermonuclearWar(game.Game):
             question = 'Would you like to play the United States? bool')
         self.option_set.add_option('russia', ['r'],
             question = 'Would you like to play Russia? bool')
-        self.option_set.add_option('failure_rate', ['fr'], float, 0.07, check = lambda fr: 0 <= fr < 0.5,
+        self.option_set.add_option('failure-rate', ['fr'], float, 0.07, check = lambda fr: 0 <= fr <= 0.5,
             question = 'What should the missile failure rate be (return for 0.07)? ')
         self.option_set.add_option('fast', ['f'],
             question = 'Would you like to remove the pauses during output? bool')
+        self.option_set.add_group('gonzo', ['gz'], 'failure-rate=0.5')
 
     def set_up(self):
         """Set up the game. (None)"""

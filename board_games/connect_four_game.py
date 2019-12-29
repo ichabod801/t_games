@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The design and programming credits for Connect Four. (str)
+OPTIONS: The options for Connect Four. (str)
 RULES: The rules to Connect Four. (str)
 
 Classes:
@@ -38,20 +39,22 @@ Game Programming: Craig "Ichabod" O'Brien
 Connect Four was originally published by Milton Bradley in 1974.
 """
 
+OPTIONS = """
+bot-level= (b=): How good the computer opponent is. Can be easy (e),
+    medium (m), or hard (h). The default is medium.
+columns (c): How many columns the board should have (4-35, default 7).
+gonzo: Equivalent to 'columns = 17 rows = 18 pop'.
+pop (p): Allow pop moves, where you remove a piece of yours that is at the
+    bottom of a column.
+rows: (r): How many rows the board should have (4-20, default 6).
+"""
+
 RULES = """
 Connect Four is played on a grid six high and seven wide. Players alternate
 placing a piece of their color in one of the columns. The piece played becomes
 the top piece in the column. The first player to get four pieces in a row,
 orthogonally or diagonally, is the winner. If all of the spaces on the board
 are filled, the game is a draw.
-
-Options:
-bot-level= (b=): How good the computer opponent is. Can be easy (e),
-    medium (m), or hard (h). The default is medium.
-columns (c): How many columns the board should have (4-35, default 7).
-pop (p): Allow pop moves, where you remove a piece of yours that is at the
-    bottom of a column.
-rows: (r): How many rows the board should have (4-20, default 6).
 """
 
 
@@ -521,6 +524,7 @@ class ConnectFour(game.Game):
     credits = CREDITS
     name = 'Connect Four'
     num_options = 4
+    options = OPTIONS
     rules = RULES
 
     def __str__(self):
@@ -614,6 +618,8 @@ class ConnectFour(game.Game):
         self.option_set.add_option('bot-level', ['b'],
             valid = ['easy', 'e', 'medium', 'm', 'hard', 'h'], default = 'medium',
             question = 'How hard of a bot do you want to play against (return for medium)? ')
+        # Set the option groups.
+        self.option_set.add_group('gonzo', ['gz'], 'rows = 18 pop')
 
     def player_action(self, now_player):
         """
