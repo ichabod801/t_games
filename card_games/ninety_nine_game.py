@@ -255,9 +255,9 @@ class NinetyNine(game.Game):
             if rank in self.rank99:
                 self.card_values[rank] = (99,)
             elif rank in self.minus:
-                self.card_values[rank] = (-cards.Card.ranks.index(rank),)
+                self.card_values[rank] = (-min(10, cards.Card.ranks.index(rank)),)
             elif rank in self.plus_minus:
-                self.card_values[rank] += (-cards.Card.ranks.index(rank),)
+                self.card_values[rank] += (-min(10, cards.Card.ranks.index(rank)),)
             elif rank in self.zero:
                 self.card_values[rank] = (0,)
         # Set the paleyrs.
