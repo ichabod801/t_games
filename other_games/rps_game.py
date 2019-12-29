@@ -380,7 +380,18 @@ class RPS(game.Game):
             # Update the players.
             self.human.tell('The score is now {}-{}-{}.'.format(*self.win_loss_draw))
             self.bot.tell(move)
-        return sum(self.win_loss_draw[:2]) == self.match
+        if sum(self.win_loss_draw[:2]) == self.match:
+            if self.match > 1:
+                if self.win_loss_draw[0] > self.win_loss_draw[1]:
+                    result = 'won'
+                elif self.win_loss_draw[1] > self.win_loss_draw[0]:
+                    result = 'lost'
+                else:
+                    result = 'drew'
+                self.human.tell('\nYou {} the match, {}-{}-{}.'.format(result, *self.win_loss_draw))
+            return True
+        else:
+            return False
 
     def handle_options(self):
         """Handle any game options. (None)"""
