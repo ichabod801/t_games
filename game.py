@@ -72,6 +72,7 @@ class Game(OtherCmd):
     Attributes:
     flags: Flags for different game events tracked in the results. (int)
     force_end: How to force the end of the game. (str)
+    gonzo: A flag indicating the gonzo option was used. (bool)
     human: The primary player of the game. (Player)
     interface: The interface that started the game playing. (Interface)
     option_set: The definitions of allowed options for the game (OptionSet)
@@ -155,6 +156,8 @@ class Game(OtherCmd):
             self.human.tell('\nWelcome to a game of {}, {}.'.format(self.name, self.human.name))
         # Define and process the game options.
         self.option_set = options.OptionSet(self)
+        raw_words = self.raw_options.lower().split()
+        self.gonzo = 'gonzo' in raw_words or 'gz' in raw_words
         self.set_options()
         self.handle_options()
         # Set up the players.
@@ -394,7 +397,8 @@ class Game(OtherCmd):
         argument = argument.lower()
         if argument in games and games[argument].name not in self.gipfed:
             # Play the game.
-            game = games[argument](self.human, 'none', self.interface)
+            options = 'gonzo' if self.gonzo else 'none'
+            game = games[argument](self.human, options, self.interface)
             results = game.play()
             # Record the giphing.
             self.flags |= 8
