@@ -441,7 +441,7 @@ class PrisonersDilemma(game.Game):
     credits = CREDITS
     move_aliases = {'c': 'cooperate', 'd': 'defect'}
     name = "Prisoner's Dilemma"
-    num_options = 4
+    num_options = 7
     options = OPTIONS
     rules = RULES
 
