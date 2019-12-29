@@ -49,6 +49,7 @@ OPTIONS = """
 failure-rate= (fr=): The probability a missile will fail. (0 to 0.5, default
     0.07)
 fast (f): Eliminate pauses while displaying missile actions.
+gonzo (gz): Equivalent to 'failure-rate=0.5'.
 russia (r): Play as Russia.
 united-states (us): Play as the United States of America.
 """
@@ -418,10 +419,11 @@ class GlobalThermonuclearWar(game.Game):
             question = 'Would you like to play the United States? bool')
         self.option_set.add_option('russia', ['r'],
             question = 'Would you like to play Russia? bool')
-        self.option_set.add_option('failure_rate', ['fr'], float, 0.07, check = lambda fr: 0 <= fr < 0.5,
+        self.option_set.add_option('failure-rate', ['fr'], float, 0.07, check = lambda fr: 0 <= fr <= 0.5,
             question = 'What should the missile failure rate be (return for 0.07)? ')
         self.option_set.add_option('fast', ['f'],
             question = 'Would you like to remove the pauses during output? bool')
+        self.option_set.add_group('gonzo', ['gz'], 'failure-rate=0.5')
 
     def set_up(self):
         """Set up the game. (None)"""
