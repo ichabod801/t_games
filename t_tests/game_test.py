@@ -60,6 +60,20 @@ class GameCommandTest(unittest.TestCase):
         self.game.handle_cmd('obey')
         self.assertEqual(check, self.bot.errors[0])
 
+    def testInfo(self):
+        """Test showing the rules, credits, and options."""
+        check = '\nRULES:\n\nNo rules have been specified for this game.\n'
+        check += '\nCREDITS:\n\nNo credits have been specified for this game.\n'
+        check += '\nOPTIONS:\n\nNo options have been specified for this game.\n'
+        self.game.do_info('')
+        self.assertEqual(check, self.bot.info[1])
+
+    def testOptions(self):
+        """Test showing the options."""
+        check = '\nNo options have been specified for this game.\n'
+        self.game.do_options('')
+        self.assertEqual(check, self.bot.info[1])
+
     def testQuitReturn(self):
         """Test quit command return value."""
         self.assertFalse(self.game.do_quit(''))
