@@ -132,6 +132,7 @@ class GameGipfCheckTest(unittest.TestCase):
     def setUp(self):
         # Make a fake interface.
         game_list = {'dice': unitility.TestGame, 'cards': unitility.TestGame}
+        game_list['dice'].name = 'Dice'
         interface = unitility.ProtoObject(games = game_list)
         # Set up the fake bot.
         self.bot = unitility.AutoBot()
