@@ -131,8 +131,11 @@ class GameGipfCheckTest(unittest.TestCase):
 
     def setUp(self):
         # Make a fake interface.
-        game_list = {'dice': unitility.TestGame, 'cards': unitility.TestGame}
-        game_list['dice'].name = 'Dice'
+        class TestDice(unitility.TestGame):
+            name = 'Dice'
+        class TestCards(unitility.TestGame):
+            name = 'Cards'
+        game_list = {'dice': TestDice, 'cards': TestCards}
         interface = unitility.ProtoObject(games = game_list)
         # Set up the fake bot.
         self.bot = unitility.AutoBot()
@@ -174,7 +177,7 @@ class GameGipfCheckTest(unittest.TestCase):
     def testGiphTracking(self):
         """Test that the game gipfed to is tracked."""
         self.game.gipf_check('Cards', ('cards', 'dice'))
-        self.assertIn('Unit', self.game.gipfed)
+        self.assertIn('Cards', self.game.gipfed)
 
     def testGiphTwice(self):
         """Test that you can't gipf to the same game twice."""
