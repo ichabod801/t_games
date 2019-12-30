@@ -38,7 +38,7 @@ class GameCommandTest(unittest.TestCase):
 
     def testCredits(self):
         """Test showing the credits."""
-        check = 'No credits have been specified for this game.\n'
+        check = '\nNo credits have been specified for this game.\n'
         self.game.do_credits('')
         self.assertEqual(check, self.bot.info[1])
 
@@ -107,7 +107,7 @@ class GameCommandTest(unittest.TestCase):
 
     def testRules(self):
         """Test showing the rules."""
-        check = 'No rules have been specified for this game.\n'
+        check = '\nNo rules have been specified for this game.\n'
         self.game.do_rules('')
         self.assertEqual(check, self.bot.info[1])
 
