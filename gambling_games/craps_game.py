@@ -1393,7 +1393,7 @@ class CrapsBot(player.Bot):
         """
         # Find the maximum possible bet.
         max_bet = int(self.max_re.search(args[0]).group())
-        wager = min(max_bet, self.game.scores[self.name])
+        wager = min(max_bet, max(1, self.game.scores[self.name] // 5))
         # Make that bet.
         message = "\n{} made a {} bet for {} bucks."
         self.game.human.tell(message.format(self.name, self.last_act, wager))
@@ -1414,6 +1414,8 @@ class CrapsBot(player.Bot):
         elif message.startswith('You must have a'):
             self.last_act = "must don't pass"
         elif message.startswith('You have already'):
+            self.last_act = 'must done'
+        elif message.startswith('That is not a valid bet'):
             self.last_act = 'must done'
         else:
             # Raise error on unrecognized errors.

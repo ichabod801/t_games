@@ -38,6 +38,8 @@ Bot Design: Robert Axelrod, B. Beaufils, S. Braver, K. Deb, J. Delahaye, James
 """
 
 OPTIONS = """
+num-extra= (ne=): The maximum number of extra random rounds played (defaults
+    to 3)
 num-turns= (nt=): The number of rounds played (defaults to 10).
 punishment= (p=): The punishment score. It must be higher than the sucker bet.
 reward= (r=): The reward score. It must be higher than the punishment score.
@@ -439,7 +441,7 @@ class PrisonersDilemma(game.Game):
     credits = CREDITS
     move_aliases = {'c': 'cooperate', 'd': 'defect'}
     name = "Prisoner's Dilemma"
-    num_options = 4
+    num_options = 7
     options = OPTIONS
     rules = RULES
 
@@ -466,7 +468,7 @@ class PrisonersDilemma(game.Game):
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
-        if self.turns == self.num_turns:
+        if self.turns == self.total_turns:
             scores = [(score, player) for player, score in self.scores.items()]
             scores.sort(reverse = True)
             human_score = self.scores[self.human.name]
@@ -615,6 +617,8 @@ class PrisonersDilemma(game.Game):
         # Set the turn options
         self.option_set.add_option('num-turns', ['nt'], int, default = 10,
             question = 'How many turns should be played (return for 10)? ')
+        self.option_set.add_option('num-extra', ['ne'], int, default = 3,
+            question = 'What should be the maximum number of random extra rounds (return for 3)? ')
         # Set the option groups.
         gonzo = 'num-turns=12 hard-majr grim pavlov prober random soft-majr tit-tat tit-2tat 2tit-tat'
         self.option_set.add_group('gonzo', ['gz'], gonzo)
@@ -623,3 +627,4 @@ class PrisonersDilemma(game.Game):
         """Set up the game. (None)"""
         self.hypno = False
         self.temp_bonus = False
+        self.total_turns = self.num_turns + random.randint(0, self.num_extra)
