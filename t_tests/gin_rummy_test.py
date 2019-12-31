@@ -301,16 +301,20 @@ class SpreadTest(unittest.TestCase):
         """Test spreading some basic runs and sets."""
         self.setHand('ac 2c 3c 4d 4h 4s 5c 6c 7c 8d')
         self.human.replies = ['ac 2c 3c', '4d 4h 4s', '5c 6c 7c', '']
-        spreads = [card_text(spread) for spread in self.human.replies[:-1]]
-        deadwood = [cards.Card(*'8D')]
-        self.assertEqual((spreads, deadwood), self.game.spread(self.human))
+        scoring_sets = [card_text(spread) for spread in self.human.replies[:-1]]
+        unspread = cards.Hand(self.game.deck)
+        unspread.cards = [cards.Card(*'8D')]
+        spread = cards.Hand(self.game.deck)
+        spread.cards = self.game.hands[self.human.name].cards[:-1]
+        self.assertEqual((scoring_sets, unspread, spread), self.game.spread(self.human))
 
     def testCancel(self):
         """Test resetting during spreading."""
         self.setHand('qh qs qc kd ah 2s 3c 4d 5h 6s')
         self.human.replies = ['q', 'cancel']
         self.game.player_index = 0
-        self.assertEqual(([], card_text('qh qs qc kd ah 2s 3c 4d 5h 6s')), self.game.spread(self.human))
+        spread = cards.Hand(self.game.deck)
+        self.assertEqual(([], self.game.hands[self.human.name], spread), self.game.spread(self.human))
 
     def testCancelFail(self):
         """Test resetting during spreading."""
