@@ -289,9 +289,12 @@ class SpreadTest(unittest.TestCase):
         """Test spreading with a bad meld specification."""
         self.setHand('qh qs qc ad 2d 3d 4h 4s 4c 5d')
         self.human.replies = ['q', 'a-3', 'ad-3', '4', '']
-        spreads = [card_text(spread) for spread in ('qh qs qc', 'ad 2d 3d', '4h 4s 4c')]
-        deadwood = [cards.Card(*'5D')]
-        self.assertEqual((spreads, deadwood), self.game.spread(self.human))
+        scoring_sets = [card_text(spread) for spread in ('qh qs qc', 'ad 2d 3d', '4h 4s 4c')]
+        unspread = cards.Hand(self.game.deck)
+        unspread.cards = [cards.Card(*'5D')]
+        spread = cards.Hand(self.game.deck)
+        spread.cards = self.game.hands[self.human.name].cards[:-1]
+        self.assertEqual((scoring_sets, unspread, spread), self.game.spread(self.human))
         self.assertEqual(["\nInvalid meld specification: 'a-3'.\n"], self.human.errors)
 
     def testBasic(self):

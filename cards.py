@@ -440,7 +440,7 @@ class Hand(object):
 
     def __repr__(self):
         """Debugging text representation. (str)"""
-        text = '<Hand: {}>'.format(self)
+        text = '<Hand: {}>'.format(', '.join([card.up_text for card in self.cards]))
         if text.endswith(': >'):
             return '<Hand: (empty)>'
         else:
