@@ -430,6 +430,21 @@ class Hand(object):
         """
         return item in self.cards
 
+    def __eq__(self, other):
+        """
+        Check for equality with another hand. (bool)
+
+        Two hands are equal if they have the same cards, regardless of order.
+
+        Parameters:
+        other: The hand to check against. (Hand)
+        """
+        # !! needs unit testing.
+        if isinstance(other, Hand):
+            return sorted(self.cards) == sorted(other.cards)
+        else:
+            return False
+
     def __iter__(self):
         """Iterate over the cards in hand. (iterator)"""
         return iter(self.cards)
@@ -440,6 +455,7 @@ class Hand(object):
 
     def __repr__(self):
         """Debugging text representation. (str)"""
+        # !! check unittesting
         text = '<Hand: {}>'.format(', '.join([card.up_text for card in self.cards]))
         if text.endswith(': >'):
             return '<Hand: (empty)>'
