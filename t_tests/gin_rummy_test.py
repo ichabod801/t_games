@@ -359,39 +359,49 @@ class SpreadTest(unittest.TestCase):
         """Test laying off onto the high end of a run."""
         self.setHand('ad ah as 2d 3d 4d 5h 5s 5c 6d')
         self.human.replies = ['ad ah as', '2d 3d 4d', '5h 5s 5c', '6d', '']
-        spreads = [card_text(spread) for spread in self.human.replies[:-1]]
-        deadwood = []
+        scoring_sets = [card_text(spread) for spread in self.human.replies[:-1]]
+        unspread = cards.Hand(self.game.deck)
+        spread = cards.Hand(self.game.deck)
+        spread.cards = self.game.hands[self.human.name].cards[:]
         attack = [card_text('7d 8d 9d')]
         actual = self.game.spread(self.human, attack)
-        self.assertEqual((spreads, deadwood), actual)
+        self.assertEqual((scoring_sets, unspread, spread), actual)
 
     def testLayoffSet(self):
         """Test laying off onto a set."""
         self.setHand('7h 8h 9h ts js qs kc kd kh as')
         self.human.replies = ['7h 8h 9h', 'ts js qs', 'kc kd kh', 'as', '']
-        spreads = [card_text(spread) for spread in self.human.replies[:-1]]
-        deadwood = []
+        scoring_sets = [card_text(spread) for spread in self.human.replies[:-1]]
+        unspread = cards.Hand(self.game.deck)
+        spread = cards.Hand(self.game.deck)
+        spread.cards = self.game.hands[self.human.name].cards[:]
         attack = [card_text('ac ad ah')]
         actual = self.game.spread(self.human, attack)
-        self.assertEqual((spreads, deadwood), actual)
+        self.assertEqual((scoring_sets, unspread, spread), actual)
 
     def testLayoffTwo(self):
         """Test laying off two cards onto a run."""
         self.setHand('2c 3c 4c 5d 5h 5s 6c 7c 8d 9h')
         self.human.replies = ['2c 3c 4c', '5d 5h 5s', '6c 7c', '']
-        spreads = [card_text(spread) for spread in self.human.replies[:-1]]
-        deadwood = card_text('8d 9h')
+        scoring_sets = [card_text(spread) for spread in self.human.replies[:-1]]
+        unspread = cards.Hand(self.game.deck)
+        unspread.cards = card_text('8d 9h')
+        spread = cards.Hand(self.game.deck)
+        spread.cards = self.game.hands[self.human.name].cards[:-2]
         attack = [card_text('8c 9c tc')]
-        self.assertEqual((spreads, deadwood), self.game.spread(self.human, attack))
+        self.assertEqual((scoring_sets, unspread, spread), self.game.spread(self.human, attack))
 
     def testLayoffTwoSplit(self):
         """Test laying off two cards onto a run one at a time."""
         self.setHand('ts js qs kc kd kh 4h 5h ad 2c')
         self.human.replies = ['ts js qs', 'kc kd kh', '4h', '5h', '']
-        spreads = [card_text(spread) for spread in self.human.replies[:-1]]
-        deadwood = card_text('ad 2c')
+        scoring_sets = [card_text(spread) for spread in self.human.replies[:-1]]
+        unspread = cards.Hand(self.game.deck)
+        unspread.cards = card_text('ad 2c')
+        spread = cards.Hand(self.game.deck)
+        spread.cards = self.game.hands[self.human.name].cards[:-2]
         attack = [card_text('ah 2h 3h')]
-        self.assertEqual((spreads, deadwood), self.game.spread(self.human, attack))
+        self.assertEqual((scoring_sets, unspread, spread), self.game.spread(self.human, attack))
 
     def testMultiDead(self):
         """Test spreading with multiple dead cards."""
