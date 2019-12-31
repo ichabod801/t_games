@@ -323,37 +323,47 @@ class SpreadTest(unittest.TestCase):
         self.game.player_index = 1
         self.game.players.append(unitility.AutoBot())
         self.game.players[-1].name = 'Not {}'.format(self.human.name)
-        spreads = [card_text('7c 8c 9c')]
-        deadwood = card_text('td jh qs kc ad 2h 3s')
-        self.assertEqual((spreads, deadwood), self.game.spread(self.human))
+        scoring_sets = [card_text('7c 8c 9c')]
+        unspread = cards.Hand(self.game.deck)
+        unspread.cards = card_text('td jh qs kc ad 2h 3s')
+        spread = cards.Hand(self.game.deck)
+        spread.cards = self.game.hands[self.human.name].cards[:3]
+        self.assertEqual((scoring_sets, unspread, spread), self.game.spread(self.human))
         self.assertEqual(['\nThe defending player may not cancel.\n'], self.human.errors)
 
     def testGin(self):
         """Test spreading a basic gin hand."""
         self.setHand('9h 9s 9c 9d th jh qh ks kc kd')
         self.human.replies = ['9h 9s 9c 9d', 'th jh qh', 'ks kc kd', '']
-        spreads = [card_text(spread) for spread in self.human.replies[:-1]]
-        deadwood = []
-        self.assertEqual((spreads, deadwood), self.game.spread(self.human))
+        scoring_sets = [card_text(spread) for spread in self.human.replies[:-1]]
+        unspread = cards.Hand(self.game.deck)
+        spread = cards.Hand(self.game.deck)
+        spread.cards = self.game.hands[self.human.name].cards[:]
+        self.assertEqual((scoring_sets, unspread, spread), self.game.spread(self.human))
 
     def testInvalid(self):
         """Test spreading an invalid meld."""
         self.setHand('kh ks kc ad 2d 3d 4h 5s 6s 7c')
         self.human.replies = ['kh ks kc', 'ad 2d 3d', '4h 5s 6s', '']
-        spreads = [card_text(spread) for spread in self.human.replies[:2]]
-        deadwood = card_text('4h 5s 6s 7c')
-        self.assertEqual((spreads, deadwood), self.game.spread(self.human))
+        scoring_sets = [card_text(spread) for spread in self.human.replies[:2]]
+        unspread = cards.Hand(self.game.deck)
+        unspread.cards = card_text('4h 5s 6s 7c')
+        spread = cards.Hand(self.game.deck)
+        spread.cards = self.game.hands[self.human.name].cards[:-4]
+        self.assertEqual((scoring_sets, unspread, spread), self.game.spread(self.human))
         self.assertEqual(['That is not a valid meld.\n'], self.human.errors)
 
     def testLayoffHigh(self):
         """Test laying off onto the high end of a run."""
         self.setHand('8d 9d td jh js jd qh qs qd kc')
         self.human.replies = ['8d 9d td', 'jh js jd', 'qh qs qd', 'kc', '']
-        spreads = [card_text(spread) for spread in self.human.replies[:-1]]
-        deadwood = []
+        scoring_sets = [card_text(spread) for spread in self.human.replies[:-1]]
+        unspread = cards.Hand(self.game.deck)
+        spread = cards.Hand(self.game.deck)
+        spread.cards = self.game.hands[self.human.name].cards[:]
         attack = [card_text('tc jc qc')]
         actual = self.game.spread(self.human, attack)
-        self.assertEqual((spreads, deadwood), actual)
+        self.assertEqual((scoring_sets, unspread, spread), actual)
 
     def testLayoffLow(self):
         """Test laying off onto the high end of a run."""
