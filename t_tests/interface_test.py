@@ -242,15 +242,15 @@ class InterfaceGameTest(unittest.TestCase):
 
     def testCategoryParent(self):
         """Test category_games with a sub-category."""
-        check = ['Bisley', 'Canfield', 'Crazy Eights', 'Cribbage', 'Forty Thieves', 'FreeCell']
-        check += ['Gargantua', 'Klondike', 'Monte Carlo', 'Ninety-Nine', 'Pyramid', 'Quadrille']
-        check += ['Spider', 'Strategy', 'Thoughtful Solitaire', 'Yukon']
+        check = ['Bisley', 'Calvin Cards', 'Canfield', 'Crazy Eights', 'Cribbage', 'Forty Thieves']
+        check += ['FreeCell', 'Gargantua', 'Gin Rummy', 'Hearts', 'Klondike', 'Monte Carlo', 'Ninety-Nine']
+        check += ['Pyramid', 'Quadrille', 'Spider', 'Strategy', 'Thoughtful Solitaire', 'Yukon']
         self.interface.focus = self.interface.categories['sub-categories']['Card Games']
         self.assertEqual(check, sorted([game.name for game in self.interface.category_games()]))
 
     def testCategoryTerminal(self):
         """Test category_games with a terminal category."""
-        check = ["Liar's Dice", 'Mate', 'Pig', 'Solitaire Dice', 'Yacht']
+        check = ["Liar's Dice", 'Mate', 'Pig', 'Solitaire Dice', 'Ten Thousand', 'Yacht']
         self.interface.focus = self.interface.categories['sub-categories']['Dice Games']
         self.assertEqual(check, sorted([game.name for game in self.interface.category_games()]))
 
@@ -274,7 +274,8 @@ class InterfaceMenuTest(unittest.TestCase):
         self.bot.replies = ['!']
         self.interface.menu()
         self.assertIn("\nWelcome to Ichabod's Text Game Extravaganza!\n", self.bot.info)
-        self.assertIn("Copyright (C) 2018 by Craig O'Brien and the t_games contributors.\n", self.bot.info)
+        self.assertIn("Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.\n",
+            self.bot.info)
         self.assertIn("For more details type 'help' or 'help license'.\n", self.bot.info)
 
     def testPlay(self):
@@ -624,7 +625,7 @@ class ValveTest(unittest.TestCase):
 
     def testRepr(self):
         """Test a random valve's debugging text representation."""
-        self.assertEqual('<RandomValve 0.0500/0.0500>', repr(self.valve))
+        self.assertEqual('<RandomValve 0.1000/0.1000>', repr(self.valve))
 
     def testReprReset(self):
         """Test a random valve's debugging text representation after it blows."""
@@ -633,7 +634,7 @@ class ValveTest(unittest.TestCase):
             if self.valve.blow(check):
                 break
         # Check the repr.
-        self.assertEqual('<RandomValve 0.0500/0.0500>', repr(self.valve))
+        self.assertEqual('<RandomValve 0.1000/0.1000>', repr(self.valve))
 
     def testReprUsed(self):
         """Test a random valve's debugging text representation after some use."""
