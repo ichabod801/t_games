@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Ninety-Nine. (str)
+OPTIONS: The options for Ninety-Nine. (str)
 RULES: The rules of Ninety-Nine.
 
 Classes:
@@ -32,6 +33,29 @@ Game Design: Traditional (Romani)
 Game Programming: Craig "Ichabod" O'Brien
 """
 
+OPTIONS = """
+99=: The ranks that take the total to 99. It can be one rank or multiple ranks
+    separated by slashes. (default is 9)
+chicago (chi): Equivalent to zero=4/9 skip=9 99=K minus=T plus-minus=!
+easy= (e=): How many easy bots you will play against. (default = 2)
+face=: The ranks that have their face value. This is used to reset default
+    non-face values. Face cards will have a value of 10.
+gonzo (gz): Equivalent to zero=4/k reverse=a jokers=2 99=9/x skip=2 minus=j.
+jokers= (j=): The number of jokers in the deck. Their default value is 99.
+joker-rules (jr): Equivalent to zero=9/k reverse=k jokers=2 99=x skip=!
+medium= (m=): How many medium bots you will play against. (default = 2)
+minus= (-=): The ranks that have their value negated. It can be one rank or
+    multiple ranks separated by slashes.
+plus-minus= (+-=): The ranks that can be positive or negative. It can be one
+    rank or multiple ranks separated by slashes.
+reverse= (r=): The rank that reverses the order of play.
+skip= (s=): The rank that skips the next player.
+zero= (0=): The ranks valued at 0. It can be one rank or multiple ranks separated
+    by slashes.
+
+To set a rank option to no rank, use ! instead of a rank character.
+"""
+
 RULES = """
 Each turn you play a card, adding it's value to the running total. You must
 correctly state the new total when you play a card. For example, if the total
@@ -51,27 +75,6 @@ In addition, a 4 reverses the order of play and a 3 skips the next player's
 turn. Nines take the total to 99, no matter what the previous total was.
 
 The tokens command will show you how many tokens each player has left.
-
-Options:
-99=: The ranks that take the total to 99. It can be one rank or multiple ranks
-    separated by slashes. (default is 9)
-chicago: Equivalent to zero=4/9 skip=9 99=K minus=T plus-minus=!
-easy= (e=): How many easy bots you will play against. (default = 2)
-face=: The ranks that have their face value. This is used to reset default
-    non-face values. Face cards will have a value of 10.
-jokers= (j=): The number of jokers in the deck. Their default value is 99.
-joker-rules: Equivalent to zero=9/k reverse=k jokers=2 99=x skip=!
-medium= (m=): How many medium bots you will play against. (default = 2)
-minus= (-=): The ranks that have their value negated. It can be one rank or
-    multiple ranks separated by slashes.
-plus-minus= (+-=): The ranks that can be positive or negative. It can be one
-    rank or multiple ranks separated by slashes.
-reverse= (r=): The rank that reverses the order of play.
-skip= (s=): The rank that skips the next player.
-zero= (0=): The ranks valued at 0. It can be one rank or multiple ranks separated
-    by slashes.
-
-To set a rank option to no rank, use ! instead of a rank character.
 """
 
 
@@ -122,6 +125,7 @@ class NinetyNine(game.Game):
     name = 'Ninety-Nine'
     ninety_nine_re = re.compile('([1-9atjqkx][cdhs]).*?(-?\d\d?)', re.I)
     num_options = 7
+    options = OPTIONS
     rules = RULES
 
     def clean_up(self):
@@ -251,9 +255,9 @@ class NinetyNine(game.Game):
             if rank in self.rank99:
                 self.card_values[rank] = (99,)
             elif rank in self.minus:
-                self.card_values[rank] = (-cards.Card.ranks.index(rank),)
+                self.card_values[rank] = (-min(10, cards.Card.ranks.index(rank)),)
             elif rank in self.plus_minus:
-                self.card_values[rank] += (-cards.Card.ranks.index(rank),)
+                self.card_values[rank] += (-min(10, cards.Card.ranks.index(rank)),)
             elif rank in self.zero:
                 self.card_values[rank] = (0,)
         # Set the paleyrs.
@@ -364,8 +368,9 @@ class NinetyNine(game.Game):
         def is_rank_list(ranks):
             return all(rank in cards.Card.ranks for rank in ranks)
         # Set the groups.
-        self.option_set.add_group('joker-rules', 'zero=9/k reverse=k jokers=2 99=x skip=!')
-        self.option_set.add_group('chicago', 'zero=4/9 skip=9 99=K minus=T plus-minus=!')
+        self.option_set.add_group('joker-rules', ['jr'], 'zero=9/k reverse=k jokers=2 99=x skip=!')
+        self.option_set.add_group('chicago', ['chi'], 'zero=4/9 skip=9 99=K minus=T plus-minus=!')
+        self.option_set.add_group('gonzo', ['gz'], 'zero=4/k reverse=a jokers=2 99=9/x skip=2 minus=j')
         # Set the bot options.
         self.option_set.add_option('easy', ['e'], converter = int, default = 2, valid = range(1, 11),
             question = 'How many easy bots do you want to play against (return for 2)? ')

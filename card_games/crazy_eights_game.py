@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Crazy Eights. (str)
+OPTIONS: The options for Crazy Eights. (str)
 RULES: The rules for Crazy Eights. (str)
 
 Classes:
@@ -34,6 +35,30 @@ Game Design: Traditional (Venezuela)
 Game Programming: Craig "Ichabod" O'Brien
 """
 
+# The options for Crazy Eights.
+OPTIONS = """
+change= (c): The rank that allows you to change suits. (default = 8)
+change-match (cm): The change suit card must match the discard's suit or rank.
+change-set (cs): The change suit card only changes to it's own suit.
+draw= (d): The rank, typically 2, that forces the next player to draw that many
+    cards without playing any.
+draw-one (d1): A player who can't play only has to draw one card.
+easy= (e): The number of easy bots in the game. (default = 2)
+empty-deck (ed): What to do when the deck is empty: pass (players can pass
+    instead of drawing), reshuffle, or score. (default = score)
+medium= (m): The number of medium bots in the game. (default = 2)
+multi-score (ms): Each players scores the points in the largest hand minus the
+    points in their own hand.
+one-alert (1a): A warning is given when a player has one card.
+one-round (1r): Only play one round.
+psychotic (@, gonzo, gz): The four special ranks are set randomly, and change
+    every deal.
+reverse= (r): The rank, typically A, that reverses the order of play.
+skip= (s): The rank, typically Q, that skips the next player.
+
+To set a rank option to no rank, use ! instead of a rank character.
+"""
+
 # The rules for Crazy Eights.
 RULES = """
 Each player is dealt 5 cards, 7 in a two player game. The top card of the deck
@@ -52,27 +77,6 @@ points are split between the tied players. After scoring, all cards are
 shuffled into the deck and the game is started again.
 
 The first player to get 50 points times the number of players wins the game.
-
-Options:
-change= (c): The rank that allows you to change suits. (default = 8)
-change-match (cm): The change suit card must match the discard's suit or rank.
-change-set (cs): The change suit card only changes to it's own suit.
-draw= (d): The rank, typically 2, that forces the next player to draw that many
-    cards without playing any.
-draw-one (d1): A player who can't play only has to draw one card.
-easy= (e): The number of easy bots in the game. (default = 2)
-empty-deck (ed): What to do when the deck is empty: pass (players can pass
-    instead of drawing), reshuffle, or score. (default = score)
-medium= (m): The number of medium bots in the game. (default = 2)
-multi-score (ms): Each players scores the points in the largest hand minus the
-    points in their own hand.
-one-alert (1a): A warning is given when a player has one card.
-one-round (1r): Only play one round.
-psychotic (@): The four special ranks are set randomly, and change every deal.
-reverse= (r): The rank, typically A, that reverses the order of play.
-skip= (s): The rank, typically Q, that skips the next player.
-
-To set a rank option to no rank, use ! instead of a rank character.
 """
 
 
@@ -332,6 +336,7 @@ class CrazyEights(game.Game):
     credits = CREDITS
     name = 'Crazy Eights'
     num_options = 13
+    options = OPTIONS
     rules = RULES
 
     def deal(self, keep_one = False):
@@ -754,7 +759,7 @@ class CrazyEights(game.Game):
         self.option_set.add_option('skip', ['s'], convert_rank, '', valid = cards.Card.ranks,
             question = 'What rank should skip the next player? ', error_text = rank_error,
             target = 'skip_rank')
-        self.option_set.add_option('psychotic', ['@'],
+        self.option_set.add_option('psychotic', ['@', 'gonzo', 'gz'],
             question = 'Are you mentally divergent, friend? bool')
         # Set the bot options.
         self.option_set.add_option('easy', ['e'], int, 2, valid = range(10), target = 'num_easy',

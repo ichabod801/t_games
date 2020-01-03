@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: Credits for Gargantua. (str)
+OPTIONS: Options for Gargantua. (str)
 RULES: Rules for Gargantua. (str)
 
 Classes:
@@ -34,9 +35,11 @@ be filled with a king or a stack starting with a king.
 
 Cards from the stock are turned over one at a time. The stock may only be gone
 through twice.
+"""
 
-Options:
-harp: Equivalent to max-passes = 4.
+OPTIONS = """
+harp (h): Equivalent to max-passes = 4.
+gonzo (gz): Equivalent to max-passes = -1 piles = 10.
 max-passes= (mp=): How many times you can go through the stock.
 piles= (p=): How many tableau piles there should be.
 """
@@ -55,6 +58,7 @@ class Gargantua(solitaire.MultiSolitaire):
     credits = CREDITS
     name = 'Gargantua'
     num_options = 2
+    options = OPTIONS
     rules = RULES
 
     def do_gipf(self, arguments):
@@ -95,4 +99,5 @@ class Gargantua(solitaire.MultiSolitaire):
             default = 9, converter = int, question = 'How many tableau piles should their be? ')
         self.option_set.add_option('max-passes', ['mp'], action = 'key=max-passes', target = self.options,
         	default = 2, converter = int, question = 'How many time can you go through the stock? ')
-        self.option_set.add_group('harp', 'max-passes=4')
+        self.option_set.add_group('gonzo', ['gz'], 'max-passes = -1 piles = 10')
+        self.option_set.add_group('harp', ['h'], 'max-passes=4')

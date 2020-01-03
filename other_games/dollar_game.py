@@ -9,6 +9,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for the Dollar Game. (str)
+OPTIONS: The options for the Dollar Game. (str)
 RULES: The rules of the Dollar Game. (str)
 
 Classes:
@@ -27,6 +28,14 @@ from .. import utility
 CREDITS = """
 Game Design: Matt Baker
 Game Programming: Craig O'Brien, David B. Wilson
+"""
+
+OPTIONS = """
+ease= (e=): How easy the graph is to solve (1-5, defaults to 2).
+from-zero (fz, f0): Calculates the inital values from 0 (see rules).
+genus= (g=): The genus of the graph (#edges - #nodes + 1, defaults to 3).
+gonzo (gz): Equivalent to 'genus=8 nodes=23 ease=1'.
+nodes= (n=): The number of nodes in the graph. Defaults to 5-10 at random.
 """
 
 RULES = """
@@ -50,12 +59,6 @@ values from -n to n (where n is the number of nodes) to each node, and then
 randomly normalizing the values based on the genus and the ease options. The
 from-zero option starts all the values at 0, and adds or subtracts from node
 values randomly until the total based on the genus and the ease is reached.
-
-Options:
-ease= (e=): How easy the graph is to solve (1-5, defaults to 2).
-from-zero (fz, f0): Calculates the inital values from 0 (see above).
-genus= (g=): The genus of the graph (#edges - #nodes + 1).
-nodes= (n=): The number of nodes in the graph. Defaults to 5-10 at random.
 """
 
 
@@ -93,6 +96,7 @@ class DollarGame(game.Game):
     credits = CREDITS
     name = 'The Dollar Game'
     num_options = 4
+    options = OPTIONS
     rules = RULES
 
     def do_donate(self, arguments):
@@ -194,6 +198,7 @@ class DollarGame(game.Game):
         self.option_set.add_option('ease', ['e'], int, 2, valid = (1, 2, 3, 4, 5),
             question = 'How easy should the graph be (return for 3)? ')
         self.option_set.add_option('from-zero', ['fz', 'f0'])
+        self.option_set.add_group('gonzo', ['gz'], 'genus=8 nodes=23 ease=1')
 
     def set_up(self):
         """Set up the game. (None)"""

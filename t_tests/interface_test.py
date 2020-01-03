@@ -68,7 +68,7 @@ class InterfaceCommandTest(unittest.TestCase):
     def testGamesParent(self):
         """Test do_games with a sub-category."""
         # Set up the bot and the interface.
-        self.interface.categories = TEST_CATEGORIES
+        self.interface.categories = TEST_CATEGORIES.copy()
         self.interface.focus = self.interface.categories
         self.bot.replies = ['']
         # Get and check the game shown.
@@ -79,7 +79,7 @@ class InterfaceCommandTest(unittest.TestCase):
     def testGamesTerminal(self):
         """Test do_games with a terminal category."""
         # Set up the bot and the interface.
-        self.interface.categories = TEST_CATEGORIES
+        self.interface.categories = TEST_CATEGORIES.copy()
         self.interface.focus = self.interface.categories['sub-categories']['Unit Games']
         self.bot.replies = ['']
         # Get and check the game shown.
@@ -126,7 +126,7 @@ class InterfaceCommandTest(unittest.TestCase):
         """Test do_random forcing all games."""
         # Set up the bot and the interface.
         self.bot.replies = ['n', '!', 'lose', '!', 'lose', '!', 'lose', 'n']
-        self.interface.categories = TEST_CATEGORIES
+        self.interface.categories = TEST_CATEGORIES.copy()
         self.interface.games = {game.name: game for game in TEST_GAMES}
         self.interface.focus = self.interface.categories['sub-categories']['Unit Games']
         # Get the actual value
@@ -140,7 +140,7 @@ class InterfaceCommandTest(unittest.TestCase):
         """Test do_random with child categories."""
         # Set up the bot and the interface.
         self.bot.replies = ['n', '!', 'lose', '!', 'lose', '!', 'lose', 'n']
-        self.interface.categories = TEST_CATEGORIES
+        self.interface.categories = TEST_CATEGORIES.copy()
         self.interface.focus = self.interface.categories
         # Get the actual value
         self.interface.do_random('')
@@ -153,7 +153,7 @@ class InterfaceCommandTest(unittest.TestCase):
         """Test do_random without child categories."""
         # Set up the bot and the interface.
         self.bot.replies = ['n', '!', 'lose', '!', 'lose', '!', 'lose', 'n']
-        self.interface.categories = TEST_CATEGORIES
+        self.interface.categories = TEST_CATEGORIES.copy()
         self.interface.focus = self.interface.categories['sub-categories']['Unit Games']
         # Get the actual value
         self.interface.do_random('')
@@ -169,9 +169,9 @@ class InterfaceDoStatsTest(unittest.TestCase):
 
     def setUp(self):
         self.bot = unitility.AutoBot()
-        self.bot.results = TEST_RESULTS
+        self.bot.results = [result[:] for result in TEST_RESULTS]
         self.interface = interface.Interface(self.bot)
-        self.interface.focus = TEST_CATEGORIES
+        self.interface.focus = TEST_CATEGORIES.copy()
 
     def testAliasStatsAllGames(self):
         """Test stat groups shown for Interface.do_stats for a specific game alias."""
@@ -242,15 +242,15 @@ class InterfaceGameTest(unittest.TestCase):
 
     def testCategoryParent(self):
         """Test category_games with a sub-category."""
-        check = ['Bisley', 'Canfield', 'Crazy Eights', 'Cribbage', 'Forty Thieves', 'FreeCell']
-        check += ['Gargantua', 'Klondike', 'Monte Carlo', 'Ninety-Nine', 'Pyramid', 'Quadrille']
-        check += ['Spider', 'Strategy', 'Thoughtful Solitaire', 'Yukon']
+        check = ['Bisley', 'Calvin Cards', 'Canfield', 'Crazy Eights', 'Cribbage', 'Forty Thieves']
+        check += ['FreeCell', 'Gargantua', 'Gin Rummy', 'Hearts', 'Klondike', 'Monte Carlo', 'Ninety-Nine']
+        check += ['Pyramid', 'Quadrille', 'Spider', 'Strategy', 'Thoughtful Solitaire', 'Yukon']
         self.interface.focus = self.interface.categories['sub-categories']['Card Games']
         self.assertEqual(check, sorted([game.name for game in self.interface.category_games()]))
 
     def testCategoryTerminal(self):
         """Test category_games with a terminal category."""
-        check = ["Liar's Dice", 'Mate', 'Pig', 'Solitaire Dice', 'Yacht']
+        check = ["Liar's Dice", 'Mate', 'Pig', 'Solitaire Dice', 'Ten Thousand', 'Yacht']
         self.interface.focus = self.interface.categories['sub-categories']['Dice Games']
         self.assertEqual(check, sorted([game.name for game in self.interface.category_games()]))
 
@@ -274,7 +274,8 @@ class InterfaceMenuTest(unittest.TestCase):
         self.bot.replies = ['!']
         self.interface.menu()
         self.assertIn("\nWelcome to Ichabod's Text Game Extravaganza!\n", self.bot.info)
-        self.assertIn("Copyright (C) 2018 by Craig O'Brien and the t_games contributors.\n", self.bot.info)
+        self.assertIn("Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.\n",
+            self.bot.info)
         self.assertIn("For more details type 'help' or 'help license'.\n", self.bot.info)
 
     def testPlay(self):
@@ -394,8 +395,8 @@ class InterfaceShowMenuTest(unittest.TestCase):
     def setUp(self):
         self.bot = unitility.AutoBot()
         self.interface = interface.Interface(self.bot)
-        self.interface.categories = TEST_CATEGORIES
-        self.interface.games = TEST_GAMES
+        self.interface.categories = TEST_CATEGORIES.copy()
+        self.interface.games = TEST_GAMES[:]
         self.interface.do_home('')
 
     def testSubCategoryDict(self):
@@ -414,13 +415,14 @@ class InterfaceShowMenuTest(unittest.TestCase):
     def testTopLevelDict(self):
         """Test generating top level menu data."""
         check = {'A': 'Unit Games Category', 'B': 'Flip', 'C': 'Sorter', '!': 'Quit'}
-        self.assertEqual(check, self.interface.show_menu(TEST_CATEGORIES))
+        categories = TEST_CATEGORIES.copy()
+        self.assertEqual(check, self.interface.show_menu(categories))
 
     def testTopLevelText(self):
         """Test displaying the top level menu."""
         check = ['\n', 'Home Menu\n', '\n', 'A: Unit Games Category\n', 'B: Flip\n', 'C: Sorter\n']
         check += ['!: Quit\n']
-        self.interface.show_menu(TEST_CATEGORIES)
+        self.interface.show_menu(TEST_CATEGORIES.copy())
         self.assertEqual(check, self.bot.info)
 
 
@@ -485,7 +487,7 @@ class StatisticsDunderTest(unittest.TestCase):
     """Tests of the other dunder methods for the Statistics class. (unittest.TestCase)"""
 
     def setUp(self):
-        self.stats = interface.Statistics(TEST_RESULTS, title = 'Test Statistics')
+        self.stats = interface.Statistics([result[:] for result in TEST_RESULTS], title = 'Test Statistics')
 
     def testBool(self):
         """Test boolean conversion of statistics."""
@@ -510,40 +512,40 @@ class StatisticsFilterResultsTest(unittest.TestCase):
 
     def testFilterAll(self):
         """Test filtering with nothing allowed."""
-        check = TEST_RESULTS[:]
+        check = [result[:] for result in TEST_RESULTS]
         for index in (11, 5, 4, 3, 0):
             del check[index]
-        self.stats = interface.Statistics(TEST_RESULTS)
+        self.stats = interface.Statistics([result[:] for result in TEST_RESULTS])
         self.assertEqual(check, self.stats.results['overall'])
 
     def testFilterAllowCheating(self):
         """Test filtering with cheating allowed."""
-        check = TEST_RESULTS[:]
+        check = [result[:] for result in TEST_RESULTS]
         for index in (11, 5, 3):
             del check[index]
-        self.stats = interface.Statistics(TEST_RESULTS, 'cheat')
+        self.stats = interface.Statistics([result[:] for result in TEST_RESULTS], 'cheat')
         self.assertEqual(check, self.stats.results['overall'])
 
     def testFilterAllowGipf(self):
         """Test filtering with gipf wins allowed."""
-        check = TEST_RESULTS[:]
+        check = [result[:] for result in TEST_RESULTS]
         for index in (11, 4, 3, 0):
             del check[index]
-        self.stats = interface.Statistics(TEST_RESULTS, 'gipf')
+        self.stats = interface.Statistics([result[:] for result in TEST_RESULTS], 'gipf')
         self.assertEqual(check, self.stats.results['overall'])
 
     def testFilterAllowXyzzy(self):
         """Test filtering with xyzzy allowed."""
-        check = TEST_RESULTS[:]
+        check = [result[:] for result in TEST_RESULTS]
         for index in (5, 4, 0):
             del check[index]
-        self.stats = interface.Statistics(TEST_RESULTS, 'xyzzy')
+        self.stats = interface.Statistics([result[:] for result in TEST_RESULTS], 'xyzzy')
         self.assertEqual(check, self.stats.results['overall'])
 
     def testFilterNone(self):
         """Test not filtering any results."""
-        check = TEST_RESULTS[:]
-        self.stats = interface.Statistics(TEST_RESULTS, 'cheat gipf xyzzy')
+        check = [result[:] for result in TEST_RESULTS]
+        self.stats = interface.Statistics([result[:] for result in TEST_RESULTS], 'cheat gipf xyzzy')
         self.assertEqual(check, self.stats.results['overall'])
 
 
@@ -551,7 +553,7 @@ class StatisticsStringTest(unittest.TestCase):
     """Tests of the full output for a Statistics object."""
 
     def setUp(self):
-        self.stats = interface.Statistics(TEST_RESULTS, title = 'Test Statistics')
+        self.stats = interface.Statistics([result[:] for result in TEST_RESULTS], title = 'Test Statistics')
         self.text = str(self.stats)
 
     def testEmpty(self):
@@ -624,7 +626,7 @@ class ValveTest(unittest.TestCase):
 
     def testRepr(self):
         """Test a random valve's debugging text representation."""
-        self.assertEqual('<RandomValve 0.0500/0.0500>', repr(self.valve))
+        self.assertEqual('<RandomValve 0.1000/0.1000>', repr(self.valve))
 
     def testReprReset(self):
         """Test a random valve's debugging text representation after it blows."""
@@ -633,7 +635,7 @@ class ValveTest(unittest.TestCase):
             if self.valve.blow(check):
                 break
         # Check the repr.
-        self.assertEqual('<RandomValve 0.0500/0.0500>', repr(self.valve))
+        self.assertEqual('<RandomValve 0.1000/0.1000>', repr(self.valve))
 
     def testReprUsed(self):
         """Test a random valve's debugging text representation after some use."""

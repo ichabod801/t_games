@@ -14,6 +14,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for the game, progamming, and bots. (str)
+OPTIONS: The options for Pig. (str)
 RULES: The rules of Pig. (str)
 SATAN_NAMES: Some names for Satan from the Bible. (str)
 
@@ -45,17 +46,9 @@ Bot Design: Roger Johnson, Reiner Knizia, Todd Neller, Craig O'Brien,
     Clifton Presser
 """
 
-RULES = """
-On your turn, you roll one die. If you roll a one your turn is over and you
-score nothing. Otherwise, you can choose to score what your rolled (ending
-your turn) or to continue rolling. If you continue to roll, any roll of a one
-ends your turn without scoring. On any other roll you can stop and score the
-total of all your rolls that turn.
-
-The first player to score 100 or more wins.
-
-OPTIONS:
+OPTIONS = """
 even-turns (et): Everyone gets the same number of turns.
+gonzo (gz): Equivalent to 'even-turns shuffle=3' with all of the preset bots.
 shuffle= (sh=): Use a shuffle die with the specified number of repeats.
 six-bad (6b): Turns end with no score on a six instead of a one.
 
@@ -90,6 +83,16 @@ The preset bots are:
     x: A rolls bot with 3 rolls.
 
 The overall default is to have one medium bot.
+"""
+
+RULES = """
+On your turn, you roll one die. If you roll a one your turn is over and you
+score nothing. Otherwise, you can choose to score what your rolled (ending
+your turn) or to continue rolling. If you continue to roll, any roll of a one
+ends your turn without scoring. On any other roll you can stop and score the
+total of all your rolls that turn.
+
+The first player to score 100 or more wins.
 """
 
 SATAN_NAMES = ['Abbadon', 'Apollyon', 'Beast', 'Beelzebub', 'Belial', 'Devil', 'Lucifer', 'Satan']
@@ -507,6 +510,7 @@ class Pig(game.Game):
         'scoring-turns': PigBotScoringTurns, 'penoptimus': PigBotPenoptimal, 'pace-race': PigBotPaceRace,
         'rolls': PigBotRolls}
     num_options = 3
+    options = OPTIONS
     rules = RULES
 
     def clean_up(self):
@@ -696,6 +700,8 @@ class Pig(game.Game):
             default = None)
         # Default bots.
         self.option_set.default_bots = [(PigBotBasePaceRace, ())]
+        # Set the option groups.
+        self.option_set.add_group('gonzo', ['gz'], 'even-turns shuffle=3 st e m h i k 666 x')
 
     def set_up(self):
         """Set up the game. (None)"""

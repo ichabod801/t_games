@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Thoughtful Solitaire. (str)
+OPTIONS: The options for Thoughtful Solitaire. (str)
 RULES: The rules of Thoughtful Solitaire. (str)
 
 Classes:
@@ -39,8 +40,10 @@ However, once you pull a card from a reserve pile, all the reserve piles to the
 left of that reserve pile will be blocked (as indicated by an XX at the bottom
 of the pile). They can be unblocked with the turn command. This simulates going
 through the stock three cards at a time as in normal Klondike.
+"""
 
-Options:
+OPTIONS = """
+piles= (p=): The number of tablue piles (4-9, defaults to 7).
 unblocked (u): There are no blocked reserve piles.
 """
 
@@ -52,6 +55,8 @@ class Thoughtful(solitaire.Solitaire):
     Attributes:
     blocked_history: The value of blocked_index after each move. (list of int)
     blocked_index: The index of the rightmost blocked reserve pile. (int)
+    piles: The number of tableau piles in the game. (int)
+    unblocked: A flag for not blocking piles. (bool)
 
     Methods:
     card_shift: Shift a card to the top of it's pile. (None)
@@ -71,7 +76,8 @@ class Thoughtful(solitaire.Solitaire):
     categories = ['Card Games', 'Solitaire Games', 'Open Games']
     credits = CREDITS
     name = 'Thoughtful Solitaire'
-    num_options = 1
+    num_options = 2
+    options = OPTIONS
     rules = RULES
 
     def card_shift(self, piles, pile_type):
@@ -195,6 +201,12 @@ class Thoughtful(solitaire.Solitaire):
             else:
                 self.blocked_index = -1
 
+    def handle_options(self):
+        """Handle the option settings for the game. (None)"""
+        super(Thoughtful, self).handle_options()
+        reserve_cards = 52 - sum(range(1, self.options['num-tableau'] + 1))
+        self.options['num-reserve'] = reserve_cards // 3 + (reserve_cards % 3 != 0)
+
     def reserve_text(self):
         """Generate text for the reserve piles. (str)"""
         # Set up a blank reserve.
@@ -211,20 +223,25 @@ class Thoughtful(solitaire.Solitaire):
 
     def set_checkers(self):
         """Set up the game specific rules. (None)"""
-        super(Thoughtful, self).set_checkers()
+        self.free_checkers = []
+        self.match_checkers = [solitaire.match_none]
         # Set the game specific rules checkers.
         self.build_checkers = [solitaire.build_unblocked]
         self.lane_checkers = [solitaire.lane_king, solitaire.lane_unblocked]
         self.pair_checkers = [solitaire.pair_down, solitaire.pair_alt_color]
         self.sort_checkers = [solitaire.sort_ace, solitaire.sort_up, solitaire.sort_unblocked]
         # Set the dealers.
-        self.dealers = [solitaire.deal_klondike, solitaire.deal_reserve_n(24, True), solitaire.deal_open]
+        self.dealers = [solitaire.deal_klondike, solitaire.deal_reserve_by_n(3, True), solitaire.deal_open]
 
     def set_options(self):
         """Define the options for the game. (None)"""
-        self.options = {'num-reserve': 8}
+        self.options = {}
         self.option_set.add_option('unblocked', ['u'], default = True, value = False, target = 'blocked',
             question = 'Should indexes to the left of that reserve pile used be blocked? bool')
+        self.option_set.add_option('piles', ['p'], action = 'key=num-tableau', converter = int,
+            default = 7, valid = range(4, 10), target = self.options,
+            question = 'How many tableau piles (4-9, return for 7)? ')
+        self.option_set.add_group('gonzo', ['gz'], 'piles = 6')
 
     def set_up(self):
         """Set up the game. (None)"""

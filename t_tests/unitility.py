@@ -343,7 +343,7 @@ class TestGame(game.Game):
     player_action
     """
 
-    aka = '1'
+    aka = ['1']
     name = 'Unit'
     rules = '\nIf you enter win, you win; if you enter lose, you lose.\n'
 

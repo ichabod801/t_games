@@ -10,6 +10,7 @@ Constants:
 CREDITS: The credits for Blackjack. (str)
 HINT_KEYS: The meanings of the entries in the hint tables. (dict of str:str)
 HINTS: A condensed tables of hints. (str)
+OPTIONS: The options for Blackjack. (str)
 RULES: The rules for Blackjack. (str)
 
 Classes:
@@ -35,6 +36,21 @@ HINT_KEYS = {'Dh': 'Double (else Hit)', 'Ds': 'Double (else Stand)', 'H': 'Hit',
 HINTS = """S45H2Su3S5H3Su1H1S5H5S5H7S3H5Dh18H3Dh4H45
 S14Ds1S5Ds5S2H4Dh4H7Dh3H7Dh3H8Dh2H8Dh2H5
 Sp10S10Sp5S1Sp2S2Sp16H4Sp5H5Dh8H5Sp2H5Sp6H4Sp6H4"""
+
+OPTIONS = """
+decks= (d=): The number of decks in the shoe. (1, 2, 4 (default), 6 or 8)
+gonzo (gz): Equivalent to 'decks=8 hands=3 hit-split-ace limit=1000 surrender'.
+hands= (h=): The number hands simultaneously played. (1 (default), 2, or 3)
+hit-split-ace (hsa): You can hit a split ace.
+limit= (l=): The maximum bet. (defaults to 8)
+no-double-split (nds): You cannot double split hands.
+no-resplit (nr): You cannot split hands that were already split.
+s17: The dealer stands on a soft 17.
+split-rank (sr): You can only split cards of the same rank.
+stake= (s=): The number of bucks the player starts with. (defaults to 100)
+surrender (su): You may surrender (as first action, get back half bet).
+true-double (td): You cannot double less than the original bet.
+"""
 
 RULES = """
 The goal is to get a higher total than the dealer, without going over 21. Face
@@ -80,19 +96,6 @@ Surrender (su): Give up your hand in exchange for half your bet back.
 
 Any command may take a hand number from 1 to n, for times when you have more
 than one hand. If no hand number is given, the first open hand is assumed.
-
-OPTIONS:
-decks= (d=): The number of decks in the shoe. (1, 2, 4 (default), 6 or 8)
-hands= (h=): The number hands simultaneously played. (1 (default), 2, or 3)
-hit-split-ace (hsa): You can hit a split ace.
-limit= (l=): The maximum bet. (defaults to 8)
-no-double-split (nds): You cannot double split hands.
-no-resplit (nr): You cannot split hands that were already split.
-s17: The dealer stands on a soft 17.
-split-rank (sr): You can only split cards of the same rank.
-stake= (s=): The number of bucks the player starts with. (defaults to 100)
-surrender (su): You may surrender (as first action, get back half bet).
-true-double (td): You cannot double less than the original bet.
 """
 
 
@@ -156,6 +159,7 @@ class Blackjack(game.Game):
     credits = CREDITS
     name = 'Blackjack'
     num_options = 11
+    options = OPTIONS
     rules = RULES
 
     def deal(self):
@@ -780,6 +784,8 @@ class Blackjack(game.Game):
             question = 'Should you be able to surrender hands? bool')
         self.option_set.add_option('s17', value = False, default = True, target = 'hit_soft_17',
             question = 'Should the dealer be able to stand on a soft 17? bool')
+        # Set the option groups.
+        self.option_set.add_group('gonzo', ['gz'], 'decks=8 hands=3 hit-split-ace limit=1000 surrender')
 
     def set_up(self):
         """Set up the game. (None)"""

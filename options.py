@@ -101,7 +101,7 @@ class OptionSet(object):
         plural = utility.plural(option_count, 'option')
         return '<OptionSet for {} with {} {}>'.format(self.game.name, option_count, plural)
 
-    def add_group(self, name, expansion):
+    def add_group(self, name, aliases = [], expansion = ''):
         """
         Add a new option group. (None)
 
@@ -109,9 +109,17 @@ class OptionSet(object):
 
         Parameters:
         name: The option setting to convert. (str)
+        aliases: The aliases for the option group. (list of str)
         expansion: What to conver the setting to. (str)
         """
+        # Handle games from before aliases (v0.50.0 and before).
+        if isinstance(aliases, str):
+            expansion = aliases
+            aliases = []
+        # Add the the group
         self.groups[name] = expansion
+        for alias in aliases:
+            self.groups[alias] = expansion
 
     def add_option(self, name, aliases = [], converter = str, default = False, value = True, target = '',
         action = 'assign', question = '', valid = AllRange(), check = lambda x: True, error_text = ''):

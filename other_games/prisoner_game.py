@@ -7,7 +7,8 @@ Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
-CREDITS: The credits for Priosoner's Dilemma.
+CREDITS: The credits for Prisoner's Dilemma.
+OPTIONS: The options for Prisoner's Dilemma.
 RULES: The rules for Prisoner's Dilemma.
 
 Classes:
@@ -32,36 +33,21 @@ CREDITS = """
 Game Design: Merrill Flood and Melvin Dresher
 Game Programming: Craig "Ichabod" O'Brien
 Bot Design: Robert Axelrod, B. Beaufils, S. Braver, K. Deb, J. Delahaye, James
-    Friedman, J. Komorita, David Kraines, Vivian Kraines, S. Mittal, Mathieu Our,
-    Anatol Rapoport, J. Sheposh
+    Friedman, J. Komorita, David Kraines, Vivian Kraines, S. Mittal, Mathieu
+    Our, Anatol Rapoport, J. Sheposh
 """
 
-RULES = """
-Each turn, you and your opponent make the choice to cooperate or defect. If
-both players cooperate, they both score the reward. If they both defect,
-they both score the punishment. If one defects and the other cooperates, the
-cooperator scores the sucker bet, while the defecter wins the temptation. The
-standard scores are:
-
-    Temptation: 3
-    Reward: 2
-    Punishment: 1
-    Sucker Bet: 0
-
-The game is played over multiple turns. Each round you know who you are playing
-against, but you don't know their move until the result is calculated.
-
-The idea of the game is that the rational move is always to defect: that will
-get you the best score no matter what your opponent does. However, mutual
-cooperation is a better outcome (the total score is highest).
-
-Options:
-iterations= (i=): The number of rounds played (defaults to 10).
+OPTIONS = """
+num-extra= (ne=): The maximum number of extra random rounds played (defaults
+    to 3)
+num-turns= (nt=): The number of rounds played (defaults to 10).
 punishment= (p=): The punishment score. It must be higher than the sucker bet.
 reward= (r=): The reward score. It must be higher than the punishment score.
 sucker= (s=): The sucker bet score. It must be lower than the punishment score.
 temptation= (t=): The temptation score. It must be higher than the reward
     score.
+gonzo (gz): Equivalent to 'iterations=12 hard-majr grim pavlov prober random
+    soft-majr tit-tat tit-2tat 2tit-tat'.
 
 Bot Options:
 all-co (ac): Add an Always Cooperate bot.
@@ -87,6 +73,26 @@ tit-2tat (t2): Add a Tit for Two Tats bot.
 2tit-tat (2t): Add a Two Tits for Tat bot.
 
 The default bots are three chosen at random.
+"""
+
+RULES = """
+Each turn, you and your opponent make the choice to cooperate or defect. If
+both players cooperate, they both score the reward. If they both defect,
+they both score the punishment. If one defects and the other cooperates, the
+cooperator scores the sucker bet, while the defecter wins the temptation. The
+standard scores are:
+
+    Temptation: 3
+    Reward: 2
+    Punishment: 1
+    Sucker Bet: 0
+
+The game is played over multiple turns. Each round you know who you are playing
+against, but you don't know their move until the result is calculated.
+
+The idea of the game is that the rational move is always to defect: that will
+get you the best score no matter what your opponent does. However, mutual
+cooperation is a better outcome (the total score is highest).
 """
 
 
@@ -435,7 +441,8 @@ class PrisonersDilemma(game.Game):
     credits = CREDITS
     move_aliases = {'c': 'cooperate', 'd': 'defect'}
     name = "Prisoner's Dilemma"
-    num_options = 4
+    num_options = 7
+    options = OPTIONS
     rules = RULES
 
     def do_gipf(self, arguments):
@@ -461,7 +468,7 @@ class PrisonersDilemma(game.Game):
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
-        if self.turns == self.num_turns:
+        if self.turns == self.total_turns:
             scores = [(score, player) for player, score in self.scores.items()]
             scores.sort(reverse = True)
             human_score = self.scores[self.human.name]
@@ -610,8 +617,14 @@ class PrisonersDilemma(game.Game):
         # Set the turn options
         self.option_set.add_option('num-turns', ['nt'], int, default = 10,
             question = 'How many turns should be played (return for 10)? ')
+        self.option_set.add_option('num-extra', ['ne'], int, default = 3,
+            question = 'What should be the maximum number of random extra rounds (return for 3)? ')
+        # Set the option groups.
+        gonzo = 'num-turns=12 hard-majr grim pavlov prober random soft-majr tit-tat tit-2tat 2tit-tat'
+        self.option_set.add_group('gonzo', ['gz'], gonzo)
 
     def set_up(self):
         """Set up the game. (None)"""
         self.hypno = False
         self.temp_bonus = False
+        self.total_turns = self.num_turns + random.randint(0, self.num_extra)

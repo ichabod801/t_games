@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: Credits for Forty Thieves. (str)
+OPTIONS: Options for Forty Thieves. (str)
 RULES: Rules for Forty Thieves. (str)
 
 Classes:
@@ -30,22 +31,25 @@ suit. You may only move one card at a time. Building on the tableau is down
 in rank by suit. You may turn over one card from the stock at a time, and
 place it in a waste pile. The top card of the waste pile is available for
 building or sorting. You may only go through the stock once.
+"""
 
-OPTIONS:
+OPTIONS = """
 alt-color (streets, ac): The tableau is built down in rank by alternating
     color.
 columns= (c=): The number of tableau columns (stacks) dealt.
 down-rows= (dr=): The number of tabelau rows that are dealt face down.
-dress-parade (rank-and-file) Equivalent to 'alt-color down-rows=3 move-seq'.
-emperor (deauville): Equivalent to 'alt-color down-rows=3'.
+dress-parade (rank-and-file, dp, rf) Equivalent to 'alt-color down-rows=3
+    move-seq'.
+emperor (deauville, em, dv): Equivalent to 'alt-color down-rows=3'.
 found-aces (fa): Start the game with the aces on the foundations.
+gonzo (gz): Equivalent to 'columns=8 down-rows=4 move-seq rows=5'.
 indian: Equivalent to 'down-rows=1 c=10 r=3 not-suit'.
-limited: Equivalent to 'c=12 r=3'.
+limited (ltd): Equivalent to 'c=12 r=3'.
 lucas: Equivalent to 'found-aces c=13 r=3'.
 maria: Equivalent to 'alt-color c=9 r=4'.
 move-seq (ms): Move any built sequence on the tableau.
 not-suit (ns): The tableau is built down in rank by anything but suit.
-number-ten: Equivalent to 'down-rows=2 c=10 r=4 alt-color move-seq'.
+number-ten (10): Equivalent to 'down-rows=2 c=10 r=4 alt-color move-seq'.
 rows (r): The number of tableau rows (cards per stack) dealt.
 """
 
@@ -73,6 +77,7 @@ class FortyThieves(solitaire.MultiSolitaire):
     credits = CREDITS
     name = 'Forty Thieves'
     num_options = 7
+    options = OPTIONS
     rules = RULES
 
     def do_gipf(self, arguments):
@@ -138,15 +143,15 @@ class FortyThieves(solitaire.MultiSolitaire):
         # Set the standard solitaire options.
         self.options = {'max-passes': 1, 'num-foundations': 8, 'num-tableau': 10, 'turn-count': 1}
         # Define the option groups.
-        self.option_set.add_group('emperor', 'streets down-rows=3')
-        self.option_set.add_group('deauville', 'streets down-rows=3')
-        self.option_set.add_group('dress-parade', 'streets down-rows=3 move-seq')
-        self.option_set.add_group('rank-and-file', 'streets down-rows=3 move-seq')
+        self.option_set.add_group('emperor', ['deauville', 'dv', 'em'], 'streets down-rows=3')
+        self.option_set.add_group('dress-parade', ['dp', 'rf', 'rank-and-file'],
+            'streets down-rows=3 move-seq')
+        self.option_set.add_group('gonzo', ['gz'], 'columns=8 down-rows=4 move-seq rows=5')
         self.option_set.add_group('lucas', 'found-aces c=13 r=3')
         self.option_set.add_group('maria', 'alt-color c=9 r=4')
-        self.option_set.add_group('limited', 'c=12 r=3')
+        self.option_set.add_group('limited', ['ltd'], 'c=12 r=3')
         self.option_set.add_group('indian', 'down-rows=1 c=10 r=3 not-suit')
-        self.option_set.add_group('number-ten', 'down-rows=2 c=10 r=4 alt-color move-seq')
+        self.option_set.add_group('number-ten', ['10'], 'down-rows=2 c=10 r=4 alt-color move-seq')
         # Define the build options.
         self.option_set.add_option('streets', ['alt-color', 'ac'],
             question = 'Should tableau building be down by alternating color (return for by suit)? bool')

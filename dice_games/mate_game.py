@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Mate. (str)
+OPTIONS: The options for Mate. (str)
 RULES: The rules of Mate. (str)
 
 Classes:
@@ -25,6 +26,14 @@ from .. import player
 CREDITS = """
 Game Design: Craig "Ichabod" O'Brien
 Game Programming: Craig "Ichabod" O'Brien
+"""
+
+OPTIONS = """
+bot-level (bl): Set the difficulty of the bot. Can be stupid (s), easy (e), or
+    medium (m).
+gonzo (gz): Equivalent to 'one-pawn win=32'.
+one-pawn (1p): Have only one pawn on each die instead of two.
+win= (w=): How many points it takes to win (defaults to 64).
 """
 
 RULES = """
@@ -51,12 +60,6 @@ piece, and both dice are rerolled.
 Each player gets the same number of turns. The highest score after any score
 is 64 or more wins. If the score is tied at 64 or higher, two more turns are
 played (each).
-
-Options:
-bot-level (bl): Set the difficulty of the bot. Can be stupid (s), easy (e), or
-    medium (m).
-one-pawn (1p): Have only one pawn on each die instead of two.
-win= (w=): How many points it takes to win (defaults to 64).
 """
 
 
@@ -97,10 +100,11 @@ class Mate(game.Game):
     credits = CREDITS
     name = 'Mate'
     num_options = 3
-    sides = ('Pawn', 'Pawn', 'Knight', 'Bishop', 'Rook', 'Queen')
+    options = OPTIONS
     piece_aliases = {'p': 'pawn', 'n': 'knight', 'k': 'knight', 'b': 'bishop', 'r': 'rook', 'q': 'queen'}
     points = {'Pawn': 1, 'Knight': 2, 'Bishop': 2, 'Rook': 3, 'Queen': 5}
     rules = RULES
+    sides = ('Pawn', 'Pawn', 'Knight', 'Bishop', 'Rook', 'Queen')
 
     def __str__(self):
         """Human readable text representation. (str)"""
@@ -330,6 +334,7 @@ class Mate(game.Game):
             question = 'Should there only be one pawn on the dice (return for two)? bool')
         self.option_set.add_option('win', ['w'], int, default = 64,
             question = 'How many points should it take to win (return for 64)? ')
+        self.option_set.add_group('gonzo', ['gz'], 'one-pawn win=32')
 
     def set_up(self):
         """Set up the game. (None)"""

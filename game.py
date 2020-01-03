@@ -72,6 +72,7 @@ class Game(OtherCmd):
     Attributes:
     flags: Flags for different game events tracked in the results. (int)
     force_end: How to force the end of the game. (str)
+    gonzo: A flag indicating the gonzo option was used. (bool)
     human: The primary player of the game. (Player)
     interface: The interface that started the game playing. (Interface)
     option_set: The definitions of allowed options for the game (OptionSet)
@@ -84,6 +85,8 @@ class Game(OtherCmd):
     Methods:
     clean_up: Handle any end of game tasks. (None)
     do_credits: Show the credits. (bool)
+    do_info: Show the rules, credits, and options. (bool)
+    do_options: Show the options text. (bool)
     do_quit: Quit the game, which counts as a loss. (bool)
     do_quit_quit: Quit the game and the t_games interface. (bool)
     do_rpn: Process reverse Polish notation statements to do calculations. (None)
@@ -107,7 +110,7 @@ class Game(OtherCmd):
     aka = []
     aliases = {'!!': 'quit_quit', '=': 'rpn', '!': 'quit'}
     categories = ['Test Games']
-    credits = 'No credits have been specified for this game.'
+    credits = '\nNo credits have been specified for this game.'
     help_text = {'help': '\nUse the rules command for instructions on how to play.'}
     int_re = re.compile('-?\d*$')
     float_re = re.compile('-?\d*\.\d+')
@@ -120,7 +123,8 @@ class Game(OtherCmd):
         '/': (operator.truediv, 2), 'ab/c': (lambda a, b, c: a + b / c, 3), 'cos': (math.cos, 1),
         'ln': (math.log, 1), 'log': (math.log10, 1), 'R': (random.random, 0), 'F': (utility.flip, 0),
         'sin': (math.sin, 1), 'V': (math.sqrt, 1), 'tan': (math.tan, 1)}
-    rules = 'No rules have been specified for this game.'
+    options = '\nNo options have been specified for this game.\n'
+    rules = '\nNo rules have been specified for this game.\n'
 
     def __init__(self, human, raw_options, interface = None, silent = False):
         """
@@ -152,6 +156,8 @@ class Game(OtherCmd):
             self.human.tell('\nWelcome to a game of {}, {}.'.format(self.name, self.human.name))
         # Define and process the game options.
         self.option_set = options.OptionSet(self)
+        raw_words = self.raw_options.lower().split()
+        self.gonzo = 'gonzo' in raw_words or 'gz' in raw_words
         self.set_options()
         self.handle_options()
         # Set up the players.
@@ -193,6 +199,22 @@ class Game(OtherCmd):
         """
         self.flags |= 2
         return super(Game, self).do_debug(arguments)
+
+    def do_info(self, arguments):
+        """
+        Show the rules, credits, and options for the game.
+        """
+        template = '\nRULES:\n\n{}\n\nCREDITS:\n\n{}\n\nOPTIONS:\n\n{}'
+        info = (self.rules.strip(), self.credits.strip(), self.options.strip())
+        self.human.tell(template.format(*info))
+        return True
+
+    def do_options(self, arguments):
+        """
+        Show the options for the game.
+        """
+        self.human.tell(self.options.rstrip())
+        return True
 
     def do_quit(self, arguments):
         """
@@ -375,7 +397,8 @@ class Game(OtherCmd):
         argument = argument.lower()
         if argument in games and games[argument].name not in self.gipfed:
             # Play the game.
-            game = games[argument](self.human, 'none', self.interface)
+            options = 'gonzo' if self.gonzo else 'none'
+            game = games[argument](self.human, options, self.interface)
             results = game.play()
             # Record the giphing.
             self.flags |= 8
@@ -662,6 +685,7 @@ class Fireball(Game):
     credits = '\nDesign and programming by Craig "Ichabod" O''Brien.'
     name = 'Fireball'
     num_options = 1
+    options = '\nAnything you specify as an option will become your target.'
     rules = '\nPlay more games.'
 
     def game_over(self):
@@ -743,6 +767,7 @@ class Sorter(Game):
     credits = '\nDesign and programming by Craig "Ichabod" O''Brien.'
     name = 'Sorter'
     num_options = 1
+    options = '\nAn integer provided as an option will determine the length of the sequence.'
     rules = '\nEach turn, swap two numbers. If you can sort the list with a minimum of swaps, you win.'
 
     def game_over(self):

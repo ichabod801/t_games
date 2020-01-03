@@ -7,8 +7,9 @@ Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
-CREDITS: The credits for TenThousand. (str)
-RULES: The rules for TenThousand. (str)
+CREDITS: The credits for Ten Thousand. (str)
+OPTIONS: The options for Ten Thousand.
+RULES: The rules for Ten Thousand. (str)
 
 Classes:
 TenKBot: A base bot for the game of Ten Thousand. (player.Bot)
@@ -37,42 +38,7 @@ Game Programming: Craig "Ichabod" O'Brien
 Bot Design: Reiner Knizia, Craig O'Brien
 """
 
-RULES = """
-At the start of each turn you roll six dice. After each roll you may set aside
-any scoring dice, and roll the remaining dice. Once you have rolled 1,000
-points, you may stop after any scoring roll and score all of the points you
-have rolled this turn. If you have not scored any points in the game yet, you
-must roll 1,500 points before you can stop and score them. This is called
-"getting on the table." If you have scored on all six dice, you may roll all
-six dice again. If at any point you roll the dice and none of the dice you
-just rolled score anything, you turn ends and you get no points for the turn.
-The first person to get 10,000 points wins the game. However, each remaining
-player gets one last chance to beat their score. The highest score wins.
-
-Scoring:
-Ones: Each one scores 100 points.
-Fives: Each five scores 50 points.
-Three of a Kind: Three of a kind are worth 100 points times the number rolled,
-    or 1,000 points for three ones.
-Four of a Kind: Four of a kind are worth 200 points times the number rolled,
-    or 2,000 points for four ones.
-Five of a Kind: Five of a kind are worth 400 points times the number rolled,
-    or 4,000 points for four ones.
-Six of a Kind: Six of a kind are worth 800 points times the number rolled,
-    or 8,000 points for four ones.
-Straight: A straight from one to six is worth 1,500 points.
-Three Pair: Three pairs are worth 1,000 points.
-* For combinations of dice, all dice in the combination must be rolled at the
-    same time. However, if you have a pair or a partial straight, you can take
-    a second chance roll to complete the three of a kind or the straight. If
-    you fail to complete the score, your turn is over with zero points even if
-    you have other scoring dice.
-
-Commands:
-hold (h): Set aside scoring dice (list the dice as a parameter to the command).
-score (s): Score the points rolled this turn and end your turn.
-
-Options:
+OPTIONS = """
 5000 (5k): Equivalent to win = 5000.
 carry-on (co): If a player fails to score, you can carry on with their points
     and dice.
@@ -145,6 +111,42 @@ mod (md): Add a bot that goes for more points the farther it is behind.
 prob (pb): Add a bot that uses expected value calculations.
 random (rd): Add a bot with a random strategy.
 value (vu): Add a bot that ties to score a set value.
+"""
+
+RULES = """
+At the start of each turn you roll six dice. After each roll you may set aside
+any scoring dice, and roll the remaining dice. Once you have rolled 1,000
+points, you may stop after any scoring roll and score all of the points you
+have rolled this turn. If you have not scored any points in the game yet, you
+must roll 1,500 points before you can stop and score them. This is called
+"getting on the table." If you have scored on all six dice, you may roll all
+six dice again. If at any point you roll the dice and none of the dice you
+just rolled score anything, you turn ends and you get no points for the turn.
+The first person to get 10,000 points wins the game. However, each remaining
+player gets one last chance to beat their score. The highest score wins.
+
+Scoring:
+Ones: Each one scores 100 points.
+Fives: Each five scores 50 points.
+Three of a Kind: Three of a kind are worth 100 points times the number rolled,
+    or 1,000 points for three ones.
+Four of a Kind: Four of a kind are worth 200 points times the number rolled,
+    or 2,000 points for four ones.
+Five of a Kind: Five of a kind are worth 400 points times the number rolled,
+    or 4,000 points for four ones.
+Six of a Kind: Six of a kind are worth 800 points times the number rolled,
+    or 8,000 points for four ones.
+Straight: A straight from one to six is worth 1,500 points.
+Three Pair: Three pairs are worth 1,000 points.
+* For combinations of dice, all dice in the combination must be rolled at the
+    same time. However, if you have a pair or a partial straight, you can take
+    a second chance roll to complete the three of a kind or the straight. If
+    you fail to complete the score, your turn is over with zero points even if
+    you have other scoring dice.
+
+Commands:
+hold (h): Set aside scoring dice (list the dice as a parameter to the command).
+score (s): Score the points rolled this turn and end your turn.
 """
 
 class TenKBot(player.Bot):
@@ -800,8 +802,11 @@ class TenThousand(game.Game):
     combo_scores = [[0], [0, 100, 200, 1000, 1100, 1200, 2000], [0, 0, 0, 200, 0, 0, 400],
         [0, 0, 0, 300, 0, 0, 600], [0, 0, 0, 400, 0, 0, 800],
         [0, 50, 100, 500, 550, 600, 1000], [0, 0, 0, 600, 0, 0, 1200]]
+    credits = CREDITS
     name = 'Ten Thousand'
     num_options = 30
+    options = OPTIONS
+    rules = RULES
 
     def __str__(self):
         """Human readable text representation. (str)"""
@@ -1218,14 +1223,10 @@ class TenThousand(game.Game):
         """Set the options for the game. (None)"""
         # Note that cosmic wimpout is zilch / cc cr d0 e=350 5d fc f6 m=0 ns ss tw wild w=5000
         # Add name variants.
-        self.option_set.add_group('5000', 'w=5000')
-        self.option_set.add_group('5k', 'w=5000')
-        wimpout = '5d e=350 5m=1000 wd fc cc f6 w=5000 ms'
-        self.option_set.add_group('wimpout', wimpout)
-        self.option_set.add_group('wo', wimpout)
+        self.option_set.add_group('5000', ['5k'], 'w=5000')
+        self.option_set.add_group('wimpout', ['wo'], '5d e=350 5m=1000 wd fc cc f6 w=5000 ms')
         gonzo = '3p=600 s=1500 fh=250 4m=200 5m=400 6m=800 3s=500 tw co cc fc f6 e=350 mg 2c ex iw wd'
-        self.option_set.add_group('gonzo', gonzo)
-        self.option_set.add_group('gz', gonzo)
+        self.option_set.add_group('gonzo', ['gz'], gonzo)
         # Set the bot options.
         self.option_set.default_bots = ((ProbabilityBot, ()), (ValueBot, ()), (ModifierBot, ()))
         self.option_set.add_option('base-pace', ['bp'],  action = 'bot', target = 'base-pace', value = (),

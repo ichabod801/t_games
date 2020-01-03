@@ -8,7 +8,8 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: Credits for Rock-Paper-Scissors. (str)
-RULES: Rulse for Rock-Paper-Scissors. (str)
+OPTIONS: Options for Rock-Paper-Scissors. (str)
+RULES: Rules for Rock-Paper-Scissors. (str)
 
 Classes:
 Bart: Good old rock. Nothing beats rock. (Bot)
@@ -35,6 +36,14 @@ Game Programming: Craig "Ichabod" O'Brien
 Special Thanks: Matt Groening
 """
 
+OPTIONS = """
+bot= (b=): The bot you will play against. The valid bots are bart (b), lisa
+    (l), memor (m), and Randy (r). Defaults to Memor.
+gonzo (gz): Equivalent to 'bot=randy lizard-spock match=23'.
+lizard-spock (ls): Add the lizard and Spock moves.
+match= (m=): The number of rounds played. Defaults to 3.
+"""
+
 RULES = """
 Each player chooses one of rock (r), paper (p), or scissors (s). Rock beats
 scissors, paper beats rock, and scissors beats paper. If players choose the
@@ -47,12 +56,6 @@ beats scissors and rock and loses to paper and lizard.
 The bots you can play against are Bart ('Good old rock, nothing beats rock.'),
 Lisa ('Poor Bart, always plays rock'), Memor (he remembers what you've played),
 and Randy (he's a bit unpredictable).
-
-Options:
-bot= (b=): The bot you will play against. The valid bots are bart (b), lisa
-    (l), memor (m), and Randy (r). Defaults to Memor.
-lizard-spock (ls): Add the lizard and Spock moves.
-match= (m=): The number of rounds played. Defaults to 3.
 """
 
 
@@ -321,6 +324,7 @@ class RPS(game.Game):
     move_aliases = {'r': 'rock', 'p': 'paper', 's': 'scissors', 'l': 'lizard', 'sp': 'spock'}
     name = 'Rock-Paper-Scissors'
     num_options = 3
+    options = OPTIONS
     rules = RULES
     wins = {'rock': ['scissors'], 'scissors': ['paper'], 'paper': ['rock']}
 
@@ -376,7 +380,18 @@ class RPS(game.Game):
             # Update the players.
             self.human.tell('The score is now {}-{}-{}.'.format(*self.win_loss_draw))
             self.bot.tell(move)
-        return sum(self.win_loss_draw[:2]) == self.match
+        if sum(self.win_loss_draw[:2]) == self.match:
+            if self.match > 1:
+                if self.win_loss_draw[0] > self.win_loss_draw[1]:
+                    result = 'won'
+                elif self.win_loss_draw[1] > self.win_loss_draw[0]:
+                    result = 'lost'
+                else:
+                    result = 'drew'
+                self.human.tell('\nYou {} the match, {}-{}-{}.'.format(result, *self.win_loss_draw))
+            return True
+        else:
+            return False
 
     def handle_options(self):
         """Handle any game options. (None)"""
@@ -418,6 +433,8 @@ class RPS(game.Game):
             default = None, question = 'Would you like to play with lizard and Spock? bool')
         self.option_set.add_option('match', ['m'], int, default = 3, check = lambda x: x > 0,
             question = 'How many games should there be in the match? (return for 3)? ')
+        # Set the option groups.
+        self.option_set.add_group('gonzo', ['gz'], 'bot=randy lizard-spock match=23')
 
     def set_up(self):
         """Set up the game. (None)"""

@@ -5,10 +5,12 @@ Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
+FIBONACCI: Fibonacci numbers under 200. (list of int)
 LOC: tgames location. (str)
 MAX_INT: The largest allowed integer. (int)
 NINETEEN: English words for 1-19. (list of str)
 ORDINALS: Conversion of cardinal numbers to ordinal numbers. (dict of str: str)
+PRIMES: All primes under 200. (list of int)
 TENS: English words for multiples of 10. (list of str)
 THOUSAND_UP: English words for powers of one thousand. (list of str)
 YES: Synonyms for 'yes'. (set of str)
@@ -37,6 +39,8 @@ import random
 import sys
 
 
+FIBONACCI = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144]
+
 LOC = os.path.dirname(os.path.abspath(__file__))
 
 try:
@@ -62,6 +66,10 @@ ORDINALS = {'zero': 'zeroth', 'one': 'first', 'two': 'second', 'three': 'third',
     'quatturodecillion': 'quatturodecillionth', 'quindecillion': 'quindecillionth',
     'sexdecillion': 'sexdecillionth', 'octodecillion': 'octodecillionth', 'novemdecillion':
     'novemdecillionth', 'vigintillion': 'vigintillionth'}
+
+PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97,
+    101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197,
+    199]
 
 TENS = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety']
 

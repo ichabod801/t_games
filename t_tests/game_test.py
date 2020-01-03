@@ -38,7 +38,7 @@ class GameCommandTest(unittest.TestCase):
 
     def testCredits(self):
         """Test showing the credits."""
-        check = 'No credits have been specified for this game.\n'
+        check = '\nNo credits have been specified for this game.\n'
         self.game.do_credits('')
         self.assertEqual(check, self.bot.info[1])
 
@@ -59,6 +59,20 @@ class GameCommandTest(unittest.TestCase):
         self.game.player_index = 0
         self.game.handle_cmd('obey')
         self.assertEqual(check, self.bot.errors[0])
+
+    def testInfo(self):
+        """Test showing the rules, credits, and options."""
+        check = '\nRULES:\n\nNo rules have been specified for this game.\n'
+        check += '\nCREDITS:\n\nNo credits have been specified for this game.\n'
+        check += '\nOPTIONS:\n\nNo options have been specified for this game.\n'
+        self.game.do_info('')
+        self.assertEqual(check, self.bot.info[1])
+
+    def testOptions(self):
+        """Test showing the options."""
+        check = '\nNo options have been specified for this game.\n'
+        self.game.do_options('')
+        self.assertEqual(check, self.bot.info[1])
 
     def testQuitReturn(self):
         """Test quit command return value."""
@@ -107,7 +121,7 @@ class GameCommandTest(unittest.TestCase):
 
     def testRules(self):
         """Test showing the rules."""
-        check = 'No rules have been specified for this game.\n'
+        check = '\nNo rules have been specified for this game.\n'
         self.game.do_rules('')
         self.assertEqual(check, self.bot.info[1])
 
@@ -117,7 +131,11 @@ class GameGipfCheckTest(unittest.TestCase):
 
     def setUp(self):
         # Make a fake interface.
-        game_list = {'dice': unitility.TestGame, 'cards': unitility.TestGame}
+        class TestDice(unitility.TestGame):
+            name = 'Dice'
+        class TestCards(unitility.TestGame):
+            name = 'Cards'
+        game_list = {'dice': TestDice, 'cards': TestCards}
         interface = unitility.ProtoObject(games = game_list)
         # Set up the fake bot.
         self.bot = unitility.AutoBot()
@@ -159,7 +177,7 @@ class GameGipfCheckTest(unittest.TestCase):
     def testGiphTracking(self):
         """Test that the game gipfed to is tracked."""
         self.game.gipf_check('Cards', ('cards', 'dice'))
-        self.assertIn('Unit', self.game.gipfed)
+        self.assertIn('Cards', self.game.gipfed)
 
     def testGiphTwice(self):
         """Test that you can't gipf to the same game twice."""

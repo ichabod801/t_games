@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 CREDITS: The credits for Liar's Dice. (str)
+OPTIONS: The options for Liar's Dice. (str)
 RULES: The rules for Liar's Dice. (str)
 
 Classes:
@@ -35,6 +36,20 @@ from ..utility import number_word, number_plural, YES
 CREDITS = """
 Game Design: Traditional
 Game Programming: Craig "Ichabod" O'Brien
+"""
+
+OPTIONS = """
+betting (b): Instead of tokens going out of the game, they go to the winner of
+    the challenge.
+challenge (chal): Add a bot with different challenge heuristics to the game.
+double (dbl): Add a double trouble (challenger + liar) bot to the game.
+gonzo (gz): Equivalent to 'betting tokens=1 two-rerolls'.
+honest (abe): Add an honest (mostly) bot to the game.
+liar (lr): Add a dishonest (sometimes) bot to the game.
+tokens= (t=): Change the number of tokens each player has. (default = 3)
+one-six (16): Ones count as sixes.
+one-wild (1w): Ones are wild.
+two-rerolls (2r): Each player can roll the dice twice before stating their claim.
 """
 
 # The rules for Liar's Dice.
@@ -66,18 +81,6 @@ previous claim. So four fives and a three is better than four fives and a two.
 
 Each player starts with three tokens. The last person with tokens left wins
 the game.
-
-Options:
-betting (b): Instead of tokens going out of the game, they go to the winner of
-    the challenge.
-challenge (chal): Add a bot with different challenge heuristics to the game.
-double (dbl): Add a double trouble (challenger + liar) bot to the game.
-honest (abe): Add an honest (mostly) bot to the game.
-liar (lr): Add a dishonest (sometimes) bot to the game.
-tokens= (t=): Change the number of tokens each player has. (default = 3)
-one-six (16): Ones count as sixes.
-one-wild (1w): Ones are wild.
-two-rerolls (2r): Each player can roll the dice twice before stating their claim.
 """
 
 
@@ -420,6 +423,7 @@ class LiarsDice(game.Game):
         'four {}s and a {}', 'five {}s']
     name = "Liar's Dice"
     num_options = 5
+    options = OPTIONS
     rules = RULES
 
     def challenge(self):
@@ -825,6 +829,8 @@ class LiarsDice(game.Game):
         self.option_set.add_option('double', ['dbl'], action = 'bot', value = (), default = None)
         # Set the default bots.
         self.option_set.default_bots = [(ABBot, ()), (Challenger, ()), (Liar, ()), (DoubleTrouble, ())]
+        # Set the option groups.
+        self.option_set.add_group('gonzo', ['gz'], 'betting tokens=1 two-rerolls')
 
     def set_up(self):
         """Set up the game. (None)"""

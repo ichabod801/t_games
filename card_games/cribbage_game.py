@@ -9,6 +9,7 @@ See the top level __init__.py file for details on the t_games license.
 Constants:
 CREDITS: The credits for Cribbage. (str)
 ENTER_TEXT: Press enter to continue. (str)
+OPTIONS: The options for Cribbage. (str)
 RULES: The rules for Cribbage. (str)
 
 Classes:
@@ -34,6 +35,43 @@ Game Programming: Craig "Ichabod" O'Brien
 """
 
 ENTER_TEXT = 'Please press enter to continue: '
+
+OPTIONS = """
+auto-go (ag): Don't prompt players who must go.
+auto-score (as): Don't prompt the user after a player scores.
+cards= (c=): The number of cards dealt (default = 6).
+discards= (d=): The number of cards discarded (default = 2).
+double-skunk= (ds=): The score needed to avoid a double skunk (default = 0).
+fast: Equivalent to auto-go auto-score no-cut no-pick.
+five-card (5-card, 5c): equivalent to one-go cards=5 discards=1 target-score=61
+    skunk=31 last=3
+four-partners (4-partners, 4p): equivalent to n-bots=3 partners cards=5
+    discards=1
+gonzo (gz): equivalent to target-score=61 match=5 skunk=41 double-skunk=21
+    skunk-scores=four
+last= (l=): The initial score of the last player to play (default = 0).
+match= (m=): The number of games to play in a match. (default = 1).
+    Match results only make sense for two player games.
+n-bots= (nb=): The number of bots to play against. (default = 1)
+no-cut (!c): Skip cutting the deck before the deal.
+no-pick (!p): Skip picking a card to see who deals first.
+one-go (1g): There is only one round of play, that is, only one go.
+partners (p): Pair players off into teams.
+seven-card (7-card, 7c): equivalent to cards=7 target-score=181 skunk=151
+skunk= (s=): The score to avoid a skunk (defualt = 91, only in match play).
+skunk-scores= (ss=): How to score wins/skunks/double skunks
+    acc: 2/3/3
+    long: 3/4/4
+    free: 1/2/3
+    four: 1/2/4
+    or you can enter three numbers separated by slashes.
+    defaults to acc (American Cribbage Congress).
+solo (1): The players are teamed against the dealer, and the dealer can swap
+    cards with the crib. The dealer scores first, along with the crib.
+target-score= (win=): The score needed to win (default = 121).
+three-solo (3-solo, 3s): Equivalent to one-go cards=5 discards=1 win=61
+    skunk=31 n-bots=2 solo
+"""
 
 RULES = """
 Each player is dealt six cards, five in a three or four player game. Each
@@ -71,39 +109,6 @@ point.
 The role of dealer then passes to the left, and a new hand and starter are
 dealt. This continues until someone reaches 121 points. Note that the dealer's
 hand is scored last, to offset the advantage of the crib in tight games.
-
-Options:
-auto-go (ag): Don't prompt players who must go.
-auto-score (as): Don't prompt the user after a player scores.
-cards= (c=): The number of cards dealt (default = 6).
-discards= (d=): The number of cards discarded (default = 2).
-double-skunk= (ds=): The score needed to avoid a double skunk (default = 0).
-fast: Equivalent to auto-go auto-score no-cut no-pick.
-five-card (5-card): equivalent to one-go cards=5 discards=1 target-score=61
-    skunk=31 last=3
-four-partners (4-partners): equivalent to n-bots=3 partners cards=5 discards=1
-last= (l=): The initial score of the last player to play (default = 0).
-match= (m=): The number of games to play in a match. (default = 1).
-    Match results only make sense for two player games.
-n-bots= (nb=): The number of bots to play against. (default = 1)
-no-cut (!c): Skip cutting the deck before the deal.
-no-pick (!p): Skip picking a card to see who deals first.
-one-go (1g): There is only one round of play, that is, only one go.
-partners (p): Pair players off into teams.
-seven-card (7-card): equivalent to cards=7 target-score=181 skunk=151
-skunk= (s=): The score to avoid a skunk (defualt = 91, only in match play).
-skunk-scores= (ss=): How to score wins/skunks/double skunks
-    acc: 2/3/3
-    long: 3/4/4
-    free: 1/2/3
-    four: 1/2/4
-    or you can enter three numbers separated by slashes.
-    defaults to acc (American Cribbage Congress).
-solo (1): The players are teamed against the dealer, and the dealer can swap
-    cards with the crib. The dealer scores first, along with the crib.
-target-score= (win=): The score needed to win (default = 121).
-three-solo (3-solo): Equivalent to one-go cards=5 discards=1 win=61 skunk=31
-    n-bots=2 solo
 """
 
 
@@ -170,6 +175,7 @@ class Cribbage(game.Game):
     credits = CREDITS
     name = 'Cribbage'
     num_options = 11
+    options = OPTIONS
     rules = RULES
 
     def __str__(self):
@@ -807,17 +813,14 @@ class Cribbage(game.Game):
             default = 'acc', question = 'Should match scores be ACC, long, free, or triple? ')
         # Set the variant groups.
         five_card = 'one-go cards=5 discards=1 win=61 skunk=31 last=3'
-        self.option_set.add_group('five-card', five_card)
-        self.option_set.add_group('5-card', five_card)
-        seven_card = 'cards=7 win=181 skunk=151'
-        self.option_set.add_group('seven-card', seven_card)
-        self.option_set.add_group('7-card', seven_card)
+        self.option_set.add_group('five-card', ['5-card', '5c'], five_card)
+        self.option_set.add_group('seven-card', ['7-card', '7c'], 'cards=7 win=181 skunk=151')
         four_partners = 'n-bots=3 partners cards=5 discards=1'
-        self.option_set.add_group('four-partners', four_partners)
-        self.option_set.add_group('4-partners', four_partners)
+        self.option_set.add_group('four-partners', ['4-partners', '4p'], four_partners)
         three_solo = 'one-go cards=5 discards=1 win=61 skunk=31 n-bots=2 solo'
-        self.option_set.add_group('three-solo', three_solo)
-        self.option_set.add_group('3-solo', three_solo)
+        self.option_set.add_group('three-solo', ['3-solo', '3s'], three_solo)
+        gonzo = 'target-score=49 match=5 skunk=31 double-skunk=18 skunk-scores=four'
+        self.option_set.add_group('gonzo', ['gz'], gonzo)
         # Interface options (do not count in num_options)
         self.option_set.add_group('fast', 'auto-go auto-score no-cut no-pick')
         self.option_set.add_option('auto-go', ['ag'],
@@ -1076,7 +1079,7 @@ class CribCard(cards.Card):
     __sub__
     """
 
-    def __init__(self, rank, suit):
+    def __init__(self, rank, suit, down_text = '??', ace_high = False):
         """
         Set up the card. (None)
 
@@ -1084,7 +1087,7 @@ class CribCard(cards.Card):
         rank: The rank of the card. (str)
         suit: The suit of the card. (str)
         """
-        super(CribCard, self).__init__(rank, suit)
+        super(CribCard, self).__init__(rank, suit, down_text, ace_high)
         self.value = min(self.ranks.index(self.rank), 10)
 
     def __add__(self, other):
