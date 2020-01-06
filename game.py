@@ -551,7 +551,7 @@ class Game(OtherCmd):
 
     def sorted_scores(self):
         """Get a list of player names sorted by score. (list of tuple)"""
-        scores = [(score, name) for score, name in self.scores]
+        scores = [(score, name) for score, name in self.scores.items()]
         scores.sort(reverse = True)
         return scores
 
