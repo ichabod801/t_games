@@ -59,6 +59,7 @@ class Game(OtherCmd):
 
     Class Attributes:
     aka: Other names for the game. (list of str)
+    bad_cmd_text: The text for when no matching command is found. (str)
     categories: The interface categories for the game. (list of str)
     credits: The design and programming credits for this game. (str)
     int_re: A regular expression matching integer numbers. (SRE_Pattern)
@@ -99,6 +100,7 @@ class Game(OtherCmd):
     set_players: Reset/change the list of players. (None)
     set_up: Handle any pre-game tasks. (None)
     tournament: Run a tournament of the game. (dict)
+    wins_by_score: Calculate the win-loss-draw record based on scores. (tuple)
 
     Overridden Methods:
     __init__
@@ -109,6 +111,7 @@ class Game(OtherCmd):
 
     aka = []
     aliases = {'!!': 'quit_quit', '=': 'rpn', '!': 'quit'}
+    bad_cmd_text = '\nI do not recognize the command {!r}.'
     categories = ['Test Games']
     credits = '\nNo credits have been specified for this game.'
     help_text = {'help': '\nUse the rules command for instructions on how to play.'}
@@ -183,7 +186,7 @@ class Game(OtherCmd):
         text: The raw text input by the user. (str)
         """
         player = self.players[self.player_index]
-        player.error('\nI do not recognize the command {!r}.'.format(text))
+        player.error(self.bad_cmd_text.format(text))
         return True
 
     def do_credits(self, arguments):
