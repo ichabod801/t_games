@@ -981,7 +981,7 @@ class Backgammon(game.Game):
         text: The raw text input by the user. (str)
         """
         # Set up the check.
-        player = self.players[self.player_index]
+        player = self.current_player
         count = 0
         # Check for multiplication notation.
         if '*' in line:
@@ -992,7 +992,7 @@ class Backgammon(game.Game):
         # Try to parse if any notation fournd.
         if count:
             try:
-                player.held_inputs = [move.strip()] * int(count) + player.held_inputs
+                self.current_player.held_inputs = [move.strip()] * int(count) + player.held_inputs
                 return True
             except ValueError:
                 pass
@@ -1012,7 +1012,7 @@ class Backgammon(game.Game):
         will not move pieces to make them bearable.
         """
         # Get the current player.
-        player = self.players[self.player_index]
+        player = self.current_player
         piece = self.pieces[player.name]
         # Convert the arguments.
         words = argument.split()
@@ -1072,30 +1072,29 @@ class Backgammon(game.Game):
         The argument is a single integer, representing the die number used to enter
         the piece into your opponent's home.
         """
-        # Get the current player.
-        player = self.players[self.player_index]
-        piece = self.pieces[player.name]
+        # Get the current piece.
+        piece = self.pieces[self.current_player.name]
         # Convert the arguments.
         try:
             needed_roll = int(argument)
         except ValueError:
-            player.error('Invalid argument to the enter command: {!r}.'.format(argument))
+            self.current_player.error('Invalid argument to the enter command: {!r}.'.format(argument))
             return True
         point = needed_roll
         if piece == 'X':
             point = 25 - point
         # Check for valid roll.
         if needed_roll not in self.rolls:
-            player.error('You need to roll a {} to enter on that point.'.format(needed_roll))
+            self.current_player.error('You need to roll a {} to enter on that point.'.format(needed_roll))
             return True
         # Check for a piece to enter.
         elif piece not in self.board.cells[BAR]:
-            player.error('You do not have a piece on the bar.')
+            self.current_player.error('You do not have a piece on the bar.')
             return True
         # Check for a valid entry point.
         end_cell = self.board.cells[point]
         if piece not in end_cell and len(end_cell) > 1:
-            player.error('That point is blocked.')
+            self.current_player.error('That point is blocked.')
             return True
         # Make the move.
         capture = self.board.move(BAR, point, piece)
@@ -1113,21 +1112,20 @@ class Backgammon(game.Game):
         # Check for Connect Four edge.
         if game == 'connect four':
             if not losses:
-                # Get the player information.
-                player = self.players[self.player_index]
-                piece = self.pieces[player.name]
+                # Get the current piece.
+                piece = self.pieces[self.current_player.name]
                 # Remind the player of the board state.
-                player.tell(self.board.get_text(piece))
+                self.current_player.tell(self.board.get_text(piece))
                 while True:
                     # Get a point.
                     query = '\nPick a point to move a piece verically from: '
-                    point = player.ask_int(query, low = 1, high = 24)
+                    point = self.current_player.ask_int(query, low = 1, high = 24)
                     target = 25 - point
                     # Validate the point.
                     if piece not in self.board.cells[point]:
-                        player.tell('You do not have a piece on that point.')
+                        self.current_player.tell('You do not have a piece on that point.')
                     elif len(self.board.cells[target]) > 2 and piece not in self.board.cells[target]:
-                        player.tell('You could not move a piece to that square normally.')
+                        self.current_player.tell('You could not move a piece to that square normally.')
                     else:
                         break
                 # Make the move.
@@ -1141,18 +1139,16 @@ class Backgammon(game.Game):
                     self.free_turn = True
         # I'm confused.
         else:
-            player.tell("I'm sorry, I didn't catch that.")
+            self.current_player.tell("I'm sorry, I didn't catch that.")
         return go
 
     def do_pips(self, argument):
         """
         Show the pip counts for the two players.
         """
-        # Get the current player.
-        player = self.players[self.player_index]
         # Show the pip counts.
-        player.tell('\nX:', self.board.get_pip_count('X'))
-        player.tell('O:', self.board.get_pip_count('O'))
+        self.current_player.tell('\nX:', self.board.get_pip_count('X'))
+        self.current_player.tell('O:', self.board.get_pip_count('O'))
         # Keep playing
         return True
 
