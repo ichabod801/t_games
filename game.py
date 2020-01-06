@@ -103,6 +103,7 @@ class Game(OtherCmd):
     set_options: Define the options for the game. (bool)
     set_players: Reset/change the list of players. (None)
     set_up: Handle any pre-game tasks. (None)
+    sorted_scores: Get a list of player names sorted by score. (list of tuple)
     tournament: Run a tournament of the game. (dict)
     wins_by_score: Calculate the win-loss-draw record based on scores. (tuple)
 
@@ -547,6 +548,12 @@ class Game(OtherCmd):
     def set_up(self):
         """Handle any pre-game tasks. (None)"""
         pass
+
+    def sorted_scores(self):
+        """Get a list of player names sorted by score. (list of tuple)"""
+        scores = [(score, name) for score, name in self.scores]
+        scores.sort(reverse = True)
+        return scores
 
     def tournament(self, players, rounds):
         """
