@@ -72,12 +72,15 @@ class Game(OtherCmd):
     rules: The rules of the game. (str)
 
     Attributes:
+    current_player: The currently acting player. (player.Player)
     flags: Flags for different game events tracked in the results. (int)
     force_end: How to force the end of the game. (str)
     gonzo: A flag indicating the gonzo option was used. (bool)
     human: The primary player of the game. (Player)
     interface: The interface that started the game playing. (Interface)
     option_set: The definitions of allowed options for the game (OptionSet)
+    player_index: The index in self.players of the currently acting player. (int)
+    players: The players in the game. (list of player.Player)
     raw_options: The options as given by the play command. (str)
     scores: The players' scores in the game. (dict of str: int)
     silent: A flag for suppressing pre-game output. (bool)
@@ -485,7 +488,8 @@ class Game(OtherCmd):
         self.player_index = 0
         while True:
             # Loop through player actions until their turn is done.
-            while self.player_action(self.players[self.player_index]):
+            self.current_player = self.players[self.player_index]
+            while self.player_action(self.current_player):
                 pass
             self.turns += 1
             # Check for the end of game.
