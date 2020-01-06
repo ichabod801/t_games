@@ -65,6 +65,7 @@ class Game(OtherCmd):
     int_re: A regular expression matching integer numbers. (SRE_Pattern)
     float_re: A regular expression matching decimal numbers. (SRE_Pattern)
     help_text: Extra help text for the game. (dict of str: str)
+    move_query: The text used to ask for the player's move. (str)
     name: The primary name of the game. (str)
     num_options: The number of settable options for the game. (str)
     operators: Operator definitions for the RPN command. (dict of str: callable)
@@ -118,6 +119,7 @@ class Game(OtherCmd):
     help_text = {'help': '\nUse the rules command for instructions on how to play.'}
     int_re = re.compile('-?\d*$')
     float_re = re.compile('-?\d*\.\d+')
+    move_query = '\nWhat is your move? '
     name = 'Null'
     num_options = 0
     operators = {'|': (abs, 1), '+': (operator.add, 2), 'C': (utility.choose, 2), '/%': (divmod, 2),
@@ -510,7 +512,7 @@ class Game(OtherCmd):
         player: The player whose turn it is. (Player)
         """
         player.tell(self)
-        move = player.ask('\nWhat is your move, {}? '.format(player.name))
+        move = player.ask(self.move_query)
         return self.handle_cmd(move)
 
     def set_options(self):
