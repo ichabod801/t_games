@@ -496,13 +496,10 @@ class LiarsDice(game.Game):
         """
         Show how many tokens each player has left. (scores)
         """
-        # Get the sorted scores.
-        scores = [(score, name) for name, score in self.scores.items() if score]
-        scores.sort(reverse = True)
         # Show the scores
         self.human.tell()
-        for score, name in scores:
-            self.human.tell('{}: {}'.format(score, name))
+        for score, name in self.sorted_scores():
+            self.human.tell('{}: {}'.format(name, score))
         return True
 
     def game_over(self):
