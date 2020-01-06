@@ -560,6 +560,53 @@ class Game(OtherCmd):
             sys.stdout = save_stdout
         return {'scores': score_tracking, 'places': place_tracking}
 
+    def wins_by_score(self, show_self = True, silent = False):
+        """
+        Calculate the win-loss-draw record based on player scores. (tuple)
+
+        The return value is a tuple of the winning score, a list of the players who
+        got the winning score, and the human's rank based on their score.
+
+        Parameters:
+        show_self: A flag for showing the game state before reporing wins. (bool)
+        silent: A flag for suppressing output. (bool)
+        """
+        # Calculate win/loss/draw and winners.
+        winners = []
+        best_score = max(self.scores.values())
+        human_score = self.scores[self.human.name]
+        # Check each score.
+        for player in self.players:
+            score = self.scores[player.name]
+            # Save winners.
+            if score == best_score:
+                winners.append(player)
+            # Update win/loss/draw
+            if score < human_score:
+                self.win_loss_draw[0] += 1
+            elif score > human_score:
+                self.win_loss_draw[1] += 1
+            elif score == human_score and player != self.human:
+                self.win_loss_draw[2] += 1
+        # Calculate the human's rank.
+        human_rank = self.win_loss_draw[1] + 1
+        # Report results.
+        if not silent:
+            # Show the final game state.
+            if show_self:
+                self.human_tell(self)
+            # Announce the winner(s).
+            winner_text = utility.oxford(winners)
+            points_text = utility.plural(best_score, 'point')
+            self.human.tell('\n{} won with {} {}.'.format(winner_text, best_score, points_text))
+            # Show the human's rank if they lost.
+            if self.human not in winners:
+                rank_text = utility.number_word(human_rank, ordinal = True)
+                total_text = utility.number_word(len(self.players))
+                self.human.tell('You came in {} out of {} players.'.format(rank_text, total_text))
+        # Return calculated numbers.
+        return (best_score, winners, human_rank)
+
 
 class Flip(Game):
     """
