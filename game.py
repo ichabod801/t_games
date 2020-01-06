@@ -105,6 +105,7 @@ class Game(OtherCmd):
     Overridden Methods:
     __init__
     __repr__
+    __str__
     default
     do_debug
     """
@@ -173,6 +174,14 @@ class Game(OtherCmd):
         """Generate a debugging text representation. (str)"""
         plural = utility.plural(len(self.players), 'player')
         return '<Game of {} with {} {}>'.format(self.name, len(self.players), plural)
+
+    def __str__(self):
+        """Genrate a human readable text representation. (str)"""
+        player = self.players[self.player_index]
+        score = self.scores[player.name]
+        turn_text = utility.number_word(self.turns + 1, ordinal = True)
+        points = utility.plural(score, 'point')
+        return '\nThis is the {} turn and you have {} {}.'.format(turn_text, score, points)
 
     def clean_up(self):
         """Handle any end of game tasks. (None)"""
@@ -500,7 +509,9 @@ class Game(OtherCmd):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        move = player.ask('What is your move, {}? '.format(player.name))
+        player.tell(self)
+        move = player.ask('\nWhat is your move, {}? '.format(player.name))
+        return self.handle_cmd(move)
 
     def set_options(self):
         """Define the options for the game. (None)"""
