@@ -78,6 +78,7 @@ class Game(OtherCmd):
     gonzo: A flag indicating the gonzo option was used. (bool)
     human: The primary player of the game. (Player)
     interface: The interface that started the game playing. (Interface)
+    next_player: The player to force to be the next player. (player.Player)
     option_set: The definitions of allowed options for the game (OptionSet)
     player_index: The index in self.players of the currently acting player. (int)
     players: The players in the game. (list of player.Player)
@@ -153,6 +154,7 @@ class Game(OtherCmd):
         # Set the default attributes.
         self.flags = 0
         self.gipfed = []
+        self.next_player = None
         # Inherit aliases and help text from parent classes.
         self.aliases = {}
         self.help_text = {}
@@ -497,7 +499,11 @@ class Game(OtherCmd):
             if self.force_end or self.game_over():
                 break
             # Move to the next player.
-            self.player_index = (self.player_index + 1) % len(self.players)
+            if self.next_player:
+                self.player_index = self.players.index(self.next_player)
+                self.next_player = None
+            else:
+                self.player_index = (self.player_index + 1) % len(self.players)
         # Clean up the game.
         self.clean_up()
         for player in self.players:
