@@ -451,6 +451,32 @@ class GameSkipTest(unittest.TestCase):
         skipped = self.game.skip_player()
         self.assertEqual(self.game.players[1], skipped)
 
+    def testEndSkipNum(self):
+        """Test a skip of the last player changing player_index."""
+        self.game.player_index = 3
+        skipped = self.game.skip_player()
+        self.assertEqual(0, self.game.player_index)
+
+    def testEndSkipPlayer(self):
+        """Test a skip of the last player returning a player."""
+        self.game.player_index = 3
+        skipped = self.game.skip_player()
+        self.assertEqual(self.game.players[0], skipped)
+
+    def testNextSkipNum(self):
+        """Test a skip with next_player set changing player_index."""
+        self.game.player_index = 1
+        self.game.next_player = self.game.players[2]
+        skipped = self.game.skip_player()
+        self.assertEqual(3, self.game.player_index)
+
+    def testNextSkipPlayer(self):
+        """Test a skip with next_player set returning a player."""
+        self.game.player_index = 3
+        self.game.next_player = self.game.players[2]
+        skipped = self.game.skip_player()
+        self.assertEqual(self.game.players[3], skipped)
+
 
 class GameTextTest(unittest.TestCase):
     """Tests of the base game class text representations. (unittest.TestCase)"""
