@@ -61,6 +61,14 @@ class GameCommandTest(unittest.TestCase):
         self.game.handle_cmd('obey')
         self.assertEqual(check, self.bot.errors[0])
 
+    def testDefaultChanged(self):
+        """Test handling unknown commands with a custom message."""
+        self.game.bad_cmd_text = '\nI pity the fool who thinks I will {}.'
+        check = '\nI pity the fool who thinks I will bark.\n'
+        self.game.player_index = 0
+        self.game.handle_cmd('bark')
+        self.assertEqual(check, self.bot.errors[0])
+
     def testInfo(self):
         """Test showing the rules, credits, and options."""
         check = '\nRULES:\n\nNo rules have been specified for this game.\n'
