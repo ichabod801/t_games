@@ -113,6 +113,24 @@ class Player(object):
         self.held_inputs = []
         self.shortcuts = {}
 
+    def __eq__(self, other):
+        """
+        Equality testing by name. (bool)
+
+        Parameters:
+        other: The object to check equality with. (object)
+        """
+        if isinstance(other, Player):
+            return self.name == other.name
+        elif isinstance(other, str):
+            return self.name == other
+        else:
+            return NotImplemented
+
+    def __hash__(self):
+        """Return a hash of the player's name. (int)"""
+        return hash(self.name)
+
     def __repr__(self):
         """Generate a debugging text representation. (str)"""
         return '<{} {}>'.format(self.__class__.__name__, self.name)
