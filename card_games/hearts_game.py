@@ -933,10 +933,11 @@ class Hearts(game.Game):
                     if self.low_club:
                         for player in self.players:
                             if self.low_club in self.hands[player.name]:
+                                self.next_player = player
                                 break
-                        self.player_index = self.players.index(player) - 1
                     else:
-                        self.player_index = self.players.index(self.dealer) - 1
+                        # Note that self.dealer refers to the next dealer, to the left of the current one.
+                        self.next_player = self.dealer
                 return go
             else:
                 # If incorrect number of cards, try to run a command.

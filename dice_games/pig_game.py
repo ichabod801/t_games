@@ -590,25 +590,7 @@ class Pig(game.Game):
             if self.even_turns and self.turns % len(self.players):
                 return False
             # Update win/loss/draw.
-            human_score = self.scores[self.human.name]
-            winning_score = max(self.scores.values())
-            for name, score in self.scores.items():
-                if name != self.human.name:
-                    if score > human_score:
-                        self.win_loss_draw[1] += 1
-                    elif score < human_score:
-                        self.win_loss_draw[0] += 1
-                    else:
-                        self.win_loss_draw[2] += 1
-                # Declare the winner when found.
-                if score == winning_score:
-                    self.human.tell('\n{} won with {} points.'.format(name, score))
-            # Tell human their place, if they didn't win.
-            if self.win_loss_draw[1]:
-                place = utility.number_word(self.win_loss_draw[1] + 1, ordinal = True)
-                if not self.win_loss_draw[0]:
-                    place = 'last'
-                self.human.tell('You came in {} place with {} points.'.format(place, human_score))
+            self.wins_by_score(show_self = False)
             return True
 
     def handle_options(self):

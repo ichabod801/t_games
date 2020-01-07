@@ -59,23 +59,29 @@ class Game(OtherCmd):
 
     Class Attributes:
     aka: Other names for the game. (list of str)
+    bad_cmd_text: The text for when no matching command is found. (str)
     categories: The interface categories for the game. (list of str)
     credits: The design and programming credits for this game. (str)
     int_re: A regular expression matching integer numbers. (SRE_Pattern)
     float_re: A regular expression matching decimal numbers. (SRE_Pattern)
     help_text: Extra help text for the game. (dict of str: str)
+    move_query: The text used to ask for the player's move. (str)
     name: The primary name of the game. (str)
     num_options: The number of settable options for the game. (str)
     operators: Operator definitions for the RPN command. (dict of str: callable)
     rules: The rules of the game. (str)
 
     Attributes:
+    current_player: The currently acting player. (player.Player)
     flags: Flags for different game events tracked in the results. (int)
     force_end: How to force the end of the game. (str)
     gonzo: A flag indicating the gonzo option was used. (bool)
     human: The primary player of the game. (Player)
     interface: The interface that started the game playing. (Interface)
+    next_player: The player to force to be the next player. (player.Player)
     option_set: The definitions of allowed options for the game (OptionSet)
+    player_index: The index in self.players of the currently acting player. (int)
+    players: The players in the game. (list of player.Player)
     raw_options: The options as given by the play command. (str)
     scores: The players' scores in the game. (dict of str: int)
     silent: A flag for suppressing pre-game output. (bool)
@@ -98,22 +104,27 @@ class Game(OtherCmd):
     set_options: Define the options for the game. (bool)
     set_players: Reset/change the list of players. (None)
     set_up: Handle any pre-game tasks. (None)
+    sorted_scores: Get a list of player names sorted by score. (list of tuple)
     tournament: Run a tournament of the game. (dict)
+    wins_by_score: Calculate the win-loss-draw record based on scores. (tuple)
 
     Overridden Methods:
     __init__
     __repr__
+    __str__
     default
     do_debug
     """
 
     aka = []
     aliases = {'!!': 'quit_quit', '=': 'rpn', '!': 'quit'}
+    bad_cmd_text = '\nI do not recognize the command {!r}.'
     categories = ['Test Games']
     credits = '\nNo credits have been specified for this game.'
     help_text = {'help': '\nUse the rules command for instructions on how to play.'}
     int_re = re.compile('-?\d*$')
     float_re = re.compile('-?\d*\.\d+')
+    move_query = '\nWhat is your move? '
     name = 'Null'
     num_options = 0
     operators = {'|': (abs, 1), '+': (operator.add, 2), 'C': (utility.choose, 2), '/%': (divmod, 2),
@@ -143,6 +154,7 @@ class Game(OtherCmd):
         # Set the default attributes.
         self.flags = 0
         self.gipfed = []
+        self.next_player = None
         # Inherit aliases and help text from parent classes.
         self.aliases = {}
         self.help_text = {}
@@ -171,6 +183,14 @@ class Game(OtherCmd):
         plural = utility.plural(len(self.players), 'player')
         return '<Game of {} with {} {}>'.format(self.name, len(self.players), plural)
 
+    def __str__(self):
+        """Genrate a human readable text representation. (str)"""
+        player = self.players[self.player_index]
+        score = self.scores[player.name]
+        turn_text = utility.number_word(self.turns + 1, ordinal = True)
+        points = utility.plural(score, 'point')
+        return '\nThis is the {} turn and you have {} {}.'.format(turn_text, score, points)
+
     def clean_up(self):
         """Handle any end of game tasks. (None)"""
         pass
@@ -183,7 +203,7 @@ class Game(OtherCmd):
         text: The raw text input by the user. (str)
         """
         player = self.players[self.player_index]
-        player.error('\nI do not recognize the command {!r}.'.format(text))
+        player.error(self.bad_cmd_text.format(text))
         return True
 
     def do_credits(self, arguments):
@@ -471,14 +491,19 @@ class Game(OtherCmd):
         self.player_index = 0
         while True:
             # Loop through player actions until their turn is done.
-            while self.player_action(self.players[self.player_index]):
+            self.current_player = self.players[self.player_index]
+            while self.player_action(self.current_player):
                 pass
             self.turns += 1
             # Check for the end of game.
             if self.force_end or self.game_over():
                 break
             # Move to the next player.
-            self.player_index = (self.player_index + 1) % len(self.players)
+            if self.next_player:
+                self.player_index = self.players.index(self.next_player)
+                self.next_player = None
+            else:
+                self.player_index = (self.player_index + 1) % len(self.players)
         # Clean up the game.
         self.clean_up()
         for player in self.players:
@@ -497,7 +522,9 @@ class Game(OtherCmd):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        move = player.ask('What is your move, {}? '.format(player.name))
+        player.tell(self)
+        move = player.ask(self.move_query)
+        return self.handle_cmd(move)
 
     def set_options(self):
         """Define the options for the game. (None)"""
@@ -527,6 +554,26 @@ class Game(OtherCmd):
     def set_up(self):
         """Handle any pre-game tasks. (None)"""
         pass
+
+    def skip_player(self):
+        """
+        Skip a player in the turn sequence. (player.Player)
+
+        If self.next_player is set, this goes to the player after next_player, and
+        resets next_player. The return value is the player skiped to, who will be the
+        player skipped over when the turn ends.
+        """
+        if self.next_player:
+            self.player_index = self.players.index(self.next_player)
+            self.next_player = None
+        self.player_index = (self.player_index + 1) % len(self.players)
+        return self.players[self.player_index]
+
+    def sorted_scores(self):
+        """Get a list of player names sorted by score. (list of tuple)"""
+        scores = [(score, name) for name, score in self.scores.items()]
+        scores.sort(reverse = True)
+        return scores
 
     def tournament(self, players, rounds):
         """
@@ -559,6 +606,53 @@ class Game(OtherCmd):
             self.human = human_hold
             sys.stdout = save_stdout
         return {'scores': score_tracking, 'places': place_tracking}
+
+    def wins_by_score(self, show_self = True, silent = False):
+        """
+        Calculate the win-loss-draw record based on player scores. (tuple)
+
+        The return value is a tuple of the winning score, a list of the players who
+        got the winning score, and the human's rank based on their score.
+
+        Parameters:
+        show_self: A flag for showing the game state before reporing wins. (bool)
+        silent: A flag for suppressing output. (bool)
+        """
+        # Calculate win/loss/draw and winners.
+        winners = []
+        best_score = max(self.scores.values())
+        human_score = self.scores[self.human.name]
+        # Check each score.
+        for player in self.players:
+            score = self.scores[player.name]
+            # Save winners.
+            if score == best_score:
+                winners.append(player)
+            # Update win/loss/draw
+            if score < human_score:
+                self.win_loss_draw[0] += 1
+            elif score > human_score:
+                self.win_loss_draw[1] += 1
+            elif score == human_score and player != self.human:
+                self.win_loss_draw[2] += 1
+        # Calculate the human's rank.
+        human_rank = self.win_loss_draw[1] + 1
+        # Report results.
+        if not silent:
+            # Show the final game state.
+            if show_self:
+                self.human.tell(self)
+            # Announce the winner(s).
+            winner_text = utility.oxford(winners)
+            points_text = utility.plural(best_score, 'point')
+            self.human.tell('\n{} won with {} {}.'.format(winner_text, best_score, points_text))
+            # Show the human's rank if they lost.
+            if self.human not in winners:
+                rank_text = utility.number_word(human_rank, ordinal = True)
+                total_text = utility.number_word(len(self.players))
+                self.human.tell('You came in {} out of {} players.'.format(rank_text, total_text))
+        # Return calculated numbers.
+        return (best_score, winners, human_rank)
 
 
 class Flip(Game):

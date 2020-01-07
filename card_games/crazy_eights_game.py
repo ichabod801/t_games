@@ -627,8 +627,8 @@ class CrazyEights(game.Game):
             self.player_index = self.players.index(player)
         # Check for skipping players.
         if card_text[0].upper() == self.skip_rank:
-            self.player_index = (self.player_index + 1) % len(self.players)
-            self.human.tell("{}'s turn is skipped.".format(self.players[self.player_index].name))
+            skipped = self.skip_player()
+            self.human.tell("{}'s turn is skipped.".format(skipped))
         # Check for playing their last card.
         if not hand.cards:
             self.human.tell('{} played their last card.'.format(player.name))
