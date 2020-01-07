@@ -555,6 +555,20 @@ class Game(OtherCmd):
         """Handle any pre-game tasks. (None)"""
         pass
 
+    def skip_player(self):
+        """
+        Skip a player in the turn sequence. (player.Player)
+
+        If self.next_player is set, this goes to the player after next_player, and
+        resets next_player. The return value is the player skiped to, who will be the
+        player skipped over when the turn ends.
+        """
+        if self.next_player:
+            self.player_index = self.players.index(self.next_player)
+            self.next_player = None
+        self.player_index = (self.player_index + 1) % len(self.players)
+        return self.players[self.player_index]
+
     def sorted_scores(self):
         """Get a list of player names sorted by score. (list of tuple)"""
         scores = [(score, name) for name, score in self.scores.items()]
