@@ -151,7 +151,7 @@ class PigBotBasePaceRace(player.Bot):
         # Calcuate the values the values that inform the decision.
         turn_score = self.game.turn_score
         max_score = max(self.game.scores.values())
-        my_score = self.game.scores[self.name]
+        my_score = self.game.scores[self]
         # Keep going if it's your last chance.
         if max_score > 99 and my_score + turn_score <= max_score:
             return 'roll'
@@ -217,7 +217,7 @@ class PigBotPaceRace(player.Bot):
         # Calcuate the values the values that inform the decision.
         turn_score = self.game.turn_score
         max_other = max([score for name, score in self.game.scores.items() if name != self.name])
-        my_score = self.game.scores[self.name]
+        my_score = self.game.scores[self]
         hold_value = round(self.pace + (max_other - my_score) / self.modifier, 0)
         # Keep going if it's your last chance.
         if max_other > 99 and my_score + turn_score <= max_other:
@@ -278,7 +278,7 @@ class PigBotPenoptimal(player.Bot):
         """
         # Calcuate the values the values that inform the decision.
         turn_score = self.game.turn_score
-        my_score = self.game.scores[self.name]
+        my_score = self.game.scores[self]
         max_score = max(score for name, score in self.game.scores.items() if name != self.name)
         # Keep going if it's your last chance.
         if max_score > 99 and my_score + turn_score <= max_score:
@@ -336,7 +336,7 @@ class PigBotRolls(player.Bot):
         # Calcuate the values the values that inform the decision.
         self.rolls += 1
         turn_score = self.game.turn_score
-        my_score = self.game.scores[self.name]
+        my_score = self.game.scores[self]
         max_score = max(self.game.scores.values())
         # Keep going if it's your last chance.
         if max_score > 99 and my_score + turn_score <= max_score:
@@ -406,7 +406,7 @@ class PigBotScoringTurns(player.Bot):
         prompt: The question being asked of the player. (str)
         """
         # Calcuate the values the values that inform the decision.
-        my_score = self.game.scores[self.name]
+        my_score = self.game.scores[self]
         turn_score = self.game.turn_score
         max_score = max(self.game.scores.values())
         hold_at = (100 - my_score) // self.turns_left
@@ -465,7 +465,7 @@ class PigBotValue(player.Bot):
         """
         # Calcuate the values the values that inform the decision.
         turn_score = self.game.turn_score
-        my_score = self.game.scores[self.name]
+        my_score = self.game.scores[self]
         max_score = max(self.game.scores.values())
         # Keep going if it's your last chance.
         if max_score > 99 and my_score + turn_score <= max_score:
@@ -515,7 +515,7 @@ class Pig(game.Game):
 
     def clean_up(self):
         """Set the loser to go first next round. (None)"""
-        self.players.sort(key = lambda player: self.scores[player.name])
+        self.players.sort(key = lambda player: self.scores[player])
 
     def do_gipf(self, arguments):
         """
@@ -539,7 +539,7 @@ class Pig(game.Game):
                 move = self.human.ask(question.format(roll))
                 move = move.strip().lower()
                 if move in ('s', 'stop', 'whoa'):
-                    self.scores[self.human.name] += self.turn_score
+                    self.scores[self.human] += self.turn_score
                     go = False
                 elif move in ('r', 'roll', 'go'):
                     if roll == self.bad:
@@ -615,7 +615,7 @@ class Pig(game.Game):
             move = 'roll'
         if move.lower() in ('s', 'stop', 'whoa'):
             # End the turn and score.
-            self.scores[player.name] += self.turn_score
+            self.scores[player] += self.turn_score
             go = False
         elif move.lower() in ('r', 'roll', 'go'):
             # Roll and risk scoring nothing.
@@ -636,7 +636,7 @@ class Pig(game.Game):
                 player.tell()
         if not go and not self.force_end:
             # Inform the player of their current total score.
-            player.tell("{}'s score is now {}.".format(player.name, self.scores[player.name]))
+            player.tell("{}'s score is now {}.".format(player, self.scores[player]))
             self.turn_score = 0
         return go
 
