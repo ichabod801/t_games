@@ -484,11 +484,42 @@ class GameWinsByScoreTest(unittest.TestCase):
 
     def setUp(self):
         self.game = game.Game(unitility.AutoBot(), '')
-        self.game.set_players([self.game.human] + [unitility.AutoBot() for bot in range(3)])
+        players = [self.game.human]
+        for bot in range(3):
+            players.append(unitility.AutoBot(taken_names = [player.name for player in players]))
+        self.game.set_players(players)
         self.game.scores = {player.name: random.randint(25, 75) for player in self.game.players}
         self.game.win_loss_draw = [0, 0, 0]
         self.game.player_index = 0
         self.game.turns = 0
+
+    def testBestScore(self):
+        """Test calculation of the winning score."""
+        bot = self.game.players[-1]
+        self.game.scores[bot.name] = 81
+        check = '\n{} won with 81 points.\n'.format(bot)
+        best_score, winner, human_rank = self.game.wins_by_score()
+        self.assertEqual(81, best_score)
+
+    def testHumanLoss(self):
+        """Test correctly identifying a human loser."""
+        self.game.scores[self.game.human.name] = 18
+        best_score, winner, human_rank = self.game.wins_by_score()
+        self.assertNotEqual([self.game.human], winner)
+        self.assertEqual(4, human_rank)
+        win_text = '\n{} won with 81 points.\n'.format(self.game.human)
+        self.assertNotIn(win_text, self.game.human.info)
+        loss_text = 'You came in fourth out of four players.\n'
+        self.assertIn(loss_text, self.game.human.info)
+
+    def testHumanWin(self):
+        """Test correctly identifying a human winner."""
+        self.game.scores[self.game.human.name] = 81
+        best_score, winner, human_rank = self.game.wins_by_score()
+        self.assertEqual([self.game.human], winner)
+        self.assertEqual(1, human_rank)
+        win_text = '\n{} won with 81 points.\n'.format(self.game.human)
+        self.assertIn(win_text, self.game.human.info)
 
     def testWinLossDraw(self):
         """Test correctly setting the win/loss/draw record."""
@@ -505,8 +536,9 @@ class GameWinsByScoreTest(unittest.TestCase):
         bot = self.game.players[-1]
         self.game.scores[bot.name] = 81
         check = '\n{} won with 81 points.\n'.format(bot)
-        self.game.wins_by_score()
+        best_score, winner, human_rank = self.game.wins_by_score()
         self.assertIn(check, self.game.human.info)
+        self.assertEqual([bot], winner)
 
 class GameXyzzyTest(unittest.TestCase):
     """Tests of the xyzzy command. (unittest.TestCase)"""

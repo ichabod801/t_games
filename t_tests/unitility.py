@@ -48,7 +48,7 @@ class AutoBot(player.Bot):
     tell
     """
 
-    def __init__(self, replies = []):
+    def __init__(self, replies = [], taken_names = []):
         """
         Set up the bot. (None)
 
@@ -56,7 +56,7 @@ class AutoBot(player.Bot):
         name: The name of the bot. (str)
         replies: The answers to questions the bot will be asked. (list)
         """
-        super(AutoBot, self).__init__()
+        super(AutoBot, self).__init__(taken_names = taken_names)
         # Output from the bot.
         self.replies = replies
         # Input to the bot.
