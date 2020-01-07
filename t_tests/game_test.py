@@ -9,6 +9,7 @@ GameGipfCheckTest: Test of validating a gipf move. (unittest.TestCase)
 GameInitTest: Test of game initialization. (unittest.TestCase)
 GamePlayTest: Tests of playing the game. (unittest.TestCase)
 GameRPNTest: Test of the RPN calculator in game.Game. (unittest.TestCase)
+GameSkipTest: Tests of the skipping around the turn order. (unittest.TestCase)
 GameTextTest: Tests of the base game class text versions. (unittest.TestCase)
 GameTournamentTest: Tests of tournaments. (unittest.TestCase)
 GameWinsByScoreTest: Tests of the win_by_scores method. (unittest.TestCase)
@@ -17,7 +18,7 @@ GameXyzzyHelpText: Tests of Game.help_xyzzy. (unittest.TestCase)
 LoadGamesTest: Tests of the load_games function. (unittest.TestCase)
 
 Functions:
-rpn_tests: Make a test class for the Game.do_rpn calculations. (unittest.TestCase)
+rpn_tests: Make a test class for Game.do_rpn calculations. (unittest.TestCase)
 """
 
 
@@ -425,6 +426,30 @@ def rpn_tests():
         setattr(GameRPNTest, arguments[0], make_rpn_test(*arguments[1:]))
     return GameRPNTest
 GameRPNTest = rpn_tests()
+
+
+class GameSkipTest(unittest.TestCase):
+    """Tests of the skipping a player in the turn order. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.game = game.Game(unitility.AutoBot(), '')
+        players = [self.game.human]
+        for bot in range(3):
+            players.append(unitility.AutoBot(taken_names = [player.name for player in players]))
+        self.game.set_players(players)
+        self.game.scores = {player.name: random.randint(25, 75) for player in self.game.players}
+
+    def testBasicSkipNum(self):
+        """Test a simple player skip changing player_index."""
+        self.game.player_index = 0
+        skipped = self.game.skip_player()
+        self.assertEqual(1, self.game.player_index)
+
+    def testBasicSkipPlayer(self):
+        """Test a simple player skip returning a player."""
+        self.game.player_index = 0
+        skipped = self.game.skip_player()
+        self.assertEqual(self.game.players[1], skipped)
 
 
 class GameTextTest(unittest.TestCase):
