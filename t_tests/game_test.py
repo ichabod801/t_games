@@ -10,6 +10,7 @@ GameInitTest: Test of game initialization. (unittest.TestCase)
 GamePlayTest: Tests of playing the game. (unittest.TestCase)
 GameRPNTest: Test of the RPN calculator in game.Game. (unittest.TestCase)
 GameSkipTest: Tests of the skipping around the turn order. (unittest.TestCase)
+GameSortedScoresTest: Tests of providing players sorted by score. (TestCase)
 GameTextTest: Tests of the base game class text versions. (unittest.TestCase)
 GameTournamentTest: Tests of tournaments. (unittest.TestCase)
 GameWinsByScoreTest: Tests of the win_by_scores method. (unittest.TestCase)
@@ -476,6 +477,53 @@ class GameSkipTest(unittest.TestCase):
         self.game.next_player = self.game.players[2]
         skipped = self.game.skip_player()
         self.assertEqual(self.game.players[3], skipped)
+
+
+class GameSortedScoresTest(unittest.TestCase):
+    """Tests of providing players sorted by score. (unittest.TestCase)"""
+
+    def setScores(self, scores):
+        """
+        Set the game scores prior to testing a sort. (None)
+
+        Parameters:
+        scores: The scores in self.players order. (tuple of int)
+        """
+        for player, score in zip(self.game.players, scores):
+            self.game.scores[player.name] = score
+
+    def setUp(self):
+        self.game = game.Game(unitility.AutoBot(), '')
+        players = [self.game.human]
+        for bot in range(3):
+            players.append(unitility.AutoBot(taken_names = [player.name for player in players]))
+        self.game.set_players(players)
+        self.game.scores = {player.name: random.randint(25, 75) for player in self.game.players}
+
+    def testSorted(self):
+        """Test sorting scores already in turn order."""
+        scores = (99, 81, 77, 69)
+        self.setScores(scores)
+        check = list(zip(scores, (player.name for player in self.game.players)))
+        self.assertEqual(check, self.game.sorted_scores())
+
+    def testMixed(self):
+        """Test sorting scores not already in turn order."""
+        scores = (95, 45, 91, 21)
+        self.setScores(scores)
+        players = self.game.players
+        check = [(95, players[0].name), (91, players[2].name), (45, players[1].name), (21, players[3].name)]
+        self.assertEqual(check, self.game.sorted_scores())
+
+    def testTie(self):
+        """Test sorting scores not already in turn order."""
+        scores = (17, 84, 59, 59)
+        self.setScores(scores)
+        players = self.game.players
+        check = [(84, players[1].name), (59, players[2].name), (59, players[3].name), (17, players[0].name)]
+        if check[1][1] < check[2][1]:
+            check[1:3] = check[2:0:-1]
+        self.assertEqual(check, self.game.sorted_scores())
 
 
 class GameTextTest(unittest.TestCase):
