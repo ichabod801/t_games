@@ -641,7 +641,7 @@ class Game(OtherCmd):
         if not silent:
             # Show the final game state.
             if show_self:
-                self.human_tell(self)
+                self.human.tell(self)
             # Announce the winner(s).
             winner_text = utility.oxford(winners)
             points_text = utility.plural(best_score, 'point')

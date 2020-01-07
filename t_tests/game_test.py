@@ -11,6 +11,7 @@ GamePlayTest: Tests of playing the game. (unittest.TestCase)
 GameRPNTest: Test of the RPN calculator in game.Game. (unittest.TestCase)
 GameTextTest: Tests of the base game class text versions. (unittest.TestCase)
 GameTournamentTest: Tests of tournaments. (unittest.TestCase)
+GameWinsByScoreTest: Tests of the win_by_scores method. (unittest.TestCase)
 GameXyzzyTest: Tests of the xyzzy command. (unittest.TestCase)
 GameXyzzyHelpText: Tests of Game.help_xyzzy. (unittest.TestCase)
 LoadGamesTest: Tests of the load_games function. (unittest.TestCase)
@@ -478,8 +479,37 @@ class GameTournamentTest(unittest.TestCase):
         self.assertEqual(check, self.results['scores'])
 
 
+class GameWinsByScoreTest(unittest.TestCase):
+    """Tests of the win_by_scores method. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.game = game.Game(unitility.AutoBot(), '')
+        self.game.set_players([self.game.human] + [unitility.AutoBot() for bot in range(3)])
+        self.game.scores = {player.name: random.randint(25, 75) for player in self.game.players}
+        self.game.win_loss_draw = [0, 0, 0]
+        self.game.player_index = 0
+        self.game.turns = 0
+
+    def testWinLossDraw(self):
+        """Test correctly setting the win/loss/draw record."""
+        win = self.game.players[-1]
+        tie = self.game.players[-2]
+        self.game.scores[win.name] = 108
+        self.game.scores[tie.name] = 81
+        self.game.scores[self.game.human.name] = 81
+        self.game.wins_by_score()
+        self.assertEqual([1, 1, 1], self.game.win_loss_draw)
+
+    def testWinner(self):
+        """Test correctly identifying the winner."""
+        bot = self.game.players[-1]
+        self.game.scores[bot.name] = 81
+        check = '\n{} won with 81 points.\n'.format(bot)
+        self.game.wins_by_score()
+        self.assertIn(check, self.game.human.info)
+
 class GameXyzzyTest(unittest.TestCase):
-    """Tests of the xyzzy command. (unittest.TestCase)s"""
+    """Tests of the xyzzy command. (unittest.TestCase)"""
 
     def setUp(self):
         # Set up the interface, with a programmable valve.
