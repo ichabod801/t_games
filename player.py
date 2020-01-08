@@ -8,6 +8,8 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 BOT_NAMES: Names for computer opponents. (dict of str: str)
+NO: Recognized responses equivalent to 'no'. (set of str)
+YES: Recognized responses equivalent to 'yes'. (set of str)
 
 Classes:
 BotError: An invalid play by a bot. (ValueError)
@@ -258,6 +260,7 @@ class Humanoid(Player):
     ask_int
     ask_int_list
     ask_valid
+    ask_yes_no
     """
 
     list_re = re.compile('[,\-/\s]+')
