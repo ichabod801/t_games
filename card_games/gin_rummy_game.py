@@ -196,7 +196,7 @@ class GinBot(player.Bot):
         if prompt.startswith('Would you like the top card of the discard pile'):
             discard = self.game.deck.discards[-1]
             move = self.discard_check(discard)
-            if move:
+            if not move:
                 self.game.human.tell('\n{} rejected the first discard.'.format(self.name))
         # Handle unforseen questions.
         else:
@@ -773,7 +773,6 @@ class GinRummy(game.Game):
         while True:
             chooser.tell('\nYour hand is {}.'.format(self.hands[chooser.name]))
             take_discard = chooser.ask_yes_no(query, yes = [str(discard).lower()], cmd = True)
-            print(take_discard)
             if isinstance(take_discard, str):
                 if take_discard.lower().split()[0] in directions:
                     self.handle_cmd(take_discard)
@@ -782,7 +781,6 @@ class GinRummy(game.Game):
                 continue
             elif take_discard:
                 self.hands[chooser.name].deal(self.deck.discards.pop())
-                # !! no text based on bot decision.
                 other.tell('\n{} drew the {} from the discard pile.'.format(chooser.name, discard))
                 self.player_index = self.players.index(other)
             break
