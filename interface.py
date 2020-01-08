@@ -599,11 +599,11 @@ class Interface(other_cmd.OtherCmd):
                 message = '\nStatistics were calculated with the following options: {}.'
                 self.human.tell(message.format(stats_options))
             # See if they want to play again.
-            again = self.human.ask('\nWould you like to play again? ').strip().lower()
+            again = self.human.ask_yes_no('\nWould you like to play again? ', other = ('!', '!!'))
             if again in ('!', '!!'):
                 self.human.held_inputs = ['!']
                 break
-            elif again not in utility.YES:
+            elif not again:
                 break
 
     def show_menu(self, category):
