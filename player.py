@@ -66,6 +66,12 @@ BOT_NAMES = {'a': 'Ash/Abby/Adam/Alan/Alice/Ada/Adele/Alonzo/Angus/Astro',
     'y': 'Yamina/Yasmin/Yoland/Yvette/Yadira/Yaakov/Yitzhak/Yves/Yannick/Yaron',
     'z': 'Zahara/Zelda/Zoe/Zuma/Zenaida/Zachary/Zafar/Zane/Zebulon/Zen'}
 
+NO = set(['no', 'n', '0', 'nope', 'negative', 'nah', 'no way', 'i think not', 'nay', 'hell no', 'negatory'])
+NO.update(['nyet', 'wu', 'nahin', 'na', 'nao', 'bango', 'nahim', 'nahi', 'la', "a'a", ''])
+
+YES = set(['yes', 'y', '1', 'yup', 'sure', 'affirmative', 'yeah', 'indubitably', 'yep', 'aye', 'ok', 'nem'])
+YES.update(['okay', 'eh', 'roger', 'da', 'si', 'shi', 'haan', 'hyam', 'sim', 'hai', 'ham', 'hoya'])
+
 
 class BotError(ValueError):
     """An invalid play by a bot. (ValueError)"""
@@ -87,6 +93,7 @@ class Player(object):
     ask_int: Get an integer response from the human. (int)
     ask_int_list: Get a multiple integer response from the human. (int)
     ask_valid: Get and validate responses from the user. (str)
+    ask_yes_no: Get a yes or no answer from the user. (str)
     clean_up: Do any necessary post-game processing. (None)
     error: Warn the player about an invalid play. (None)
     set_up: Do any necessary pre-game processing. (None)
@@ -189,6 +196,16 @@ class Player(object):
         valid: The valid responses from the user. (container of str)
         default: The default value for the response. (str)
         lower: A flag for case insensitive matching. (bool)
+        """
+        raise BotError('Unexpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
+
+    def ask_yes_no(self, prompt, cmd = False):
+        """
+        Get a yes or no answer from the user. (str)
+
+        Parameters:
+        prompt: The question to ask the user. (str)
+        cmd: A flag for returning commands for processing. (bool)
         """
         raise BotError('Unexpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
 
@@ -376,6 +393,28 @@ class Humanoid(Player):
             else:
                 break
         return response
+
+    def ask_yes_no(self, prompt, cmd = False):
+        """
+        Get a yes or no answer from the user. (str)
+
+        Parameters:
+        prompt: The question to ask the user. (str)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        if cmd and self.game.force_end:
+            return False
+        while True:
+            raw = input(prompt).strip()
+            yes_no = raw.lower()
+            if yes_no in YES:
+                return True
+            elif yes_no in NO:
+                return False
+            elif cmd:
+                return raw
+            else:
+                self.error("Please enter 'yes' or 'no'")
 
 
 class Human(Humanoid):
