@@ -228,8 +228,7 @@ class CalvinCards(solitaire.Solitaire):
     def handle_options(self):
         """Handle the option settings for this game. (None)"""
         # Confirm the player is wearing a mask.
-        mask = self.human.ask('\nAre you wearing a mask? ')
-        if mask.lower() not in utility.YES:
+        if not self.human.ask_yes_no('\nAre you wearing a mask? '):
             self.option_set.errors.append('No mask.')
             return
         # Do the standard option handling, with no deal number request, and no questions.
