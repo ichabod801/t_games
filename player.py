@@ -201,12 +201,15 @@ class Player(object):
         """
         raise BotError('Unexpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
 
-    def ask_yes_no(self, prompt, cmd = False):
+    def ask_yes_no(self, prompt, yes = (), no = (), other = (), cmd = False):
         """
         Get a yes or no answer from the user. (str)
 
         Parameters:
         prompt: The question to ask the user. (str)
+        yes: Extra answers accepted as yes. (tuple of str)
+        no: Extra answers accepted as no. (tuple of str)
+        other: Other answers to be returned as strings. (tuple of str)
         cmd: A flag for returning commands for processing. (bool)
         """
         raise BotError('Unexpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
@@ -397,12 +400,18 @@ class Humanoid(Player):
                 break
         return response
 
-    def ask_yes_no(self, prompt, cmd = False):
+    def ask_yes_no(self, prompt, yes = (), no = (), other = (), cmd = False):
         """
         Get a yes or no answer from the user. (str)
 
+        Note that the yes, no, and other parameters are compared to the lower
+        case version of the input.
+
         Parameters:
         prompt: The question to ask the user. (str)
+        yes: Extra answers accepted as yes. (tuple of str)
+        no: Extra answers accepted as no. (tuple of str)
+        other: Other answers to be returned as strings. (tuple of str)
         cmd: A flag for returning commands for processing. (bool)
         """
         if cmd and self.game.force_end:
@@ -410,14 +419,16 @@ class Humanoid(Player):
         while True:
             raw = input(prompt).strip()
             yes_no = raw.lower()
-            if yes_no in YES:
+            if yes_no in YES or yes_no in yes:
                 return True
-            elif yes_no in NO:
+            elif yes_no in NO or yes_no in no:
                 return False
-            elif cmd:
+            elif cmd or yes_no in other:
                 return raw
             else:
-                self.error("Please enter 'yes' or 'no'")
+                valid = ['yes', 'no']
+                valid.extend(other)
+                self.error("Please enter {}.".format(utility.oxford(valid, 'or', "'{}'")))
 
 
 class Human(Humanoid):
