@@ -9,6 +9,7 @@ See the top level __init__.py file for details on the t_games license.
 Classes:
 Card: A standard playing card, with a suit and a rank. (object)
 CRand: Implementation of C's rand function. (object)
+FeatureSet: A set of valid values for a feature (rank/suit) of a Card. (object)
 Deck: A standard deck of cards. (object)
 Hand: A hand of cards held by a player. (object)
 TrackingCard: A card that tracks it's location. (Card)
@@ -234,6 +235,87 @@ class CRand(object):
     def __repr__(self):
         """Computer readable text representation. (str)"""
         return 'CRand({})'.format(self.state)
+
+
+class FeatureSet(object):
+    """
+    A set of valid values for a feature (rank/suit) of a Card. (object)
+
+    Attributes:
+    chars: The characters for the feature values. (str)
+    names: The names of the feature values. (dict of str: str)
+    skip: The number of values to skip when iterating. (int)
+    values: Numeric values associated with feature values. (dict of str: int)
+
+    Overwritten Methods
+    __init__
+    __iter__
+    __len__
+    __repr__
+    index
+    items
+    """
+
+    def __init__(self, chars, names, values = None, skip = 0):
+        """
+        Set up the feature set. (None)
+
+        Parameters:
+        chars: The characters for the feature values. (str)
+        names: The names of the feature values. (list of str)
+        skip: The number of values to skip when iterating. (int)
+        values: Numeric values associated with feature values. (list of int)
+        """
+        # Set default values of zero.
+        if values is None:
+            values = [0] * len(chars)
+        # Check length of names and values.
+        if len(names) != len(chars):
+            raise ValueError('Names and characters of feature sets must have the same length.')
+        if len(values) != len(chars):
+            raise ValueError('Values and characters of feature sets must have the same length.')
+        # Set the attributes.
+        self.chars = chars
+        self.names = dict(zip(chars, names))
+        self.values = dict(zip(chars, values))
+        self.skip = skip
+
+    def __iter__(self):
+        """Iterate over the characters. (iterator)"""
+        return iter(self.chars[self.skip:])
+
+    def __len__(self):
+        """The number of possible feature values. (int)"""
+        return len(self.chars)   # ?? minus skip?
+
+    def __repr__(self):
+        """Debugging text representation. (str)"""
+        return '<FeatureSet {!r}>'.format(self.chars)
+
+    def index(self, char):
+        """Give the feature index of a character. (int)"""
+        return self.chars.index(char)
+
+    def items(self):
+        """
+        Iterate over all the items in the feature set. (iterator)
+
+        Each interation is a tuple of (index, character, name, value)
+        """
+        def iter_items():
+            for index, char in enumerate(self.chars):
+                if index < self.skip:
+                    continue
+                yield (index, char, self.names[char], self.values[char])
+        return iter_items()
+
+STANDARD_RANKS = FeatureSet('XA23456789TJQK',
+    ['Joker', 'Ace', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack',
+        'Queen', 'King'],
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10],
+    skip = 1)
+
+STANDARD_SUITS = FeatureSet('CDHS', ['Clubs', 'Diamonds', 'Hearts', 'Spades'])
 
 
 class Deck(object):
