@@ -247,13 +247,15 @@ class FeatureSet(object):
     skip: The number of values to skip when iterating. (int)
     values: Numeric values associated with feature values. (dict of str: int)
 
+    Methods:
+    index: Give the feature index of a character. (int)
+    item: Iterate over all the items in the feature set. (iterator)
+
     Overwritten Methods
     __init__
     __iter__
     __len__
     __repr__
-    index
-    items
     """
 
     def __init__(self, chars, names, values = None, skip = 0):
@@ -302,6 +304,7 @@ class FeatureSet(object):
 
         Each interation is a tuple of (index, character, name, value)
         """
+        # ?? Can I simplify this by removing the def and the return?
         def iter_items():
             for index, char in enumerate(self.chars):
                 if index < self.skip:
