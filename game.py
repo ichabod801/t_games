@@ -165,7 +165,7 @@ class Game(OtherCmd):
                 self.help_text.update(cls.help_text)
         # Introduce yourself.
         if self.name != 'Fireball' and not self.silent:
-            self.human.tell('\nWelcome to a game of {}, {}.'.format(self.name, self.human.name))
+            self.human.tell('\nWelcome to a game of {}, {}.'.format(self.name, self.human))
         # Define and process the game options.
         self.option_set = options.OptionSet(self)
         raw_words = self.raw_options.lower().split()
@@ -185,8 +185,8 @@ class Game(OtherCmd):
 
     def __str__(self):
         """Genrate a human readable text representation. (str)"""
-        player = self.players[self.player_index]
-        score = self.scores[player.name]
+        player = self.current_player
+        score = self.scores[player]
         turn_text = utility.number_word(self.turns + 1, ordinal = True)
         points = utility.plural(score, 'point')
         return '\nThis is the {} turn and you have {} {}.'.format(turn_text, score, points)
@@ -484,7 +484,7 @@ class Game(OtherCmd):
         self.scores = {}
         self.set_up()
         if not self.scores:
-            self.scores = {player.name: 0 for player in self.players}
+            self.scores = {player: 0 for player in self.players}
         for player in self.players:
             player.set_up()
         # Loop through the players repeatedly.
@@ -510,7 +510,7 @@ class Game(OtherCmd):
             player.clean_up()
         self.gipfed = []
         # Report the results.
-        results = [self.scores[self.human.name], self.turns, self.flags, self.option_set.settings_text]
+        results = [self.scores[self.human], self.turns, self.flags, self.option_set.settings_text]
         return self.win_loss_draw + results
 
     def player_action(self, player):
@@ -590,8 +590,8 @@ class Game(OtherCmd):
             # Set up the players.
             human_hold = self.set_players(players)
             # Set up results tracking.
-            score_tracking = {player.name: [] for player in self.players}
-            place_tracking = {player.name: [] for player in self.players}
+            score_tracking = {player: [] for player in self.players}
+            place_tracking = {player: [] for player in self.players}
             # Run the tournament.
             for game_index in range(rounds):
                 # Run the game.
@@ -621,10 +621,10 @@ class Game(OtherCmd):
         # Calculate win/loss/draw and winners.
         winners = []
         best_score = max(self.scores.values())
-        human_score = self.scores[self.human.name]
+        human_score = self.scores[self.human]
         # Check each score.
         for player in self.players:
-            score = self.scores[player.name]
+            score = self.scores[player]
             # Save winners.
             if score == best_score:
                 winners.append(player)
@@ -682,13 +682,13 @@ class Flip(Game):
             if score_diff == 2:
                 # Figure out who won.
                 winning_score = max(score_values)
-                if self.scores[self.human.name] == winning_score:
+                if self.scores[self.human] == winning_score:
                     self.win_loss_draw[0] = 1
-                    self.human.tell('You beat {} with {} heads!'.format(self.bot.name, winning_score))
+                    self.human.tell('You beat {} with {} heads!'.format(self.bot, winning_score))
                 else:
                     self.win_loss_draw[1] = 1
                     message = 'You lost to {} with {} heads.'
-                    self.human.tell(message.format(self.bot.name, winning_score - 2))
+                    self.human.tell(message.format(self.bot, winning_score - 2))
                 return True
 
     def handle_options(self):
@@ -724,9 +724,9 @@ class Flip(Game):
             player.tell('Flip #{} is {}.'.format(flip_index + 1, flip))
         # Record the final flip.
         if flip == 'heads':
-            self.scores[player.name] += 1
+            self.scores[player] += 1
         # Update the player.
-        player.tell('You now have {} heads.'.format(self.scores[player.name]))
+        player.tell('You now have {} heads.'.format(self.scores[player]))
         player.tell()
 
 
@@ -752,7 +752,7 @@ class FlipBot(Player):
         prompt: The question being asked of the player. (str)
         """
         flips = random.randint(1, 3)
-        self.game.human.tell('{} chooses to flip {}.'.format(self.name, self.count_words[flips]))
+        self.game.human.tell('{} chooses to flip {}.'.format(self, self.count_words[flips]))
         return str(flips)
 
     def tell(self, *args, **kwargs):
@@ -785,7 +785,7 @@ class Fireball(Game):
     def game_over(self):
         """Declare the end of the game."""
         # Check for no games as a loss.
-        if not self.scores[self.human.name]:
+        if not self.scores[self.human]:
             self.win_loss_draw[1] = 1
             self.human.tell('\nPing.')
         # Skip play again and counting this game.
@@ -826,7 +826,7 @@ class Fireball(Game):
         pool.roll()
         damage = sum(pool) + bonus
         self.human.tell('\nYou did {} {} of damage.'.format(damage, utility.plural(damage, 'point')))
-        self.scores[self.human.name] = damage
+        self.scores[self.human] = damage
         # Check for a win.
         expected = (sides / 2.0 + 0.5) * dice_count
         percent = damage / expected
@@ -876,7 +876,7 @@ class Sorter(Game):
                 self.win_loss_draw[1] = 1
                 self.human.tell('You lost. The sequence could be sorted in {} swaps.'.format(self.minimum))
             # Set the score and end the game.
-            self.scores[self.human.name] = self.minimum - self.turns
+            self.scores[self.human] = self.minimum - self.turns
             return True
 
     def handle_options(self):

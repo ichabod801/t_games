@@ -153,6 +153,7 @@ class GinBot(player.Bot):
 
     Overridden Methods:
     ask
+    ask_yes_no
     error
     set_up
     tell
@@ -160,14 +161,8 @@ class GinBot(player.Bot):
 
     def ask(self, prompt):
         """Answer a question from the game. (str)"""
-        # Handle first pick.
-        if prompt.startswith('Would you like the top card of the discard pile'):
-            discard = self.game.deck.discards[-1]
-            move = 'yes' if self.discard_check(discard) else 'no'
-            if move == 'no':
-                self.game.human.tell('\n{} rejected the first discard.'.format(self.name))
         # Handle discard vs. deck.
-        elif prompt.startswith('Would you like to draw from the diScards'):
+        if prompt.startswith('Would you like to draw from the diScards'):
             discard = self.game.deck.discards[-1]
             move = 'discards' if self.discard_check(discard) else 'deck'
         # Handle knock vs. discard.
@@ -181,6 +176,28 @@ class GinBot(player.Bot):
         elif prompt.startswith('Enter a set of cards'):
             self.sort_hand()
             move = self.next_spread()
+        # Handle unforseen questions.
+        else:
+            move = super(GinBot, self).ask(prompt)
+        return move
+
+    def ask_yes_no(self, prompt, yes = (), no = (), other = (), cmd = False):
+        """
+        Get a yes or no answer from the user. (str)
+
+        Parameters:
+        prompt: The question to ask the user. (str)
+        yes: Extra answers accepted as yes. (tuple of str)
+        no: Extra answers accepted as no. (tuple of str)
+        other: Other answers to be returned as strings. (tuple of str)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        # Handle first pick.
+        if prompt.startswith('Would you like the top card of the discard pile'):
+            discard = self.game.deck.discards[-1]
+            move = self.discard_check(discard)
+            if not move:
+                self.game.human.tell('\n{} rejected the first discard.'.format(self.name))
         # Handle unforseen questions.
         else:
             move = super(GinBot, self).ask(prompt)
@@ -751,17 +768,21 @@ class GinRummy(game.Game):
         chooser: The player who gets the choice. (player.Player)
         other: The player to inform what the choice is. (player.Player)
         """
+        directions = ('l', 'left', 'r', 'right')
+        query = 'Would you like the top card of the discard pile ({})? '.format(discard)
         while True:
             chooser.tell('\nYour hand is {}.'.format(self.hands[chooser.name]))
-            query = 'Would you like the top card of the discard pile ({})? '.format(discard)
-            take_discard = chooser.ask(query).lower()
-            if take_discard in utility.YES or take_discard == self.deck.discards[-1]:
+            take_discard = chooser.ask_yes_no(query, yes = [str(discard).lower()], cmd = True)
+            if isinstance(take_discard, str):
+                if take_discard.lower().split()[0] in directions:
+                    self.handle_cmd(take_discard)
+                else:
+                    chooser.error('Please enter yes, no, or a hand organization command.')
+                continue
+            elif take_discard:
                 self.hands[chooser.name].deal(self.deck.discards.pop())
                 other.tell('\n{} drew the {} from the discard pile.'.format(chooser.name, discard))
                 self.player_index = self.players.index(other)
-            elif take_discard.split()[0] in ('l', 'left', 'r', 'right'):
-                self.handle_cmd(take_discard)
-                continue
             break
 
     def do_discard(self, argument):

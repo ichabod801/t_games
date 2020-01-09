@@ -8,6 +8,8 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 BOT_NAMES: Names for computer opponents. (dict of str: str)
+NO: Recognized responses equivalent to 'no'. (set of str)
+YES: Recognized responses equivalent to 'yes'. (set of str)
 
 Classes:
 BotError: An invalid play by a bot. (ValueError)
@@ -66,6 +68,12 @@ BOT_NAMES = {'a': 'Ash/Abby/Adam/Alan/Alice/Ada/Adele/Alonzo/Angus/Astro',
     'y': 'Yamina/Yasmin/Yoland/Yvette/Yadira/Yaakov/Yitzhak/Yves/Yannick/Yaron',
     'z': 'Zahara/Zelda/Zoe/Zuma/Zenaida/Zachary/Zafar/Zane/Zebulon/Zen'}
 
+NO = set(['no', 'n', '0', 'nope', 'negative', 'nah', 'no way', 'i think not', 'nay', 'hell no', 'negatory'])
+NO.update(['nyet', 'wu', 'nahin', 'na', 'nao', 'bango', 'nahim', 'nahi', 'la', "a'a", ''])
+
+YES = set(['yes', 'y', '1', 'yup', 'sure', 'affirmative', 'yeah', 'indubitably', 'yep', 'aye', 'ok', 'nem'])
+YES.update(['okay', 'eh', 'roger', 'da', 'si', 'shi', 'haan', 'hyam', 'sim', 'hai', 'ham', 'hoya'])
+
 
 class BotError(ValueError):
     """An invalid play by a bot. (ValueError)"""
@@ -87,6 +95,7 @@ class Player(object):
     ask_int: Get an integer response from the human. (int)
     ask_int_list: Get a multiple integer response from the human. (int)
     ask_valid: Get and validate responses from the user. (str)
+    ask_yes_no: Get a yes or no answer from the user. (str)
     clean_up: Do any necessary post-game processing. (None)
     error: Warn the player about an invalid play. (None)
     set_up: Do any necessary pre-game processing. (None)
@@ -112,6 +121,24 @@ class Player(object):
         self.game = None
         self.held_inputs = []
         self.shortcuts = {}
+
+    def __eq__(self, other):
+        """
+        Equality testing by name. (bool)
+
+        Parameters:
+        other: The object to check equality with. (object)
+        """
+        if isinstance(other, Player):
+            return self.name == other.name
+        elif isinstance(other, str):
+            return self.name == other
+        else:
+            return NotImplemented
+
+    def __hash__(self):
+        """Return a hash of the player's name. (int)"""
+        return hash(self.name)
 
     def __repr__(self):
         """Generate a debugging text representation. (str)"""
@@ -174,6 +201,19 @@ class Player(object):
         """
         raise BotError('Unexpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
 
+    def ask_yes_no(self, prompt, yes = (), no = (), other = (), cmd = False):
+        """
+        Get a yes or no answer from the user. (str)
+
+        Parameters:
+        prompt: The question to ask the user. (str)
+        yes: Extra answers accepted as yes. (tuple of str)
+        no: Extra answers accepted as no. (tuple of str)
+        other: Other answers to be returned as strings. (tuple of str)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        raise BotError('Unexpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
+
     def clean_up(self):
         """Do any necessary post-game processing. (None)"""
         pass
@@ -223,6 +263,7 @@ class Humanoid(Player):
     ask_int
     ask_int_list
     ask_valid
+    ask_yes_no
     """
 
     list_re = re.compile('[,\-/\s]+')
@@ -358,6 +399,36 @@ class Humanoid(Player):
             else:
                 break
         return response
+
+    def ask_yes_no(self, prompt, yes = (), no = (), other = (), cmd = False):
+        """
+        Get a yes or no answer from the user. (str)
+
+        Note that the yes, no, and other parameters are compared to the lower
+        case version of the input.
+
+        Parameters:
+        prompt: The question to ask the user. (str)
+        yes: Extra answers accepted as yes. (tuple of str)
+        no: Extra answers accepted as no. (tuple of str)
+        other: Other answers to be returned as strings. (tuple of str)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        if cmd and self.game.force_end:
+            return False
+        while True:
+            raw = input(prompt).strip()
+            yes_no = raw.lower()
+            if yes_no in YES or yes_no in yes:
+                return True
+            elif yes_no in NO or yes_no in no:
+                return False
+            elif cmd or yes_no in other:
+                return raw
+            else:
+                valid = ['yes', 'no']
+                valid.extend(other)
+                self.error("Please enter {}.".format(utility.oxford(valid, 'or', "'{}'")))
 
 
 class Human(Humanoid):
