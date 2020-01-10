@@ -621,12 +621,11 @@ class Deck(Pile):
         self.discards = []
 
 
-class Hand(object):
+class Hand(Pile):
     """
-    A hand of cards held by a player. (object)
+    A hand of cards held by a player. (Pile)
 
     Attributes:
-    cards: The cards in the hand. (list of Card)
     deck: The deck the cards in the hand come from. (Deck)
 
     Methods:
@@ -638,12 +637,7 @@ class Hand(object):
 
     Overridden Methods:
     __init__
-    __bool__
-    __contains__
-    __iter__
-    __len__
-    __repr__
-    __str__
+    __eq__
     """
 
     def __init__(self, deck):
@@ -655,19 +649,6 @@ class Hand(object):
         """
         self.deck = deck
         self.cards = []
-
-    def __bool__(self):
-        """Hands are True if they have cards in them. (None)"""
-        return bool(self.cards)
-
-    def __contains__(self, item):
-        """
-        Check for a card being in the hand. (None)
-
-        Parameters:
-        item: The card to check for existince. (object)
-        """
-        return item in self.cards
 
     def __eq__(self, other):
         """
@@ -684,26 +665,25 @@ class Hand(object):
         else:
             return False
 
-    def __iter__(self):
-        """Iterate over the cards in hand. (iterator)"""
-        return iter(self.cards)
+    def __lt__(self, other):
+        """
+        Sort Hands by score. (bool)
 
-    def __len__(self):
-        """Return the number of cards in the hand. (int)"""
-        return len(self.cards)
+        Parameters:
+        other: The other hand to compare with. (Hand)
+        """
+        if isinstance(other, Pile):
+            return self.score() < other.score()
+        else:
+            return self.cards < other
 
     def __repr__(self):
-        """Debugging text representation. (str)"""
-        # !! check unittesting
-        text = '<Hand: {}>'.format(', '.join([card.up_text for card in self.cards]))
-        if text.endswith(': >'):
-            return '<Hand: (empty)>'
-        else:
-            return text
+        """Debugging text representation."""
+        return '<{} [{}]>'.format(self.__class__.__name__, self)
 
     def __str__(self):
         """Human readable text representation. (str)"""
-        return ', '.join([str(card) for card in self.cards])
+        return '{}'.format(', '.join(card.up_text for card in self.cards))
 
     def deal(self, card):
         """
