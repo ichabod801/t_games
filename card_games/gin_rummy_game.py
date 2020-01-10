@@ -411,7 +411,7 @@ class GinBot(player.Bot):
         Note that if a card is in a run and a set, this tracks the run as a meld and
         the set as a potential meld.
         """
-        cards = self.hand.cards[:]
+        cards = self.hand[:]
         # Check for runs.
         cards.sort(key = lambda card: (card.suit, card.rank_num))
         full_runs, part_runs = self.find_melds(cards, self.run_pair)
@@ -827,10 +827,10 @@ class GinRummy(game.Game):
                         break
                     else:
                         self.human.error('{!r} is not a valid rank.'.format(rank))
-                card_index = hand.cards.index(card)
+                card_index = hand.index(card)
                 new_card = cards.Card(rank, card[1])
                 new_card.up = True
-                hand.cards[card_index] = new_card
+                hand[card_index] = new_card
         # Liar's Dice changes one card's suit.
         elif game == "liar's dice":
             if not losses:
@@ -848,10 +848,10 @@ class GinRummy(game.Game):
                         break
                     else:
                         self.human.error('{!r} is not a valid suit.'.format(suit))
-                card_index = hand.cards.index(card)
+                card_index = hand.index(card)
                 new_card = cards.Card(card[0], suit)
                 new_card.up = True
-                hand.cards[card_index] = new_card
+                hand[card_index] = new_card
         # Otherwise I'm confused.
         else:
             self.human.tell("I think you've had a bit too much to drink.")
@@ -879,7 +879,7 @@ class GinRummy(game.Game):
             if attack_melds:
                 text = 'You need {} points or less to knock, but you have {}.'
                 attacker.error(text.format(knock_max, attack_score), attack_melds, attack_deadwood, end = '\n')
-                self.hands[attacker.name].cards.extend(attack_spread.cards)
+                self.hands[attacker.name].extend(attack_spread.cards)
             return False
         self.show_melds(attack_melds, attack_deadwood, defender, 'attacking')
         # Get the defender's melds.
@@ -1097,7 +1097,7 @@ class GinRummy(game.Game):
             return
         # Make sure the cards to move are in the hand.
         try:
-            cards = [hand.cards[hand.cards.index(card_name)] for card_name in card_text]
+            cards = [hand[hand.index(card_name)] for card_name in card_text]
         except ValueError:
             player.error('You do not have all of those cards in your hand.')
             return
@@ -1109,17 +1109,17 @@ class GinRummy(game.Game):
             single_cards = []
             for card in cards:
                 if card in hand:
-                    hand.cards.remove(card)
+                    hand.remove(card)
                     single_cards.append(card)
             # Get the location to move the cards to.
             if target:
-                index = hand.cards.index(target) + mod
+                index = hand.index(target) + mod
             elif mod:
-                index = len(hand.cards)
+                index = len(hand)
             else:
                 index = 0
             # Move the cards.
-            hand.cards[index:index] = single_cards
+            hand[index:index] = single_cards
 
     def parse_meld(self, meld, cards):
         """
@@ -1336,13 +1336,13 @@ class GinRummy(game.Game):
                 break
             elif meld == ['cancel']:
                 if player == self.players[self.player_index]:
-                    unspread.cards.extend(spread.cards)
+                    unspread.extend(spread.cards)
                     spread.cards = []
                     return [], unspread, spread
                 else:
                     player.error('\nThe defending player may not cancel.')
             elif meld == ['reset']:
-                unspread.cards.extend(spread.cards)
+                unspread.extend(spread.cards)
                 spread.cards = []
                 scoring_sets = []
             elif meld == ['error']:
