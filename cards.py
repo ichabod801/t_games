@@ -502,6 +502,7 @@ class Deck(Pile):
         # Set the specified attribute.
         self.shuffle_size = shuffle_size
         # Extract attributes from the card class.
+        self.card_class = card_class
         self.card_re = card_class.card_re
         self.ranks = card_class.ranks
         self.suits = card_class.suits
@@ -522,6 +523,18 @@ class Deck(Pile):
                 self.cards.append(card_class(joker_rank, suit))
         # Start with an empty discard pile.
         self.discards = []
+
+    def _child(self, cards):
+        """
+        Make a Pile with the same attributes but different cards. (Pile)
+
+        Paramters:
+        cards: The cards to make a pile out of. (list of Card)
+        """
+        child = Deck(cards, jokers = self.jokers, decks = self.decks, shuffle_size = self.shuffle_size,
+            card_class = self.card_class, ace_high = self.ace_high)
+        child.discards = self.discards[:]
+        return child
 
     def cut(self, card_index):
         """
