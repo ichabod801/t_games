@@ -432,7 +432,7 @@ class Pile(MutableSequence):
 
     def __str__(self):
         """Human readable text representation. (str)"""
-        return '[{}]'.format(', '.join(str(card) for card in self.cards))
+        return '[{}]'.format(', '.join(card.up_text for card in self.cards))
 
     def _child(self, cards):
         """
@@ -464,13 +464,12 @@ class Pile(MutableSequence):
         self.cards.sort(key = key, reverse = reverse)
 
 
-class Deck(object):
+class Deck(Pile):
     """
-    A standard deck of cards. (object)
+    A standard deck of cards. (Pile)
 
     Attributes:
-    card_re: A regular expression to match a card.
-    cards: The cards in the deck. (list of card)
+    card_re: A regular expression to match a card. (SRExpression)
     discards: The cards in the discard pile. (list of card)
     ranks: The possible ranks for cards in the deck. (str)
     shuffle_size: The number of cards left that triggers a shuffle. (int)
@@ -486,14 +485,15 @@ class Deck(object):
 
     Overridden Methods:
     __init__
-    __repr__
     """
 
-    def __init__(self, jokers = 0, decks = 1, shuffle_size = 0, card_class = Card, ace_high = False):
+    def __init__(self, cards = None, jokers = 0, decks = 1, shuffle_size = 0, card_class = Card,
+        ace_high = False):
         """
         Fill the deck with a standard set of cards. (None)
 
         Parameters:
+        cards: The initial cards in the deck. (list of Card)
         jokers: The number of jokers in the deck. (int)
         decks: The number of idential decks shuffled together. (int)
         shuffle_size: The number of cards left that triggers a shuffle. (int)
@@ -506,11 +506,14 @@ class Deck(object):
         self.ranks = card_class.ranks
         self.suits = card_class.suits
         # Add the standard cards.
-        self.cards = []
-        for deck in range(decks):
-            for rank in card_class.ranks[1:]:
-                for suit in card_class.suits:
-                    self.cards.append(card_class(rank, suit, ace_high = ace_high))
+        if cards is None:
+            self.cards = []
+            for deck in range(decks):
+                for rank in card_class.ranks[1:]:
+                    for suit in card_class.suits:
+                        self.cards.append(card_class(rank, suit, ace_high = ace_high))
+        else:
+            self.cards = cards
         # Add any requested jokers.
         joker_rank = card_class.ranks[0]
         for deck in range(decks):
@@ -519,11 +522,6 @@ class Deck(object):
                 self.cards.append(card_class(joker_rank, suit))
         # Start with an empty discard pile.
         self.discards = []
-
-    def __repr__(self):
-        """Create a debugging text representation. (str)"""
-        card_text = utility.plural(len(self.cards), 'card')
-        return '<{} with {} {} remaining>'.format(self.__class__.__name__, len(self.cards), card_text)
 
     def cut(self, card_index):
         """

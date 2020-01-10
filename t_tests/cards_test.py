@@ -405,19 +405,21 @@ class DeckTest(unittest.TestCase):
 
     def testRepr(self):
         """Test the repr of a fresh deck."""
-        self.assertEqual('<Deck with 52 cards remaining>', repr(self.deck))
+        card_list = ', '.join(card.up_text for card in self.deck)
+        self.assertEqual('<Deck [{}]>'.format(card_list), repr(self.deck))
 
     def testReprDeal(self):
         """Test the repr of a deck after dealing some cards."""
+        card_list = ', '.join(card.up_text for card in self.deck[:34])
         for deal in range(18):
             card = self.deck.deal()
-        self.assertEqual('<Deck with 34 cards remaining>', repr(self.deck))
+        self.assertEqual('<Deck [{}]>'.format(card_list), repr(self.deck))
 
     def testReprOne(self):
         """Test the repr of a deck after dealing all but one card."""
         for deal in range(51):
             card = self.deck.deal()
-        self.assertEqual('<Deck with 1 card remaining>', repr(self.deck))
+        self.assertEqual('<Deck [AC]>', repr(self.deck))
 
     def testShuffleDiscards(self):
         """Test that shuffling the deck gets back the discards."""
