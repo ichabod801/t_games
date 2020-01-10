@@ -23,6 +23,10 @@ MultiTrackingDeck: A deck that keeps track of multiple duplicate cards. (Deck)
 from __future__ import print_function
 
 import collections
+try:
+    from collections.abc import MutableSequence
+except ImportError:
+    from collections import MutableSequence
 import random
 import re
 
@@ -319,6 +323,145 @@ STANDARD_RANKS = FeatureSet('XA23456789TJQK',
     skip = 1)
 
 STANDARD_SUITS = FeatureSet('CDHS', ['Clubs', 'Diamonds', 'Hearts', 'Spades'])
+
+
+class Pile(MutableSequence):
+    """
+    A sequence of cards. (MutableSequence)
+
+    Methods:
+    _child: Make a Pile with the same attributes but different cards. (Pile)
+    insert: Insert a card into the pile. (None)
+    sort: Sort the cards in the pile. (None)
+
+    Overridden Methods:
+    __init__
+    __add__
+    __delitem__
+    __getitem__
+    __imul__
+    __len__
+    __mul__
+    __repr__
+    __rmul__
+    __setitem__
+    __str__
+    """
+
+    def __init__(self, cards = []):
+        """
+        Put the cards in the pile. (None)
+
+        Parameters:
+        cards: The cards to put in the pile. (list of Card)
+        """
+        self.cards = cards
+
+    def __add__(self, other):
+        """Add the pile to another sequence of cards. (Pile)"""
+        if isinstance(Pile):
+            return self._child(Pile.cards + other.cards)
+        else:
+            return self._child(Pile.cards + other)
+
+    def __delitem__(self, key):
+        """
+        Delete a card. (None)
+
+        Parameters:
+        key: The item(s) to delete. (int or slice)
+        """
+        del self.cards[key]
+
+    def __getitem__(self, key):
+        """
+        Get a card or slice of cards. (Card or Pile)
+
+        Parameters:
+        key: The item(s) to delete. (int or slice)
+        """
+        if isinstance(key, int):
+            return self.cards[key]
+        else:
+            return self._child(self.cards[key])
+
+    def __imul__(self, other):
+        """
+        Copy the cards in the pile in place. (Pile)
+
+        Parameters:
+        other: The number of copies to make. (int)
+        """
+        self.cards *= other
+
+    def __len__(self):
+        """Get the number of cards in the Pile. (int)"""
+        return len(self.cards)
+
+    def __mul__(self, other):
+        """
+        Copy the cards in the pile. (Pile)
+
+        Parameters:
+        other: The number of copies to make. (int)
+        """
+        return self._child(self.cards * other)
+
+    def __repr__(self):
+        """Debugging text representation."""
+        return '<{} {}>'.format(self.__class__.__name__, self)
+
+    def __rmul__(self, other):
+        """
+        Copy the cards in the pile. (Pile)
+
+        Parameters:
+        other: The number of copies to make. (int)
+        """
+        return self._child(self.cards * other)
+
+    def __setitem__(self, key, value):
+        """
+        Set a card in the deck. (None)
+
+        Parameters:
+        key: The card(s) to change. (int or slice)
+        value: The cards(s) to change to. (Card or list of Cards)
+        """
+        self.cards[key] = value
+
+    def __str__(self):
+        """Human readable text representation. (str)"""
+        return '[{}]'.format(', '.join(str(card) for card in self.cards))
+
+    def _child(self, cards):
+        """
+        Make a Pile with the same attributes but different cards. (Pile)
+
+        Paramters:
+        cards: The cards to make a pile out of. (list of Card)
+        """
+        return Pile(cards)
+
+    def insert(self, index, card):
+        """
+        Insert a card in the pile. (None)
+
+        Parameters:
+        index: Where to put the card. (int)
+        card: The card to put there. (Card)
+        """
+        self.cards.insert(index, card)
+
+    def sort(self, key = None, reverse = False):
+        """
+        Sort the cards in the pile. (None)
+
+        Parameters:
+        key: A function to get comparison keys for the cards. (callable)
+        reverse: A flag for sorting in descending order. (bool)
+        """
+        self.cards.sort(key = key, reverse = reverse)
 
 
 class Deck(object):
