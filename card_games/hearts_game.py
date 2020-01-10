@@ -607,7 +607,7 @@ class Hearts(game.Game):
         player_index = (self.players.index(self.dealer) + 1) % len(self.players)
         for player in itertools.cycle(self.players[player_index:] + self.players[:player_index]):
             self.hands[player.name].draw()
-            if player == self.dealer and len(self.deck.cards) < len(self.players):
+            if player == self.dealer and len(self.deck) < len(self.players):
                 break
         for hand in self.hands.values():
             hand.cards.sort(key = lambda card: (card.suit, card.rank_num))
@@ -790,7 +790,7 @@ class Hearts(game.Game):
         """Handle the deal option settings for this game. (None)"""
         if self.extras[0] == 'd':
             ditch_stack = ['3D', '3C', '2D', '2C']
-            while len(self.deck.cards) % len(self.players):
+            while len(self.deck) % len(self.players):
                 self.deck.force(ditch_stack.pop())
         elif self.extras[0] == 'f':
             self.kitty = 'first'
@@ -798,8 +798,8 @@ class Hearts(game.Game):
             self.kitty = 'heart'
         elif self.extras[0] == 'j':
             suits = itertools.cycle('CD')
-            while len(self.deck.cards) % len(self.players):
-                self.deck.cards.append(cards.Card('X', next(suits)))
+            while len(self.deck) % len(self.players):
+                self.deck.append(cards.Card('X', next(suits)))
 
     def handle_opt_pass(self):
         """Handle the passing option settings for this game. (None)"""
@@ -820,7 +820,7 @@ class Hearts(game.Game):
     def handle_opt_play(self):
         """Handle the play option settings for this game. (None)"""
         if self.low_club:
-            clubs = [card for card in self.deck.cards if card.suit == 'C']
+            clubs = [card for card in self.deck if card.suit == 'C']
             clubs.sort(key = lambda card: card.rank_num, reverse = True)
             self.low_club = clubs.pop()
             while self.jokers_follow and self.low_club.rank == 'X':
@@ -848,11 +848,11 @@ class Hearts(game.Game):
             self.heart_points = {rank: score for score, rank in enumerate(self.deck.ranks)}
             self.heart_points['A'] = 14
         self.max_score = sum(self.heart_points.values()) + self.lady_points
-        self.breakers = set([card for card in self.deck.cards if card.suit == 'H'])
+        self.breakers = set([card for card in self.deck if card.suit == 'H'])
         if self.all_break:
             self.breakers.add('QS')
         if self.joker_points:
-            jokers = [card for card in self.deck.cards if card.rank == 'X']
+            jokers = [card for card in self.deck if card.rank == 'X']
             self.max_score += len(jokers)
             if self.all_break:
                 self.breakers.update(jokers)
@@ -1199,13 +1199,13 @@ class Hearts(game.Game):
         self.human.tell('\n{} won the trick with the {}.'.format(winner, winning_card))
         self.taken[winner.name].cards.extend(self.trick.cards)
         # Handle any kitty.
-        if self.deck.cards:
+        if self.deck:
             kitty_win = self.kitty == 'first'
             kitty_win = kitty_win or 'heart' and [card for card in self.trick.cards if card.suit == 'H']
             if kitty_win:
-                self.taken[winner.name].cards.extend(self.deck.cards)
+                self.taken[winner.name].cards.extend(self.deck)
                 text = 'You won {} from the kitty.'
-                winner.tell(text.format(utility.oxford(self.deck.cards, word_format = 'the {0.up_text}')))
+                winner.tell(text.format(utility.oxford(self.deck, word_format = 'the {0.up_text}')))
                 if winner != self.human:
                     self.human.tell('{} won the kitty.')
                 self.deck.cards = []
