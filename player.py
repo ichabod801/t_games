@@ -140,6 +140,20 @@ class Player(object):
         """Return a hash of the player's name. (int)"""
         return hash(self.name)
 
+    def __lt__(self, other):
+        """
+        Less-than testing by name. (bool)
+
+        Parameters:
+        other: The object to check equality with. (object)
+        """
+        if isinstance(other, Player):
+            return self.name < other.name
+        elif isinstance(other, str):
+            return self.name < other
+        else:
+            return NotImplemented
+
     def __repr__(self):
         """Generate a debugging text representation. (str)"""
         return '<{} {}>'.format(self.__class__.__name__, self.name)
