@@ -41,14 +41,10 @@ class Card(object):
 
     Class Attributes:
     an_ranks: Ranks whose name uses 'an' rather than 'a'. (str)
-    card_re: A regular expression to match a card.
-    rank_names: The names of the ranks. (list of str)
-    ranks: The rank characters. (str)
-    suit_names: The names of the suits. (list of str)
-    suits: The suit characters. (str)
 
     Attributes:
     color: The color of the card. ('R' or 'B')
+    format_types: Extra types used for the format method. (dict of str: str)
     name: The full name of the card. (str)
     rank: The rank of the card. (str)
     suit: The suit of the card. (str)
@@ -69,14 +65,9 @@ class Card(object):
     """
 
     an_ranks = 'A8'
-    suits = 'CDHS'
-    suit_names = ['Clubs', 'Diamonds', 'Hearts', 'Spades']
-    ranks = 'XA23456789TJQK'
-    rank_names = ['Joker', 'Ace', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten']
-    rank_names += ['Jack', 'Queen', 'King']
-    card_re = re.compile('[{}][{}]'.format(ranks, suits), re.IGNORECASE)
 
-    def __init__(self, rank, suit, down_text = '??', ace_high = False):
+    def __init__(self, rank, suit, down_text = '??', ace_high = False, rank_set = STANDARD_RANKS,
+        suit_set = STANDARD_SUITS):
         """
         Set up the card. (None)
 
@@ -85,30 +76,32 @@ class Card(object):
         suit: The suit of the card. (str)
         down_text: How the card looks when face down. (str)
         ace_high: Treat the ace as higher than a king. (bool)
+        rank_set: The ranks set the card is part of. (FeatureSet)
+        suit_set: The suit set the card is part of. (FeatureSet)
         """
         # Set the specified paramters.
         self.rank = rank[0]
         self.suit = suit[0]
-        # Calculate the rank number.
+        self.rank_set = rank_set
+        self.suit_set = suit_set
+        # Calculate the numeric values of the card.
         self.rank_num = self.ranks.index(self.rank)
-        if self.rank_num == 1 and ace_high:
-            self.rank_num = len(self.ranks)
-        # Calculated the color of the card.
+        self.suit_num = self.suits.index(self.suit)
+        self.value = self.rank_set.values[self.rank] + self.suit_set.values[self.suit]
+        # Calculated the color of the card.  !! whoops, forgot about color.
         if self.suit in 'DH':
             self.color = 'R'
         else:
             self.color = 'B'
         # Calcuate the text attributes of the card.
-        rank_name = self.rank_names[self.ranks.index(self.rank)]
-        suit_name = self.suit_names[self.suits.index(self.suit)]
-        self.name = '{} of {}'.format(rank_name, suit_name)
+        self.name = '{} of {}'.format(self.rank_set.names[self.rank], self.suit_set.names[self.suit])
         self.up_text = self.rank + self.suit
         self.down_text = down_text
-        if self.rank in self.an_ranks:
+        if self.rank in self.an_ranks:                 # !! move to FeatureSet
             a_text = 'an {}'.format(self.name.lower())
         else:
             a_text = 'a {}'.format(self.name.lower())
-        self.format_types = {'a': a_text, 'd': self.down_text, 'n': self.name, 'u': self.up_text}
+        format_types = {'a': a_text, 'd': self.down_text, 'n': self.name, 'u': self.up_text}
         # Default face down.
         self.up = False
 
@@ -123,17 +116,17 @@ class Card(object):
         """
         # Compare cards by rank and suit.
         if isinstance(other, Card):
-            return (self.rank_num, self.suit) == (other.rank_num, other.suit)
+            return (self.rank_num, self.suit_num) == (other.rank_num, other.suit_num)
         # Compare strings by str.
         elif isinstance(other, str):
-            return self.rank + self.suit == other.upper()
+            return self.up_text == other.upper()
         # The rest is not implementd.
         else:
             return NotImplemented
 
     def __hash__(self):
         """The hash is the card text. (hash)"""
-        return hash(self.rank + self.suit)
+        return hash(self.up_text)
 
     def __format__(self, format_spec):
         """
@@ -160,9 +153,9 @@ class Card(object):
     def __lt__(self, other):
         """For sorting by rank. (bool)"""
         if isinstance(other, Card):
-            return self.rank_num < other.rank_num
+            return (self.suit_num, self.rank_num) < (self.suit_num, other.rank_num)
         else:
-            return self.rank_num < other
+            return (self.suit_num, self.rank_num) < other
 
     def __repr__(self):
         """Generate computer readable text representation. (str)"""
@@ -183,6 +176,7 @@ class Card(object):
         other: The card to compare with. (Card)
         wrap_ranks: A flag for K-A-2 wrapping. (bool)
         """
+        # ?? move to FeatureSet (pass through from here)
         # Do the standard caculation
         diff = self.rank_num - other.rank_num
         # Account for wrap ranks.
@@ -198,6 +192,7 @@ class Card(object):
         other: The card to compare with. (Card)
         wrap_ranks: A flag for K-A-2 wrapping. (bool)
         """
+        # ?? move to FeatureSet (pass through from here)
         # Do the standard caculation
         diff = other.rank_num - self.rank_num
         # Account for wrap ranks.
@@ -292,7 +287,7 @@ class FeatureSet(object):
 
     def __len__(self):
         """The number of possible feature values. (int)"""
-        return len(self.chars)   # ?? minus skip?
+        return len(self.chars) - self.skip
 
     def __repr__(self):
         """Debugging text representation. (str)"""
@@ -488,7 +483,7 @@ class Deck(Pile):
     """
 
     def __init__(self, cards = None, jokers = 0, decks = 1, shuffle_size = 0, card_class = Card,
-        ace_high = False):
+        ace_high = False, rank_set = STANDARD_RANKS, suit_set = STANDARD_SUITS):
         """
         Fill the deck with a standard set of cards. (None)
 
@@ -498,29 +493,42 @@ class Deck(Pile):
         decks: The number of idential decks shuffled together. (int)
         shuffle_size: The number of cards left that triggers a shuffle. (int)
         card_class: The type of cards that go into the deck. (type)
+        rank_set: The rank information for cards in the deck. (FeatureSet)
+        suit_set: The suit information for cards in the deck. (FeatureSet)
         """
-        # Set the specified attribute.
+        # Set the specified attributes.
         self.shuffle_size = shuffle_size
-        # Extract attributes from the card class.
+        self.jokers = jokers
         self.card_class = card_class
-        self.card_re = card_class.card_re
-        self.ranks = card_class.ranks
-        self.suits = card_class.suits
+        self.rank_set = rank_set
+        self.suit_set = suit_set
+        # Extract attributes from the feature sets.
+        self.ranks = self.rank_set.chars
+        self.suits = self.suit_set.chars
+        self.card_re = re.compile('[{}][{}]'.format(self.ranks, self.suits), re.IGNORECASE)
         # Add the standard cards.
         if cards is None:
+            # !! refactor out to allow for customization.
+            # Add the base cards.
             self.cards = []
             for deck in range(decks):
-                for rank in card_class.ranks[1:]:
-                    for suit in card_class.suits:
-                        self.cards.append(card_class(rank, suit, ace_high = ace_high))
+                for rank in self.rank_set:
+                    for suit in self.suit_set:
+                        self.cards.append(card_class(rank, suit, rank_set, suit_set))
+            # Get the joker ranks and suits.
+            joker_ranks = self.rank_set.chars[:self.rank_set.skip]
+            if self.suit_set.skip:
+                joker_suits = self.suit_set.chars
+            else:
+                joker_suits = self.suit_set.chars[:self.suit_set.skip]
+            # Add the jokers.
+            for deck in range(decks):
+                for rank in joker_ranks:
+                    for suit_index in range(self.jokers):
+                        suit = joker_suits[suit_index % len(card_class.suits)]
+                        self.cards.append(card_class(joker_rank, suit))
         else:
             self.cards = cards
-        # Add any requested jokers.
-        joker_rank = card_class.ranks[0]
-        for deck in range(decks):
-            for suit_index in range(jokers):
-                suit = card_class.suits[suit_index % len(card_class.suits)]
-                self.cards.append(card_class(joker_rank, suit))
         # Start with an empty discard pile.
         self.discards = []
 
@@ -532,7 +540,8 @@ class Deck(Pile):
         cards: The cards to make a pile out of. (list of Card)
         """
         child = Deck(cards, jokers = self.jokers, decks = self.decks, shuffle_size = self.shuffle_size,
-            card_class = self.card_class, ace_high = self.ace_high)
+            card_class = self.card_class, ace_high = self.ace_high, rank_set = self.rank_set,
+            suit_set = self.suit_set)
         child.discards = self.discards[:]
         return child
 
