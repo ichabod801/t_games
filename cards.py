@@ -517,8 +517,8 @@ class Deck(Pile):
     __init__
     """
 
-    def __init__(self, cards = None, jokers = 0, decks = 1, shuffle_size = 0, card_class = Card,
-        ace_high = False, rank_set = STANDARD_RANKS, suit_set = STANDARD_SUITS):
+    def __init__(self, cards = None, jokers = 0, decks = 1, shuffle_size = 0, rank_set = STANDARD_RANKS,
+        suit_set = STANDARD_SUITS):
         """
         Fill the deck with a standard set of cards. (None)
 
@@ -527,14 +527,12 @@ class Deck(Pile):
         jokers: The number of jokers in the deck. (int)
         decks: The number of idential decks shuffled together. (int)
         shuffle_size: The number of cards left that triggers a shuffle. (int)
-        card_class: The type of cards that go into the deck. (type)
         rank_set: The rank information for cards in the deck. (FeatureSet)
         suit_set: The suit information for cards in the deck. (FeatureSet)
         """
         # Set the specified attributes.
         self.shuffle_size = shuffle_size
         self.jokers = jokers
-        self.card_class = card_class
         self.rank_set = rank_set
         self.suit_set = suit_set
         # Extract attributes from the feature sets.
@@ -569,10 +567,10 @@ class Deck(Pile):
 
     def _child(self, cards):
         """
-        Make a Pile with the same attributes but different cards. (Pile)
+        Make a Deck with the same attributes but different cards. (Deck)
 
         Paramters:
-        cards: The cards to make a pile out of. (list of Card)
+        cards: The cards to make a deck out of. (list of Card)
         """
         child = Deck(cards, jokers = self.jokers, decks = self.decks, shuffle_size = self.shuffle_size,
             card_class = self.card_class, ace_high = self.ace_high, rank_set = self.rank_set,
@@ -684,7 +682,7 @@ class Hand(Pile):
     __eq__
     """
 
-    def __init__(self, deck):
+    def __init__(self, cards = None, deck = None):
         """
         Set up the link to the deck. (None)
 
@@ -692,7 +690,10 @@ class Hand(Pile):
         deck: The deck the hand is dealt from. (Deck)
         """
         self.deck = deck
-        self.cards = []
+        if cards is None:
+            self.cards = []
+        else:
+            self.cards = cards
 
     def __eq__(self, other):
         """
@@ -728,6 +729,15 @@ class Hand(Pile):
     def __str__(self):
         """Human readable text representation. (str)"""
         return '{}'.format(', '.join(card.up_text for card in self.cards))
+
+    def _child(self, cards):
+        """
+        Make a Hand with the same attributes but different cards. (Hand)
+
+        Paramters:
+        cards: The cards to make a hand out of. (list of Card)
+        """
+        return Hand(cards, self.deck)
 
     def deal(self, card):
         """
@@ -767,7 +777,7 @@ class Hand(Pile):
     def score(self):
         """Score the hand. (int)"""
         # Default score is high card.
-        return max([Card.ranks.index(card.rank) for card in self.cards])
+        return sum(card.value for card in self.cards)
 
     def shift(self, card, hand):
         """
@@ -777,11 +787,11 @@ class Hand(Pile):
         hand: The hand to pass it to. (Hand)
         """
         card_index = self.cards.index(card)
-        hand.cards.append(self.cards.pop(card_index))
+        hand.append(self.cards.pop(card_index))
 
     def show_player(self):
         """Show the hand to the player playing it. (str)"""
-        return ', '.join([card.rank + card.suit for card in self.cards])
+        return ', '.join([card.up_text for card in self.cards])
 
 
 class TrackingCard(Card):
