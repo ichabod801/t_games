@@ -326,7 +326,7 @@ class Card(object):
     def __lt__(self, other):
         """For sorting by rank. (bool)"""
         if isinstance(other, Card):
-            return (self.suit_num, self.rank_num) < (self.suit_num, other.rank_num)
+            return (self.suit_num, self.rank_num) < (other.suit_num, other.rank_num)
         else:
             return (self.suit_num, self.rank_num) < other
 
