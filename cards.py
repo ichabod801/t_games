@@ -129,6 +129,16 @@ class FeatureSet(object):
         self.colors = dict(zip(chars, colors))
         self.skip = skip
         self.wrap = wrap
+        self.an_chars = an_chars
+
+    def __contains__(self, char):
+        """
+        Check for a valid rank. (bool)
+
+        Parameters:
+        char: The rank character to check validity of. (str)
+        """
+        return char in self.names
 
     def __iter__(self):
         """Iterate over the characters. (iterator)"""
@@ -187,7 +197,7 @@ class FeatureSet(object):
             for index, char in enumerate(self.chars):
                 if index < self.skip:
                     continue
-                yield (index, char, self.names[char], self.values[char])
+                yield (index, char, self.names[char], self.values[char], self.colors[char])
         return iter_items()
 
 STANDARD_RANKS = FeatureSet('XA23456789TJQK',
@@ -211,9 +221,6 @@ class Card(object):
 
     The color, rank, and suit attributes are length 1.
 
-    Class Attributes:
-    an_ranks: Ranks whose name uses 'an' rather than 'a'. (str)
-
     Attributes:
     color: The color of the card. ('R' or 'B')
     format_types: Extra types used for the format method. (dict of str: str)
@@ -236,8 +243,6 @@ class Card(object):
     __str__
     """
 
-    an_ranks = 'A8'
-
     def __init__(self, rank, suit, down_text = '??', ace_high = False, rank_set = STANDARD_RANKS,
         suit_set = STANDARD_SUITS):
         """
@@ -257,15 +262,15 @@ class Card(object):
         self.rank_set = rank_set
         self.suit_set = suit_set
         # Calculate the numeric values of the card.
-        self.rank_num = self.ranks.index(self.rank)
-        self.suit_num = self.suits.index(self.suit)
+        self.rank_num = self.rank_set.index(self.rank)
+        self.suit_num = self.suit_set.index(self.suit)
         self.value = self.rank_set.values[self.rank] + self.suit_set.values[self.suit]
         self.color = self.suit_set.colors[self.suit]
         # Calcuate the text attributes of the card.
         self.name = '{} of {}'.format(self.rank_set.names[self.rank], self.suit_set.names[self.suit])
         self.up_text = self.rank + self.suit
         self.down_text = down_text
-        if self.rank in self.ranks.an_chars:
+        if self.rank in self.rank_set.an_chars:
             a_text = 'an {}'.format(self.name.lower())
         else:
             a_text = 'a {}'.format(self.name.lower())
@@ -547,7 +552,7 @@ class Deck(Pile):
             for deck in range(decks):
                 for rank in self.rank_set:
                     for suit in self.suit_set:
-                        self.cards.append(card_class(rank, suit, rank_set, suit_set))
+                        self.cards.append(Card(rank, suit, rank_set, suit_set))
             # Get the joker ranks and suits.
             joker_ranks = self.rank_set.chars[:self.rank_set.skip]
             if self.suit_set.skip:
@@ -559,7 +564,7 @@ class Deck(Pile):
                 for rank in joker_ranks:
                     for suit_index in range(self.jokers):
                         suit = joker_suits[suit_index % len(card_class.suits)]
-                        self.cards.append(card_class(joker_rank, suit))
+                        self.cards.append(Card(joker_rank, suit))
         else:
             self.cards = cards
         # Start with an empty discard pile.

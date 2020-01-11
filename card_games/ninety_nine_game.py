@@ -176,7 +176,7 @@ class NinetyNine(game.Game):
         """
         Pass the turn and lose a token. (p)
         """
-        # Handel free passes.
+        # Handle free passes.
         if self.free_pass:
             self.free_pass = False
         else:
@@ -251,13 +251,14 @@ class NinetyNine(game.Game):
         """Handle the game options(None)"""
         super(NinetyNine, self).handle_options()
         # Set the special rank values.
-        for rank in cards.Card.ranks:
+        rank_set = cards.STANDARD_RANKS
+        for rank in rank_set.chars:
             if rank in self.rank99:
                 self.card_values[rank] = (99,)
             elif rank in self.minus:
-                self.card_values[rank] = (-min(10, cards.Card.ranks.index(rank)),)
+                self.card_values[rank] = (-min(10, rank_set.index(rank)),)
             elif rank in self.plus_minus:
-                self.card_values[rank] += (-min(10, cards.Card.ranks.index(rank)),)
+                self.card_values[rank] += (-min(10, rank_set.index(rank)),)
             elif rank in self.zero:
                 self.card_values[rank] = (0,)
         # Set the paleyrs.
@@ -270,25 +271,18 @@ class NinetyNine(game.Game):
     def help_ranks(self):
         """Show the current special ranks in the game. (None)"""
         self.human.tell('\nThe current values of the ranks are:\n')
-        # Get the card class.
-        if self.deck.discards:
-            card_class = self.deck.discards[0].__class__
-        elif self.deck.cards:
-            card_class = self.deck.cards[0].__class__
-        else:
-            card_class = self.hands[self.human.name].cards[0]
         # Show the rank values.
-        for rank, rank_name in zip(card_class.ranks[1:], card_class.rank_names[1:]):
+        for rank_num, rank, name, value, color in self.deck.rank_set.items():
             value_text = ' or '.join([str(value) for value in self.card_values[rank]])
-            self.human.tell('{}: {}'.format(rank_name, value_text))
+            self.human.tell('{}: {}'.format(name, value_text))
         # Show the special ranks.
         if self.skip_rank or self.reverse_rank:
             self.human.tell('\nRanks with special abilities include:\n')
         if self.reverse_rank:
-            rank_name = card_class.rank_names[card_class.ranks.index(self.reverse_rank)]
+            rank_name = self.deck.rank_set.names[self.reverse_rank]
             self.human.tell('The rank to reverse the order of play is {}.'.format(rank_name))
         if self.skip_rank:
-            rank_name = card_class.rank_names[card_class.ranks.index(self.skip_rank)]
+            rank_name = self.deck.rank_set.names[self.reverse_rank]
             self.human.tell('The rank to skip the next player is {}.'.format(rank_name))
 
     def player_action(self, player):
@@ -357,7 +351,8 @@ class NinetyNine(game.Game):
     def set_options(self):
         """Define the options for the game. (None)"""
         # Set the standard card values.
-        self.card_values = {rank: (min(10, index),) for index, rank in enumerate(cards.Card.ranks)}
+        rank_set = cards.STANDARD_RANKS
+        self.card_values = {rank: (min(10, index),) for index, rank in enumerate(rank_set.chars)}
         self.card_values['A'] = (1, 11)
         self.free_pass = False
         # Get functions for rank lists.
@@ -366,7 +361,7 @@ class NinetyNine(game.Game):
                 text = ''
             return text.upper()
         def is_rank_list(ranks):
-            return all(rank in cards.Card.ranks for rank in ranks)
+            return all(rank in rank_set for rank in ranks)
         # Set the groups.
         self.option_set.add_group('joker-rules', ['jr'], 'zero=9/k reverse=k jokers=2 99=x skip=!')
         self.option_set.add_group('chicago', ['chi'], 'zero=4/9 skip=9 99=K minus=T plus-minus=!')
@@ -392,10 +387,10 @@ class NinetyNine(game.Game):
         # Set the special rank options.
         self.option_set.add_option('jokers', ['j'], converter = int, default = 0, valid = range(5),
             question = 'How many jokers should there be in the deck (return for 0)? ')
-        self.option_set.add_option('reverse', ['r'], target = 'reverse_rank', valid = cards.Card.ranks,
+        self.option_set.add_option('reverse', ['r'], target = 'reverse_rank', valid = rank_set,
             default = '4', converter = convert_rank,
             question = 'What rank should reverse the order of play? ')
-        self.option_set.add_option('skip', ['s'], target = 'skip_rank', valid = cards.Card.ranks,
+        self.option_set.add_option('skip', ['s'], target = 'skip_rank', valid = rank_set,
             default = '3', converter = convert_rank, question = 'What rank should skip the next player? ')
 
     def set_up(self):
@@ -406,7 +401,7 @@ class NinetyNine(game.Game):
         self.scores = {player.name: 3 for player in self.players}
         # Set up deck and hands.
         self.deck = cards.Deck(jokers = self.jokers)
-        self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
+        self.hands = {player.name: cards.Hand(deck = self.deck) for player in self.players}
         # Deal three cards to each player.
         self.deal()
         # Set the tracking variables
