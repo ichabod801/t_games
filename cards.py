@@ -112,7 +112,7 @@ class FeatureSet(object):
         """
         # Set default values.
         if values is None:
-            values = [0] * len(chars)
+            values = [1] * len(chars)
         if colors is None:
             colors = 'X' * len(chars)
         # Check length of secondary attributes.
@@ -264,7 +264,7 @@ class Card(object):
         # Calculate the numeric values of the card.
         self.rank_num = self.rank_set.index(self.rank)
         self.suit_num = self.suit_set.index(self.suit)
-        self.value = self.rank_set.values[self.rank] + self.suit_set.values[self.suit]
+        self.value = self.rank_set.values[self.rank] * self.suit_set.values[self.suit]
         self.color = self.suit_set.colors[self.suit]
         # Calcuate the text attributes of the card.
         self.name = '{} of {}'.format(self.rank_set.names[self.rank], self.suit_set.names[self.suit])

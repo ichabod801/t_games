@@ -29,6 +29,21 @@ from .. import player
 from .. import utility
 
 
+
+ACE_HIGH_RANKS = FeatureSet('X23456789TJQKA',
+    ['Joker', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack',
+        'Queen', 'King', 'Ace'],
+    [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    skip = 1, an_chars = 'A8')
+
+FACE_RANKS = FeatureSet('X23456789TJQKA',
+    ['Joker', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack',
+        'Queen', 'King', 'Ace'],
+    [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5],
+    skip = 1, an_chars = 'A8')
+
+HEARTS_SUITS = FeatureSet('CDHS', ['Clubs', 'Diamonds', 'Hearts', 'Spades'], [0, 0, 1, 0], colors = 'RRBB')
+
 CREDITS = """
 Game Design: Traditional
 Game Programming: Craig "Ichabod" O'Brien
@@ -89,6 +104,18 @@ pass-dir= (pd=): The direction in which cards are passed. Valid settings are:
         round. Start to the left, and when passing to yourself just don't pass.
     scatter (s): Each player passes one other card to each other player.
 """
+
+PIP_RANKS = FeatureSet('X23456789TJQKA',
+    ['Joker', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack',
+        'Queen', 'King', 'Ace'],
+    [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 10],
+    skip = 1, an_chars = 'A8')
+
+RANK_RANKS = FeatureSet('X23456789TJQKA',
+    ['Joker', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack',
+        'Queen', 'King', 'Ace'],
+    [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+    skip = 1, an_chars = 'A8')
 
 RULES = """
 In the standard four player game, 13 cards are dealt to each player. Each
@@ -173,7 +200,7 @@ class HeartBot(player.Bot):
         cmd: A flag for returning commands for processing. (bool)
         """
         if prompt.startswith('How many cards'):
-            self.hand = self.game.hands[self.name]  # This may be asked during game setup, before bot setup.
+            self.hand = self.game.hands[self]  # This may be asked during game setup, before bot setup.
             return self.pass_count(low, high)
         else:
             return super(HeartBot, self).ask(prompt)
@@ -181,7 +208,7 @@ class HeartBot(player.Bot):
     def follow(self):
         """Play a card to an existing trick. (str)"""
         # Get the cards matching the suit led.
-        trick_starter = self.game.trick.cards[0]
+        trick_starter = self.game.trick[0]
         trick_cards = [card for card in self.game.trick if card.suit == trick_starter.suit]
         trick_max = sorted(trick_cards, key = lambda card: card.rank_num)[-1]
         point_cards = [card for card in self.game.trick if card.suit == 'H' or card == 'QS']
@@ -227,26 +254,26 @@ class HeartBot(player.Bot):
                     card = hearts[-1]
                 else:
                     # If you have no penalty cards, get rid of the highest card you can.
-                    card = sorted(self.hand.cards, key = lambda card: card.rank_num)[-1]
+                    card = sorted(self.hand, key = lambda card: card.rank_num)[-1]
         return card
 
     def lead(self):
         """Play a card to start a trick. (cards.Card)"""
         # Open with the lowest card you have in the hopes of losing.
-        self.hand.cards.sort(key = lambda card: card.rank_num)
+        self.hand.sort(key = lambda card: card.rank_num)
         play_index = 0
-        card = self.hand.cards[play_index]
+        card = self.hand[play_index]
         # Don't lead with jokers if it's banned.
         while self.game.jokers_follow and card.rank == 'X':
             play_index += 1
-            card = self.hand.cards[play_index]
+            card = self.hand[play_index]
         # Don't lead with hearts if they're not broken.
         while not self.game.hearts_broken and card.suit == 'H':
             play_index += 1
-            card = self.hand.cards[play_index]
+            card = self.hand[play_index]
         # Avoid leading the QS.
-        if card == 'QS' and play_index < len(self.hand.cards) - 1:
-            card = self.hand.cards[play_index + 1]
+        if card == 'QS' and play_index < len(self.hand) - 1:
+            card = self.hand[play_index + 1]
         return card
 
     def pass_cards(self):
@@ -278,8 +305,8 @@ class HeartBot(player.Bot):
         high: The highest acceptable value for the integer. (int or None)
         """
         # Pass just enough to get rid of the nasty cards.
-        high_hearts = len([card for card in self.hand.cards if card.suit == 'H' and card.rank_num > 10])
-        high_spades = len([card for card in self.hand.cards if card.suit == 'S' and card.rank_num > 11])
+        high_hearts = len([card for card in self.hand if card.suit == 'H' and card.rank_num > 10])
+        high_spades = len([card for card in self.hand if card.suit == 'S' and card.rank_num > 11])
         return max(low, min(high, high_hearts + high_spades))
 
     def pass_direction(self):
@@ -298,7 +325,7 @@ class HeartBot(player.Bot):
     def set_up(self):
         """Set up the bot. (None)"""
         # Create a shortcut to your hand for easier programming.
-        self.hand = self.game.hands[self.name]
+        self.hand = self.game.hands[self]
 
     def tell(self, *args, **kwargs):
         """
@@ -471,7 +498,7 @@ class SmeartBot(HeartBot):
         self.hand.cards.sort(key = lambda card: card.rank_num)
         if self.game.trick:
             # Try to win the trick.
-            matching = [card for card in self.hand if card.suit == self.game.trick.cards[0].suit]
+            matching = [card for card in self.hand if card.suit == self.game.trick[0].suit]
             if matching:
                 return matching[-1]
             else:
@@ -501,7 +528,7 @@ class SmeartBot(HeartBot):
                 self.got_points[self.game.last_winner.name] = True
         # Look for signs of someone trying to shoot (leading a high card early).
         if self.strategy == 'standard':
-            if self.game.trick and self.game.trick.cards[0] in self.danger_cards and self.tricks < 5:
+            if self.game.trick and self.game.trick[0] in self.danger_cards and self.tricks < 5:
                 self.strategy = 'defend'
                 self.shooter = self.game.players[self.game.player_index - len(self.game.trick)].name
         # Go back to avoidance if more than one person has points.
@@ -606,11 +633,11 @@ class Hearts(game.Game):
         self.deck.shuffle()
         player_index = (self.players.index(self.dealer) + 1) % len(self.players)
         for player in itertools.cycle(self.players[player_index:] + self.players[:player_index]):
-            self.hands[player.name].draw()
+            self.hands[player].draw()
             if player == self.dealer and len(self.deck) < len(self.players):
                 break
         for hand in self.hands.values():
-            hand.cards.sort(key = lambda card: (card.suit, card.rank_num))
+            hand.sort()
         self.human.tell('{} deals.'.format(self.dealer))
         # Eldest hand starts, and is the next dealer.
         self.dealer = self.players[player_index]
@@ -627,7 +654,7 @@ class Hearts(game.Game):
         while True:
             # Get the dealer for this deal (self.dealer is dealer for next deal at this point)
             dealer = self.players[self.players.index(self.dealer) - 1]
-            dealer.tell('\nYour hand is: {}.'.format(self.hands[dealer.name]))
+            dealer.tell('\nYour hand is: {}.'.format(self.hands[dealer]))
             # Get a valid direction.
             while True:
                 pass_dir = dealer.ask('What direction shoud cards be passed? ')
@@ -666,8 +693,8 @@ class Hearts(game.Game):
         Pass one or more cards to another player.
         """
         # Get the player and their hand.
-        player = self.players[self.player_index]
-        hand = self.hands[player.name]
+        player = self.current_player
+        hand = self.hands[player]
         #print('{} passes {} from {}.'.format(player, arguments, hand))
         # Get the actual card objects.
         cards = [card.strip().upper() for card in self.card_re.findall(arguments)]
@@ -685,15 +712,15 @@ class Hearts(game.Game):
         else:
             # Shift the cards to their passing stack.
             for card in cards:
-                hand.shift(card, self.passes[player.name])
+                hand.shift(card, self.passes[player])
 
     def do_play(self, arguments):
         """
         Play a card, to either start or contribute to a trick.  (p)
         """
         # Get the player and their hand.
-        player = self.players[self.player_index]
-        hand = self.hands[player.name]
+        player = self.current_player
+        hand = self.hands[player]
         #print(player.name, hand)
         # Check for a valid card.
         if self.card_re.match(arguments):
@@ -712,7 +739,7 @@ class Hearts(game.Game):
         to_play = hand.cards[hand.cards.index(card_text)]
         if self.trick:
             # Check that the card follows suit, or that the player is void in that suit.
-            trick_suit = self.trick.cards[0].suit
+            trick_suit = self.trick[0].suit
             if to_play.suit != trick_suit and list(filter(lambda card: card.suit == trick_suit, hand)):
                 player.error('You must play a card of the suit led.')
                 return True
@@ -741,7 +768,7 @@ class Hearts(game.Game):
         """
         Show the current scores in the game. (s)
         """
-        current = self.players[self.player_index]
+        current = self.current_player
         current.tell()
         for player in self.players:
             current.tell('{}: {}'.format(player, self.scores[player.name]))
@@ -752,12 +779,12 @@ class Hearts(game.Game):
         """
         View the cards you have taken so far this deal. (t)
         """
-        player = self.players[self.player_index]
-        taken = self.taken[player.name]
+        player = self.current_player
+        taken = self.taken[player]
         if taken:
-            cards = taken.cards[:]
-            cards.sort(key = lambda card: (card.suit, card.rank_num))
-            player.tell('\nSo far this deal you have taken: {}.\n'.format(utility.oxford(cards)))
+            cards = taken[:]
+            cards.sort()
+            player.tell('\nSo far this deal you have taken: {}.\n'.format())
         else:
             player.tell('\nYou have not taken any cards yet this deal.\n')
         return True
@@ -767,7 +794,7 @@ class Hearts(game.Game):
         # Check for someone breaking the "winning" score.
         if max(self.scores.values()) >= self.end:
             # Get the scores of interest.
-            human_score = self.scores[self.human.name]
+            human_score = self.scores[self.human]
             winning_score = min(self.scores.values())
             # Calculate the humans win/loss/draw.
             for name, score in self.scores.items():
@@ -788,6 +815,7 @@ class Hearts(game.Game):
 
     def handle_opt_deal(self):
         """Handle the deal option settings for this game. (None)"""
+        self.kitty = ''
         if self.extras[0] == 'd':
             ditch_stack = ['3D', '3C', '2D', '2C']
             while len(self.deck) % len(self.players):
@@ -838,15 +866,19 @@ class Hearts(game.Game):
 
     def handle_opt_score(self):
         """Handle the scoring option settings for this game. (None)"""
-        self.heart_points = {rank: 1 for rank in self.deck.ranks[1:]}
+        rank_set = ACE_HIGH_RANKS
         if self.heart_score[0] == 'f':
-            self.heart_points.update({'J': 2, 'Q': 3, 'K': 4, 'A': 5})
+            rank_set = FACE_RANKS
         elif self.heart_score[0] == 'p':
-            self.heart_points = {rank: min(10, score) for score, rank in enumerate(self.deck.ranks)}
-            self.heart_points['A'] = 10
+            rank_set = PIP_RANKS
         elif self.heart_score[0] == 'r':
-            self.heart_points = {rank: score for score, rank in enumerate(self.deck.ranks)}
-            self.heart_points['A'] = 14
+            rank_set = RANK_RANKS
+        self.deck = cards.Deck(rank_set = rank_set, suit_set = HEARTS_SUITS)
+        lady_index = self.deck.index('QS')
+        self.deck[lady_index].value = self.lady_points
+        if self.bonus:
+            bonus_index = self.deck.index(self.bonus)
+            self.deck[bonus_index].value = -10
         self.max_score = sum(self.heart_points.values()) + self.lady_points
         self.breakers = set([card for card in self.deck if card.suit == 'H'])
         if self.all_break:
@@ -864,9 +896,6 @@ class Hearts(game.Game):
         """Handle the option settings for this game. (None)"""
         super(Hearts, self).handle_options()
         self.handle_opt_player()
-        # Set up the deck.
-        self.deck = cards.Deck(ace_high = True)
-        self.kitty = ''
         self.handle_opt_deal()
         self.handle_opt_pass()
         self.handle_opt_play()
@@ -878,11 +907,11 @@ class Hearts(game.Game):
         if self.this_pass == 'center':
             center = []
             for player in self.players:
-                center.extend(self.passes[player.name].cards)
-                self.passes[player.name].cards = []
+                center.extend(self.passes[player])
+                self.passes[player].cards = []
             random.shuffle(center)
             for player in itertools.cycle(self.players):
-                self.hands[player.name].cards.append(center.pop())
+                self.hands[player].append(center.pop())
                 if not center:
                     break
         # Handle scatter passing.
@@ -890,20 +919,20 @@ class Hearts(game.Game):
             for pass_from in self.players:
                 for pass_to in self.players:
                     if pass_from != pass_to:
-                        self.hands[pass_to.name].cards.append(self.passes[pass_from.name].cards.pop(0))
+                        self.hands[pass_to].append(self.passes[pass_from].pop(0))
         # Handle passing from player to player.
         else:
             for pass_from in self.players:
-                pass_to = self.pass_to[pass_from.name]
+                pass_to = self.pass_to[pass_from]
                 #print('passing from {} to {}'.format(pass_from, pass_to))
-                self.hands[pass_to].cards.extend(self.passes[pass_from.name].cards)
-                self.passes[pass_from.name].cards = []
-        human_got = self.hands[self.human.name].cards[-self.num_pass:]
+                self.hands[pass_to].extend(self.passes[pass_from])
+                self.passes[pass_from].cards = []
+        human_got = self.hands[self.human][-self.num_pass:]
         pass_text = utility.oxford(human_got, word_format = 'the {}')
         self.human.tell('You were passed {}.'.format(pass_text))
         # Sort the hands.
         for hand in self.hands.values():
-            hand.cards.sort(key = lambda card: (card.suit, card.rank_num))
+            hand.cards.sort()
 
     def player_action(self, player):
         """
@@ -915,11 +944,11 @@ class Hearts(game.Game):
         # Handle passing.
         if self.phase == 'pass':
             # Get the cards to pass.
-            player.tell('\nYour hand is: {}.'.format(self.hands[player.name]))
+            player.tell('\nYour hand is: {}.'.format(self.hands[player]))
             if self.this_pass == 'scatter':
                 pass_text = utility.oxford([other.name for other in self.players if other != player])
             else:
-                pass_text = self.pass_to[player.name]
+                pass_text = self.pass_to[player]
             query = '\nWhich {} do you want to pass to {}? '
             move = player.ask(query.format(utility.number_plural(self.num_pass, 'card'), pass_text))
             # If the correct number of cards are found, pass them.
@@ -932,7 +961,7 @@ class Hearts(game.Game):
                     # Set the first player.
                     if self.low_club:
                         for player in self.players:
-                            if self.low_club in self.hands[player.name]:
+                            if self.low_club in self.hands[player]:
                                 self.next_player = player
                                 break
                     else:
@@ -950,8 +979,8 @@ class Hearts(game.Game):
             else:
                 self.human.tell('')  # Make sure tricks are blocked out in the ouput.
                 player.tell('You lead the trick.')
-            player.tell('Your hand is: {}.'.format(self.hands[player.name]))
-            if self.low_club and self.low_club in self.hands[player.name]:
+            player.tell('Your hand is: {}.'.format(self.hands[player]))
+            if self.low_club and self.low_club in self.hands[player]:
                 if player == self.human:
                     self.human.tell('You must play the {}.'.format(self.low_club))
                 move = self.low_club.up_text
@@ -981,24 +1010,16 @@ class Hearts(game.Game):
         for player in self.players:
             # Count the scoring cards.
             hearts, heart_points, lady, jokers = 0, 0, 0, 0
-            bonus = None
-            for card in self.taken[player.name]:
-                if card.suit == 'H':
-                    hearts += 1
-                    heart_points += self.heart_points[card.rank]
-                elif card == 'QS':
-                    lady += 1
-                elif card.rank == 'X':
-                    jokers += 1
-                elif card == self.bonus:
-                    bonus = card
+            bonus = self.bonus if self.bonus in self.taken[player] else None
+            points = self.taken[player].score()
+            hearts = len([card for card in self.taken[player] if card.suit == 'H'])
+            lady = 'QS' in self.taken[player]
+            jokers = len([card for card in self.taken[player] if card.rank == 'X'])
             # Calculate and store the unadjusted points.
-            player_points = heart_points + self.lady_points * lady
             if self.joker_points:
-                player_points += jokers
-            if self.bonus and bonus:
-                player_points = max(0, player_points - 10)
-            round_points[player.name] = player_points
+                points += jokers
+            points = max(0, points)
+            round_points[player] = points
             # Display the card counts and points.
             score_text = '{} had {} {}'.format(player.name, hearts, utility.plural(hearts, 'heart'))
             score_bits = ['{} {}'.format(hearts, utility.plural(hearts, 'heart'))]
@@ -1007,20 +1028,20 @@ class Hearts(game.Game):
             if self.joker_points and jokers:
                 score_bits.append('{} {}'.format(jokers, utility.plural(jokers, 'joker')))
             if bonus:
-                score_bits.append('the {}'.format(bonus.name))
-            point_text = '{} {}'.format(player_points, utility.plural(player_points, 'point'))
+                score_bits.append('the {:n}'.format(bonus))
+            point_text = '{} {}'.format(points, utility.plural(points, 'point'))
             base_text = '{} had {}, for {} this round.'
-            score_text = base_text.format(player.name, utility.oxford(score_bits), point_text)
+            score_text = base_text.format(player, utility.oxford(score_bits), point_text)
             self.human.tell(score_text)
             # Inform and record any sucessful shooter.
-            if player_points == self.max_score and (bonus or not self.bonus):
-                self.human.tell('{} shot the moon!'.format(player.name))
+            if points == self.max_score or (bonus or points == self.max_score - 10):
+                self.human.tell('{} shot the moon!'.format(player))
                 shooter = player.name
             # Check for taking no tricks.
-            if not self.taken[player.name] and self.no_tricks:
+            if not self.taken[player] and self.no_tricks:
                 text = '{} gets {} points taken off for winning no tricks.'
-                self.human.tell(text.format(player.name, self.no_tricks))
-                round_points[player.name] = -self.no_tricks
+                self.human.tell(text.format(player, self.no_tricks))
+                round_points[player] = -self.no_tricks
         return round_points, shooter
 
     def score_round(self):
@@ -1043,8 +1064,8 @@ class Hearts(game.Game):
         # Adjust and display the overall points.
         self.human.tell('\nOverall Scores:')
         for player in self.players:
-            self.scores[player.name] = max(self.scores[player.name] + round_points[player.name], 0)
-            self.human.tell('{}: {}'.format(player, self.scores[player.name]))
+            self.scores[player] = max(self.scores[player] + round_points[player], 0)
+            self.human.tell('{}: {}'.format(player, self.scores[player]))
 
     def set_dealer(self):
         """Determine the first dealer for the game. (None)"""
@@ -1077,7 +1098,9 @@ class Hearts(game.Game):
                     if max_rank == 14:
                         # Correct rank index for aces.
                         max_rank = 1
-                    self.human.tell("\nThere was a tie of {}'s.".format(self.deck.ranks[max_rank]))
+                    max_name = self.deck.rank_set.names[self.deck.rank_set.chars[max_rank]].lower()
+                    s = 'es' if max_name == 'six' else 's'
+                    self.human.tell("\nThere was a tie of {}{}.".format(max_name, s))
                     max_rank = -1
                     players = max_players
                     max_players = []
@@ -1162,20 +1185,20 @@ class Hearts(game.Game):
             pass_to = self.players[offset:] + self.players[:offset]
         # Set up the passing dictionary.
         if self.this_pass == 'center':
-            self.pass_to = {pass_from.name: 'the center' for pass_from in self.players}
+            self.pass_to = {pass_from: 'the center' for pass_from in self.players}
         elif self.this_pass == 'scatter':
-            self.pass_to = {pass_from.name: self.this_pass for pass_from in self.players}
+            self.pass_to = {pass_from: self.this_pass for pass_from in self.players}
         else:
-            self.pass_to = {passer.name: passee.name for passer, passee in zip(self.players, pass_to)}
+            self.pass_to = {passer: passee.name for passer, passee in zip(self.players, pass_to)}
 
     def set_up(self):
         """Set up the game. (None)"""
         # Set up hands, including pseudo-hands for holding various sets of cards.
-        self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
-        self.passes = {player.name: cards.Hand(self.deck) for player in self.players}
-        self.taken = {player.name: cards.Hand(self.deck) for player in self.players}
-        self.trick = cards.Hand(self.deck)
-        self.last_trick = cards.Hand(self.deck)
+        self.hands = {player: cards.Hand(deck = self.deck) for player in self.players}
+        self.passes = {player: cards.Hand(deck = self.deck) for player in self.players}
+        self.taken = {player: cards.Hand(deck = self.deck) for player in self.players}
+        self.trick = cards.Hand(deck = self.deck)
+        self.last_trick = cards.Hand(deck = self.deck)
         random.shuffle(self.players)
         # Handle the initial deal
         self.set_dealer()
@@ -1188,24 +1211,24 @@ class Hearts(game.Game):
     def trick_winner(self):
         """Determine who won the trick. (None)"""
         # Find the winning card.
-        trick_suit = self.trick.cards[0].suit
+        trick_suit = self.trick[0].suit
         suit_cards = [card for card in self.trick if card.suit == trick_suit]
-        winning_card = sorted(suit_cards, key = lambda card: card.rank_num)[-1]
+        winning_card = sorted(suit_cards)[-1]
         card_index = self.trick.cards.index(winning_card)
         # Find the winning player.
         winner_index = (self.player_index + 1 + card_index) % len(self.players)
         winner = self.players[winner_index]
         # Handle the win.
         self.human.tell('\n{} won the trick with the {}.'.format(winner, winning_card))
-        self.taken[winner.name].cards.extend(self.trick.cards)
+        self.taken[winner].extend(self.trick.cards)
         # Handle any kitty.
         if self.deck:
             kitty_win = self.kitty == 'first'
-            kitty_win = kitty_win or 'heart' and [card for card in self.trick.cards if card.suit == 'H']
+            kitty_win = kitty_win or 'heart' and [card for card in self.trick if card.suit == 'H']
             if kitty_win:
-                self.taken[winner.name].cards.extend(self.deck)
+                self.taken[winner].cards.extend(self.deck)
                 text = 'You won {} from the kitty.'
-                winner.tell(text.format(utility.oxford(self.deck, word_format = 'the {0.up_text}')))
+                winner.tell(text.format(utility.oxford(self.deck, word_format = 'the {:u}')))
                 if winner != self.human:
                     self.human.tell('{} won the kitty.')
                 self.deck.cards = []
@@ -1215,10 +1238,10 @@ class Hearts(game.Game):
         # Clear the trick.
         self.last_trick = self.trick
         self.last_winner = winner
-        self.trick = cards.Hand(self.deck)
+        self.trick = cards.Hand(deck = self.deck)
         self.random_move = False
         # Check for the end of the round.
-        if not self.hands[self.human.name]:
+        if not self.hands[self.human]:
             self.score_round()
             for taken in self.taken.values():
                 taken.discard()

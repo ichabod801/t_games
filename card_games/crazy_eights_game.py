@@ -495,7 +495,7 @@ class CrazyEights(game.Game):
         """Check for the game being over. (bool)"""
         # Win if someone scored enough points.
         if max(self.scores.values()) >= self.goal:
-            self.wins_by_score()
+            self.wins_by_score(show_self = False)
             return True
         else:
             return False
