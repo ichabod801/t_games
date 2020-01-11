@@ -274,7 +274,7 @@ class Card(object):
             a_text = 'an {}'.format(self.name.lower())
         else:
             a_text = 'a {}'.format(self.name.lower())
-        format_types = {'a': a_text, 'd': self.down_text, 'n': self.name, 'u': self.up_text}
+        self.format_types = {'a': a_text, 'd': self.down_text, 'n': self.name, 'u': self.up_text}
         # Default face down.
         self.up = False
 
