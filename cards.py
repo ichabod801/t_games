@@ -6,10 +6,15 @@ Cards and decks of cards for tgames.
 Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
+Constants:
+STANDARD_RANKS: The standard Western card ranks. (FeatureSet)
+STANDARD_SUITS: The standard Western card suits. (FeatureSet)
+STANDARD_WRAP_RANKS: The standard card ranks with wrapping. (FeatureSet)
+
 Classes:
-Card: A standard playing card, with a suit and a rank. (object)
 CRand: Implementation of C's rand function. (object)
 FeatureSet: A set of valid values for a feature (rank/suit) of a Card. (object)
+Card: A standard playing card, with a suit and a rank. (object)
 Deck: A standard deck of cards. (object)
 Hand: A hand of cards held by a player. (object)
 TrackingCard: A card that tracks it's location. (Card)
@@ -31,6 +36,173 @@ import random
 import re
 
 from . import utility
+
+
+class CRand(object):
+    """
+    Implementation of C's rand function. (object)
+
+    Attributes:
+    state: The current state of the PRNG. (int)
+
+    Overridden Methods:
+    __init__
+    __call__
+    __repr__
+    """
+
+    def __init__(self, seed = None):
+        """
+        Set up the pseudo-random number generator. (None)
+
+        Parameters:
+        seed: The initial state of the PRNG. (int)
+        """
+        # Use a random seed if none is given.
+        if seed is None:
+            seed = random.randint(0, 32767)
+        self.state = seed
+
+    def __call__(self):
+        """Get the next number from the PRNG. (int)"""
+        self.state = (214013 * self.state + 2531011) % (2 ** 31)
+        return self.state // (2 ** 16)
+
+    def __repr__(self):
+        """Computer readable text representation. (str)"""
+        return 'CRand({})'.format(self.state)
+
+
+class FeatureSet(object):
+    """
+    A set of valid values for a feature (rank/suit) of a Card. (object)
+
+    Attributes:
+    an_chars: The characters for ranks using 'an' instead of 'a'. (str)
+    chars: The characters for the feature values. (str)
+    colors: The colors associated with the feature values. (str)
+    names: The names of the feature values. (dict of str: str)
+    skip: The number of values to skip when iterating. (int)
+    values: Numeric values associated with feature values. (dict of str: int)
+    wrap: A flag for ranks being wrappable. (bool)
+
+    Methods:
+    index: Give the feature index of a character. (int)
+    item: Iterate over all the items in the feature set. (iterator)
+
+    Overwritten Methods
+    __init__
+    __iter__
+    __len__
+    __repr__
+    """
+
+    def __init__(self, chars, names, values = None, colors = None, skip = 0, wrap = False, an_chars = ''):
+        """
+        Set up the feature set. (None)
+
+        Parameters:
+        chars: The characters for the feature values. (str)
+        names: The names of the feature values. (list of str)
+        values: Numeric values associated with feature values. (list of int)
+        colors: The colors associated with the feature values. (str)
+        skip: The number of values to skip when iterating. (int)
+        wrap: A flag for ranks being wrappable. (bool)
+        an_chars: The characters for ranks using 'an' instead of 'a'. (str)
+        """
+        # Set default values.
+        if values is None:
+            values = [0] * len(chars)
+        if colors is None:
+            colors = 'X' * len(chars)
+        # Check length of secondary attributes.
+        if len(names) != len(chars):
+            raise ValueError('Names and characters of feature sets must have the same length.')
+        if len(values) != len(chars):
+            raise ValueError('Values and characters of feature sets must have the same length.')
+        if len(colors) != len(chars):
+            raise ValueError('Colors and characters of feature sets must have the same length.')
+        # Set the attributes.
+        self.chars = chars
+        self.names = dict(zip(chars, names))
+        self.values = dict(zip(chars, values))
+        self.colors = dict(zip(chars, colors))
+        self.skip = skip
+        self.wrap = wrap
+
+    def __iter__(self):
+        """Iterate over the characters. (iterator)"""
+        return iter(self.chars[self.skip:])
+
+    def __len__(self):
+        """The number of possible feature values. (int)"""
+        return len(self.chars) - self.skip
+
+    def __repr__(self):
+        """Debugging text representation. (str)"""
+        return '<FeatureSet {!r}>'.format(self.chars)
+
+    def above(self, char, other_char, n = 1):
+        """
+        Check that this card is n ranks above another card. (bool)
+
+        Parameters:
+        char: The feature character of the first card. (str)
+        other_char: The feature character of the second card. (str)
+        """
+        # Do the standard caculation
+        diff = self.ranks.index(char) - self.ranks.index(other_char)
+        # Account for wraping.
+        if self.wrap and diff < 0:
+            diff += len(self) - self.skip
+        return diff == n
+
+    def below(self, char, other_char, n = 1):
+        """
+        Check that this card is n ranks below another card. (bool)
+
+        Parameters:
+        char: The feature character of the first card. (str)
+        other_char: The feature character of the second card. (str)
+        """
+        # Do the standard caculation
+        diff = self.ranks.index(other_char) - self.ranks.index(char)
+        # Account for wraping.
+        if self.wrap and diff < 0:
+            diff += len(self) - self.skip
+        return diff == n
+
+    def index(self, char):
+        """Give the feature index of a character. (int)"""
+        return self.chars.index(char)
+
+    def items(self):
+        """
+        Iterate over all the items in the feature set. (iterator)
+
+        Each interation is a tuple of (index, character, name, value)
+        """
+        # ?? Can I simplify this by removing the def and the return?
+        def iter_items():
+            for index, char in enumerate(self.chars):
+                if index < self.skip:
+                    continue
+                yield (index, char, self.names[char], self.values[char])
+        return iter_items()
+
+STANDARD_RANKS = FeatureSet('XA23456789TJQK',
+    ['Joker', 'Ace', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack',
+        'Queen', 'King'],
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10],
+    skip = 1, an_chars = 'A8')
+
+STANDARD_SUITS = FeatureSet('CDHS', ['Clubs', 'Diamonds', 'Hearts', 'Spades'], colors = 'RRBB')
+
+STANDARD_WRAP_RANKS = FeatureSet('XA23456789TJQK',
+    ['Joker', 'Ace', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack',
+        'Queen', 'King'],
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10],
+    skip = 1, wrap = True, an_chars = 'A8')
 
 
 class Card(object):
@@ -88,16 +260,12 @@ class Card(object):
         self.rank_num = self.ranks.index(self.rank)
         self.suit_num = self.suits.index(self.suit)
         self.value = self.rank_set.values[self.rank] + self.suit_set.values[self.suit]
-        # Calculated the color of the card.  !! whoops, forgot about color.
-        if self.suit in 'DH':
-            self.color = 'R'
-        else:
-            self.color = 'B'
+        self.color = self.suit_set.colors[self.suit]
         # Calcuate the text attributes of the card.
         self.name = '{} of {}'.format(self.rank_set.names[self.rank], self.suit_set.names[self.suit])
         self.up_text = self.rank + self.suit
         self.down_text = down_text
-        if self.rank in self.an_ranks:                 # !! move to FeatureSet
+        if self.rank in self.ranks.an_chars:
             a_text = 'an {}'.format(self.name.lower())
         else:
             a_text = 'a {}'.format(self.name.lower())
@@ -168,156 +336,23 @@ class Card(object):
         else:
             return self.down_text
 
-    def above(self, other, n = 1, wrap_ranks = False):
+    def above(self, other, n = 1):
         """
         Check that this card is n ranks above another card. (bool)
 
         Parameters:
         other: The card to compare with. (Card)
-        wrap_ranks: A flag for K-A-2 wrapping. (bool)
         """
-        # ?? move to FeatureSet (pass through from here)
-        # Do the standard caculation
-        diff = self.rank_num - other.rank_num
-        # Account for wrap ranks.
-        if wrap_ranks and diff < 0:
-            diff += len(self.ranks) - 1
-        return diff == n
+        return self.rank_set.above(self.rank, other.rank)
 
-    def below(self, other, n = 1, wrap_ranks = False):
+    def below(self, other, n = 1):
         """
         Check that this card is n ranks below another card. (bool)
 
         Parameters:
         other: The card to compare with. (Card)
-        wrap_ranks: A flag for K-A-2 wrapping. (bool)
         """
-        # ?? move to FeatureSet (pass through from here)
-        # Do the standard caculation
-        diff = other.rank_num - self.rank_num
-        # Account for wrap ranks.
-        if wrap_ranks and diff < 0:
-            diff += len(self.ranks) - 1
-        return diff == n
-
-
-class CRand(object):
-    """
-    Implementation of C's rand function. (object)
-
-    Attributes:
-    state: The current state of the PRNG. (int)
-
-    Overridden Methods:
-    __init__
-    __call__
-    __repr__
-    """
-
-    def __init__(self, seed = None):
-        """
-        Set up the pseudo-random number generator. (None)
-
-        Parameters:
-        seed: The initial state of the PRNG. (int)
-        """
-        # Use a random seed if none is given.
-        if seed is None:
-            seed = random.randint(0, 32767)
-        self.state = seed
-
-    def __call__(self):
-        """Get the next number from the PRNG. (int)"""
-        self.state = (214013 * self.state + 2531011) % (2 ** 31)
-        return self.state // (2 ** 16)
-
-    def __repr__(self):
-        """Computer readable text representation. (str)"""
-        return 'CRand({})'.format(self.state)
-
-
-class FeatureSet(object):
-    """
-    A set of valid values for a feature (rank/suit) of a Card. (object)
-
-    Attributes:
-    chars: The characters for the feature values. (str)
-    names: The names of the feature values. (dict of str: str)
-    skip: The number of values to skip when iterating. (int)
-    values: Numeric values associated with feature values. (dict of str: int)
-
-    Methods:
-    index: Give the feature index of a character. (int)
-    item: Iterate over all the items in the feature set. (iterator)
-
-    Overwritten Methods
-    __init__
-    __iter__
-    __len__
-    __repr__
-    """
-
-    def __init__(self, chars, names, values = None, skip = 0):
-        """
-        Set up the feature set. (None)
-
-        Parameters:
-        chars: The characters for the feature values. (str)
-        names: The names of the feature values. (list of str)
-        skip: The number of values to skip when iterating. (int)
-        values: Numeric values associated with feature values. (list of int)
-        """
-        # Set default values of zero.
-        if values is None:
-            values = [0] * len(chars)
-        # Check length of names and values.
-        if len(names) != len(chars):
-            raise ValueError('Names and characters of feature sets must have the same length.')
-        if len(values) != len(chars):
-            raise ValueError('Values and characters of feature sets must have the same length.')
-        # Set the attributes.
-        self.chars = chars
-        self.names = dict(zip(chars, names))
-        self.values = dict(zip(chars, values))
-        self.skip = skip
-
-    def __iter__(self):
-        """Iterate over the characters. (iterator)"""
-        return iter(self.chars[self.skip:])
-
-    def __len__(self):
-        """The number of possible feature values. (int)"""
-        return len(self.chars) - self.skip
-
-    def __repr__(self):
-        """Debugging text representation. (str)"""
-        return '<FeatureSet {!r}>'.format(self.chars)
-
-    def index(self, char):
-        """Give the feature index of a character. (int)"""
-        return self.chars.index(char)
-
-    def items(self):
-        """
-        Iterate over all the items in the feature set. (iterator)
-
-        Each interation is a tuple of (index, character, name, value)
-        """
-        # ?? Can I simplify this by removing the def and the return?
-        def iter_items():
-            for index, char in enumerate(self.chars):
-                if index < self.skip:
-                    continue
-                yield (index, char, self.names[char], self.values[char])
-        return iter_items()
-
-STANDARD_RANKS = FeatureSet('XA23456789TJQK',
-    ['Joker', 'Ace', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack',
-        'Queen', 'King'],
-    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10],
-    skip = 1)
-
-STANDARD_SUITS = FeatureSet('CDHS', ['Clubs', 'Diamonds', 'Hearts', 'Spades'])
+        return self.rank_set.below(self.rank, other.rank)
 
 
 class Pile(MutableSequence):
