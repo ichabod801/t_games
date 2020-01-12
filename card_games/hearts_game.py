@@ -29,7 +29,6 @@ from .. import player
 from .. import utility
 
 
-# !! not sorting aces to the top.
 ACE_HIGH_RANKS = cards.FeatureSet('X23456789TJQKA',
     ['Joker', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack',
         'Queen', 'King', 'Ace'],
@@ -1231,7 +1230,7 @@ class Hearts(game.Game):
                 text = 'You won {} from the kitty.'
                 winner.tell(text.format(utility.oxford(self.deck, word_format = 'the {:u}')))
                 if winner != self.human:
-                    self.human.tell('{} won the kitty.')
+                    self.human.tell('{} won the kitty.'.format(winner))
                 self.deck.cards = []
         # Check for breaking hearts.
         if not self.hearts_broken and self.breakers.intersection(self.trick):
