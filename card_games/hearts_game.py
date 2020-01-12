@@ -29,20 +29,21 @@ from .. import player
 from .. import utility
 
 
-
-ACE_HIGH_RANKS = FeatureSet('X23456789TJQKA',
+# !! not sorting aces to the top.
+ACE_HIGH_RANKS = cards.FeatureSet('X23456789TJQKA',
     ['Joker', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack',
         'Queen', 'King', 'Ace'],
     [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     skip = 1, an_chars = 'A8')
 
-FACE_RANKS = FeatureSet('X23456789TJQKA',
+FACE_RANKS = cards.FeatureSet('X23456789TJQKA',
     ['Joker', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack',
         'Queen', 'King', 'Ace'],
     [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5],
     skip = 1, an_chars = 'A8')
 
-HEARTS_SUITS = FeatureSet('CDHS', ['Clubs', 'Diamonds', 'Hearts', 'Spades'], [0, 0, 1, 0], colors = 'RRBB')
+HEARTS_SUITS = cards.FeatureSet('CDHS', ['Clubs', 'Diamonds', 'Hearts', 'Spades'], [0, 0, 1, 0],
+    colors = 'RRBB')
 
 CREDITS = """
 Game Design: Traditional
@@ -105,13 +106,13 @@ pass-dir= (pd=): The direction in which cards are passed. Valid settings are:
     scatter (s): Each player passes one other card to each other player.
 """
 
-PIP_RANKS = FeatureSet('X23456789TJQKA',
+PIP_RANKS = cards.FeatureSet('X23456789TJQKA',
     ['Joker', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack',
         'Queen', 'King', 'Ace'],
     [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 10],
     skip = 1, an_chars = 'A8')
 
-RANK_RANKS = FeatureSet('X23456789TJQKA',
+RANK_RANKS = cards.FeatureSet('X23456789TJQKA',
     ['Joker', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack',
         'Queen', 'King', 'Ace'],
     [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
@@ -879,7 +880,7 @@ class Hearts(game.Game):
         if self.bonus:
             bonus_index = self.deck.index(self.bonus)
             self.deck[bonus_index].value = -10
-        self.max_score = sum(self.heart_points.values()) + self.lady_points
+        self.max_score = sum(rank_set.values.values()) + self.lady_points
         self.breakers = set([card for card in self.deck if card.suit == 'H'])
         if self.all_break:
             self.breakers.add('QS')
@@ -896,10 +897,10 @@ class Hearts(game.Game):
         """Handle the option settings for this game. (None)"""
         super(Hearts, self).handle_options()
         self.handle_opt_player()
+        self.handle_opt_score()
         self.handle_opt_deal()
         self.handle_opt_pass()
         self.handle_opt_play()
-        self.handle_opt_score()
 
     def pass_cards(self):
         """Handle the actual passing of the cards between players. (None)"""
