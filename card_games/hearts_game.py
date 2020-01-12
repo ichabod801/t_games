@@ -7,8 +7,13 @@ Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
+ACE_HIGH_RANKS: The ranks for when aces are high in Hearts. (cards.FeatureSet)
 CREDITS: The credits for Hearts. (str)
+FACE_RANKS: The ranks for 'face' scoring in Hearts. (cards.FeatureSet)
+HEART_SUITS: The suits (and suit values) for Hearts. (cards.FeatureSet)
 OPTIONS: The options for Hearts. (str)
+PIP_RANKS: The ranks for 'pip' scoring in Hearts. (cards.FeatureSet)
+RANK_RANKS: The ranks for 'rank' scoring in Hearts. (cards.FeatureSet)
 RULES: The rules to Hearts. (str)
 
 Classes:
@@ -35,6 +40,11 @@ ACE_HIGH_RANKS = cards.FeatureSet('X23456789TJQKA',
     [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     skip = 1, an_chars = 'A8')
 
+CREDITS = """
+Game Design: Traditional
+Game Programming: Craig "Ichabod" O'Brien
+"""
+
 FACE_RANKS = cards.FeatureSet('X23456789TJQKA',
     ['Joker', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack',
         'Queen', 'King', 'Ace'],
@@ -43,11 +53,6 @@ FACE_RANKS = cards.FeatureSet('X23456789TJQKA',
 
 HEARTS_SUITS = cards.FeatureSet('CDHS', ['Clubs', 'Diamonds', 'Hearts', 'Spades'], [0, 0, 1, 0],
     colors = 'RRBB')
-
-CREDITS = """
-Game Design: Traditional
-Game Programming: Craig "Ichabod" O'Brien
-"""
 
 OPTIONS = """
 all-break (ab): Hearts may not lead a trick before a penalty card has been
