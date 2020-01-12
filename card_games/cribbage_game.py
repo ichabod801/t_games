@@ -185,8 +185,7 @@ class Cribbage(game.Game):
         for player in self.players:
             lines.append('{}: {}'.format(player.name, self.scores[player.name]))
         # Show the player's hand.
-        player = self.players[self.player_index]
-        hand = self.hands[player.name]
+        hand = self.hands[self.current_player]
         lines.append('\nCards in Hand: {}'.format(hand.show_player()))
         # Show the current cards in play.
         if self.phase != 'discard':
@@ -203,12 +202,9 @@ class Cribbage(game.Game):
         scorer: The player to get the points. (player.Player or str)
         points: The points they should get.
         """
-        # Get the player name.
-        if isinstance(scorer, player.Player):
-            scorer = scorer.name
         # Add his score to all team mates.
-        for name in self.teams[scorer]:
-            self.scores[name] += points
+        for player in self.teams[scorer]:
+            self.scores[player] += points
 
     def deal(self):
         """Deal the cards. (None)"""
@@ -249,7 +245,7 @@ class Cribbage(game.Game):
         # Deal the cards
         for card in range(self.cards):
             for player in self.players:
-                self.hands[player.name].draw()
+                self.hands[player].draw()
         for card in range(4 - len(self.players) * self.discards):
             self.hands['The Crib'].draw()
         # Make a dummy starter card.
@@ -271,13 +267,13 @@ class Cribbage(game.Game):
         # Craps lets you swap a card with one from the deck.
         elif game == 'craps':
             # Get a valid card to discard.
-            hand = self.hands[self.human.name]
+            hand = self.hands[self.human]
             while True:
                 card_text = self.human.ask('Pick a card to replace: ')
                 card = CribCard.card_re.search(card_text)
                 if not card:
                     self.human.error('Please enter a valid card.')
-                elif card.upper() not in hand:
+                elif card not in hand:
                     self.human.error('You do not have that card to discard.')
                 else:
                     break
@@ -301,8 +297,7 @@ class Cribbage(game.Game):
             if self.solo:
                 self.teams = {player.name: [player.name] for player in self.players}
             # Determine the winner.
-            scores = [(score, name) for name, score in self.scores.items()]
-            scores.sort(reverse = True)
+            scores = self.sorted_scores()
             names = ' and '.join(self.teams[scores[0][1]])
             plural = ('s', '')[' and ' in names]
             self.human.tell('\n{} win{} with {} points.'.format(names, plural, scores[0][0]))
@@ -319,9 +314,9 @@ class Cribbage(game.Game):
             if self.match > 1:
                 self.show_match()
             # Calcualte win/loss/draw stats.
-            human_score = self.scores[self.human.name]
+            human_score = self.scores[self.human]
             for score, name in scores:
-                if name in self.teams[self.human.name]:
+                if name in self.teams[self.human]:
                     continue
                 elif score < human_score:
                     self.win_loss_draw[0] += game_score
@@ -356,7 +351,7 @@ class Cribbage(game.Game):
         super(Cribbage, self).handle_options()
         # Add the human.
         self.players = [self.human]
-        taken_names = [self.human.name]
+        taken_names = [self.human]
         # Check for bot class.
         if self.cyborg:
             bot_class = player.Cyborg
@@ -365,8 +360,7 @@ class Cribbage(game.Game):
             bot_class = CribBot
         # Add the bots.
         for bot in range(self.n_bots):
-            self.players.append(bot_class(taken_names))
-            taken_names.append(self.players[-1].name)
+            self.players.append(bot_class(self.players))
         # Warn user for trying to make a team with an odd number of players.
         if self.partners and len(self.players) % 2:
             warning = 'Invalid number of players for the partners option: {}.'
@@ -417,7 +411,7 @@ class Cribbage(game.Game):
         # Handle playing cards for pegging.
         elif self.phase == 'play':
             if self.skip_player == player:
-                print("{}'s discard is skipped.".format(player.name))
+                print("{}'s discard is skipped.".format(player))
                 self.skip_player = None
                 return False
             else:
@@ -436,14 +430,14 @@ class Cribbage(game.Game):
             discard_save = self.discards
             self.discards = self.cards - self.discards
             # Reset the crib.
-            self.hands['The Crib'] = cards.Hand(self.deck)
+            self.hands['The Crib'] = cards.Hand(deck = self.deck)
         # Loop until the right number of discards have been made
         to_discard = self.discards
         while to_discard:
             # Get and parse the discards.
             discard_plural = utility.number_plural(to_discard, 'card')
             query = '\nWhich {} would you like to discard to the crib, {}? '
-            answer = player.ask(query.format(discard_plural, player.name))
+            answer = player.ask(query.format(discard_plural, player))
             discards = cards.Card.card_re.findall(answer)
             if not discards:
                 # If no discards, assume it's another command.
@@ -455,13 +449,13 @@ class Cribbage(game.Game):
             elif len(discards) > to_discard:
                 # Warn on the wrong number of discards.
                 player.error('You can only discard {}.'.format(discard_plural))
-            elif not all(card in self.hands[player.name] for card in discards):
+            elif not all(card in self.hands[player] for card in discards):
                 # Block discarding cards you don't have.
                 player.error('You do not have all of those cards in your hand.')
             else:
                 # Handle discards.
                 for card in discards:
-                    self.hands[player.name].shift(card, self.hands['The Crib'])
+                    self.hands[player].shift(card, self.hands['The Crib'])
                 to_discard -= len(discards)
         # Check for starting play after dealer discards.
         if self.players.index(player) == self.dealer_index:
@@ -500,13 +494,13 @@ class Cribbage(game.Game):
             if self.go_count == len(self.players):
                 self.human.tell('\nEveryone has passed.')
                 self.add_points(player, 1)
-                self.human.tell('{} scores 1 for the go.'.format(player.name))
+                self.human.tell('{} scores 1 for the go.'.format(player))
                 if not self.auto_score:
                     self.human.ask(ENTER_TEXT)
                 self.reset()
             return False
         # Get card to play.
-        answer = player.ask('\nWhich card would you like to play, {}? '.format(player.name))
+        answer = player.ask('\nWhich card would you like to play, {}? '.format(player))
         card = CribCard.card_re.match(answer)
         if card:
             card = CribCard(*answer[:2].upper())
@@ -547,7 +541,7 @@ class Cribbage(game.Game):
         self.go_count = 0
         self.in_play['Play Sequence'].cards = []
         # Player names are used to get hands to avoid checking the crib for cards.
-        if (not any(self.hands[player.name] for player in self.players)) or self.one_go:
+        if (not any(self.hands.values())) or self.one_go:
             if not self.score_hands():
                 self.deal()  # Only deal if no one wins.
 
@@ -622,7 +616,7 @@ class Cribbage(game.Game):
 
     def score_one_hand(self, cards, name):
         """
-        Scoer a single hand after a round of play. (int)
+        Score a single hand after a round of play. (int)
 
         Parameters:
         cards: The cards in the hand. (list of CribCard)
@@ -700,7 +694,7 @@ class Cribbage(game.Game):
         cards: The cards to score. (int)
         """
         # Get the numeric ranks of the cards.
-        ranks = sorted([CribCard.ranks.index(card.rank) for card in cards])
+        ranks = sorted([card.rank_num for card in cards])
         # Loop through consecutive pairs of ranks.
         run_data = []
         run = []
@@ -844,13 +838,13 @@ class Cribbage(game.Game):
         self.double_pairs = False
         self.skip_player = None
         # Set up the deck.
-        self.deck = cards.Deck(card_class = CribCard)
+        self.deck = cards.Deck(card_class = CribCard)  # !! needs fix depending on CribCard update.
         self.deck.shuffle()
         # Set up the hands.
-        self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
-        self.hands['The Crib'] = cards.Hand(self.deck)
-        self.in_play = {player.name: cards.Hand(self.deck) for player in self.players}
-        self.in_play['Play Sequence'] = cards.Hand(self.deck)
+        self.hands = {player.name: cards.Hand(deck = self.deck) for player in self.players}
+        self.hands['The Crib'] = cards.Hand(deck = self.deck)
+        self.in_play = {player.name: cards.Hand(deck = self.deck) for player in self.players}
+        self.in_play['Play Sequence'] = cards.Hand(deck = self.deck)
         # Pick the dealer.
         if self.no_pick:
             random.shuffle(self.players)
@@ -864,16 +858,16 @@ class Cribbage(game.Game):
                     query = '\nEnter a number to pick a card: '
                     card_index = player.ask_int(query, cmd = False, default = 0)
                     card = self.deck.pick(card_index)
-                    self.human.tell('{} picked the {}.'.format(player, card.name))
+                    self.human.tell('{} picked the {:n}.'.format(player, card))
                     self.deck.discard(card)
-                    cards_picked.append((card, player))
+                    cards_picked.append((card.rank_num, player))
                 # Determine the highest rangk.
                 cards_picked.sort()
                 # Sort players by card, no tie for winner.
                 self.players[:len(cards_picked)] = [player for card, player in cards_picked]
-                if cards_picked[0][0].rank == cards_picked[1][0].rank:
+                if cards_picked[0][0] == cards_picked[1][0]:
                     self.human.tell('Tie! Pick again.')
-                    players = [plyr for crd, plyr in cards_picked if crd.rank == cards_picked[0][0].rank]
+                    players = [plyr for crd, plyr in cards_picked if crd.rank_num == cards_picked[0][0]]
                 else:
                     break
             self.dealer_index = -1
