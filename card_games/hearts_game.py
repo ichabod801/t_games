@@ -785,7 +785,7 @@ class Hearts(game.Game):
         if taken:
             cards = taken[:]
             cards.sort()
-            player.tell('\nSo far this deal you have taken: {}.\n'.format())
+            player.tell('\nSo far this deal you have taken: {}.\n'.format(cards))
         else:
             player.tell('\nYou have not taken any cards yet this deal.\n')
         return True
