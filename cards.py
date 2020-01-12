@@ -552,7 +552,7 @@ class Deck(Pile):
             for deck in range(decks):
                 for rank in self.rank_set:
                     for suit in self.suit_set:
-                        self.cards.append(Card(rank, suit, rank_set, suit_set))
+                        self.cards.append(Card(rank, suit, rank_set = rank_set, suit_set = suit_set))
             # Get the joker ranks and suits.
             joker_ranks = self.rank_set.chars[:self.rank_set.skip]
             if self.suit_set.skip:
