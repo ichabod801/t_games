@@ -378,16 +378,16 @@ class SmeartBot(HeartBot):
             standard.up = True
         base_check = standard.suit == 'H' or standard in self.danger_cards
         if base_check or (self.game.joker_points and standard.rank == 'X'):
-            suit_cards = [card for card in self.game.trick if card.suit == self.game.trick.cards[0].suit]
+            suit_cards = [card for card in self.game.trick if card.suit == self.game.trick.[0].suit]
             suit_cards.sort(key = lambda card: card.rank_num)
             if not suit_cards:
                 return standard
             best_card = suit_cards[-1]
-            best_index = self.game.trick.cards.index(best_card)
+            best_index = self.game.trick.index(best_card)
             best_player = self.game.players[self.game.player_index - len(self.game.trick) + best_index]
-            self.hand.cards.sort(key = lambda card: card.rank_num)
+            self.hand.sort(key = lambda card: card.rank_num)
             if best_player.name == self.shooter:
-                playable = [card for card in self.hand if card.suit == self.game.trick.cards[0].suit]
+                playable = [card for card in self.hand if card.suit == self.game.trick[0].suit]
                 if playable:
                     winners = [card for card in playable if card.rank_num > best_card.rank_num]
                     if winners:
@@ -420,7 +420,7 @@ class SmeartBot(HeartBot):
         if len(set(['QS', 'KS', 'AS', 'KH', 'AH']).intersection(self.hand)) >= 4:
             if ('QH' in self.hand and by_suit['H'] > 4) or by_suit['H'] > 5:
                 self.strategy = 'shoot'
-                to_pass = self.hand.cards[:]
+                to_pass = self.hand[:]
                 to_pass.sort(key = lambda card: card.rank_num + 2 * (card.suit in ('HS')))
         if self.strategy == 'standard':
             to_pass = []
