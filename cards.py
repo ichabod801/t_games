@@ -235,12 +235,16 @@ class Card(object):
 
     Overridden Methods:
     __init__
+    __add__
     __eq__
     __format__
     __hash__
     __lt__
+    __radd__
     __repr__
+    __rsub__
     __str__
+    __sub__
     """
 
     def __init__(self, rank, suit, down_text = '??', ace_high = False, rank_set = STANDARD_RANKS,
@@ -277,6 +281,15 @@ class Card(object):
         self.format_types = {'a': a_text, 'd': self.down_text, 'n': self.name, 'u': self.up_text}
         # Default face down.
         self.up = False
+
+    def __add__(self, other):
+        """
+        Add the card as an integer. (int)
+
+        Parameters:
+        other: The integer to add to. (int)
+        """
+        return self.value + other
 
     def __eq__(self, other):
         """
@@ -330,9 +343,27 @@ class Card(object):
         else:
             return (self.suit_num, self.rank_num) < other
 
+    def __radd__(self, other):
+        """
+        Add the card as an integer. (int)
+
+        Parameters:
+        other: The integer to add to. (int)
+        """
+        return self.value + other
+
     def __repr__(self):
         """Generate computer readable text representation. (str)"""
         return 'Card({!r}, {!r})'.format(self.rank, self.suit)
+
+    def __rsub__(self, other):
+        """
+        Subtract the card as an integer. (int)
+
+        Parameters:
+        other: The integer to add to. (int)
+        """
+        return other - self.value
 
     def __str__(self):
         """Generate human readable text representation. (str)"""
@@ -340,6 +371,15 @@ class Card(object):
             return self.up_text
         else:
             return self.down_text
+
+    def __sub__(self, other):
+        """
+        Subtract the card as an integer. (int)
+
+        Parameters:
+        other: The integer to add to. (int)
+        """
+        return self.value - other
 
     def above(self, other, n = 1):
         """
@@ -782,7 +822,7 @@ class Hand(Pile):
     def score(self):
         """Score the hand. (int)"""
         # Default score is high card.
-        return sum(card.value for card in self.cards)
+        return sum(self.cards)
 
     def shift(self, card, hand):
         """

@@ -838,7 +838,7 @@ class Cribbage(game.Game):
         self.double_pairs = False
         self.skip_player = None
         # Set up the deck.
-        self.deck = cards.Deck(card_class = CribCard)  # !! needs fix depending on CribCard update.
+        self.deck = cards.Deck()
         self.deck.shuffle()
         # Set up the hands.
         self.hands = {player.name: cards.Hand(deck = self.deck) for player in self.players}
@@ -913,13 +913,13 @@ class CribBot(player.Bot):
         query: The question the game asked. (str)
         """
         # Get you hand.
-        hand = self.game.hands[self.name]
+        hand = self.game.hands[self]
         # Discard a card.
         if 'discard' in query:
             return self.get_discard()
         # Pass when you can't play.
         elif 'no playable' in query:
-            self.game.human.tell('\n{} calls "go."'.format(self.name))
+            self.game.human.tell('\n{} calls "go."'.format(self))
             return ''
         # Play a card for pegging.
         elif 'play' in query:
@@ -953,7 +953,7 @@ class CribBot(player.Bot):
     def get_discard(self):
         """Determine which card to discard to the crib. (str)"""
         # Check current game information.
-        hand = self.game.hands[self.name]
+        hand = self.game.hands[self]
         dealer = (self == self.game.players[self.game.dealer_index])
         # Get the possible discard.
         possibles = []
@@ -974,7 +974,7 @@ class CribBot(player.Bot):
     def get_play(self):
         """Get a card to play. (str)"""
         # Get the playable cards.
-        hand = self.game.hands[self.name]
+        hand = self.game.hands[self]
         playable = [card for card in hand if 31 - card >= self.game.card_total]
         playable.sort()
         # Get the highest scoring play (randomly break ties)
@@ -1004,7 +1004,7 @@ class CribBot(player.Bot):
             # If all else fails, play your biggest card.
             play = playable[0]
         # Make the play.
-        self.game.human.tell('\n{} played the {}.'.format(self.name, play.name.lower()))
+        self.game.human.tell('\n{} played the {:n}.'.format(self.name, play))
         return str(play)
 
     def score_discards(self, cards):
@@ -1056,66 +1056,3 @@ class CribBot(player.Bot):
             pass
         else:
             super(CribBot, self).tell(message)
-
-
-class CribCard(cards.Card):
-    """
-    A card for a game of Cribbage. (cards.Card)
-
-    Attributes:
-    value: The numerical value of the card. (int)
-
-    Overridden Methods:
-    __init__
-    __add__
-    __radd__
-    __rsub__
-    __sub__
-    """
-
-    def __init__(self, rank, suit, down_text = '??', ace_high = False):
-        """
-        Set up the card. (None)
-
-        Parameters:
-        rank: The rank of the card. (str)
-        suit: The suit of the card. (str)
-        """
-        super(CribCard, self).__init__(rank, suit, down_text, ace_high)
-        self.value = min(self.ranks.index(self.rank), 10)
-
-    def __add__(self, other):
-        """
-        Add the card as an integer. (int)
-
-        Parameters:
-        other: The integer to add to. (int)
-        """
-        return self.value + other
-
-    def __radd__(self, other):
-        """
-        Add the card as an integer. (int)
-
-        Parameters:
-        other: The integer to add to. (int)
-        """
-        return self.value + other
-
-    def __rsub__(self, other):
-        """
-        Subtract the card as an integer. (int)
-
-        Parameters:
-        other: The integer to add to. (int)
-        """
-        return other - self.value
-
-    def __sub__(self, other):
-        """
-        Subtract the card as an integer. (int)
-
-        Parameters:
-        other: The integer to add to. (int)
-        """
-        return self.value - other
