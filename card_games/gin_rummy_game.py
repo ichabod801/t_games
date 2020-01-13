@@ -401,7 +401,7 @@ class GinBot(player.Bot):
 
     def set_up(self):
         """Set up the bot. (None)"""
-        self.hand = self.game.hands[self.name]
+        self.hand = self.game.hands[self]
         self.listen = False
 
     def sort_hand(self):
@@ -413,7 +413,7 @@ class GinBot(player.Bot):
         """
         cards = self.hand[:]
         # Check for runs.
-        cards.sort(key = lambda card: (card.suit, card.rank_num))
+        cards.sort()
         full_runs, part_runs = self.find_melds(cards, self.run_pair)
         # Remove cards in full runs.
         used = set(sum(full_runs, []))
@@ -714,14 +714,14 @@ class GinRummy(game.Game):
         """Deal the cards. (None)"""
         # Rest the deck and the hands.
         self.deck = cards.Deck()
-        self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
+        self.hands = {player.name: cards.Hand(deck = self.deck) for player in self.players}
         self.deck.shuffle()
         # Deal 10 cards to each player.
         for card in range(10):
             for hand in self.hands.values():
                 hand.draw()
         for player in self.players:
-            player.tell('\n{} deals.'.format(self.dealer.name))
+            player.tell('\n{} deals.'.format(self.dealer))
         # Discard one card.
         self.deck.discard(self.deck.deal(), up = True)
         # Handle play modifications based on the initial discard.
@@ -754,7 +754,7 @@ class GinRummy(game.Game):
             self.discard_choice(discard, self.dealer, non_dealer)
             if self.deck.discards:
                 # If no one wants it, non-dealer starts with the top card off the deck.
-                self.hands[non_dealer.name].draw()
+                self.hands[non_dealer].draw()
                 self.player_index = self.players.index(self.dealer)
         self.card_drawn = True
         self.deal_cards = False
@@ -771,7 +771,7 @@ class GinRummy(game.Game):
         directions = ('l', 'left', 'r', 'right')
         query = 'Would you like the top card of the discard pile ({})? '.format(discard)
         while True:
-            chooser.tell('\nYour hand is {}.'.format(self.hands[chooser.name]))
+            chooser.tell('\nYour hand is {}.'.format(self.hands[chooser]))
             take_discard = chooser.ask_yes_no(query, yes = [str(discard).lower()], cmd = True)
             if isinstance(take_discard, str):
                 if take_discard.lower().split()[0] in directions:
@@ -780,8 +780,8 @@ class GinRummy(game.Game):
                     chooser.error('Please enter yes, no, or a hand organization command.')
                 continue
             elif take_discard:
-                self.hands[chooser.name].deal(self.deck.discards.pop())
-                other.tell('\n{} drew the {} from the discard pile.'.format(chooser.name, discard))
+                self.hands[chooser].deal(self.deck.discards.pop())
+                other.tell('\n{} drew the {} from the discard pile.'.format(chooser, discard))
                 self.player_index = self.players.index(other)
             break
 
@@ -790,8 +790,7 @@ class GinRummy(game.Game):
         Discard a card from your hand and end your turn. (d)
         """
         # Get the player info.
-        player = self.players[self.player_index]
-        hand = self.hands[player.name]
+        hand = self.hands[self.current_player]
         # Validate the card.
         if argument in hand:
             # Discard valid cards.
@@ -800,7 +799,7 @@ class GinRummy(game.Game):
             return False
         else:
             # Give a warning if the card is not valid.
-            player.error('You do not have that card to discard.')
+            self.current_player.error('You do not have that card to discard.')
             return True
 
     def do_gipf(self, arguments):
@@ -813,7 +812,7 @@ class GinRummy(game.Game):
         # Chess changes one card's rank.
         if game == 'chess':
             if not losses:
-                hand = self.hands[self.human.name]
+                hand = self.hands[self.human]
                 self.human.tell('\nYour hand is: {}.'.format(hand))
                 while True:
                     card = self.human.ask('What card do you want to change the rank of? ').upper()
@@ -834,7 +833,7 @@ class GinRummy(game.Game):
         # Liar's Dice changes one card's suit.
         elif game == "liar's dice":
             if not losses:
-                hand = self.hands[self.human.name]
+                hand = self.hands[self.human]
                 self.human.tell('\nYour hand is: {}.'.format(hand))
                 while True:
                     card = self.human.ask('What card do you want to change the suit of? ').upper()
@@ -862,13 +861,12 @@ class GinRummy(game.Game):
         Set out your cards in an attempt to win the hand. (k)
         """
         # Get the players.
-        attacker = self.players[self.player_index]
+        attacker = self.current_player
         defender = self.players[1 - self.player_index]
         # Get the attacker's discard.
         discard = self.get_knock_discard(attacker, argument)
         if discard != 'BIG':
-            self.hands[attacker.name].discard(discard)
-            self.deck.discards[-1].up = True
+            self.hands[attacker].discard(discard, up = True)
             knock_max = self.knock_max
         else:
             knock_max = 0
@@ -902,12 +900,12 @@ class GinRummy(game.Game):
         else:
             winner, score = defender, (self.undercut - score_diff) * self.doubler
         # Update the game score.
-        self.human.tell('\n{} scored {} points.'.format(winner.name, score))
+        self.human.tell('\n{} scored {} points.'.format(winner, score))
         self.update_score(winner, score)
         self.do_scores('', self.human)
         # Check for the end of the game.
-        hollywood_end = self.hollywood and self.scores[2][winner.name] < self.end
-        if hollywood_end or (not self.hollywood and self.scores[winner.name] < self.end):
+        hollywood_end = self.hollywood and self.scores[2][winner] < self.end
+        if hollywood_end or (not self.hollywood and self.scores[winner] < self.end):
             if self.alt_deal:
                 self.dealer = [player for player in self.players if player != self.dealer][0]
             else:
@@ -948,14 +946,14 @@ class GinRummy(game.Game):
         Show the current game scores. (s)
         """
         if reciever is None:
-            reciever = self.players[self.player_index]
+            reciever = self.current_player
         reciever.tell('\nCurrent Scores:')
         for player in self.players:
             if self.hollywood:
-                scores = [self.scores[game][player.name] for game in range(3)]
-                reciever.tell('{}: {}/{}/{}'.format(player.name, *scores))
+                scores = [self.scores[game][player] for game in range(3)]
+                reciever.tell('{}: {}/{}/{}'.format(player, *scores))
             else:
-                reciever.tell('{}: {}'.format(player.name, self.scores[player.name]))
+                reciever.tell('{}: {}'.format(player, self.scores[player]))
 
     def game_over(self):
         """Check for end of game and calculate the final score. (bool)"""
@@ -1002,23 +1000,23 @@ class GinRummy(game.Game):
         """
         self.human.tell('\nThe {}game is over.'.format(nth))
         # Give the ender the game bonus.
-        ender = self.players[self.player_index]
+        ender = self.current_player
         text = '{} scores {} points for ending the {}game.'
-        self.human.tell(text.format(ender.name, self.game_bonus, nth))
-        scores[ender.name] += self.game_bonus
+        self.human.tell(text.format(ender, self.game_bonus, nth))
+        scores[ender] += self.game_bonus
         # Check for a sweep bonus.
         opponent = self.players[1 - self.player_index]
-        if not wins[opponent.name]:
-            self.human.tell('{} doubles their score for sweeping the {}game.'.format(ender.name, nth))
-            scores[ender.name] *= 2
+        if not wins[opponent]:
+            self.human.tell('{} doubles their score for sweeping the {}game.'.format(ender, nth))
+            scores[ender] *= 2
         # Give each payer 25 points for each win.
         for player in self.players:
-            if wins[player.name]:
-                win_points = self.box_bonus * wins[player.name]
+            if wins[player]:
+                win_points = self.box_bonus * wins[player]
                 text = '{} gets {} extra points for winning {} hands.'
-                self.human.tell(text.format(player.name, win_points, wins[player.name]))
+                self.human.tell(text.format(player, win_points, wins[player]))
         # Determine the winner.
-        if scores[ender.name] > scores[opponent.name]:
+        if scores[ender] > scores[opponent]:
             winner = ender
             loser = opponent
         else:
@@ -1026,11 +1024,11 @@ class GinRummy(game.Game):
             loser = ender
         # Reset the scores.
         for player in self.players:
-            scores[player.name] -= scores[loser.name]
+            scores[player] -= scores[loser]
         # Announce the winner.
         text = '\n{} won the {}game by {} points.'
-        self.human.tell(text.format(winner.name, nth, scores[winner.name]))
-        self.match_scores[winner.name] += scores[winner.name]
+        self.human.tell(text.format(winner, nth, scores[winner]))
+        self.match_scores[winner] += scores[winner]
         if winner == self.human:
             self.win_loss_draw[0] += 1
         else:
@@ -1430,3 +1428,6 @@ class GinRummy(game.Game):
                     valid = True
         # Check for a high/low run.
         return valid
+
+
+# !! GinRummy.card_values will need to use the FeatureSets.
