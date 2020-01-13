@@ -1043,7 +1043,7 @@ class GinRummy(game.Game):
         argument: The argument to the discard command. (str)
         """
         # Check for it passed as an argument.
-        if argument in self.hands[knocker.name] or (self.big_gin and argument.lower() == 'big'):
+        if argument in self.hands[knocker] or (self.big_gin and argument.lower() == 'big'):
             discard = argument
         else:
             # Warn about invalid arguments.
@@ -1052,10 +1052,10 @@ class GinRummy(game.Game):
             # Query the user for the card.
             while True:
                 discard = knocker.ask('Which card would you like to discard? ')
-                if discard in self.hands[knocker.name] or (self.big_gin and argument.lower() == 'big'):
+                if discard in self.hands[knocker] or (self.big_gin and argument.lower() == 'big'):
                     break
                 knocker.tell('You do not have that card to discard.')
-                knocker.tell('Your hand is {}.'.format(self.hands[knocker.name]))
+                knocker.tell('Your hand is {}.'.format(self.hands[knocker]))
         return discard.upper()
 
     def handle_options(self):
@@ -1080,8 +1080,8 @@ class GinRummy(game.Game):
         arguments: The arguments to the left or right command. (str)
         """
         # Get the player information
-        player = self.players[self.player_index]
-        hand = self.hands[player.name]
+        player = self.current_player
+        hand = self.hands[player]
         # Parse the arguments.
         if '/' in arguments:
             target, slash, arguments = arguments.partition('/')
@@ -1095,7 +1095,7 @@ class GinRummy(game.Game):
             return
         # Make sure the cards to move are in the hand.
         try:
-            cards = [hand[hand.index(card_name)] for card_name in card_text]
+            cards = [card for card in hand if card in card_text]
         except ValueError:
             player.error('You do not have all of those cards in your hand.')
             return
