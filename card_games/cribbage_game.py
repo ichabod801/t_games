@@ -15,7 +15,6 @@ RULES: The rules for Cribbage. (str)
 Classes:
 Cribbage: A game of Cribbage. (game.Game)
 CribBot: A bot for playing Cribbage. (player.Bot)
-CribCard: A card for a game of Cribbage. (cards.Card)
 """
 
 
@@ -143,7 +142,7 @@ class Cribbage(game.Game):
     skunk: The score needed to avoid being skunked.
     skunk_scores: The match points earned for wins and skunks. (tuple of int)
     solo: A flag for teaming everyone against the dealer. (bool)
-    starter: The starter card. (CribCard)
+    starter: The starter card. (Card)
     target_score: The score needed to win the game. (int)
     teams: The people on each player's team. (dict of str: list)
 
@@ -249,7 +248,7 @@ class Cribbage(game.Game):
         for card in range(4 - len(self.players) * self.discards):
             self.hands['The Crib'].draw()
         # Make a dummy starter card.
-        self.starter = CribCard('X', 'S')
+        self.starter = cards.Card('X', 'S')
         # Reset the tracking variables.
         self.phase = 'discard'
 
@@ -270,7 +269,7 @@ class Cribbage(game.Game):
             hand = self.hands[self.human]
             while True:
                 card_text = self.human.ask('Pick a card to replace: ')
-                card = CribCard.card_re.search(card_text)
+                card = self.deck.card_re.search(card_text)
                 if not card:
                     self.human.error('Please enter a valid card.')
                 elif card not in hand:
@@ -438,7 +437,7 @@ class Cribbage(game.Game):
             discard_plural = utility.number_plural(to_discard, 'card')
             query = '\nWhich {} would you like to discard to the crib, {}? '
             answer = player.ask(query.format(discard_plural, player))
-            discards = cards.Card.card_re.findall(answer)
+            discards = self.deck.card_re.findall(answer)
             if not discards:
                 # If no discards, assume it's another command.
                 if not self.handle_cmd(answer):
@@ -501,9 +500,9 @@ class Cribbage(game.Game):
             return False
         # Get card to play.
         answer = player.ask('\nWhich card would you like to play, {}? '.format(player))
-        card = CribCard.card_re.match(answer)
+        card = self.deck.card_re.match(answer)
         if card:
-            card = CribCard(*answer[:2].upper())
+            card = cards.Card(*answer[:2].upper())
             if card not in hand:
                 # Warn the player about cards they don't have.
                 player.error('You do not have that card in your hand.')
@@ -541,7 +540,7 @@ class Cribbage(game.Game):
         self.go_count = 0
         self.in_play['Play Sequence'].cards = []
         # Player names are used to get hands to avoid checking the crib for cards.
-        if (not any(self.hands.values())) or self.one_go:
+        if (not any([self.hands[player] for player in self.players])) or self.one_go:
             if not self.score_hands():
                 self.deal()  # Only deal if no one wins.
 
@@ -550,7 +549,7 @@ class Cribbage(game.Game):
         Score any sets totalling to fifteen in the given cards. (int)
 
         Parameters:
-        cards: The cards to score. (list of CribCard)
+        cards: The cards to score. (list of Card)
         """
         fifteens = 0
         for size in range(2, 6):
@@ -564,7 +563,7 @@ class Cribbage(game.Game):
         Score any flushes in the given cards. (int)
 
         Parameters:
-        cards: The cards to score. (list of CribCard)
+        cards: The cards to score. (list of Card)
         """
         score = 0
         suits = set([card.suit for card in cards])
@@ -614,30 +613,30 @@ class Cribbage(game.Game):
         self.double_pairs = False
         return False
 
-    def score_one_hand(self, cards, name):
+    def score_one_hand(self, hand, name):
         """
         Score a single hand after a round of play. (int)
 
         Parameters:
-        cards: The cards in the hand. (list of CribCard)
+        hand: The cards in the hand. (list of Card)
         name: The name of the player who's hand it is. (str)
         """
         hand_score = 0
         # Check for flushes. (four in hand or five with starter)
-        suit_score = self.score_flush(cards)
+        suit_score = self.score_flush(hand)
         if suit_score:
             hand_score += suit_score
             message = '{} scores {} points for a {}-card flush.'
             self.human.tell(message.format(name, suit_score, utility.number_word(suit_score)))
         # Check for his nobs (jack of suit of starter)
-        nob = CribCard('J', self.starter.suit)
-        if nob in cards:
+        nob = cards.Card('J', self.starter.suit)
+        if nob in hand:
             hand_score += 1
             self.human.tell('{} scores one for his nob.'.format(name))
         # Add the starter for the scoring categories below.
-        cards.append(self.starter)
+        hand.append(self.starter)
         # Check for fifteens.
-        fifteens = self.score_fifteens(cards)
+        fifteens = self.score_fifteens(hand)
         if fifteens:
             hand_score += 2 * fifteens
             # Update the user.
@@ -645,17 +644,17 @@ class Cribbage(game.Game):
             message = '{} scores {} for {} adding to 15.'
             self.human.tell(message.format(name, 2 * fifteens, plural_15))
         # Check for pairs.
-        rank_data = self.score_pairs(cards)
+        rank_data = self.score_pairs(hand)
         for rank, count, pair_score in rank_data:
             hand_score += pair_score
             # Update the user.
-            rank_name = CribCard.rank_names[CribCard.ranks.index(rank)].lower()
+            rank_name = self.deck.rank_set.names[rank].lower()
             if rank_name == 'six':
                 rank_name = 'sixe'
             message = '{} scores {} for getting {} {}s.'
             self.human.tell(message.format(name, pair_score, utility.number_word(count), rank_name))
         # Check for runs.
-        for run_length, run_count in self.score_runs(cards):
+        for run_length, run_count in self.score_runs(hand):
             hand_score += run_length * run_count
             # Update the user.
             if run_count == 1:
@@ -673,7 +672,7 @@ class Cribbage(game.Game):
         for that rank.
 
         Parameters:
-        cards: The cards to score. (list of CribCard)
+        cards: The cards to score. (list of Card)
         """
         rank_counts = collections.Counter([card.rank for card in cards])
         rank_data = []
@@ -731,7 +730,7 @@ class Cribbage(game.Game):
 
         Parameters:
         player: The player who is scoring. (player.Player)
-        card: The next card to play in sequence. (CribCard)
+        card: The next card to play in sequence. (Card)
         """
         played = list(reversed(self.in_play['Play Sequence'].cards + [card]))
         next_total = self.card_total + card
@@ -757,7 +756,7 @@ class Cribbage(game.Game):
         # Check for runs.
         run_count = 0
         for run_len in range(3, len(played) + 1):
-            values = sorted([CribCard.ranks.index(card.rank) for card in played[:run_len]])
+            values = sorted([card.rank_num for card in played[:run_len]])
             diffs = [second - first for first, second in zip(values, values[1:])]
             if diffs and all([diff == 1 for diff in diffs]):
                 run_count = len(values)
@@ -1015,7 +1014,7 @@ class CribBot(player.Bot):
         discard those card(s).
 
         Parameters:
-        cards: The cards to score. (list of CribCard)
+        cards: The cards to score. (list of Card)
         """
         score = 0
         # Account for scoring cards.
@@ -1038,7 +1037,7 @@ class CribBot(player.Bot):
         Score a potential set of kept cards. (int)
 
         Parameters:
-        cards: The cards to score. (list of CribCard)
+        cards: The cards to score. (list of Card)
         """
         score = self.game.score_flush(cards) + self.game.score_fifteens(cards)
         score += sum([pair_score for rank, count, pair_score in self.game.score_pairs(cards)])

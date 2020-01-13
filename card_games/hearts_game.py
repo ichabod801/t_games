@@ -378,7 +378,7 @@ class SmeartBot(HeartBot):
             standard.up = True
         base_check = standard.suit == 'H' or standard in self.danger_cards
         if base_check or (self.game.joker_points and standard.rank == 'X'):
-            suit_cards = [card for card in self.game.trick if card.suit == self.game.trick.[0].suit]
+            suit_cards = [card for card in self.game.trick if card.suit == self.game.trick[0].suit]
             suit_cards.sort(key = lambda card: card.rank_num)
             if not suit_cards:
                 return standard
