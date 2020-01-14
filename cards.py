@@ -781,7 +781,7 @@ class Hand(Pile):
 
     def __str__(self):
         """Human readable text representation. (str)"""
-        return '{}'.format(', '.join(card.up_text for card in self.cards))
+        return '{}'.format(', '.join(str(card) for card in self.cards))
 
     def _child(self, cards):
         """

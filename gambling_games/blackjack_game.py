@@ -7,6 +7,7 @@ Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
+BLACKJACK_RANKS: The ranks for a Blackjack hand. (cards.FeatureSet)
 CREDITS: The credits for Blackjack. (str)
 HINT_KEYS: The meanings of the entries in the hint tables. (dict of str:str)
 HINTS: A condensed tables of hints. (str)
@@ -23,6 +24,12 @@ from .. import cards
 from .. import game
 from .. import utility
 
+
+BLACKJACK_RANKS = cards.FeatureSet('XA23456789TJQK',
+    ['Joker', 'Ace', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack',
+        'Queen', 'King'],
+    [0, 11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10],
+    skip = 1, an_chars = 'A8')
 
 CREDITS = """
 Game Design: Traditional (U.S. Casinos)
@@ -796,7 +803,8 @@ class Blackjack(game.Game):
         self.phase = 'bet'
         self.dealer_skip = False
         # Set up the deck.
-        self.deck = cards.Deck(decks = self.decks, shuffle_size = 17 * self.decks)
+        self.deck = cards.Deck(decks = self.decks, shuffle_size = 17 * self.decks,
+            rank_set = BLACKJACK_RANKS)
         self.deck.shuffle()
         # Set up default hands.
         self.dealer_hand = BlackjackHand(deck = self.deck)
