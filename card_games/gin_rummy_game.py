@@ -1427,6 +1427,3 @@ class GinRummy(game.Game):
                     valid = True
         # Check for a high/low run.
         return valid
-
-
-# !! GinRummy.card_values will need to use the FeatureSets.
