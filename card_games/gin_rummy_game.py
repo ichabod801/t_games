@@ -1418,7 +1418,7 @@ class GinRummy(game.Game):
             valid = True
         # Check for a run.
         elif len(set(card[1].upper() for card in meld)) == 1:
-            if ''.join(card[0].upper() for card in meld) in self.deck.rank_set:
+            if ''.join(card[0].upper() for card in meld) in self.deck.rank_set.chars:
                 valid = True
             elif self.high_low and meld[0][0].upper() == 'A' and meld[-1][0].upper() == 'K':
                 ranks = [card[0].upper() for card in meld]
