@@ -1075,8 +1075,6 @@ class GinRummy(game.Game):
         mod: The modifier to the target's index. (int)
         arguments: The arguments to the left or right command. (str)
         """
-        # !! not moving straights (9d-j) in order. (moving the cards in the order they are in the hand)
-        # !! not working on first discard.
         # Get the player information
         player = self.current_player
         hand = self.hands[player]
@@ -1093,7 +1091,8 @@ class GinRummy(game.Game):
             return
         # Make sure the cards to move are in the hand.
         try:
-            cards = [card for card in hand if card in card_text]
+            # Get the card object in the order they are in the move arguments
+            cards = [hand[hand.index(card_name)] for card_name in card_text]
         except ValueError:
             player.error('You do not have all of those cards in your hand.')
             return
@@ -1103,7 +1102,7 @@ class GinRummy(game.Game):
         else:
             # Remove the cards to be moved.
             single_cards = []
-            for card in cards:          # !! I think the problem is here.
+            for card in cards:
                 if card in hand:
                     hand.remove(card)
                     single_cards.append(card)
