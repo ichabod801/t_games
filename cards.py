@@ -162,7 +162,7 @@ class FeatureSet(object):
         other_char: The feature character of the second card. (str)
         """
         # Do the standard caculation
-        diff = self.ranks.index(char) - self.ranks.index(other_char)
+        diff = self.chars.index(char) - self.chars.index(other_char)
         # Account for wraping.
         if self.wrap and diff < 0:
             diff += len(self) - self.skip
@@ -177,7 +177,7 @@ class FeatureSet(object):
         other_char: The feature character of the second card. (str)
         """
         # Do the standard caculation
-        diff = self.ranks.index(other_char) - self.ranks.index(char)
+        diff = self.chars.index(other_char) - self.chars.index(char)
         # Account for wraping.
         if self.wrap and diff < 0:
             diff += len(self) - self.skip
@@ -809,7 +809,7 @@ class Hand(Pile):
         """
         self.cards.append(self.deck.deal(up = up))
 
-    def discard(self, card = None):
+    def discard(self, card = None, up = True):
         """
         Discard a card back to the deck. (None)
 
@@ -819,12 +819,12 @@ class Hand(Pile):
         # Discard all cards.
         if card is None:
             for card in self.cards:
-                self.deck.discard(card)
+                self.deck.discard(card, up)
             self.cards = []
         # Discard a specified card.
         else:
             card_index = self.cards.index(card)
-            self.deck.discard(self.cards[card_index])
+            self.deck.discard(self.cards[card_index], up)
             del self.cards[card_index]
 
     def score(self):
