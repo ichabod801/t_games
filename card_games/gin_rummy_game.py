@@ -671,9 +671,6 @@ class GinRummy(game.Game):
     undercut: How many poits are scored for undercutting. (int)
     wins: The number of hands each player has won. (dict of str: int)
 
-    Class Attributes:
-    card_values: The points per card by rank. (dict of str: int)
-
     Methods:
     deal: Deal the cards. (None)
     discard_choice: Give a player a chance to take the first discard. (None)
@@ -702,7 +699,6 @@ class GinRummy(game.Game):
 
     aka = ['Gin', 'Knock Poker', 'Poker Gin', 'Gin Poker']
     aliases = {'d': 'discard', 'l': 'left', 'k': 'knock', 'p': 'pass', 'r': 'right', 's': 'score'}
-    card_values = dict(zip('A23456789TJQK', (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10)))
     categories = ['Card Games']
     credits = CREDITS
     name = 'Gin Rummy'
@@ -1144,7 +1140,7 @@ class GinRummy(game.Game):
                     meld = ['error']
                 else:
                     # Loop through the ranks, creating the card strings.
-                    ranks = self.deck.ranks
+                    ranks = self.deck.rank_set.chars
                     meld = []
                     try:
                         for rank in ranks[ranks.index(start_rank):(ranks.index(end_rank) + 1)]:
@@ -1175,7 +1171,7 @@ class GinRummy(game.Game):
         # Show the game status.
         discard_text = ', '.join([str(card) for card in self.deck.discards])
         player.tell('\nDiscard Pile: {}'.format(discard_text))
-        player.tell('Your Hand: {}'.format(self.hands[player.name]))
+        player.tell('Your Hand: {}'.format(self.hands[player]))
         # Handle the player action.
         if self.card_drawn:
             # Get a move
@@ -1196,17 +1192,17 @@ class GinRummy(game.Game):
                 move = move.lower()
                 if move in ('discard', 'discards', self.deck.discards[-1], 's'):
                     draw_text = '\n{} drew the {} from the discard pile.'
-                    foe.tell(draw_text.format(player.name, self.deck.discards[-1]))
-                    self.hands[player.name].deal(self.deck.discards.pop())
+                    foe.tell(draw_text.format(player, self.deck.discards[-1]))
+                    self.hands[player].deal(self.deck.discards.pop())
                     break
                 elif move in ('deck', 'top', 'k'):
-                    foe.tell('\n{} drew from the deck.'.format(player.name))
-                    self.hands[player.name].draw()
+                    foe.tell('\n{} drew from the deck.'.format(player))
+                    self.hands[player].draw()
                     break
                 elif move.split()[0] in ('l', 'left', 'r', 'right'):
                     self.handle_cmd(move)
                     player.tell('\nDiscard Pile: {}'.format(discard_text))
-                    player.tell('Your Hand: {}'.format(self.hands[player.name]))
+                    player.tell('Your Hand: {}'.format(self.hands[player]))
                 else:
                     player.tell('I do not undertand. Please enter "discards" or "deck".')
             self.card_drawn = True
@@ -1217,12 +1213,12 @@ class GinRummy(game.Game):
         """Reset the game. (None)"""
         # Reset the scores based on the options.
         if self.hollywood:
-            self.scores = [{player.name: 0 for player in self.players} for game in range(3)]
-            self.wins = [{player.name: 0 for player in self.players} for game in range(3)]
+            self.scores = [{player: 0 for player in self.players} for game in range(3)]
+            self.wins = [{player: 0 for player in self.players} for game in range(3)]
             self.game_on = [True, True, True]
         else:
-            self.scores = {player.name: 0 for player in self.players}
-            self.wins = {player.name: 0 for player in self.players}
+            self.scores = {player: 0 for player in self.players}
+            self.wins = {player: 0 for player in self.players}
         # Reset the tracking variables.
         self.deal_cards = True
         self.side_deck.shuffle()
@@ -1255,8 +1251,8 @@ class GinRummy(game.Game):
         self.option_set.add_option('straight', ['s'], default = 10, value = 0, target = 'knock_max',
             question = 'Should the game be played straight (you can only knock with gin)? bool')
         # Set the hand scoring options.
-        self.option_set.add_option('ace-penalty', ['ap'], int, 1, target = self.card_values,
-            action = 'key=A', question = 'How many points should an ace be worth (return for 1)? ')
+        self.option_set.add_option('ace-penalty', ['ap'], int, 1,
+            question = 'How many points should an ace be worth (return for 1)? ')
         self.option_set.add_option('gin', ['g'], int, 25,
             question = 'How many points should you get for gin (return for 25)? ')
         self.option_set.add_option('undercut', ['uc'], int, 25,
@@ -1281,14 +1277,17 @@ class GinRummy(game.Game):
     def set_up(self):
         """Set up the game. (None)"""
         # Set up the cards.
-        self.deck = cards.Deck()
-        self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
+        rank_set = cards.STANDARD_RANKS.copy()
+        rank_set.values['A'] = self.ace_penalty
+        self.card_values = rank_set.values
+        self.deck = cards.Deck(rank_set = rank_set)
+        self.hands = {player: cards.Hand(deck = self.deck) for player in self.players}
         self.dealer = random.choice(self.players)
         self.side_deck = cards.Deck()
         # Set up the tracking variables.
         self.draws = 0
         self.doubler = 1
-        self.match_scores = {player.name: 0 for player in self.players}
+        self.match_scores = {player: 0 for player in self.players}
         self.reset()
 
     def show_melds(self, melds, deadwood, show_to, role):
@@ -1321,8 +1320,8 @@ class GinRummy(game.Game):
         attack: The melds that were spread by the attacking player. (list of list)
         """
         # Get the available cards.
-        unspread = self.hands[player.name]
-        spread = cards.Hand(self.deck)
+        unspread = self.hands[player]
+        spread = cards.Hand(deck = self.deck)
         # Get the melds and layoffs.
         scoring_sets = []
         while True:
@@ -1340,7 +1339,7 @@ class GinRummy(game.Game):
                 else:
                     player.error('\nThe defending player may not cancel.')
             elif meld == ['reset']:
-                unspread.extend(spread.cards)
+                unspread.extend(spread)
                 spread.cards = []
                 scoring_sets = []
             elif meld == ['error']:
@@ -1368,13 +1367,12 @@ class GinRummy(game.Game):
                     scoring_sets.append([])
                     for card in meld:
                         unspread.shift(card, spread)
-                        scoring_sets[-1].append(spread.cards[-1])
+                        scoring_sets[-1].append(spread[-1])
                     if not unspread:
                         break
                 elif has_cards:   # only print one error message.
                     # Warn if the meld or layoff is invalid.
                     layoff = ' or layoff' if attack else ''
-                    #player.error('That is not a valid meld{}.'.format(layoff), meld, unspread, attack, sep = '\n')
                     player.error('That is not a valid meld{}.'.format(layoff))
         # Return the melds and the deadwood.
         return scoring_sets, unspread, spread
@@ -1388,18 +1386,18 @@ class GinRummy(game.Game):
         points: How many points to add to their score. (int)
         """
         if self.hollywood:
-            if self.scores[1][player.name] or not self.game_on[1]:
-                self.scores[2][player.name] += points
-                self.wins[2][player.name] += 1
-            if self.game_on[1] and (self.scores[0][player.name] or not self.game_on[0]):
-                self.scores[1][player.name] += points
-                self.wins[1][player.name] += 1
+            if self.scores[1][player] or not self.game_on[1]:
+                self.scores[2][player] += points
+                self.wins[2][player] += 1
+            if self.game_on[1] and (self.scores[0][player] or not self.game_on[0]):
+                self.scores[1][player] += points
+                self.wins[1][player] += 1
             if self.game_on[0]:
-                self.scores[0][player.name] += points
-                self.wins[0][player.name] += 1
+                self.scores[0][player] += points
+                self.wins[0][player] += 1
         else:
-            self.scores[player.name] += points
-            self.wins[player.name] += 1
+            self.scores[player] += points
+            self.wins[player] += 1
 
     def validate_meld(self, meld):
         """
@@ -1411,7 +1409,7 @@ class GinRummy(game.Game):
         valid = False
         # Sort the cards.
         try:
-            meld.sort(key = lambda card: self.deck.ranks.index(card[0].upper()))
+            meld.sort(key = lambda card: self.deck.rank_set.index(card[0].upper()))
         except ValueError:
             return False
         # Check for a set.
@@ -1419,12 +1417,12 @@ class GinRummy(game.Game):
             valid = True
         # Check for a run.
         elif len(set(card[1].upper() for card in meld)) == 1:
-            if ''.join(card[0].upper() for card in meld) in self.deck.ranks:
+            if ''.join(card[0].upper() for card in meld) in self.deck.rank_set:
                 valid = True
             elif self.high_low and meld[0][0].upper() == 'A' and meld[-1][0].upper() == 'K':
                 ranks = [card[0].upper() for card in meld]
                 pairs = ['{}{}'.format(*pair) for pair in zip(ranks, ranks[1:])]
-                if sum([pair not in self.deck.ranks for pair in pairs]) == 1:
+                if sum([pair not in self.deck.rank_set.chars for pair in pairs]) == 1:
                     valid = True
         # Check for a high/low run.
         return valid

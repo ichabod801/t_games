@@ -87,6 +87,7 @@ class FeatureSet(object):
     wrap: A flag for ranks being wrappable. (bool)
 
     Methods:
+    copy: Make an independent copy of the FeatureSet. (FeatureSet)
     index: Give the feature index of a character. (int)
     item: Iterate over all the items in the feature set. (iterator)
 
@@ -181,6 +182,13 @@ class FeatureSet(object):
         if self.wrap and diff < 0:
             diff += len(self) - self.skip
         return diff == n
+
+    def copy(self):
+        """Make an independent copy of the FeatureSet. (FeatureSet)"""
+        names = [self.names[char] for char in self.chars]
+        values = [self.values[char] for char in self.chars]
+        colors = [self.colors[char] for char in self.chars]
+        return FeatureSet(self.chars, names, values, colors, self.skip, self.wrap, self.an_chars)
 
     def index(self, char):
         """Give the feature index of a character. (int)"""
