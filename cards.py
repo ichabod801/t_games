@@ -1025,12 +1025,11 @@ class TrackingDeck(Deck):
         # Add the base cards.
         self.cards = []
         self.card_map = {}
-        for deck in range(decks):
-            for rank in self.rank_set:
-                for suit in self.suit_set:
-                    card = TrackingCard(rank, suit, self, rank_set, suit_set)
-                    self.cards.append(card)
-                    self.card_map[card.up_text] = card
+        for rank in self.rank_set:
+            for suit in self.suit_set:
+                card = TrackingCard(rank, suit, self, self.rank_set, self.suit_set)
+                self.cards.append(card)
+                self.card_map[card.up_text] = card
         # Get the joker ranks and suits.
         joker_ranks = self.rank_set.chars[:self.rank_set.skip]
         if self.suit_set.skip:
@@ -1038,13 +1037,12 @@ class TrackingDeck(Deck):
         else:
             joker_suits = self.suit_set.chars[:self.suit_set.skip]
         # Add the jokers.
-        for deck in range(decks):
-            for rank in joker_ranks:
-                for suit_index in range(self.jokers):
-                    suit = joker_suits[suit_index % len(card_class.suits)]
-                    joker = TrackingCard(joker_rank, suit, self, rank_set, suit_set)
-                    self.cards.append(joker)
-                    self.card_map[joker.up_text] = joker
+        for rank in joker_ranks:
+            for suit_index in range(self.jokers):
+                suit = joker_suits[suit_index % len(card_class.suits)]
+                joker = TrackingCard(joker_rank, suit, self, rank_set, suit_set)
+                self.cards.append(joker)
+                self.card_map[joker.up_text] = joker
 
     def deal(self, game_location, up = True, card_index = -1):
         """
@@ -1128,7 +1126,7 @@ class MultiTrackingDeck(TrackingDeck):
     find
     """
 
-    def __init__(self, cards = None, game = None, jokers = 0,
+    def __init__(self, cards = None, game = None, jokers = 0, decks = 2,
         rank_set = STANDARD_RANKS, suit_set = STANDARD_SUITS):
         """
         Fill the deck with a standard set of cards. (None)

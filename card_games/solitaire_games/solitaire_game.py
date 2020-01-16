@@ -787,7 +787,7 @@ class Solitaire(game.Game):
         self.max_passes = options['max-passes']
         # Initialize the derived attributes.
         # Initialize the deck.
-        self.deck = cards.TrackingDeck(self, *options['deck-specs'])
+        self.deck = cards.TrackingDeck(None, self, *options['deck-specs'])
         deal_num = -1
         deal_text_index = self.option_set.settings_text.find('deal-num')
         if deal_text_index != -1:
@@ -802,6 +802,7 @@ class Solitaire(game.Game):
             self.human.tell('The random deal number is {}.'.format(deal_num))
         if deal_num:
             self.option_set.settings_text += ' deal-num={}'.format(deal_num)
+        print(self.deck)
         self.deck.shuffle(number = deal_num)
         # Initialize the variable game locations
         self.tableau = [[] for pile in range(options['num-tableau'])]
