@@ -7,9 +7,11 @@ Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
+ONE_SUIT: A feature set with only one suit (spades). (FeatureSet)
 STANDARD_RANKS: The standard Western card ranks. (FeatureSet)
 STANDARD_SUITS: The standard Western card suits. (FeatureSet)
 STANDARD_WRAP_RANKS: The standard card ranks with wrapping. (FeatureSet)
+TWO_SUITS: A feature set with only two suits (spades and hearts). (FeatureSet)
 
 Classes:
 CRand: Implementation of C's rand function. (object)
@@ -208,19 +210,23 @@ class FeatureSet(object):
                 yield (index, char, self.names[char], self.values[char], self.colors[char])
         return iter_items()
 
+ONE_SUIT = FeatureSet('S', ['Spades'], colors = 'B')
+
 STANDARD_RANKS = FeatureSet('XA23456789TJQK',
     ['Joker', 'Ace', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack',
         'Queen', 'King'],
     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10],
     skip = 1, an_chars = 'A8')
 
-STANDARD_SUITS = FeatureSet('CDHS', ['Clubs', 'Diamonds', 'Hearts', 'Spades'], colors = 'RRBB')
+STANDARD_SUITS = FeatureSet('CDHS', ['Clubs', 'Diamonds', 'Hearts', 'Spades'], colors = 'BRRB')
 
 STANDARD_WRAP_RANKS = FeatureSet('XA23456789TJQK',
     ['Joker', 'Ace', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack',
         'Queen', 'King'],
     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10],
     skip = 1, wrap = True, an_chars = 'A8')
+
+TWO_SUITS = FeatureSet('HS', ['Hearts', 'Spades'], colors = 'RB')
 
 
 class Card(object):
@@ -255,8 +261,7 @@ class Card(object):
     __sub__
     """
 
-    def __init__(self, rank, suit, down_text = '??', ace_high = False, rank_set = STANDARD_RANKS,
-        suit_set = STANDARD_SUITS):
+    def __init__(self, rank, suit, down_text = '??', rank_set = STANDARD_RANKS, suit_set = STANDARD_SUITS):
         """
         Set up the card. (None)
 
@@ -594,25 +599,7 @@ class Deck(Pile):
         self.card_re = re.compile('[{}][{}]'.format(self.ranks, self.suits), re.IGNORECASE)
         # Add the standard cards.
         if cards is None:
-            # !! refactor out to allow for customization.
-            # Add the base cards.
-            self.cards = []
-            for deck in range(decks):
-                for rank in self.rank_set:
-                    for suit in self.suit_set:
-                        self.cards.append(Card(rank, suit, rank_set = rank_set, suit_set = suit_set))
-            # Get the joker ranks and suits.
-            joker_ranks = self.rank_set.chars[:self.rank_set.skip]
-            if self.suit_set.skip:
-                joker_suits = self.suit_set.chars
-            else:
-                joker_suits = self.suit_set.chars[:self.suit_set.skip]
-            # Add the jokers.
-            for deck in range(decks):
-                for rank in joker_ranks:
-                    for suit_index in range(self.jokers):
-                        suit = joker_suits[suit_index % len(card_class.suits)]
-                        self.cards.append(Card(joker_rank, suit))
+            self._initial_cards()
         else:
             self.cards = cards
         # Start with an empty discard pile.
@@ -630,6 +617,27 @@ class Deck(Pile):
             suit_set = self.suit_set)
         child.discards = self.discards[:]
         return child
+
+    def _initial_cards(self):
+        """Add in the initial cards for the deck. (None)"""
+        # Add the base cards.
+        self.cards = []
+        for deck in range(decks):
+            for rank in self.rank_set:
+                for suit in self.suit_set:
+                    self.cards.append(Card(rank, suit, rank_set = rank_set, suit_set = suit_set))
+        # Get the joker ranks and suits.
+        joker_ranks = self.rank_set.chars[:self.rank_set.skip]
+        if self.suit_set.skip:
+            joker_suits = self.suit_set.chars
+        else:
+            joker_suits = self.suit_set.chars[:self.suit_set.skip]
+        # Add the jokers.
+        for deck in range(decks):
+            for rank in joker_ranks:
+                for suit_index in range(self.jokers):
+                    suit = joker_suits[suit_index % len(card_class.suits)]
+                    self.cards.append(Card(joker_rank, suit))
 
     def cut(self, card_index):
         """
@@ -869,7 +877,7 @@ class TrackingCard(Card):
     below
     """
 
-    def __init__(self, rank, suit, deck):
+    def __init__(self, rank, suit, deck, rank_set = STANDARD_RANKS, suit_set = STANDARD_SUITS):
         """
         Set up the card. (None)
 
@@ -880,9 +888,8 @@ class TrackingCard(Card):
         suit: The suit of the card. (str)
         deck: The deck the card comes from. (TrackingDeck)
         """
-        super(TrackingCard, self).__init__(rank, suit)
+        super(TrackingCard, self).__init__(rank, suit, rank_set = rank_set, suit_set = suit_set)
         self.deck = deck
-        self.rank_num = self.ranks.index(self.rank)
         if self.deck is not None:
             self.deck_location = self.deck.cards
             self.game_location = self.deck.cards
@@ -939,47 +946,9 @@ class TrackingCard(Card):
         """Create a debugging text representation."""
         return '<TrackingCard {}{}>'.format(self.rank, self.suit)
 
-    def above(self, other, card_index = 1):
-        """
-        Check that this card is n ranks above another card. (bool)
-
-        Parameters:
-        other: The card to compare with. (Card)
-        card_index: How many ranks above you are checking for. (int)
-        """
-        return super(TrackingCard, self).above(other, card_index, self.deck.game.wrap_ranks)
-
-    def below(self, other, card_index = 1):
-        """
-        Check that this card is n ranks below another card. (bool)
-
-        Parameters:
-        other: The card to compare with. (Card)
-        card_index: How many ranks below you are checking for. (int)
-        """
-        return super(TrackingCard, self).below(other, card_index, self.deck.game.wrap_ranks)
-
     def discard(self):
         """Discard the card. (None)"""
         self.deck.discard(self)
-
-
-class TrackOneSuit(TrackingCard):
-    """A tracking card with only one suit. (TrackingCard)"""
-
-    ranks = 'XA23456789TJQK'
-    suits = 'S'
-    suit_names = ['Spades']
-    card_re = re.compile('[{}][{}]'.format(ranks, suits), re.IGNORECASE)
-
-
-class TrackTwoSuit(TrackingCard):
-    """A tracking card with only two suits. (TrackingCard)"""
-
-    ranks = 'XA23456789TJQK'
-    suits = 'HS'
-    suit_names = ['Hearts', 'Spades']
-    card_re = re.compile('[{}][{}]'.format(ranks, suits), re.IGNORECASE)
 
 
 class TrackingDeck(Deck):
@@ -1008,48 +977,33 @@ class TrackingDeck(Deck):
     force
     """
 
-    def __init__(self, game, card_class = TrackingCard):
+    def __init__(self, cards = None, game = None, jokers = 0, decks = 1, shuffle_size = 0,
+        rank_set = STANDARD_RANKS, suit_set = STANDARD_SUITS):
         """
-        Set up the deck of cards. (None)
+        Fill the deck with a standard set of cards. (None)
 
         Parameters:
-        game: The game the card is a part of. (game.Game)
-        card_class: The type of card in the deck. (TrackingCard)
+        cards: The initial cards in the deck. (list of Card)
+        jokers: The number of jokers in the deck. (int)
+        decks: The number of idential decks shuffled together. (int)
+        shuffle_size: The number of cards left that triggers a shuffle. (int)
+        rank_set: The rank information for cards in the deck. (FeatureSet)
+        suit_set: The suit information for cards in the deck. (FeatureSet)
         """
         # Set the general attributes.
         self.game = game
-        self.ranks = card_class.ranks
-        self.suits = card_class.suits
-        self.card_re = card_class.card_re
-        # Fill the deck.
-        self.cards = []
-        self.card_map = {}
-        card_number = 0
-        for rank in self.ranks[1:]:
-            for suit in self.suits:
-                card = card_class(rank, suit, self)
-                self.cards.append(card)
-                self.card_map[card.rank + card.suit] = card
+        super(TrackingDeck, self).__init__(cards, jokers, decks, suffle_size, rank_set, suit_set)
         # Set the calcuated attribute.
-        self.max_rank = self.ranks[-1]
+        self.max_rank = self.rank_set.chars[-1]
         # Set the default attributes.
         self.in_play = []
-        self.discards = []
         self.last_order = self.cards[:]
 
     def __repr__(self):
         """Generate a computer readable text representation. (str)"""
-        # Get a card.
-        if self.in_play:
-            card = self.in_play[0]
-        elif self.cards:
-            card = self.cards[0]
-        else:
-            card = self.discards[0]
         # Get the class names.
         class_name = self.__class__.__name__
-        card_class_name = card.__class__.__name__
-        return '<{} of {}s for {!r}>'.format(class_name, card_class_name, self.game)
+        return '<{} for {!r}>'.format(class_name, card_class_name, self.game)
 
     def __str__(self):
         """Generate a human readable text representation. (str)"""
@@ -1064,6 +1018,32 @@ class TrackingDeck(Deck):
         # Generate the text.
         text = 'Deck of cards with {} {}, plus {} {} in play and {} {} discarded'
         return text.format(cards, card_text, in_play, play_text, discards, discard_text)
+
+    def _initial_cards(self):
+        """Add in the initial cards for the deck. (None)"""
+        # Add the base cards.
+        self.cards = []
+        self.card_map = {}
+        for deck in range(decks):
+            for rank in self.rank_set:
+                for suit in self.suit_set:
+                    card = TrackingCard(rank, suit, self, rank_set, suit_set)
+                    self.cards.append(card)
+                    self.card_map[card.up_text] = card
+        # Get the joker ranks and suits.
+        joker_ranks = self.rank_set.chars[:self.rank_set.skip]
+        if self.suit_set.skip:
+            joker_suits = self.suit_set.chars
+        else:
+            joker_suits = self.suit_set.chars[:self.suit_set.skip]
+        # Add the jokers.
+        for deck in range(decks):
+            for rank in joker_ranks:
+                for suit_index in range(self.jokers):
+                    suit = joker_suits[suit_index % len(card_class.suits)]
+                    joker = TrackingCard(joker_rank, suit, self, rank_set, suit_set)
+                    self.cards.append(joker)
+                    self.card_map[joker.up_text] = joker
 
     def deal(self, game_location, up = True, card_index = -1):
         """
