@@ -977,7 +977,7 @@ class TrackingDeck(Deck):
     force
     """
 
-    def __init__(self, cards = None, game = None, jokers = 0, decks = 1, shuffle_size = 0,
+    def __init__(self, cards = None, game = None, jokers = 0,
         rank_set = STANDARD_RANKS, suit_set = STANDARD_SUITS):
         """
         Fill the deck with a standard set of cards. (None)
@@ -992,7 +992,8 @@ class TrackingDeck(Deck):
         """
         # Set the general attributes.
         self.game = game
-        super(TrackingDeck, self).__init__(cards, jokers, decks, suffle_size, rank_set, suit_set)
+        super(TrackingDeck, self).__init__(cards, jokers, decks = 1, shuffle_size = 0,
+            rank_set = rank_set, suit_set = suit_set)
         # Set the calcuated attribute.
         self.max_rank = self.rank_set.chars[-1]
         # Set the default attributes.
@@ -1127,6 +1128,32 @@ class MultiTrackingDeck(TrackingDeck):
     find
     """
 
+    def __init__(self, cards = None, game = None, jokers = 0,
+        rank_set = STANDARD_RANKS, suit_set = STANDARD_SUITS):
+        """
+        Fill the deck with a standard set of cards. (None)
+
+        Parameters:
+        cards: The initial cards in the deck. (list of Card)
+        jokers: The number of jokers in the deck. (int)
+        decks: The number of idential decks shuffled together. (int)
+        shuffle_size: The number of cards left that triggers a shuffle. (int)
+        rank_set: The rank information for cards in the deck. (FeatureSet)
+        suit_set: The suit information for cards in the deck. (FeatureSet)
+        """
+        # Set the general attributes.
+        self.game = game
+        self.decks = decks
+        super(TrackingDeck, self).__init__(cards, jokers, decks = self.decks, shuffle_size = 0,
+            rank_set = rank_set, suit_set = suit_set)
+        # Set the calcuated attribute.
+        reg_text = '[{}][{}](?:-[twrf]?\d*)?'.format(self.rank_set.chars, self.suit_set.chars)
+        self.card_re = re.compile(reg_text, re.IGNORECASE)
+        self.max_rank = self.rank_set.chars[-1]
+        # Set the default attributes.
+        self.in_play = []
+        self.last_order = self.cards[:]
+
     def __init__(self, game, decks = 2, card_class = TrackingCard):
         """
         Set up the deck of cards. (None)
@@ -1159,6 +1186,33 @@ class MultiTrackingDeck(TrackingDeck):
         self.in_play = []
         self.discards = []
         self.last_order = self.cards[:]
+
+    def _initial_cards(self):
+        """Add in the initial cards for the deck. (None)"""
+        # Add the base cards.
+        self.cards = []
+        self.card_map = collections.defaultdict(list)
+        card_number = 0
+        for deck in range(decks):
+            for rank in self.ranks[1:]:
+                for suit in self.suits:
+                    card = card_class(rank, suit, self)
+                    self.cards.append(card)
+                    self.card_map[card.up_text].append(card)
+        # Get the joker ranks and suits.
+        joker_ranks = self.rank_set.chars[:self.rank_set.skip]
+        if self.suit_set.skip:
+            joker_suits = self.suit_set.chars
+        else:
+            joker_suits = self.suit_set.chars[:self.suit_set.skip]
+        # Add the jokers.
+        for deck in range(decks):
+            for rank in joker_ranks:
+                for suit_index in range(self.jokers):
+                    suit = joker_suits[suit_index % len(card_class.suits)]
+                    joker = TrackingCard(joker_rank, suit, self, rank_set, suit_set)
+                    self.cards.append(joker)
+                    self.card_map[joker.up_text].append(joker)
 
     def find(self, card_text):
         """
