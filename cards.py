@@ -1004,7 +1004,7 @@ class TrackingDeck(Deck):
         """Generate a computer readable text representation. (str)"""
         # Get the class names.
         class_name = self.__class__.__name__
-        return '<{} for {!r}>'.format(class_name, card_class_name, self.game)
+        return '<{} for {!r}>'.format(class_name, self.game)
 
     def __str__(self):
         """Generate a human readable text representation. (str)"""
@@ -1152,49 +1152,16 @@ class MultiTrackingDeck(TrackingDeck):
         self.in_play = []
         self.last_order = self.cards[:]
 
-    def __init__(self, game, decks = 2, card_class = TrackingCard):
-        """
-        Set up the deck of cards. (None)
-
-        Parameters:
-        game: The game the card is a part of. (game.Game)
-        decks: The number of decks shuffled together. (int)
-        card_class: The type of card in the deck. (TrackingCard)
-        """
-        # Set the specified attributes.
-        self.game = game
-        self.decks = decks
-        # Extract attributes from the card class.
-        self.ranks = card_class.ranks
-        self.suits = card_class.suits
-        reg_text = '[{}][{}](?:-[twrf]?\d*)?'
-        self.card_re = re.compile(reg_text.format(self.ranks, self.suits), re.IGNORECASE)
-        # Fill the deck.
-        self.cards = []
-        self.card_map = collections.defaultdict(list)
-        card_number = 0
-        for deck in range(decks):
-            for rank in self.ranks[1:]:
-                for suit in self.suits:
-                    card = card_class(rank, suit, self)
-                    self.cards.append(card)
-                    self.card_map[card.rank + card.suit].append(card)
-        self.max_rank = self.ranks[-1]
-        # set the default attributes
-        self.in_play = []
-        self.discards = []
-        self.last_order = self.cards[:]
-
     def _initial_cards(self):
         """Add in the initial cards for the deck. (None)"""
         # Add the base cards.
         self.cards = []
         self.card_map = collections.defaultdict(list)
         card_number = 0
-        for deck in range(decks):
+        for deck in range(self.decks):
             for rank in self.ranks[1:]:
                 for suit in self.suits:
-                    card = card_class(rank, suit, self)
+                    card = Card(rank, suit, self, self.rank_set, self.suit_set)
                     self.cards.append(card)
                     self.card_map[card.up_text].append(card)
         # Get the joker ranks and suits.
@@ -1204,7 +1171,7 @@ class MultiTrackingDeck(TrackingDeck):
         else:
             joker_suits = self.suit_set.chars[:self.suit_set.skip]
         # Add the jokers.
-        for deck in range(decks):
+        for deck in range(self.decks):
             for rank in joker_ranks:
                 for suit_index in range(self.jokers):
                     suit = joker_suits[suit_index % len(card_class.suits)]
