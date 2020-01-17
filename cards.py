@@ -167,7 +167,7 @@ class FeatureSet(object):
         diff = self.chars.index(char) - self.chars.index(other_char)
         # Account for wraping.
         if self.wrap and diff < 0:
-            diff += len(self) - self.skip
+            diff += len(self) - self.skip + 1
         return diff == n
 
     def below(self, char, other_char, n = 1):
@@ -182,7 +182,7 @@ class FeatureSet(object):
         diff = self.chars.index(other_char) - self.chars.index(char)
         # Account for wraping.
         if self.wrap and diff < 0:
-            diff += len(self) - self.skip
+            diff += len(self) - self.skip + 1
         return diff == n
 
     def copy(self):
