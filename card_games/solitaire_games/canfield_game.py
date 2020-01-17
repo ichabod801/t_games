@@ -16,6 +16,7 @@ Canfield: A game of Canfield. (Solitaire)
 """
 
 
+from ... import cards
 from ... import options
 from . import solitaire_game as solitaire
 
@@ -175,7 +176,7 @@ class Canfield(solitaire.Solitaire):
 
     def set_options(self):
         """Define the game options. (None)"""
-        self.options = {'num-reserve': 1, 'wrap-ranks': True}
+        self.options = {'num-reserve': 1, 'deck-specs': (0, cards.STANDARD_WRAP_RANKS)}
         # Set up the deal options.
         self.option_set.add_option('foundation', ['f'], options.upper, default = '',
             valid = 'A23456789TJQK',
