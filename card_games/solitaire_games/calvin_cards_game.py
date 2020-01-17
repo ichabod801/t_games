@@ -398,7 +398,7 @@ class CalvinCards(solitaire.Solitaire):
     def set_solitaire(self):
         """Randomize the beginning of the solitaire game. (None)"""
         # Randomize the options
-        self.options = {'deck-spec': [None, self, 0, cards.STANDARD_WRAP_RANKS], 'num-foundations': 4}
+        self.options = {'deck-specs': [0, cards.STANDARD_WRAP_RANKS], 'num-foundations': 4}
         self.options['wrap-ranks'] = True
         self.options['num-tableau'] = random.randint(self.min_tableau, self.max_tableau)
         self.options['num-reserve'] = random.randint(self.min_reserve, self.max_reserve)

@@ -1445,7 +1445,7 @@ class MultiSolitaire(Solitaire):
         self.max_passes = options['max-passes']
         # Initialize the derived attributes.
         # Initialze the deck.
-        self.deck = cards.MultiTrackingDeck(self, *options['deck-specs'])
+        self.deck = cards.MultiTrackingDeck(None, self, *options['deck-specs'])
         deal_num = -1
         deal_text_index = self.option_set.settings_text.find('deal-num')
         if deal_text_index != -1:
