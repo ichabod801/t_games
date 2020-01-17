@@ -1161,7 +1161,7 @@ class MultiTrackingDeck(TrackingDeck):
         for deck in range(self.decks):
             for rank in self.ranks[1:]:
                 for suit in self.suits:
-                    card = Card(rank, suit, self, self.rank_set, self.suit_set)
+                    card = TrackingCard(rank, suit, self, self.rank_set, self.suit_set)
                     self.cards.append(card)
                     self.card_map[card.up_text].append(card)
         # Get the joker ranks and suits.
