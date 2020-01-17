@@ -802,7 +802,6 @@ class Solitaire(game.Game):
             self.human.tell('The random deal number is {}.'.format(deal_num))
         if deal_num:
             self.option_set.settings_text += ' deal-num={}'.format(deal_num)
-        print(self.deck)
         self.deck.shuffle(number = deal_num)
         # Initialize the variable game locations
         self.tableau = [[] for pile in range(options['num-tableau'])]
