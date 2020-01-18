@@ -569,6 +569,7 @@ class Deck(Pile):
     discard: Discard a card to the discard pile. (None)
     force: Remove a particular card from the deck. (Card)
     pick: Pick a card from the deck. (Card)
+    player_hands: Create a set of hands for a list of players. (dict)
     shuffle: Shuffle the discards back into the deck. (None)
 
     Overridden Methods:
@@ -748,9 +749,11 @@ class Hand(Pile):
     Methods:
     discard: Discard a card back to the deck. (None)
     draw: Draw a card from the deck. (None)
+    rank_in: Check that a rank is in the hand. (bool)
     score: Score the hand. (int)
     shift: Pass a card to another hand. (None)
     show_player: Show the hand to the player playing it. (str)
+    suit_in: Check that a suit is in the hand. (bool)
 
     Overridden Methods:
     __init__
@@ -849,6 +852,16 @@ class Hand(Pile):
             self.deck.discard(self.cards[card_index], up)
             del self.cards[card_index]
 
+    def rank_in(self, rank):
+        """
+        Check that a rank is in the hand. (bool)
+
+        Parameters:
+        rank: the rank to check for. (str)
+        """
+        rank = rank.upper()
+        return any(card.rank == rank for card in self.cards)
+
     def score(self):
         """Score the hand. (int)"""
         # Default score is high card.
@@ -867,6 +880,16 @@ class Hand(Pile):
     def show_player(self):
         """Show the hand to the player playing it. (str)"""
         return ', '.join([card.up_text for card in self.cards])
+
+    def suit_in(self, suit):
+        """
+        Check that a suit is in the hand. (bool)
+
+        Parameters:
+        suit: the suit to check for. (str)
+        """
+        suit = suit.upper()
+        return any(card.suit == suit for card in self.cards)
 
 
 class TrackingCard(Card):

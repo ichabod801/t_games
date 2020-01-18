@@ -745,7 +745,7 @@ class Hearts(game.Game):
         if self.trick:
             # Check that the card follows suit, or that the player is void in that suit.
             trick_suit = self.trick[0].suit
-            if to_play.suit != trick_suit and list(filter(lambda card: card.suit == trick_suit, hand)):
+            if to_play.suit != trick_suit and hand.suit_in(trick_suit):
                 player.error('You must play a card of the suit led.')
                 return True
             hand.shift(to_play, self.trick)
