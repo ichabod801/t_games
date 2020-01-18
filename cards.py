@@ -749,6 +749,7 @@ class Hand(Pile):
     Methods:
     discard: Discard a card back to the deck. (None)
     draw: Draw a card from the deck. (None)
+    find: Get a subset of the cards in the hand. (Hand)
     rank_in: Check that a rank is in the hand. (bool)
     score: Score the hand. (int)
     shift: Pass a card to another hand. (None)
@@ -851,6 +852,38 @@ class Hand(Pile):
             card_index = self.cards.index(card)
             self.deck.discard(self.cards[card_index], up)
             del self.cards[card_index]
+
+    def find(self, rank = '', suit = '', not_rank = '', not_suit = '', regex = ''):
+        """
+        Get a subset of the cards in the hand. (Hand)
+
+        Parameters are processed in the following order: rank, suit, re, not_rank,
+        not_suit. Without parameters it returns a shallow copy of the hand.
+
+        Parameters:
+        rank: The ranks to include in the subset. (str)
+        suit: The suits to include in the subset. (str)
+        not_rank: The ranks to exclude from the subset. (str)
+        not_suit: The suits to exclude from the subset. (str)
+        regex: A regular expression each card's up_text must match. (str)
+        """
+        # Start with the full hand.
+        cards = self.cards[:]
+        # Apply postive filters.
+        if rank:
+            cards = [card for card in cards if card.rank in rank]
+        elif suit:
+            cards = [card for card in cards if card.suit in suit]
+        elif regex:
+            regex = re.compile(regex)
+            cards = [card for card in cards if regex.match(card.up_text)]
+        # Apply negative filters.
+        elif not_rank:
+            cards = [card for card in cards if card.rank not in not_rank]
+        elif not_suit:
+            cards = [card for card in cards if card.suit not in not_suit]
+        # Return the cards as a Hand.
+        return self._child(cards)
 
     def rank_in(self, rank):
         """

@@ -214,13 +214,13 @@ class HeartBot(player.Bot):
         """Play a card to an existing trick. (str)"""
         # Get the cards matching the suit led.
         trick_starter = self.game.trick[0]
-        trick_cards = [card for card in self.game.trick if card.suit == trick_starter.suit]
+        trick_cards = self.game.trick.find(suit = trick_starter.suit)
         trick_max = sorted(trick_cards, key = lambda card: card.rank_num)[-1]
-        point_cards = [card for card in self.game.trick if card.suit == 'H' or card == 'QS']
+        point_cards = [card for card in self.game.trick if card.value > 0]
         if self.game.joker_points:
-            point_cards.extend([card for card in self.game.trick if card.rank == 'X'])
+            point_cards.extend(self.game.trick.find(rank = 'X'))
         last_player = len(self.game.trick) + 1 == len(self.game.players)
-        playable = [card for card in self.hand if card.suit == trick_starter.suit]
+        playable = self.hand.find(suit = trick_starter.suit)
         if playable:
             # Get the playable cards that lose.
             playable.sort(key = lambda card: card.rank_num)
@@ -287,9 +287,9 @@ class HeartBot(player.Bot):
         if self.game.keep_spades:
             to_pass = []
         else:
-            to_pass = [card for card in self.hand if card in ('QS', 'KS', 'AS')]
+            to_pass = self.hand.find(regex = '[QKA]S')
         # Get rid of high hearts
-        hearts = [card for card in self.hand if card.suit == 'H']
+        hearts = self.hand.find(suit = 'H')
         hearts.sort(key = lambda card: card.rank_num, reverse = True)
         to_pass.extend(hearts)
         # If that's not enough, get rid of other high cards.
@@ -378,7 +378,7 @@ class SmeartBot(HeartBot):
             standard.up = True
         base_check = standard.suit == 'H' or standard in self.danger_cards
         if base_check or (self.game.joker_points and standard.rank == 'X'):
-            suit_cards = [card for card in self.game.trick if card.suit == self.game.trick[0].suit]
+            suit_cards = self.game.trick.find(suit = self.game.trick[0].suit)
             suit_cards.sort(key = lambda card: card.rank_num)
             if not suit_cards:
                 return standard
@@ -387,7 +387,7 @@ class SmeartBot(HeartBot):
             best_player = self.game.players[self.game.player_index - len(self.game.trick) + best_index]
             self.hand.sort(key = lambda card: card.rank_num)
             if best_player.name == self.shooter:
-                playable = [card for card in self.hand if card.suit == self.game.trick[0].suit]
+                playable = self.hand.find(suit = self.game.trick[0].suit)
                 if playable:
                     winners = [card for card in playable if card.rank_num > best_card.rank_num]
                     if winners:
@@ -397,7 +397,7 @@ class SmeartBot(HeartBot):
                     else:
                         return playable[0]
                 else:
-                    non_points = [card for card in self.hand if card.suit != 'H' and card != 'QS']
+                    non_points = [card for card in self.hand if card.value == 0]
                     if self.game.joker_points:
                         non_points = [card for card in non_points if card.rank != 'X']
                     if non_points:
