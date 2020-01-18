@@ -828,12 +828,15 @@ class Hand(Pile):
 
     def draw(self, up = True):
         """
-        Draw a card from the deck. (None)
+        Draw a card from the deck. (Card)
+
+        The return value is the card drawn.
 
         Parameters:
         up: A flag for dealing the card face up. (None)
         """
         self.cards.append(self.deck.deal(up = up))
+        return self.cards[-1]
 
     def discard(self, card = None, up = True):
         """

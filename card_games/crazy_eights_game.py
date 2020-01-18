@@ -421,8 +421,8 @@ class CrazyEights(game.Game):
             return False
         # Draw the card.
         hand = self.hands[player.name]
-        hand.draw()
-        player.tell('You drew the {}.'.format(hand.cards[-1]))
+        new_card = hand.draw()
+        player.tell('You drew the {}.'.format(new_card))
         # Sort the human's cards.
         if player.name == self.human.name:
             hand.sort()
