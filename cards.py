@@ -599,7 +599,7 @@ class Deck(Pile):
         self.card_re = re.compile('[{}][{}]'.format(self.ranks, self.suits), re.IGNORECASE)
         # Add the standard cards.
         if cards is None:
-            self._initial_cards()
+            self._initial_cards(decks)
         else:
             self.cards = cards
         # Start with an empty discard pile.
@@ -618,8 +618,13 @@ class Deck(Pile):
         child.discards = self.discards[:]
         return child
 
-    def _initial_cards(self):
-        """Add in the initial cards for the deck. (None)"""
+    def _initial_cards(self, decks):
+        """
+        Add in the initial cards for the deck. (None)
+
+        Parameters:
+        decks: How many of each card to include. (int)
+        """
         # Add the base cards.
         self.cards = []
         for deck in range(decks):
@@ -699,6 +704,15 @@ class Deck(Pile):
         card = self.cards.pop(card_index % len(self.cards))
         card.up = up
         return card
+
+    def player_hands(self, players):
+        """
+        Create a set of hands for a list of players. (dict of Player: Hand)
+
+        Parameters:
+        players: The players to make hands for. (list of player.Player)
+        """
+        return {player: Hand(deck = self) for player in players}
 
     def shuffle(self, number = None):
         """

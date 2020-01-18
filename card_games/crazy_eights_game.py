@@ -784,7 +784,7 @@ class CrazyEights(game.Game):
         self.fuzzy_ranks = False
         self.last_player = None
         # Deal the hands.
-        self.hands = {player.name: cards.Hand(deck = self.deck) for player in self.players}
+        self.hands = self.deck.player_hands(self.players)
         self.deal()
         # Randomize the players.
         random.shuffle(self.players)
