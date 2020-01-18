@@ -751,10 +751,12 @@ class Hand(Pile):
     draw: Draw a card from the deck. (None)
     find: Get a subset of the cards in the hand. (Hand)
     rank_in: Check that a rank is in the hand. (bool)
+    ranks: Get the ranks in the hand. (list of str)
     score: Score the hand. (int)
     shift: Pass a card to another hand. (None)
     show_player: Show the hand to the player playing it. (str)
     suit_in: Check that a suit is in the hand. (bool)
+    suits: Get the suits in the hand. (list of str)
 
     Overridden Methods:
     __init__
@@ -898,6 +900,10 @@ class Hand(Pile):
         rank = rank.upper()
         return any(card.rank == rank for card in self.cards)
 
+    def ranks(self):
+        """Get the ranks in the hand. (list of str)"""
+        return [card.rank for card in self.cards]
+
     def score(self):
         """Score the hand. (int)"""
         # Default score is high card.
@@ -926,6 +932,10 @@ class Hand(Pile):
         """
         suit = suit.upper()
         return any(card.suit == suit for card in self.cards)
+
+    def suits(self):
+        """Get the suits in the hand. (list of str)"""
+        return [card.suit for card in self.cards]
 
 
 class TrackingCard(Card):
