@@ -140,9 +140,7 @@ class NinetyNine(game.Game):
             hand.discard()
         self.deck.shuffle()
         # Deal three cards to each player still in the game.
-        for card in range(3):
-            for player in self.players:
-                self.hands[player.name].draw()
+        self.deck.deal_n_each(3, self.players)
 
     def do_gipf(self, arguments):
         """

@@ -566,6 +566,7 @@ class Deck(Pile):
     Methods:
     cut: Cut the deck. (None)
     deal: Deal a card from the deck. (Card)
+    deal_n_each: Deal n cards to each player. (None or list of Card)
     discard: Discard a card to the discard pile. (None)
     force: Remove a particular card from the deck. (Card)
     pick: Pick a card from the deck. (Card)
@@ -669,6 +670,29 @@ class Deck(Pile):
         card = self.cards.pop()
         card.up = up
         return card
+
+    def deal_n_each(self, n, players = None, up = True):
+        """
+        Deal n cards to each player. (None or list of Card)
+
+        A list of n cards is returned if players is None. Otherwise it is assumed that
+        the game the players are part of has a hands dictionary with Players as keys
+        and Hands as values.
+
+        Paramters:
+        n: How many cards to deal to each player. (int)
+        players: The players to deal cards to. (list of player.Player)
+        up: A flag for dealing the cards face up. (bool)
+        """
+        # Check the players paramter.
+        if not players:
+            # Deal n cards.
+            return [self.deal(up = up) for card in range(n)]
+        else:
+            # Deal n cards to each player.
+            for card in range(n):
+                for player, hand in players[0].game.hands.items():
+                    hand.draw()
 
     def discard(self, card, up = False):
         """
