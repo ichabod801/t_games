@@ -607,7 +607,7 @@ class Deck(Pile):
         # Extract attributes from the feature sets.
         self.ranks = self.rank_set.chars
         self.suits = self.suit_set.chars
-        self.card_re = re.compile('[{}][{}]'.format(self.ranks, self.suits), re.IGNORECASE)
+        self.card_re = re.compile('\b[{}][{}]\b'.format(self.ranks, self.suits), re.IGNORECASE)
         # Add the standard cards.
         if cards is None:
             self._initial_cards(decks)
@@ -1280,7 +1280,7 @@ class MultiTrackingDeck(TrackingDeck):
         super(TrackingDeck, self).__init__(cards, jokers, decks = self.decks, shuffle_size = 0,
             rank_set = rank_set, suit_set = suit_set)
         # Set the calcuated attribute.
-        reg_text = '[{}][{}](?:-[twrf]?\d*)?'.format(self.rank_set.chars, self.suit_set.chars)
+        reg_text = '\b[{}][{}](?:-[twrf]?\d*)?\b'.format(self.rank_set.chars, self.suit_set.chars)
         self.card_re = re.compile(reg_text, re.IGNORECASE)
         self.max_rank = self.rank_set.chars[-1]
         # Set the default attributes.
