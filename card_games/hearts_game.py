@@ -215,7 +215,7 @@ class HeartBot(player.Bot):
         # Get the cards matching the suit led.
         trick_starter = self.game.trick[0]
         trick_cards = self.game.trick.find(suit = trick_starter.suit)
-        trick_max = sorted(trick_cards, key = lambda card: card.rank_num)[-1]
+        trick_max = sorted(trick_cards, key = cards.by_rank)[-1]
         point_cards = [card for card in self.game.trick if card.value > 0]
         if self.game.joker_points:
             point_cards.extend(self.game.trick.find(rank = 'X'))
@@ -223,7 +223,7 @@ class HeartBot(player.Bot):
         playable = self.hand.find(suit = trick_starter.suit)
         if playable:
             # Get the playable cards that lose.
-            playable.sort(key = lambda card: card.rank_num)
+            playable.sort(key = cards.by_rank)
             losers = [card for card in playable if card.rank_num < trick_max.rank_num]
             # Play the highest possible loser, or the lowest possible card in hopes of losing.
             if self.game.random_move:
@@ -254,18 +254,18 @@ class HeartBot(player.Bot):
             # Otherwise get rid of hearts if you can.
             else:
                 hearts = [card for card in self.hand if card.suit == 'H']
-                hearts.sort(key = lambda card: card.rank_num)
+                hearts.sort(key = cards.by_rank)
                 if hearts:
                     card = hearts[-1]
                 else:
                     # If you have no penalty cards, get rid of the highest card you can.
-                    card = sorted(self.hand, key = lambda card: card.rank_num)[-1]
+                    card = sorted(self.hand, key = cards.by_rank)[-1]
         return card
 
     def lead(self):
         """Play a card to start a trick. (cards.Card)"""
         # Open with the lowest card you have in the hopes of losing.
-        self.hand.sort(key = lambda card: card.rank_num)
+        self.hand.sort(key = cards.by_rank)
         play_index = 0
         card = self.hand[play_index]
         # Don't lead with jokers if it's banned.
@@ -290,14 +290,14 @@ class HeartBot(player.Bot):
             to_pass = self.hand.find(regex = '[QKA]S')
         # Get rid of high hearts
         hearts = self.hand.find(suit = 'H')
-        hearts.sort(key = lambda card: card.rank_num, reverse = True)
+        hearts.sort(key = cards.by_rank, reverse = True)
         to_pass.extend(hearts)
         # If that's not enough, get rid of other high cards.
         if len(to_pass) < self.game.num_pass:
             other = [card for card in self.hand if card not in to_pass]
             if self.game.keep_spades:
                 other = [card for card in other if card not in ('QS', 'KS', 'AS')]
-            other.sort(key = lambda card: card.rank_num, reverse = True)
+            other.sort(key = cards.by_rank, reverse = True)
             to_pass.extend(other)
         return to_pass[:self.game.num_pass]
 
@@ -379,13 +379,13 @@ class SmeartBot(HeartBot):
         base_check = standard.suit == 'H' or standard in self.danger_cards
         if base_check or (self.game.joker_points and standard.rank == 'X'):
             suit_cards = self.game.trick.find(suit = self.game.trick[0].suit)
-            suit_cards.sort(key = lambda card: card.rank_num)
+            suit_cards.sort(key = cards.by_rank)
             if not suit_cards:
                 return standard
             best_card = suit_cards[-1]
             best_index = self.game.trick.index(best_card)
             best_player = self.game.players[self.game.player_index - len(self.game.trick) + best_index]
-            self.hand.sort(key = lambda card: card.rank_num)
+            self.hand.sort(key = cards.by_rank)
             if best_player.name == self.shooter:
                 playable = self.hand.find(suit = self.game.trick[0].suit)
                 if playable:
@@ -500,7 +500,7 @@ class SmeartBot(HeartBot):
 
     def shoot(self):
         """Make a move trying to shoot the moon. (cards.Card)"""
-        self.hand.cards.sort(key = lambda card: card.rank_num)
+        self.hand.cards.sort(key = cards.by_rank)
         if self.game.trick:
             # Try to win the trick.
             matching = [card for card in self.hand if card.suit == self.game.trick[0].suit]
@@ -854,7 +854,7 @@ class Hearts(game.Game):
         """Handle the play option settings for this game. (None)"""
         if self.low_club:
             clubs = [card for card in self.deck if card.suit == 'C']
-            clubs.sort(key = lambda card: card.rank_num, reverse = True)
+            clubs.sort(key = cards.by_rank, reverse = True)
             self.low_club = clubs.pop()
             while self.jokers_follow and self.low_club.rank == 'X':
                 self.low_club = clubs.pop()

@@ -24,6 +24,13 @@ TrackOneSuit: A tracking card with only one suit. (TrackingCard)
 TrackTwoSuit: A tracking card with only two suits. (TrackingCard)
 TrackingDeck: A deck that keeps track of the location of its cards. (Deck)
 MultiTrackingDeck: A deck that keeps track of multiple duplicate cards. (Deck)
+
+Functions
+by_rank: A key function for sorting Cards by rank. (int)
+by_rank_suit: A key function for sorting Cards by rank then suit. (tuple)
+by_suit: A key function for sorting Cards by suit. (int)
+by_suit_rank: A key function for sorting Cards by suit then rank. (tuple)
+by_value: A key function for sorting Cards by value. (int)
 """
 
 
@@ -754,7 +761,7 @@ class Deck(Pile):
         else:
             # Do a C-style shuffle.
             rand = CRand(number)
-            self.cards.sort(key = lambda card: (card.ranks.index(card.rank), card.suit))
+            self.cards.sort(key = by_rank_suit)
             while self.cards:
                 swap = rand() % len(self.cards)
                 self.cards[swap], self.cards[-1] = self.cards[-1], self.cards[swap]
@@ -1364,6 +1371,52 @@ class MultiTrackingDeck(TrackingDeck):
             location_type = location_text
             location_count = 0
         return location_type, location_count
+
+
+def by_rank(card):
+    """
+    A key function for sorting Cards by rank. (int)
+
+    Parameters:
+    card: The card being sorted. (Card)
+    """
+    return card.rank_num
+
+def by_rank_suit(card):
+    """
+    A key function for sorting Cards by rank then suit. (tuple of int)
+
+    Parameters:
+    card: The card being sorted. (Card)
+    """
+    return (card.rank_num, card.suit_num)
+
+def by_suit(card):
+    """
+    A key function for sorting Cards by suit. (int)
+
+    Parameters:
+    card: The card being sorted. (Card)
+    """
+    return card.suit_num
+
+def by_suit_rank(card):
+    """
+    A key function for sorting Cards by suit then rank. (tuple of int)
+
+    Parameters:
+    card: The card being sorted. (Card)
+    """
+    return (card.suit_num, card.rank_num)
+
+def by_value(card):
+    """
+    A key function for sorting Cards by value. (int)
+
+    Parameters:
+    card: The card being sorted. (Card)
+    """
+    return card.value
 
 
 if __name__ == '__main__':
