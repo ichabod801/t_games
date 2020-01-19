@@ -31,6 +31,7 @@ by_rank_suit: A key function for sorting Cards by rank then suit. (tuple)
 by_suit: A key function for sorting Cards by suit. (int)
 by_suit_rank: A key function for sorting Cards by suit then rank. (tuple)
 by_value: A key function for sorting Cards by value. (int)
+parse_text: Parse text looking for a card. (Card or list of Card)
 """
 
 
@@ -576,6 +577,7 @@ class Deck(Pile):
     deal_n_each: Deal n cards to each player. (None or list of Card)
     discard: Discard a card to the discard pile. (None)
     force: Remove a particular card from the deck. (Card)
+    parse_text: Parse text looking for a card. (Card or list of Card)
     pick: Pick a card from the deck. (Card)
     player_hands: Create a set of hands for a list of players. (dict)
     shuffle: Shuffle the discards back into the deck. (None)
@@ -725,6 +727,15 @@ class Deck(Pile):
         card.up = up
         return card
 
+    def parse_text(self, text):
+        """
+        Parse text looking for a card. (Card or list of Card)
+
+        Parameters:
+        text: The text to parse. (str)
+        """
+        return parse_text(text, self.card_re)
+
     def pick(self, card_index, up = True):
         """
         Pick a card from the deck. (Card)
@@ -781,6 +792,7 @@ class Hand(Pile):
     discard: Discard a card back to the deck. (None)
     draw: Draw a card from the deck. (None)
     find: Get a subset of the cards in the hand. (Hand)
+    parse_text: Parse text looking for a card. (Card or list of Card)
     rank_in: Check that a rank is in the hand. (bool)
     ranks: Get the ranks in the hand. (list of str)
     score: Score the hand. (int)
@@ -920,6 +932,15 @@ class Hand(Pile):
             cards = [card for card in cards if card.suit not in not_suit]
         # Return the cards as a Hand.
         return self._child(cards)
+
+    def parse_text(self, text):
+        """
+        Parse text looking for a card. (Card or list of Card)
+
+        Parameters:
+        text: The text to parse. (str)
+        """
+        return parse_text(text, self.deck.card_re)
 
     def rank_in(self, rank):
         """
@@ -1417,6 +1438,23 @@ def by_value(card):
     card: The card being sorted. (Card)
     """
     return card.value
+
+def parse_text(text, card_re = None):
+    """
+    Parse text looking for a card. (Card or list of Card)
+
+    Parameters:
+    text: The text to parse. (str)
+    card_re: A regular expression matching a card. (re.SRE_Pattern)
+    """
+    if card_re is None:
+        re_text = '\b[{}][{}]\b'.format(STANDARD_RANKS.chars, STANDARD_SUITS.chars)
+        card_re = re.compile(re_text, re.IGNORECASE)
+    cards = [Card(*match) for match in card_re.findall(text)]
+    if len(cards) == 1:
+        return cards[0]
+    else:
+        return cards
 
 
 if __name__ == '__main__':
