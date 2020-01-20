@@ -97,9 +97,13 @@ class FeatureSet(object):
     wrap: A flag for ranks being wrappable. (bool)
 
     Methods:
+    above: Check that this card is n ranks above another card. (bool)
+    below: Check that this card is n ranks below another card. (bool)
     copy: Make an independent copy of the FeatureSet. (FeatureSet)
     index: Give the feature index of a character. (int)
     item: Iterate over all the items in the feature set. (iterator)
+    next: Get the character after a given one. (str)
+    previous: Get the character before a given one. (str)
 
     Overwritten Methods
     __init__
@@ -218,6 +222,37 @@ class FeatureSet(object):
                 yield (index, char, self.names[char], self.values[char], self.colors[char])
         return iter_items()
 
+    def next(self, char):
+        """
+        Get the character after a given one. (str)
+
+        Parameters:
+        char: The starting character. (str)
+        """
+        new_num = (self.chars.index(char) + 1) % len(self.chars)
+        if new_num < self.skip:
+            if self.wrap:
+                new_num = self.skip
+            else:
+                raise IndexError('There is no higher character than {!r}.'.format(char))
+        return self.chars[new_num]
+
+    def previous(self, char):
+        """
+        Get the character before a given character. (str)
+
+        Parameters:
+        char: The starting character. (str)
+        """
+        new_num = self.chars.index(char) - 1
+        if new_num < self.skip:
+            if self.wrap:
+                new_num = len(self.chars) - 1
+            else:
+                raise IndexError('There is no lower character than {!r}.'.format(char))
+        return self.chars[new_num]
+
+
 ONE_SUIT = FeatureSet('S', ['Spades'], colors = 'B')
 
 STANDARD_RANKS = FeatureSet('XA23456789TJQK',
@@ -254,6 +289,8 @@ class Card(object):
     Methods:
     above: Check that this card is n ranks above another card. (bool)
     below: Check that this card is n ranks below another card. (bool)
+    next: Get the next card in rank order. (Card)
+    previous: Get the previous card in rank order. (Card)
 
     Overridden Methods:
     __init__
@@ -419,6 +456,15 @@ class Card(object):
         other: The card to compare with. (Card)
         """
         return self.rank_set.below(self.rank, other.rank)
+
+    def next(self):
+        """Get the next card in rank order. (Card)"""
+        return Card(self.rank_set.next(self.rank), self.suit, self.down_text, self.rank_set, self.suit_set)
+
+    def previous(self):
+        """Get the previous card in rank order. (Card)"""
+        return Card(self.rank_set.previous(self.rank), self.suit, self.down_text, self.rank_set,
+            self.suit_set)
 
 
 class Pile(MutableSequence):
