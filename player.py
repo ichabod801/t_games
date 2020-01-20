@@ -333,12 +333,15 @@ class Humanoid(Player):
         if cmd and self.game.force_end:
             return valid[0] if valid else cards.Card('X', 'S')
         # Get a card regex.
-        if valid:
-            card_re = valid[0].card_re
+        if isinstance(valid, cards.Hand):
+            parser = valid.parse_text
+            print('using valid')
         elif hasattr(self.game, 'deck'):
-            card_re = self.game.deck.card_re
+            parser = self.game.deck.parse_text
+            print('using deck')
         else:
-            card_re = None
+            parser = cards.parse_text
+            print('using default')
         # Ask until you get a valid answer.
         while True:
             card_text = self.ask(prompt).strip()
@@ -346,7 +349,7 @@ class Humanoid(Player):
             if not card_text and default is not None:
                 return default
             # Convert to a card.
-            card = cards.parse_text(card_text, card_re)
+            card = parser(card_text)
             if isinstance(card, cards.Card):
                 return card
             elif card:
