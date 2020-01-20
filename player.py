@@ -32,6 +32,7 @@ import re
 import string
 
 from . import utility
+from . import cards
 
 
 # Convert 2.7 input to raw_input
@@ -342,7 +343,7 @@ class Humanoid(Player):
         while True:
             card_text = self.ask(prompt).strip()
             # Check for default.
-            if not response and default is not None:
+            if not card_text and default is not None:
                 return default
             # Convert to a card.
             card = cards.parse_text(card_text, card_re)

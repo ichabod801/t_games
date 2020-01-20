@@ -1496,7 +1496,7 @@ def parse_text(text, card_re = None):
     if card_re is None:
         re_text = '\\b[{}][{}]\\b'.format(STANDARD_RANKS.chars, STANDARD_SUITS.chars)
         card_re = re.compile(re_text, re.IGNORECASE)
-    cards = [Card(*match) for match in card_re.findall(text)]
+    cards = [Card(*match.upper()) for match in card_re.findall(text)]
     if len(cards) == 1:
         return cards[0]
     else:

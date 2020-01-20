@@ -181,13 +181,26 @@ class HeartBot(player.Bot):
         # Handle passing.
         if 'want to pass' in prompt:
             return ' '.join(str(card) for card in self.pass_cards())
-        # Handle passing cards.
-        elif prompt.startswith('What is'):
-            card = str(self.play())
-            return card
         # Handle dealer's choice of pass direction.
         elif prompt.startswith('What direction'):
             return self.pass_direction()
+        # Handle everything else.
+        else:
+            return super(HeartBot, self).ask(prompt)
+
+    def ask_card(self, prompt, valid = [], default = None, cmd = True):
+        """
+        Get a card from the player. (cards.Card)
+
+        Parameters:
+        prompt: The question asking for the card. (str)
+        valid: The valid values for the card. (container of int)
+        default: The default choice. (cards.Card or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        # Handle passing cards.
+        if prompt.startswith('What is'):
+            return self.play()
         # Handle everything else.
         else:
             return super(HeartBot, self).ask(prompt)
@@ -728,8 +741,10 @@ class Hearts(game.Game):
         hand = self.hands[player]
         #print(player.name, hand)
         # Check for a valid card.
-        if self.card_re.match(arguments):
-            card_text = arguments.upper()
+        if isinstance(arguments, cards.Card):
+            to_play = arguments
+        elif self.card_re.match(arguments):
+            to_play = self.deck.parse_text(arguments)
         else:
             player.error('{!r} is not a card in the deck.'.format(arguments))
             return True
@@ -738,10 +753,9 @@ class Hearts(game.Game):
             player.error('This is not the right time to play cards.')
             return True
         # Check for possession of the card.
-        elif card_text not in hand:
-            player.error('You do not have the {} to play.'.format(card_text))
+        elif to_play not in hand:
+            player.error('You do not have the {} to play.'.format(to_play))
             return True
-        to_play = hand.cards[hand.cards.index(card_text)]
         if self.trick:
             # Check that the card follows suit, or that the player is void in that suit.
             trick_suit = self.trick[0].suit
@@ -765,7 +779,7 @@ class Hearts(game.Game):
             if to_play.suit == 'H' and not self.hearts_broken and playable:
                 player.error('You cannot lead with a heart until they are broken.')
                 return True
-            hand.shift(card_text, self.trick)
+            hand.shift(to_play, self.trick)
             if player != self.human:
                 self.human.tell('{} lead with the {}.'.format(player, to_play))
 
@@ -988,10 +1002,10 @@ class Hearts(game.Game):
             if self.low_club and self.low_club in self.hands[player]:
                 if player == self.human:
                     self.human.tell('You must play the {}.'.format(self.low_club))
-                move = self.low_club.up_text
+                move = self.low_club
             else:
-                move = player.ask('What is your play? ')
-            if self.card_re.match(move):
+                move = player.ask_card('What is your play? ')
+            if isinstance(move, cards.Card):
                 # Handle card text as plays.
                 go = self.do_play(move)
                 # Check for the trick being finished.
