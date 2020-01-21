@@ -178,11 +178,8 @@ class HeartBot(player.Bot):
         Parameters:
         prompt: The question to ask the bot. (str)
         """
-        # Handle passing.
-        if 'want to pass' in prompt:
-            return ' '.join(card.up_text for card in self.pass_cards())
         # Handle dealer's choice of pass direction.
-        elif prompt.startswith('What direction'):
+        if prompt.startswith('What direction'):
             return self.pass_direction()
         # Handle everything else.
         else:
@@ -198,12 +195,30 @@ class HeartBot(player.Bot):
         default: The default choice. (cards.Card or None)
         cmd: A flag for returning commands for processing. (bool)
         """
-        # Handle passing cards.
+        # Handle playing cards to a trick..
         if prompt.startswith('What is'):
             return self.play()
         # Handle everything else.
         else:
-            return super(HeartBot, self).ask_card(prompt)
+            return super(HeartBot, self).ask_card(prompt, valid, default, cmd)
+
+    def ask_card_list(self, prompt, valid = [], valid_lens = [], default = None, cmd = True):
+        """
+        Get a multiple card response from the player. (int)
+
+        Parameters:
+        prompt: The question asking for the card. (str)
+        valid: The valid values for the cards. (list of int)
+        valid_lens: The valid numbers of values. (list of int)
+        default: The default choice. (list or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        # Handle passing.
+        if 'want to pass' in prompt:
+            return self.pass_cards()
+        # Handle everything else.
+        else:
+            return super(HeartBot, self).ask_card_list(prompt, valid, valid_lens, default, cmd)
 
     def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
         """
@@ -715,7 +730,10 @@ class Hearts(game.Game):
         hand = self.hands[player]
         #print('{} passes {} from {}.'.format(player, arguments, hand))
         # Get the actual card objects.
-        cards = [card.strip().upper() for card in self.card_re.findall(arguments)]
+        if isinstance(arguments, str):
+            cards = self.deck.parse_text(arguments)
+        else:
+            cards = arguments
         # Make sure all of the cards are in their hand and legal.
         error = False
         for card in cards:
@@ -969,9 +987,13 @@ class Hearts(game.Game):
             else:
                 pass_text = self.pass_to[player]
             query = '\nWhich {} do you want to pass to {}? '
-            move = player.ask(query.format(utility.number_plural(self.num_pass, 'card'), pass_text))
-            # If the correct number of cards are found, pass them.
-            if len(self.card_re.findall(move)) == self.num_pass:
+            query = query.format(utility.number_plural(self.num_pass, 'card'), pass_text)
+            move = player.ask_card_list(query, valid = self.hands[player], valid_lens = [self.num_pass])
+            if isinstance(move, str):
+                # Treat strings as commands.
+                return self.handle_cmd(move)
+            else:
+                # If cards are returned, pass them.
                 go = self.do_pass(move)
                 # If everyone has set up a passing stack, actually pass the cards.
                 if all(self.passes.values()):
@@ -987,9 +1009,6 @@ class Hearts(game.Game):
                         # Note that self.dealer refers to the next dealer, to the left of the current one.
                         self.next_player = self.dealer
                 return go
-            else:
-                # If incorrect number of cards, try to run a command.
-                return self.handle_cmd(move)
         # Handle playing tricks
         elif self.phase == 'trick':
             # Display the game status.
