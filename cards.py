@@ -780,7 +780,7 @@ class Deck(Pile):
         Parameters:
         text: The text to parse. (str)
         """
-        return parse_text(text, self.card_re)
+        return parse_text(text, self)
 
     def pick(self, card_index, up = True):
         """
@@ -986,7 +986,7 @@ class Hand(Pile):
         Parameters:
         text: The text to parse. (str)
         """
-        return parse_text(text, self.deck.card_re)
+        return parse_text(text, self.deck)
 
     def rank_in(self, rank):
         """
@@ -1485,18 +1485,26 @@ def by_value(card):
     """
     return card.value
 
-def parse_text(text, card_re = None):
+def parse_text(text, deck = None):
     """
     Parse text looking for a card. (Card or list of Card)
 
     Parameters:
     text: The text to parse. (str)
-    card_re: A regular expression matching a card. (re.SRE_Pattern)
+    deck: A deck with rank and suit information (Deck or None)
     """
-    if card_re is None:
-        re_text = '\\b[{}][{}]\\b'.format(STANDARD_RANKS.chars, STANDARD_SUITS.chars)
+    if deck is None:
+        rank_set = STANDARD_RANKS
+        suit_set = STANDARD_SUITS
+        re_text = '\\b[{}][{}]\\b'.format(rank_set.chars, suit_set.chars)
         card_re = re.compile(re_text, re.IGNORECASE)
-    cards = [Card(*match.upper()) for match in card_re.findall(text)]
+    else:
+        rank_set = deck.rank_set
+        suit_set = deck.suit_set
+        card_re = deck.card_re
+    cards = []
+    for match in card_re.findall(text):
+        cards.append(Card(*match.upper(), rank_set = rank_set, suit_set = suit_set))
     if len(cards) == 1:
         return cards[0]
     else:

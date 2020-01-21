@@ -748,7 +748,6 @@ class Hearts(game.Game):
         else:
             player.error('{!r} is not a card in the deck.'.format(arguments))
             return True
-        print(to_play, repr(to_play), to_play.rank_num, to_play.suit_num)
         # Check for valid timing.
         if self.phase != 'trick':
             player.error('This is not the right time to play cards.')
