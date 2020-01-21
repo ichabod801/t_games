@@ -377,6 +377,7 @@ class Card(object):
         Return a formatted text version of the card. (str)
 
         The additional recognized format types are:
+            a: The full name with an indefinite article.
             d: The face down two-letter abbreviation.
             n: The full name.
             u: The face up two-letter abbreviation.

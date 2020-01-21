@@ -94,6 +94,7 @@ class Player(object):
     Methods:
     ask: Get information from the player. (str)
     ask_card: Get a card from the player. (cards.Card)
+    ask_card_list: Get a multiple card response from the player. (int)
     ask_int: Get an integer response from the player. (int)
     ask_int_list: Get a multiple integer response from the player. (int)
     ask_valid: Get and validate responses from the user. (str)
@@ -181,6 +182,19 @@ class Player(object):
         prompt: The question asking for the card. (str)
         valid: The valid values for the card. (container of int)
         default: The default choice. (cards.Card or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        raise BotError('Unexpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
+
+    def ask_card_list(self, prompt, valid = [], valid_lens = [], default = None, cmd = True):
+        """
+        Get a multiple card response from the player. (int)
+
+        Parameters:
+        prompt: The question asking for the card. (str)
+        valid: The valid values for the cards. (list of int)
+        valid_lens: The valid numbers of values. (list of int)
+        default: The default choice. (list or None)
         cmd: A flag for returning commands for processing. (bool)
         """
         raise BotError('Unexpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
@@ -288,6 +302,8 @@ class Humanoid(Player):
 
     Overridden Methods:
     ask
+    ask_card
+    ask_card_list
     ask_int
     ask_int_list
     ask_valid
@@ -325,7 +341,7 @@ class Humanoid(Player):
 
         Parameters:
         prompt: The question asking for the card. (str)
-        valid: The valid values for the card. (container of int)
+        valid: The valid values for the card. (container of cards.Card)
         default: The default choice. (cards.Card or None)
         cmd: A flag for returning commands for processing. (bool)
         """
@@ -345,7 +361,7 @@ class Humanoid(Player):
             # Check for default.
             if not card_text and default is not None:
                 return default
-            # Convert to a card.
+            # Convert to a cards.
             card = cards.parse_text(card_text, deck)
             if isinstance(card, cards.Card) and (card in valid or not valid):
                 return card
@@ -355,6 +371,47 @@ class Humanoid(Player):
                 return card_text
             else:
                 self.error('Please enter a valid card.')
+
+    def ask_card_list(self, prompt, valid = [], valid_lens = [], default = None, cmd = True):
+        """
+        Get a multiple card response from the human. (int)
+
+        Parameters:
+        prompt: The question asking for the card. (str)
+        valid: The valid values for the cards. (list of int)
+        valid_lens: The valid numbers of values. (list of int)
+        default: The default choice. (list or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        # Give a dummy answer if the game is over.
+        if cmd and self.game.force_end:
+            return valid[0] if valid else cards.Card('X', 'S')
+        # Get the deck to base the search on.
+        if isinstance(valid, cards.Hand):
+            deck = valid.deck
+        elif hasattr(self.game, 'deck'):
+            deck = self.game.deck
+        else:
+            deck = None
+        # Ask until you get a valid answer.
+        while True:
+            card_text = self.ask(prompt).strip()
+            # Check for default.
+            if not card_text and default is not None:
+                return default
+            # Convert to a cards.
+            cards_in = cards.parse_text(card_text, deck)
+            if isinstance(cards_in, cards.Card):
+                cards_in = [cards_in]
+            if isinstance(cards_in, cards.Hand):
+                if valid_lens and len(cards_in) not in valid_lens:
+                    player.error('Please enter {} cards.'.format(utility.oxford(valid_lens)))
+                elif [card for card in cards_in if card not in valid]:
+                    player.error('Not all of those cards are available.')
+                else:
+                    return cards_in
+            elif isinstance(cards_in, str) and cmd:
+                return card_text
 
     def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
         """
