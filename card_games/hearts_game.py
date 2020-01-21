@@ -180,7 +180,7 @@ class HeartBot(player.Bot):
         """
         # Handle passing.
         if 'want to pass' in prompt:
-            return ' '.join(str(card) for card in self.pass_cards())
+            return ' '.join(card.up_text for card in self.pass_cards())
         # Handle dealer's choice of pass direction.
         elif prompt.startswith('What direction'):
             return self.pass_direction()
@@ -203,7 +203,7 @@ class HeartBot(player.Bot):
             return self.play()
         # Handle everything else.
         else:
-            return super(HeartBot, self).ask(prompt)
+            return super(HeartBot, self).ask_card(prompt)
 
     def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
         """
@@ -242,7 +242,7 @@ class HeartBot(player.Bot):
             if self.game.random_move:
                 card = random.choice(playable)
             elif losers and 'QS' in losers:
-                card = 'QS'
+                card = self.game.deck.parse_text('QS')
             elif losers and last_player and not point_cards:
                 card = playable[-1]
                 if card == 'QS' and len(playable) > 1:
@@ -263,7 +263,7 @@ class HeartBot(player.Bot):
                 card = random.choice(self.hand.cards)
             # Get rid of the queen if you can.
             elif 'QS' in self.hand:
-                card = 'QS'
+                card = self.game.deck.parse_text('QS')
             # Otherwise get rid of hearts if you can.
             else:
                 hearts = [card for card in self.hand if card.suit == 'H']
@@ -452,7 +452,7 @@ class SmeartBot(HeartBot):
                 to_pass.append(self.game.low_club)
             # Always pass QS to your right.
             if self.game.this_pass == 'right' and 'QS' in self.hand and 'QS' not in to_pass:
-                to_pass.append('QS')
+                to_pass.append(self.game.deck.parse_text('QS'))
             # Watch out for the keep-spades option.
             if self.game.keep_spades:
                 to_pass = [card for card in to_pass if card not in ('QS', 'KS', 'AS')]
@@ -764,7 +764,7 @@ class Hearts(game.Game):
                 return True
             hand.shift(to_play, self.trick)
             if player != self.human:
-                self.human.tell('{} played the {}.'.format(player, to_play))
+                self.human.tell('{} played the {:u}.'.format(player, to_play))
         else:
             # Get the player's playable cards.
             playable = hand.cards[:]
