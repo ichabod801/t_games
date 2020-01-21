@@ -403,11 +403,11 @@ class Humanoid(Player):
             cards_in = cards.parse_text(card_text, deck)
             if isinstance(cards_in, cards.Card):
                 cards_in = [cards_in]
-            if isinstance(cards_in, cards.Hand):
+            if isinstance(cards_in, list):
                 if valid_lens and len(cards_in) not in valid_lens:
-                    player.error('Please enter {} cards.'.format(utility.oxford(valid_lens)))
+                    self.error('Please enter {} cards.'.format(utility.oxford(valid_lens)))
                 elif [card for card in cards_in if card not in valid]:
-                    player.error('Not all of those cards are available.')
+                    self.error('Not all of those cards are available.')
                 else:
                     return cards_in
             elif isinstance(cards_in, str) and cmd:

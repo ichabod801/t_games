@@ -989,6 +989,7 @@ class Hearts(game.Game):
             query = '\nWhich {} do you want to pass to {}? '
             query = query.format(utility.number_plural(self.num_pass, 'card'), pass_text)
             move = player.ask_card_list(query, valid = self.hands[player], valid_lens = [self.num_pass])
+            #print(move)
             if isinstance(move, str):
                 # Treat strings as commands.
                 return self.handle_cmd(move)
