@@ -360,7 +360,7 @@ class Card(object):
         """
         # Compare cards by rank and suit.
         if isinstance(other, Card):
-            return (self.rank_num, self.suit_num) == (other.rank_num, other.suit_num)
+            return (self.rank, self.suit) == (other.rank, other.suit)
         # Compare strings by str.
         elif isinstance(other, str):
             return self.up_text == other.upper()
