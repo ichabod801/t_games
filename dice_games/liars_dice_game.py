@@ -29,7 +29,7 @@ import random
 from .. import dice
 from .. import game
 from .. import player
-from ..utility import number_word, number_plural, YES
+from ..utility import num_text, YES
 
 
 # The credits for Liar's Dice.
@@ -511,7 +511,7 @@ class LiarsDice(game.Game):
             self.win_loss_draw = [before, len(self.players) - before - 1, 0]
             # Announce the loss.
             self.human.tell('\nYou have no more tokens, you lose the game.')
-            before_text = number_plural(before, 'player').capitalize()
+            before_text = num_text(before, 'player').capitalize()
             self.human.tell('{} left the game before you did.'.format(before_text))
         # Check for the human being the only one left.
         elif len([player for player in self.players if self.scores[player.name]]) == 1:
@@ -723,26 +723,26 @@ class LiarsDice(game.Game):
         # Fill in the template with the word versions of the numbers.
         # Five of a kind and straights need one word.
         if score[0] in (4, 7):
-            hand_name = hand_name.format(number_word(score[1]))
+            hand_name = hand_name.format(num_text(score[1]))
         # Four of a kind and full house need the first and the last word.
         elif score[0] in (5, 6):
-            hand_name = hand_name.format(number_word(score[1]), number_word(score[5]))
+            hand_name = hand_name.format(num_text(score[1]), num_text(score[5]))
         # Three of a kind needs the first word and two trailing words.
         elif score[0] == 3:
-            words = number_word(score[1]), number_word(score[4]), number_word(score[5])
+            words = num_text(score[1]), num_text(score[4]), num_text(score[5])
             hand_name = hand_name.format(*words)
         # Two pair needs the odd numbered words.
         elif score[0] == 2:
-            words = number_word(score[1]), number_word(score[3]), number_word(score[5])
+            words = num_text(score[1]), num_text(score[3]), num_text(score[5])
             hand_name = hand_name.format(*words)
         # One pair needs the first word and three trailing words.
         elif score[0] == 1:
-            trailers = ', '.join([number_word(value) for value in score[-3:]])
-            hand_name = hand_name.format(number_word(score[1]), trailers)
+            trailers = ', '.join([num_text(value) for value in score[-3:]])
+            hand_name = hand_name.format(num_text(score[1]), trailers)
         # High card needs the missing word.
         elif score[0] == 0:
             missing = [value for value in range(7) if value not in score][0]
-            hand_name = hand_name.format(number_word(missing))
+            hand_name = hand_name.format(num_text(missing))
         # Return the hand name after fixing and six plural.
         return hand_name.replace('sixs', 'sixes')
 
@@ -762,9 +762,8 @@ class LiarsDice(game.Game):
         else:
             line_feed = ''
         self.last_roller = player
-        reroll_text = number_word(len(rerolls))
-        dice = ['dice', 'die'][len(rerolls) == 1]
-        self.human.tell('{}{} rerolled {} {}.'.format(line_feed, player.name, reroll_text, dice))
+        reroll_text = num_text(len(rerolls), 'die', 'dice')
+        self.human.tell('{}{} rerolled {}.'.format(line_feed, player.name, reroll_text))
         # Make the rerolls.
         for die_index, value in enumerate(self.dice.values):
             if value in rerolls:
@@ -797,7 +796,7 @@ class LiarsDice(game.Game):
         self.scores[loser.name] -= 1
         loser_score = self.scores[loser.name]
         if loser_score:
-            plural = number_plural(loser_score, 'token')
+            plural = num_text(loser_score, 'token')
             self.human.tell('{} now has {}.'.format(loser.name, plural))
         if not self.scores[loser.name]:
             drop_message = '\n{} has lost all of their tokens and is out of the game.'
@@ -805,7 +804,7 @@ class LiarsDice(game.Game):
         # Adjust and announce the winner's score.
         if self.betting:
             self.scores[winner.name] += 1
-            plural = number_plural(self.scores[winner.name], 'token')
+            plural = num_text(self.scores[winner.name], 'token')
             self.human.tell('{} now has {}.'.format(winner.name, plural))
 
     def set_options(self):
@@ -856,7 +855,7 @@ class LiarsDice(game.Game):
                     self.scores[player.name] += 1
                     sum_text = ' + '.join(str(value) for value in sub_values)
                     player.tell('{} = 13, you get an extra token.'.format(sum_text))
-                    player.tell('You now have {} tokens.'.format(number_word(self.scores[player.name])))
+                    player.tell('You now have {} tokens.'.format(num_text(self.scores[player.name])))
                     break
             if not self.thirteen:
                 break

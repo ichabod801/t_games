@@ -175,9 +175,11 @@ def median(values):
         return sum(values[(mid_point - 1):(mid_point + 1)]) / 2.0
 
 
-def num_text(number, word, *args):
+def num_text(number, word = '', *args):
     """
     Handle text instances of 'n foo'. (str)
+
+    If the word is empty, then only the number word is returned.
 
     The args parameters can be up to two modifiers. If a modifier does not start
     with a colon (:), it is the plural of word. If a plural is not specified this
@@ -197,7 +199,7 @@ def num_text(number, word, *args):
     converted and returned by itself.
 
     Parameters:
-    n: The number of things. (int)
+    number: The number of things. (int)
     word: The word for the things. (str)
     *args: Modifiers to the conversion as specified above. (str)
     """
@@ -209,18 +211,23 @@ def num_text(number, word, *args):
             format_type = arg.lower()
         else:
             plural = arg
-    # Check for -es plurals.
+    # Check for odd plurals.
     if 'e' in format_type:
         plural = '{}es'.format(word)
+    if not word:
+        plural = ''
+    # Check for singleton.
+    if number == 1:
+        plural = word
     # Convert the number.
-    wordify = (n < 11 or 'w' in format_type) and 'n' not in format_type
+    wordify = (number < 11 or 'w' in format_type) and 'n' not in format_type
     if wordify:
-        number = number_word(n, ordinal = 'o' in format_type)
+        worded = number_word(number, ordinal = 'o' in format_type)
     else:
-        number = str(n)
+        worded = str(number)
         if 'o' in format_type:
-            '{}{}'.format(number, ORDINAL_ENDS.get(n % 10, 'th'))
-    return '{} {}'.format(number, word)
+            '{}{}'.format(worded, ORDINAL_ENDS.get(number % 10, 'th'))
+    return '{} {}'.format(worded, plural).strip()
 
 
 def number_plural(number, singular, many = ''):
