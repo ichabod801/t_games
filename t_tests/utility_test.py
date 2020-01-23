@@ -6,6 +6,7 @@ Tests of t_games/utility.py.
 Classes:
 FactorialTest: Tests of factorial functions in utility. (unittest.TestCase)
 MedianTest: Test of median calculation. (unittest.TestCase)
+NumTextTests: Tests of combined number and text handling. (unittest.TestCase)
 NumberPluralTests: Tests of number word & singular/plural. (unittest.TestCase)
 NumberWordTests: Tests of converting numbers to words. (unittest.TestCase)
 OxfordTest: Tests of converting Python lists to English lists. (TestCase)
@@ -18,7 +19,7 @@ StreakTest: Tests of longest streak calculations. (unittest.TestCase)
 import unittest
 
 from .. import utility
-
+#from t_games import utility
 
 class FactorialTest(unittest.TestCase):
     """Tests of factorial functions in utility. (unittest.TestCase)"""
@@ -78,6 +79,78 @@ class MedianTest(unittest.TestCase):
     def testRightSkew(self):
         """Test a median lower than the mean."""
         self.assertEqual(5, utility.median([5, 3, 4, 9, 7]))
+
+
+class NumTextTest(unittest.TestCase):
+    """Tests of combined number and text handling. (unittest.TestCase)"""
+
+    def testForceNumeric(self):
+        """Test focing a numeric form of a number."""
+        self.assertEqual('9 points', utility.num_text(9, 'point', ':n'))
+
+    def testForceWord(self):
+        """Test focing a numeric form of a number."""
+        self.assertEqual('eight hundred one corners', utility.num_text(801, 'corner', ':w'))
+
+    def testFour(self):
+        """Test using four parameters."""
+        self.assertEqual('sixty-six geese', utility.num_text(66, 'goose', 'geese', ':w'))
+
+    def testJustNumber(self):
+        """Test only getting the word form of the number."""
+        self.assertEqual('eight', utility.num_text(8))
+
+    def testLarge(self):
+        """Test a large number being numeric."""
+        self.assertEqual('108 buddhas', utility.num_text(108, 'buddha'))
+
+    def testOrdinal(self):
+        """Test generating the ordinal form of a number."""
+        self.assertEqual('fifth element', utility.num_text(5, 'element', ':o'))
+
+    def testOrdinalForcedNumeric(self):
+        """Test generating the ordinal form of a number."""
+        self.assertEqual('5th element', utility.num_text(5, 'element', ':on'))
+
+    def testOrdinalForcedWord(self):
+        """Test generating the ordinal form of a number."""
+        self.assertEqual('one hundred eighth street', utility.num_text(108, 'street', ':wo'))
+
+    def testOrdinalNumeric(self):
+        """Test generating the ordinal form of a number."""
+        self.assertEqual('108th street', utility.num_text(108, 'street', ':o'))
+
+    def testOrdinalNumericLow(self):
+        """Test generating the ordinal form of a number."""
+        self.assertEqual('23rd eyeball', utility.num_text(23, 'eyeball', ':o'))
+
+    def testPlural(self):
+        """Test getting a plural form of a word."""
+        self.assertEqual('seven cards', utility.num_text(7, 'card'))
+
+    def testPluralEs(self):
+        """Test getting a plural form of a word with -es."""
+        self.assertEqual('six hexes', utility.num_text(6, 'hex', ':e'))
+
+    def testPluralNoS(self):
+        """Test getting a plural form of a word without adding s."""
+        self.assertEqual('five dice', utility.num_text(5, 'die', 'dice'))
+
+    def testSingular(self):
+        """Test getting a plural form of a word."""
+        self.assertEqual('one card', utility.num_text(1, 'card'))
+
+    def testSingularNoS(self):
+        """Test getting a plural form of a word wihtout adding s."""
+        self.assertEqual('one die', utility.num_text(1, 'die', 'dice'))
+
+    def testZero(self):
+        """Test getting a plural with zero."""
+        self.assertEqual('zero cards', utility.num_text(0, 'card'))
+
+    def testZeroNoS(self):
+        """Test getting a plural with zero and not adding s."""
+        self.assertEqual('zero dice', utility.num_text(0, 'die', 'dice'))
 
 
 class NumberPluralTest(unittest.TestCase):
@@ -297,3 +370,7 @@ class StreakTest(unittest.TestCase):
         """Test a longest streak of zero."""
         streaks = utility.streaks([result for result in self.results if result])
         self.assertEqual(0, streaks[2][0])
+
+
+if __name__ == '__main__':
+    unittest.main()
