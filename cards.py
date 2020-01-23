@@ -396,7 +396,7 @@ class Card(object):
         return format_text.format(target)
 
     def __lt__(self, other):
-        """For sorting by rank. (bool)"""
+        """For sorting by suit then rank. (bool)"""
         if isinstance(other, Card):
             return (self.suit_num, self.rank_num) < (other.suit_num, other.rank_num)
         else:
@@ -447,7 +447,7 @@ class Card(object):
         Parameters:
         other: The card to compare with. (Card)
         """
-        return self.rank_set.above(self.rank, other.rank)
+        return self.rank_set.above(self.rank, other.rank, n)
 
     def below(self, other, n = 1):
         """
@@ -456,7 +456,7 @@ class Card(object):
         Parameters:
         other: The card to compare with. (Card)
         """
-        return self.rank_set.below(self.rank, other.rank)
+        return self.rank_set.below(self.rank, other.rank, n)
 
     def next(self):
         """Get the next card in rank order. (Card)"""

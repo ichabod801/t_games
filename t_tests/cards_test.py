@@ -118,6 +118,22 @@ class CardTest(unittest.TestCase):
         """Test formatting with the face up specification."""
         self.assertEqual('JH', '{:u}'.format(self.jack))
 
+    def testLessThanEqual(self):
+        """Test a less than comparison of equalcards."""
+        self.assertFalse(self.jack < self.jack)
+
+    def testLessThanNo(self):
+        """Test an incorrect less than comparison of cards."""
+        self.assertFalse(self.ace < self.jack)
+
+    def testLessThanRank(self):
+        """Test a less than comparison in the same suit."""
+        self.assertTrue(cards.Card('2', 'H') < self.jack)
+
+    def testLessThanYes(self):
+        """Test a correct less than comparison of cards."""
+        self.assertTrue(self.jack < self.ace)
+
     def testNotEqualCard(self):
         """Test inequality of card and card."""
         self.assertNotEqual(cards.Card('A', 'C'), self.ace)
@@ -133,18 +149,6 @@ class CardTest(unittest.TestCase):
     def testNotEqualNotImplemented(self):
         """Test inequality of card and integer."""
         self.assertNotEqual(108, self.ace)
-
-    def testLessThanEqual(self):
-        """Test a less than comparison of equalcards."""
-        self.assertFalse(self.jack < self.jack)
-
-    def testLessThanNo(self):
-        """Test an incorrect less than comparison of cards."""
-        self.assertFalse(self.jack < self.ace)
-
-    def testLessThanYes(self):
-        """Test a correct less than comparison of cards."""
-        self.assertTrue(self.ace < self.jack)
 
     def testRegExBackwards(self):
         """Test the card regular expression on backwards card text."""
@@ -472,7 +476,7 @@ class HandTest(unittest.TestCase):
 
     def setUp(self):
         self.deck = cards.Deck()
-        self.hand = cards.Hand(self.deck)
+        self.hand = cards.Hand(deck = self.deck)
 
     def testBoolFalse(self):
         """Test the bool of an empty hand."""
@@ -599,7 +603,7 @@ class HandTest(unittest.TestCase):
         """Test the repr of a hand of cards."""
         for card in range(5):
             self.hand.draw()
-        self.assertEqual('<Hand: KS, KH, KD, KC, QS>', repr(self.hand))
+        self.assertEqual('<Hand [KS, KH, KD, KC, QS]>', repr(self.hand))
 
     def testReprDiscard(self):
         """Test the repr of a hand of cards after some discards."""
@@ -607,11 +611,11 @@ class HandTest(unittest.TestCase):
             self.hand.draw()
         self.hand.discard('KH')
         self.hand.discard('KC')
-        self.assertEqual('<Hand: KS, KD, QS>', repr(self.hand))
+        self.assertEqual('<Hand [KS, KD, QS]>', repr(self.hand))
 
     def testReprEmpty(self):
         """Test the repr of an empty hand of cards."""
-        self.assertEqual('<Hand: (empty)>', repr(self.hand))
+        self.assertEqual('<Hand []>', repr(self.hand))
 
     def testShiftGone(self):
         """Test that a shifted card is not in the old hand."""
