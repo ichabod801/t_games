@@ -670,9 +670,8 @@ class Deck(Pile):
         Paramters:
         cards: The cards to make a deck out of. (list of Card)
         """
-        child = Deck(cards, jokers = self.jokers, decks = self.decks, shuffle_size = self.shuffle_size,
-            card_class = self.card_class, ace_high = self.ace_high, rank_set = self.rank_set,
-            suit_set = self.suit_set)
+        child = Deck(cards, jokers = self.jokers, shuffle_size = self.shuffle_size,
+            rank_set = self.rank_set, suit_set = self.suit_set)
         child.discards = self.discards[:]
         return child
 
@@ -1339,8 +1338,13 @@ class MultiTrackingDeck(TrackingDeck):
         self.in_play = []
         self.last_order = self.cards[:]
 
-    def _initial_cards(self):
-        """Add in the initial cards for the deck. (None)"""
+    def _initial_cards(self, decks):
+        """
+        Add in the initial cards for the deck. (None)
+
+        Parameters:
+        decks: The number of copies of each card to make. (int)
+        """
         # Add the base cards.
         self.cards = []
         self.card_map = collections.defaultdict(list)

@@ -52,7 +52,8 @@ class CardTest(unittest.TestCase):
 
     def testAboveWrapYes(self):
         """Test Card.above with wrapped ranks."""
-        self.assertTrue(self.ace.above(cards.Card('K', 'S'), wrap_ranks = True))
+        self.ace.rank_set = cards.STANDARD_WRAP_RANKS
+        self.assertTrue(self.ace.above(cards.Card('K', 'S')))
 
     def testBelowAbove(self):
         """Test Card.below when below."""
@@ -76,7 +77,9 @@ class CardTest(unittest.TestCase):
 
     def testBelowWrapYes(self):
         """Test Card.below with wrapped ranks."""
-        self.assertTrue(cards.Card('K', 'S').below(self.ace, wrap_ranks = True))
+        king = cards.Card('K', 'S')
+        king.rank_set = cards.STANDARD_WRAP_RANKS
+        self.assertTrue(king.below(self.ace))
 
     def testEqualCard(self):
         """Test equality of card and card."""
@@ -149,26 +152,6 @@ class CardTest(unittest.TestCase):
     def testNotEqualNotImplemented(self):
         """Test inequality of card and integer."""
         self.assertNotEqual(108, self.ace)
-
-    def testRegExBackwards(self):
-        """Test the card regular expression on backwards card text."""
-        self.assertIsNone(self.ace.card_re.match('dk'))
-
-    def testRegExLower(self):
-        """Test the card regular expression on lower case card text."""
-        self.assertIsNotNone(self.ace.card_re.match('kd'))
-
-    def testRegExMixed(self):
-        """Test the card regular expression on mexed case card text."""
-        self.assertIsNotNone(self.ace.card_re.match('aC'))
-
-    def testRegExValid(self):
-        """Test the card regular expression on valid card text."""
-        self.assertIsNotNone(self.ace.card_re.match('9C'))
-
-    def testRegExWord(self):
-        """Test the card regular expression on an English word."""
-        self.assertIsNone(self.ace.card_re.match('feline'))
 
     def testRepr(self):
         """Test the computer readable text representation."""
@@ -406,6 +389,30 @@ class DeckTest(unittest.TestCase):
         self.deck.shuffle()
         card = self.deck.pick(18)
         self.assertTrue(card.up)
+
+    def testRegExBackwards(self):
+        """Test the card regular expression on backwards card text."""
+        self.assertIsNone(self.deck.card_re.match('dk'))
+
+    def testRegExLower(self):
+        """Test the card regular expression on lower case card text."""
+        self.assertIsNotNone(self.deck.card_re.match('kd'))
+
+    def testRegExMixed(self):
+        """Test the card regular expression on mexed case card text."""
+        self.assertIsNotNone(self.deck.card_re.match('aC'))
+
+    def testRegExValid(self):
+        """Test the card regular expression on valid card text."""
+        self.assertIsNotNone(self.deck.card_re.match('9C'))
+
+    def testRegExWord(self):
+        """Test the card regular expression on an English word."""
+        self.assertIsNone(self.deck.card_re.match('feline'))
+
+    def testRegExWordMatch(self):
+        """Test the card regular expression on a word that has a card in it."""
+        self.assertIsNone(self.deck.card_re.match('backward'))
 
     def testRepr(self):
         """Test the repr of a fresh deck."""
@@ -682,7 +689,7 @@ class MultiTrackingDeckTest(unittest.TestCase):
     def setUp(self):
         self.game = unitility.ProtoObject(reserve = [[], [], []], cells = [], waste = [],
             tableau = [[], [], []])
-        self.deck = cards.MultiTrackingDeck(self.game)
+        self.deck = cards.MultiTrackingDeck(None, self.game)
         self.game.deck = self.deck
 
     def testCardREBadRank(self):
@@ -775,7 +782,7 @@ class MultiTrackingDeckTest(unittest.TestCase):
 
     def testRepr(self):
         """Test the debugging text representation."""
-        check = '<MultiTrackingDeck of TrackingCards for {!r}>'.format(self.game)
+        check = '<MultiTrackingDeck for {!r}>'.format(self.game)
         self.assertEqual(check, repr(self.deck))
 
     def testStr(self):
@@ -824,7 +831,7 @@ class TrackingCardTest(unittest.TestCase):
 
     def setUp(self):
         self.game = self.game_tuple(wrap_ranks = False)
-        self.deck = cards.TrackingDeck(self.game)
+        self.deck = cards.TrackingDeck(None, self.game)
         self.ace = self.deck.force('AS', self.deck.cards)
         self.jack = self.deck.force('JH', self.deck.cards)
 
@@ -842,7 +849,7 @@ class TrackingCardTest(unittest.TestCase):
 
     def testAboveTwoYes(self):
         """Test TrackingCard.above with multi-rank distance."""
-        self.assertTrue(self.jack.above(cards.TrackingCard('9', 'D', self.deck), card_index = 2))
+        self.assertTrue(self.jack.above(cards.TrackingCard('9', 'D', self.deck), 2))
 
     def testAboveWrapNo(self):
         """Test TrackingCard.above with wrapped ranks."""
@@ -850,8 +857,10 @@ class TrackingCardTest(unittest.TestCase):
 
     def testAboveWrapYes(self):
         """Test TrackingCard.above with wrapped ranks."""
-        self.deck.game = self.game_tuple(wrap_ranks = True)
-        self.assertTrue(self.ace.above(cards.TrackingCard('K', 'S', self.deck)))
+        deck = cards.TrackingDeck(None, self.game, rank_set = cards.STANDARD_WRAP_RANKS)
+        ace = deck.force('AS', deck.cards)
+        king = deck.force('KS', deck.cards)
+        self.assertTrue(ace.above(king))
 
     def testBelowAbove(self):
         """Test TrackingCard.below when below."""
@@ -867,7 +876,7 @@ class TrackingCardTest(unittest.TestCase):
 
     def testBelowTwoYes(self):
         """Test TrackingCard.below with multi-rank distance."""
-        self.assertTrue(self.jack.below(cards.TrackingCard('K', 'D', self.deck), card_index = 2))
+        self.assertTrue(self.jack.below(cards.TrackingCard('K', 'D', self.deck), 2))
 
     def testBelowWrapNo(self):
         """Test TrackingCard.below with wrapped ranks."""
@@ -875,8 +884,10 @@ class TrackingCardTest(unittest.TestCase):
 
     def testBelowWrapYes(self):
         """Test TrackingCard.below with wrapped ranks."""
-        self.deck.game = self.game_tuple(wrap_ranks = True)
-        self.assertTrue(cards.TrackingCard('K', 'S', self.deck).below(self.ace))
+        deck = cards.TrackingDeck(None, self.game, rank_set = cards.STANDARD_WRAP_RANKS)
+        ace = deck.force('AS', deck.cards)
+        king = deck.force('KS', deck.cards)
+        self.assertTrue(king.below(ace))
 
     def testEqualSelf(self):
         """Test that a TrackingCard is equal to iteslf."""
@@ -1047,7 +1058,7 @@ class TrackingDeckTest(unittest.TestCase):
 
     def testRepr(self):
         """Test the debugging text representation."""
-        check = "<TrackingDeck of TrackingCards for <Game of Solitaire Base with 1 player>>"
+        check = "<TrackingDeck for <Game of Solitaire Base with 1 player>>"
         self.assertEqual(check, repr(self.deck))
 
     def testStrAllNumbers(self):
