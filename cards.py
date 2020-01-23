@@ -1202,8 +1202,13 @@ class TrackingDeck(Deck):
         text = 'Deck of cards with {} {}, plus {} {} in play and {} {} discarded'
         return text.format(cards, card_text, in_play, play_text, discards, discard_text)
 
-    def _initial_cards(self):
-        """Add in the initial cards for the deck. (None)"""
+    def _initial_cards(self, decks = 1):
+        """
+        Add in the initial cards for the deck. (None)
+
+        Parameters:
+        decks: The number of decks used. (int)
+        """
         # Add the base cards.
         self.cards = []
         self.card_map = {}

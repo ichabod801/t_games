@@ -915,7 +915,7 @@ class TrackingDeckTest(unittest.TestCase):
 
     def setUp(self):
         self.game = solitaire.Solitaire(unitility.AutoBot(), 'none')
-        self.deck = cards.TrackingDeck(self.game)
+        self.deck = cards.TrackingDeck(None, self.game)
         self.game.deck = self.deck
 
     def testDealCard(self):
