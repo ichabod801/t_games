@@ -208,7 +208,7 @@ def num_text(number, word = '', *args):
     plural = '{}s'.format(word)
     for arg in args:
         if arg.startswith(':'):
-            format_type = arg.lower()
+            format_type = arg[1:].lower()
         else:
             plural = arg
     # Check for odd plurals.
@@ -226,7 +226,10 @@ def num_text(number, word = '', *args):
     else:
         worded = str(number)
         if 'o' in format_type:
-            '{}{}'.format(worded, ORDINAL_ENDS.get(number % 10, 'th'))
+            worded = '{}{}'.format(worded, ORDINAL_ENDS.get(number % 10, 'th'))
+    # Undo plurals for ordinals.
+    if 'o' in format_type:
+        plural = word
     return '{} {}'.format(worded, plural).strip()
 
 
