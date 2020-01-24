@@ -9,6 +9,8 @@ CRandTest: Test of the implementation of C's rand function.
 DeckTest: Test of the standard Deck class. (unittest.TestCase)
 FeatureSetTest: Tests of the FeatureSet (ranks/suits) class. (TestCase)
 HandTest: Test of the Hand (of cards) class. (unittest.TestCase)
+MultiTrackingDeckTest: Tests of the MultiTrackingDeck class. (TestCase)
+PileTest: Tests of the Pile (of Cards) class. (unittest.TestCase)
 TrackingCardTest: Tests of the TrackingCard class. (unittest.TestCase)
 TrackingDeckTest: Tests of the TrackingDeck class. (unittest.TestCase)
 """
@@ -994,6 +996,49 @@ class MultiTrackingDeckTest(unittest.TestCase):
         """Test human readable text representation with one card in play."""
         card = self.deck.deal(self.game.waste)
         check = 'Deck of cards with 103 cards, plus 1 card in play and 0 cards discarded'
+
+
+class PileTest(unittest.TestCase):
+    """Tests of the Pile (of Cards) class. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.pile = cards.Pile(cards.parse_text('AS 3C QS 2H 8D QH JH'))
+
+    def testSort(self):
+        """Test a standard sort of the cards in a Pile."""
+        check = cards.parse_text('3C 8D 2H JH QH AS QS')
+        self.pile.sort()
+        self.assertEqual(check, self.pile.cards)
+
+    def testSortByRank(self):
+        """Test a sort of the cards in a Pile by rank."""
+        check = cards.parse_text('AS 2H 3C 8D JH QS QH')
+        self.pile.sort(key = cards.by_rank)
+        self.assertEqual(check, self.pile.cards)
+
+    def testSortByRankSuit(self):
+        """Test a sort of the cards in a Pile by rank then suit."""
+        check = cards.parse_text('AS 2H 3C 8D JH QH QS')
+        self.pile.sort(key = cards.by_rank_suit)
+        self.assertEqual(check, self.pile.cards)
+
+    def testSortBySuit(self):
+        """Test a sort of the cards in a Pile by suit."""
+        check = cards.parse_text('3C 8D 2H QH JH AS QS')
+        self.pile.sort(key = cards.by_suit)
+        self.assertEqual(check, self.pile.cards)
+
+    def testSortBySuitRank(self):
+        """Test a sort of the cards in a Pile by suit then rank."""
+        check = cards.parse_text('3C 8D 2H JH QH AS QS')
+        self.pile.sort(key = cards.by_suit_rank)
+        self.assertEqual(check, self.pile.cards)
+
+    def testSortByValue(self):
+        """Test a sort of the cards in a Pile by value."""
+        check = cards.parse_text('AS 2H 3C 8D QS QH JH')
+        self.pile.sort(key = cards.by_value)
+        self.assertEqual(check, self.pile.cards)
 
 
 class TrackingCardTest(unittest.TestCase):
