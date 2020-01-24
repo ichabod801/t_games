@@ -7,6 +7,7 @@ Classes:
 CardTest: Tests of the standard Card class. (unittest.TestCase)
 CRandTest: Test of the implementation of C's rand function.
 DeckTest: Test of the standard Deck class. (unittest.TestCase)
+FeatureSetTest: Tests of the FeatureSet (ranks/suits) class. (TestCase)
 HandTest: Test of the Hand (of cards) class. (unittest.TestCase)
 TrackingCardTest: Tests of the TrackingCard class. (unittest.TestCase)
 TrackingDeckTest: Tests of the TrackingDeck class. (unittest.TestCase)
@@ -476,6 +477,74 @@ class DeckTest(unittest.TestCase):
         check = self.deck.cards[:]
         self.deck.shuffle()
         self.assertNotEqual(check, self.deck.cards)
+
+
+class FeatureSetTest(unittest.TestCase):
+    """Tests of the FeatureSet (ranks/suits) class. (unittest.TestCase)"""
+
+    def testColorsDefault(self):
+        """Test the default color."""
+        self.assertEqual('X', cards.STANDARD_RANKS.colors['8'])
+
+    def testColorsInvalid(self):
+        """Test validity checks on the colors."""
+        with self.assertRaises(ValueError):
+            cards.FeatureSet('SPAM', 'RBW')
+
+    def testColorsSpecified(self):
+        """Test specifying colors."""
+        self.assertEqual('R', cards.STANDARD_SUITS.colors['H'])
+
+    def testContains(self):
+        """Test checking for valid characters."""
+        self.assertTrue('6' in cards.STANDARD_RANKS)
+
+    def testContainsNot(self):
+        """Test checking for invalid characters."""
+        self.assertFalse('6' in cards.STANDARD_SUITS)
+
+    def testIter(self):
+        """Test iterating over the characters."""
+        self.assertEqual(['C', 'D', 'H', 'S'], list(cards.STANDARD_SUITS))
+
+    def testIterSkip(self):
+        """Test iterating when there is a skip value."""
+        self.assertEqual(list('A23456789TJQK'), list(cards.STANDARD_RANKS))
+
+    def testLen(self):
+        """Test the length of a FeatureSet."""
+        self.assertEqual(4, len(cards.STANDARD_SUITS))
+
+    def testLenSkip(self):
+        """Test the length of a FeatureSet with a skip value."""
+        self.assertEqual(13, len(cards.STANDARD_RANKS))
+
+    def testNamesInvalid(self):
+        """Test validity checks on names."""
+        names = ('Spam', 'Pythons', 'Armaments', 'Moose', 'Twits')
+        with self.assertRaises(ValueError):
+            cards.FeatureSet('SPAM', names)
+
+    def testNamesSpecified(self):
+        """Test specifying names."""
+        self.assertEqual('Queen', cards.STANDARD_RANKS.names['Q'])
+
+    def testRepr(self):
+        """Test the dubugging text representation."""
+        self.assertEqual("<FeatureSet 'XA23456789TJQK'>", repr(cards.STANDARD_RANKS))
+
+    def testValuesDefault(self):
+        """Test the default values."""
+        self.assertEqual(1, cards.STANDARD_SUITS.values['S'])
+
+    def testValuesInvalid(self):
+        """Test validity checks on the values."""
+        with self.assertRaises(ValueError):
+            cards.FeatureSet('RABIT', [2, 7, 1, 8, 2, 8])
+
+    def testValuesSpecified(self):
+        """Test specifying values."""
+        self.assertEqual(10, cards.STANDARD_RANKS.values['J'])
 
 
 class HandTest(unittest.TestCase):
