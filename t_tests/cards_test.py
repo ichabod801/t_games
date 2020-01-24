@@ -482,6 +482,54 @@ class DeckTest(unittest.TestCase):
 class FeatureSetTest(unittest.TestCase):
     """Tests of the FeatureSet (ranks/suits) class. (unittest.TestCase)"""
 
+    def testAboveBelow(self):
+        """Test FeatureSet.above when below."""
+        self.assertFalse(cards.STANDARD_RANKS.above('J', 'Q'))
+
+    def testAboveOne(self):
+        """Test FeatureSet.above when above."""
+        self.assertTrue(cards.STANDARD_RANKS.above('J', 'T'))
+
+    def testAboveTwoNo(self):
+        """Test FeatureSet.above when too far above."""
+        self.assertFalse(cards.STANDARD_RANKS.above('J', '9'))
+
+    def testAboveTwoYes(self):
+        """Test FeatureSet.above with multi-rank distance."""
+        self.assertTrue(cards.STANDARD_RANKS.above('J', '9', 2))
+
+    def testAboveWrapNo(self):
+        """Test FeatureSet.above with wrapped ranks."""
+        self.assertFalse(cards.STANDARD_RANKS.above('A', 'K'))
+
+    def testAboveWrapYes(self):
+        """Test FeatureSet.above with wrapped ranks."""
+        self.assertTrue(cards.STANDARD_WRAP_RANKS.above('A', 'K'))
+
+    def testBelowAbove(self):
+        """Test FeatureSet.below when below."""
+        self.assertFalse(cards.STANDARD_RANKS.below('J', 'T'))
+
+    def testBelowOne(self):
+        """Test FeatureSet.below when below."""
+        self.assertTrue(cards.STANDARD_RANKS.below('J', 'Q'))
+
+    def testBelowTwoNo(self):
+        """Test FeatureSet.below when too far below."""
+        self.assertFalse(cards.STANDARD_RANKS.below('J', 'K'))
+
+    def testBelowTwoYes(self):
+        """Test FeatureSet.below with multi-rank distance."""
+        self.assertTrue(cards.STANDARD_RANKS.below('J', 'K', 2))
+
+    def testBelowWrapNo(self):
+        """Test FeatureSet.below with wrapped ranks."""
+        self.assertFalse(cards.STANDARD_RANKS.below('K', 'A'))
+
+    def testBelowWrapYes(self):
+        """Test FeatureSet.below with wrapped ranks."""
+        self.assertTrue(cards.STANDARD_WRAP_RANKS.below('K', 'A'))
+
     def testColorsDefault(self):
         """Test the default color."""
         self.assertEqual('X', cards.STANDARD_RANKS.colors['8'])
@@ -495,6 +543,23 @@ class FeatureSetTest(unittest.TestCase):
         """Test specifying colors."""
         self.assertEqual('R', cards.STANDARD_SUITS.colors['H'])
 
+    def testCopyAttrs(self):
+        """Test copying the attributes of a FeatureSet."""
+        clone = cards.STANDARD_SUITS.copy()
+        self.assertEqual(clone.chars, cards.STANDARD_SUITS.chars)
+        self.assertEqual(clone.names, cards.STANDARD_SUITS.names)
+        self.assertEqual(clone.values, cards.STANDARD_SUITS.values)
+        self.assertEqual(clone.colors, cards.STANDARD_SUITS.colors)
+        self.assertEqual(clone.skip, cards.STANDARD_SUITS.skip)
+        self.assertEqual(clone.wrap, cards.STANDARD_SUITS.wrap)
+        self.assertEqual(clone.an_chars, cards.STANDARD_SUITS.an_chars)
+
+    def testCopyIndependence(self):
+        """Test the independence of a copy of a FeatureSet."""
+        clone = cards.STANDARD_SUITS.copy()
+        clone.names['X'] = 'Fool'
+        self.assertNotEqual(clone.names['X'], cards.STANDARD_RANKS.names['X'])
+
     def testContains(self):
         """Test checking for valid characters."""
         self.assertTrue('6' in cards.STANDARD_RANKS)
@@ -502,6 +567,20 @@ class FeatureSetTest(unittest.TestCase):
     def testContainsNot(self):
         """Test checking for invalid characters."""
         self.assertFalse('6' in cards.STANDARD_SUITS)
+
+    def testIndex(self):
+        """Test getting the index of a char."""
+        self.assertEqual(5, cards.STANDARD_RANKS.index('5'))
+
+    def testIndexError(self):
+        """Test indexing an invalid character."""
+        self.assertRaises(ValueError, cards.STANDARD_SUITS.index, 'P')
+
+    def testItems(self):
+        """Test iterating through the items of a FeatureSet."""
+        check = [(0, 'C', 'Clubs', 1, 'B'), (1, 'D', 'Diamonds', 1, 'R'), (2, 'H', 'Hearts', 1, 'R')]
+        check.append((3, 'S', 'Spades', 1, 'B'))
+        self.assertEqual(check, list(cards.STANDARD_SUITS.items()))
 
     def testIter(self):
         """Test iterating over the characters."""
@@ -528,6 +607,30 @@ class FeatureSetTest(unittest.TestCase):
     def testNamesSpecified(self):
         """Test specifying names."""
         self.assertEqual('Queen', cards.STANDARD_RANKS.names['Q'])
+
+    def testNext(self):
+        """Test getting the next rank."""
+        self.assertEqual('9', cards.STANDARD_RANKS.next('8'))
+
+    def testNextWrapNo(self):
+        """Test failing to get the next rank without wrapping."""
+        self.assertRaises(IndexError, cards.STANDARD_RANKS.next, 'K')
+
+    def testNextWrapYes(self):
+        """Test getting the next rank with wrapping."""
+        self.assertEqual('A', cards.STANDARD_WRAP_RANKS.next('K'))
+
+    def testPrevious(self):
+        """Test getting the previous rank."""
+        self.assertEqual('7', cards.STANDARD_RANKS.previous('8'))
+
+    def testPreviousWrapNo(self):
+        """Test failing to get the previous rank without wrapping."""
+        self.assertRaises(IndexError, cards.STANDARD_RANKS.previous, 'A')
+
+    def testPreviousWrapYes(self):
+        """Test getting the previous rank with wrapping."""
+        self.assertEqual('K', cards.STANDARD_WRAP_RANKS.previous('A'))
 
     def testRepr(self):
         """Test the dubugging text representation."""

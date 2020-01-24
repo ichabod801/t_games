@@ -214,7 +214,6 @@ class FeatureSet(object):
 
         Each interation is a tuple of (index, character, name, value)
         """
-        # ?? Can I simplify this by removing the def and the return?
         def iter_items():
             for index, char in enumerate(self.chars):
                 if index < self.skip:
