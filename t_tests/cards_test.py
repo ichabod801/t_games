@@ -1021,6 +1021,11 @@ class PileTest(unittest.TestCase):
         check = self.pile.cards + self.cards
         self.assertEqual(check, self.pile + other)
 
+    def testChildPile(self):
+        """Test that the child of a Pile is a Pile."""
+        pile = self.pile._child(cards.parse_text('AD 2D 3D'))
+        self.assertIsInstance(pile, cards.Pile)
+
     def testDel(self):
         """Test deleting a card from the pile."""
         check = self.pile[:2] + self.pile[3:]
@@ -1048,14 +1053,127 @@ class PileTest(unittest.TestCase):
         self.assertEqual(check, self.pile)
 
     def testGetIndex(self):
-        """Test getting a single card with indexing."""
+        """Test getting a single card with indexing a Pile."""
         check = cards.parse_text('8D')
         self.assertEqual(check, self.pile[4])
 
     def testGetNegativeIndex(self):
-        """Test getting a single card with indexing."""
+        """Test getting a single card with negative indexing a Pile."""
         check = cards.parse_text('2H')
         self.assertEqual(check, self.pile[-4])
+
+    def testGetSliceData(self):
+        """Test getting a group of cards with slicing a Pile."""
+        check = cards.parse_text('QS 2H 8D QH')
+        self.assertEqual(check, self.pile[2:-1])
+
+    def testGetSlicePile(self):
+        """Test getting a Pile with slicing a Pile."""
+        self.assertIsInstance(self.pile[2:-1], cards.Pile)
+
+    def testGetSliceStep(self):
+        """Test slicing a Pile with a step."""
+        check = cards.parse_text('3C 2H QH')
+        self.assertEqual(check, self.pile[1:6:2])
+
+    def testInplaceMultiply(self):
+        """Test multiplying a Pile in place."""
+        base = cards.parse_text('8S AH')
+        check = cards.parse_text('8S AH 8S AH 8S AH 8S AH 8S AH')
+        pile = cards.Pile(base)
+        pile *= 5
+        self.assertEqual(check, pile)
+
+    def testInplaceMultiplyOne(self):
+        """Test multiplying a Pile by one in place."""
+        check = self.pile.cards[:]
+        self.pile *= 1
+        self.assertEqual(check, self.pile)
+
+    def testInplaceMultiplyZero(self):
+        """Test multiplying a Pile by zero in place."""
+        check = []
+        self.pile *= 0
+        self.assertEqual(check, self.pile)
+
+    def testInsert(self):
+        """Test inserting a card into a Pile."""
+        check = cards.parse_text('AS 3C QS JS 2H 8D QH JH')
+        self.pile.insert(3, cards.parse_text('JS'))
+
+    def testLen(self):
+        """Test the len of a Pile."""
+        self.assertEqual(7, len(self.pile))
+
+    def testLenEmpty(self):
+        """Test the len of a Pile."""
+        self.assertEqual(0, len(cards.Pile()))
+
+    def testMultiply(self):
+        """Test multiplying a Pile."""
+        base = cards.parse_text('8S AH')
+        check = cards.parse_text('8S AH 8S AH 8S AH 8S AH 8S AH')
+        pile = cards.Pile(base)
+        self.assertEqual(check, pile * 5)
+
+    def testMultiplyOne(self):
+        """Test multiplying a Pile by one."""
+        check = self.pile.cards[:]
+        self.assertEqual(check, self.pile * 1)
+
+    def testMultiplyZero(self):
+        """Test multiplying a Pile by zero."""
+        check = []
+        self.assertEqual(check, self.pile * 0)
+
+    def testRepr(self):
+        """Test the debugging text representation of a Pile."""
+        self.assertEqual('<Pile [AS, 3C, QS, 2H, 8D, QH, JH]>', repr(self.pile))
+
+    def testReprEmpty(self):
+        """Test the debugging text representation of an empty Pile."""
+        self.assertEqual('<Pile []>', repr(cards.Pile()))
+
+    def testRightMultiply(self):
+        """Test right multiplying a Pile."""
+        base = cards.parse_text('8S AH')
+        check = cards.parse_text('8S AH 8S AH 8S AH 8S AH 8S AH')
+        pile = cards.Pile(base)
+        self.assertEqual(check, 5 * pile)
+
+    def testRightMultiplyOne(self):
+        """Test right multiplying a Pile by one."""
+        check = self.pile.cards[:]
+        self.assertEqual(check, 1 * self.pile)
+
+    def testRightMultiplyZero(self):
+        """Test right multiplying a Pile by zero."""
+        check = []
+        self.assertEqual(check, 0 * self.pile)
+
+    def testSetIndex(self):
+        """Test setting a single card with indexing a Pile."""
+        check = cards.parse_text('AS 3C QS 2H JS QH JH')
+        self.pile[4] = check[4]
+        self.assertEqual(check, self.pile)
+
+    def testSetNegativeIndex(self):
+        """Test setting a single card with negative indexing a Pile."""
+        check = cards.parse_text('AS 3C QS JS 8D QH JH')
+        self.pile[-4] = check[-4]
+        self.assertEqual(check, self.pile)
+
+    def testSetSliceData(self):
+        """Test setting a group of cards with slicing a Pile."""
+        check = cards.parse_text('AS 3C JS KS JH')
+        self.pile[2:-1] = check[2:4]
+        self.assertEqual(check, self.pile)
+
+    def testSetSliceStep(self):
+        """Test setting a Pile with a step slice."""
+        check = cards.parse_text('AS JS QS QD 8D KS JH')
+        self.pile[1:6:2] = cards.parse_text('JS QD KS')
+        self.assertEqual(check, self.pile)
 
     def testSort(self):
         """Test a standard sort of the cards in a Pile."""

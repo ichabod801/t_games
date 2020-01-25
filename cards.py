@@ -548,6 +548,7 @@ class Pile(MutableSequence):
         other: The number of copies to make. (int)
         """
         self.cards *= other
+        return self
 
     def __len__(self):
         """Get the number of cards in the Pile. (int)"""
