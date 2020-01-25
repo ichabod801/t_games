@@ -10,6 +10,7 @@ DeckTest: Test of the standard Deck class. (unittest.TestCase)
 FeatureSetTest: Tests of the FeatureSet (ranks/suits) class. (TestCase)
 HandTest: Test of the Hand (of cards) class. (unittest.TestCase)
 MultiTrackingDeckTest: Tests of the MultiTrackingDeck class. (TestCase)
+ParseTextTest: Tests of the parse_text function. (unittest.TestCase)
 PileTest: Tests of the Pile (of Cards) class. (unittest.TestCase)
 TrackingCardTest: Tests of the TrackingCard class. (unittest.TestCase)
 TrackingDeckTest: Tests of the TrackingDeck class. (unittest.TestCase)
@@ -1091,6 +1092,51 @@ class MultiTrackingDeckTest(unittest.TestCase):
         """Test human readable text representation with one card in play."""
         card = self.deck.deal(self.game.waste)
         check = 'Deck of cards with 103 cards, plus 1 card in play and 0 cards discarded'
+
+
+class ParseTextTest(unittest.TestCase):
+    """Tests of the parse_text function. (unittest.TestCase)"""
+
+    def testParseOne(self):
+        """Test parsing the text for a single card."""
+        self.assertEqual(cards.Card('J', 'S'), cards.parse_text('JS'))
+
+    def testParseOneDeck(self):
+        """Test parsing the text for a single card with a deck parameter."""
+        deck = cards.Deck(rank_set = cards.STANDARD_WRAP_RANKS, suit_set = cards.TWO_SUITS)
+        self.assertEqual(cards.Card('3', 'H'), cards.parse_text('3H', deck = deck))
+
+    def testParseOneDeckFeature(self):
+        """Test features when parsing the text for a single card with a deck."""
+        deck = cards.Deck(rank_set = cards.STANDARD_WRAP_RANKS, suit_set = cards.TWO_SUITS)
+        card = cards.parse_text('3H', deck = deck)
+        self.assertEqual(cards.STANDARD_WRAP_RANKS, card.rank_set)
+
+    def testParseOneLower(self):
+        """Test parsing the text for a single card in lower case."""
+        self.assertEqual(cards.Card('A', 'D'), cards.parse_text('ad'))
+
+    def testParseMulti(self):
+        """Test parsing the text for multiple cards."""
+        check = [cards.Card(*pair) for pair in (('T', 'C'), ('J', 'C'), ('Q', 'C'), ('K', 'C'), ('A', 'C'))]
+        self.assertEqual(check, cards.parse_text('TC JC QC KC AC'))
+
+    def testParseMultiDeck(self):
+        """Test parsing the text for multiple cards."""
+        deck = cards.Deck(rank_set = cards.STANDARD_WRAP_RANKS, suit_set = cards.TWO_SUITS)
+        check = [cards.Card(*pair) for pair in (('A', 'S'), ('2', 'S'), ('3', 'S'), ('4', 'S'), ('6', 'S'))]
+        self.assertEqual(check, cards.parse_text('AS 2S 3S 4S 6S', deck = deck))
+
+    def testParseMultiDeckFeature(self):
+        """Test features when parsing the text for multiple cards."""
+        deck = cards.Deck(rank_set = cards.STANDARD_WRAP_RANKS, suit_set = cards.TWO_SUITS)
+        card = cards.parse_text('AS 2S 3S 4S 6S', deck = deck)[2]
+        self.assertEqual(cards.TWO_SUITS, card.suit_set)
+
+    def testParseMultiLower(self):
+        """Test parsing the text for multiple cards with lower case."""
+        check = [cards.Card(*pair) for pair in (('T', 'C'), ('J', 'C'), ('Q', 'C'), ('K', 'C'), ('A', 'C'))]
+        self.assertEqual(check, cards.parse_text('TC jc qc kC Ac'))
 
 
 class PileTest(unittest.TestCase):
