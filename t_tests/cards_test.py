@@ -393,6 +393,18 @@ class DeckTest(unittest.TestCase):
         card = self.deck.pick(18)
         self.assertTrue(card.up)
 
+    def testPlayerHandsKeys(self):
+        players = ['Jack', 'Robert', 'Tyler']
+        hands = self.deck.player_hands(players)
+        keys = list(hands.keys())
+        keys.sort()
+        self.assertEqual(players, keys)
+
+    def testPlayerHandsValues(self):
+        players = ['Jack', 'Robert', 'Tyler']
+        hands = self.deck.player_hands(players)
+        self.assertTrue(all(hand.deck is self.deck for hand in hands.values()))
+
     def testRegExBackwards(self):
         """Test the card regular expression on backwards card text."""
         self.assertIsNone(self.deck.card_re.match('dk'))
@@ -759,6 +771,45 @@ class HandTest(unittest.TestCase):
     def testIter(self):
         """Test the iterator for a hand."""
         self.assertEqual(list(self.hand), self.hand.cards)
+
+    def testFindAll(self):
+        """Test finding all of the cards in hand."""
+        self.assertEqual(self.hand, self.hand.find())
+
+    def testFindNotRank(self):
+        """Test finding cards in hand excluding a rank."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 3C 4C 5C 5H')
+        check = cards.Hand(cards.parse_text('6D 7D 3C 4C'))
+        self.assertEqual(check, self.hand.find(not_rank = '5'))
+
+    def testFindNotSuit(self):
+        """Test finding cards in hand excluding a suit."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        check = cards.Hand(cards.parse_text('5D 5H 6D 7D'))
+        self.assertEqual(check, self.hand.find(not_suit = 'C'))
+
+    def testFindRank(self):
+        """Test finding cards in hand matching a rank."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        check = cards.Hand(cards.parse_text('5C 5D 5H'))
+        self.assertEqual(check, self.hand.find(rank = '5'))
+
+    def testFindRegex(self):
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        check = cards.Hand(cards.parse_text('5C 5D 6D'))
+        self.assertEqual(check, self.hand.find(regex = '[56][CD]'))
+
+    def testFindSuit(self):
+        """Test finding cards in hand matching a suit."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        check = cards.Hand(cards.parse_text('3C 4C 5C'))
+        self.assertEqual(check, self.hand.find(suit = 'C'))
+
+    def testFindTwoParam(self):
+        """Test finding cards in hand with two criteria."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        check = cards.Hand(cards.parse_text('5C 5D'))
+        self.assertEqual(check, self.hand.find(rank = '5', not_suit = 'H'))
 
     def testLenEmpty(self):
         """Test the len of a hand."""

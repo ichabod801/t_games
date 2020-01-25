@@ -907,7 +907,7 @@ class Hand(Pile):
 
     def __repr__(self):
         """Debugging text representation."""
-        return '<{} [{}]>'.format(self.__class__.__name__, self)
+        return '<{} [{}]>'.format(self.__class__.__name__, ', '.join(card.up_text for card in self.cards))
 
     def __str__(self):
         """Human readable text representation. (str)"""
@@ -979,15 +979,15 @@ class Hand(Pile):
         # Apply postive filters.
         if rank:
             cards = [card for card in cards if card.rank in rank]
-        elif suit:
+        if suit:
             cards = [card for card in cards if card.suit in suit]
-        elif regex:
+        if regex:
             regex = re.compile(regex)
             cards = [card for card in cards if regex.match(card.up_text)]
         # Apply negative filters.
-        elif not_rank:
+        if not_rank:
             cards = [card for card in cards if card.rank not in not_rank]
-        elif not_suit:
+        if not_suit:
             cards = [card for card in cards if card.suit not in not_suit]
         # Return the cards as a Hand.
         return self._child(cards)
