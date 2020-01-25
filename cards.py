@@ -480,6 +480,7 @@ class Pile(MutableSequence):
     __init__
     __add__
     __delitem__
+    __eq__
     __getitem__
     __imul__
     __len__
@@ -501,10 +502,10 @@ class Pile(MutableSequence):
 
     def __add__(self, other):
         """Add the pile to another sequence of cards. (Pile)"""
-        if isinstance(Pile):
-            return self._child(Pile.cards + other.cards)
+        if isinstance(other, Pile):
+            return self._child(self.cards + other.cards)
         else:
-            return self._child(Pile.cards + other)
+            return self._child(self.cards + other)
 
     def __delitem__(self, key):
         """
@@ -514,6 +515,18 @@ class Pile(MutableSequence):
         key: The item(s) to delete. (int or slice)
         """
         del self.cards[key]
+
+    def __eq__(self, other):
+        """
+        Check equality with another object. (bool)
+
+        Parameters:
+        other: The object to check equality with. (object)
+        """
+        if isinstance(other, Pile):
+            return self.cards == other.cards
+        else:
+            return self.cards == other
 
     def __getitem__(self, key):
         """

@@ -1003,6 +1003,59 @@ class PileTest(unittest.TestCase):
 
     def setUp(self):
         self.pile = cards.Pile(cards.parse_text('AS 3C QS 2H 8D QH JH'))
+        self.cards = cards.parse_text('4C 6D 9H TS QC')
+
+    def testAddList(self):
+        """Test adding a pile to a list."""
+        check = self.pile.cards + self.cards
+        self.assertEqual(check, self.pile + self.cards)
+
+    def testAddMakesPile(self):
+        """Test that the result of addition is a Pile."""
+        check = self.pile + self.cards
+        self.assertIsInstance(check, cards.Pile)
+
+    def testAddPile(self):
+        """Test adding one pile to another."""
+        other = cards.Pile(self.cards)
+        check = self.pile.cards + self.cards
+        self.assertEqual(check, self.pile + other)
+
+    def testDel(self):
+        """Test deleting a card from the pile."""
+        check = self.pile[:2] + self.pile[3:]
+        del self.pile[2]
+        self.assertEqual(check, self.pile)
+
+    def testEqualListNo(self):
+        """Test a pile not being equal to a different list."""
+        check = cards.parse_text('AS 4C 2H 8D QH JH')
+        self.assertNotEqual(check, self.pile)
+
+    def testEqualListYes(self):
+        """Test a pile being equal to a similar list."""
+        check = cards.parse_text('AS 3C QS 2H 8D QH JH')
+        self.assertEqual(check, self.pile)
+
+    def testEqualPileNo(self):
+        """Test a pile not being equal to a different pile."""
+        check = cards.Pile(cards.parse_text('AS 4C 2H 8D QH JH'))
+        self.assertNotEqual(check, self.pile)
+
+    def testEqualPileYes(self):
+        """Test a pile being equal to a similar pile."""
+        check = cards.Pile(cards.parse_text('AS 3C QS 2H 8D QH JH'))
+        self.assertEqual(check, self.pile)
+
+    def testGetIndex(self):
+        """Test getting a single card with indexing."""
+        check = cards.parse_text('8D')
+        self.assertEqual(check, self.pile[4])
+
+    def testGetNegativeIndex(self):
+        """Test getting a single card with indexing."""
+        check = cards.parse_text('2H')
+        self.assertEqual(check, self.pile[-4])
 
     def testSort(self):
         """Test a standard sort of the cards in a Pile."""
