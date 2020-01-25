@@ -714,25 +714,6 @@ class HandTest(unittest.TestCase):
         check = self.hand.cards[2]
         self.assertIn(check, self.hand)
 
-    def testDrawCard(self):
-        """Test drawing a card from the deck."""
-        self.deck.shuffle()
-        check = self.deck.cards[-1]
-        self.hand.draw()
-        self.assertEqual([check], self.hand.cards)
-
-    def testDrawDown(self):
-        """Test drawing a down card from the deck."""
-        self.deck.shuffle()
-        self.hand.draw(up = False)
-        self.assertFalse(self.hand.cards[0].up)
-
-    def testDrawUp(self):
-        """Test drawing a down card from the deck."""
-        self.deck.shuffle()
-        self.hand.draw()
-        self.assertTrue(self.hand.cards[0].up)
-
     def testDiscardAll(self):
         """Test that discarding a whole hand sends it to the discard pile."""
         self.deck.shuffle()
@@ -767,6 +748,31 @@ class HandTest(unittest.TestCase):
         discard = random.choice(self.hand.cards)
         self.hand.discard(discard)
         self.assertNotIn(discard, self.hand.cards)
+
+    def testDrawCard(self):
+        """Test drawing a card from the deck."""
+        self.deck.shuffle()
+        check = self.deck.cards[-1]
+        self.hand.draw()
+        self.assertEqual([check], self.hand.cards)
+
+    def testDrawDown(self):
+        """Test drawing a down card from the deck."""
+        self.deck.shuffle()
+        self.hand.draw(up = False)
+        self.assertFalse(self.hand.cards[0].up)
+
+    def testDrawReturn(self):
+        """Test the return value of drawing a card from the deck."""
+        self.deck.shuffle()
+        check = self.deck.cards[-1]
+        self.assertEqual(check, self.hand.draw())
+
+    def testDrawUp(self):
+        """Test drawing a down card from the deck."""
+        self.deck.shuffle()
+        self.hand.draw()
+        self.assertTrue(self.hand.cards[0].up)
 
     def testIter(self):
         """Test the iterator for a hand."""
@@ -830,6 +836,25 @@ class HandTest(unittest.TestCase):
         self.hand.discard(self.hand.cards[0])
         self.hand.discard(self.hand.cards[-1])
         self.assertEqual(3, len(self.hand))
+
+    def testRankInNo(self):
+        """Test check for a rank that is not in the hand."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        self.assertFalse(self.hand.rank_in('J'))
+
+    def testRankInYes(self):
+        """Test check for a rank that is in the hand."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        self.assertTrue(self.hand.rank_in('7'))
+
+    def testRanks(self):
+        """Test getting the ranks in a hand."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        self.assertEqual('5 6 7 4 5 3 5'.split(), self.hand.ranks())
+
+    def testRanksEmpty(self):
+        """Test getting the ranks from an empty hand."""
+        self.assertEqual([], self.hand.ranks())
 
     def testRepr(self):
         """Test the repr of a hand of cards."""
@@ -907,6 +932,25 @@ class HandTest(unittest.TestCase):
         check = self.deck.cards[-1].rank + self.deck.cards[-1].suit
         self.hand.draw()
         self.assertEqual(check, str(self.hand))
+
+    def testSuitInNo(self):
+        """Test check for a suit that is not in the hand."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        self.assertFalse(self.hand.suit_in('S'))
+
+    def testSuitInYes(self):
+        """Test check for a suit that is in the hand."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        self.assertTrue(self.hand.suit_in('C'))
+
+    def testSuits(self):
+        """Test getting the suits in a hand."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        self.assertEqual('D D D C C C H'.split(), self.hand.suits())
+
+    def testSuitsEmpty(self):
+        """Test getting the suits from an empty hand."""
+        self.assertEqual([], self.hand.suits())
 
 class MultiTrackingDeckTest(unittest.TestCase):
     """Tests of the MultiTrackingDeck class. (unittest.TestCase)"""
