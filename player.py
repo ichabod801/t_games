@@ -363,8 +363,11 @@ class Humanoid(Player):
                 return default
             # Convert to a cards.
             card = cards.parse_text(card_text, deck)
-            if isinstance(card, cards.Card) and (card in valid or not valid):
-                return card
+            if isinstance(card, cards.Card):
+                if valid and card not in valid:
+                    self.error('Please enter one of {}.'.format(utility.oxford(valid, 'or', '{:u}')))
+                else:
+                    return card
             elif card:
                 self.error('One card only please.')
             elif cmd:
