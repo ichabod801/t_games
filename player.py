@@ -388,7 +388,7 @@ class Humanoid(Player):
         """
         # Give a dummy answer if the game is over.
         if cmd and self.game.force_end:
-            return valid[0] if valid else cards.Card('X', 'S')
+            return []
         # Get the deck to base the search on.
         if isinstance(valid, cards.Hand):
             deck = valid.deck
@@ -406,15 +406,22 @@ class Humanoid(Player):
             cards_in = cards.parse_text(card_text, deck)
             if isinstance(cards_in, cards.Card):
                 cards_in = [cards_in]
-            if isinstance(cards_in, list):
+            # Validate response.
+            if cards_in:
                 if valid_lens and len(cards_in) not in valid_lens:
-                    self.error('Please enter {} cards.'.format(utility.oxford(valid_lens)))
-                elif [card for card in cards_in if card not in valid]:
+                    self.error('That is an invalid number of cards.')
+                    if valid_lens == [1]:
+                        self.error('Please enter 1 card.')
+                    else:
+                        self.error('Please enter {} cards.'.format(utility.oxford(valid_lens, 'or')))
+                elif valid and [card for card in cards_in if card not in valid]:
                     self.error('Not all of those cards are available.')
                 else:
                     return cards_in
-            elif isinstance(cards_in, str) and cmd:
+            elif cmd:
                 return card_text
+            else:
+                self.error('Please enter valid cards.')
 
     def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
         """
