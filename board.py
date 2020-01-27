@@ -233,6 +233,10 @@ class MultiCell(BoardCell):
         else:
             self.contents = pieces
 
+    def __bool__(self):
+        """Convert the cell to True/False. (bool)"""
+        return bool(self.contents)
+
     def __contains__(self, other):
         """
         Check for a piece in the cell. (bool)
