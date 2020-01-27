@@ -5,6 +5,8 @@ Unittesting of t_games/player.py
 
 Classes:
 BotTest: Tests of the Bot class. (unittest.TestCase)
+HumanoidAskCardListTest: Tests of Humaoid asking for cards. (unittest.TestCase)
+HumanoidAskCardTest: Tests of Humanoid asking for a card. (unittest.TestCase)
 HumanoidAskIntListTest: Tests of Humaoid asking for integers. (TestCase)
 HumanoidAskIntTest: Tests of Humanoid asking for an int. (unittest.TestCase)
 HumanoidAskTest: Tests of basic Humanoid question asking. (unittest.TestCase)
@@ -19,6 +21,7 @@ import sys
 import unittest
 
 from t_games import player
+from t_games import cards
 from t_games.t_tests import unitility
 
 
@@ -60,6 +63,178 @@ class BotTest(unittest.TestCase):
         """Test a simple case for Bot.tell."""
         self.bot.tell('Craig moved west.')
         self.assertEqual('Craig moved west.', sys.stdout.output[0])
+
+
+class HumanoidAskCardListTest(unittest.TestCase):
+    """Tests of Humaoid asking for cards. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.human = player.Humanoid('Gandalf')
+        self.deck = cards.Deck()
+        self.human.game = unitility.ProtoObject(force_end = False, deck = self.deck)
+        self.stdin_hold = sys.stdin
+        self.stdout_hold = sys.stdout
+        sys.stdin = unitility.ProtoStdIn()
+        sys.stdout = unitility.ProtoStdOut()
+
+    def tearDown(self):
+        sys.stdin = self.stdin_hold
+        sys.stdout = self.stdout_hold
+
+    def testAskCardListCommand(self):
+        """Test a request for some cards with a command answer."""
+        sys.stdin.lines = ['double-down']
+        self.assertEqual('double-down', self.human.ask_card_list('Pick some cards: '))
+
+    def testAskCardListCommandNotAnswer(self):
+        """Test the answer for some cards with an invalid command answer."""
+        sys.stdin.lines = ['double-down', 'as']
+        self.assertEqual([cards.Card('A', 'S')], self.human.ask_card_list('Pick some cards: ', cmd = False))
+
+    def testAskCardListCommandNotError(self):
+        """Test the error for some cards with an invalid command answer."""
+        sys.stdin.lines = ['not-pass', 'QH 8H js']
+        self.human.ask_card_list('Pick some cards: ', cmd = False)
+        self.assertEqual('Please enter valid cards.', sys.stdout.output[1])
+
+    def testAskCardListLenAnswer(self):
+        """Test the answer some cards request with valid lengths."""
+        sys.stdin.lines = ['7c', '7c QH 8H js', 'QH 8H js']
+        check = [cards.Card(*pair) for pair in 'QH', '8H', 'JS']
+        self.assertEqual(check, self.human.ask_card_list('Pick some cards: ', valid_lens = [2, 3]))
+
+    def testAskCardListLenErrorInvalid(self):
+        """Test the first part of the error for an invalid length when asking for cards."""
+        sys.stdin.lines = ['7c', '7c QH 8H js', 'QH 8H js']
+        self.human.ask_card_list('Pick some cards: ', valid_lens = [2, 3])
+        self.assertEqual('That is an invalid number of cards.', sys.stdout.output[1])
+
+    def testAskCardListLenErrorPlease1(self):
+        """Test the first part of the error for an invalid length when asking for cards."""
+        sys.stdin.lines = ['7c QH 8H js', 'js']
+        self.human.ask_card_list('Pick some cards: ', valid_lens = [1])
+        self.assertEqual('Please enter 1 card.', sys.stdout.output[3])
+
+    def testAskCardListLenErrorPlease2(self):
+        """Test the first part of the error for an invalid length when asking for cards."""
+        sys.stdin.lines = ['7c QH 8H js', '8H js']
+        self.human.ask_card_list('Pick some numbers: ', valid_lens = [2])
+        self.assertEqual('Please enter 2 cards.', sys.stdout.output[3])
+
+    def testAskCardListLenErrorPlease123(self):
+        """Test the first part of the error for an invalid length when asking for cards."""
+        sys.stdin.lines = ['7c QH 8H js', '8H js']
+        self.human.ask_card_list('Pick some cards: ', valid_lens = [1, 2, 3])
+        self.assertEqual('Please enter 1, 2, or 3 cards.', sys.stdout.output[3])
+
+    def testAskCardListPlain(self):
+        """Test a simple request for some cards."""
+        sys.stdin.lines = ['QH 8H js']
+        check = [cards.Card(*pair) for pair in ('QH', '8H', 'JS')]
+        self.assertEqual(check, self.human.ask_card_list('Pick some cards: '))
+
+    def testAskCardsListSkip(self):
+        """Test skipping ask_card_list at the end of the game."""
+        self.human.game.force_end = True
+        self.assertEqual([], self.human.ask_card_list('Pick some cards: '))
+
+    def testAskCardListValidAnswer(self):
+        """Test the answer for some cards with defined valid answers."""
+        sys.stdin.lines = ['th tc', 'th 5c']
+        valid = cards.Hand(cards.parse_text('ad 8s 4h 5c th'), deck = self.deck)
+        check = [cards.Card(*pair) for pair in ('TH', '5C')]
+        self.assertEqual(check, self.human.ask_card_list('Pick some cards: ', valid = valid))
+
+    def testAskCardListValidError(self):
+        """Test the error for some cards with defined valid answers."""
+        sys.stdin.lines = ['th tc', 'th 5c']
+        valid = cards.Hand(cards.parse_text('ad 8s 4h 5c th'), deck = self.deck)
+        self.human.ask_card_list('Pick some cards: ', valid = valid)
+        check = "Not all of those cards are available."
+        self.assertEqual(check, sys.stdout.output[1])
+
+
+class HumanoidAskCardTest(unittest.TestCase):
+    """Tests of Humanoid asking for a card. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.human = player.Humanoid('Gandalf')
+        self.deck = cards.Deck()
+        self.human.game = unitility.ProtoObject(force_end = False, deck = self.deck)
+        self.stdin_hold = sys.stdin
+        self.stdout_hold = sys.stdout
+        sys.stdin = unitility.ProtoStdIn()
+        sys.stdout = unitility.ProtoStdOut()
+
+    def tearDown(self):
+        sys.stdin = self.stdin_hold
+        sys.stdout = self.stdout_hold
+
+    def testAskCardCommand(self):
+        """Test a request for a card with a command answer."""
+        sys.stdin.lines = ['double-down']
+        self.assertEqual('double-down', self.human.ask_card('Pick a card: '))
+
+    def testAskCardCommandNotAnswer(self):
+        """Test the answer for a card with an invalid command answer."""
+        sys.stdin.lines = ['double-down', 'as']
+        self.assertEqual(cards.Card('A', 'S'), self.human.ask_card('Pick a card: ', cmd = False))
+
+    def testAskCardCommandNotError(self):
+        """Test the error for a card with an invalid command answer."""
+        sys.stdin.lines = ['double-down', 'AS']
+        self.human.ask_card('Pick a card: ', cmd = False)
+        self.assertEqual('Please enter a valid card.', sys.stdout.output[1])
+
+    def testAskCardDefault(self):
+        """Test getting the default answer when asking for a card."""
+        sys.stdin.lines = [' ']
+        check = cards.Card('2', 'C')
+        self.assertEqual(check, self.human.ask_card('Pick a card: ', default = check, cmd = False))
+
+    def testAskCardFeatureDeck(self):
+        """Test getting features sets from the game deck when asking for a card."""
+        self.human.game.deck = cards.Deck(rank_set = cards.STANDARD_WRAP_RANKS)
+        sys.stdin.lines = ['8c']
+        card = self.human.ask_card('Pick a card: ', cmd = False)
+        self.assertTrue(card.rank_set.wrap)
+
+    def testAskCardFeatureHand(self):
+        """Test getting features sets from the valid hand when asking for a card."""
+        deck = cards.Deck(rank_set = cards.STANDARD_WRAP_RANKS)
+        sys.stdin.lines = ['8h']
+        valid = cards.Hand(cards.parse_text('5C 7D 8H TS'), deck = deck)
+        card = self.human.ask_card('Pick a card: ', valid = valid, cmd = False)
+        self.assertTrue(card.rank_set.wrap)
+
+    def testAskCardMultiple(self):
+        """Test the error for getting multiple cards when asking for one card."""
+        sys.stdin.lines = ['3H 6D 5d', '7s']
+        card = self.human.ask_card('Pick a card: ', cmd = False)
+        self.assertEqual('One card only please.', sys.stdout.output[1])
+
+    def testAskCardPlain(self):
+        """Test a simple request for a card."""
+        sys.stdin.lines = ['3d']
+        self.assertEqual(cards.Card('3', 'D'), self.human.ask_card('Pick a card: '))
+
+    def testAskCardSkip(self):
+        """Test skipping ask_card at the end of the game."""
+        self.human.game.force_end = True
+        self.assertEqual(cards.Card('X', 'S'), self.human.ask_card('Pick a card: '))
+
+    def testAskCardValidAnswer(self):
+        """Test the answer for a card with defined valid answers."""
+        sys.stdin.lines = ['5S', 'tS']
+        valid = cards.Hand(cards.parse_text('5C 7D 8H TS'))
+        self.assertEqual(cards.Card('T', 'S'), self.human.ask_card('Pick a card: ', valid = valid))
+
+    def testAskCardValidError(self):
+        """Test the error for a card with defined valid answers."""
+        sys.stdin.lines = ['5S', 'tS']
+        valid = cards.Hand(cards.parse_text('5C 7D 8H TS'))
+        self.human.ask_card('Pick a card: ', valid = valid)
+        self.assertEqual('Please enter one of 5C, 7D, 8H, or TS.', sys.stdout.output[1])
 
 
 class HumanoidAskIntListTest(unittest.TestCase):

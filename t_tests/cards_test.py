@@ -7,7 +7,11 @@ Classes:
 CardTest: Tests of the standard Card class. (unittest.TestCase)
 CRandTest: Test of the implementation of C's rand function.
 DeckTest: Test of the standard Deck class. (unittest.TestCase)
+FeatureSetTest: Tests of the FeatureSet (ranks/suits) class. (TestCase)
 HandTest: Test of the Hand (of cards) class. (unittest.TestCase)
+MultiTrackingDeckTest: Tests of the MultiTrackingDeck class. (TestCase)
+ParseTextTest: Tests of the parse_text function. (unittest.TestCase)
+PileTest: Tests of the Pile (of Cards) class. (unittest.TestCase)
 TrackingCardTest: Tests of the TrackingCard class. (unittest.TestCase)
 TrackingDeckTest: Tests of the TrackingDeck class. (unittest.TestCase)
 """
@@ -52,7 +56,8 @@ class CardTest(unittest.TestCase):
 
     def testAboveWrapYes(self):
         """Test Card.above with wrapped ranks."""
-        self.assertTrue(self.ace.above(cards.Card('K', 'S'), wrap_ranks = True))
+        self.ace.rank_set = cards.STANDARD_WRAP_RANKS
+        self.assertTrue(self.ace.above(cards.Card('K', 'S')))
 
     def testBelowAbove(self):
         """Test Card.below when below."""
@@ -76,7 +81,9 @@ class CardTest(unittest.TestCase):
 
     def testBelowWrapYes(self):
         """Test Card.below with wrapped ranks."""
-        self.assertTrue(cards.Card('K', 'S').below(self.ace, wrap_ranks = True))
+        king = cards.Card('K', 'S')
+        king.rank_set = cards.STANDARD_WRAP_RANKS
+        self.assertTrue(king.below(self.ace))
 
     def testEqualCard(self):
         """Test equality of card and card."""
@@ -118,6 +125,22 @@ class CardTest(unittest.TestCase):
         """Test formatting with the face up specification."""
         self.assertEqual('JH', '{:u}'.format(self.jack))
 
+    def testLessThanEqual(self):
+        """Test a less than comparison of equalcards."""
+        self.assertFalse(self.jack < self.jack)
+
+    def testLessThanNo(self):
+        """Test an incorrect less than comparison of cards."""
+        self.assertFalse(self.ace < self.jack)
+
+    def testLessThanRank(self):
+        """Test a less than comparison in the same suit."""
+        self.assertTrue(cards.Card('2', 'H') < self.jack)
+
+    def testLessThanYes(self):
+        """Test a correct less than comparison of cards."""
+        self.assertTrue(self.jack < self.ace)
+
     def testNotEqualCard(self):
         """Test inequality of card and card."""
         self.assertNotEqual(cards.Card('A', 'C'), self.ace)
@@ -133,38 +156,6 @@ class CardTest(unittest.TestCase):
     def testNotEqualNotImplemented(self):
         """Test inequality of card and integer."""
         self.assertNotEqual(108, self.ace)
-
-    def testLessThanEqual(self):
-        """Test a less than comparison of equalcards."""
-        self.assertFalse(self.jack < self.jack)
-
-    def testLessThanNo(self):
-        """Test an incorrect less than comparison of cards."""
-        self.assertFalse(self.jack < self.ace)
-
-    def testLessThanYes(self):
-        """Test a correct less than comparison of cards."""
-        self.assertTrue(self.ace < self.jack)
-
-    def testRegExBackwards(self):
-        """Test the card regular expression on backwards card text."""
-        self.assertIsNone(self.ace.card_re.match('dk'))
-
-    def testRegExLower(self):
-        """Test the card regular expression on lower case card text."""
-        self.assertIsNotNone(self.ace.card_re.match('kd'))
-
-    def testRegExMixed(self):
-        """Test the card regular expression on mexed case card text."""
-        self.assertIsNotNone(self.ace.card_re.match('aC'))
-
-    def testRegExValid(self):
-        """Test the card regular expression on valid card text."""
-        self.assertIsNotNone(self.ace.card_re.match('9C'))
-
-    def testRegExWord(self):
-        """Test the card regular expression on an English word."""
-        self.assertIsNone(self.ace.card_re.match('feline'))
 
     def testRepr(self):
         """Test the computer readable text representation."""
@@ -403,21 +394,59 @@ class DeckTest(unittest.TestCase):
         card = self.deck.pick(18)
         self.assertTrue(card.up)
 
+    def testPlayerHandsKeys(self):
+        players = ['Jack', 'Robert', 'Tyler']
+        hands = self.deck.player_hands(players)
+        keys = list(hands.keys())
+        keys.sort()
+        self.assertEqual(players, keys)
+
+    def testPlayerHandsValues(self):
+        players = ['Jack', 'Robert', 'Tyler']
+        hands = self.deck.player_hands(players)
+        self.assertTrue(all(hand.deck is self.deck for hand in hands.values()))
+
+    def testRegExBackwards(self):
+        """Test the card regular expression on backwards card text."""
+        self.assertIsNone(self.deck.card_re.match('dk'))
+
+    def testRegExLower(self):
+        """Test the card regular expression on lower case card text."""
+        self.assertIsNotNone(self.deck.card_re.match('kd'))
+
+    def testRegExMixed(self):
+        """Test the card regular expression on mexed case card text."""
+        self.assertIsNotNone(self.deck.card_re.match('aC'))
+
+    def testRegExValid(self):
+        """Test the card regular expression on valid card text."""
+        self.assertIsNotNone(self.deck.card_re.match('9C'))
+
+    def testRegExWord(self):
+        """Test the card regular expression on an English word."""
+        self.assertIsNone(self.deck.card_re.match('feline'))
+
+    def testRegExWordMatch(self):
+        """Test the card regular expression on a word that has a card in it."""
+        self.assertIsNone(self.deck.card_re.match('backward'))
+
     def testRepr(self):
         """Test the repr of a fresh deck."""
-        self.assertEqual('<Deck with 52 cards remaining>', repr(self.deck))
+        card_list = ', '.join(card.up_text for card in self.deck)
+        self.assertEqual('<Deck [{}]>'.format(card_list), repr(self.deck))
 
     def testReprDeal(self):
         """Test the repr of a deck after dealing some cards."""
+        card_list = ', '.join(card.up_text for card in self.deck[:34])
         for deal in range(18):
             card = self.deck.deal()
-        self.assertEqual('<Deck with 34 cards remaining>', repr(self.deck))
+        self.assertEqual('<Deck [{}]>'.format(card_list), repr(self.deck))
 
     def testReprOne(self):
         """Test the repr of a deck after dealing all but one card."""
         for deal in range(51):
             card = self.deck.deal()
-        self.assertEqual('<Deck with 1 card remaining>', repr(self.deck))
+        self.assertEqual('<Deck [AC]>', repr(self.deck))
 
     def testShuffleDiscards(self):
         """Test that shuffling the deck gets back the discards."""
@@ -465,12 +494,183 @@ class DeckTest(unittest.TestCase):
         self.assertNotEqual(check, self.deck.cards)
 
 
+class FeatureSetTest(unittest.TestCase):
+    """Tests of the FeatureSet (ranks/suits) class. (unittest.TestCase)"""
+
+    def testAboveBelow(self):
+        """Test FeatureSet.above when below."""
+        self.assertFalse(cards.STANDARD_RANKS.above('J', 'Q'))
+
+    def testAboveOne(self):
+        """Test FeatureSet.above when above."""
+        self.assertTrue(cards.STANDARD_RANKS.above('J', 'T'))
+
+    def testAboveTwoNo(self):
+        """Test FeatureSet.above when too far above."""
+        self.assertFalse(cards.STANDARD_RANKS.above('J', '9'))
+
+    def testAboveTwoYes(self):
+        """Test FeatureSet.above with multi-rank distance."""
+        self.assertTrue(cards.STANDARD_RANKS.above('J', '9', 2))
+
+    def testAboveWrapNo(self):
+        """Test FeatureSet.above with wrapped ranks."""
+        self.assertFalse(cards.STANDARD_RANKS.above('A', 'K'))
+
+    def testAboveWrapYes(self):
+        """Test FeatureSet.above with wrapped ranks."""
+        self.assertTrue(cards.STANDARD_WRAP_RANKS.above('A', 'K'))
+
+    def testBelowAbove(self):
+        """Test FeatureSet.below when below."""
+        self.assertFalse(cards.STANDARD_RANKS.below('J', 'T'))
+
+    def testBelowOne(self):
+        """Test FeatureSet.below when below."""
+        self.assertTrue(cards.STANDARD_RANKS.below('J', 'Q'))
+
+    def testBelowTwoNo(self):
+        """Test FeatureSet.below when too far below."""
+        self.assertFalse(cards.STANDARD_RANKS.below('J', 'K'))
+
+    def testBelowTwoYes(self):
+        """Test FeatureSet.below with multi-rank distance."""
+        self.assertTrue(cards.STANDARD_RANKS.below('J', 'K', 2))
+
+    def testBelowWrapNo(self):
+        """Test FeatureSet.below with wrapped ranks."""
+        self.assertFalse(cards.STANDARD_RANKS.below('K', 'A'))
+
+    def testBelowWrapYes(self):
+        """Test FeatureSet.below with wrapped ranks."""
+        self.assertTrue(cards.STANDARD_WRAP_RANKS.below('K', 'A'))
+
+    def testColorsDefault(self):
+        """Test the default color."""
+        self.assertEqual('X', cards.STANDARD_RANKS.colors['8'])
+
+    def testColorsInvalid(self):
+        """Test validity checks on the colors."""
+        with self.assertRaises(ValueError):
+            cards.FeatureSet('SPAM', 'RBW')
+
+    def testColorsSpecified(self):
+        """Test specifying colors."""
+        self.assertEqual('R', cards.STANDARD_SUITS.colors['H'])
+
+    def testCopyAttrs(self):
+        """Test copying the attributes of a FeatureSet."""
+        clone = cards.STANDARD_SUITS.copy()
+        self.assertEqual(clone.chars, cards.STANDARD_SUITS.chars)
+        self.assertEqual(clone.names, cards.STANDARD_SUITS.names)
+        self.assertEqual(clone.values, cards.STANDARD_SUITS.values)
+        self.assertEqual(clone.colors, cards.STANDARD_SUITS.colors)
+        self.assertEqual(clone.skip, cards.STANDARD_SUITS.skip)
+        self.assertEqual(clone.wrap, cards.STANDARD_SUITS.wrap)
+        self.assertEqual(clone.an_chars, cards.STANDARD_SUITS.an_chars)
+
+    def testCopyIndependence(self):
+        """Test the independence of a copy of a FeatureSet."""
+        clone = cards.STANDARD_SUITS.copy()
+        clone.names['X'] = 'Fool'
+        self.assertNotEqual(clone.names['X'], cards.STANDARD_RANKS.names['X'])
+
+    def testContains(self):
+        """Test checking for valid characters."""
+        self.assertTrue('6' in cards.STANDARD_RANKS)
+
+    def testContainsNot(self):
+        """Test checking for invalid characters."""
+        self.assertFalse('6' in cards.STANDARD_SUITS)
+
+    def testIndex(self):
+        """Test getting the index of a char."""
+        self.assertEqual(5, cards.STANDARD_RANKS.index('5'))
+
+    def testIndexError(self):
+        """Test indexing an invalid character."""
+        self.assertRaises(ValueError, cards.STANDARD_SUITS.index, 'P')
+
+    def testItems(self):
+        """Test iterating through the items of a FeatureSet."""
+        check = [(0, 'C', 'Clubs', 1, 'B'), (1, 'D', 'Diamonds', 1, 'R'), (2, 'H', 'Hearts', 1, 'R')]
+        check.append((3, 'S', 'Spades', 1, 'B'))
+        self.assertEqual(check, list(cards.STANDARD_SUITS.items()))
+
+    def testIter(self):
+        """Test iterating over the characters."""
+        self.assertEqual(['C', 'D', 'H', 'S'], list(cards.STANDARD_SUITS))
+
+    def testIterSkip(self):
+        """Test iterating when there is a skip value."""
+        self.assertEqual(list('A23456789TJQK'), list(cards.STANDARD_RANKS))
+
+    def testLen(self):
+        """Test the length of a FeatureSet."""
+        self.assertEqual(4, len(cards.STANDARD_SUITS))
+
+    def testLenSkip(self):
+        """Test the length of a FeatureSet with a skip value."""
+        self.assertEqual(13, len(cards.STANDARD_RANKS))
+
+    def testNamesInvalid(self):
+        """Test validity checks on names."""
+        names = ('Spam', 'Pythons', 'Armaments', 'Moose', 'Twits')
+        with self.assertRaises(ValueError):
+            cards.FeatureSet('SPAM', names)
+
+    def testNamesSpecified(self):
+        """Test specifying names."""
+        self.assertEqual('Queen', cards.STANDARD_RANKS.names['Q'])
+
+    def testNext(self):
+        """Test getting the next rank."""
+        self.assertEqual('9', cards.STANDARD_RANKS.next('8'))
+
+    def testNextWrapNo(self):
+        """Test failing to get the next rank without wrapping."""
+        self.assertRaises(IndexError, cards.STANDARD_RANKS.next, 'K')
+
+    def testNextWrapYes(self):
+        """Test getting the next rank with wrapping."""
+        self.assertEqual('A', cards.STANDARD_WRAP_RANKS.next('K'))
+
+    def testPrevious(self):
+        """Test getting the previous rank."""
+        self.assertEqual('7', cards.STANDARD_RANKS.previous('8'))
+
+    def testPreviousWrapNo(self):
+        """Test failing to get the previous rank without wrapping."""
+        self.assertRaises(IndexError, cards.STANDARD_RANKS.previous, 'A')
+
+    def testPreviousWrapYes(self):
+        """Test getting the previous rank with wrapping."""
+        self.assertEqual('K', cards.STANDARD_WRAP_RANKS.previous('A'))
+
+    def testRepr(self):
+        """Test the dubugging text representation."""
+        self.assertEqual("<FeatureSet 'XA23456789TJQK'>", repr(cards.STANDARD_RANKS))
+
+    def testValuesDefault(self):
+        """Test the default values."""
+        self.assertEqual(1, cards.STANDARD_SUITS.values['S'])
+
+    def testValuesInvalid(self):
+        """Test validity checks on the values."""
+        with self.assertRaises(ValueError):
+            cards.FeatureSet('RABIT', [2, 7, 1, 8, 2, 8])
+
+    def testValuesSpecified(self):
+        """Test specifying values."""
+        self.assertEqual(10, cards.STANDARD_RANKS.values['J'])
+
+
 class HandTest(unittest.TestCase):
     """Test of the Hand (of cards) class. (unittest.TestCase)"""
 
     def setUp(self):
         self.deck = cards.Deck()
-        self.hand = cards.Hand(self.deck)
+        self.hand = cards.Hand(deck = self.deck)
 
     def testBoolFalse(self):
         """Test the bool of an empty hand."""
@@ -515,25 +715,6 @@ class HandTest(unittest.TestCase):
         check = self.hand.cards[2]
         self.assertIn(check, self.hand)
 
-    def testDrawCard(self):
-        """Test drawing a card from the deck."""
-        self.deck.shuffle()
-        check = self.deck.cards[-1]
-        self.hand.draw()
-        self.assertEqual([check], self.hand.cards)
-
-    def testDrawDown(self):
-        """Test drawing a down card from the deck."""
-        self.deck.shuffle()
-        self.hand.draw(up = False)
-        self.assertFalse(self.hand.cards[0].up)
-
-    def testDrawUp(self):
-        """Test drawing a down card from the deck."""
-        self.deck.shuffle()
-        self.hand.draw()
-        self.assertTrue(self.hand.cards[0].up)
-
     def testDiscardAll(self):
         """Test that discarding a whole hand sends it to the discard pile."""
         self.deck.shuffle()
@@ -569,9 +750,73 @@ class HandTest(unittest.TestCase):
         self.hand.discard(discard)
         self.assertNotIn(discard, self.hand.cards)
 
+    def testDrawCard(self):
+        """Test drawing a card from the deck."""
+        self.deck.shuffle()
+        check = self.deck.cards[-1]
+        self.hand.draw()
+        self.assertEqual([check], self.hand.cards)
+
+    def testDrawDown(self):
+        """Test drawing a down card from the deck."""
+        self.deck.shuffle()
+        self.hand.draw(up = False)
+        self.assertFalse(self.hand.cards[0].up)
+
+    def testDrawReturn(self):
+        """Test the return value of drawing a card from the deck."""
+        self.deck.shuffle()
+        check = self.deck.cards[-1]
+        self.assertEqual(check, self.hand.draw())
+
+    def testDrawUp(self):
+        """Test drawing a down card from the deck."""
+        self.deck.shuffle()
+        self.hand.draw()
+        self.assertTrue(self.hand.cards[0].up)
+
     def testIter(self):
         """Test the iterator for a hand."""
         self.assertEqual(list(self.hand), self.hand.cards)
+
+    def testFindAll(self):
+        """Test finding all of the cards in hand."""
+        self.assertEqual(self.hand, self.hand.find())
+
+    def testFindNotRank(self):
+        """Test finding cards in hand excluding a rank."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 3C 4C 5C 5H')
+        check = cards.Hand(cards.parse_text('6D 7D 3C 4C'))
+        self.assertEqual(check, self.hand.find(not_rank = '5'))
+
+    def testFindNotSuit(self):
+        """Test finding cards in hand excluding a suit."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        check = cards.Hand(cards.parse_text('5D 5H 6D 7D'))
+        self.assertEqual(check, self.hand.find(not_suit = 'C'))
+
+    def testFindRank(self):
+        """Test finding cards in hand matching a rank."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        check = cards.Hand(cards.parse_text('5C 5D 5H'))
+        self.assertEqual(check, self.hand.find(rank = '5'))
+
+    def testFindRegex(self):
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        check = cards.Hand(cards.parse_text('5C 5D 6D'))
+        self.assertEqual(check, self.hand.find(regex = '[56][CD]'))
+
+    def testFindSuit(self):
+        """Test finding cards in hand matching a suit."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        check = cards.Hand(cards.parse_text('3C 4C 5C'))
+        self.assertEqual(check, self.hand.find(suit = 'C'))
+
+    def testFindTwoParam(self):
+        """Test finding cards in hand with two criteria."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        check = cards.Hand(cards.parse_text('5C 5D'))
+        self.assertEqual(check, self.hand.find(rank = '5', not_suit = 'H'))
 
     def testLenEmpty(self):
         """Test the len of a hand."""
@@ -593,11 +838,30 @@ class HandTest(unittest.TestCase):
         self.hand.discard(self.hand.cards[-1])
         self.assertEqual(3, len(self.hand))
 
+    def testRankInNo(self):
+        """Test check for a rank that is not in the hand."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        self.assertFalse(self.hand.rank_in('J'))
+
+    def testRankInYes(self):
+        """Test check for a rank that is in the hand."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        self.assertTrue(self.hand.rank_in('7'))
+
+    def testRanks(self):
+        """Test getting the ranks in a hand."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        self.assertEqual('5 6 7 4 5 3 5'.split(), self.hand.ranks())
+
+    def testRanksEmpty(self):
+        """Test getting the ranks from an empty hand."""
+        self.assertEqual([], self.hand.ranks())
+
     def testRepr(self):
         """Test the repr of a hand of cards."""
         for card in range(5):
             self.hand.draw()
-        self.assertEqual('<Hand: KS, KH, KD, KC, QS>', repr(self.hand))
+        self.assertEqual('<Hand [KS, KH, KD, KC, QS]>', repr(self.hand))
 
     def testReprDiscard(self):
         """Test the repr of a hand of cards after some discards."""
@@ -605,11 +869,11 @@ class HandTest(unittest.TestCase):
             self.hand.draw()
         self.hand.discard('KH')
         self.hand.discard('KC')
-        self.assertEqual('<Hand: KS, KD, QS>', repr(self.hand))
+        self.assertEqual('<Hand [KS, KD, QS]>', repr(self.hand))
 
     def testReprEmpty(self):
         """Test the repr of an empty hand of cards."""
-        self.assertEqual('<Hand: (empty)>', repr(self.hand))
+        self.assertEqual('<Hand []>', repr(self.hand))
 
     def testShiftGone(self):
         """Test that a shifted card is not in the old hand."""
@@ -670,13 +934,32 @@ class HandTest(unittest.TestCase):
         self.hand.draw()
         self.assertEqual(check, str(self.hand))
 
+    def testSuitInNo(self):
+        """Test check for a suit that is not in the hand."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        self.assertFalse(self.hand.suit_in('S'))
+
+    def testSuitInYes(self):
+        """Test check for a suit that is in the hand."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        self.assertTrue(self.hand.suit_in('C'))
+
+    def testSuits(self):
+        """Test getting the suits in a hand."""
+        self.hand.cards = cards.parse_text('5D 6D 7D 4C 5C 3C 5H')
+        self.assertEqual('D D D C C C H'.split(), self.hand.suits())
+
+    def testSuitsEmpty(self):
+        """Test getting the suits from an empty hand."""
+        self.assertEqual([], self.hand.suits())
+
 class MultiTrackingDeckTest(unittest.TestCase):
     """Tests of the MultiTrackingDeck class. (unittest.TestCase)"""
 
     def setUp(self):
         self.game = unitility.ProtoObject(reserve = [[], [], []], cells = [], waste = [],
             tableau = [[], [], []])
-        self.deck = cards.MultiTrackingDeck(self.game)
+        self.deck = cards.MultiTrackingDeck(None, self.game)
         self.game.deck = self.deck
 
     def testCardREBadRank(self):
@@ -769,7 +1052,7 @@ class MultiTrackingDeckTest(unittest.TestCase):
 
     def testRepr(self):
         """Test the debugging text representation."""
-        check = '<MultiTrackingDeck of TrackingCards for {!r}>'.format(self.game)
+        check = '<MultiTrackingDeck for {!r}>'.format(self.game)
         self.assertEqual(check, repr(self.deck))
 
     def testStr(self):
@@ -811,6 +1094,265 @@ class MultiTrackingDeckTest(unittest.TestCase):
         check = 'Deck of cards with 103 cards, plus 1 card in play and 0 cards discarded'
 
 
+class ParseTextTest(unittest.TestCase):
+    """Tests of the parse_text function. (unittest.TestCase)"""
+
+    def testParseOne(self):
+        """Test parsing the text for a single card."""
+        self.assertEqual(cards.Card('J', 'S'), cards.parse_text('JS'))
+
+    def testParseOneDeck(self):
+        """Test parsing the text for a single card with a deck parameter."""
+        deck = cards.Deck(rank_set = cards.STANDARD_WRAP_RANKS, suit_set = cards.TWO_SUITS)
+        self.assertEqual(cards.Card('3', 'H'), cards.parse_text('3H', deck = deck))
+
+    def testParseOneDeckFeature(self):
+        """Test features when parsing the text for a single card with a deck."""
+        deck = cards.Deck(rank_set = cards.STANDARD_WRAP_RANKS, suit_set = cards.TWO_SUITS)
+        card = cards.parse_text('3H', deck = deck)
+        self.assertEqual(cards.STANDARD_WRAP_RANKS, card.rank_set)
+
+    def testParseOneLower(self):
+        """Test parsing the text for a single card in lower case."""
+        self.assertEqual(cards.Card('A', 'D'), cards.parse_text('ad'))
+
+    def testParseMulti(self):
+        """Test parsing the text for multiple cards."""
+        check = [cards.Card(*pair) for pair in (('T', 'C'), ('J', 'C'), ('Q', 'C'), ('K', 'C'), ('A', 'C'))]
+        self.assertEqual(check, cards.parse_text('TC JC QC KC AC'))
+
+    def testParseMultiDeck(self):
+        """Test parsing the text for multiple cards."""
+        deck = cards.Deck(rank_set = cards.STANDARD_WRAP_RANKS, suit_set = cards.TWO_SUITS)
+        check = [cards.Card(*pair) for pair in (('A', 'S'), ('2', 'S'), ('3', 'S'), ('4', 'S'), ('6', 'S'))]
+        self.assertEqual(check, cards.parse_text('AS 2S 3S 4S 6S', deck = deck))
+
+    def testParseMultiDeckFeature(self):
+        """Test features when parsing the text for multiple cards."""
+        deck = cards.Deck(rank_set = cards.STANDARD_WRAP_RANKS, suit_set = cards.TWO_SUITS)
+        card = cards.parse_text('AS 2S 3S 4S 6S', deck = deck)[2]
+        self.assertEqual(cards.TWO_SUITS, card.suit_set)
+
+    def testParseMultiLower(self):
+        """Test parsing the text for multiple cards with lower case."""
+        check = [cards.Card(*pair) for pair in (('T', 'C'), ('J', 'C'), ('Q', 'C'), ('K', 'C'), ('A', 'C'))]
+        self.assertEqual(check, cards.parse_text('TC jc qc kC Ac'))
+
+
+class PileTest(unittest.TestCase):
+    """Tests of the Pile (of Cards) class. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.pile = cards.Pile(cards.parse_text('AS 3C QS 2H 8D QH JH'))
+        self.cards = cards.parse_text('4C 6D 9H TS QC')
+
+    def testAddList(self):
+        """Test adding a pile to a list."""
+        check = self.pile.cards + self.cards
+        self.assertEqual(check, self.pile + self.cards)
+
+    def testAddMakesPile(self):
+        """Test that the result of addition is a Pile."""
+        check = self.pile + self.cards
+        self.assertIsInstance(check, cards.Pile)
+
+    def testAddPile(self):
+        """Test adding one pile to another."""
+        other = cards.Pile(self.cards)
+        check = self.pile.cards + self.cards
+        self.assertEqual(check, self.pile + other)
+
+    def testChildPile(self):
+        """Test that the child of a Pile is a Pile."""
+        pile = self.pile._child(cards.parse_text('AD 2D 3D'))
+        self.assertIsInstance(pile, cards.Pile)
+
+    def testDel(self):
+        """Test deleting a card from the pile."""
+        check = self.pile[:2] + self.pile[3:]
+        del self.pile[2]
+        self.assertEqual(check, self.pile)
+
+    def testEqualListNo(self):
+        """Test a pile not being equal to a different list."""
+        check = cards.parse_text('AS 4C 2H 8D QH JH')
+        self.assertNotEqual(check, self.pile)
+
+    def testEqualListYes(self):
+        """Test a pile being equal to a similar list."""
+        check = cards.parse_text('AS 3C QS 2H 8D QH JH')
+        self.assertEqual(check, self.pile)
+
+    def testEqualPileNo(self):
+        """Test a pile not being equal to a different pile."""
+        check = cards.Pile(cards.parse_text('AS 4C 2H 8D QH JH'))
+        self.assertNotEqual(check, self.pile)
+
+    def testEqualPileYes(self):
+        """Test a pile being equal to a similar pile."""
+        check = cards.Pile(cards.parse_text('AS 3C QS 2H 8D QH JH'))
+        self.assertEqual(check, self.pile)
+
+    def testGetIndex(self):
+        """Test getting a single card with indexing a Pile."""
+        check = cards.parse_text('8D')
+        self.assertEqual(check, self.pile[4])
+
+    def testGetNegativeIndex(self):
+        """Test getting a single card with negative indexing a Pile."""
+        check = cards.parse_text('2H')
+        self.assertEqual(check, self.pile[-4])
+
+    def testGetSliceData(self):
+        """Test getting a group of cards with slicing a Pile."""
+        check = cards.parse_text('QS 2H 8D QH')
+        self.assertEqual(check, self.pile[2:-1])
+
+    def testGetSlicePile(self):
+        """Test getting a Pile with slicing a Pile."""
+        self.assertIsInstance(self.pile[2:-1], cards.Pile)
+
+    def testGetSliceStep(self):
+        """Test slicing a Pile with a step."""
+        check = cards.parse_text('3C 2H QH')
+        self.assertEqual(check, self.pile[1:6:2])
+
+    def testInplaceMultiply(self):
+        """Test multiplying a Pile in place."""
+        base = cards.parse_text('8S AH')
+        check = cards.parse_text('8S AH 8S AH 8S AH 8S AH 8S AH')
+        pile = cards.Pile(base)
+        pile *= 5
+        self.assertEqual(check, pile)
+
+    def testInplaceMultiplyOne(self):
+        """Test multiplying a Pile by one in place."""
+        check = self.pile.cards[:]
+        self.pile *= 1
+        self.assertEqual(check, self.pile)
+
+    def testInplaceMultiplyZero(self):
+        """Test multiplying a Pile by zero in place."""
+        check = []
+        self.pile *= 0
+        self.assertEqual(check, self.pile)
+
+    def testInsert(self):
+        """Test inserting a card into a Pile."""
+        check = cards.parse_text('AS 3C QS JS 2H 8D QH JH')
+        self.pile.insert(3, cards.parse_text('JS'))
+
+    def testLen(self):
+        """Test the len of a Pile."""
+        self.assertEqual(7, len(self.pile))
+
+    def testLenEmpty(self):
+        """Test the len of a Pile."""
+        self.assertEqual(0, len(cards.Pile()))
+
+    def testMultiply(self):
+        """Test multiplying a Pile."""
+        base = cards.parse_text('8S AH')
+        check = cards.parse_text('8S AH 8S AH 8S AH 8S AH 8S AH')
+        pile = cards.Pile(base)
+        self.assertEqual(check, pile * 5)
+
+    def testMultiplyOne(self):
+        """Test multiplying a Pile by one."""
+        check = self.pile.cards[:]
+        self.assertEqual(check, self.pile * 1)
+
+    def testMultiplyZero(self):
+        """Test multiplying a Pile by zero."""
+        check = []
+        self.assertEqual(check, self.pile * 0)
+
+    def testRepr(self):
+        """Test the debugging text representation of a Pile."""
+        self.assertEqual('<Pile [AS, 3C, QS, 2H, 8D, QH, JH]>', repr(self.pile))
+
+    def testReprEmpty(self):
+        """Test the debugging text representation of an empty Pile."""
+        self.assertEqual('<Pile []>', repr(cards.Pile()))
+
+    def testRightMultiply(self):
+        """Test right multiplying a Pile."""
+        base = cards.parse_text('8S AH')
+        check = cards.parse_text('8S AH 8S AH 8S AH 8S AH 8S AH')
+        pile = cards.Pile(base)
+        self.assertEqual(check, 5 * pile)
+
+    def testRightMultiplyOne(self):
+        """Test right multiplying a Pile by one."""
+        check = self.pile.cards[:]
+        self.assertEqual(check, 1 * self.pile)
+
+    def testRightMultiplyZero(self):
+        """Test right multiplying a Pile by zero."""
+        check = []
+        self.assertEqual(check, 0 * self.pile)
+
+    def testSetIndex(self):
+        """Test setting a single card with indexing a Pile."""
+        check = cards.parse_text('AS 3C QS 2H JS QH JH')
+        self.pile[4] = check[4]
+        self.assertEqual(check, self.pile)
+
+    def testSetNegativeIndex(self):
+        """Test setting a single card with negative indexing a Pile."""
+        check = cards.parse_text('AS 3C QS JS 8D QH JH')
+        self.pile[-4] = check[-4]
+        self.assertEqual(check, self.pile)
+
+    def testSetSliceData(self):
+        """Test setting a group of cards with slicing a Pile."""
+        check = cards.parse_text('AS 3C JS KS JH')
+        self.pile[2:-1] = check[2:4]
+        self.assertEqual(check, self.pile)
+
+    def testSetSliceStep(self):
+        """Test setting a Pile with a step slice."""
+        check = cards.parse_text('AS JS QS QD 8D KS JH')
+        self.pile[1:6:2] = cards.parse_text('JS QD KS')
+        self.assertEqual(check, self.pile)
+
+    def testSort(self):
+        """Test a standard sort of the cards in a Pile."""
+        check = cards.parse_text('3C 8D 2H JH QH AS QS')
+        self.pile.sort()
+        self.assertEqual(check, self.pile.cards)
+
+    def testSortByRank(self):
+        """Test a sort of the cards in a Pile by rank."""
+        check = cards.parse_text('AS 2H 3C 8D JH QS QH')
+        self.pile.sort(key = cards.by_rank)
+        self.assertEqual(check, self.pile.cards)
+
+    def testSortByRankSuit(self):
+        """Test a sort of the cards in a Pile by rank then suit."""
+        check = cards.parse_text('AS 2H 3C 8D JH QH QS')
+        self.pile.sort(key = cards.by_rank_suit)
+        self.assertEqual(check, self.pile.cards)
+
+    def testSortBySuit(self):
+        """Test a sort of the cards in a Pile by suit."""
+        check = cards.parse_text('3C 8D 2H QH JH AS QS')
+        self.pile.sort(key = cards.by_suit)
+        self.assertEqual(check, self.pile.cards)
+
+    def testSortBySuitRank(self):
+        """Test a sort of the cards in a Pile by suit then rank."""
+        check = cards.parse_text('3C 8D 2H JH QH AS QS')
+        self.pile.sort(key = cards.by_suit_rank)
+        self.assertEqual(check, self.pile.cards)
+
+    def testSortByValue(self):
+        """Test a sort of the cards in a Pile by value."""
+        check = cards.parse_text('AS 2H 3C 8D QS QH JH')
+        self.pile.sort(key = cards.by_value)
+        self.assertEqual(check, self.pile.cards)
+
+
 class TrackingCardTest(unittest.TestCase):
     """Tests of the location aware TrackingCard class. (unittest.TestCase)"""
 
@@ -818,7 +1360,7 @@ class TrackingCardTest(unittest.TestCase):
 
     def setUp(self):
         self.game = self.game_tuple(wrap_ranks = False)
-        self.deck = cards.TrackingDeck(self.game)
+        self.deck = cards.TrackingDeck(None, self.game)
         self.ace = self.deck.force('AS', self.deck.cards)
         self.jack = self.deck.force('JH', self.deck.cards)
 
@@ -836,7 +1378,7 @@ class TrackingCardTest(unittest.TestCase):
 
     def testAboveTwoYes(self):
         """Test TrackingCard.above with multi-rank distance."""
-        self.assertTrue(self.jack.above(cards.TrackingCard('9', 'D', self.deck), card_index = 2))
+        self.assertTrue(self.jack.above(cards.TrackingCard('9', 'D', self.deck), 2))
 
     def testAboveWrapNo(self):
         """Test TrackingCard.above with wrapped ranks."""
@@ -844,8 +1386,10 @@ class TrackingCardTest(unittest.TestCase):
 
     def testAboveWrapYes(self):
         """Test TrackingCard.above with wrapped ranks."""
-        self.deck.game = self.game_tuple(wrap_ranks = True)
-        self.assertTrue(self.ace.above(cards.TrackingCard('K', 'S', self.deck)))
+        deck = cards.TrackingDeck(None, self.game, rank_set = cards.STANDARD_WRAP_RANKS)
+        ace = deck.force('AS', deck.cards)
+        king = deck.force('KS', deck.cards)
+        self.assertTrue(ace.above(king))
 
     def testBelowAbove(self):
         """Test TrackingCard.below when below."""
@@ -861,7 +1405,7 @@ class TrackingCardTest(unittest.TestCase):
 
     def testBelowTwoYes(self):
         """Test TrackingCard.below with multi-rank distance."""
-        self.assertTrue(self.jack.below(cards.TrackingCard('K', 'D', self.deck), card_index = 2))
+        self.assertTrue(self.jack.below(cards.TrackingCard('K', 'D', self.deck), 2))
 
     def testBelowWrapNo(self):
         """Test TrackingCard.below with wrapped ranks."""
@@ -869,8 +1413,10 @@ class TrackingCardTest(unittest.TestCase):
 
     def testBelowWrapYes(self):
         """Test TrackingCard.below with wrapped ranks."""
-        self.deck.game = self.game_tuple(wrap_ranks = True)
-        self.assertTrue(cards.TrackingCard('K', 'S', self.deck).below(self.ace))
+        deck = cards.TrackingDeck(None, self.game, rank_set = cards.STANDARD_WRAP_RANKS)
+        ace = deck.force('AS', deck.cards)
+        king = deck.force('KS', deck.cards)
+        self.assertTrue(king.below(ace))
 
     def testEqualSelf(self):
         """Test that a TrackingCard is equal to iteslf."""
@@ -909,7 +1455,7 @@ class TrackingDeckTest(unittest.TestCase):
 
     def setUp(self):
         self.game = solitaire.Solitaire(unitility.AutoBot(), 'none')
-        self.deck = cards.TrackingDeck(self.game)
+        self.deck = cards.TrackingDeck(None, self.game)
         self.game.deck = self.deck
 
     def testDealCard(self):
@@ -1041,7 +1587,7 @@ class TrackingDeckTest(unittest.TestCase):
 
     def testRepr(self):
         """Test the debugging text representation."""
-        check = "<TrackingDeck of TrackingCards for <Game of Solitaire Base with 1 player>>"
+        check = "<TrackingDeck for <Game of Solitaire Base with 1 player>>"
         self.assertEqual(check, repr(self.deck))
 
     def testStrAllNumbers(self):

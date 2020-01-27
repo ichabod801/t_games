@@ -32,6 +32,7 @@ import re
 import string
 
 from . import utility
+from . import cards
 
 
 # Convert 2.7 input to raw_input
@@ -92,8 +93,10 @@ class Player(object):
 
     Methods:
     ask: Get information from the player. (str)
-    ask_int: Get an integer response from the human. (int)
-    ask_int_list: Get a multiple integer response from the human. (int)
+    ask_card: Get a card from the player. (cards.Card)
+    ask_card_list: Get a multiple card response from the player. (int)
+    ask_int: Get an integer response from the player. (int)
+    ask_int_list: Get a multiple integer response from the player. (int)
     ask_valid: Get and validate responses from the user. (str)
     ask_yes_no: Get a yes or no answer from the user. (str)
     clean_up: Do any necessary post-game processing. (None)
@@ -140,6 +143,20 @@ class Player(object):
         """Return a hash of the player's name. (int)"""
         return hash(self.name)
 
+    def __lt__(self, other):
+        """
+        Less-than testing by name. (bool)
+
+        Parameters:
+        other: The object to check equality with. (object)
+        """
+        if isinstance(other, Player):
+            return self.name < other.name
+        elif isinstance(other, str):
+            return self.name < other
+        else:
+            return NotImplemented
+
     def __repr__(self):
         """Generate a debugging text representation. (str)"""
         return '<{} {}>'.format(self.__class__.__name__, self.name)
@@ -157,12 +174,37 @@ class Player(object):
         """
         raise BotError('Unexpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
 
-    def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
+    def ask_card(self, prompt, valid = [], default = None, cmd = True):
         """
-        Get an integer response from the human. (int)
+        Get a card from the player. (cards.Card)
 
         Parameters:
-        prompt: The question asking for the interger. (str)
+        prompt: The question asking for the card. (str)
+        valid: The valid values for the card. (container of int)
+        default: The default choice. (cards.Card or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        raise BotError('Unexpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
+
+    def ask_card_list(self, prompt, valid = [], valid_lens = [], default = None, cmd = True):
+        """
+        Get a multiple card response from the player. (int)
+
+        Parameters:
+        prompt: The question asking for the card. (str)
+        valid: The valid values for the cards. (list of int)
+        valid_lens: The valid numbers of values. (list of int)
+        default: The default choice. (list or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        raise BotError('Unexpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
+
+    def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
+        """
+        Get an integer response from the player. (int)
+
+        Parameters:
+        prompt: The question asking for the integer. (str)
         low: The lowest acceptable value for the integer. (int or None)
         high: The highest acceptable value for the integer. (int or None)
         valid: The valid values for the integer. (container of int)
@@ -260,6 +302,8 @@ class Humanoid(Player):
 
     Overridden Methods:
     ask
+    ask_card
+    ask_card_list
     ask_int
     ask_int_list
     ask_valid
@@ -290,6 +334,94 @@ class Humanoid(Player):
         first = self.shortcuts.get(first.lower(), first)
         # Return the processed inputs.
         return '{} {}'.format(first, rest).strip()
+
+    def ask_card(self, prompt, valid = [], default = None, cmd = True):
+        """
+        Get a card from the player. (cards.Card)
+
+        Parameters:
+        prompt: The question asking for the card. (str)
+        valid: The valid values for the card. (container of cards.Card)
+        default: The default choice. (cards.Card or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        # Give a dummy answer if the game is over.
+        if cmd and self.game.force_end:
+            return valid[0] if valid else cards.Card('X', 'S')
+        # Get the deck to base the search on.
+        if isinstance(valid, cards.Hand):
+            deck = valid.deck
+        elif hasattr(self.game, 'deck'):
+            deck = self.game.deck
+        else:
+            deck = None
+        # Ask until you get a valid answer.
+        while True:
+            card_text = self.ask(prompt).strip()
+            # Check for default.
+            if not card_text and default is not None:
+                return default
+            # Convert to a cards.
+            card = cards.parse_text(card_text, deck)
+            if isinstance(card, cards.Card):
+                if valid and card not in valid:
+                    self.error('Please enter one of {}.'.format(utility.oxford(valid, 'or', '{:u}')))
+                else:
+                    return card
+            elif card:
+                self.error('One card only please.')
+            elif cmd:
+                return card_text
+            else:
+                self.error('Please enter a valid card.')
+
+    def ask_card_list(self, prompt, valid = [], valid_lens = [], default = None, cmd = True):
+        """
+        Get a multiple card response from the human. (int)
+
+        Parameters:
+        prompt: The question asking for the card. (str)
+        valid: The valid values for the cards. (list of int)
+        valid_lens: The valid numbers of values. (list of int)
+        default: The default choice. (list or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        # Give a dummy answer if the game is over.
+        if cmd and self.game.force_end:
+            return []
+        # Get the deck to base the search on.
+        if isinstance(valid, cards.Hand):
+            deck = valid.deck
+        elif hasattr(self.game, 'deck'):
+            deck = self.game.deck
+        else:
+            deck = None
+        # Ask until you get a valid answer.
+        while True:
+            card_text = self.ask(prompt).strip()
+            # Check for default.
+            if not card_text and default is not None:
+                return default
+            # Convert to a cards.
+            cards_in = cards.parse_text(card_text, deck)
+            if isinstance(cards_in, cards.Card):
+                cards_in = [cards_in]
+            # Validate response.
+            if cards_in:
+                if valid_lens and len(cards_in) not in valid_lens:
+                    self.error('That is an invalid number of cards.')
+                    if valid_lens == [1]:
+                        self.error('Please enter 1 card.')
+                    else:
+                        self.error('Please enter {} cards.'.format(utility.oxford(valid_lens, 'or')))
+                elif valid and [card for card in cards_in if card not in valid]:
+                    self.error('Not all of those cards are available.')
+                else:
+                    return cards_in
+            elif cmd:
+                return card_text
+            else:
+                self.error('Please enter valid cards.')
 
     def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
         """
