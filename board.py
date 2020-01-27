@@ -17,6 +17,10 @@ MultiBoard: A board with multiple pieces per cell. (Board)
 """
 
 
+try:
+    from collections.abc import MutableSequence
+except ImportError:
+    from collections import MutableSequence
 import itertools
 
 
@@ -99,7 +103,7 @@ class BoardCell(object):
 
     def __len__(self):
         """Return the number of pieces in the cell. (int)"""
-        return self.contents is not None
+        return 0 self.contents if is None else 1
 
     def __repr__(self):
         """
@@ -187,18 +191,29 @@ class MultiCell(BoardCell):
     be any object, but it should be hashable and support addition.
 
     Methods:
-    add_piece: Add a piece to the cell. (object)
+    add_piece: Add a piece to the cell. (None)
+    append: Add a piece to the cell. (None)
     clear: Remove any piece from the cell. (None)
     copy_piece: Copy the piece in the cell. (object)
     count: Count the number of times a piece is in the cell. (int)
-    remove_piece: Remove a piece from the cell. (object)
+    extend: Add pieces to the cell. (object)
+    index: Return the location of a piece in the cell. (int)
+    insert: Insert a piece into the cell. (None)
+    pop: Remove and return a piece from the cell. (object)
+    remove: Remove a piece from the cell. (object)
+    remove_piece: Remove and return a piece from the cell. (object)
+    reverse: Reverse the order of the pieces in the cell. (None)
 
     Overridden Methods:
     __init__
     __contains__
+    __delitem__
+    __getitem__
     __iter__
     __len__
     __repr__
+    __reversed__
+    __setitem__
     __str__
     """
 
@@ -226,6 +241,24 @@ class MultiCell(BoardCell):
         """
         return other in self.contents
 
+    def __delitem__(self, key):
+        """
+        Remove an item or items from the cell. (object or list of objects)
+
+        Parameters:
+        key: The location of the items to remove. (index or slice)
+        """
+        del self.contents[key]
+
+    def __getitem__(self, index):
+        """
+        Get an item or items from the cell. (object or list of objects)
+
+        Parameters:
+        index: The location of the items to get. (index or slice)
+        """
+        return self.contents[index]
+
     def __iter__(self):
         """Iterate over the piece in the cell. (iterator)"""
         return iter(self.contents)
@@ -250,6 +283,20 @@ class MultiCell(BoardCell):
         # complete and return
         return '{}({!r}{}{})'.format(self.__class__.__name__, self.location, piece_text, empty_text)
 
+    def __reversed__(self):
+        """Iterate over the contents backwards. (iterator)"""
+        return reversed(self.contents)
+
+    def __setitem__(self, key, value):
+        """
+        Set a piece in the cell. (None)
+
+        Parameters:
+        key: The location of the item to set. (int or slice)
+        value: The new value of that location. (object)
+        """
+        self.contents[key] = value
+
     def __str__(self):
         """
         Generate a human readable text representation. (str)
@@ -263,7 +310,14 @@ class MultiCell(BoardCell):
         """
         Add a piece to the cell. (object)
 
-        The return value is the piece that was in the cell before.
+        Parameters:
+        piece: The piece to add to the cell. (object)
+        """
+        self.contents.append(piece)
+
+    def append(self, piece):
+        """
+        Add a piece to the cell. (object)
 
         Parameters:
         piece: The piece to add to the cell. (object)
@@ -295,9 +349,55 @@ class MultiCell(BoardCell):
         """
         return self.contents.count(piece)
 
+    def extend(self, pieces):
+        """
+        Add pieces to the cell. (object)
+
+        Parameters:
+        pieces: The pieces to add to the cell. (sequence of object)
+        """
+        self.contents.extend(pieces)
+
+    def index(self, piece):
+        """
+        Return the location of a piece in the cell. (int)
+
+        Parameters:
+        piece: The piece to get an index for. (object)
+        """
+        return self.contents.index(piece)
+
+    def insert(self, index, piece):
+        """
+        Insert a piece into the cell. (None)
+
+        Parameters:
+        index: Where to insert the piece. (int)
+        piece: The piece to insert. (object)
+        """
+        self.contents.insert(index, piece)
+
+    def pop(self, index = -1):
+        """
+        Remove and return a piece from the cell. (object)
+
+        Parameters:
+        index: The location of the piece to remove. (int)
+        """
+        return self.contents.pop(index)
+
+    def remove(self, piece):
+        """
+        Remove a piece from the cell. (None)
+
+        Parameters:
+        piece: The piece to remove from the cell. (object)
+        """
+        self.contents.remove(piece)
+
     def remove_piece(self, piece = None):
         """
-        Remove a piece from the cell. (object)
+        Remove and return a piece from the cell. (object)
 
         Parameters:
         piece: The piece to remove from the cell. (object)
@@ -307,6 +407,10 @@ class MultiCell(BoardCell):
         else:
             piece = self.contents.pop()
         return piece
+
+    def reverse(self):
+        """Reverse the order of the pieces in the cell. (None)"""
+        self.contents.reverse()
 
 
 class Coordinate(tuple):
