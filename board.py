@@ -206,13 +206,20 @@ class MultiCell(BoardCell):
 
     Overridden Methods:
     __init__
+    __add__
+    __bool__
     __contains__
     __delitem__
     __getitem__
+    __iadd__
+    __imul__
     __iter__
     __len__
+    __mul__
+    __radd__
     __repr__
     __reversed__
+    __rmul__
     __setitem__
     __str__
     """
@@ -232,6 +239,15 @@ class MultiCell(BoardCell):
             self.contents = []
         else:
             self.contents = pieces
+
+    def __add__(self, other):
+        """
+        Addition is by contents. (list)
+
+        Parameters:
+        other: The other summand. (list)
+        """
+        return self.contents + other
 
     def __bool__(self):
         """Convert the cell to True/False. (bool)"""
@@ -263,6 +279,24 @@ class MultiCell(BoardCell):
         """
         return self.contents[index]
 
+    def __iadd__(self, other):
+        """
+        In place ddition adds to the contents. (list)
+
+        Parameters:
+        other: The summand. (list)
+        """
+        self.contents += other
+
+    def __mul__(self, other):
+        """
+        Multiply the pieces in the cell in place. (list)
+
+        Parameters:
+        other: The multiplier. (int)
+        """
+        self.contents *= other
+
     def __iter__(self):
         """Iterate over the piece in the cell. (iterator)"""
         return iter(self.contents)
@@ -270,6 +304,24 @@ class MultiCell(BoardCell):
     def __len__(self):
         """Return the number of pieces in the cell. (int)"""
         return len(self.contents)
+
+    def __mul__(self, other):
+        """
+        Multiply the pieces in the cell. (list)
+
+        Parameters:
+        other: The multiplier. (int)
+        """
+        return self.contents * other
+
+    def __radd__(self, other):
+        """
+        Right hand addition is by contents. (list)
+
+        Parameters:
+        other: The other summand. (list)
+        """
+        return other + self.contents
 
     def __repr__(self):
         """
@@ -290,6 +342,15 @@ class MultiCell(BoardCell):
     def __reversed__(self):
         """Iterate over the contents backwards. (iterator)"""
         return reversed(self.contents)
+
+    def __rmul__(self, other):
+        """
+        Right hand multiply the pieces in the cell. (list)
+
+        Parameters:
+        other: The multiplier. (int)
+        """
+        return self.contents * other
 
     def __setitem__(self, key, value):
         """
