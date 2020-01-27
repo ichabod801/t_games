@@ -103,7 +103,7 @@ class BoardCell(object):
 
     def __len__(self):
         """Return the number of pieces in the cell. (int)"""
-        return 0 self.contents if is None else 1
+        return 0 if self.contents is None else 1
 
     def __repr__(self):
         """

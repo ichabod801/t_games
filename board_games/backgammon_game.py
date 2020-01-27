@@ -255,7 +255,7 @@ class BackgammonBot(player.Bot):
                         max_x = max(points['X']) if points['X'] else 0
                         max_o = max(points['O']) if points['O'] else 0
                         # Get the game phase.
-                        if max_x + max_o > 24 or sub_board.cells[BAR].contents:
+                        if max_x + max_o > 24 or sub_board.cells[BAR]:
                             phase = 'mixed'
                         elif max_x <= 6 and max_o < 6:
                             phase = 'stretch'
@@ -322,7 +322,7 @@ class BackgammonBot(player.Bot):
                             # Only count indirect hits that aren't blocked.
                             for die in range(1, offset - 1):
                                 subcell = board.offset(blot, die * foe_direction)
-                                if subcell.contents[:2] != [self.piece, self.piece]:
+                                if subcell[:2] != [self.piece, self.piece]:
                                     indirect_hits[piece] += 1
         return direct_hits, indirect_hits
 
@@ -353,16 +353,16 @@ class BackgammonBot(player.Bot):
         for cell in board.cells.values():
             if cell.location < 0:
                 continue
-            if len(cell.contents) > 1:
-                controlled[cell.contents[0]].append(cell.location)
-            elif len(cell.contents) == 1:
-                blots[cell.contents[0]].append(cell.location)
+            if len(cell) > 1:
+                controlled[cell[0]].append(cell.location)
+            elif len(cell) == 1:
+                blots[cell[0]].append(cell.location)
         # Get all the points for each player.
         points = {piece: controlled[piece] + blots[piece] for piece in 'XO'}
         points['O'] = [25 - point for point in points['O']]
         # Count the off board pieces.
-        captured = {piece: board.cells[BAR].contents.count(piece) for piece in 'XO'}
-        off = {piece: board.cells[OUT].contents.count(piece) for piece in 'XO'}
+        captured = {piece: board.cells[BAR].count(piece) for piece in 'XO'}
+        off = {piece: board.cells[OUT].count(piece) for piece in 'XO'}
         # Get the pip counts and furthest piece from home.
         pip_count = {piece: board.get_pip_count(piece) for piece in 'XO'}
         max_pip = {}
@@ -933,7 +933,7 @@ class Backgammon(game.Game):
                 self.rolls.remove(roll)
                 self.board.move(max_board, OUT)
                 # Check for the point still being valid.
-                if not self.board.cells[max_board].contents:
+                if not self.board.cells[max_board]:
                     player_points.remove(max_player)
                     # Check for the game being over.
                     if not player_points:
@@ -1432,7 +1432,7 @@ class Backgammon(game.Game):
         elif (end - start) * direction not in all_totals:
             player.error('You do not have a die roll matching that move.')
         # Check for a piece on the bar.
-        elif player_piece in self.board.cells[BAR].contents and start != BAR:
+        elif player_piece in self.board.cells[BAR] and start != BAR:
             player.error('You must re-enter your piece on the bar before making any other move.')
         else:
             # Check for blocked move, checking all possible move orders.
@@ -1538,7 +1538,7 @@ class BackgammonBoard(board.LineBoard):
                             row_text += '{} '.format(pieces % 10)
                     # Handle piece symbols.
                     else:
-                        row_text += '{} '.format(self.cells[location].contents[0])
+                        row_text += '{} '.format(self.cells[location][0])
                 else:
                     # Handle board design.
                     row_text += '{} '.format('.' if location % 2 else ':')
@@ -1593,7 +1593,7 @@ class BackgammonBoard(board.LineBoard):
         roll: The current roll being moved. (int)
         """
         # Get the bar piece at the end for popping.
-        if piece != self.cells[BAR].contents[-1]:
+        if piece != self.cells[BAR][-1]:
             self.cells[BAR].remove_piece(piece)
             self.cells[BAR].add_piece(piece)
         # Get the end point
@@ -1723,7 +1723,7 @@ class BackgammonBoard(board.LineBoard):
             elif piece == 'O':
                 point = 25 - point
             # Get the pip count for each piece.
-            points += point * cell.contents.count(piece)
+            points += point * cell.count(piece)
         return points
 
     def get_plays(self, piece, rolls):
@@ -1779,8 +1779,8 @@ class BackgammonBoard(board.LineBoard):
         lines.extend(self.board_text(order_low, reverse = True))
         lines.extend(frame_low)
         # Include a line for any pieces on the bar.
-        if self.cells[BAR].contents:
-            lines.extend(['', 'Bar: {}'.format(''.join(self.cells[BAR].contents))])
+        if self.cells[BAR]:
+            lines.extend(['', 'Bar: {}'.format(''.join(self.cells[BAR]))])
         # Return the text.
         return '\n'.join(lines)
 
