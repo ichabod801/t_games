@@ -588,6 +588,7 @@ class Board(object):
     clear: Clear all pieces off the board. (None)
     copy_pices: Copy all of the pieces from another board. (None)
     displace: Move a piece from one cell to another w/ displace capture. (object)
+    found: Find cells matching certain criteria. (list of Coordinate)
     get: Get a board cell with a default if it's not on the board.
     items: Get all of the locations and cells. (iterator)
     locations: Get all of the cell coordinates for the board. (iterator)
