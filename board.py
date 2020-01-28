@@ -735,6 +735,46 @@ class Board(object):
         self.cells[end].add_piece(mover)
         return capture
 
+    def find(self, piece = 'any', locations = None, count = 1, cells = False):
+        """
+        Find cells matching certain criteria. (list of Coordinate)
+
+        If piece is None, all empty cells are returned. If piece is 'any', all non-
+        empty cells are returned. If locations is None, all locations are used. The
+        count parameter specifies how many pieces are need to match the location.
+
+        Parameters:
+        piece: The piece to look for. (object)
+        locations: The locations to search. (None or list of Coordinate)
+        count: The number of pieces required for a match.
+        cells: Return the board cells instead of their locations. (bool)
+        """
+        # Set the locations.
+        if locations is None:
+            locations = self.cells.keys()
+        # Find empty cells.
+        if piece is None:
+            found = [location in locations if not self.cells[location]]
+        # Find non-empty cells.
+        elif piece.lower == 'any':
+            # ... with a certain number of pieces.
+            if count > 1:
+                found = [location in locations in len(self.cells[location]) >= count]
+            # ... with any number of pieces.
+            else:
+                found = [location in locations if self.cells[location]]
+        # Find cells with a certain number of pieces.
+        elif count > 1:
+            found = [location in locations if self.cells[location].count(piece) >= count]
+        # Find cells with a particular piece
+        else:
+            found = [location in locations if piece in self.cells[location]]
+        # Return the cells or locations, as requested.
+        if cells:
+            return [self.cells[location] for location in found]
+        else:
+            return found
+
     def get(self, key, default = None):
         """
         Get a board cell with a default if it's not on the board.
