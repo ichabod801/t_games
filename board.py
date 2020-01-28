@@ -588,16 +588,26 @@ class Board(object):
     clear: Clear all pieces off the board. (None)
     copy_pices: Copy all of the pieces from another board. (None)
     displace: Move a piece from one cell to another w/ displace capture. (object)
+    get: Get a board cell with a default if it's not on the board.
+    items: Get all of the locations and cells. (iterator)
+    locations: Get all of the cell coordinates for the board. (iterator)
     move: Move a piece from one cell to another. (object)
     offset: Return a cell offset from another cell (BoardCell)
     place: Place a piece in a cell. (None)
     safe: Determine if a cell is safe from capture. (bool)
     safe_displace: Move a piece with displace capture if target not safe. (object)
+    values: Get all of the board cells. (iterator)
 
     Overriddent Methods:
     __init__
+    __contains__
+    __delitem__
+    __eq__
     __iter__
+    __len__
+    __ne__
     __repr__
+    __setitem__
     """
 
     def __init__(self, locations = [], cell_class = BoardCell):
@@ -611,6 +621,47 @@ class Board(object):
         self.cells = {location: cell_class(location) for location in locations}
         self.extra_cells = []
 
+    def __contains__(self, location):
+        """
+        Check for a location being on the board. (bool)
+
+        Parameter:
+        location: Coordinates for a cell. (Coordinate)
+        """
+        return item in self.cells
+
+    def __delitem__(self, key):
+        """
+        Get rid of a board cell. (object)
+
+        This does not clear the pieces from a cell, it removes the cell entirely.
+
+        Parameters:
+        key: The key (location) of the board cell. (Coordinate)
+        """
+        del self.cells[key]
+
+    def __eq__(self, other):
+        """
+        Check for equality with another board. (bool)
+
+        Parameters:
+        other: The other board to check. (Board)
+        """
+        if hasattr(other, 'cells'):
+            return self.cells == other.cells
+        else:
+            return False
+
+    def __getitem__(self, key):
+        """
+        Get a board cell. (object)
+
+        Parameters:
+        key: The key (location) of the board cell. (Coordinate)
+        """
+        return self.cells[key]
+
     def __iter__(self):
         """
         Iterator for the board (iterator)
@@ -619,11 +670,38 @@ class Board(object):
         """
         return iter(self.cells)
 
+    def __len__(self):
+        """The number of cells on the board. (int)"""
+        return len(self.cells)
+
+    def __ne__(self, other):
+        """
+        Check for inequality with another board. (bool)
+
+        Parameters:
+        other: The other board to check. (Board)
+        """
+        return not (self == other)
+
     def __repr__(self):
         """Generate a debugging text representation. (str)"""
         cell_count = len(self.cells) + len(self.extra_cells)
         cell_class_name = next(iter(self.cells.values())).__class__.__name__
         return '<{} with {} {}s>'.format(self.__class__.__name__, cell_count, cell_class_name)
+
+    def __setitem__(self, key, value):
+        """
+        Set the value of a board cell. (None)
+
+        This should rarely (if ever) be used. Instead you should get the board cell
+        and use it's methods to set the pieces: board[location].add_piece(knight).
+        This sets the BoardCell object itself, not the pieces in it.
+
+        Parameters:
+        key: The key (location) to set. (Coordinate)
+        value: The value to set the location to. (BoardCell)
+        """
+        self.cells[key] = value
 
     def clear(self):
         """Clear all pieces off the board. (None)"""
@@ -656,6 +734,24 @@ class Board(object):
         self.cells[end].clear()
         self.cells[end].add_piece(mover)
         return capture
+
+    def get(self, key, default = None):
+        """
+        Get a board cell with a default if it's not on the board.
+
+        Parameters:
+        key: The key (location) of the board cell. (Coordinate)
+        default: The value to return if the locations is not on the board. (object)
+        """
+        self.cells.get(key, default)
+
+    def items(self):
+        """Get all of the locations and cells. (iterator)"""
+        return self.cells.items()
+
+    def locations(self):
+        """Get all of the cell coordinates for the board. (iterator)"""
+        return self.cells.keys()
 
     def move(self, start, end, piece = None):
         """
@@ -731,6 +827,10 @@ class Board(object):
             self.cells[end].clear()
             self.cells[end].add_piece(mover)
             return capture
+
+    def values(self):
+        """Get all of the board cells. (iterator)"""
+        return self.cells.values()
 
 
 class DimBoard(Board):
