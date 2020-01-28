@@ -743,7 +743,7 @@ class Board(object):
         key: The key (location) of the board cell. (Coordinate)
         default: The value to return if the locations is not on the board. (object)
         """
-        self.cells.get(key, default)
+        return self.cells.get(key, default)
 
     def items(self):
         """Get all of the locations and cells. (iterator)"""
