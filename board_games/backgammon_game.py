@@ -1470,6 +1470,10 @@ class BackgammonBoard(board.LineBoard):
     """
     A board for Backgammon. (board.LineBoard)
 
+    Attributes:
+    eks: The view from the X player's side. (dict of int: BoardCell)
+    oh: The view from the O player's side. (dict of int: BoardCell)
+
     Methods:
     board_text: Generate a text lines for the pieces on the board. (list of str)
     get_plays: Get the legal plays for a given set of rolls. (list)
@@ -1828,6 +1832,19 @@ class BackgammonBoard(board.LineBoard):
         for location, count in layout:
             self.cells[location].contents = ['X'] * count
             self.cells[25 - location].contents = ['O'] * count
+
+    def set_views(self):
+        """Set up the alternate mappings for the board. (None)"""
+        # Set the X piece view.
+        self.eks = self.cells
+        # Translate that into the O piece view.
+        self.oh = {}
+        for point in range(1, 25):
+            self.oh[point] = self.cells[25 - point]
+        self.oh[BAR] = self.cells[BAR]
+        self.oh[OUT] = self.cells[OUT]
+        # Set up the views attribute.
+        self.views = itertools.cycle([self.oh, self.eks])
 
 
 class BackgammonPlay(object):
