@@ -287,6 +287,7 @@ class MultiCell(BoardCell):
         other: The summand. (list)
         """
         self.contents += other
+        return self
 
     def __mul__(self, other):
         """
@@ -423,14 +424,16 @@ class MultiCell(BoardCell):
         """
         self.contents.extend(pieces)
 
-    def index(self, piece):
+    def index(self, piece, start = 0, end = None):
         """
         Return the location of a piece in the cell. (int)
 
         Parameters:
         piece: The piece to get an index for. (object)
         """
-        return self.contents.index(piece)
+        if end is None:
+            end = len(self)
+        return self.contents.index(piece, start, end)
 
     def insert(self, index, piece):
         """

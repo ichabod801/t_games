@@ -525,6 +525,37 @@ class MultiCellTest(unittest.TestCase):
     def setUp(self):
         self.cell = board.MultiCell('here', ['@', '@'])
 
+    def testAdd(self):
+        """Test basic addition of cells."""
+        self.assertEqual(['@', '@', '#' '#'], self.cell + ['#' '#'])
+
+    def testAddEmpty(self):
+        """Test addition of a cell and an empty list."""
+        self.assertEqual(['@', '@'], self.cell + [])
+
+    def testAddInPlace(self):
+        """Test addition of a cell in-place."""
+        self.cell += ['#' '#']
+        self.assertEqual(['@', '@', '#' '#'], self.cell.contents)
+
+    def testAddRight(self):
+        """Test right side addition of cells."""
+        self.assertEqual(['#' '#', '@', '@'], ['#' '#'] + self.cell)
+
+    def testAppend(self):
+        """Test appending a piece to a MultiCell."""
+        self.cell.append('&')
+        self.assertEqual(['@', '@', '&'], self.cell.contents)
+
+    def testBoolFalse(self):
+        """Test boolean conversion of an empty cell."""
+        self.cell.clear()
+        self.assertFalse(self.cell)
+
+    def testBoolTrue(self):
+        """Test boolean conversion of a cell with pieces."""
+        self.assertTrue(self.cell)
+
     def testClear(self):
         """Test clearing a MultiCell."""
         self.cell.clear()
@@ -574,9 +605,61 @@ class MultiCellTest(unittest.TestCase):
         """Test the count of pice not in the MultiCell."""
         self.assertEqual(0, self.cell.count('&'))
 
+    def testDelete(self):
+        """Test deletion of a piece from a cell with indexing."""
+        cell = board.MultiCell('there', ['1', '2', '3'])
+        del cell[1]
+        self.assertEqual(['1', '3'], cell.contents)
+
+    def testDeleteSlice(self):
+        """Test deletion of a piece from a cell with slicing."""
+        cell = board.MultiCell('there', ['1', '2', '3'])
+        del cell[1:3]
+        self.assertEqual(['1'], cell.contents)
+
+    def testExtend(self):
+        """Test extending a cell's contents."""
+        self.cell.extend(['&', '#'])
+        self.assertEqual(['@', '@', '&', '#'], self.cell.contents)
+
+    def testExtendEmpty(self):
+        """Test extending a cell's contents with nothing."""
+        self.cell.extend([])
+        self.assertEqual(['@', '@'], self.cell.contents)
+
+    def testGetItem(self):
+        """Test getting a piece with indexing."""
+        self.assertEqual('@', self.cell[0])
+
+    def testGetItemNegative(self):
+        """Test getting a piece with ngeative indexing."""
+        self.assertEqual('@', self.cell[-1])
+
+    def testGetItemSlice(self):
+        """Test getting a piece with slicing."""
+        self.assertEqual(['@'], self.cell[1:2])
+
+    def testGetItemStep(self):
+        """Test getting a piece with slicing and a step."""
+        cell = board.MultiCell('there', ['1', '2', '3', '5', '6'])
+        self.assertEqual(['2', '5'], cell[1:4:2])
+
     def testGetPiece(self):
         """Test getting a piece from the MultiCell."""
         self.assertEqual(['@', '@'], self.cell.get_piece())
+
+    def testIndex(self):
+        """Test getting the index of a piece."""
+        self.assertEqual(0, self.cell.index('@'))
+
+    def testIndexConstrained(self):
+        """Test getting the double-bounded index of a piece."""
+        cell = board.MultiCell('there', list('@#$&@#$'))
+        self.assertEqual(4, cell.index('@', 2, 6))
+
+    def testIndexLater(self):
+        """Test getting a later index of a piece."""
+        self.assertEqual(1, self.cell.index('@', 1))
 
     def testIteration(self):
         """Test iteration of a MultiCell."""
@@ -595,6 +678,22 @@ class MultiCellTest(unittest.TestCase):
         """Test the length of an empty MultiCell."""
         self.cell.contents = []
         self.assertEqual(0, len(self.cell))
+
+    def testMultiply(self):
+        """Test multiplication of the cell contents."""
+        self.assertEqual(['@', '@', '@', '@', '@', '@'], self.cell * 3)
+
+    def testMultiplyOne(self):
+        """Test multiplication of the cell contents by one."""
+        self.assertEqual(['@', '@'], self.cell * 1)
+
+    def testMultiplyZero(self):
+        """Test multiplication of the cell contents by 0."""
+
+    def testMultiply(self):
+        """Test right side multiplication of the cell contents."""
+        self.assertEqual(['@', '@', '@', '@', '@', '@'], 3 * self.cell)
+        self.assertEqual([], self.cell * 0)
 
     def testRemoveContents(self):
         """Test MultiCell contents after removing a piece."""
@@ -637,10 +736,30 @@ class MultiCellTest(unittest.TestCase):
         self.cell.empty = '+'
         self.assertEqual("MultiCell('here', empty = '+')", repr(self.cell))
 
+    def testReveresed(self):
+        """Test reversing a MultiCell."""
+        cell = board.MultiCell('there', ['1', '2', '3', '4'])
+        self.assertEqual(['4', '3', '2', '1'], list(reversed(cell)))
+
     def testPlace(self):
         """Test adding a piece to a MultiCell."""
         self.cell.add_piece('&')
         self.assertEqual(['@', '@', '&'], self.cell.contents)
+
+    def testSetItem(self):
+        """Test setting a particular piece in a MultiCell."""
+        self.cell[0] = '&'
+        self.assertEqual(['&', '@'], self.cell.contents)
+
+    def testSetItemNegative(self):
+        """Test setting a particular piece in a MultiCell with a negative index."""
+        self.cell[-1] = '&'
+        self.assertEqual(['@', '&'], self.cell.contents)
+
+    def testSetItemSlice(self):
+        """Test setting a slice of pieces in a MultiCell."""
+        self.cell[1:2] = ['&', '$', '#']
+        self.assertEqual(['@', '&', '$', '#'], self.cell.contents)
 
     def testStr(self):
         """Test the string of a MultiCell."""
