@@ -964,7 +964,8 @@ class Backgammon(game.Game):
                     home = range(1, 7)
                 else:
                     home = range(19, 25)
-                if self.board.find(other_piece, home + [BAR]):
+                home_pieces = sum([self.board[point] for point in home], [])
+                if other_piece in self.board[BAR] or other_piece in home_pieces:
                     self.human.tell('\nBackgammon!')
                     result *= 3
                 else:

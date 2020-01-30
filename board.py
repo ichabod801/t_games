@@ -759,21 +759,21 @@ class Board(object):
             locations = self.cells.keys()
         # Find empty cells.
         if piece is None:
-            found = [location for location in locations if not self.cells[location]]
+            found = [location in locations if not self.cells[location]]
         # Find non-empty cells.
         elif piece.lower == 'any':
             # ... with a certain number of pieces.
             if count > 1:
-                found = [location for location in locations in len(self.cells[location]) >= count]
+                found = [location in locations in len(self.cells[location]) >= count]
             # ... with any number of pieces.
             else:
-                found = [location for location in locations if self.cells[location]]
+                found = [location in locations if self.cells[location]]
         # Find cells with a certain number of pieces.
         elif count > 1:
-            found = [location for location in locations if self.cells[location].count(piece) >= count]
+            found = [location in locations if self.cells[location].count(piece) >= count]
         # Find cells with a particular piece
         else:
-            found = [location for location in locations if piece in self.cells[location]]
+            found = [location in locations if piece in self.cells[location]]
         # Return the cells or locations, as requested.
         if cells:
             return [self.cells[location] for location in found]
