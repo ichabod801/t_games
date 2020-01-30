@@ -661,6 +661,16 @@ class MultiCellTest(unittest.TestCase):
         """Test getting a later index of a piece."""
         self.assertEqual(1, self.cell.index('@', 1))
 
+    def testInsert(self):
+        """Test inserting into a MultiCell's contents."""
+        self.cell.insert(1, '&')
+        self.assertEqual(['@', '&', '@'], self.cell.contents)
+
+    def testInsertNegative(self):
+        """Test inserting into a MultiCell's contents with a negative index."""
+        self.cell.insert(-1, '$')
+        self.assertEqual(['@', '$', '@'], self.cell.contents)
+
     def testIteration(self):
         """Test iteration of a MultiCell."""
         self.assertEqual(['@', '@'], list(self.cell))
@@ -694,6 +704,18 @@ class MultiCellTest(unittest.TestCase):
         """Test right side multiplication of the cell contents."""
         self.assertEqual(['@', '@', '@', '@', '@', '@'], 3 * self.cell)
         self.assertEqual([], self.cell * 0)
+
+    def testPop(self):
+        """Test popping a piece from a MultiCell."""
+        cell = board.MultiCell('there', list('123'))
+        piece = cell.pop()
+        self.assertEqual('3', piece)
+
+    def testPopIndex(self):
+        """Test popping a piece from a MultiCell with an index."""
+        cell = board.MultiCell('there', list('123'))
+        piece = cell.pop(0)
+        self.assertEqual('1', piece)
 
     def testRemoveContents(self):
         """Test MultiCell contents after removing a piece."""
@@ -736,7 +758,13 @@ class MultiCellTest(unittest.TestCase):
         self.cell.empty = '+'
         self.assertEqual("MultiCell('here', empty = '+')", repr(self.cell))
 
-    def testReveresed(self):
+    def testReverse(self):
+        """Test reversing a MulitCell in place."""
+        cell = board.MultiCell('there', ['1', '2', '3', '4'])
+        cell.reverse()
+        self.assertEqual(['4', '3', '2', '1'], cell.contents)
+
+    def testReversed(self):
         """Test reversing a MultiCell."""
         cell = board.MultiCell('there', ['1', '2', '3', '4'])
         self.assertEqual(['4', '3', '2', '1'], list(reversed(cell)))
