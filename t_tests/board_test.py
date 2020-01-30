@@ -114,6 +114,46 @@ class BoardTest(unittest.TestCase):
         other.place(4, '&')
         self.assertEqual(other, self.board)
 
+    def testFindAny(self):
+        """Test finding non-empty board locations."""
+        self.assertEqual([2, 4], self.board.find())
+
+    def testFindBasic(self):
+        """Test finding a piece."""
+        self.assertEqual([4], self.board.find('&'))
+
+    def testFindCount(self):
+        """Test finding pieces."""
+        other = board.LineBoard(5)
+        other[2].contents = ['@']
+        other[4].contents = ['@'] * 3
+        self.assertEqual([4], other.find('@', count = 2))
+
+    def testFindCountAny(self):
+        """Test finding suitably full locations."""
+        other = board.LineBoard(5)
+        other[2].contents = ['@']
+        other[4].contents = ['@'] * 3
+        other[3].contents = ['$'] * 2
+        self.assertEqual([3, 4], other.find(count = 2))
+
+    def testFindEmpty(self):
+        self.assertEqual([0, 1, 3], self.board.find(None))
+
+    def testFindLocations(self):
+        """Test finding a piece with specified locations."""
+        self.board.place(0, '@')
+        self.assertEqual([2], self.board.find('@', (1, 2, 3)))
+
+    def testFindMultiple(self):
+        """Test finding more than one piece."""
+        self.board.place(3, '@')
+        self.assertEqual([2, 3], self.board.find('@'))
+
+    def testFindNothing(self):
+        """Test finding nothing when a piece is not on the board."""
+        self.assertEqual([], self.board.find('$'))
+
     def testGetItem(self):
         """Test getting an item with a location key."""
         self.assertEqual('@', self.board[2].contents)

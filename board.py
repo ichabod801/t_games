@@ -764,10 +764,10 @@ class Board(object):
         if piece is None:
             found = [location for location in locations if not self.cells[location]]
         # Find non-empty cells.
-        elif piece.lower == 'any':
+        elif piece.lower() == 'any':
             # ... with a certain number of pieces.
             if count > 1:
-                found = [location for location in locations in len(self.cells[location]) >= count]
+                found = [location for location in locations if len(self.cells[location]) >= count]
             # ... with any number of pieces.
             else:
                 found = [location for location in locations if self.cells[location]]
