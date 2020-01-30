@@ -1833,19 +1833,6 @@ class BackgammonBoard(board.LineBoard):
             self.cells[location].contents = ['X'] * count
             self.cells[25 - location].contents = ['O'] * count
 
-    def set_views(self):
-        """Set up the alternate mappings for the board. (None)"""
-        # Set the X piece view.
-        self.eks = self.cells
-        # Translate that into the O piece view.
-        self.oh = {}
-        for point in range(1, 25):
-            self.oh[point] = self.cells[25 - point]
-        self.oh[BAR] = self.cells[BAR]
-        self.oh[OUT] = self.cells[OUT]
-        # Set up the views attribute.
-        self.views = itertools.cycle([self.oh, self.eks])
-
 
 class BackgammonPlay(object):
     """

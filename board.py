@@ -624,7 +624,6 @@ class Board(object):
         """
         self.cells = {location: cell_class(location) for location in locations}
         self.extra_cells = []
-        self.set_views()
 
     def __contains__(self, location):
         """
@@ -872,19 +871,6 @@ class Board(object):
             self.cells[end].clear()
             self.cells[end].add_piece(mover)
             return capture
-
-    def set_views(self):
-        """Set up the alternate mappings for the board. (None)"""
-        self.views = itertools.repeat(self.views)
-
-    def switch(self, key = None):
-        """
-        Switch to the next view in order. (None)
-
-        Parameters:
-        key: Optional parameter for keyed views. (int or hashable)
-        """
-        self.cells = next(self.views)
 
     def values(self):
         """Get all of the board cells. (iterator)"""
