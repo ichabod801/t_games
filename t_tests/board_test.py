@@ -38,6 +38,14 @@ class BoardTest(unittest.TestCase):
         pieces = [cell.contents for cell in self.board.cells.values()]
         self.assertEqual([None] * 5, pieces)
 
+    def testContainsNo(self):
+        """Test contains with a location not on the board."""
+        self.assertFalse(6 in self.board)
+
+    def testContainsYes(self):
+        """Test contains with a location on the board."""
+        self.assertTrue(2 in self.board)
+
     def testCopyPieces(self):
         """Test copying pieces from one board to another."""
         other_board = board.Board(range(5))
@@ -45,6 +53,11 @@ class BoardTest(unittest.TestCase):
         pieces = [self.board.cells[index].contents for index in range(5)]
         other_pieces = [other_board.cells[index].contents for index in range(5)]
         self.assertEqual(other_pieces, pieces)
+
+    def testDel(self):
+        """Test deleting a location on the board."""
+        del self.board[2]
+        self.assertFalse(2 in self.board)  # True in testContainsYes
 
     def testDisplaceCapCap(self):
         """Test the capture of displace movement with capture."""
@@ -75,6 +88,62 @@ class BoardTest(unittest.TestCase):
         """Test the start square of displace movement with no capture."""
         capture = self.board.displace(2, 3)
         self.assertIsNone(self.board.cells[2].contents)
+
+    def testEqualNoClass(self):
+        """Test inequality of a board with a non-board."""
+        self.assertNotEqual({0: '', 1: '', 2: '@', 3: '', 4: '&'}, self.board)
+
+    def testEqualNoCells(self):
+        """Test inequality between two equal boards with different cells."""
+        other = board.Board(range(5))
+        other.place(2, '@')
+        other.place(4, '&')
+        del other[3]
+        self.assertNotEqual(other, self.board)
+
+    def testEqualNoPiece(self):
+        """Test inequality between two equal boards with different pieces."""
+        other = board.Board(range(5))
+        other.place(2, '@')
+        self.assertNotEqual(other, self.board)
+
+    def testEqualYes(self):
+        """Test equality between two equal boards."""
+        other = board.Board(range(5))
+        other.place(2, '@')
+        other.place(4, '&')
+        self.assertEqual(other, self.board)
+
+    def testGetItem(self):
+        """Test getting an item with a location key."""
+        self.assertEqual('@', self.board[2].contents)
+
+    def testGetNo(self):
+        """Test getting an item that isn't on the board."""
+        self.assertEqual('fail', self.board.get(7, 'fail'))
+
+    def testGetYes(self):
+        """Test getting an item that is on the board."""
+        self.assertEqual('@', self.board.get(2, 'fail').contents)
+
+    def testIter(self):
+        """Test iterating over a board."""
+        self.assertEqual([0, 1, 2, 3,4], sorted(list(self.board)))
+
+    def testItems(self):
+        """Test iterating over a board's items."""
+        data = [(loc, cell.contents) for loc, cell in self.board.items()]
+        data.sort()
+        self.assertEqual([(0, None), (1, None), (2, '@'), (3, None), (4, '&')], data)
+
+    def testLen(self):
+        """Test the length of a board."""
+        self.assertEqual(5, len(self.board))
+
+    def testLenChange(self):
+        """Test the length of a board after removing a cell."""
+        del self.board[1]
+        self.assertEqual(4, len(self.board))
 
     def testOffsetClass(self):
         """Test the class of an offset."""
@@ -107,6 +176,17 @@ class BoardTest(unittest.TestCase):
         """Test debugging text representation with string locations."""
         test_board = board.Board(['a', 'B', '3'])
         self.assertEqual('<Board with 3 BoardCells>', repr(test_board))
+
+    def testSetItem(self):
+        """Test setting a board cell with an index."""
+        self.board[2] = 'whoops'
+        self.assertEqual('whoops', self.board.cells[2])
+
+    def testValues(self):
+        """Test iterating over a board's items."""
+        data = [cell.contents for cell in self.board.values()]
+        data.sort()
+        self.assertEqual([None, None, None, '&', '@'], data)
 
 
 class BoardCellTest(unittest.TestCase):

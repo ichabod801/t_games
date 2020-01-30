@@ -609,6 +609,7 @@ class Board(object):
     __init__
     __contains__
     __delitem__
+    __getitem__
     __eq__
     __iter__
     __len__
@@ -635,7 +636,7 @@ class Board(object):
         Parameter:
         location: Coordinates for a cell. (Coordinate)
         """
-        return item in self.cells
+        return location in self.cells
 
     def __delitem__(self, key):
         """
