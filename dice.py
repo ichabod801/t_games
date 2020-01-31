@@ -13,6 +13,7 @@ DominoPool: A set of dice based on dominos. (Pool)
 """
 
 
+import collections
 import functools
 import itertools
 import random
@@ -545,13 +546,20 @@ class Pool(object):
         """
         Returns a dictionary describing the rolls in the pool. (dict)
 
-        The keys in the dictionary are any values rolled, and the strings 'max' and
-        'min'. If the die can have non-hashable values this may cause an error. If
-        'max' or 'min' are possible values, the number of times they are rolled will
-        overwrite the maximum and minimum values rolled.
+        The keys in the dictionary 'min', 'max', 'counts' (counts[value] = # of rolls),
+        and 'by_counts' (by_counts[# of rolls] = list of values).
         """
-        info = {'max': max(self.values), 'min': min(self.values)}
-        info.update({value: self.values.count(value) for value in set(self.values)})
+        info = {'counts': [0] * self.sides[-1]  + 1, 'max': 0, 'min': self.sides[-1] + 1}
+        for value in self.values:
+            info['count'][value] += 1
+            if value < info['min']:
+                info['min'] = value
+            if value > info['max']:
+                info['max'] = value
+        info['by_counts'] = collections.defaultdict(list)
+        for value, count in enumerate(info['counts']):
+            if count + value:
+                info['by_counts'][count].append(value)
         return info
 
     def hold(self, values):
