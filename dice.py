@@ -25,7 +25,12 @@ class Die(object):
     """
     A single die. (object)
 
-    While typically integers, the sides of the die can be any object.
+    While typically integers, the sides of the die can be any object. Dice can be
+    used with most mathematical operators, but there is no support for bit based
+    operators like <<. Math with dice is always done by the value attribute (the
+    result of the last roll), and never results in a Die object. Use of in-place
+    operators is not advised. If die is a Die with value = 3, 'die += 1' will
+    assign 4 to die, and die will no longer be an instance of Die.
 
     Attributes:
     held: A flag for holding the die aside and not rolling it. (bool)
