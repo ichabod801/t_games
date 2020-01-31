@@ -371,6 +371,12 @@ class Die(object):
         else:
             return self.value / other
 
+    def copy(self):
+        """Create an independent copy of the Die. (Die)"""
+        clone = Die(self.sides)
+        clone.value = self.value
+        return clone
+
     def roll(self):
         """
         Roll the die. (object)
