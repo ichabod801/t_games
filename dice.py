@@ -37,13 +37,17 @@ class Die(object):
 
     Overridden Methods:
     __init__
+    __abs__
     __add__
     __divmod__
     __eq__
     __floordiv__
+    __invert__
     __lt__
     __mod__
     __mul__
+    __neg__
+    __pos__
     __pow__
     __radd__
     __rdivmod__
@@ -74,6 +78,10 @@ class Die(object):
         self.held = False
         # Get an initial value for the die.
         self.roll()
+
+    def __abs__(self):
+        """Absolute value. (object)"""
+        return abs(self.value)
 
     def __add__(self, other):
         """
@@ -127,6 +135,10 @@ class Die(object):
         else:
             return self.value // other
 
+    def __invert__(self):
+        """Inversion. (object)"""
+        return ~self.value
+
     def __lt__(self, other):
         """
         Ordering (less than) testing. (bool)
@@ -169,6 +181,14 @@ class Die(object):
         # Multiply value to other objects.
         else:
             return self.value * other
+
+    def __neg__(self):
+        """Negation. (object)"""
+        return -self.value
+
+    def __pos__(self):
+        """Positive value. (object)"""
+        return +self.value
 
     def __pow__(self, other, mod = None):
         """
