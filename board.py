@@ -17,6 +17,10 @@ MultiBoard: A board with multiple pieces per cell. (Board)
 """
 
 
+try:
+    from collections.abc import MutableSequence
+except ImportError:
+    from collections import MutableSequence
 import itertools
 
 
@@ -99,7 +103,7 @@ class BoardCell(object):
 
     def __len__(self):
         """Return the number of pieces in the cell. (int)"""
-        return self.contents is not None
+        return 0 if self.contents is None else 1
 
     def __repr__(self):
         """
@@ -187,18 +191,36 @@ class MultiCell(BoardCell):
     be any object, but it should be hashable and support addition.
 
     Methods:
-    add_piece: Add a piece to the cell. (object)
+    add_piece: Add a piece to the cell. (None)
+    append: Add a piece to the cell. (None)
     clear: Remove any piece from the cell. (None)
     copy_piece: Copy the piece in the cell. (object)
     count: Count the number of times a piece is in the cell. (int)
-    remove_piece: Remove a piece from the cell. (object)
+    extend: Add pieces to the cell. (object)
+    index: Return the location of a piece in the cell. (int)
+    insert: Insert a piece into the cell. (None)
+    pop: Remove and return a piece from the cell. (object)
+    remove: Remove a piece from the cell. (object)
+    remove_piece: Remove and return a piece from the cell. (object)
+    reverse: Reverse the order of the pieces in the cell. (None)
 
     Overridden Methods:
     __init__
+    __add__
+    __bool__
     __contains__
+    __delitem__
+    __getitem__
+    __iadd__
+    __imul__
     __iter__
     __len__
+    __mul__
+    __radd__
     __repr__
+    __reversed__
+    __rmul__
+    __setitem__
     __str__
     """
 
@@ -218,6 +240,19 @@ class MultiCell(BoardCell):
         else:
             self.contents = pieces
 
+    def __add__(self, other):
+        """
+        Addition is by contents. (list)
+
+        Parameters:
+        other: The other summand. (list)
+        """
+        return self.contents + other
+
+    def __bool__(self):
+        """Convert the cell to True/False. (bool)"""
+        return bool(self.contents)
+
     def __contains__(self, other):
         """
         Check for a piece in the cell. (bool)
@@ -226,6 +261,43 @@ class MultiCell(BoardCell):
         """
         return other in self.contents
 
+    def __delitem__(self, key):
+        """
+        Remove an item or items from the cell. (object or list of objects)
+
+        Parameters:
+        key: The location of the items to remove. (index or slice)
+        """
+        del self.contents[key]
+
+    def __getitem__(self, index):
+        """
+        Get an item or items from the cell. (object or list of objects)
+
+        Parameters:
+        index: The location of the items to get. (index or slice)
+        """
+        return self.contents[index]
+
+    def __iadd__(self, other):
+        """
+        In place ddition adds to the contents. (list)
+
+        Parameters:
+        other: The summand. (list)
+        """
+        self.contents += other
+        return self
+
+    def __mul__(self, other):
+        """
+        Multiply the pieces in the cell in place. (list)
+
+        Parameters:
+        other: The multiplier. (int)
+        """
+        self.contents *= other
+
     def __iter__(self):
         """Iterate over the piece in the cell. (iterator)"""
         return iter(self.contents)
@@ -233,6 +305,24 @@ class MultiCell(BoardCell):
     def __len__(self):
         """Return the number of pieces in the cell. (int)"""
         return len(self.contents)
+
+    def __mul__(self, other):
+        """
+        Multiply the pieces in the cell. (list)
+
+        Parameters:
+        other: The multiplier. (int)
+        """
+        return self.contents * other
+
+    def __radd__(self, other):
+        """
+        Right hand addition is by contents. (list)
+
+        Parameters:
+        other: The other summand. (list)
+        """
+        return other + self.contents
 
     def __repr__(self):
         """
@@ -250,6 +340,29 @@ class MultiCell(BoardCell):
         # complete and return
         return '{}({!r}{}{})'.format(self.__class__.__name__, self.location, piece_text, empty_text)
 
+    def __reversed__(self):
+        """Iterate over the contents backwards. (iterator)"""
+        return reversed(self.contents)
+
+    def __rmul__(self, other):
+        """
+        Right hand multiply the pieces in the cell. (list)
+
+        Parameters:
+        other: The multiplier. (int)
+        """
+        return self.contents * other
+
+    def __setitem__(self, key, value):
+        """
+        Set a piece in the cell. (None)
+
+        Parameters:
+        key: The location of the item to set. (int or slice)
+        value: The new value of that location. (object)
+        """
+        self.contents[key] = value
+
     def __str__(self):
         """
         Generate a human readable text representation. (str)
@@ -263,7 +376,14 @@ class MultiCell(BoardCell):
         """
         Add a piece to the cell. (object)
 
-        The return value is the piece that was in the cell before.
+        Parameters:
+        piece: The piece to add to the cell. (object)
+        """
+        self.contents.append(piece)
+
+    def append(self, piece):
+        """
+        Add a piece to the cell. (object)
 
         Parameters:
         piece: The piece to add to the cell. (object)
@@ -295,9 +415,57 @@ class MultiCell(BoardCell):
         """
         return self.contents.count(piece)
 
+    def extend(self, pieces):
+        """
+        Add pieces to the cell. (object)
+
+        Parameters:
+        pieces: The pieces to add to the cell. (sequence of object)
+        """
+        self.contents.extend(pieces)
+
+    def index(self, piece, start = 0, end = None):
+        """
+        Return the location of a piece in the cell. (int)
+
+        Parameters:
+        piece: The piece to get an index for. (object)
+        """
+        if end is None:
+            end = len(self)
+        return self.contents.index(piece, start, end)
+
+    def insert(self, index, piece):
+        """
+        Insert a piece into the cell. (None)
+
+        Parameters:
+        index: Where to insert the piece. (int)
+        piece: The piece to insert. (object)
+        """
+        self.contents.insert(index, piece)
+
+    def pop(self, index = -1):
+        """
+        Remove and return a piece from the cell. (object)
+
+        Parameters:
+        index: The location of the piece to remove. (int)
+        """
+        return self.contents.pop(index)
+
+    def remove(self, piece):
+        """
+        Remove a piece from the cell. (None)
+
+        Parameters:
+        piece: The piece to remove from the cell. (object)
+        """
+        self.contents.remove(piece)
+
     def remove_piece(self, piece = None):
         """
-        Remove a piece from the cell. (object)
+        Remove and return a piece from the cell. (object)
 
         Parameters:
         piece: The piece to remove from the cell. (object)
@@ -307,6 +475,10 @@ class MultiCell(BoardCell):
         else:
             piece = self.contents.pop()
         return piece
+
+    def reverse(self):
+        """Reverse the order of the pieces in the cell. (None)"""
+        self.contents.reverse()
 
 
 class Coordinate(tuple):
@@ -414,21 +586,36 @@ class Board(object):
     Attributes:
     cells: The locations that make up the board. (dict of Coordinate: BoardCell)
     extra_cells: A list of non-standard locations. (list of BoardCell)
+    views: The possible cell mappings. (iterable of dict)
 
     Methods:
     clear: Clear all pieces off the board. (None)
     copy_pices: Copy all of the pieces from another board. (None)
     displace: Move a piece from one cell to another w/ displace capture. (object)
+    found: Find cells matching certain criteria. (list of Coordinate)
+    get: Get a board cell with a default if it's not on the board.
+    items: Get all of the locations and cells. (iterator)
+    locations: Get all of the cell coordinates for the board. (iterator)
     move: Move a piece from one cell to another. (object)
     offset: Return a cell offset from another cell (BoardCell)
     place: Place a piece in a cell. (None)
     safe: Determine if a cell is safe from capture. (bool)
     safe_displace: Move a piece with displace capture if target not safe. (object)
+    set_views: Set up the alternate mappings for the board. (None)
+    switch: Switch to the next view in order. (None)
+    values: Get all of the board cells. (iterator)
 
     Overriddent Methods:
     __init__
+    __contains__
+    __delitem__
+    __getitem__
+    __eq__
     __iter__
+    __len__
+    __ne__
     __repr__
+    __setitem__
     """
 
     def __init__(self, locations = [], cell_class = BoardCell):
@@ -442,6 +629,47 @@ class Board(object):
         self.cells = {location: cell_class(location) for location in locations}
         self.extra_cells = []
 
+    def __contains__(self, location):
+        """
+        Check for a location being on the board. (bool)
+
+        Parameter:
+        location: Coordinates for a cell. (Coordinate)
+        """
+        return location in self.cells
+
+    def __delitem__(self, key):
+        """
+        Get rid of a board cell. (object)
+
+        This does not clear the pieces from a cell, it removes the cell entirely.
+
+        Parameters:
+        key: The key (location) of the board cell. (Coordinate)
+        """
+        del self.cells[key]
+
+    def __eq__(self, other):
+        """
+        Check for equality with another board. (bool)
+
+        Parameters:
+        other: The other board to check. (Board)
+        """
+        if hasattr(other, 'cells'):
+            return self.cells == other.cells
+        else:
+            return False
+
+    def __getitem__(self, key):
+        """
+        Get a board cell. (object)
+
+        Parameters:
+        key: The key (location) of the board cell. (Coordinate)
+        """
+        return self.cells[key]
+
     def __iter__(self):
         """
         Iterator for the board (iterator)
@@ -450,11 +678,38 @@ class Board(object):
         """
         return iter(self.cells)
 
+    def __len__(self):
+        """The number of cells on the board. (int)"""
+        return len(self.cells)
+
+    def __ne__(self, other):
+        """
+        Check for inequality with another board. (bool)
+
+        Parameters:
+        other: The other board to check. (Board)
+        """
+        return not (self == other)
+
     def __repr__(self):
         """Generate a debugging text representation. (str)"""
         cell_count = len(self.cells) + len(self.extra_cells)
         cell_class_name = next(iter(self.cells.values())).__class__.__name__
         return '<{} with {} {}s>'.format(self.__class__.__name__, cell_count, cell_class_name)
+
+    def __setitem__(self, key, value):
+        """
+        Set the value of a board cell. (None)
+
+        This should rarely (if ever) be used. Instead you should get the board cell
+        and use it's methods to set the pieces: board[location].add_piece(knight).
+        This sets the BoardCell object itself, not the pieces in it.
+
+        Parameters:
+        key: The key (location) to set. (Coordinate)
+        value: The value to set the location to. (BoardCell)
+        """
+        self.cells[key] = value
 
     def clear(self):
         """Clear all pieces off the board. (None)"""
@@ -487,6 +742,64 @@ class Board(object):
         self.cells[end].clear()
         self.cells[end].add_piece(mover)
         return capture
+
+    def find(self, piece = 'any', locations = None, count = 1, cells = False):
+        """
+        Find cells matching certain criteria. (list of Coordinate)
+
+        If piece is None, all empty cells are returned. If piece is 'any', all non-
+        empty cells are returned. If locations is None, all locations are used. The
+        count parameter specifies how many pieces are need to match the location.
+
+        Parameters:
+        piece: The piece to look for. (object)
+        locations: The locations to search. (None or list of Coordinate)
+        count: The number of pieces required for a match.
+        cells: Return the board cells instead of their locations. (bool)
+        """
+        # Set the locations.
+        if locations is None:
+            locations = self.cells.keys()
+        # Find empty cells.
+        if piece is None:
+            found = [location for location in locations if not self.cells[location]]
+        # Find non-empty cells.
+        elif piece.lower() == 'any':
+            # ... with a certain number of pieces.
+            if count > 1:
+                found = [location for location in locations if len(self.cells[location]) >= count]
+            # ... with any number of pieces.
+            else:
+                found = [location for location in locations if self.cells[location]]
+        # Find cells with a certain number of pieces.
+        elif count > 1:
+            found = [location for location in locations if self.cells[location].count(piece) >= count]
+        # Find cells with a particular piece
+        else:
+            found = [location for location in locations if piece in self.cells[location]]
+        # Return the cells or locations, as requested.
+        if cells:
+            return [self.cells[location] for location in found]
+        else:
+            return found
+
+    def get(self, key, default = None):
+        """
+        Get a board cell with a default if it's not on the board.
+
+        Parameters:
+        key: The key (location) of the board cell. (Coordinate)
+        default: The value to return if the locations is not on the board. (object)
+        """
+        return self.cells.get(key, default)
+
+    def items(self):
+        """Get all of the locations and cells. (iterator)"""
+        return self.cells.items()
+
+    def locations(self):
+        """Get all of the cell coordinates for the board. (iterator)"""
+        return self.cells.keys()
 
     def move(self, start, end, piece = None):
         """
@@ -562,6 +875,10 @@ class Board(object):
             self.cells[end].clear()
             self.cells[end].add_piece(mover)
             return capture
+
+    def values(self):
+        """Get all of the board cells. (iterator)"""
+        return self.cells.values()
 
 
 class DimBoard(Board):
