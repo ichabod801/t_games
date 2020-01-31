@@ -1,7 +1,7 @@
 """
 dice.py
 
-Dice objects for tgames.
+Dice objects for t_games.
 
 Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
@@ -38,11 +38,18 @@ class Die(object):
     Overridden Methods:
     __init__
     __add__
+    __divmod__
     __eq__
+    __floordiv__
     __lt__
+    __mod__
+    __mul__
+    __pow__
     __radd__
     __repr__
     __str__
+    __sub__
+    __truediv__
     """
 
     def __init__(self, sides = 6):
@@ -76,6 +83,15 @@ class Die(object):
         else:
             return self.value + other
 
+    def __divmod__(self, other):
+        """
+        Integer division with remainder.
+
+        Parameters:
+        other: The item to divide by. (object)
+        """
+        return (self // other, self % other)
+
     def __eq__(self, other):
         """
         Equality testing. (bool)
@@ -91,6 +107,20 @@ class Die(object):
         else:
             return NotImplemented
 
+    def __floordiv__(self, other):
+        """
+        Integer division. (object)
+
+        Parameters:
+        other: The item to divide by. (object)
+        """
+        # dice divide by sides.
+        if isinstance(other, Die):
+            return self.value // other.value
+        # Divide value by other objects.
+        else:
+            return self.value // other
+
     def __lt__(self, other):
         """
         Ordering (less than) testing. (bool)
@@ -105,6 +135,54 @@ class Die(object):
             return self.value < other
         else:
             return NotImplemented
+
+    def __mod__(self, other):
+        """
+        Modulus. (object)
+
+        Parameters:
+        other: The item to modulate by. (object)
+        """
+        # dice modulate by sides.
+        if isinstance(other, Die):
+            return self.value % other.value
+        # Modulate value to other objects.
+        else:
+            return self.value % other
+
+    def __mul__(self, other):
+        """
+        Multiplication. (object)
+
+        Parameters:
+        other: The item to multiply by. (object)
+        """
+        # dice multiply by sides.
+        if isinstance(other, Die):
+            return self.value * other.value
+        # Multiply value to other objects.
+        else:
+            return self.value * other
+
+    def __pow__(self, other, mod = None):
+        """
+        Exponentiation. (object)
+
+        Parameters:
+        other: The exponent. (object)
+        mod: The modulus for ternary pow() calls. (object)
+        """
+        # Dice exponentiate by sides.
+        if isinstance(other, Die):
+            power = self.value ** other.value
+        # Exponentioate value for other objects.
+        else:
+            power = self.value ** other
+        # Check for modulation.
+        if mod is None:
+            return power
+        else:
+            return power % mod
 
     def __radd__(self, other):
         """
@@ -125,6 +203,34 @@ class Die(object):
             return '{}*'.format(self.value)
         else:
             return str(self.value)
+
+    def __sub__(self, other):
+        """
+        Subtraction. (object)
+
+        Parameters:
+        other: The item to subtract. (object)
+        """
+        # dice subtract by sides.
+        if isinstance(other, Die):
+            return self.value - other.value
+        # Subtract value to other objects.
+        else:
+            return self.value - other
+
+    def __truediv__(self, other):
+        """
+        Division. (object)
+
+        Parameters:
+        other: The item to divide by. (object)
+        """
+        # dice divide by sides.
+        if isinstance(other, Die):
+            return self.value / other.value
+        # Divide value by other objects.
+        else:
+            return self.value / other
 
     def roll(self):
         """
