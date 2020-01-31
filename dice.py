@@ -46,7 +46,13 @@ class Die(object):
     __mul__
     __pow__
     __radd__
+    __rdivmod__
     __repr__
+    __rmod__
+    __rmul__
+    __rpow__
+    __rsub__
+    __rtruediv__
     __str__
     __sub__
     __truediv__
@@ -193,9 +199,89 @@ class Die(object):
         """
         return self + other
 
+    def __rdivmod__(self, other):
+        """
+        Right hand integer division with remainder.
+
+        Parameters:
+        other: The item to divide. (object)
+        """
+        return (other // self, other % self)
+
     def __repr__(self):
         """Generate a debugging text representation. (str)"""
         return '<{} {}>'.format(self.__class__.__name__, self.value)
+
+    def __rmod__(self, other):
+        """
+        Right hand modulus. (object)
+
+        Parameters:
+        other: The item to modulate. (object)
+        """
+        # dice modulate by sides.
+        if isinstance(other, Die):
+            return other.value % self.value
+        # Modulate value to other objects.
+        else:
+            return other % self.value
+
+    def __rmul__(self, other):
+        """
+        Right-side multiplication.
+
+        Parameters:
+        other: The item to multiply by. (object)
+        """
+        return self * other
+
+    def __rpow__(self, other, mod = None):
+        """
+        Right hand exponentiation. (object)
+
+        Parameters:
+        other: The item to exponentiate. (object)
+        mod: The modulus for ternary pow() calls. (object)
+        """
+        # Dice exponentiate by sides.
+        if isinstance(other, Die):
+            power = other.value ** self.value
+        # Exponentioate value for other objects.
+        else:
+            power = other ** self.value
+        # Check for modulation.
+        if mod is None:
+            return power
+        else:
+            return power % mod
+
+    def __rsub__(self, other):
+        """
+        Right hand subtraction. (object)
+
+        Parameters:
+        other: The item to subtract from. (object)
+        """
+        # dice subtract by sides.
+        if isinstance(other, Die):
+            return other.value - self.value
+        # Subtract value to other objects.
+        else:
+            return other - self.value
+
+    def __rtruediv__(self, other):
+        """
+        Right hand division. (object)
+
+        Parameters:
+        other: The item to divide. (object)
+        """
+        # dice divide by sides.
+        if isinstance(other, Die):
+            return other.value / self.value
+        # Divide value by other objects.
+        else:
+            return other / self.value
 
     def __str__(self):
         """Generate a human readable text representation. (str)"""
