@@ -456,6 +456,8 @@ class Pool(object):
 
     Methods:
     count: Count the number of times a particular rolls has been made. (int)
+    counts: Return counts of the values in the pool. (list of int)
+    describe: Returns a dictionary describing the rolls in the pool. (dict)
     hold: Hold some of the dice from further rolling. (None)
     index: Return the index of the die with the specified value. (int)
     release: Make all held dice available for rolling. (None)
@@ -525,6 +527,32 @@ class Pool(object):
         object: The roll to count. (object)
         """
         return self.dice.count(object)
+
+    def counts(self):
+        """
+        Return counts of the values in the pool. (list of int)
+
+        Returns a list counts such that counts[value] is the number of times value was
+        rolled. Will raise an error for non-integer dice, and may be sparse depending
+        on the value of self.sides.
+        """
+        counts = [0] * (max(self.sides)  + 1)
+        for value in self.values:
+            counts[value] += 1
+        return counts
+
+    def describe(self):
+        """
+        Returns a dictionary describing the rolls in the pool. (dict)
+
+        The keys in the dictionary are any values rolled, and the strings 'max' and
+        'min'. If the die can have non-hashable values this may cause an error. If
+        'max' or 'min' are possible values, the number of times they are rolled will
+        overwrite the maximum and minimum values rolled.
+        """
+        info = {'max': max(self.values), 'min': min(self.values)}
+        info.update({value: self.values.count(value) for value in set(self.values)})
+        return info
 
     def hold(self, values):
         """
