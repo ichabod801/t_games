@@ -39,9 +39,12 @@ class Die(object):
     __init__
     __abs__
     __add__
+    __complex__
     __divmod__
     __eq__
+    __float__
     __floordiv__
+    __int__
     __invert__
     __lt__
     __mod__
@@ -97,6 +100,10 @@ class Die(object):
         else:
             return self.value + other
 
+    def __complex__(self):
+        """Convert to a complex number. (complex)"""
+        return complex(self.value)
+
     def __divmod__(self, other):
         """
         Integer division with remainder.
@@ -121,6 +128,10 @@ class Die(object):
         else:
             return NotImplemented
 
+    def __float__(self):
+        """Convert to a floating point number. (float)"""
+        return float(self.value)
+
     def __floordiv__(self, other):
         """
         Integer division. (object)
@@ -134,6 +145,14 @@ class Die(object):
         # Divide value by other objects.
         else:
             return self.value // other
+
+    def __index__(self):
+        """Convert to an integer for slicing and other conversions. (int)"""
+        return int(self.value)
+
+    def __int__(self):
+        """Convert to an integer. (int)"""
+        return int(self.value)
 
     def __invert__(self):
         """Inversion. (object)"""
