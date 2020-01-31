@@ -205,6 +205,15 @@ class Die(object):
         """Negation. (object)"""
         return -self.value
 
+    def __round__(self, ndigits = None):
+        """
+        Rounding. (float)
+
+        Parameters:
+        ndigits: The number of digits to round. (int)
+        """
+        return round(self.value, ndigits)
+
     def __pos__(self):
         """Positive value. (object)"""
         return +self.value
