@@ -603,6 +603,10 @@ class Pool(object):
         self.dice.append(die)
         self.values.append(die.value)
 
+    def copy(self):
+        """Create an independent deep copy of the Pool. (Pool)"""
+        return Pool([die.copy() for die in self.dice], roll = False)
+
     def count(self, object):
         """
         Count the number of times a particular rolls has been made. (int)
