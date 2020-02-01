@@ -450,6 +450,10 @@ class Pool(object):
     """
     A set of dice. (object)
 
+    Manipulating the dice attribute directly is dangerous, as it can make the
+    values attribute not map to the dice attribute directly. Use the provided list
+    like methods instead, which update values as well as dice.
+
     Attributes:
     dice: The dice in the pool. (list of Die)
     values: The current values of the dice in the pool. (list)
@@ -458,22 +462,31 @@ class Pool(object):
     count: Count the number of times a particular rolls has been made. (int)
     counts: Return counts of the values in the pool. (list of int)
     describe: Returns a dictionary describing the rolls in the pool. (dict)
+    extend: Add multiple dice to the end of the Pool. (None)
     hold: Hold some of the dice from further rolling. (None)
     index: Return the index of the die with the specified value. (int)
+    insert: Insert a new die into the pool. (None)
     release: Make all held dice available for rolling. (None)
+    remove: Remove the first die with the specified value. (None)
+    reverse: Reverse the order of the dice in the pool. (None)
     roll: Roll the dice in the pool. (list)
     sort: Sort the dice in the pool in place. (list)
 
     Overridden Methods:
     __init__
     __contains__
+    __delitem__
+    __getitem__
+    __iadd__
     __iter__
     __len__
     __repr__
+    __reversed__
+    __setitem__
     __str__
     """
 
-    def __init__(self, dice = [6, 6]):
+    def __init__(self, dice = [6, 6], roll = True):
         """
         Set up the dice in the pool. (None)
 
@@ -491,7 +504,10 @@ class Pool(object):
             else:
                 self.dice.append(Die(die))
         # Get an initial value.
-        self.roll()
+        if roll:
+            self.roll()
+        else:
+            self.values = [die.value for die in self.dice]
 
     def __contains__(self, value):
         """
@@ -501,6 +517,37 @@ class Pool(object):
         value: The value to check for. (object)
         """
         return value in self.dice
+
+    def __delitem__(self, key):
+        """
+        Remove one or more dice. (None)
+
+        Parameters:
+        key: The die or dice to remove. (int or slice)
+        """
+        del self.dice[key]
+        del self.values[key]
+
+    def __getitem__(self, key):
+        """
+        Get one or more of the dice. (Die or list)
+
+        Parameters:
+        key: The die or dice to get. (int or slice)
+        """
+        if isinstance(key, slice):
+            return Pool(self.dice[key], roll = False)
+        else:
+            return self.dice[key]
+
+    def __iadd__(self, dice):
+        """
+        Add multiple dice to the end of the Pool. (None)
+
+        Parameters:
+        dice: The dice to add. (sequence of Die)
+        """
+        self.extend(dice)
 
     def __iter__(self):
         """Iterate over the dice. (iterator)"""
@@ -514,9 +561,34 @@ class Pool(object):
         """Generate debugging text representation. (str)"""
         return '<{} {}>'.format(self.__class__.__name__, self)
 
+    def __reversed__(self):
+        """Return a reversed version of the Pool. (Pool)"""
+        return Pool(reversed(self.dice), roll = False)
+
+    def __setitem__(self, key, value):
+        """
+        Modify the pool by index or slice. (None)
+
+        Parameters:
+        key: The dice to modify. (int or slice)
+        value: The new dice to use. (object)
+        """
+        self.dice[key] = value
+        self.values = [die.value for die in self.dice]
+
     def __str__(self):
         """Generate human readable text representation. (str)"""
         return utility.oxford(self.dice)
+
+    def append(self, die):
+        """
+        Add a new die to the end of the Pool. (None)
+
+        Parameter:
+        die: The new die to add. (Die)
+        """
+        self.dice.append(die)
+        self.values.append(die.value)
 
     def count(self, object):
         """
@@ -560,17 +632,23 @@ class Pool(object):
                 info['by_counts'][count].append(value)
         return info
 
+    def extend(self, dice):
+        """
+        Add multiple dice to the end of the Pool. (None)
+
+        Parameters:
+        dice: The dice to add. (sequence of Die)
+        """
+        self.dice.extend(dice)
+        self.values.extend([die.value for die in dice])
+
     def get_free(self):
         """Return a sub-pool of the un-held dice. (Pool)"""
-        unheld = Pool()
-        unheld.dice = [die for die in self.dice if not die.held]
-        return unheld
+        return Pool([die for die in self.dice if not die.held])
 
     def get_held(self):
         """Return a sub-pool of the held dice. (Pool)"""
-        held = Pool()
-        held.dice = [die for die in self.dice if die.held]
-        return held
+        return Pool([die for die in self.dice if die.held])
 
     def hold(self, values):
         """
@@ -608,11 +686,43 @@ class Pool(object):
                 return start
             start += 1
 
+    def insert(self, index, die):
+        """
+        Insert a new die into the pool. (None)
+
+        Parameters:
+        index: Where to insert the die. (int)
+        die: The die to instert. (Die)
+        """
+        self.dice.insert(index, die)
+        self.values.insert(index, die.value)
+
+    def pop(self, index = -1):
+        """
+        Remove and return a die. (Die)
+
+        Parameters:
+        index: The die to remove and return. (int)
+        """
+        self.values.pop(index)
+        return self.dice.pop(index)
+
     def release(self):
         """Make all held dice available for rolling. (None)"""
         for die in self.dice:
             die.held = False
         self.held = 0
+
+    def remove(self, value):
+        """Remove the first die with the specified value. (None)"""
+        index = self.dice.index(value)
+        del self.dice[index]
+        del self.values[index]
+
+    def reverse(self):
+        """Reverse the order of the dice in the pool. (None)"""
+        self.dice.reverse()
+        self.values.reverse()
 
     def roll(self, index = None):
         """
