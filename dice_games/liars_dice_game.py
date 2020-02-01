@@ -165,7 +165,7 @@ class ABBot(player.Bot):
         claim_score = self.game.poker_score(self.game.claim)
         prev_score = self.game.poker_score(self.game.history[-1])
         # Get the correct believability matrix.
-        if self.game.scores[self.name] == 1:
+        if self.game.scores[self] == 1:
             dont_challenge = self.conservative
         else:
             dont_challenge = self.believable

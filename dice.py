@@ -476,6 +476,7 @@ class Pool(object):
     __init__
     __contains__
     __delitem__
+    __eq__
     __getitem__
     __iadd__
     __iter__
@@ -527,6 +528,18 @@ class Pool(object):
         """
         del self.dice[key]
         del self.values[key]
+
+    def __eq__(self, other):
+        """
+        Equality check. (bool)
+
+        Parameters:
+        other: The item to check equality with. (object)
+        """
+        if isinstance(other, Pool):
+            return self.dice == other.dice
+        else:
+            return self.values == other
 
     def __getitem__(self, key):
         """
@@ -607,7 +620,7 @@ class Pool(object):
         rolled. Will raise an error for non-integer dice, and may be sparse depending
         on the value of self.sides.
         """
-        counts = [0] * (max(self.sides)  + 1)
+        counts = [0] * (max(self.dice[0].sides)  + 1)
         for value in self.values:
             counts[value] += 1
         return counts
@@ -644,11 +657,11 @@ class Pool(object):
 
     def get_free(self):
         """Return a sub-pool of the un-held dice. (Pool)"""
-        return Pool([die for die in self.dice if not die.held])
+        return Pool([die for die in self.dice if not die.held], roll = False)
 
     def get_held(self):
         """Return a sub-pool of the held dice. (Pool)"""
-        return Pool([die for die in self.dice if die.held])
+        return Pool([die for die in self.dice if die.held], roll = False)
 
     def hold(self, values):
         """

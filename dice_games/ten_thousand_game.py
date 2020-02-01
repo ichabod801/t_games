@@ -813,7 +813,7 @@ class TenThousand(game.Game):
         score_text = '\n'.join('{}: {}'.format(name, score) for name, score in self.scores.items())
         full_text = '\nScores:\n{}\n\nYou have banked {} points this turn.\nThe roll to you is {}.'
         if self.min_grows:
-            if self.entry and not self.entered[self.players[self.player_index].name]:
+            if self.entry and not self.entered[self.current_player]:
                 min_roll = max(self.minimum, self.entry)
             else:
                 min_roll = self.minimum
@@ -830,8 +830,9 @@ class TenThousand(game.Game):
         """
         # !! refactor
         player = self.players[self.player_index]
-        possibles = [die.value for die in self.dice if not die.held]
-        counts = [possibles.count(value) for value in range(7)]
+        possibles = self.dice.get_free()
+        counts = possibles.counts()
+        print(possibles, counts)
         # Process the arguments.
         if arguments.strip():
             # Split out the individual values to hold.
@@ -869,7 +870,7 @@ class TenThousand(game.Game):
             else:
                 # Otherwise, get any combos or loose dice.
                 values = []
-                for possible in set(possibles):
+                for possible in set(possibles.values):
                     for count in range(counts[possible], 0, -1):
                         if self.combo_scores[possible][count]:
                             values.extend([possible] * count)
@@ -895,7 +896,7 @@ class TenThousand(game.Game):
         self.turn_score += held_score
         self.held_this_turn = True
         # Check for holding all of the dice (force-six option).
-        if self.force_six and not [die for die in self.dice if not die.held]:
+        if self.force_six and not self.dice.get_free():
             self.must_roll = 'you scored on all {} dice'.format(len(self.dice))
         return True
 
