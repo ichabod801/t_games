@@ -832,7 +832,6 @@ class TenThousand(game.Game):
         player = self.players[self.player_index]
         possibles = self.dice.get_free()
         counts = possibles.counts()
-        print(possibles, counts)
         # Process the arguments.
         if arguments.strip():
             # Split out the individual values to hold.
@@ -906,13 +905,13 @@ class TenThousand(game.Game):
 
         If all of the dice are held, all of the dice are rerolled.
         """
-        player = self.players[self.player_index]
+        player = self.current_player
         # Check for having held dice.
         if not (self.held_this_turn or self.new_turn or self.must_roll):
             player.error('You must hold dice before you can roll.')
             return True
         # Reset the dice if they've all been rolled.
-        if not [die for die in self.dice if not die.held]:
+        if not self.dice.get_free():
             self.dice.release()
         # Roll the dice.
         self.must_roll = ''
@@ -922,7 +921,7 @@ class TenThousand(game.Game):
             self.wild_roll(player)
         # Make sure any combos have been cleared (clear-combo option).
         if self.clear_combo and self.last_combo:
-            rolled = [die for die in self.dice if not die.held]
+            rolled = self.dice.get_free()
             if self.wild and -1 in rolled:
                 self.wild_die(player)
             message = 'You must reroll because you matched the last combo.'
@@ -934,7 +933,7 @@ class TenThousand(game.Game):
                     self.wild_roll(player)
             self.last_combo = []
         self.held_this_turn = False
-        values = sorted([die.value for die in self.dice if not die.held])
+        values = sorted(self.dice.get_free().values)
         player.tell('\n{} rolled: {}.'.format(player.name, ', '.join([str(value) for value in values])))
         # Check for no score (end the turn if there isn't).
         roll_score = self.score_dice(values, validate = False)
