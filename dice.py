@@ -452,7 +452,6 @@ class Pool(object):
 
     Attributes:
     dice: The dice in the pool. (list of Die)
-    held: The number of dice currently being held. (int)
     values: The current values of the dice in the pool. (list)
 
     Methods:
@@ -493,7 +492,6 @@ class Pool(object):
                 self.dice.append(Die(die))
         # Get an initial value.
         self.roll()
-        self.held = 0
 
     def __contains__(self, value):
         """
@@ -549,9 +547,9 @@ class Pool(object):
         The keys in the dictionary 'min', 'max', 'counts' (counts[value] = # of rolls),
         and 'by_counts' (by_counts[# of rolls] = list of values).
         """
-        info = {'counts': [0] * self.sides[-1]  + 1, 'max': 0, 'min': self.sides[-1] + 1}
+        info = {'counts': [0] * (self.sides[-1]  + 1), 'max': 0, 'min': self.sides[-1] + 1}
         for value in self.values:
-            info['count'][value] += 1
+            info['counts'][value] += 1
             if value < info['min']:
                 info['min'] = value
             if value > info['max']:
@@ -561,6 +559,18 @@ class Pool(object):
             if count + value:
                 info['by_counts'][count].append(value)
         return info
+
+    def get_free(self):
+        """Return a sub-pool of the un-held dice. (Pool)"""
+        unheld = Pool()
+        unheld.dice = [die for die in self.dice if not die.held]
+        return unheld
+
+    def get_held(self):
+        """Return a sub-pool of the held dice. (Pool)"""
+        held = Pool()
+        held.dice = [die for die in self.dice if die.held]
+        return held
 
     def hold(self, values):
         """
@@ -578,7 +588,6 @@ class Pool(object):
             # Find a die with that value and hold it.
             spot = unheld.index(value)
             unheld[spot].held = True
-            self.held += 1
             del unheld[spot]
 
     def index(self, value, start = 0, end = None):
