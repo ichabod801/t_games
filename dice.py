@@ -342,7 +342,6 @@ class Die(object):
         Parameters:
         other: The item to divide. (object)
         """
-        print(self.value)
         # dice divide by sides.
         if isinstance(other, Die):
             return other.value / self.value
@@ -378,7 +377,6 @@ class Die(object):
         Parameters:
         other: The item to divide by. (object)
         """
-        print(self.value)
         # dice divide by sides.
         if isinstance(other, Die):
             return self.value / other.value

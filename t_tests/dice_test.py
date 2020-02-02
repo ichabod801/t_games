@@ -12,6 +12,8 @@ ShuffleDieTest: Tests of a sampling die. (unittest.TestCase)
 """
 
 
+from __future__ import division
+
 import operator
 import unittest
 
