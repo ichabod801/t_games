@@ -435,6 +435,26 @@ class PoolTest(unittest.TestCase):
         values = [die.value for die in self.pool.dice]
         self.assertEqual(values.count(5), self.pool.count(5))
 
+    def testGetItemIndex(self):
+        """Test getting a die by index."""
+        self.assertIs(self.pool.dice[2], self.pool[2])
+
+    def testGetItemNegative(self):
+        """Test getting a die by negative index."""
+        self.assertIs(self.pool.dice[-1], self.pool[-1])
+
+    def testGetItemSkip(self):
+        """Test getting a die by slice with skip."""
+        self.assertEqual(self.pool.dice[::2], self.pool[::2])
+
+    def testGetItemSlice(self):
+        """Test getting a die by slice."""
+        self.assertEqual(self.pool.dice[1:-1], self.pool[1:-1])
+
+    def testLen(self):
+        """Test the length of a pool."""
+        self.assertEqual(5, len(self.pool))
+
     def testHoldDice(self):
         """Test holding dice holds the dice."""
         last_two = self.pool.dice[-2:]
