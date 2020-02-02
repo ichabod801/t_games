@@ -448,6 +448,17 @@ class PoolTest(unittest.TestCase):
         check = [value for value in range(1, 7) if value not in self.pool.values][0]
         self.assertNotIn(check, self.pool)
 
+    def testCopySame(self):
+        """Test that a copy has the same (initial) values."""
+        clone = self.pool.copy()
+        self.assertEqual(clone.values, self.pool.values)
+
+    def testCopyDifferent(self):
+        """Test that the copy has independent values."""
+        clone = self.pool.copy()
+        clone.roll()
+        self.assertNotEqual(clone.values, self.pool.values) # 1 in 7,776 chance of being equal
+
     def testCount(self):
         """Test of counting values among the dice."""
         values = [die.value for die in self.pool.dice]
