@@ -129,10 +129,8 @@ class Die(object):
         # Test by value.
         if isinstance(other, Die):
             return self.value == other.value
-        elif isinstance(other, (int, float)):
-            return self.value == other
         else:
-            return NotImplemented
+            return self.value == other
 
     def __float__(self):
         """Convert to a floating point number. (float)"""

@@ -23,6 +23,15 @@ class DieTest(unittest.TestCase):
     def setUp(self):
         self.die = dice.Die()
 
+    def testAbsNegative(self):
+        """Test the absolute value of a negative die."""
+        self.die.value = -3
+        self.assertEqual(3, abs(self.die))
+
+    def testAbsPositive(self):
+        """Test the absolute value of a postive die."""
+        self.assertEqual(self.die.value, abs(self.die))
+
     def testAddDie(self):
         """Test adding two dice together."""
         d8 = dice.Die(8)
@@ -35,6 +44,19 @@ class DieTest(unittest.TestCase):
     def testAddInt(self):
         """Test adding a die to an integer."""
         self.assertEqual(self.die.value + 18, self.die + 18)
+
+    def testComplexEqual(self):
+        """Test a complex version of a die being equal to the die."""
+        self.assertEqual(complex(self.die), self.die)
+
+    def testComplexParts(self):
+        """Test the parts of a comple version of a die."""
+        c = complex(self.die)
+        self.assertEqual((self.die.value, 0.0), (c.real, c.imag))
+
+    def testDivMod(self):
+        """Test divmoding a die."""
+        self.assertEqual((self.die.value // 3, self.die.value % 3), divmod(self.die, 3))
 
     def testEqualDie(self):
         """Test equality across dice."""
@@ -54,6 +76,14 @@ class DieTest(unittest.TestCase):
         while self.die > 1:
             self.die.roll()
         self.assertEqual(1, self.die)
+
+    def testFloatEqual(self):
+        """Test a float version of a Die being a float."""
+        self.assertEqual(float(self.die), self.die)
+
+    def testFloatType(self):
+        """The the type of a float version of a Die."""
+        self.assertEqual(float, type(float(self.die)))
 
     def testInequalityGreater(self):
         """Test greater than for a die."""
@@ -185,13 +215,6 @@ class PoolTest(unittest.TestCase):
         values = [die.value for die in last_two]
         self.pool.hold(values)
         self.assertEqual(sorted(last_two), sorted([die for die in self.pool if die.held]))
-
-    def testHoldHeld(self):
-        """Test holding dice updates the count."""
-        last_two = self.pool.dice[-2:]
-        values = [die.value for die in last_two]
-        self.pool.hold(values)
-        self.assertEqual(2, self.pool.held)
 
     def testIter(self):
         """Test of iterating over the dice in the pool."""
