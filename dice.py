@@ -158,10 +158,6 @@ class Die(object):
         """Convert to an integer. (int)"""
         return int(self.value)
 
-    def __invert__(self):
-        """Inversion. (object)"""
-        return ~self.value
-
     def __lt__(self, other):
         """
         Ordering (less than) testing. (bool)

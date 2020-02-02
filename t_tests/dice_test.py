@@ -12,6 +12,7 @@ ShuffleDieTest: Tests of a sampling die. (unittest.TestCase)
 """
 
 
+import operator
 import unittest
 
 from t_games import dice
@@ -85,6 +86,31 @@ class DieTest(unittest.TestCase):
         """The the type of a float version of a Die."""
         self.assertEqual(float, type(float(self.die)))
 
+    def testFloorDivDie(self):
+        """Test floor division with another die."""
+        other = dice.Die()
+        other.value = 2
+        self.assertEqual(self.die.value // 2, self.die // other)
+
+    def testFloorDivInt(self):
+        """Test floor division of a die by an integer."""
+        self.assertEqual(self.die.value // 2, self.die // 2)
+
+    def testFloorDivZero(self):
+        """Test floor division of a die guaranteed to be zero."""
+        self.assertEqual(0, self.die // 7)
+
+    def testIndexType(self):
+        """Test the type when converting a die to an index."""
+        die = dice.Die([1.5, 2.5, 3.5])
+        self.assertIsInstance(operator.index(die), int)
+
+    def testIndexValue(self):
+        """Test value when converting a die to an index."""
+        die = dice.Die([1.5, 2.5, 3.5])
+        check = [0, 1, 1, 1, 0, 0]
+        self.assertEqual(1, check[die])
+
     def testInequalityGreater(self):
         """Test greater than for a die."""
         self.assertTrue(-1 < self.die)
@@ -93,9 +119,51 @@ class DieTest(unittest.TestCase):
         """Test less than for a die."""
         self.assertTrue(self.die < 18)
 
-    def testInqualityNot(self):
+    def testInequalityNot(self):
         """Test not equals for a die."""
         self.assertNotEqual(801, self.die)
+
+    def testIntType(self):
+        """Test the type when converting a die to an int."""
+        die = dice.Die([1.5, 2.5, 3.5])
+        self.assertIsInstance(int(die), int)
+
+    def testIntValue(self):
+        """Test value when converting a die to an int."""
+        die = dice.Die([1.5, 2.5, 3.5])
+        self.assertIn(int(die), (1, 2, 3))
+
+    def testModDie(self):
+        """Test the modulus of a die by a die."""
+        other = dice.Die()
+        other.value = 2
+        self.assertEqual(self.die.value % 2, self.die % other)
+
+    def testModInt(self):
+        """Test the modulus of a die by an integer."""
+        self.assertEqual(self.die.value % 2, self.die % 2)
+
+    def testMultiplyDie(self):
+        """Test multiplication by a die."""
+        other = dice.Die()
+        other.value = 5
+        self.assertEqual(self.die.value * 5, self.die * other)
+
+    def testMultiplyInt(self):
+        """Test multiplication by an integer."""
+        self.assertEqual(self.die.value * 4, self.die * 4)
+
+    def testMultiplyOne(self):
+        """Test multiplication by the identity."""
+        self.assertEqual(self.die.value, self.die * 1)
+
+    def testMultiplyZero(self):
+        """Test multiplication by the absorber."""
+        self.assertEqual(0, self.die * 0)
+
+    def testNegation(self):
+        """Test the negation of a die."""
+        self.assertEqual(self.die.value * -1, -self.die)
 
     def testRAddFloat(self):
         """Test right adding a die to a floating point number."""
@@ -113,6 +181,25 @@ class DieTest(unittest.TestCase):
         """Test trying to roll a held die."""
         self.die.held = True
         self.assertRaises(ValueError, self.die.roll)
+
+    def testRound(self):
+        """Test rounding a die."""
+        die = dice.Die([1.1, 1.2, 1.3])
+        self.assertEqual(1, round(die))
+
+    def testRoundPlaces(self):
+        """Test rounding a die to a particular precision."""
+        die = dice.Die([1.11, 1.12, 1.13])
+        self.assertEqual(1.1, round(die, 1))
+
+    def testPositiveNegative(self):
+        """Test the positive of a negative die."""
+        die = dice.Die([-1, -2, -3])
+        self.assertEqual(self.die.value * -1, +die)
+
+    def testPositivePositive(self):
+        """Test the positive of a positive die."""
+        self.assertEqual(self.die.value, +self.die)
 
     def testSort(self):
         """Test sorting a bunch of dice."""
