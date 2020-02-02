@@ -172,6 +172,13 @@ class Game(OtherCmd):
         self.gonzo = 'gonzo' in raw_words or 'gz' in raw_words
         self.set_options()
         self.handle_options()
+        # Handle any errors in the options.
+        if self.option_set.errors:
+            self.human.tell()
+            self.human.error('\n'.join(self.option_set.errors))
+            # Check for playing anyway.
+            if self.human.ask('\nDo you still want to play the game? ') in utility.YES:
+                self.option_set.errors = []
         # Set up the players.
         if not hasattr(self, 'players'):
             self.players = [self.human]
