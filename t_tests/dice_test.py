@@ -424,6 +424,30 @@ class PoolTest(unittest.TestCase):
     def setUp(self):
         self.pool = dice.Pool([6] * 5)
 
+    def testAppendDie(self):
+        """Test appending a die to the pool."""
+        other = dice.Die()
+        other.value = 7
+        self.pool.append(other)
+        self.assertIs(other, self.pool.dice[-1])
+
+    def testAppendValue(self):
+        """Test appending a value to the pool."""
+        other = dice.Die()
+        other.value = 7
+        self.pool.append(other)
+        self.assertEqual(7, self.pool.values[-1])
+
+    def testContains(self):
+        """Test an item being in the list."""
+        check = self.pool[1].value
+        self.assertIn(check, self.pool)
+
+    def testContainsNot(self):
+        """Test an item not being in the list."""
+        check = [value for value in range(1, 7) if value not in self.pool.values][0]
+        self.assertNotIn(check, self.pool)
+
     def testCount(self):
         """Test of counting values among the dice."""
         values = [die.value for die in self.pool.dice]
@@ -434,6 +458,30 @@ class PoolTest(unittest.TestCase):
         self.pool.hold(self.pool.values[-2:])
         values = [die.value for die in self.pool.dice]
         self.assertEqual(values.count(5), self.pool.count(5))
+
+    def testDeleteDie(self):
+        """Test deleting a die from the pool."""
+        del self.pool[3]
+        self.assertEqual(4, len(self.pool.dice))
+
+    def testDeleteValue(self):
+        """Test deleting a value from the pool."""
+        del self.pool[0]
+        self.assertEqual(4, len(self.pool.values))
+
+    def testExtendDice(self):
+        """Test extending a pool by dice."""
+        others = [dice.Die(), dice.Die()]
+        self.pool.extend(others)
+        self.assertIs(others[0], self.pool.dice[-2])
+        self.assertIs(others[1], self.pool.dice[-1])
+
+    def testExtendValues(self):
+        """Test extending a pool by values."""
+        others = [dice.Die(), dice.Die()]
+        values = [die.value for die in others]
+        self.pool.extend(others)
+        self.assertEqual(values, self.pool.values[-2:])
 
     def testGetItemIndex(self):
         """Test getting a die by index."""
@@ -451,10 +499,6 @@ class PoolTest(unittest.TestCase):
         """Test getting a die by slice."""
         self.assertEqual(self.pool.dice[1:-1], self.pool[1:-1])
 
-    def testLen(self):
-        """Test the length of a pool."""
-        self.assertEqual(5, len(self.pool))
-
     def testHoldDice(self):
         """Test holding dice holds the dice."""
         last_two = self.pool.dice[-2:]
@@ -462,13 +506,59 @@ class PoolTest(unittest.TestCase):
         self.pool.hold(values)
         self.assertEqual(sorted(last_two), sorted([die for die in self.pool if die.held]))
 
+    def testIndex(self):
+        """Test indexing a value."""
+        for check in range(1, 7):
+            if check in self.pool:
+                break
+        self.assertEqual(self.pool.dice.index(check), self.pool.index(check))
+
     def testIter(self):
         """Test of iterating over the dice in the pool."""
         self.assertEqual(list(self.pool), self.pool.dice)
 
     def testIterHold(self):
         """Test of iterating over the dice in the pool."""
+        self.pool.hold(self.pool[2].value)
         self.assertEqual(self.pool.dice, list(self.pool))
+
+    def testInsertDie(self):
+        """Test inserting a die in the pool."""
+        other = dice.Die()
+        other.value = 7
+        self.pool.insert(3, other)
+        self.assertIs(other, self.pool.dice[3])
+
+    def testInsertValue(self):
+        """Test setting a value in the pool with an index."""
+        other = dice.Die()
+        other.value = 7
+        self.pool.insert(1, other)
+        self.assertEqual(7, self.pool.values[1])
+
+    def testLen(self):
+        """Test the length of a pool."""
+        self.assertEqual(5, len(self.pool))
+
+    def testPopIndexValue(self):
+        """Test the return value of popping a pool with an index."""
+        check = self.pool[2]
+        self.assertIs(check, self.pool.pop(2))
+
+    def testPopLenDice(self):
+        """Test that pop removes a die."""
+        self.pool.pop()
+        self.assertEqual(4, len(self.pool.dice))
+
+    def testPopLenValues(self):
+        """Test that pop removes a die."""
+        self.pool.pop()
+        self.assertEqual(4, len(self.pool.values))
+
+    def testPopValue(self):
+        """Test the return value of popping a pool."""
+        check = self.pool[-1]
+        self.assertIs(check, self.pool.pop())
 
     def testReleaseAll(self):
         """Test releasing all of the dice."""
@@ -486,6 +576,22 @@ class PoolTest(unittest.TestCase):
         self.pool.hold(self.pool.values[:2])
         self.pool.release()
         self.assertEqual(5, len(self.pool.dice))
+
+    def testRemoveDie(self):
+        """Test removing a die from the pool."""
+        for check in range(1, 7):
+            if check in self.pool:
+                break
+        self.pool.remove(check)
+        self.assertEqual(4, len(self.pool.dice))
+
+    def testRemoveValue(self):
+        """Test removing a value from the pool."""
+        for check in range(1, 7):
+            if check in self.pool:
+                break
+        self.pool.remove(check)
+        self.assertEqual(4, len(self.pool.values))
 
     def testRepr(self):
         """Test a computer readable text representation of a pool of dice."""
@@ -510,6 +616,22 @@ class PoolTest(unittest.TestCase):
         pool = dice.Pool()
         self.assertEqual('<Pool {} and {}>'.format(*pool.values), repr(pool))
 
+    def testReverseDice(self):
+        """Test reversing a pool in place by dice."""
+        check = self.pool.dice[::-1]
+        self.pool.reverse()
+        self.assertEqual(check, self.pool)
+
+    def testReverseValues(self):
+        """Test reversing a pool in place by values."""
+        check = self.pool.values[::-1]
+        self.pool.reverse()
+        self.assertEqual(check, self.pool.values)
+
+    def testReversed(self):
+        """Test a reversed pool."""
+        self.assertEqual(list(reversed(self.pool.values)), [die.value for die in reversed(self.pool)])
+
     def testRollHeld(self):
         """Test that rolling does not affect held dice."""
         held_values = sorted(self.pool.values[:2])
@@ -522,6 +644,34 @@ class PoolTest(unittest.TestCase):
         held_values = self.pool.values[:]
         self.pool.roll(4)
         self.assertEqual(held_values[:4], self.pool.values[:4])
+
+    def testSetItemIndexDie(self):
+        """Test setting a die in the pool with an index."""
+        other = dice.Die()
+        other.value = 7
+        self.pool[2] = other
+        self.assertIs(other, self.pool.dice[2])
+
+    def testSetItemIndexValue(self):
+        """Test setting a value in the pool with an index."""
+        other = dice.Die()
+        other.value = 7
+        self.pool[2] = other
+        self.assertEqual(7, self.pool.values[2])
+
+    def testSetItemNegativeDie(self):
+        """Test setting a die in the pool with a negative index."""
+        other = dice.Die()
+        other.value = -1
+        self.pool[-1] = other
+        self.assertIs(other, self.pool.dice[-1])
+
+    def testSetItemNegativeValue(self):
+        """Test setting a value in the pool with a negative index."""
+        other = dice.Die()
+        other.value = -1
+        self.pool[-1] = other
+        self.assertEqual(-1, self.pool.values[-1])
 
     def testSortHoldKey(self):
         """Test sorting the values with a key function and held dice."""
