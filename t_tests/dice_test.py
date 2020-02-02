@@ -520,6 +520,22 @@ class PoolTest(unittest.TestCase):
         del self.pool[0]
         self.assertEqual(4, len(self.pool.values))
 
+    def testDescribeByCounts(self):
+        self.pool.values = [1, 2, 2, 4, 2]
+        self.assertEqual({1: [1, 4], 3: [2], 0: [3, 5, 6]}, self.pool.describe()['by-counts'])
+
+    def testDescribeCounts(self):
+        self.pool.values = [1, 2, 2, 1, 6]
+        self.assertEqual([0, 2, 2, 0, 0, 0, 1], self.pool.describe()['counts'])
+
+    def testDescribeMax(self):
+        self.pool.values = [4, 2, 6, 3, 3]
+        self.assertEqual(6, self.pool.describe()['max'])
+
+    def testDescribeMin(self):
+        self.pool.values = [4, 2, 2, 3, 3]
+        self.assertEqual(2, self.pool.describe()['min'])
+
     def testExtendDice(self):
         """Test extending a pool by dice."""
         others = [dice.Die(), dice.Die()]

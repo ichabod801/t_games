@@ -648,17 +648,21 @@ class Pool(object):
         The keys in the dictionary 'min', 'max', 'counts' (counts[value] = # of rolls),
         and 'by_counts' (by_counts[# of rolls] = list of values).
         """
-        info = {'counts': [0] * (self.sides[-1]  + 1), 'max': 0, 'min': self.sides[-1] + 1}
-        for value in self.values:
-            info['counts'][value] += 1
-            if value < info['min']:
-                info['min'] = value
-            if value > info['max']:
-                info['max'] = value
-        info['by_counts'] = collections.defaultdict(list)
-        for value, count in enumerate(info['counts']):
-            if count + value:
-                info['by_counts'][count].append(value)
+        if self.dice:
+            sides = self.dice[0].sides[-1]
+            info = {'counts': [0] * (sides  + 1), 'max': 0, 'min': sides + 1}
+            for value in self.values:
+                info['counts'][value] += 1
+                if value < info['min']:
+                    info['min'] = value
+                if value > info['max']:
+                    info['max'] = value
+            info['by-counts'] = collections.defaultdict(list)
+            for value, count in enumerate(info['counts']):
+                if count + value:
+                    info['by-counts'][count].append(value)
+        else:
+            info = {}
         return info
 
     def extend(self, dice):
