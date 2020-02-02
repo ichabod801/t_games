@@ -57,6 +57,17 @@ class DieTest(unittest.TestCase):
         c = complex(self.die)
         self.assertEqual((self.die.value, 0.0), (c.real, c.imag))
 
+    def testCopyIndependent(self):
+        """Test that changing a copy of a die does not change the original die."""
+        other = self.die.copy()
+        self.die.value = 7
+        other.roll()
+        self.assertNotEqual(self.die.value, other.value)
+
+    def testCopyValue(self):
+        """Test that the copy of a die has the same value."""
+        self.assertEqual(self.die.value, self.die.copy().value)
+
     def testDivMod(self):
         """Test divmoding a die."""
         self.assertEqual((self.die.value // 3, self.die.value % 3), divmod(self.die, 3))
