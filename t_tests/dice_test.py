@@ -165,6 +165,37 @@ class DieTest(unittest.TestCase):
         """Test the negation of a die."""
         self.assertEqual(self.die.value * -1, -self.die)
 
+    def testPositiveNegative(self):
+        """Test the positive of a negative die."""
+        die = dice.Die([-1, -2, -3])
+        self.assertEqual(die.value, +die)
+
+    def testPositivePositive(self):
+        """Test the positive of a positive die."""
+        self.assertEqual(self.die.value, +self.die)
+
+    def testPowDie(self):
+        """Test exponetiation by a die."""
+        other = dice.Die()
+        other.value = 5
+        self.assertEqual(self.die.value ** 5, self.die ** other)
+
+    def testPowInt(self):
+        """Test exponetiation by an integer."""
+        self.assertEqual(self.die.value ** 4, self.die ** 4)
+
+    def testPowMod(self):
+        """Test exponentiation of a die with a modules."""
+        self.assertEqual(pow(self.die.value, 3, 4), pow(self.die, 3, 4))
+
+    def testPowOne(self):
+        """Test exponetiation by the identity."""
+        self.assertEqual(self.die.value, self.die ** 1)
+
+    def testPowZero(self):
+        """Test exponetiation by zero."""
+        self.assertEqual(1, self.die ** 0)
+
     def testRAddFloat(self):
         """Test right adding a die to a floating point number."""
         self.assertEqual(self.die.value + 1.8, 1.8 + self.die)
@@ -176,6 +207,82 @@ class DieTest(unittest.TestCase):
     def testRepr(self):
         """Test a computer readable text representation of a die."""
         self.assertEqual('<Die {}>'.format(self.die.value), repr(self.die))
+
+    def testRightDivMod(self):
+        """Test divmoding a die on the right."""
+        self.assertEqual((3 // self.die.value, 3 % self.die.value), divmod(3, self.die))
+
+    def testRightFloorDivDie(self):
+        """Test right-handed floor division with another die."""
+        other = dice.Die()
+        other.value = 2
+        self.assertEqual(2 // self.die.value, other // self.die)
+
+    def testRightFloorDivInt(self):
+        """Test right-handed floor division of a die by an integer."""
+        self.assertEqual(2 // self.die.value, 2 // self.die)
+
+    def testRightModDie(self):
+        """Test right-handed modulus of a die by a die."""
+        other = dice.Die()
+        other.value = 2
+        self.assertEqual(2 % self.die.value, other % self.die)
+
+    def testRightModInt(self):
+        """Test right-handed modulus of a die by an integer."""
+        self.assertEqual(2 % self.die.value, 2 % self.die)
+
+    def testRightMultiplyDie(self):
+        """Test right-handed multiplication by a die."""
+        other = dice.Die()
+        other.value = 5
+        self.assertEqual(5 * self.die.value, other * self.die)
+
+    def testRightMultiplyInt(self):
+        """Test right-handed multiplication by an integer."""
+        self.assertEqual(self.die.value * 4, 4 * self.die)
+
+    def testRightMultiplyOne(self):
+        """Test right-handed multiplication by the identity."""
+        self.die.value = 1
+        self.assertEqual(18, self.die * 18)
+
+    def testRightMultiplyZero(self):
+        """Test right-handed multiplication by the absorber."""
+        self.die.value = 0
+        self.assertEqual(0, self.die * 81)
+
+    def testRightPowInt(self):
+        """Test right-handed exponetiation of an integer."""
+        self.assertEqual(4 ** self.die.value, 4 ** self.die)
+
+    def testRightPowOne(self):
+        """Test right-handed exponetiation by the identity."""
+        self.die.value = 1
+        self.assertEqual(108, 108 ** self.die)
+
+    def testRightPowZero(self):
+        """Test right-handed exponetiation by zero."""
+        self.die.value = 0
+        self.assertEqual(1, 801 ** self.die)
+
+    def testRightSubtractInt(self):
+        """Test right-hand subtraction with an integer."""
+        self.assertEqual(4 - self.die.value, 4 - self.die)
+
+    def testRightSubtractZero(self):
+        """Test right-hand subtraction of nothing."""
+        self.die.value = 0
+        self.assertEqual(83, 83 - self.die)
+
+    def testRightTrueDivInt(self):
+        """Test right-hand division of a die with an integer."""
+        self.assertEqual(4 / self.die.value, 4 / self.die)
+
+    def testRightTrueDivOne(self):
+        """Test right-hand division of a die with the identity."""
+        self.die.value = 1
+        self.assertEqual(424, 424 / self.die)
 
     def testRollHeld(self):
         """Test trying to roll a held die."""
@@ -192,15 +299,6 @@ class DieTest(unittest.TestCase):
         die = dice.Die([1.11, 1.12, 1.13])
         self.assertEqual(1.1, round(die, 1))
 
-    def testPositiveNegative(self):
-        """Test the positive of a negative die."""
-        die = dice.Die([-1, -2, -3])
-        self.assertEqual(self.die.value * -1, +die)
-
-    def testPositivePositive(self):
-        """Test the positive of a positive die."""
-        self.assertEqual(self.die.value, +self.die)
-
     def testSort(self):
         """Test sorting a bunch of dice."""
         pool = [dice.Die() for die in range(18)]
@@ -210,6 +308,34 @@ class DieTest(unittest.TestCase):
     def testStr(self):
         """Test a human readable text representation of a die."""
         self.assertEqual(str(self.die.value), str(self.die))
+
+    def testSubtractDie(self):
+        """Test subtraction of a die with a die."""
+        other = dice.Die()
+        other.value = 4
+        self.assertEqual(self.die.value - 4, self.die - other)
+
+    def testSubtractInt(self):
+        """Test subtraction of a die with an integer."""
+        self.assertEqual(self.die.value - 4, self.die - 4)
+
+    def testSubtractZero(self):
+        """Test subtraction of a die with nothing."""
+        self.assertEqual(self.die.value, self.die - 0)
+
+    def testTrueDivDie(self):
+        """Test division of a die with a die."""
+        other = dice.Die()
+        other.value = 3
+        self.assertEqual(self.die.value / 3, self.die / other)
+
+    def testTrueDivInt(self):
+        """Test division of a die with an integer."""
+        self.assertEqual(self.die.value / 2, self.die / 2)
+
+    def testTrueDivOne(self):
+        """Test division of a die with the identity."""
+        self.assertEqual(self.die.value, self.die / 1)
 
 
 class DominoPoolRollTest(unittest.TestCase):

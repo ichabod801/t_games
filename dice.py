@@ -13,6 +13,8 @@ DominoPool: A set of dice based on dominos. (Pool)
 """
 
 
+from __future__ import division
+
 import collections
 import functools
 import itertools
@@ -109,6 +111,10 @@ class Die(object):
     def __complex__(self):
         """Convert to a complex number. (complex)"""
         return complex(self.value)
+
+    def __div__(self, other):
+        """Use true division for division. (float)"""
+        return self.__truediv__(other)
 
     def __divmod__(self, other):
         """
@@ -247,6 +253,10 @@ class Die(object):
         """
         return self + other
 
+    def __rdiv__(self, other):
+        """Use true division for division. (float)"""
+        return self.__truediv__(other)
+
     def __rdivmod__(self, other):
         """
         Right hand integer division with remainder.
@@ -255,6 +265,20 @@ class Die(object):
         other: The item to divide. (object)
         """
         return (other // self, other % self)
+
+    def __rfloordiv__(self, other):
+        """
+        Right hand integer division. (object)
+
+        Parameters:
+        other: The item to divide by. (object)
+        """
+        # dice divide by sides.
+        if isinstance(other, Die):
+            return other.value // self.value
+        # Divide value by other objects.
+        else:
+            return other // self.value
 
     def __repr__(self):
         """Generate a debugging text representation. (str)"""
@@ -283,25 +307,19 @@ class Die(object):
         """
         return self * other
 
-    def __rpow__(self, other, mod = None):
+    def __rpow__(self, other):
         """
         Right hand exponentiation. (object)
 
         Parameters:
         other: The item to exponentiate. (object)
-        mod: The modulus for ternary pow() calls. (object)
         """
         # Dice exponentiate by sides.
         if isinstance(other, Die):
-            power = other.value ** self.value
+            return other.value ** self.value
         # Exponentioate value for other objects.
         else:
-            power = other ** self.value
-        # Check for modulation.
-        if mod is None:
-            return power
-        else:
-            return power % mod
+            return other ** self.value
 
     def __rsub__(self, other):
         """
@@ -324,6 +342,7 @@ class Die(object):
         Parameters:
         other: The item to divide. (object)
         """
+        print(self.value)
         # dice divide by sides.
         if isinstance(other, Die):
             return other.value / self.value
@@ -359,6 +378,7 @@ class Die(object):
         Parameters:
         other: The item to divide by. (object)
         """
+        print(self.value)
         # dice divide by sides.
         if isinstance(other, Die):
             return self.value / other.value
