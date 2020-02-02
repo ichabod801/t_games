@@ -470,6 +470,46 @@ class PoolTest(unittest.TestCase):
         values = [die.value for die in self.pool.dice]
         self.assertEqual(values.count(5), self.pool.count(5))
 
+    def testCountsFiveKind(self):
+        """Test counts of a pool with five of a kind."""
+        self.pool.values = [5, 5, 5, 5, 5]
+        self.assertEqual([0, 0, 0, 0, 0, 5, 0], self.pool.counts())
+
+    def testCountsFourKind(self):
+        """Test counts of a pool with a four of a kind."""
+        self.pool.values = [1, 1, 1, 4, 1]
+        self.assertEqual([0, 4, 0, 0, 1, 0, 0], self.pool.counts())
+
+    def testCountsFullHouse(self):
+        """Test counts of a pool with a full house."""
+        self.pool.values = [6, 2, 2, 6, 6]
+        self.assertEqual([0, 0, 2, 0, 0, 0, 3], self.pool.counts())
+
+    def testCountsLow(self):
+        """Test counts of a pool with a perfect low."""
+        self.pool.values = [1, 2, 3, 4, 6]
+        self.assertEqual([0, 1, 1, 1, 1, 0, 1], self.pool.counts())
+
+    def testCountsPair(self):
+        """Test counts of a pool with a pair."""
+        self.pool.values = [1, 2, 2, 4, 6]
+        self.assertEqual([0, 1, 2, 0, 1, 0, 1], self.pool.counts())
+
+    def testCountsStraight(self):
+        """Test counts of a pool with a straight."""
+        self.pool.values = [1, 2, 3, 4, 5]
+        self.assertEqual([0, 1, 1, 1, 1, 1, 0], self.pool.counts())
+
+    def testCountsTrip(self):
+        """Test counts of a pool with three of a kind."""
+        self.pool.values = [1, 2, 2, 4, 2]
+        self.assertEqual([0, 1, 3, 0, 1, 0, 0], self.pool.counts())
+
+    def testCountsTwoPair(self):
+        """Test counts of a pool with two pair."""
+        self.pool.values = [1, 2, 2, 1, 6]
+        self.assertEqual([0, 2, 2, 0, 0, 0, 1], self.pool.counts())
+
     def testDeleteDie(self):
         """Test deleting a die from the pool."""
         del self.pool[3]
