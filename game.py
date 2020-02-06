@@ -493,6 +493,7 @@ class Game(OtherCmd):
         if not self.scores:
             self.scores = {player: 0 for player in self.players}
         for player in self.players:
+            player.game = self
             player.set_up()
         # Loop through the players repeatedly.
         self.player_index = 0
