@@ -813,7 +813,7 @@ class TenThousand(game.Game):
         score_text = '\n'.join('{}: {}'.format(name, score) for name, score in self.scores.items())
         full_text = '\nScores:\n{}\n\nYou have banked {} points this turn.\nThe roll to you is {}.'
         if self.min_grows:
-            if self.entry and not self.entered[self.players[self.player_index].name]:
+            if self.entry and not self.entered[self.current_player]:
                 min_roll = max(self.minimum, self.entry)
             else:
                 min_roll = self.minimum
@@ -830,8 +830,8 @@ class TenThousand(game.Game):
         """
         # !! refactor
         player = self.players[self.player_index]
-        possibles = [die.value for die in self.dice if not die.held]
-        counts = [possibles.count(value) for value in range(7)]
+        possibles = self.dice.get_free()
+        counts = possibles.counts()
         # Process the arguments.
         if arguments.strip():
             # Split out the individual values to hold.
@@ -869,7 +869,7 @@ class TenThousand(game.Game):
             else:
                 # Otherwise, get any combos or loose dice.
                 values = []
-                for possible in set(possibles):
+                for possible in set(possibles.values):
                     for count in range(counts[possible], 0, -1):
                         if self.combo_scores[possible][count]:
                             values.extend([possible] * count)
@@ -895,7 +895,7 @@ class TenThousand(game.Game):
         self.turn_score += held_score
         self.held_this_turn = True
         # Check for holding all of the dice (force-six option).
-        if self.force_six and not [die for die in self.dice if not die.held]:
+        if self.force_six and not self.dice.get_free():
             self.must_roll = 'you scored on all {} dice'.format(len(self.dice))
         return True
 
@@ -905,13 +905,13 @@ class TenThousand(game.Game):
 
         If all of the dice are held, all of the dice are rerolled.
         """
-        player = self.players[self.player_index]
+        player = self.current_player
         # Check for having held dice.
         if not (self.held_this_turn or self.new_turn or self.must_roll):
             player.error('You must hold dice before you can roll.')
             return True
         # Reset the dice if they've all been rolled.
-        if not [die for die in self.dice if not die.held]:
+        if not self.dice.get_free():
             self.dice.release()
         # Roll the dice.
         self.must_roll = ''
@@ -921,7 +921,7 @@ class TenThousand(game.Game):
             self.wild_roll(player)
         # Make sure any combos have been cleared (clear-combo option).
         if self.clear_combo and self.last_combo:
-            rolled = [die for die in self.dice if not die.held]
+            rolled = self.dice.get_free()
             if self.wild and -1 in rolled:
                 self.wild_die(player)
             message = 'You must reroll because you matched the last combo.'
@@ -933,7 +933,7 @@ class TenThousand(game.Game):
                     self.wild_roll(player)
             self.last_combo = []
         self.held_this_turn = False
-        values = sorted([die.value for die in self.dice if not die.held])
+        values = sorted(self.dice.get_free().values)
         player.tell('\n{} rolled: {}.'.format(player.name, ', '.join([str(value) for value in values])))
         # Check for no score (end the turn if there isn't).
         roll_score = self.score_dice(values, validate = False)
@@ -967,22 +967,22 @@ class TenThousand(game.Game):
         """
         End the turn and score the points you rolled this turn. (s)
         """
-        player = self.players[self.player_index]
+        player = self.current_player
         # Check for forced rolls and invalid stops.
         if not self.held_this_turn:
             player.error('You cannot stop without holding some scoring dice.')
         elif self.turn_score < self.minimum:
             player.error('You cannot stop until you score {} points.'.format(self.minimum))
-        elif self.turn_score < self.entry and not self.entered[player.name]:
+        elif self.turn_score < self.entry and not self.entered[player]:
             player.error('You cannot stop the first time until you score {} points.'.format(self.entry))
         elif self.must_roll:
             player.error('You must roll because {}.'.format(self.must_roll))
         else:
             # Score the dice.
-            self.scores[self.players[self.player_index].name] += self.turn_score
+            self.scores[player] += self.turn_score
             # Clear the tracking variables.
-            self.entered[player.name] = True
-            self.strikes[player.name] = 0
+            self.entered[player] = True
+            self.strikes[player] = 0
             if self.min_grows:
                 self.minimum = self.turn_score + 50
             self.end_turn()
@@ -1080,36 +1080,36 @@ class TenThousand(game.Game):
             return True
         elif self.second_chance:
             # Recalculate value list after rolls in retry.
-            values = [die.value for die in self.dice if not die.held]
+            values = self.dice.get_free().values
         # Score anyway if the no-risk option is in effect..
         if self.no_risk:
-            player.tell('{} scored {} points this turn.'.format(player.name, self.turn_score))
-            self.scores[player.name] += self.turn_score
+            player.tell('{} scored {} points this turn.'.format(player, self.turn_score))
+            self.scores[player] += self.turn_score
         elif not self.zen:
             # Record strikes and check for three strikes.
-            self.strikes[player.name] += 1
-            if self.strikes[player.name] == 3:
-                self.strikes[player.name] = 0
+            self.strikes[player] += 1
+            if self.strikes[player] == 3:
+                self.strikes[player] = 0
                 if self.three_strikes:
                     message = '{} gets three strikes, and loses {} points.'
                     player.tell(message.format(player, self.three_strikes))
-                    self.scores[player.name] = max(self.scores[player.name] - self.three_strikes, 0)
+                    self.scores[player] = max(self.scores[player] - self.three_strikes, 0)
                 elif self.super_strikes:
                     player.tell('Three strikes, you lose all of your points.')
-                    self.scores[player.name] = 0
+                    self.scores[player] = 0
         # Check for failing to score on all six dice (crash/train-wreck/zen options)
-        if not [die for die in self.dice if die.held]:
+        if not self.dice.get_held():
             # Lose some points.
             if self.crash:
                 player.tell('That is a crash, you lose {} points.'.format(self.crash))
-                self.scores[player.name] = max(0, self.scores[player.name] - self.crash)
+                self.scores[player] = max(0, self.scores[player] - self.crash)
             # Lose all points.
             elif self.train_wreck:
                 player.tell('That is a train wreck, you lose all of your points.')
-                self.scores[player.name] = 0
+                self.scores[player] = 0
             # Score some points.
             elif self.zen:
-                player.tell('How Zen.'.format(player.name, self.zen))
+                player.tell('How Zen.'.format(player, self.zen))
                 self.turn_score += self.zen
                 self.dice.hold(values)
                 self.held_this_turn = True
@@ -1377,7 +1377,7 @@ class TenThousand(game.Game):
         player: The player who rolled the wild. (player.Player)
         """
         # Get the wild die.
-        wild_die = self.dice.dice[self.dice.index(-1)]
+        wild_die = self.dice[self.dice.index(-1)]
         # Get data on the other dice.
         values = [die.value for die in self.dice if not (die.held or die is wild_die)]
         counts = [values.count(possible) for possible in range(7)]

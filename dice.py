@@ -1,7 +1,7 @@
 """
 dice.py
 
-Dice objects for tgames.
+Dice objects for t_games.
 
 Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
@@ -13,6 +13,9 @@ DominoPool: A set of dice based on dominos. (Pool)
 """
 
 
+from __future__ import division
+
+import collections
 import functools
 import itertools
 import random
@@ -25,7 +28,12 @@ class Die(object):
     """
     A single die. (object)
 
-    While typically integers, the sides of the die can be any object.
+    While typically integers, the sides of the die can be any object. Dice can be
+    used with most mathematical operators, but there is no support for bit based
+    operators like <<. Math with dice is always done by the value attribute (the
+    result of the last roll), and never results in a Die object. Use of in-place
+    operators is not advised. If die is a Die with value = 3, 'die += 1' will
+    assign 4 to die, and die will no longer be an instance of Die.
 
     Attributes:
     held: A flag for holding the die aside and not rolling it. (bool)
@@ -37,12 +45,32 @@ class Die(object):
 
     Overridden Methods:
     __init__
+    __abs__
     __add__
+    __complex__
+    __divmod__
     __eq__
+    __float__
+    __floordiv__
+    __int__
+    __invert__
     __lt__
+    __mod__
+    __mul__
+    __neg__
+    __pos__
+    __pow__
     __radd__
+    __rdivmod__
     __repr__
+    __rmod__
+    __rmul__
+    __rpow__
+    __rsub__
+    __rtruediv__
     __str__
+    __sub__
+    __truediv__
     """
 
     def __init__(self, sides = 6):
@@ -62,6 +90,10 @@ class Die(object):
         # Get an initial value for the die.
         self.roll()
 
+    def __abs__(self):
+        """Absolute value. (object)"""
+        return abs(self.value)
+
     def __add__(self, other):
         """
         Addition. (object)
@@ -76,6 +108,23 @@ class Die(object):
         else:
             return self.value + other
 
+    def __complex__(self):
+        """Convert to a complex number. (complex)"""
+        return complex(self.value)
+
+    def __div__(self, other):
+        """Use true division for division. (float)"""
+        return self.__truediv__(other)
+
+    def __divmod__(self, other):
+        """
+        Integer division with remainder.
+
+        Parameters:
+        other: The item to divide by. (object)
+        """
+        return (self // other, self % other)
+
     def __eq__(self, other):
         """
         Equality testing. (bool)
@@ -86,10 +135,34 @@ class Die(object):
         # Test by value.
         if isinstance(other, Die):
             return self.value == other.value
-        elif isinstance(other, (int, float)):
-            return self.value == other
         else:
-            return NotImplemented
+            return self.value == other
+
+    def __float__(self):
+        """Convert to a floating point number. (float)"""
+        return float(self.value)
+
+    def __floordiv__(self, other):
+        """
+        Integer division. (object)
+
+        Parameters:
+        other: The item to divide by. (object)
+        """
+        # dice divide by sides.
+        if isinstance(other, Die):
+            return self.value // other.value
+        # Divide value by other objects.
+        else:
+            return self.value // other
+
+    def __index__(self):
+        """Convert to an integer for slicing and other conversions. (int)"""
+        return int(self.value)
+
+    def __int__(self):
+        """Convert to an integer. (int)"""
+        return int(self.value)
 
     def __lt__(self, other):
         """
@@ -106,6 +179,71 @@ class Die(object):
         else:
             return NotImplemented
 
+    def __mod__(self, other):
+        """
+        Modulus. (object)
+
+        Parameters:
+        other: The item to modulate by. (object)
+        """
+        # dice modulate by sides.
+        if isinstance(other, Die):
+            return self.value % other.value
+        # Modulate value to other objects.
+        else:
+            return self.value % other
+
+    def __mul__(self, other):
+        """
+        Multiplication. (object)
+
+        Parameters:
+        other: The item to multiply by. (object)
+        """
+        # dice multiply by sides.
+        if isinstance(other, Die):
+            return self.value * other.value
+        # Multiply value to other objects.
+        else:
+            return self.value * other
+
+    def __neg__(self):
+        """Negation. (object)"""
+        return -self.value
+
+    def __round__(self, ndigits = None):
+        """
+        Rounding. (float)
+
+        Parameters:
+        ndigits: The number of digits to round. (int)
+        """
+        return round(self.value, ndigits)
+
+    def __pos__(self):
+        """Positive value. (object)"""
+        return +self.value
+
+    def __pow__(self, other, mod = None):
+        """
+        Exponentiation. (object)
+
+        Parameters:
+        other: The exponent. (object)
+        mod: The modulus for ternary pow() calls. (object)
+        """
+        # Dice exponentiate by sides.
+        if isinstance(other, Die):
+            power = self.value ** other.value
+        # Exponentioate value for other objects.
+        else:
+            power = self.value ** other
+        # Check for modulation.
+        if mod is None:
+            return power
+        else:
+            return power % mod
+
     def __radd__(self, other):
         """
         Right-side addition.
@@ -115,9 +253,101 @@ class Die(object):
         """
         return self + other
 
+    def __rdiv__(self, other):
+        """Use true division for division. (float)"""
+        return self.__truediv__(other)
+
+    def __rdivmod__(self, other):
+        """
+        Right hand integer division with remainder.
+
+        Parameters:
+        other: The item to divide. (object)
+        """
+        return (other // self, other % self)
+
+    def __rfloordiv__(self, other):
+        """
+        Right hand integer division. (object)
+
+        Parameters:
+        other: The item to divide by. (object)
+        """
+        # dice divide by sides.
+        if isinstance(other, Die):
+            return other.value // self.value
+        # Divide value by other objects.
+        else:
+            return other // self.value
+
     def __repr__(self):
         """Generate a debugging text representation. (str)"""
         return '<{} {}>'.format(self.__class__.__name__, self.value)
+
+    def __rmod__(self, other):
+        """
+        Right hand modulus. (object)
+
+        Parameters:
+        other: The item to modulate. (object)
+        """
+        # dice modulate by sides.
+        if isinstance(other, Die):
+            return other.value % self.value
+        # Modulate value to other objects.
+        else:
+            return other % self.value
+
+    def __rmul__(self, other):
+        """
+        Right-side multiplication.
+
+        Parameters:
+        other: The item to multiply by. (object)
+        """
+        return self * other
+
+    def __rpow__(self, other):
+        """
+        Right hand exponentiation. (object)
+
+        Parameters:
+        other: The item to exponentiate. (object)
+        """
+        # Dice exponentiate by sides.
+        if isinstance(other, Die):
+            return other.value ** self.value
+        # Exponentioate value for other objects.
+        else:
+            return other ** self.value
+
+    def __rsub__(self, other):
+        """
+        Right hand subtraction. (object)
+
+        Parameters:
+        other: The item to subtract from. (object)
+        """
+        # dice subtract by sides.
+        if isinstance(other, Die):
+            return other.value - self.value
+        # Subtract value to other objects.
+        else:
+            return other - self.value
+
+    def __rtruediv__(self, other):
+        """
+        Right hand division. (object)
+
+        Parameters:
+        other: The item to divide. (object)
+        """
+        # dice divide by sides.
+        if isinstance(other, Die):
+            return other.value / self.value
+        # Divide value by other objects.
+        else:
+            return other / self.value
 
     def __str__(self):
         """Generate a human readable text representation. (str)"""
@@ -125,6 +355,40 @@ class Die(object):
             return '{}*'.format(self.value)
         else:
             return str(self.value)
+
+    def __sub__(self, other):
+        """
+        Subtraction. (object)
+
+        Parameters:
+        other: The item to subtract. (object)
+        """
+        # dice subtract by sides.
+        if isinstance(other, Die):
+            return self.value - other.value
+        # Subtract value to other objects.
+        else:
+            return self.value - other
+
+    def __truediv__(self, other):
+        """
+        Division. (object)
+
+        Parameters:
+        other: The item to divide by. (object)
+        """
+        # dice divide by sides.
+        if isinstance(other, Die):
+            return self.value / other.value
+        # Divide value by other objects.
+        else:
+            return self.value / other
+
+    def copy(self):
+        """Create an independent copy of the Die. (Die)"""
+        clone = Die(self.sides)
+        clone.value = self.value
+        return clone
 
     def roll(self):
         """
@@ -198,29 +462,44 @@ class Pool(object):
     """
     A set of dice. (object)
 
+    Manipulating the dice attribute directly is dangerous, as it can make the
+    values attribute not map to the dice attribute directly. Use the provided list
+    like methods instead, which update values as well as dice.
+
     Attributes:
     dice: The dice in the pool. (list of Die)
-    held: The number of dice currently being held. (int)
     values: The current values of the dice in the pool. (list)
 
     Methods:
     count: Count the number of times a particular rolls has been made. (int)
+    counts: Return counts of the values in the pool. (list of int)
+    describe: Returns a dictionary describing the rolls in the pool. (dict)
+    extend: Add multiple dice to the end of the Pool. (None)
     hold: Hold some of the dice from further rolling. (None)
     index: Return the index of the die with the specified value. (int)
+    insert: Insert a new die into the pool. (None)
     release: Make all held dice available for rolling. (None)
+    remove: Remove the first die with the specified value. (None)
+    reverse: Reverse the order of the dice in the pool. (None)
     roll: Roll the dice in the pool. (list)
     sort: Sort the dice in the pool in place. (list)
 
     Overridden Methods:
     __init__
     __contains__
+    __delitem__
+    __eq__
+    __getitem__
+    __iadd__
     __iter__
     __len__
     __repr__
+    __reversed__
+    __setitem__
     __str__
     """
 
-    def __init__(self, dice = [6, 6]):
+    def __init__(self, dice = [6, 6], roll = True):
         """
         Set up the dice in the pool. (None)
 
@@ -238,8 +517,10 @@ class Pool(object):
             else:
                 self.dice.append(Die(die))
         # Get an initial value.
-        self.roll()
-        self.held = 0
+        if roll:
+            self.roll()
+        else:
+            self.values = [die.value for die in self.dice]
 
     def __contains__(self, value):
         """
@@ -249,6 +530,49 @@ class Pool(object):
         value: The value to check for. (object)
         """
         return value in self.dice
+
+    def __delitem__(self, key):
+        """
+        Remove one or more dice. (None)
+
+        Parameters:
+        key: The die or dice to remove. (int or slice)
+        """
+        del self.dice[key]
+        del self.values[key]
+
+    def __eq__(self, other):
+        """
+        Equality check. (bool)
+
+        Parameters:
+        other: The item to check equality with. (object)
+        """
+        if isinstance(other, Pool):
+            return self.dice == other.dice
+        else:
+            return self.values == other
+
+    def __getitem__(self, key):
+        """
+        Get one or more of the dice. (Die or list)
+
+        Parameters:
+        key: The die or dice to get. (int or slice)
+        """
+        if isinstance(key, slice):
+            return Pool(self.dice[key], roll = False)
+        else:
+            return self.dice[key]
+
+    def __iadd__(self, dice):
+        """
+        Add multiple dice to the end of the Pool. (None)
+
+        Parameters:
+        dice: The dice to add. (sequence of Die)
+        """
+        self.extend(dice)
 
     def __iter__(self):
         """Iterate over the dice. (iterator)"""
@@ -262,9 +586,38 @@ class Pool(object):
         """Generate debugging text representation. (str)"""
         return '<{} {}>'.format(self.__class__.__name__, self)
 
+    def __reversed__(self):
+        """Return a reversed version of the Pool. (Pool)"""
+        return Pool(reversed(self.dice), roll = False)
+
+    def __setitem__(self, key, value):
+        """
+        Modify the pool by index or slice. (None)
+
+        Parameters:
+        key: The dice to modify. (int or slice)
+        value: The new dice to use. (object)
+        """
+        self.dice[key] = value
+        self.values = [die.value for die in self.dice]
+
     def __str__(self):
         """Generate human readable text representation. (str)"""
         return utility.oxford(self.dice)
+
+    def append(self, die):
+        """
+        Add a new die to the end of the Pool. (None)
+
+        Parameter:
+        die: The new die to add. (Die)
+        """
+        self.dice.append(die)
+        self.values.append(die.value)
+
+    def copy(self):
+        """Create an independent deep copy of the Pool. (Pool)"""
+        return Pool([die.copy() for die in self.dice], roll = False)
 
     def count(self, object):
         """
@@ -274,6 +627,61 @@ class Pool(object):
         object: The roll to count. (object)
         """
         return self.dice.count(object)
+
+    def counts(self):
+        """
+        Return counts of the values in the pool. (list of int)
+
+        Returns a list counts such that counts[value] is the number of times value was
+        rolled. Will raise an error for non-integer dice, and may be sparse depending
+        on the value of self.sides.
+        """
+        counts = [0] * (max(self.dice[0].sides)  + 1)
+        for value in self.values:
+            counts[value] += 1
+        return counts
+
+    def describe(self):
+        """
+        Returns a dictionary describing the rolls in the pool. (dict)
+
+        The keys in the dictionary 'min', 'max', 'counts' (counts[value] = # of rolls),
+        and 'by_counts' (by_counts[# of rolls] = list of values).
+        """
+        if self.dice:
+            sides = self.dice[0].sides[-1]
+            info = {'counts': [0] * (sides  + 1), 'max': 0, 'min': sides + 1}
+            for value in self.values:
+                info['counts'][value] += 1
+                if value < info['min']:
+                    info['min'] = value
+                if value > info['max']:
+                    info['max'] = value
+            info['by-counts'] = collections.defaultdict(list)
+            for value, count in enumerate(info['counts']):
+                if count + value:
+                    info['by-counts'][count].append(value)
+        else:
+            info = {}
+        return info
+
+    def extend(self, dice):
+        """
+        Add multiple dice to the end of the Pool. (None)
+
+        Parameters:
+        dice: The dice to add. (sequence of Die)
+        """
+        self.dice.extend(dice)
+        self.values.extend([die.value for die in dice])
+
+    def get_free(self):
+        """Return a sub-pool of the un-held dice. (Pool)"""
+        return Pool([die for die in self.dice if not die.held], roll = False)
+
+    def get_held(self):
+        """Return a sub-pool of the held dice. (Pool)"""
+        return Pool([die for die in self.dice if die.held], roll = False)
 
     def hold(self, values):
         """
@@ -291,7 +699,6 @@ class Pool(object):
             # Find a die with that value and hold it.
             spot = unheld.index(value)
             unheld[spot].held = True
-            self.held += 1
             del unheld[spot]
 
     def index(self, value, start = 0, end = None):
@@ -312,11 +719,43 @@ class Pool(object):
                 return start
             start += 1
 
+    def insert(self, index, die):
+        """
+        Insert a new die into the pool. (None)
+
+        Parameters:
+        index: Where to insert the die. (int)
+        die: The die to instert. (Die)
+        """
+        self.dice.insert(index, die)
+        self.values.insert(index, die.value)
+
+    def pop(self, index = -1):
+        """
+        Remove and return a die. (Die)
+
+        Parameters:
+        index: The die to remove and return. (int)
+        """
+        self.values.pop(index)
+        return self.dice.pop(index)
+
     def release(self):
         """Make all held dice available for rolling. (None)"""
         for die in self.dice:
             die.held = False
         self.held = 0
+
+    def remove(self, value):
+        """Remove the first die with the specified value. (None)"""
+        index = self.dice.index(value)
+        del self.dice[index]
+        del self.values[index]
+
+    def reverse(self):
+        """Reverse the order of the dice in the pool. (None)"""
+        self.dice.reverse()
+        self.values.reverse()
 
     def roll(self, index = None):
         """
