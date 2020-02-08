@@ -490,7 +490,8 @@ class Solitaire(game.Game):
         # Get the number of moves to undo.
         if not arguments.strip():
             num_moves = 1
-        num_moves = int(arguments)
+        else:
+            num_moves = int(arguments)
         # Loop through that many undos.
         moves_undone = False
         for move_index in range(num_moves):
