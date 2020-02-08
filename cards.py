@@ -102,12 +102,13 @@ class FeatureSet(object):
     below: Check that this card is n ranks below another card. (bool)
     copy: Make an independent copy of the FeatureSet. (FeatureSet)
     index: Give the feature index of a character. (int)
-    item: Iterate over all the items in the feature set. (iterator)
+    items: Iterate over all the items in the feature set. (iterator)
     next: Get the character after a given one. (str)
     previous: Get the character before a given one. (str)
 
-    Overwritten Methods
+    Overwritten Methods:
     __init__
+    __contains__
     __iter__
     __len__
     __repr__
@@ -175,6 +176,7 @@ class FeatureSet(object):
         Parameters:
         char: The feature character of the first card. (str)
         other_char: The feature character of the second card. (str)
+        n: How far above to check for. (int)
         """
         # Do the standard caculation
         diff = self.chars.index(char) - self.chars.index(other_char)
@@ -190,6 +192,7 @@ class FeatureSet(object):
         Parameters:
         char: The feature character of the first card. (str)
         other_char: The feature character of the second card. (str)
+        n: How far below to check for. (int)
         """
         # Do the standard caculation
         diff = self.chars.index(other_char) - self.chars.index(char)
@@ -206,7 +209,12 @@ class FeatureSet(object):
         return FeatureSet(self.chars, names, values, colors, self.skip, self.wrap, self.an_chars)
 
     def index(self, char):
-        """Give the feature index of a character. (int)"""
+        """
+        Give the feature index of a character. (int)
+
+        Parameters:
+        char: The character to get an index for. (str)
+        """
         return self.chars.index(char)
 
     def items(self):
@@ -280,11 +288,18 @@ class Card(object):
 
     Attributes:
     color: The color of the card. ('R' or 'B')
+    down_text: The text to display when the card is face down. (str)
     format_types: Extra types used for the format method. (dict of str: str)
     name: The full name of the card. (str)
     rank: The rank of the card. (str)
+    rank_num: The index of the rank of the card. (int)
+    rank_set: The ranks set the card is part of. (FeatureSet)
     suit: The suit of the card. (str)
+    suit_num: The index of the suit of the card. (int)
+    suit_set: The suit set the card is part of. (FeatureSet)
     up: A flag for the card being face up. (str)
+    up_text: The text to display when the card is face up. (str)
+    value: The score provided by the card. (int)
 
     Methods:
     above: Check that this card is n ranks above another card. (bool)
@@ -396,7 +411,12 @@ class Card(object):
         return format_text.format(target)
 
     def __lt__(self, other):
-        """For sorting by suit then rank. (bool)"""
+        """
+        For sorting by suit then rank. (bool)
+
+        Parameters:
+        other: The integer to compare to. (int)
+        """
         if isinstance(other, Card):
             return (self.suit_num, self.rank_num) < (other.suit_num, other.rank_num)
         else:
@@ -446,6 +466,7 @@ class Card(object):
 
         Parameters:
         other: The card to compare with. (Card)
+        n: How many ranks above to check for. (int)
         """
         return self.rank_set.above(self.rank, other.rank, n)
 
@@ -455,6 +476,7 @@ class Card(object):
 
         Parameters:
         other: The card to compare with. (Card)
+        n: How many ranks below to check for. (int)
         """
         return self.rank_set.below(self.rank, other.rank, n)
 
@@ -505,7 +527,12 @@ class Pile(MutableSequence):
         self.cards = cards
 
     def __add__(self, other):
-        """Add the pile to another sequence of cards. (Pile)"""
+        """
+        Add the pile to another sequence of cards. (Pile)
+
+        Parameters:
+        other: The object to add. (object)
+        """
         if isinstance(other, Pile):
             return self._child(self.cards + other.cards)
         else:
@@ -633,8 +660,10 @@ class Deck(Pile):
     discards: The cards in the discard pile. (list of card)
     jokers: The number of jokers in the deck. (int)
     rank_set: The ranks of cards in the deck. (FeatureSet)
+    ranks: The rank characters for cards in the deck. (str)
     shuffle_size: The number of cards left that triggers a shuffle. (int)
     suit_set: The suits of cards in the deck. (FeatureSet)
+    suits: The suits characters for cards in the deck. (str)
 
     Methods:
     _initial_cards: Add in the initial cards for the deck. (None)
@@ -1094,6 +1123,8 @@ class TrackingCard(Card):
         rank: The rank of the card. (int)
         suit: The suit of the card. (str)
         deck: The deck the card comes from. (TrackingDeck)
+        rank_set: The full rank information for the deck. (FeatureSet)
+        suit_set: The full suit information for the deck. (FeatureSet)
         """
         super(TrackingCard, self).__init__(rank, suit, rank_set = rank_set, suit_set = suit_set)
         self.deck = deck
@@ -1191,6 +1222,7 @@ class TrackingDeck(Deck):
 
         Parameters:
         cards: The initial cards in the deck. (list of Card)
+        game: The game the deck is for. (game.Game)
         jokers: The number of jokers in the deck. (int)
         decks: The number of idential decks shuffled together. (int)
         shuffle_size: The number of cards left that triggers a shuffle. (int)
@@ -1308,12 +1340,17 @@ class TrackingDeck(Deck):
         Parameters:
         card_text: The string version of the card. (str)
         game_location: The new location of card in the game. (list of Card)
-        up = Flag for dealing the card face up. (bool)
+        up: Flag for dealing the card face up. (bool)
         """
         return self.deal(game_location, up = up, card_index = self.cards.index(card_text))
 
     def shuffle(self, number = None):
-        """Shuffle the discards back into the deck. (None)"""
+        """
+        Shuffle the discards back into the deck. (None)
+
+        Parameters:
+        number: The FreeCell-style number of the shuffle. (int)
+        """
         # Shuffle the cards.
         super(TrackingDeck, self).shuffle(number = number)
         # Reset the card tracking.
@@ -1345,6 +1382,7 @@ class MultiTrackingDeck(TrackingDeck):
 
         Parameters:
         cards: The initial cards in the deck. (list of Card)
+        game: The game the deck is for. (game.Game)
         jokers: The number of jokers in the deck. (int)
         decks: The number of idential decks shuffled together. (int)
         shuffle_size: The number of cards left that triggers a shuffle. (int)

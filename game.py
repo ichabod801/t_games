@@ -34,12 +34,12 @@ import sys
 
 from . import dice
 from . import options
-from .other_cmd import OtherCmd
+from . import other_cmd
 from .player import Player
 from . import utility
 
 
-class Game(OtherCmd):
+class Game(other_cmd.OtherCmd):
     """
     A game with a text interface. (OtherCmd)
 
