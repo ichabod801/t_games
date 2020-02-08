@@ -119,8 +119,10 @@ class Solitaire(game.Game):
     foundations: The piles to fill to win the game. (list of list of Card)
     free_checkers: Functions for determining valid cell moves. (list of callable)
     lane_checkers: Functions for determining valid lane mvoes. (list of callable)
+    last_sort: When the last non-sorting move was. (int)
     match_checkers: Functions for determining valid matches. (list of callable)
     max_passes: The number of allowed passes through the stock. (int)
+    move_count: The number of moves made, not counting undone moves. (int)
     moves: The moves taken in the game. (list of list)
     num_cells: The number of cells in the game. (int)
     options: The standard solitaire options for this game. (dict of str: object)
@@ -279,6 +281,7 @@ class Solitaire(game.Game):
         """
         Handle unrecognized commands. (bool)
 
+        Parameters:
         line: The user's input. (str)
         """
         cards = self.deck.card_re.findall(line)
@@ -294,7 +297,7 @@ class Solitaire(game.Game):
         else:
             self.human.error("\nI don't know what to do with that many cards.")
 
-    def do_auto(self, max_rank):
+    def do_auto(self, arguments):
         """
         Automatically play cards to the foundations. (a)
 
@@ -303,7 +306,7 @@ class Solitaire(game.Game):
         rank.
         """
         # Convert max rank to int.
-        max_rank = max_rank.upper()
+        max_rank = arguments.upper()
         if max_rank.strip() == '':
             max_rank = len(self.deck.ranks) - 1
         elif max_rank in self.deck.ranks:
@@ -372,14 +375,14 @@ class Solitaire(game.Game):
         else:
             return True
 
-    def do_free(self, card):
+    def do_free(self, arguments):
         """
         Move a card to one of the free cells. (f)
 
         This command takes one argument: the card to move.
         """
         # Parse the arguments.
-        card_arguments = self.deck.card_re.findall(card.upper())
+        card_arguments = self.deck.card_re.findall(arguments.upper())
         if len(card_arguments) != 1:
             self.human.error('\nInvalid arguments to free command: {!r}.'.format(arguments))
             return True
@@ -392,17 +395,17 @@ class Solitaire(game.Game):
         else:
             return True
 
-    def do_lane(self, card):
+    def do_lane(self, arguments):
         """
         Move a card into an empty lane. (l)
 
         This command takes one argument: the card to move.
         """
         # Get the card and the cards to be moved.
-        if not self.deck.card_re.match(card):
-            self.human.error('\nInvalid card passed to lane command: {!r}.'.format(card))
+        if not self.deck.card_re.match(arguments):
+            self.human.error('\nInvalid card passed to lane command: {!r}.'.format(arguments))
             return True
-        card = self.deck.find(card)
+        card = self.deck.find(arguments)
         moving_stack = self.super_stack(card)
         # Check for validity and move.
         if self.lane_check(card, moving_stack):
@@ -411,14 +414,14 @@ class Solitaire(game.Game):
         else:
             return True
 
-    def do_match(self, cards):
+    def do_match(self, arguments):
         """
         Match two cards and discard them. (m)
 
         The two cards specified by the arguments can be listed in any order.
         """
         # Get the card and the card to be matched.
-        cards = self.deck.card_re.findall(cards)
+        cards = self.deck.card_re.findall(arguments)
         if len(cards) != 2:
             self.human.error('\nYou must provide two valid cards to the match command.')
             return True
@@ -428,17 +431,17 @@ class Solitaire(game.Game):
             self.transfer([cards[0]], self.foundations[0])
             self.transfer([cards[1]], self.foundations[0], undo_ndx = 1)
 
-    def do_sort(self, card):
+    def do_sort(self, arguments):
         """
         Move a card to the foundation. (s)
 
         This command takes one argument: the card to move.
         """
         # Get the card to sort.
-        if not self.deck.card_re.match(card):
-            self.human.error('\nInvalid card passed to sort command: {!r}.'.format(card))
+        if not self.deck.card_re.match(arguments):
+            self.human.error('\nInvalid card passed to sort command: {!r}.'.format(arguments))
             return True
-        card = self.deck.find(card)
+        card = self.deck.find(arguments)
         # Check for validity and sort.
         foundation = self.find_foundation(card)
         if self.sort_check(card, foundation):
@@ -477,7 +480,7 @@ class Solitaire(game.Game):
             self.human.error('\nThere are no more cards to turn.')
             return True
 
-    def do_undo(self, num_moves):
+    def do_undo(self, arguments):
         """
         Undo one or more previous moves. (u)
 
@@ -485,9 +488,10 @@ class Solitaire(game.Game):
         argument is given, that many moves are undone.
         """
         # Get the number of moves to undo.
-        if not num_moves.strip():
+        if not arguments.strip():
             num_moves = 1
-        num_moves = int(num_moves)
+        else:
+            num_moves = int(arguments)
         # Loop through that many undos.
         moves_undone = False
         for move_index in range(num_moves):
@@ -1000,7 +1004,7 @@ class MultiSolitaire(Solitaire):
     aliases = {'alt': 'alternate'}
     name = 'MultiSolitaire Base'
 
-    def do_alternate(self, argument):
+    def do_alternate(self, arguments):
         """
         Redo the last command with different but matching cards. (alt)
 
@@ -1014,9 +1018,9 @@ class MultiSolitaire(Solitaire):
                 move_index -= 1
             base_move = self.moves[move_index]
             # Find the move to make.
-            if argument:
+            if arguments:
                 # Get the specifications and possibilities.
-                locations = [self.find_location(word) for word in argument.split()]
+                locations = [self.find_location(word) for word in arguments.split()]
                 valid = self.alt_moves[:]
                 # Filter the possibilities by the location specifications.
                 if locations:
@@ -1045,7 +1049,7 @@ class MultiSolitaire(Solitaire):
             self.human.error('\nThe last move is not alternatable.')
             return True
 
-    def do_auto(self, max_rank):
+    def do_auto(self, arguments):
         """
         Automatically play cards to the foundations. (a)
 
@@ -1054,7 +1058,7 @@ class MultiSolitaire(Solitaire):
         rank.
         """
         # Convert max rank to int
-        max_rank = max_rank.upper()
+        max_rank = arguments.upper()
         if max_rank.strip() == '':
             max_rank = len(self.deck.ranks) - 1
         elif max_rank in self.deck.ranks:
@@ -1136,14 +1140,14 @@ class MultiSolitaire(Solitaire):
             self.move_error('building', card_arguments, movers, targets)
             return True
 
-    def do_free(self, card):
+    def do_free(self, arguments):
         """
         Move a card to one of the free cells. (f)
 
         This command takes one argument: the card to move.
         """
         # Parse the arguments.
-        card_arguments = self.deck.card_re.findall(card.upper())
+        card_arguments = self.deck.card_re.findall(arguments.upper())
         if len(card_arguments) != 1:
             self.human.error('\nInvalid arguments to free command: {!r}.'.format(arguments))
             return True
@@ -1162,17 +1166,17 @@ class MultiSolitaire(Solitaire):
             self.move_error('freeing', card_arguments, cards)
             return True
 
-    def do_lane(self, card_text):
+    def do_lane(self, arguments):
         """
         Move a card into an empty lane. (l)
 
         This command takes one argument: the card to move.
         """
         # Get the card and the cards to be moved.
-        if not self.deck.card_re.match(card_text):
+        if not self.deck.card_re.match(arguments):
             self.human.error('\nInvalid card passed to lane command: {!r}.'.format(card))
             return True
-        cards = self.deck.find(card_text)
+        cards = self.deck.find(arguments)
         self.alt_moves = []
         for card in cards:
             moving_stack = self.super_stack(card)
@@ -1185,17 +1189,17 @@ class MultiSolitaire(Solitaire):
             return False
         else:
             # Warn the user about invalid moves.
-            self.move_error('laning', [card_text], cards)
+            self.move_error('laning', [arguments], cards)
             return True
 
-    def do_match(self, card_text):
+    def do_match(self, arguments):
         """
         Match two cards and discard them. (m)
 
         The two cards specified by the arguments can be listed in any order.
         """
         # Get the cards to match.
-        card_words = self.deck.card_re.findall(card_text)
+        card_words = self.deck.card_re.findall(arguments)
         # Check for a valid number of cards.
         if len(card_words) != 2:
             self.human.error('\nYou must provide two valid cards to the match command.')
@@ -1218,17 +1222,17 @@ class MultiSolitaire(Solitaire):
             self.move_error('matching', card_words, cards[0], cards[1])
             return True
 
-    def do_sort(self, card_text):
+    def do_sort(self, arguments):
         """
         Move a card to the foundation. (s)
 
         This command takes one argument: the card to move.
         """
         # Get the cards.
-        if not self.deck.card_re.match(card_text):
+        if not self.deck.card_re.match(arguments):
             self.human.error('\nInvalid card passed to sort command: {!r}.'.format(card))
             return True
-        cards = self.deck.find(card_text)
+        cards = self.deck.find(arguments)
         # Check the cards for sortability.
         self.alt_moves = []
         for card in cards:
@@ -1242,7 +1246,7 @@ class MultiSolitaire(Solitaire):
             return False
         else:
             # Warn the user about invalid moves.
-            self.move_error('sorting', card_text, cards)
+            self.move_error('sorting', arguments, cards)
             return True
 
     def do_turn(self, arguments):
@@ -1256,7 +1260,7 @@ class MultiSolitaire(Solitaire):
         self.alt_moves = []
         return super(MultiSolitaire, self).do_turn(arguments)
 
-    def do_undo(self, num_moves, clear_alt = True):
+    def do_undo(self, arguments, clear_alt = True):
         """
         Undo one or more previous moves. (u)
 
@@ -1266,7 +1270,7 @@ class MultiSolitaire(Solitaire):
         # Remove the previous alternative moves if asked to.
         if clear_alt:
             self.alt_moves = []
-        return super(MultiSolitaire, self).do_undo(num_moves)
+        return super(MultiSolitaire, self).do_undo(arguments)
 
     def find_foundation(self, card):
         """

@@ -73,6 +73,7 @@ class BoardCell(object):
         """
         Check for a piece in the cell. (bool)
 
+        Parameters:
         other: The piece to check for. (object)
         """
         return self.contents == other
@@ -81,7 +82,8 @@ class BoardCell(object):
         """
         Check for equality (of location and contents) with another cell. (bool)
 
-        Other: The piece to check equality for. (object)
+        Parameters:
+        other: The piece to check equality for. (object)
         """
         if isinstance(other, BoardCell):
             return self.location == other.location and self.contents == other.contents
@@ -146,6 +148,9 @@ class BoardCell(object):
     def clear(self, nothing = None):
         """
         Remove any piece from the cell. (None)
+
+        Parameters:
+        nothing: The 'clear' value to put in the cell. (object)
         """
         self.contents = nothing
 
@@ -257,6 +262,7 @@ class MultiCell(BoardCell):
         """
         Check for a piece in the cell. (bool)
 
+        Parameters:
         other: The piece to check for. (object)
         """
         return other in self.contents
@@ -393,6 +399,9 @@ class MultiCell(BoardCell):
     def clear(self, nothing = None):
         """
         Remove any piece from the cell. (None)
+
+        Parameters:
+        nothing: The 'clear' value to put in the cell. (object)
         """
         if nothing is None:
             nothing = []
@@ -430,6 +439,8 @@ class MultiCell(BoardCell):
 
         Parameters:
         piece: The piece to get an index for. (object)
+        start: The index to start the search at. (int)
+        end: The index to stop the search at. (int or None)
         """
         if end is None:
             end = len(self)
@@ -590,9 +601,9 @@ class Board(object):
 
     Methods:
     clear: Clear all pieces off the board. (None)
-    copy_pices: Copy all of the pieces from another board. (None)
+    copy_pieces: Copy all of the pieces from another board. (None)
     displace: Move a piece from one cell to another w/ displace capture. (object)
-    found: Find cells matching certain criteria. (list of Coordinate)
+    find: Find cells matching certain criteria. (list of Coordinate)
     get: Get a board cell with a default if it's not on the board.
     items: Get all of the locations and cells. (iterator)
     locations: Get all of the cell coordinates for the board. (iterator)

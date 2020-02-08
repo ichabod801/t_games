@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Classes:
 Game: A game with a text interface. (OtherCmd)
+Fireball: A game of blowing things up. (Game)
 Flip: A test game of flipping coins. (Game)
 FlipBot: A bot to play Flip against. (Player)
 Sorter: A test game of sorting a sequence. (Game)
@@ -34,12 +35,12 @@ import sys
 
 from . import dice
 from . import options
-from .other_cmd import OtherCmd
-from .player import Player
+from . import other_cmd
+from . import player
 from . import utility
 
 
-class Game(OtherCmd):
+class Game(other_cmd.OtherCmd):
     """
     A game with a text interface. (OtherCmd)
 
@@ -69,12 +70,14 @@ class Game(OtherCmd):
     name: The primary name of the game. (str)
     num_options: The number of settable options for the game. (str)
     operators: Operator definitions for the RPN command. (dict of str: callable)
+    options: The options for the game. (str)
     rules: The rules of the game. (str)
 
     Attributes:
     current_player: The currently acting player. (player.Player)
     flags: Flags for different game events tracked in the results. (int)
     force_end: How to force the end of the game. (str)
+    gipfed: The names of games gipfed to. (list of str)
     gonzo: A flag indicating the gonzo option was used. (bool)
     human: The primary player of the game. (Player)
     interface: The interface that started the game playing. (Interface)
@@ -97,13 +100,17 @@ class Game(OtherCmd):
     do_quit_quit: Quit the game and the t_games interface. (bool)
     do_rpn: Process reverse Polish notation statements to do calculations. (None)
     do_rules: Show the rules text. (bool)
+    do_xyzzy: Nothing happens. (None)
     game_over: Check for the end of the game. (bool)
+    gipf_check: Check for successful gipfing. (int)
     handle_options: Handle game options and set the player list. (None)
+    help_xyzzy: Help for the xyzzy command. (None)
     play: Play the game. (list of int)
     player_action: Handle a player's turn or other player actions. (bool)
     set_options: Define the options for the game. (bool)
     set_players: Reset/change the list of players. (None)
     set_up: Handle any pre-game tasks. (None)
+    skip_player: Skip a player in the turn sequence. (player.Player)
     sorted_scores: Get a list of player names sorted by score. (list of tuple)
     tournament: Run a tournament of the game. (dict)
     wins_by_score: Calculate the win-loss-draw record based on scores. (tuple)
@@ -141,6 +148,7 @@ class Game(OtherCmd):
         """
         Set up the game. (None)
 
+        Parameters:
         human: The primary player of the game. (player.Player)
         raw_options: The user's option choices as provided by the interface. (str)
         interface: The interface that started the game playing. (interface.Interface)
@@ -401,7 +409,7 @@ class Game(OtherCmd):
 
         Parameters:
         argument: The argument to the gipf command. (str)
-        game_name: The names of the games to check. (list of str)
+        game_names: The names of the games to check. (list of str)
         """
         # Get the possible games and their aliases.
         if self.name == 'Oregon Trail':
@@ -663,6 +671,85 @@ class Game(OtherCmd):
         return (best_score, winners, human_rank)
 
 
+class Fireball(Game):
+    """
+    A game of blowing things up. (Game)
+
+    Attributes:
+    target: What the player is trying to blow up. (str)
+
+    Overridden Methods:
+    game_over
+    handle_options
+    player_turn
+    """
+
+    credits = '\nDesign and programming by Craig "Ichabod" O''Brien.'
+    name = 'Fireball'
+    num_options = 1
+    options = '\nAnything you specify as an option will become your target.'
+    rules = '\nPlay more games.'
+
+    def game_over(self):
+        """Declare the end of the game."""
+        # Check for no games as a loss.
+        if not self.scores[self.human]:
+            self.win_loss_draw[1] = 1
+            self.human.tell('\nPing.')
+        # Skip play again and counting this game.
+        self.human.held_inputs = ['n'] + self.human.held_inputs
+        self.human.fire_index = len(self.human.results) + 1
+        return True
+
+    def handle_options(self):
+        """Handle the specified game options. (None)"""
+        # The one option is the target.
+        if not self.raw_options:
+            self.target = 'your target'
+        else:
+            self.target = self.raw_options
+            self.option_set.settings_text = self.raw_options
+
+    def player_action(self, player):
+        """
+        Determine the damage. (bool)
+
+        Parameters:
+        player: The player whose turn it is. (Player)
+        """
+        # Get the dice parameters (end the game if there are no dice).
+        fire_results = self.human.results[self.human.fire_index:]
+        dice_count = len(fire_results)
+        if not dice_count:
+            return False
+        sides = len(set(result[0] for result in fire_results)) * 2 + 2
+        pool = dice.Pool([sides] * dice_count)
+        # Get the bonus to the roll.
+        all_categories = set()
+        for result in fire_results:
+            categories = self.interface.games[result[0].lower()].categories
+            all_categories.add(tuple(categories))
+        bonus = len(all_categories)
+        # Get the damage.
+        pool.roll()
+        damage = sum(pool) + bonus
+        self.human.tell('\nYou did {} {} of damage.'.format(damage, utility.plural(damage, 'point')))
+        self.scores[self.human] = damage
+        # Check for a win.
+        expected = (sides / 2.0 + 0.5) * dice_count
+        percent = damage / expected
+        # Output results.
+        if percent > 1:
+            self.human.tell('You completely destroyed {}.'.format(self.target))
+            self.win_loss_draw[0] = 1
+        elif percent >= 0.95:
+            self.human.tell('You almost destroyed {}.'.format(self.target))
+            self.win_loss_draw[2] = 1
+        else:
+            self.human.tell('You failed to destroy {}.'.format(self.target))
+            self.win_loss_draw[1] = 1
+
+
 class Flip(Game):
     """
     A test game of flipping coins. (Game)
@@ -738,7 +825,7 @@ class Flip(Game):
         player.tell()
 
 
-class FlipBot(Player):
+class FlipBot(player.Player):
     """
     A bot to play Flip against. (Player)
 
@@ -772,82 +859,6 @@ class FlipBot(Player):
         """
         if args:
             self.game.human.tell(args[0].replace('You', self.name).replace('have', 'has'))
-
-
-class Fireball(Game):
-    """
-    A game of blowing things up. (Game)
-
-    Overridden Methods:
-    game_over
-    handle_options
-    player_turn
-    """
-
-    credits = '\nDesign and programming by Craig "Ichabod" O''Brien.'
-    name = 'Fireball'
-    num_options = 1
-    options = '\nAnything you specify as an option will become your target.'
-    rules = '\nPlay more games.'
-
-    def game_over(self):
-        """Declare the end of the game."""
-        # Check for no games as a loss.
-        if not self.scores[self.human]:
-            self.win_loss_draw[1] = 1
-            self.human.tell('\nPing.')
-        # Skip play again and counting this game.
-        self.human.held_inputs = ['n'] + self.human.held_inputs
-        self.human.fire_index = len(self.human.results) + 1
-        return True
-
-    def handle_options(self):
-        """Handle the specified game options. (None)"""
-        # The one option is the target.
-        if not self.raw_options:
-            self.target = 'your target'
-        else:
-            self.target = self.raw_options
-            self.option_set.settings_text = self.raw_options
-
-    def player_action(self, player):
-        """
-        Determine the damage. (bool)
-
-        Parameters:
-        player: The player whose turn it is. (Player)
-        """
-        # Get the dice parameters (end the game if there are no dice).
-        fire_results = self.human.results[self.human.fire_index:]
-        dice_count = len(fire_results)
-        if not dice_count:
-            return False
-        sides = len(set(result[0] for result in fire_results)) * 2 + 2
-        pool = dice.Pool([sides] * dice_count)
-        # Get the bonus to the roll.
-        all_categories = set()
-        for result in fire_results:
-            categories = self.interface.games[result[0].lower()].categories
-            all_categories.add(tuple(categories))
-        bonus = len(all_categories)
-        # Get the damage.
-        pool.roll()
-        damage = sum(pool) + bonus
-        self.human.tell('\nYou did {} {} of damage.'.format(damage, utility.plural(damage, 'point')))
-        self.scores[self.human] = damage
-        # Check for a win.
-        expected = (sides / 2.0 + 0.5) * dice_count
-        percent = damage / expected
-        # Output results.
-        if percent > 1:
-            self.human.tell('You completely destroyed {}.'.format(self.target))
-            self.win_loss_draw[0] = 1
-        elif percent >= 0.95:
-            self.human.tell('You almost destroyed {}.'.format(self.target))
-            self.win_loss_draw[2] = 1
-        else:
-            self.human.tell('You failed to destroy {}.'.format(self.target))
-            self.win_loss_draw[1] = 1
 
 
 class Sorter(Game):

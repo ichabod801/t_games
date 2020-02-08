@@ -20,6 +20,7 @@ Functions:
 choose: Combinations [n choose r]. (int)
 flip: Returns a random bit. (int)
 hundred_word: Give the word form of a number less than 100. (str)
+levenshtein: Determine the Levenshtein distance between two strings. (int)
 mean: Calculate the mean of a list of values. (float)
 median: Calculate the median of a list of values. (float)
 num_text: Handle text instances of 'n foo'. (str)
@@ -239,7 +240,7 @@ def number_plural(number, singular, many = ''):
 
     Parameters:
     number: The number determining plural or singular. (int)
-    single: The singular form of the word. (str)
+    singular: The singular form of the word. (str)
     many: The plural form of the word, if not a simple + 's'. (str)
     """
     return '{} {}'.format(number_word(number), plural(number, singular, many))
@@ -315,7 +316,7 @@ def plural(number, singular, many = ''):
 
     Parameters:
     number: The number determining plural or singular. (int)
-    single: The singular form of the word. (str)
+    singular: The singular form of the word. (str)
     many: The plural form of the word, if not a simple + 's'. (str)
     """
     if number == 1:

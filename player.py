@@ -107,6 +107,9 @@ class Player(object):
 
     Overridden Methods:
     __init__
+    __eq__
+    __hash__
+    __lt__
     __repr__
     __str__
     """
@@ -273,7 +276,7 @@ class Player(object):
         """Do any necessary pre-game processing. (None)"""
         pass
 
-    def store_results(self, game_name, result):
+    def store_results(self, game_name, results):
         """
         Store game results. (None)
 
@@ -570,6 +573,7 @@ class Human(Humanoid):
     Attributes:
     color: The player's favorite color. (str)
     folder_name: The local file with the player's data. (str)
+    fire_index: An indicator of the last time the player played Fireball. (int)
     quest: The player's quest. (str)
     results: The results of games played. (list of list)
     session_index: The number of games played before this session. (int)
@@ -680,7 +684,14 @@ class Tester(Human):
     """
 
     def __init__(self, name = 'Buckaroo', quest = 'testing', color = 'black'):
-        """Auto setup a Human. (None)"""
+        """
+        Auto setup a Human. (None)
+
+        Parameters:
+        name: The name of the player. (str)
+        quest: The player's quest. (str)
+        color: The player's favorite color. (str)
+        """
         # Store the answers to the three questions.
         self.name = name
         self.quest = quest

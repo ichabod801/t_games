@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Classes:
 Play: An object for saving state when playing. (object)
+Test: An object for saving state when play testing. (object)
 
 Functions:
 play: Play t_games. (list of lists)
@@ -97,7 +98,7 @@ play = Play()
 
 class Test(Play):
     """
-    An object for saving state when playing. (object)
+    An object for saving state when play testing. (object)
 
     Overridden Methods:
     reset
