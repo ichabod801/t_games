@@ -17,6 +17,7 @@ Classes:
 CRand: Implementation of C's rand function. (object)
 FeatureSet: A set of valid values for a feature (rank/suit) of a Card. (object)
 Card: A standard playing card, with a suit and a rank. (object)
+Pile: A sequence of cards. (MutableSequence)
 Deck: A standard deck of cards. (object)
 Hand: A hand of cards held by a player. (object)
 TrackingCard: A card that tracks it's location. (Card)
@@ -25,7 +26,7 @@ TrackTwoSuit: A tracking card with only two suits. (TrackingCard)
 TrackingDeck: A deck that keeps track of the location of its cards. (Deck)
 MultiTrackingDeck: A deck that keeps track of multiple duplicate cards. (Deck)
 
-Functions
+Functions:
 by_rank: A key function for sorting Cards by rank. (int)
 by_rank_suit: A key function for sorting Cards by rank then suit. (tuple)
 by_suit: A key function for sorting Cards by suit. (int)
@@ -471,6 +472,9 @@ class Pile(MutableSequence):
     """
     A sequence of cards. (MutableSequence)
 
+    Attributes:
+    cards: The cards in the pile. (list of Card)
+
     Methods:
     _child: Make a Pile with the same attributes but different cards. (Pile)
     insert: Insert a card into the pile. (None)
@@ -627,11 +631,13 @@ class Deck(Pile):
     Attributes:
     card_re: A regular expression to match a card. (SRExpression)
     discards: The cards in the discard pile. (list of card)
-    ranks: The possible ranks for cards in the deck. (str)
+    jokers: The number of jokers in the deck. (int)
+    rank_set: The ranks of cards in the deck. (FeatureSet)
     shuffle_size: The number of cards left that triggers a shuffle. (int)
-    suits: The possible suits for cards in the deck. (str)
+    suit_set: The suits of cards in the deck. (FeatureSet)
 
     Methods:
+    _initial_cards: Add in the initial cards for the deck. (None)
     cut: Cut the deck. (None)
     deal: Deal a card from the deck. (Card)
     deal_n_each: Deal n cards to each player. (None or list of Card)
@@ -644,6 +650,7 @@ class Deck(Pile):
 
     Overridden Methods:
     __init__
+    _child
     """
 
     def __init__(self, cards = None, jokers = 0, decks = 1, shuffle_size = 0, rank_set = STANDARD_RANKS,
@@ -779,7 +786,7 @@ class Deck(Pile):
 
         Parameters:
         card_text: The string version of the card. (str)
-        up = Flag for dealing the card face up. (bool)
+        up: Flag for dealing the card face up. (bool)
         """
         card = self.cards[self.cards.index(card_text)]
         self.cards.remove(card)
@@ -848,6 +855,7 @@ class Hand(Pile):
     deck: The deck the cards in the hand come from. (Deck)
 
     Methods:
+    deal: Add a card to the hand. (None)
     discard: Discard a card back to the deck. (None)
     draw: Draw a card from the deck. (None)
     find: Get a subset of the cards in the hand. (Hand)
@@ -863,6 +871,7 @@ class Hand(Pile):
     Overridden Methods:
     __init__
     __eq__
+    __lt__
     """
 
     def __init__(self, cards = None, deck = None):
@@ -870,6 +879,7 @@ class Hand(Pile):
         Set up the link to the deck. (None)
 
         Parameters:
+        cards: The initial cards in the hand. (list of Card or None)
         deck: The deck the hand is dealt from. (Deck)
         """
         self.deck = deck
@@ -926,6 +936,7 @@ class Hand(Pile):
         """
         Add a card to the hand. (None)
 
+        Parameters:
         card: The card to add to the hand. (Card)
         """
         self.cards.append(card)
@@ -948,6 +959,7 @@ class Hand(Pile):
 
         Parameters:
         card: The card to discard, or None to discard all cards. (Card or None)
+        up: A flag for discarding the card face up. (bool)
         """
         # Discard all cards.
         if card is None:
@@ -1024,6 +1036,7 @@ class Hand(Pile):
         """
         Pass a card to another hand. (None)
 
+        Parameters:
         card: The card to pass. (str)
         hand: The hand to pass it to. (Hand)
         """
