@@ -6,6 +6,7 @@ Dice objects for t_games.
 Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
+Classes:
 Die: A single die. (object)
 ShuffleDie: A die that samples from the range without replacement. (Die)
 Pool: A set of dice. (object)
@@ -41,6 +42,7 @@ class Die(object):
     value: The current value of the die. (object)
 
     Methods:
+    copy: Create an independent copy of the Die. (Die)
     roll: Roll the die. (object)
 
     Overridden Methods:
@@ -48,10 +50,12 @@ class Die(object):
     __abs__
     __add__
     __complex__
+    __div__
     __divmod__
     __eq__
     __float__
     __floordiv__
+    __index__
     __int__
     __invert__
     __lt__
@@ -61,10 +65,13 @@ class Die(object):
     __pos__
     __pow__
     __radd__
+    __rdiv__
     __rdivmod__
     __repr__
+    __rfloordiv__
     __rmod__
     __rmul__
+    __round__
     __rpow__
     __rsub__
     __rtruediv__
@@ -113,7 +120,12 @@ class Die(object):
         return complex(self.value)
 
     def __div__(self, other):
-        """Use true division for division. (float)"""
+        """
+        Use true division for division. (float)
+
+        Parameters:
+        other: The item to divide by. (object)
+        """
         return self.__truediv__(other)
 
     def __divmod__(self, other):
@@ -254,7 +266,12 @@ class Die(object):
         return self + other
 
     def __rdiv__(self, other):
-        """Use true division for division. (float)"""
+        """
+        Use true division for division. (float)
+
+        Parameters:
+        other: The item to divide. (object)
+        """
         return self.__truediv__(other)
 
     def __rdivmod__(self, other):
@@ -471,13 +488,18 @@ class Pool(object):
     values: The current values of the dice in the pool. (list)
 
     Methods:
+    append: Add a new die to the end of the Pool. (None)
+    copy: Create an independent deep copy of the Pool. (Pool)
     count: Count the number of times a particular rolls has been made. (int)
     counts: Return counts of the values in the pool. (list of int)
     describe: Returns a dictionary describing the rolls in the pool. (dict)
     extend: Add multiple dice to the end of the Pool. (None)
+    get_free: Return a sub-pool of the unheld dice. (Pool)
+    get_held: Return a sub-pool of the held dice. (Pool)
     hold: Hold some of the dice from further rolling. (None)
     index: Return the index of the die with the specified value. (int)
     insert: Insert a new die into the pool. (None)
+    pop: Remove and return a die. (Die)
     release: Make all held dice available for rolling. (None)
     remove: Remove the first die with the specified value. (None)
     reverse: Reverse the order of the dice in the pool. (None)
@@ -508,6 +530,7 @@ class Pool(object):
 
         Parameters:
         dice: A list of dice specifications. (list)
+        roll: A flag for rolling the dice. (bool)
         """
         # Set up the dice.
         self.dice = []
@@ -744,10 +767,14 @@ class Pool(object):
         """Make all held dice available for rolling. (None)"""
         for die in self.dice:
             die.held = False
-        self.held = 0
 
     def remove(self, value):
-        """Remove the first die with the specified value. (None)"""
+        """
+        Remove the first die with the specified value. (None)
+
+        Parameters:
+        value: The value to remove. (object)
+        """
         index = self.dice.index(value)
         del self.dice[index]
         del self.values[index]
@@ -860,7 +887,13 @@ class DominoPool(Pool):
         return self.values
 
     def sort(self, key = None, reverse = False):
-        """Sort the dice in the pool. (list)"""
+        """
+        Sort the dice in the pool. (list)
+
+        Parameters:
+        key: A function providing an alternate sorting key. (callable)
+        reverse: A flag for sorting in descending order. (bool)
+        """
         self.values.sort(key = key, reverse = reverse)
 
 
