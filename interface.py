@@ -90,11 +90,15 @@ class Interface(other_cmd.OtherCmd):
     categories: The tree of categories and games. (dict)
     focus: The menu's current location in the category tree. (dict)
     game: The game being played. (game.Game)
+    games: The games available to be played. (dict of str: game.Game)
     human: The player navigating the menu. (player.Player)
     previous: Previous menu locations visited. (list)
     titles: The titles of the previous categories visited. (list)
+    valve: A random valve. Figure out what it's for yourself. (RandomValve)
 
     Class Attributes:
+    cell_defaults: The default arguments to the cell command. (dict)
+    options: The description of the available options. (str)
     rules: The rules. (str)
     word_list: The relative location of a word list for word games. (str)
 
@@ -726,6 +730,7 @@ class Statistics(object):
     Overridden Methods:
     __init__
     __bool__
+    __nonzero__
     __repr__
     __str__
     """
