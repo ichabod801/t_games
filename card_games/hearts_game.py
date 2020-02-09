@@ -913,10 +913,11 @@ class Hearts(game.Game):
         self.deck = cards.Deck(rank_set = rank_set, suit_set = HEARTS_SUITS)
         lady_index = self.deck.index('QS')
         self.deck[lady_index].value = self.lady_points
+        self.max_score = sum(rank_set.values.values()) + self.lady_points
         if self.bonus:
+            # does not count toward max score.
             bonus_index = self.deck.index(self.bonus)
             self.deck[bonus_index].value = -10
-        self.max_score = sum(rank_set.values.values()) + self.lady_points
         self.breakers = set([card for card in self.deck if card.suit == 'H'])
         if self.all_break:
             self.breakers.add('QS')
@@ -925,9 +926,6 @@ class Hearts(game.Game):
             self.max_score += len(jokers)
             if self.all_break:
                 self.breakers.update(jokers)
-        if self.bonus:
-            self.bonus = cards.Card(*self.bonus)
-            self.max_score -= 10
 
     def handle_options(self):
         """Handle the option settings for this game. (None)"""
@@ -1073,7 +1071,7 @@ class Hearts(game.Game):
             score_text = base_text.format(player, utility.oxford(score_bits), point_text)
             self.human.tell(score_text)
             # Inform and record any sucessful shooter.
-            if points == self.max_score or (bonus or points == self.max_score - 10):
+            if points == self.max_score or (bonus and points == self.max_score - 10):
                 self.human.tell('{} shot the moon!'.format(player))
                 shooter = player.name
             # Check for taking no tricks.
@@ -1149,7 +1147,7 @@ class Hearts(game.Game):
         """Set the possible options for the game. (None)"""
         # Get a card verifier.
         def is_card(text):
-            return len(text) == 2 and text[0] in cards.Card.ranks and text[1] in cards.Card.suits
+            return len(text) == 2 and text[0] in cards.STANDARD_RANKS and text[1] in cards.STANDARD_SUITS
         # Set the bot options.
         self.option_set.add_option('easy', ['ez'], int, 1, valid = range(5),
             question = 'How many easy bots do you want to play against (return for 1)? ')
