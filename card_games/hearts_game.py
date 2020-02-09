@@ -917,7 +917,8 @@ class Hearts(game.Game):
         if self.bonus:
             # does not count toward max score.
             bonus_index = self.deck.index(self.bonus)
-            self.deck[bonus_index].value = -10
+            self.bonus = self.deck[bonus_index]
+            self.bonus.value = -10
         self.breakers = set([card for card in self.deck if card.suit == 'H'])
         if self.all_break:
             self.breakers.add('QS')
