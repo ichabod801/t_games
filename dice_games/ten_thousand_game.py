@@ -1392,7 +1392,7 @@ class TenThousand(game.Game):
             player.tell('\nYou rolled a wild and {}.'.format(', '.join(map(str, values))))
             if valid:
                 query = 'Do you want the wild to be a {}? '.format(utility.oxford(set(valid), 'or'))
-                choice = player.ask_int(query, valid = valid)
+                choice = player.ask_int(query, valid = valid, cmd = False)
             else:
-                choice = player.ask_int('What do you want the wild to be? ', low = 1, high = 6)
+                choice = player.ask_int('What do you want the wild to be? ', low = 1, high = 6, cmd = False)
             wild_die.value = choice

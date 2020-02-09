@@ -402,7 +402,7 @@ class SmeartBot(HeartBot):
         """Make a move to stop a player from shooting the moon. (cards.Card)"""
         standard = super(SmeartBot, self).play()
         if isinstance(standard, str):
-            standard = cards.Card(*standard)
+            standard = self.game.deck.parse_text(standard)
             standard.up = True
         base_check = standard.suit == 'H' or standard in self.danger_cards
         if base_check or (self.game.joker_points and standard.rank == 'X'):
