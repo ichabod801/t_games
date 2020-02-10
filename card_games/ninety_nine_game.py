@@ -144,8 +144,11 @@ class NinetyNine(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Blackjack allows you to pass without losing a token. Crazy Eights reverses
-        eights and nines for one play. Yacht gives you a free token.
+        Blackjack allows you to pass without losing a token.
+
+        Crazy Eights reverses eights and nines for one play.
+
+        Yacht gives you a free token.
         """
         game, losses = self.gipf_check(arguments, ('blackjack', 'crazy eights', 'yacht'))
         go = True

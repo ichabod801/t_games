@@ -706,7 +706,7 @@ class Hearts(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Calvin Cards randomized the rest of the plays this round.
+        Calvin Cards randomizes the rest of the plays this round.
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('calvin cards',))

@@ -257,9 +257,11 @@ class Klondike(solitaire.Solitaire):
 
     def do_gipf(self, arguments):
         """
-        Battleships lets you see one down card. Hangman lets you move one jack to the
-        top of the waste. Solitaire Dice lets you move any one waste card to the top of
-        the waste.
+        Battleships lets you see one down card.
+
+        Hangman lets you move one jack to the top of the waste.
+
+        Solitaire Dice lets you move any one waste card to the top of the waste.
         """
         game, losses = self.gipf_check(arguments, ('battleships', 'hangman', 'solitaire dice'))
         go = True
