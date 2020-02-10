@@ -404,12 +404,10 @@ class SmeartBot(HeartBot):
         if isinstance(standard, str):
             standard = self.game.deck.parse_text(standard)
             standard.up = True
-        base_check = standard.suit == 'H' or standard in self.danger_cards
+        base_check = (standard.suit == 'H' or standard in self.danger_cards) and self.game.trick
         if base_check or (self.game.joker_points and standard.rank == 'X'):
             suit_cards = self.game.trick.find(suit = self.game.trick[0].suit)
             suit_cards.sort(key = cards.by_rank)
-            if not suit_cards:
-                return standard
             best_card = suit_cards[-1]
             best_index = self.game.trick.index(best_card)
             best_player = self.game.players[self.game.player_index - len(self.game.trick) + best_index]
