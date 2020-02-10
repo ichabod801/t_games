@@ -329,8 +329,11 @@ class Wumpus(game.Game):
 
     def do_gipf(self, argument):
         """
-        Battleships forces the wumpus to move. Hangman gives you directions to the
-        nearest pit. Pig summons the giant bats.
+        Battleships forces the wumpus to move.
+
+        Hangman gives you directions to the nearest pit.
+
+        Pig summons the giant bats.
         """
         # Check the argument.
         game, losses = self.gipf_check(argument, ('battleships', 'hangman', 'pig'))

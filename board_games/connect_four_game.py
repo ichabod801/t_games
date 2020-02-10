@@ -537,8 +537,9 @@ class ConnectFour(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Roulette forces the bot to move randomly next turn. Hunt the Wumpus allows you
-        to reverse a column.
+        Roulette forces the bot to move randomly next turn.
+
+        Hunt the Wumpus allows you to reverse a column.
         """
         # Check/play the gipf game.
         game, losses = self.gipf_check(arguments, ('roulette', 'wumpus'))
