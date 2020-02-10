@@ -466,8 +466,9 @@ class LiarsDice(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Backgammon gives you a free reroll if you have a pair. Pyramid gives you a
-        token if the next roll has any dice that sum to thirteen.
+        Backgammon gives you a free reroll if you have a pair.
+
+        Pyramid gives you a token if the next roll has any dice that sum to thirteen.
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('pyramid', 'backgammon'))

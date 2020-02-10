@@ -670,8 +670,11 @@ class Roulette(game.Game):
     def do_gipf(self, arguments):
         """
         Connect Four allows you to select a square bet, and one of those numbers will
-        come up on the next spin. Blackjack makes the next spin black. Klondike makes
-        the next spin a multiple of seven.
+        come up on the next spin.
+
+        Blackjack makes the next spin black.
+
+        Klondike makes the next spin a multiple of seven.
         """
         # Check/play the gipf game.
         game, losses = self.gipf_check(arguments, ('blackjack', 'connect four', 'klondike'))
