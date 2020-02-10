@@ -131,6 +131,8 @@ class Chess(game.Game):
     parse_algebraic: Parse an algebraic move into a Sunfish move. (tuple)
     parse_fen: Parse a position from Forsyth-Edwards Notation. (Position)
     parse_move: Parse a move into one Sunfish recognizes. (str)
+    parse_pawn: Parse a single square algebraic move. (tuple)
+    parse_piece: Parse an algebraic move with a piece indicated. (tuple)
 
     Overridden Methods:
     __str__
@@ -394,54 +396,10 @@ class Chess(game.Game):
         match_type = sum(2 ** index for index, group in enumerate(groups) if group is not None)
         # Handle single squares (pawn moves).
         if match_type in (8, 10):
-            end = sunfish.parse(groups[3])
-            direction = -10 if self.player_index else 10
-            if self.player_index:
-                board = self.position.rotate().board
-            else:
-                board = self.position.board # works
-            # Set up disambiguation
-            if match_type == 10:
-                column = ' abcdefgh'.index(groups[1])
-                direction = direction + column - end % 10
-            # Make sure there's a pawn that can make the move.
-            if board[end + direction] in 'pP':
-                return (end + direction, end)
-            elif abs(direction) == 10 and board[end + 2 * direction] in 'pP':
-                return (end + 2 * direction, end)
-            else:
-                return (None, '{} is not a legal move.'.format(groups[3]))
+            return self.parse_pawn(groups, match_type)
         # Handle moves with a piece provided (standard algebraic).
         elif match_type in (9, 11, 13):
-            piece = groups[0]
-            end = sunfish.parse(groups[3])
-            # Set up disambiguation.
-            if match_type == 11:
-                column = ' abcdefgh'.index(groups[1])
-            if match_type == 13:
-                row = 10 - int(groups[2])
-            # Find valid moves with that end and that piece.
-            starts = []
-            if self.player_index:
-                end = 119 - end
-            for move in self.position.gen_moves():
-                if move[1] == end and self.position.board[move[0]] == piece:
-                    # Match and disambiguation.
-                    if match_type == 11 and move[0] % 10 != column:
-                        continue
-                    elif match_type == 13 and move[0] // 10 != row:
-                        continue
-                    starts.append(move[0])
-            # Check for ambiguous moves.
-            if len(starts) == 1:
-                if self.player_index:
-                    return (119 - starts[0], 119 - end)
-                else:
-                    return (starts[0], end)
-            elif not starts:
-                return (None, '{} is not a legal move.'.format(text))
-            else:
-                return (None, '{} is ambiguous.'.format(text))
+            return self.parse_piece(groups, match_type)
         # Handle two squares (long algebraic notation).
         elif match_type == 14:
             start = sunfish.parse('{}{}'.format(*groups[1:3]))
@@ -523,6 +481,70 @@ class Chess(game.Game):
             return (start, end)
         else:
             return (None, 'I do not understand that move.')
+
+    def parse_pawn(self, groups, match_type):
+        """
+        Parse a single square algebraic move. (tuple)
+
+        Parameters:
+        groups: The groups from the regex match. (list of tuple)
+        match_type: Binary flags for which groups matched. (int)
+        """
+        end = sunfish.parse(groups[3])
+        direction = -10 if self.player_index else 10
+        if self.player_index:
+            board = self.position.rotate().board
+        else:
+            board = self.position.board # works
+        # Set up disambiguation
+        if match_type == 10:
+            column = ' abcdefgh'.index(groups[1])
+            direction = direction + column - end % 10
+        # Make sure there's a pawn that can make the move.
+        if board[end + direction] in 'pP':
+            return (end + direction, end)
+        elif abs(direction) == 10 and board[end + 2 * direction] in 'pP':
+            return (end + 2 * direction, end)
+        else:
+            return (None, '{} is not a legal move.'.format(groups[3]))
+
+    def parse_piece(self, groups, match_type):
+        """
+        Parse an algebraic move with a piece indicated. (tuple)
+
+        Parameters:
+        groups: The groups from the regex match. (list of tuple)
+        match_type: Binary flags for which groups matched. (int)
+        """
+        piece = groups[0]
+        end = sunfish.parse(groups[3])
+        # Set up disambiguation.
+        if match_type == 11:
+            column = ' abcdefgh'.index(groups[1])
+        if match_type == 13:
+            row = 10 - int(groups[2])
+        # Find valid moves with that end and that piece.
+        starts = []
+        if self.player_index:
+            end = 119 - end
+        for move in self.position.gen_moves():
+            if move[1] == end and self.position.board[move[0]] == piece:
+                # Match and disambiguation.
+                if match_type == 11 and move[0] % 10 != column:
+                    continue
+                elif match_type == 13 and move[0] // 10 != row:
+                    continue
+                starts.append(move[0])
+        # Check for ambiguous moves.
+        if len(starts) == 1:
+            if self.player_index:
+                return (119 - starts[0], 119 - end)
+            else:
+                return (starts[0], end)
+        elif not starts:
+            return (None, '{} is not a legal move.'.format(text))
+        else:
+            return (None, '{} is ambiguous.'.format(text))
 
     def player_action(self, player):
         """
