@@ -183,8 +183,9 @@ class Hamurabi(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Cribbage cats, who will kill of the next set of rats. Yacht improves the next
-        grain yield by one.
+        Cribbage gets you cats, who will kill of the next set of rats.
+
+        Yacht improves the next grain yield by one.
         """
         game, losses = self.gipf_check(arguments, ('cribbage', 'yacht'))
         go = True
