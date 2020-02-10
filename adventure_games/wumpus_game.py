@@ -1,55 +1,47 @@
 """
-wumpus_game.py
+wumpus_hunt_game.py
 
 A game of Hunt the Wumpus.
 
-This is at least the third time I have used the Cave and Dodecahedron objects
-to create a Hunt the Wumpus game. However, I want to redo those as subclasses
-of Board and MultiCell.
-
-Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
-See the top level __init__.py file for details on the t_games license.
-
 Constants:
-ADJACENT: Adjacent points on a dodecahedron. (list of tuple of int)
-CREDITS: The game design and programming credits. (str)
-DESCRIPTIONS: The room descriptions. (list of str)
+BAT_TEXT: The text to display for being grabbed by giant bats. (str)
+CREDITS: The credits for Hunt the Wumpus. (str)
 OPTIONS: The options for Hunt the Wumpus. (str)
-RULES: Text describing the game. (str)
+PIT_TEXT: The text to display for falling down a pit. (str)
+RULES: The rules for Hunt the Wumpus. (str)
+WIFF_TEXT: The text to display for a missed shot. (str)
+WUMPUS_TEXT: The text to display when you get eaten by a wumpus. (str)
 
 Classes:
-Cave: One cave in a cave complex. (object)
-Dodecahedron: A cave complex arranged as a dodecahedron. (object)
+Cave: One cave in a cave complex. (board.BoardCell)
+Dodecahedron: Caves arranged as the vertices of a dodecahedron. (LineBoard)
 Wumpus: A game of Hunt the Wumpus. (game.Game)
 """
 
 
 import random
 
+from .. import board
 from .. import game
+from ..utility import num_text
 
-
-ADJACENT = [(4, 5, 1), (0, 6, 2), (1, 7, 3), (2, 8, 4), (3, 9, 0),
-    (0, 14, 10), (1, 10, 11), (2, 11, 12), (3, 12, 13), (4, 13, 14),
-    (5, 15, 6), (6, 16, 7), (7, 17, 8), (8, 18, 9), (9, 19, 5),
-    (10, 19, 16), (11, 15, 17), (12, 16, 18), (13, 17, 19), (14, 18, 15)]
+BAT_TEXT = """
+You are grabbed by a giant, screeching bat and flown through the caves at
+random."""
 
 CREDITS = """
 Game Design/Original Programming: Gregory Yob
 Python Game Programming: Craig "Ichabod" O'Brien
 """
 
-DESCRIPTIONS = ['wumpus dung in the corner', '', '', '', '', 'ants crawling all over everything',
-    'lots of cobwebs', 'a dart board on the wall', 'a spooky echo', 'remains of a fire',
-    'rude graffiti on the wall', 'a battered helmet on the floor', 'a pile of junk in the corner',
-    'a family of lizards hiding in cracks in the wall', 'a strange mist in the air',
-    'several notches marked on the wall', 'an obelisk carved out of a stalagmite', 'a tall roof',
-    'a skull on the floor', 'a big red X marked on the floor']
-
 OPTIONS = """
 arrows= (a=): How many arrows you get. (1 to 5, defaults to 5)
 gonzo (gz): Equivalent to 'arrows = 1'.
 """
+
+PIT_TEXT = """
+You stumble in the dark and fall down a bottomless pit. Well, okay, it's got a
+bottom. Give us some room for poetic license here."""
 
 RULES = """
 The goal is to search the cave system for the wumpus, a large and heavy beast
@@ -71,32 +63,48 @@ The commands are:
    RULES: Read these fascinating, well written instructions again.
 """
 
+UP_TEXT = """
+You climb back out of the bowels of the earth.
 
-class Cave(object):
+All right, we'll call it a draw."""
+
+WIFF_TEXT = """
+You hear an arrow break uselessly against a cave wall. Then you hear a grumble
+and a strange suck-pop sound."""
+
+WUMPUS_TEXT = """
+The heavy weight of a wumpus lands on you, and you are trapped in it's sucker
+tipped claws. In seconds you are shoved into it's huge maw and eaten alive."""
+
+
+class Cave(board.BoardCell):
     """
-    One cave in a cave complex. (object)
+    One cave in a cave complex. (board.BoardCell)
 
     Attributes:
     adjacent: The caves reachable from this cave. (list of Cave)
     bats: A flag for the cave containing giant bats. (bool)
     description: A short description of the cave. (str)
-    id: A unique identifier for the cave. (int)
+    location: A unique identifier for the cave. (int)
     pit: A flag for the cave containing a bottomless pit. (bool)
     wumpus: A flag for the cave containing the wumpus. (bool)
 
     Overridden Methods:
     __init__
-    __eq__
+    __repr__
+    __str__
     """
 
-    def __init__(self, id):
+    def __init__(self, location):
         """
         Set up the default attributes of the cave. (None)
 
         Parameters:
-        id: A unique identifier for the cave. (int)
+        location: The location of the cave. (int)
         """
-        self.id = id
+        self.location = location
+        self.contents = None
+        self.empty = ''
         self.adjacent = []
         self.description = ''
         self.pit = False
@@ -106,124 +114,87 @@ class Cave(object):
     def __repr__(self):
         """Generate a debugging text representation."""
         # Get the base text.
-        text = '<Cave {}'.format(self.id)
+        text = '<Cave {}'.format(self.location)
         # Add text for any flags that are on.
         for flag in ('bats', 'pit', 'wumpus'):
             if getattr(self, flag):
                 text = '{} {}'.format(text, flag.capitalize())
         return '{}>'.format(text)
 
-    def __eq__(self, other):
-        """
-        Compare caves by id. (bool)
+    def __str__(self):
+        """Human readable text representation."""
+        lines = [self.description]
+        for cave in self.adjacent:
+            if cave.pit:
+                lines.append('You feel a cool draft.')
+            if cave.bats:
+                lines.append('You hear a stange flapping sound.')
+            if cave.wumpus:
+                lines.append('You smell a foul odor.')
+        return '\n'.join(lines)
 
-        Parameters:
-        other: the cave to compare with (Cave)
-        """
-        if isinstance(other, Cave):
-            return self.id == other.id
-        else:
-            return NotImplemented
 
-
-class Dodecahedron(object):
+class Dodecahedron(board.LineBoard):
     """
-    A cave complex arranged as a dodecahedron. (object)
+    A cave complex arranged as the vertices of a dodecahedron. (board.LineBoard)
 
     Attributes:
-    caves: The caves in the complex. (list of Cave)
-    current: The cave the player is in. (Cave)
-    previous: The cave the player was in last. (Cave)
+    current: The cave the player is currently in. (Cave)
+    previous: The last cave the player was in. (Cave)
     start: The cave the player started in. (Cave)
-    wumpus_start: The cave the wumpus started in. (Cave)
+    wumpus: The cave containing the wumpus. (Cave)
+
+    Class attributes:
+    adjacent: The connections between the caves. (tuple of tuple of int)
+    descriptions: The cave descriptions. (tuple of str)
 
     Methods:
     bats: Move the player to a random cave. (None)
-    check_cave: Give the details for the specified cave. (list of str)
     move: Move the player in the specified direction. (None)
     move_wumpus: Move the wumpus after a miss. (None)
     next_cave: Determine the next cave in a given direction. (Cave)
-    shoot: Shoot a crooked arrow from the current location. (int)
 
     Overridden Methods:
     __init__
     """
 
-    def __init__(self):
-        """Set up the cave complex and its initial state. (None)"""
-        self.caves = [Cave(x) for x in range(20)]
-        for cave, adjacent in zip(self.caves, ADJACENT):
-            cave.adjacent = [self.caves[id] for id in adjacent]
-        # get a random list of caves
-        random_locations = list(range(20))
-        random.shuffle(random_locations)
-        # set descriptions randomly
-        for description_index, cave_index in enumerate(random_locations):
-            self.caves[cave_index].description = DESCRIPTIONS[description_index]
-        # set initial locations, making sure they're all distinct
-        self.caves[random_locations[0]].wumpus = True
-        self.wumpus_start = self.caves[random_locations[0]]
-        self.caves[random_locations[1]].bats = True
-        self.caves[random_locations[2]].bats = True
-        self.caves[random_locations[3]].pit = True
-        self.caves[random_locations[4]].pit = True
-        self.current = self.caves[random_locations[random.randrange(5, 20)]]
-        self.start = self.current
-        # the initial previous cave is arbitrary
-        self.previous = self.current.adjacent[0]
+    adjacent = ((0, 0, 0), (5, 6, 2), (1, 7, 3), (2, 8, 4), (3, 9, 5), (4, 10, 1), (1, 15, 11), (2, 11, 12),
+        (3, 12, 13), (4, 13, 14), (5, 14, 15), (6, 16, 7), (7, 17, 8), (8, 18, 9), (9, 19, 10), (10, 20, 6),
+        (11, 20, 17), (12, 16, 18), (13, 17, 19), (14, 18, 20), (15, 19, 16))
 
-    def __repr__(self):
-        """Generate a debugging text representation. (str)"""
-        # Get the base text.
-        text = '<Dodecahedron Current: {}; Bats: {}; Pits: {}; Wumpus: {}>'
-        # Get the flag data.
-        bat_text = ', '.join([str(cave.id) for cave in self.caves if cave.bats])
-        pit_text = ', '.join([str(cave.id) for cave in self.caves if cave.pit])
-        wumpus_id = [cave.id for cave in self.caves if cave.wumpus][0]
-        # Return the base text with the flag data.
-        return text.format(self.current, bat_text, pit_text, wumpus_id)
+    descriptions = ('', 'wumpus dung in the corner', '', '', '', '', 'ants crawling all over everything',
+        'lots of cobwebs', 'a dart board on the wall', 'a spooky echo', 'remains of a fire',
+        'rude graffiti on the wall', 'a battered helmet on the floor', 'a pile of junk in the corner',
+        'a family of lizards hiding in cracks in the wall', 'a strange mist in the air',
+        'several notches marked on the wall', 'an obelisk carved out of a stalagmite', 'a tall roof',
+        'a skull on the floor', 'a big red X marked on the floor')
+
+    def __init__(self):
+        """Set up the cave complex. (None)"""
+        # Set the base board.
+        super(Dodecahedron, self).__init__(20, cell_class = Cave)
+        # Set the adjacent locations and descriptions.
+        random_locations = list(range(1, 21))
+        random.shuffle(random_locations)
+        for location, cave in self.cells.items():
+            cave.adjacent = tuple(self.cells[adj] for adj in self.adjacent[location])
+            cave.description = self.descriptions[random_locations[location - 1]]
+        # Set the special caves.
+        self.cells[random_locations[0]].wumpus = True
+        self.wumpus = self.cells[random_locations[0]]
+        self.cells[random_locations[1]].bats = True
+        self.cells[random_locations[2]].bats = True
+        self.cells[random_locations[3]].pit = True
+        self.cells[random_locations[4]].pit = True
+        self.current = self.cells[random_locations[random.randrange(5, 20)]]
+        self.start = self.current
+        self.previous = self.current.adjacent[0]
 
     def bats(self):
         """Move the player to a random cave. (None)"""
         # randomize current (with arbitrary previous)
-        self.current = self.caves[random.randrange(20)]
+        self.current = self.cells[random.randrange(20)]
         self.previous = self.current.adjacent[0]
-
-    def check_cave(self, cave = None):
-        """
-        Give the details for the specified cave. (list of str)
-
-        If the cave parameter is None, the current cave is used. If cave is an
-        integer, it gets the cave with that ID.
-
-        Parameter:
-        cave: The cave to get details on. (Cave, int, or None)
-        """
-        # get current if no cave specified
-        if cave is None:
-            cave = self.current
-        # get cave by id if necessary
-        elif isinstance(cave, int):
-            cave = self.caves[cave]
-        # get the description
-        text = [cave.description]
-        # check for hazards
-        if cave.wumpus:
-            text.append('WUMPUS')
-        elif cave.bats:
-            text.append('BATS')
-        elif cave.pit:
-            text.append('PIT')
-        else:
-            # if no hazards, check for nearby hazards
-            for nearby in cave.adjacent:
-                if nearby.bats and 'FLAP' not in text:
-                    text.append('FLAP')
-                if nearby.wumpus:
-                    text.append('SMELL')
-                if nearby.pit and 'DRAFT' not in text:
-                    text.append('DRAFT')
-        return text
 
     def move(self, direction):
         """
@@ -241,11 +212,9 @@ class Dodecahedron(object):
         There is a one in four chance the wumpus does not move.
         """
         # randomly choose from current and adjacent
-        old_wumpus = [cave for cave in self.caves if cave.wumpus][0]
-        new_wumpus = random.choice([old_wumpus] + old_wumpus.adjacent)
-        # reset wumpus indicators
-        old_wumpus.wumpus = False
-        new_wumpus.wumpus = True
+        self.wumpus.wumpus = False
+        self.wumpus = random.choice([self.wumpus] + self.wumpus.adjacent)
+        self.wumpus.wumpus = True
 
     def next_cave(self, previous, current, direction):
         """
@@ -263,40 +232,12 @@ class Dodecahedron(object):
         back_index = current.adjacent.index(previous)
         # assume adjacent list is in clockwise order
         if direction == 'B':
-            next = current.adjacent[back_index]
+            next_cave = current.adjacent[back_index]
         elif direction == 'L':
-            next = current.adjacent[(back_index + 1) % 3]
+            next_cave = current.adjacent[(back_index + 1) % 3]
         elif direction == 'R':
-            next = current.adjacent[back_index - 1]
-        return next
-
-    def shoot(self, direction):
-        """
-        Shoot a crooked arrow from the current location. (int)
-
-        The return value is >0 for hitting the wumpus, 0 for hitting yourself,
-        and <0 for not hitting anything. Absolute value is the number of rooms
-        shot through.
-
-        Parameter:
-        direction: The (L/R/B) directions to shoot the arrow in (str)
-        """
-        # initialize the arrow location
-        target = self.current
-        shooter = self.previous
-        # shoot through up to three caves
-        rooms = 1
-        for char in direction[:3]:
-            # move the arrow
-            shooter, target = target, self.next_cave(shooter, target, char)
-            # check for a hit
-            if target.wumpus:
-                return rooms
-            if target.id == self.current.id:
-                return 0
-            # indicate a miss (for that cave at least)
-            rooms += 1
-        return rooms * -1
+            next_cave = current.adjacent[back_index - 1]
+        return next_cave
 
 
 class Wumpus(game.Game):
@@ -306,26 +247,34 @@ class Wumpus(game.Game):
     Attributes:
     arrows: The number of crooked arrows to start with. (int)
     arrows_left: The number of crooked arrows left. (int)
-    dodec: The cave system. (Dodecahedron)
+    caves: The cave system. (Dodecahedron)
 
     Methods:
-    shoot: Fire a crooked arrow. (None)
-    status_check: Check the room for hazards and description. (None)
+    do_back: Go back the way you came. (bool)
+    do_left: Take the left hand passage. (bool)
+    do_right: Take the right hand passage. (bool)
+    do_shoot: Shoot a crooked arrow. (bool)
+    do_up: Climb out of the caves. (u)
 
     Overridden Methods:
     game_over
-    player_action
     set_options
     set_up
     """
 
     aka = ['Wumpus', 'HuTW']
+    aliases = {'b': 'back', 'l': 'left', 'r': 'right', 's': 'shoot', 'u': 'up'}
     categories = ['Adventure Games']
     credits = CREDITS
     name = 'Hunt the Wumpus'
     num_options = 1
     options = OPTIONS
     rules = RULES
+
+    def __str__(self):
+        """Human readable text representation. (str)"""
+        text = '\nYou are in a cave with {}\n\nYou have {} left.'
+        return text.format(self.caves.current, num_text(self.arrows_left, 'crooked arrow'))
 
     def do_gipf(self, argument):
         """
@@ -337,26 +286,24 @@ class Wumpus(game.Game):
         """
         # Check the argument.
         game, losses = self.gipf_check(argument, ('battleships', 'hangman', 'pig'))
-        go = True
+        go = False
         # Successful Battleships moves the wumpus.
         if game == 'battleships':
             if not losses:
                 self.human.tell('\nYou hear a grumbling roar and a strange suck-pop sound.\n')
-                self.dodec.move_wumpus()
-                self.status_check()
-                return False
+                self.caves.move_wumpus()
         # Successful Hangman finds the nearest pit.
         elif game == 'hangman':
             if not losses:
                 # Breadth first search to find the nearest pit.
-                caves = [('', self.dodec.previous, self.dodec.current)]
+                caves = [('', self.caves.previous, self.caves.current)]
                 # Allow going backwards, but only as the first move
-                back_cave = self.dodec.next_cave(self.dodec.previous, self.dodec.current, 'B')
-                caves.append(('B', self.dodec.current, back_cave))
+                back_cave = self.caves.next_cave(self.caves.previous, self.caves.current, 'B')
+                caves.append(('B', self.caves.current, back_cave))
                 while True:
                     path, previous, current = caves.pop(0)
                     for direction in ('L', 'R'):
-                        new_cave = self.dodec.next_cave(previous, current, direction)
+                        new_cave = self.caves.next_cave(previous, current, direction)
                         new_path = path + direction
                         if new_cave.pit:
                             break
@@ -367,78 +314,103 @@ class Wumpus(game.Game):
                         break
                 # Display the result.
                 self.human.tell('\nThe path to the nearest pit is {}.'.format(new_path))
+                go = True
         # Successful Pig summons a giant bat.
         elif game == 'pig':
             if not losses:
-                self.human.tell("\nYou are grabbed by a giant, screeching bat and flown through")
-                self.human.tell("the caves at random.")
-                self.dodec.bats()
-                self.status_check()
-                return False
+                self.human.tell(BAT_TEXT)
+                self.caves.bats()
         # Otherwise I'm confused.
         elif game == 'invalid-game':
             self.human.tell("\nYou're hunting a wumpus, not a gipf.")
-        self.status_check()
+            go = True
         return go
 
+    def do_back(self, arguments):
+        """
+        Go back the way you came. (b)
+        """
+        self.caves.move('B')
+
+    def do_left(self, arguments):
+        """
+        Take the left hand passage. (l)
+        """
+        self.caves.move('L')
+
+    def do_right(self, arguments):
+        """
+        Take the right hand passage. (r)
+        """
+        self.caves.move('R')
+
+    def do_shoot(self, arguments):
+        """
+        Shoot a crooked arrow. (s)
+
+        Give up to three directions as an argument, as in 'shoot lrl', or 'shoot brl'.
+        """
+        # Check arguments.
+        arguments = arguments.upper()
+        if set(arguments) != set('BRL'):
+            self.human.error('Invalid arguments to the shoot command: {!r}.'.format(arguments))
+            return True
+        # Check arrows.
+        if not self.arrows_left:
+            self.human.tell('You do not have any arrows left.')
+            return True
+        self.arrows_left -= 1
+        # initialize the arrow location
+        target = self.caves.current
+        shooter = self.caves.previous
+        # shoot through up to three caves
+        for char in arguments[:3]:
+            # move the arrow
+            shooter, target = target, self.caves.next_cave(shooter, target, char)
+            # check for a hit
+            if target.wumpus:
+                self.caves.wumpus = None
+                return False
+            if target.id == self.current.id:
+                self.arrows = -1
+                return False
+            # indicate a miss (for that cave at least)
+            self.human.tell('Wiff!')
+        self.caves.move_wumpus()
+        return False
+
+    def do_up(self, arguments):
+        """
+        Climb out of the caves. (u)
+
+        This can only be done in the cave you started in.
+        """
+        if self.caves.current == self.caves.start:
+            self.current = None
+            return False
+        else:
+            return True
+
     def game_over(self):
-        """Check for the game being over. (bool)"""
-        # Game over is flagged elsewhere by changing win/loss/draw.
-        if self.win_loss_draw[1]:
-            self.human.tell('The wumpus wins. :(')
-        elif self.win_loss_draw[0]:
-            self.human.tell('You win!')
-        elif self.win_loss_draw[2]:
-            self.human.tell("Alright, we'll call it a draw.")
-        else:
-            # Game still on.
-            return False
-        # Record score and end game.
-        self.scores[self.human.name] = self.turns - 1
-        return True
-
-    def player_action(self, player):
-        """
-        Handle a player's turn or other player actions. (bool)
-
-        Parameters:
-        player: The player whose turn it is. (Player)
-        """
-        # Update the player
-        self.human.tell()
-        self.status_check()
-        # Check for end of game.
-        if sum(self.win_loss_draw):
-            return False
-        move = player.ask('What is your move? ').strip().lower()
-        # Check for standard moves that are mediated by the Dodecahedron.
-        if move in ('b', 'back'):
-            self.dodec.move('B')
-        elif move in ('c', 'climb'):
-            if self.dodec.current == self.dodec.start:
-                player.tell('You climb back out of the bowels of the earth.')
-                self.win_loss_draw[2] = 1
-            else:
-                player.tell('There is no way to climb out of here.')
-        elif move in ('l', 'left'):
-            self.dodec.move('L')
-        elif move in ('q', 'quit'):
+        """See if the human or wumpus has died. (bool)"""
+        if self.caves.current is None:
+            self.human.tell(UP_TEXT)
+            self.win_loss_draw[2] = 1
+        elif self.arrows == -1:
+            self.human.tell('\nNice shot, right into your own chest.')
             self.win_loss_draw[1] = 1
-        elif move in ('r', 'right'):
-            self.dodec.move('R')
-        # Check for shooting an arrow.
+        elif self.caves.current.wumpus:
+            self.human.tell(WUMPUS_TEXT)
+            self.win_loss_draw[1] = 1
+        elif self.caves.current.pit:
+            self.human.tell(PIT_TEXT)
+            self.win_loss_draw[1] = 1
+        elif self.caves.wumpus is None:
+            self.human.tell('\nYou hear the horrible screams of a dying wumpus.\n\nYou win!')
+            self.win_loss_draw[0] = 1
         else:
-            words = move.split()
-            if words and words[0] in ('s', 'shoot'):
-                if len(words) == 2:
-                    self.shoot(move.split()[1])
-                else:
-                    player.error('The shoot command takes one and only one parameter.')
-            # Check for other commands.
-            else:
-                return self.handle_cmd(move)
-        # Set the current (losing) score.
-        self.scores[self.human.name] = -self.turns
+            return False
+        return True
 
     def set_options(self):
         """Set the possible options for the game. (None)"""
@@ -448,74 +420,5 @@ class Wumpus(game.Game):
 
     def set_up(self):
         """Set up the caves and the tracking variables. (None)"""
-        self.dodec = Dodecahedron()
+        self.caves = Dodecahedron()
         self.arrows_left = self.arrows
-
-    def shoot(self, arg):
-        """
-        Fire a crooked arrow. (None)
-
-        Parameters:
-        arg: The directions to shoot the arrow in. (str)
-        """
-        # make sure there are arrows
-        if self.arrows_left:
-            # update arrows
-            self.arrows_left -= 1
-            # take the shot
-            hit = self.dodec.shoot(arg.upper())
-            # Show the results
-            for whiff in range(abs(hit) - 1):
-                self.human.tell('Whiff!')
-            if hit < 0:
-                # miss means wumpus may move
-                self.human.tell('You hear the arrow break uselessly against a wall.')
-                self.human.tell('You hear a grumbling roar and a strange suck-pop sound.')
-                self.human.tell('You have {} crooked arrows left.'.format(self.arrows_left))
-                self.dodec.move_wumpus()
-            elif hit == 0:
-                # shooting yourself is a loss
-                self.human.tell('Arrgh! You shot yourself in the back')
-                self.win_loss_draw[1] = 1
-            else:
-                # shooting the wumpus is a win
-                self.human.tell('You hear the horrible scream of a dying wumpus!')
-                self.win_loss_draw[0] = 1
-        else:
-            self.human.tell("You don't have any arrows left to shoot.")
-
-    def status_check(self):
-        """Check the room for hazards and description. (None)"""
-        # check for hazards
-        while True:
-            status = self.dodec.check_cave()
-            if 'WUMPUS' in status:
-                # wumpus is a loss
-                self.human.tell("The heavy weight of a wumpus lands on you, and you are")
-                self.human.tell("trapped in it's sucker tipped claws. In seconds you are")
-                self.human.tell("shoved into it's huge maw and eaten alive.")
-                self.win_loss_draw[1] = 1
-            elif 'BATS' in status:
-                # bats move randomly and skip to next cave
-                self.human.tell("You are grabbed by a giant, screeching bat and flown through")
-                self.human.tell("the caves at random.")
-                self.dodec.bats()
-                continue
-            elif 'PIT' in status:
-                # pit is a loss
-                self.human.tell("You stumble in the dark and fall down a bottomless pit. Well,")
-                self.human.tell("okay, it's got a bottom. Give us some room for poetic")
-                self.human.tell("license here.")
-                self.win_loss_draw[1] = 1
-            else:
-                # player.tell description
-                self.human.tell("You are in a cave with " + status[0])
-                # player.tell any nearby hazard warnings
-                if 'FLAP' in status:
-                    self.human.tell("You hear a strange flapping sound.")
-                if 'SMELL' in status:
-                    self.human.tell("You smell a foul odor.")
-                if 'DRAFT' in status:
-                    self.human.tell("You feel a cool draft.")
-                result = ''
-            break
