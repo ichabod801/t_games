@@ -20,6 +20,7 @@ Wumpus: A game of Hunt the Wumpus. (game.Game)
 
 
 import random
+import re
 
 from .. import board
 from .. import game
@@ -124,7 +125,7 @@ class Cave(board.BoardCell):
     def __str__(self):
         """Human readable text representation."""
         lines = [self.description]
-        for cave in self.adjacent:
+        for cave in self.adjacent:   # only one of each??
             if cave.pit:
                 lines.append('You feel a cool draft.')
             if cave.bats:
@@ -158,11 +159,11 @@ class Dodecahedron(board.LineBoard):
     __init__
     """
 
-    adjacent = ((5, 6, 2), (1, 7, 3), (2, 8, 4), (3, 9, 5), (4, 10, 1), (1, 15, 11), (2, 11, 12),
+    adjacent = ((0, 0, 0), (5, 6, 2), (1, 7, 3), (2, 8, 4), (3, 9, 5), (4, 10, 1), (1, 15, 11), (2, 11, 12),
         (3, 12, 13), (4, 13, 14), (5, 14, 15), (6, 16, 7), (7, 17, 8), (8, 18, 9), (9, 19, 10), (10, 20, 6),
         (11, 20, 17), (12, 16, 18), (13, 17, 19), (14, 18, 20), (15, 19, 16))
 
-    descriptions = ('wumpus dung in the corner', '', '', '', '', 'ants crawling all over everything',
+    descriptions = ('', 'wumpus dung in the corner', '', '', '', '', 'ants crawling all over everything',
         'lots of cobwebs', 'a dart board on the wall', 'a spooky echo', 'remains of a fire',
         'rude graffiti on the wall', 'a battered helmet on the floor', 'a pile of junk in the corner',
         'a family of lizards hiding in cracks in the wall', 'a strange mist in the air',
@@ -176,10 +177,9 @@ class Dodecahedron(board.LineBoard):
         # Set the adjacent locations and descriptions.
         random_locations = list(range(1, 21))
         random.shuffle(random_locations)
-        for location, adjacent, description in zip(random_locations, self.adjacent, self.descriptions):
-            cave = self.cells[location]
-            cave.adjacent = tuple(self.cells[adj] for adj in adjacent)
-            cave.description = description
+        for cave_index, random_index in enumerate(random_locations, start = 1):
+            self.cells[cave_index].adjacent = tuple(self.cells[adj] for adj in self.adjacent[cave_index])
+            self.cells[random_index].description = self.descriptions[cave_index]
         # Set the special caves.
         self.cells[random_locations[0]].wumpus = True
         self.wumpus = self.cells[random_locations[0]]
@@ -267,6 +267,7 @@ class Wumpus(game.Game):
     aliases = {'b': 'back', 'l': 'left', 'r': 'right', 's': 'shoot', 'u': 'up'}
     categories = ['Adventure Games']
     credits = CREDITS
+    shoot_re = re.compile('^[BRL]{1,3}$')
     name = 'Hunt the Wumpus'
     num_options = 1
     options = OPTIONS
@@ -353,7 +354,7 @@ class Wumpus(game.Game):
         """
         # Check arguments.
         arguments = arguments.upper()
-        if set(arguments) != set('BRL'):
+        if not self.shoot_re.match(arguments):
             self.human.error('Invalid arguments to the shoot command: {!r}.'.format(arguments))
             return True
         # Check arrows.
@@ -372,7 +373,7 @@ class Wumpus(game.Game):
             if target.wumpus:
                 self.caves.wumpus = None
                 return False
-            if target.id == self.current.id:
+            if target.location == self.caves.current.location:
                 self.arrows = -1
                 return False
             # indicate a miss (for that cave at least)
@@ -387,9 +388,10 @@ class Wumpus(game.Game):
         This can only be done in the cave you started in.
         """
         if self.caves.current == self.caves.start:
-            self.current = None
+            self.caves.current = None
             return False
         else:
+            self.human.error('There is no way up from here.')
             return True
 
     def game_over(self):
@@ -421,7 +423,7 @@ class Wumpus(game.Game):
         player: The current player. (player.Player)
         """
         go = super(Wumpus, self).player_action(player)
-        while self.caves.current.bats and not self.caves.current.wumpus:
+        while self.caves.current and self.caves.current.bats and not self.caves.current.wumpus:
             self.caves.bats()
 
     def set_options(self):
