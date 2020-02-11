@@ -158,11 +158,11 @@ class Dodecahedron(board.LineBoard):
     __init__
     """
 
-    adjacent = ((0, 0, 0), (5, 6, 2), (1, 7, 3), (2, 8, 4), (3, 9, 5), (4, 10, 1), (1, 15, 11), (2, 11, 12),
+    adjacent = ((5, 6, 2), (1, 7, 3), (2, 8, 4), (3, 9, 5), (4, 10, 1), (1, 15, 11), (2, 11, 12),
         (3, 12, 13), (4, 13, 14), (5, 14, 15), (6, 16, 7), (7, 17, 8), (8, 18, 9), (9, 19, 10), (10, 20, 6),
         (11, 20, 17), (12, 16, 18), (13, 17, 19), (14, 18, 20), (15, 19, 16))
 
-    descriptions = ('', 'wumpus dung in the corner', '', '', '', '', 'ants crawling all over everything',
+    descriptions = ('wumpus dung in the corner', '', '', '', '', 'ants crawling all over everything',
         'lots of cobwebs', 'a dart board on the wall', 'a spooky echo', 'remains of a fire',
         'rude graffiti on the wall', 'a battered helmet on the floor', 'a pile of junk in the corner',
         'a family of lizards hiding in cracks in the wall', 'a strange mist in the air',
@@ -176,9 +176,10 @@ class Dodecahedron(board.LineBoard):
         # Set the adjacent locations and descriptions.
         random_locations = list(range(1, 21))
         random.shuffle(random_locations)
-        for location, cave in self.cells.items():
-            cave.adjacent = tuple(self.cells[adj] for adj in self.adjacent[location])
-            cave.description = self.descriptions[random_locations[location - 1]]
+        for location, adjacent, description in zip(random_locations, self.adjacent, self.descriptions):
+            cave = self.cells[location]
+            cave.adjacent = tuple(self.cells[adj] for adj in adjacent)
+            cave.description = description
         # Set the special caves.
         self.cells[random_locations[0]].wumpus = True
         self.wumpus = self.cells[random_locations[0]]
@@ -193,7 +194,7 @@ class Dodecahedron(board.LineBoard):
     def bats(self):
         """Move the player to a random cave. (None)"""
         # randomize current (with arbitrary previous)
-        self.current = self.cells[random.randrange(20)]
+        self.current = self.cells[random.randrange(1, 21)]
         self.previous = self.current.adjacent[0]
 
     def move(self, direction):
@@ -411,6 +412,17 @@ class Wumpus(game.Game):
         else:
             return False
         return True
+
+    def player_action(self, player):
+        """
+        Handle the player's next action. (bool)
+
+        Parameters:
+        player: The current player. (player.Player)
+        """
+        go = super(Wumpus, self).player_action(player)
+        while self.caves.current.bats and not self.caves.current.wumpus:
+            self.caves.bats()
 
     def set_options(self):
         """Set the possible options for the game. (None)"""
