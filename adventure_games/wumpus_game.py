@@ -214,7 +214,7 @@ class Dodecahedron(board.LineBoard):
         """
         # randomly choose from current and adjacent
         self.wumpus.wumpus = False
-        self.wumpus = random.choice([self.wumpus] + self.wumpus.adjacent)
+        self.wumpus = random.choice([self.wumpus] + list(self.wumpus.adjacent))
         self.wumpus.wumpus = True
 
     def next_cave(self, previous, current, direction):
@@ -292,7 +292,7 @@ class Wumpus(game.Game):
         # Successful Battleships moves the wumpus.
         if game == 'battleships':
             if not losses:
-                self.human.tell('\nYou hear a grumbling roar and a strange suck-pop sound.\n')
+                self.human.tell('\nYou hear a grumbling roar and a strange suck-pop sound.')
                 self.caves.move_wumpus()
         # Successful Hangman finds the nearest pit.
         elif game == 'hangman':
@@ -374,11 +374,12 @@ class Wumpus(game.Game):
                 self.caves.wumpus = None
                 return False
             if target.location == self.caves.current.location:
-                self.arrows = -1
+                self.arrows_left = -1
                 return False
             # indicate a miss (for that cave at least)
             self.human.tell('Wiff!')
         self.caves.move_wumpus()
+        self.human.tell(WIFF_TEXT)
         return False
 
     def do_up(self, arguments):
@@ -399,7 +400,7 @@ class Wumpus(game.Game):
         if self.caves.current is None:
             self.human.tell(UP_TEXT)
             self.win_loss_draw[2] = 1
-        elif self.arrows == -1:
+        elif self.arrows_left == -1:
             self.human.tell('\nNice shot, right into your own chest.')
             self.win_loss_draw[1] = 1
         elif self.caves.current.wumpus:
@@ -423,8 +424,10 @@ class Wumpus(game.Game):
         player: The current player. (player.Player)
         """
         go = super(Wumpus, self).player_action(player)
-        while self.caves.current and self.caves.current.bats and not self.caves.current.wumpus:
+        while self.caves.current is not None and self.caves.current.bats and not self.caves.current.wumpus:
+            self.human.tell(BAT_TEXT)
             self.caves.bats()
+        return go
 
     def set_options(self):
         """Set the possible options for the game. (None)"""
