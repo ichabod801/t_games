@@ -125,13 +125,16 @@ class Cave(board.BoardCell):
     def __str__(self):
         """Human readable text representation."""
         lines = [self.description]
-        for cave in self.adjacent:   # only one of each??
-            if cave.pit:
-                lines.append('You feel a cool draft.')
-            if cave.bats:
-                lines.append('You hear a stange flapping sound.')
+        flap, draft = False, False
+        for cave in self.adjacent:
+            flap = flap or cave.bats
+            draft = draft or cave.pit
             if cave.wumpus:
                 lines.append('You smell a foul odor.')
+        if draft:
+            lines.append('You feel a cool draft.')
+        if flap:
+            lines.append('You hear a stange flapping sound.')
         return '\n'.join(lines)
 
 
