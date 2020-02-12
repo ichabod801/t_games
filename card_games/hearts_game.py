@@ -599,6 +599,7 @@ class Hearts(game.Game):
     no_tricks: How many points you get for not winning any tricks. (int)
     not_warning: A flag for warning that there is no passing this trick. (bool)
     num_pass: The number of cards each player passes. (int)
+    pair_bonus: A flag for getting a bonus if there is a pair in the trick. (bool)
     pass_dir: The direction(s) that cards are passed. (generator)
     pass_to: Who is passing to who. (dict of str: str)
     passes: The cards passed by each player. (dict of str: cards.Hand)
@@ -707,13 +708,20 @@ class Hearts(game.Game):
     def do_gipf(self, arguments):
         """
         Calvin Cards randomizes the rest of the plays this round.
+
+        Winning Ten Thousand loses 5 points off your score if there is a pair in the
+        trick.
         """
         # Run the edge, if possible.
-        game, losses = self.gipf_check(arguments, ('calvin cards',))
+        game, losses = self.gipf_check(arguments, ('calvin cards', 'ten thousand'))
         # Winning Calvin Cards randomizes moves for the rest of the trick.
         if game == 'calvin cards':
             if not losses:
                 self.random_move = True
+        # Winning Ten Thousand loses 5 points off your score if there is a pair in the trick.
+        elif game == 'ten thousand':
+            if not losses:
+                self.pair_bonus = True
         # Otherwise I'm confused.
         else:
             self.human.tell('Bless your heart.')
@@ -1243,6 +1251,7 @@ class Hearts(game.Game):
         self.set_pass()
         self.tricks = 0
         self.random_move = False
+        self.pair_bonus = False
 
     def trick_winner(self):
         """Determine who won the trick. (None)"""
@@ -1271,6 +1280,15 @@ class Hearts(game.Game):
         # Check for breaking hearts.
         if not self.hearts_broken and self.breakers.intersection(self.trick):
             self.hearts_broken = True
+        # Check for a pair bonus.
+        if self.pair_bonus:
+            ranks = [card.rank for card in self.trick]
+            if len(set(ranks)) < len(ranks):
+                points_lost = min(self.scores[self.human], 5)
+                self.scores[self.human] -= points_lost
+                message = '{} removed {} because the trick has a pair in it.'
+                self.human.tell(message.format(self.human, utility.num_text(points_lost, 'point')))
+                self.pair_bonus = False
         # Clear the trick.
         self.last_trick = self.trick
         self.last_winner = winner
