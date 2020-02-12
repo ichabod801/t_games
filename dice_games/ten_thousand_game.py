@@ -740,6 +740,7 @@ class TenThousand(game.Game):
     carry_on: A flag for being able to take over a failed roll. (bool)
     clear_combo: A flag for having to reroll if you match the last combo. (bool)
     crash: How many points are lost for not scoring on any dice. (int)
+    dice: The dice used to play the game. (dice.Pool)
     entered: The players who have entered the game. (dict of str: bool)
     entry: How many points are needed on the first scoring turn. (int)
     explosion: A flag for losing when you roll a max combo of ones. (bool)
@@ -819,6 +820,41 @@ class TenThousand(game.Game):
                 min_roll = self.minimum
             full_text = '{}\nThe minimum turn score is {}.'.format(full_text, min_roll)
         return full_text.format(score_text, self.turn_score, self.dice)
+
+    def do_gipf(self, arguments):
+        """
+        Winning Yacht gives you one reroll this turn.
+
+        Winning Yukon allows you to change one unheld die by one pip.
+        """
+        # Run the edge, if possible.
+        game, losses = self.gipf_check(arguments, ('yacht', 'yukon'))
+        # Winning Yacht gives you a choice between two rolls.
+        if game == 'yacht':
+            if not losses:
+                self.reroll = True
+        # Winning Yukon allows you to change a die by one pip.
+        elif game == 'yukon':
+            if not losses:
+                unheld = self.dice.get_unheld()
+                self.current_player.tell('\nYour unheld dice are: {}.'.foramt(unheld))
+                query = 'Which value would you like to change? '
+                value = self.current_player.ask_int(query, valid = unheld, cmd = False)
+                if value == 1:
+                    change = 2
+                    self.current_player.tell('Ones can only be changed to twos.')
+                elif value == 6:
+                    change = 5
+                    self.current_player.tell('Sixes can only be changed to fives.')
+                else:
+                    query = 'What would you like to change it to? '
+                    change = self.current_player.ask_int(query, valid = (value - 1, value + 1), cmd = False)
+                die = [die for die in self.dice if not die.held and die == value][0]
+                die.value = change
+        # Otherwise I'm confused.
+        else:
+            self.human.tell('Like, well, I mean, you know ... What was the question again?')
+        return True
 
     def do_hold(self, arguments):
         """
@@ -916,6 +952,12 @@ class TenThousand(game.Game):
         # Roll the dice.
         self.must_roll = ''
         self.dice.roll()
+        # Handle any rerolls:
+        if self.reroll:
+            rolled = self.dice.get_free()
+            if player.ask_yes_no('Your roll is {}. Would you like to reroll? '.format(rolled)):
+                self.dice.roll()
+                self.reroll = False
         # Handle any wilds.
         if self.wild and -1 in self.dice:
             self.wild_roll(player)
@@ -995,6 +1037,7 @@ class TenThousand(game.Game):
         self.last_combo = []
         self.turn_score = 0
         self.dice.release()
+        self.reroll = False
         self.new_turn = True
 
     def game_over(self):
@@ -1317,6 +1360,7 @@ class TenThousand(game.Game):
         self.last_combo = []
         self.last_player = None
         self.must_roll = ''
+        self.reroll = False
         self.new_turn = True
         self.entered = {player.name: False for player in self.players}
         self.strikes = {player.name: 0 for player in self.players}
