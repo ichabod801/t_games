@@ -828,9 +828,9 @@ class TenThousand(game.Game):
         Winning Yukon allows you to change one unheld die by one pip.
         """
         # Run the edge, if possible.
-        game, losses = self.gipf_check(arguments, ('yacht', 'yukon'))
+        game, losses = self.gipf_check(arguments, ('pyramid', 'yukon'))
         # Winning Yacht gives you a choice between two rolls.
-        if game == 'yacht':
+        if game == 'pyramid':
             if not losses:
                 self.reroll = True
         # Winning Yukon allows you to change a die by one pip.
