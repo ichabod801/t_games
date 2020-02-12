@@ -836,8 +836,8 @@ class TenThousand(game.Game):
         # Winning Yukon allows you to change a die by one pip.
         elif game == 'yukon':
             if not losses:
-                unheld = self.dice.get_unheld()
-                self.current_player.tell('\nYour unheld dice are: {}.'.foramt(unheld))
+                unheld = self.dice.get_free()
+                self.current_player.tell('\nYour unheld dice are: {}.'.format(unheld))
                 query = 'Which value would you like to change? '
                 value = self.current_player.ask_int(query, valid = unheld, cmd = False)
                 if value == 1:
