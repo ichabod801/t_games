@@ -1288,7 +1288,7 @@ class Hearts(game.Game):
                 self.scores[self.human] -= points_lost
                 message = '{} removed {} because the trick has a pair in it.'
                 self.human.tell(message.format(self.human, utility.num_text(points_lost, 'point')))
-                self.pair_bonus = False
+            self.pair_bonus = False
         # Clear the trick.
         self.last_trick = self.trick
         self.last_winner = winner
