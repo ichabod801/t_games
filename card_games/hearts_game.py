@@ -402,14 +402,12 @@ class SmeartBot(HeartBot):
         """Make a move to stop a player from shooting the moon. (cards.Card)"""
         standard = super(SmeartBot, self).play()
         if isinstance(standard, str):
-            standard = cards.Card(*standard)
+            standard = self.game.deck.parse_text(standard)
             standard.up = True
-        base_check = standard.suit == 'H' or standard in self.danger_cards
+        base_check = (standard.suit == 'H' or standard in self.danger_cards) and self.game.trick
         if base_check or (self.game.joker_points and standard.rank == 'X'):
             suit_cards = self.game.trick.find(suit = self.game.trick[0].suit)
             suit_cards.sort(key = cards.by_rank)
-            if not suit_cards:
-                return standard
             best_card = suit_cards[-1]
             best_index = self.game.trick.index(best_card)
             best_player = self.game.players[self.game.player_index - len(self.game.trick) + best_index]
@@ -601,6 +599,7 @@ class Hearts(game.Game):
     no_tricks: How many points you get for not winning any tricks. (int)
     not_warning: A flag for warning that there is no passing this trick. (bool)
     num_pass: The number of cards each player passes. (int)
+    pair_bonus: A flag for getting a bonus if there is a pair in the trick. (bool)
     pass_dir: The direction(s) that cards are passed. (generator)
     pass_to: Who is passing to who. (dict of str: str)
     passes: The cards passed by each player. (dict of str: cards.Hand)
@@ -708,14 +707,21 @@ class Hearts(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Calvin Cards randomized the rest of the plays this round.
+        Calvin Cards randomizes the rest of the plays this round.
+
+        Winning Ten Thousand loses 5 points off your score if there is a pair in the
+        trick.
         """
         # Run the edge, if possible.
-        game, losses = self.gipf_check(arguments, ('calvin cards',))
+        game, losses = self.gipf_check(arguments, ('calvin cards', 'ten thousand'))
         # Winning Calvin Cards randomizes moves for the rest of the trick.
         if game == 'calvin cards':
             if not losses:
                 self.random_move = True
+        # Winning Ten Thousand loses 5 points off your score if there is a pair in the trick.
+        elif game == 'ten thousand':
+            if not losses:
+                self.pair_bonus = True
         # Otherwise I'm confused.
         else:
             self.human.tell('Bless your heart.')
@@ -913,10 +919,12 @@ class Hearts(game.Game):
         self.deck = cards.Deck(rank_set = rank_set, suit_set = HEARTS_SUITS)
         lady_index = self.deck.index('QS')
         self.deck[lady_index].value = self.lady_points
-        if self.bonus:
-            bonus_index = self.deck.index(self.bonus)
-            self.deck[bonus_index].value = -10
         self.max_score = sum(rank_set.values.values()) + self.lady_points
+        if self.bonus:
+            # does not count toward max score.
+            bonus_index = self.deck.index(self.bonus)
+            self.bonus = self.deck[bonus_index]
+            self.bonus.value = -10
         self.breakers = set([card for card in self.deck if card.suit == 'H'])
         if self.all_break:
             self.breakers.add('QS')
@@ -925,9 +933,6 @@ class Hearts(game.Game):
             self.max_score += len(jokers)
             if self.all_break:
                 self.breakers.update(jokers)
-        if self.bonus:
-            self.bonus = cards.Card(*self.bonus)
-            self.max_score -= 10
 
     def handle_options(self):
         """Handle the option settings for this game. (None)"""
@@ -1073,7 +1078,7 @@ class Hearts(game.Game):
             score_text = base_text.format(player, utility.oxford(score_bits), point_text)
             self.human.tell(score_text)
             # Inform and record any sucessful shooter.
-            if points == self.max_score or (bonus or points == self.max_score - 10):
+            if points == self.max_score or (bonus and points == self.max_score - 10):
                 self.human.tell('{} shot the moon!'.format(player))
                 shooter = player.name
             # Check for taking no tricks.
@@ -1149,7 +1154,7 @@ class Hearts(game.Game):
         """Set the possible options for the game. (None)"""
         # Get a card verifier.
         def is_card(text):
-            return len(text) == 2 and text[0] in cards.Card.ranks and text[1] in cards.Card.suits
+            return len(text) == 2 and text[0] in cards.STANDARD_RANKS and text[1] in cards.STANDARD_SUITS
         # Set the bot options.
         self.option_set.add_option('easy', ['ez'], int, 1, valid = range(5),
             question = 'How many easy bots do you want to play against (return for 1)? ')
@@ -1246,6 +1251,7 @@ class Hearts(game.Game):
         self.set_pass()
         self.tricks = 0
         self.random_move = False
+        self.pair_bonus = False
 
     def trick_winner(self):
         """Determine who won the trick. (None)"""
@@ -1274,6 +1280,15 @@ class Hearts(game.Game):
         # Check for breaking hearts.
         if not self.hearts_broken and self.breakers.intersection(self.trick):
             self.hearts_broken = True
+        # Check for a pair bonus.
+        if self.pair_bonus:
+            ranks = [card.rank for card in self.trick]
+            if len(set(ranks)) < len(ranks):
+                points_lost = min(self.scores[self.human], 5)
+                self.scores[self.human] -= points_lost
+                message = '{} removed {} because the trick has a pair in it.'
+                self.human.tell(message.format(self.human, utility.num_text(points_lost, 'point')))
+            self.pair_bonus = False
         # Clear the trick.
         self.last_trick = self.trick
         self.last_winner = winner

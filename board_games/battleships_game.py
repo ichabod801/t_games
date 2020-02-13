@@ -124,9 +124,11 @@ class Battleships(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Canfield gives you a random hit for your next shot. Pig gives you a free shot
-        if you hit on your next shot. Hunt the Wumpus tells you a random square of a
-        specific ship type.
+        Canfield gives you a random hit for your next shot.
+
+        Pig gives you a free shot if you hit on your next shot.
+
+        Hunt the Wumpus tells you a random square of a specific ship type.
         """
         game, losses = self.gipf_check(arguments, ('wumpus', 'pig', 'canfield'))
         go = True

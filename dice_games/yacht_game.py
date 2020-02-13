@@ -349,16 +349,16 @@ class Bacht(player.Bot):
                 return 'roll'
             # Check for time to score.
             elif (self.game.roll_count == self.game.max_rolls or self.next == 'score' or
-                self.game.dice.held == 5):
+                len(self.game.dice.get_free()) == 5):
                 move = 'score ' + self.get_category()
             # Otherwise hold dice.
             else:
                 move = 'hold ' + ' '.join([str(x) for x in self.get_holds()])
                 move = move.replace('*', '')
-                print(self.game.dice.held)
+                #print(self.game.dice.held)
                 if move == 'hold ':
                     move = 'roll'
-                elif self.game.dice.held < 5:
+                elif self.game.dice.get_free() < 5:
                     self.next = 'roll'
                 else:
                     self.next = 'score'
@@ -389,7 +389,7 @@ class Bacht(player.Bot):
         If the roll is ready to score, this method holds all of the dice.
         """
         # Hold on first round based on dice values.
-        if not self.game.dice.held:
+        if not self.game.dice.get_free():
             hold = self.initial_holds()
         # Hold on later rounds by inferring why you held things on early rounds.
         else:

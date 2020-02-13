@@ -519,9 +519,12 @@ class Pig(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Battleships makes your next roll a 2. Hunt the Wumpus lets you see your next
-        roll before you decide whether to roll or stop. Solitaire dice lest you choose
-        between two possible next rolls.
+        Battleships makes your next roll a 2.
+
+        Hunt the Wumpus lets you see your next roll before you decide whether to roll
+        or stop.
+
+        Solitaire dice lest you choose between two possible next rolls.
         """
         game, losses = self.gipf_check(arguments, ('battleships', 'wumpus', 'solitaire dice'))
         go = True

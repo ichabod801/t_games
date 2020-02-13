@@ -332,8 +332,9 @@ class SnakesAndLadders(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Guess a Number makes your next roll a 6. Forty Thieves lets you pick the next
-        roll, but you can't pick a 6.
+        Guess a Number makes your next roll a 6.
+
+        Forty Thieves lets you pick the next roll, but you can't pick a 6.
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('number guessing game', 'forty thieves'))

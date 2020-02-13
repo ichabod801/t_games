@@ -91,7 +91,7 @@ class FeatureSet(object):
     Attributes:
     an_chars: The characters for ranks using 'an' instead of 'a'. (str)
     chars: The characters for the feature values. (str)
-    colors: The colors associated with the feature values. (str)
+    colors: The colors associated with the feature values. (dict of str: str)
     names: The names of the feature values. (dict of str: str)
     skip: The number of values to skip when iterating. (int)
     values: Numeric values associated with feature values. (dict of str: int)
@@ -287,6 +287,7 @@ class Card(object):
     The color, rank, and suit attributes are length 1.
 
     Attributes:
+    a_text: The text for the card with an 'a' or 'an'. (str)
     color: The color of the card. ('R' or 'B')
     down_text: The text to display when the card is face down. (str)
     format_types: Extra types used for the format method. (dict of str: str)
