@@ -55,8 +55,9 @@ class Strategy(solitaire.Solitaire):
 
     def do_gipf(self, arguments):
         """
-        Monte Carlo allows reverses one pile. Roulette lets you swap two adjacent
-        cards.
+        Monte Carlo allows reverses one pile.
+
+        Roulette lets you swap two adjacent cards.
         """
         game, losses = self.gipf_check(arguments, ('monte carlo', 'roulette'))
         go = True

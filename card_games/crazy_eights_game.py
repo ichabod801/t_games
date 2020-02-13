@@ -165,16 +165,18 @@ class Crazy8Bot(player.Bot):
         else:
             self.suit = self.discard.suit
         # Calculate the legal plays.
-        self.suit_matches = [card for card in self.hand.cards if card.suit == self.suit and
+        self.suit_matches = [card for card in self.hand if card.suit == self.suit and
             card.rank != self.game.change_rank]
-        self.rank_matches = [card for card in self.hand.cards if card.rank == self.discard.rank and
+        self.rank_matches = [card for card in self.hand if card.rank == self.discard.rank and
             card.rank != self.game.change_rank]
-        self.eights = [card for card in self.hand.cards if card.rank == self.game.change_rank]
+        self.eights = [card for card in self.hand if card.rank == self.game.change_rank]
         # Check for change card matching.
         if self.game.change_match and self.discard.rank != self.game.change_rank:
             self.eights = [card for card in self.eights if card.suit == self.suit]
         # Calculate the frequencies of suits in hand.
-        self.suits = [(len([c for c in self.hand.cards if c.suit == suit]), suit) for suit in 'CDHS']
+        self.suits = []
+        for suit in self.game.deck.suit_set:
+            self.suits.append((len([card for card in self.hand if card.suit == suit]), suit))
         self.suits.sort(reverse = True)
         # Get the recent plays.
         self.plays = self.game.history[-len(self.game.players):]
@@ -254,7 +256,7 @@ class CrazySmartBot(Crazy8Bot):
                     maybes[card] += 2
             else:
                 # Score cards by cards left in suit, plus two if it's a switch.
-                maybes[card] = len([maybe for maybe in self.hand.cards if maybe.suit == card.suit]) - 1
+                maybes[card] = len([maybe for maybe in self.hand if maybe.suit == card.suit]) - 1
                 if suit_switch and card.suit != self.suits:
                     maybes[card] += 2
             # Track  the best card.
@@ -361,7 +363,7 @@ class CrazyEights(game.Game):
         # Set the discard pile.
         if keep_one:
             self.deck.discards = [keeper]
-            self.deck.cards.remove(keeper)
+            self.deck.remove(keeper)
         else:
             self.deck.discard(self.deck.deal(), up = True)
             self.history.append(self.deck.discards[-1])
@@ -374,15 +376,16 @@ class CrazyEights(game.Game):
             # Deal the cards.
             for card in range(hand_size):
                 for player in self.players:
-                    self.hands[player.name].draw()
+                    self.hands[player].draw()
             # Sort the human's hand for readability.
-            self.hands[self.human.name].cards.sort()
-            self.hands[self.human.name].cards.sort(key = lambda card: card.suit)
+            self.hands[self.human].sort()
 
     def do_gipf(self, arguments):
         """
-        Strategy allows you to play one rank above or below the current rank. Spider
-        (hah!) allows you to play any card, but it doesn't change the suit to play.
+        Strategy allows you to play one rank above or below the current rank.
+
+        Spider (hah!) allows you to play any card, but it doesn't change the suit to
+        play.
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('strategy', 'spider'))
@@ -409,7 +412,7 @@ class CrazyEights(game.Game):
         player: The player to draw a card for. (player.Player)
         """
         # Check for a forced pass.
-        if self.empty_deck == 'pass' and not self.deck.cards:
+        if self.empty_deck == 'pass' and not self.deck:
             player.tell('You cannot draw, you must pass.')
             self.human.tell('{} passes.'.format(player.name))
             self.pass_count += 1
@@ -420,12 +423,11 @@ class CrazyEights(game.Game):
             return False
         # Draw the card.
         hand = self.hands[player.name]
-        hand.draw()
-        player.tell('You drew the {}.'.format(hand.cards[-1]))
+        new_card = hand.draw()
+        player.tell('You drew the {}.'.format(new_card))
         # Sort the human's cards.
         if player.name == self.human.name:
-            hand.cards.sort()
-            hand.cards.sort(key = lambda card: card.suit)
+            hand.sort()
         # Check for empty deck.
         if not self.deck.cards:
             self.human.tell('The deck is empty.')
@@ -447,7 +449,7 @@ class CrazyEights(game.Game):
         """
         # Check the hand for playable cards.
         hand = self.hands[player.name]
-        playable = [card for card in hand.cards if card.rank == self.draw_rank]
+        playable = [card for card in hand if card.rank == self.draw_rank]
         # Check for chance to play.
         if not playable:
             player.tell('You must draw {} cards.'.format(self.forced_draw))
@@ -469,7 +471,7 @@ class CrazyEights(game.Game):
                     message = 'That is not a valid play. Please draw or play a {}.'
                     player.error(message.format(self.draw_rank))
         # Draw the cards.
-        if self.deck.cards:
+        if self.deck:
             plural = utility.plural(self.forced_draw, 'card')
             self.human.tell('{} must draw {} {}.'.format(player.name, self.forced_draw, plural))
             for card in range(self.forced_draw):
@@ -477,7 +479,7 @@ class CrazyEights(game.Game):
                 self.forced_draw = 0
                 self.human.tell('{} drew a card.'.format(player.name))
                 # Handle the deck running out.
-                if not self.deck.cards:
+                if not self.deck:
                     self.human.tell('The deck is empty.')
                     if self.empty_deck == 'score':
                         self.score()
@@ -489,27 +491,13 @@ class CrazyEights(game.Game):
         # Sort the human's cards.
         if player.name == self.human.name:
             hand.cards.sort()
-            hand.cards.sort(key = lambda card: card.suit)
         return False
 
     def game_over(self):
         """Check for the game being over. (bool)"""
         # Win if someone scored enough points.
         if max(self.scores.values()) >= self.goal:
-            # Find the winner.
-            scores = [(score, name) for name, score in self.scores.items()]
-            scores.sort(reverse = True)
-            self.human.tell('\n{1} won the game with {0} points.'.format(*scores[0]))
-            # Calculate the win/loss/draw.
-            human_score = self.scores[self.human.name]
-            for name, score in self.scores.items():
-                if name != self.human.name:
-                    if score < human_score:
-                        self.win_loss_draw[0] += 1
-                    elif score > human_score:
-                        self.win_loss_draw[1] += 1
-                    else:
-                        self.win_loss_draw[2] += 1
+            self.wins_by_score(show_self = False)
             return True
         else:
             return False
@@ -519,15 +507,12 @@ class CrazyEights(game.Game):
         super(CrazyEights, self).handle_options()
         # Set up the players.
         self.players = [self.human]
-        taken_names = [self.human.name]
         if not self.num_easy + self.num_medium:
             self.num_medium = 7
         for bot in range(self.num_easy):
-            self.players.append(Crazy8Bot(taken_names))
-            taken_names.append(self.players[-1].name)
+            self.players.append(Crazy8Bot(self.players))
         for bot in range(self.num_medium):
-            self.players.append(CrazySmartBot(taken_names))
-            taken_names.append(self.players[-1].name)
+            self.players.append(CrazySmartBot(self.players))
         # Set the winning score.
         if not self.goal:
             self.goal = 50 * len(self.players)
@@ -539,16 +524,16 @@ class CrazyEights(game.Game):
         else:
             self.human.tell('\nThe current special ranks are:\n')
             if self.change_rank:
-                rank_name = self.card_class.rank_names[self.card_class.ranks.index(self.change_rank)]
+                rank_name = self.deck.rank_set.names[self.change_rank]
                 self.human.tell('The rank to change the suit is {}.'.format(rank_name))
             if self.draw_rank:
-                rank_name = self.card_class.rank_names[self.card_class.ranks.index(self.draw_rank)]
+                rank_name = self.deck.rank_set.names[self.draw_rank]
                 self.human.tell('The rank to force drawing cards is {}.'.format(rank_name))
             if self.reverse_rank:
-                rank_name = self.card_class.rank_names[self.card_class.ranks.index(self.reverse_rank)]
+                rank_name = self.deck.rank_set.names[self.reverse_rank]
                 self.human.tell('The rank to reverse the order of play is {}.'.format(rank_name))
             if self.skip_rank:
-                rank_name = self.card_class.rank_names[self.card_class.ranks.index(self.skip_rank)]
+                rank_name = self.deck.rank_set.names[self.skip_rank]
                 self.human.tell('The rank to skip the next player is {}.'.format(rank_name))
 
     def mental_health(self):
@@ -572,7 +557,7 @@ class CrazyEights(game.Game):
         player: The player whose turn it is. (Player)
         """
         # Check for a valid pass.
-        if not self.deck.cards and self.empty_deck == 'pass':
+        if not self.deck and self.empty_deck == 'pass':
             self.human.tell('{} passes.'.format(player.name))
             self.pass_count += 1
             if self.pass_count >= len(self.players):
@@ -627,10 +612,10 @@ class CrazyEights(game.Game):
             self.player_index = self.players.index(player)
         # Check for skipping players.
         if card_text[0].upper() == self.skip_rank:
-            self.player_index = (self.player_index + 1) % len(self.players)
-            self.human.tell("{}'s turn is skipped.".format(self.players[self.player_index].name))
+            skipped = self.skip_player()
+            self.human.tell("{}'s turn is skipped.".format(skipped))
         # Check for playing their last card.
-        if not hand.cards:
+        if not hand:
             self.human.tell('{} played their last card.'.format(player.name))
             self.score()
             if max(self.scores.values()) < self.goal:
@@ -654,7 +639,7 @@ class CrazyEights(game.Game):
         hand = self.hands[player.name]
         discard = self.deck.discards[-1]
         # Show the game status.
-        player.tell('The card to you is {}.'.format(discard.rank + discard.suit))
+        player.tell('The card to you is {:u}.'.format(discard))
         if self.suit:
             player.tell('The suit to you is {}.'.format(self.suit))
         player.tell('Your hand is {}.'.format(hand))
@@ -689,7 +674,8 @@ class CrazyEights(game.Game):
         # Score each hand.
         self.human.tell()
         for name, hand in self.hands.items():
-            for card in hand.cards:
+            for card in hand:
+                # !! redo with a FeatureSet (don't forget psychotic)
                 if card.rank == self.change_rank:
                     round_scores[name] += 50
                 elif card.rank in 'TJQK':
@@ -736,7 +722,9 @@ class CrazyEights(game.Game):
 
     def set_options(self):
         """Define the options for the game. (None)"""
-        # Get rank converter.
+        # Get rank handlers.
+        rank_set = cards.STANDARD_RANKS
+        rank_error = 'The valid card ranks are {}.'.format(', '.join(rank_set.chars))
         def convert_rank(text):
             if text == '!':
                 text = ''
@@ -746,17 +734,16 @@ class CrazyEights(game.Game):
             question = 'Should the suit change card have to match the last card played? bool')
         self.option_set.add_option('change-set', ['cs'],
             question = 'Should the suit change card just change to its own suit? bool')
-        rank_error = 'The valid card ranks are {}.'.format(', '.join(cards.Card.ranks))
-        self.option_set.add_option('change', ['c'], convert_rank, '8', valid = cards.Card.ranks,
+        self.option_set.add_option('change', ['c'], convert_rank, '8', valid = rank_set,
             question = 'What rank should change the suit? ', error_text = rank_error,
             target = 'change_rank')
-        self.option_set.add_option('draw', ['d'], convert_rank, '', valid = cards.Card.ranks,
+        self.option_set.add_option('draw', ['d'], convert_rank, '', valid = rank_set,
             question = 'What rank should force the next player to draw? ', error_text = rank_error,
             target = 'draw_rank')
-        self.option_set.add_option('reverse', ['r'], convert_rank, '', valid = cards.Card.ranks,
+        self.option_set.add_option('reverse', ['r'], convert_rank, '', valid = rank_set,
             question = 'What rank should reverse the order of play? ', error_text = rank_error,
             target = 'reverse_rank')
-        self.option_set.add_option('skip', ['s'], convert_rank, '', valid = cards.Card.ranks,
+        self.option_set.add_option('skip', ['s'], convert_rank, '', valid = rank_set,
             question = 'What rank should skip the next player? ', error_text = rank_error,
             target = 'skip_rank')
         self.option_set.add_option('psychotic', ['@', 'gonzo', 'gz'],
@@ -787,8 +774,7 @@ class CrazyEights(game.Game):
             self.deck = cards.Deck(shuffle_size = -1)
         else:
             self.deck = cards.Deck(decks = 2, shuffle_size = -1)
-        self.card_class = card_class = self.deck.cards[0].__class__
-        self.all_ranks = list(set([card.rank for card in self.deck.cards]))
+        self.all_ranks = self.deck.rank_set.chars
         # Perform a mental health evaluation.
         self.mental_health()
         # Set up the tracking variables.
@@ -800,7 +786,7 @@ class CrazyEights(game.Game):
         self.fuzzy_ranks = False
         self.last_player = None
         # Deal the hands.
-        self.hands = {player.name: cards.Hand(self.deck) for player in self.players}
+        self.hands = self.deck.player_hands(self.players)
         self.deal()
         # Randomize the players.
         random.shuffle(self.players)
@@ -823,11 +809,11 @@ class CrazyEights(game.Game):
             valid_ranks = (discard.rank, self.change_rank)
         # Account for fuzzy ranks.
         if self.fuzzy_ranks:
-            rank_index = discard.ranks.index(discard.rank)
+            rank_index = discard.rank_num
             if rank_index > 0:
-                valid_ranks += (discard.ranks[rank_index - 1],)
-            if rank_index + 1 < len(discard.ranks):
-                valid_ranks += (discard.ranks[rank_index + 1],)
+                valid_ranks += (discard.rank_set.chars[rank_index - 1],)
+            if rank_index + 1 < len(discard.rank_set):
+                valid_ranks += (discard.rank_set.chars[rank_index + 1],)
         # Get the valid suit.
         if self.suit:
             valid_suit = self.suit

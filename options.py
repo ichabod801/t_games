@@ -399,13 +399,6 @@ class OptionSet(object):
             else:
                 # Set other options normally.
                 setattr(self.game, option, setting)
-        # Warn of any errors.
-        if self.errors:
-            self.game.human.tell()
-            self.game.human.error('\n'.join(self.errors))
-            # Check for playing anyway.
-            if self.game.human.ask('\nDo you still want to play the game? ') in utility.YES:
-                self.errors = []
 
     def parse_settings(self, settings_text):
         """

@@ -814,7 +814,7 @@ def lane_ranks(game, card, moving_stack):
     error = ''
     # Get the correct rank.
     if card.rank not in game.lane_ranks:
-        rank_name = card.rank_names[card.ranks.index(game.foundation_rank)].lower()
+        rank_name = card.rank_set.names[game.foundation_rank].lower()
         if game.foundation_rank == 'A':
             error = 'You can only move kings into an empty lane.'
         else:
@@ -1296,7 +1296,7 @@ def sort_rank(game, card, foundation):
     error = ''
     # Check for match to foundation pile.
     if not foundation and card.rank != game.foundation_rank:
-        rank_name = card.rank_names[card.rank_num].lower()
+        rank_name = card.rank_set.names[game.foundation_rank].lower()
         error = 'Only {}s can be sorted to empty foundations.'.format(rank_name)
     return error
 

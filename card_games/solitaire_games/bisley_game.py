@@ -70,8 +70,9 @@ class Bisley(solitaire.Solitaire):
 
     def do_gipf(self, arguments):
         """
-        Liar's Dice shuffles one tableau pile. Strategy lets you move on stack into an
-        empty lane.
+        Liar's Dice shuffles one tableau pile.
+
+        Strategy lets you move on stack into an empty lane.
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ("liar's dice", 'strategy'))

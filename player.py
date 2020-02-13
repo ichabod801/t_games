@@ -8,6 +8,8 @@ See the top level __init__.py file for details on the t_games license.
 
 Constants:
 BOT_NAMES: Names for computer opponents. (dict of str: str)
+NO: Recognized responses equivalent to 'no'. (set of str)
+YES: Recognized responses equivalent to 'yes'. (set of str)
 
 Classes:
 BotError: An invalid play by a bot. (ValueError)
@@ -30,6 +32,7 @@ import re
 import string
 
 from . import utility
+from . import cards
 
 
 # Convert 2.7 input to raw_input
@@ -66,6 +69,12 @@ BOT_NAMES = {'a': 'Ash/Abby/Adam/Alan/Alice/Ada/Adele/Alonzo/Angus/Astro',
     'y': 'Yamina/Yasmin/Yoland/Yvette/Yadira/Yaakov/Yitzhak/Yves/Yannick/Yaron',
     'z': 'Zahara/Zelda/Zoe/Zuma/Zenaida/Zachary/Zafar/Zane/Zebulon/Zen'}
 
+NO = set(['no', 'n', '0', 'nope', 'negative', 'nah', 'no way', 'i think not', 'nay', 'hell no', 'negatory'])
+NO.update(['nyet', 'wu', 'nahin', 'na', 'nao', 'bango', 'nahim', 'nahi', 'la', "a'a", ''])
+
+YES = set(['yes', 'y', '1', 'yup', 'sure', 'affirmative', 'yeah', 'indubitably', 'yep', 'aye', 'ok', 'nem'])
+YES.update(['okay', 'eh', 'roger', 'da', 'si', 'shi', 'haan', 'hyam', 'sim', 'hai', 'ham', 'hoya'])
+
 
 class BotError(ValueError):
     """An invalid play by a bot. (ValueError)"""
@@ -84,9 +93,12 @@ class Player(object):
 
     Methods:
     ask: Get information from the player. (str)
-    ask_int: Get an integer response from the human. (int)
-    ask_int_list: Get a multiple integer response from the human. (int)
+    ask_card: Get a card from the player. (cards.Card)
+    ask_card_list: Get a multiple card response from the player. (int)
+    ask_int: Get an integer response from the player. (int)
+    ask_int_list: Get a multiple integer response from the player. (int)
     ask_valid: Get and validate responses from the user. (str)
+    ask_yes_no: Get a yes or no answer from the user. (str)
     clean_up: Do any necessary post-game processing. (None)
     error: Warn the player about an invalid play. (None)
     set_up: Do any necessary pre-game processing. (None)
@@ -95,6 +107,9 @@ class Player(object):
 
     Overridden Methods:
     __init__
+    __eq__
+    __hash__
+    __lt__
     __repr__
     __str__
     """
@@ -113,6 +128,38 @@ class Player(object):
         self.held_inputs = []
         self.shortcuts = {}
 
+    def __eq__(self, other):
+        """
+        Equality testing by name. (bool)
+
+        Parameters:
+        other: The object to check equality with. (object)
+        """
+        if isinstance(other, Player):
+            return self.name == other.name
+        elif isinstance(other, str):
+            return self.name == other
+        else:
+            return NotImplemented
+
+    def __hash__(self):
+        """Return a hash of the player's name. (int)"""
+        return hash(self.name)
+
+    def __lt__(self, other):
+        """
+        Less-than testing by name. (bool)
+
+        Parameters:
+        other: The object to check equality with. (object)
+        """
+        if isinstance(other, Player):
+            return self.name < other.name
+        elif isinstance(other, str):
+            return self.name < other
+        else:
+            return NotImplemented
+
     def __repr__(self):
         """Generate a debugging text representation. (str)"""
         return '<{} {}>'.format(self.__class__.__name__, self.name)
@@ -130,12 +177,37 @@ class Player(object):
         """
         raise BotError('Unexpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
 
-    def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
+    def ask_card(self, prompt, valid = [], default = None, cmd = True):
         """
-        Get an integer response from the human. (int)
+        Get a card from the player. (cards.Card)
 
         Parameters:
-        prompt: The question asking for the interger. (str)
+        prompt: The question asking for the card. (str)
+        valid: The valid values for the card. (container of int)
+        default: The default choice. (cards.Card or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        raise BotError('Unexpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
+
+    def ask_card_list(self, prompt, valid = [], valid_lens = [], default = None, cmd = True):
+        """
+        Get a multiple card response from the player. (int)
+
+        Parameters:
+        prompt: The question asking for the card. (str)
+        valid: The valid values for the cards. (list of int)
+        valid_lens: The valid numbers of values. (list of int)
+        default: The default choice. (list or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        raise BotError('Unexpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
+
+    def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
+        """
+        Get an integer response from the player. (int)
+
+        Parameters:
+        prompt: The question asking for the integer. (str)
         low: The lowest acceptable value for the integer. (int or None)
         high: The highest acceptable value for the integer. (int or None)
         valid: The valid values for the integer. (container of int)
@@ -174,6 +246,19 @@ class Player(object):
         """
         raise BotError('Unexpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
 
+    def ask_yes_no(self, prompt, yes = (), no = (), other = (), cmd = False):
+        """
+        Get a yes or no answer from the user. (str)
+
+        Parameters:
+        prompt: The question to ask the user. (str)
+        yes: Extra answers accepted as yes. (tuple of str)
+        no: Extra answers accepted as no. (tuple of str)
+        other: Other answers to be returned as strings. (tuple of str)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        raise BotError('Unexpected question asked of {}: {!r}'.format(self.__class__.__name__, prompt))
+
     def clean_up(self):
         """Do any necessary post-game processing. (None)"""
         pass
@@ -191,7 +276,7 @@ class Player(object):
         """Do any necessary pre-game processing. (None)"""
         pass
 
-    def store_results(self, game_name, result):
+    def store_results(self, game_name, results):
         """
         Store game results. (None)
 
@@ -220,9 +305,12 @@ class Humanoid(Player):
 
     Overridden Methods:
     ask
+    ask_card
+    ask_card_list
     ask_int
     ask_int_list
     ask_valid
+    ask_yes_no
     """
 
     list_re = re.compile('[,\-/\s]+')
@@ -249,6 +337,94 @@ class Humanoid(Player):
         first = self.shortcuts.get(first.lower(), first)
         # Return the processed inputs.
         return '{} {}'.format(first, rest).strip()
+
+    def ask_card(self, prompt, valid = [], default = None, cmd = True):
+        """
+        Get a card from the player. (cards.Card)
+
+        Parameters:
+        prompt: The question asking for the card. (str)
+        valid: The valid values for the card. (container of cards.Card)
+        default: The default choice. (cards.Card or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        # Give a dummy answer if the game is over.
+        if cmd and self.game.force_end:
+            return valid[0] if valid else cards.Card('X', 'S')
+        # Get the deck to base the search on.
+        if isinstance(valid, cards.Hand):
+            deck = valid.deck
+        elif hasattr(self.game, 'deck'):
+            deck = self.game.deck
+        else:
+            deck = None
+        # Ask until you get a valid answer.
+        while True:
+            card_text = self.ask(prompt).strip()
+            # Check for default.
+            if not card_text and default is not None:
+                return default
+            # Convert to a cards.
+            card = cards.parse_text(card_text, deck)
+            if isinstance(card, cards.Card):
+                if valid and card not in valid:
+                    self.error('Please enter one of {}.'.format(utility.oxford(valid, 'or', '{:u}')))
+                else:
+                    return card
+            elif card:
+                self.error('One card only please.')
+            elif cmd:
+                return card_text
+            else:
+                self.error('Please enter a valid card.')
+
+    def ask_card_list(self, prompt, valid = [], valid_lens = [], default = None, cmd = True):
+        """
+        Get a multiple card response from the human. (int)
+
+        Parameters:
+        prompt: The question asking for the card. (str)
+        valid: The valid values for the cards. (list of int)
+        valid_lens: The valid numbers of values. (list of int)
+        default: The default choice. (list or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        # Give a dummy answer if the game is over.
+        if cmd and self.game.force_end:
+            return []
+        # Get the deck to base the search on.
+        if isinstance(valid, cards.Hand):
+            deck = valid.deck
+        elif hasattr(self.game, 'deck'):
+            deck = self.game.deck
+        else:
+            deck = None
+        # Ask until you get a valid answer.
+        while True:
+            card_text = self.ask(prompt).strip()
+            # Check for default.
+            if not card_text and default is not None:
+                return default
+            # Convert to a cards.
+            cards_in = cards.parse_text(card_text, deck)
+            if isinstance(cards_in, cards.Card):
+                cards_in = [cards_in]
+            # Validate response.
+            if cards_in:
+                if valid_lens and len(cards_in) not in valid_lens:
+                    self.error('That is an invalid number of cards.')
+                    if valid_lens == [1]:
+                        self.error('Please enter 1 card.')
+                    else:
+                        self.error('Please enter {} cards.'.format(utility.oxford(valid_lens, 'or')))
+                elif valid and [card for card in cards_in if card not in valid]:
+                    self.error('Not all of those cards are available.')
+                else:
+                    return cards_in
+            elif cmd:
+                return card_text
+            else:
+                self.error('Please enter valid cards.')
 
     def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
         """
@@ -359,6 +535,36 @@ class Humanoid(Player):
                 break
         return response
 
+    def ask_yes_no(self, prompt, yes = (), no = (), other = (), cmd = False):
+        """
+        Get a yes or no answer from the user. (str)
+
+        Note that the yes, no, and other parameters are compared to the lower
+        case version of the input.
+
+        Parameters:
+        prompt: The question to ask the user. (str)
+        yes: Extra answers accepted as yes. (tuple of str)
+        no: Extra answers accepted as no. (tuple of str)
+        other: Other answers to be returned as strings. (tuple of str)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        if cmd and self.game.force_end:
+            return False
+        while True:
+            raw = input(prompt).strip()
+            yes_no = raw.lower()
+            if yes_no in YES or yes_no in yes:
+                return True
+            elif yes_no in NO or yes_no in no:
+                return False
+            elif cmd or yes_no in other:
+                return raw
+            else:
+                valid = ['yes', 'no']
+                valid.extend(other)
+                self.error("Please enter {}.".format(utility.oxford(valid, 'or', "'{}'")))
+
 
 class Human(Humanoid):
     """
@@ -367,6 +573,7 @@ class Human(Humanoid):
     Attributes:
     color: The player's favorite color. (str)
     folder_name: The local file with the player's data. (str)
+    fire_index: An indicator of the last time the player played Fireball. (int)
     quest: The player's quest. (str)
     results: The results of games played. (list of list)
     session_index: The number of games played before this session. (int)
@@ -477,7 +684,14 @@ class Tester(Human):
     """
 
     def __init__(self, name = 'Buckaroo', quest = 'testing', color = 'black'):
-        """Auto setup a Human. (None)"""
+        """
+        Auto setup a Human. (None)
+
+        Parameters:
+        name: The name of the player. (str)
+        quest: The player's quest. (str)
+        color: The player's favorite color. (str)
+        """
         # Store the answers to the three questions.
         self.name = name
         self.quest = quest

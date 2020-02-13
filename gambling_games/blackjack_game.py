@@ -7,6 +7,7 @@ Copyright (C) 2018-2020 by Craig O'Brien and the t_games contributors.
 See the top level __init__.py file for details on the t_games license.
 
 Constants:
+BLACKJACK_RANKS: The ranks for a Blackjack hand. (cards.FeatureSet)
 CREDITS: The credits for Blackjack. (str)
 HINT_KEYS: The meanings of the entries in the hint tables. (dict of str:str)
 HINTS: A condensed tables of hints. (str)
@@ -23,6 +24,12 @@ from .. import cards
 from .. import game
 from .. import utility
 
+
+BLACKJACK_RANKS = cards.FeatureSet('XA23456789TJQK',
+    ['Joker', 'Ace', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack',
+        'Queen', 'King'],
+    [0, 11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10],
+    skip = 1, an_chars = 'A8')
 
 CREDITS = """
 Game Design: Traditional (U.S. Casinos)
@@ -165,18 +172,18 @@ class Blackjack(game.Game):
     def deal(self):
         """Deal the hands. (None)"""
         # Deal the dealer's cards.
-        self.dealer_hand = BlackjackHand(self.deck)
+        self.dealer_hand = BlackjackHand(deck = self.deck)
         self.dealer_hand.draw(False)
         self.dealer_hand.draw()
         # Deal the player's cards.
-        self.player_hands = [BlackjackHand(self.deck) for hand in range(self.hand_count)]
+        self.player_hands = [BlackjackHand(deck = self.deck) for hand in range(self.hand_count)]
         for hand in self.player_hands:
             hand.draw()
             hand.draw()
             hand.status = 'open'
             hand.was_split = False
         # Check for insurance.
-        if self.dealer_hand.cards[-1].rank == 'A':
+        if self.dealer_hand[-1].rank == 'A':
             # Update the user on the situation.
             self.human.tell('The dealer is showing an ace.')
             self.human.tell('Your hand is {}.'.format(self.player_hands[0]))
@@ -190,7 +197,7 @@ class Blackjack(game.Game):
                 insure = self.human.ask_int(prompt, low = 0, high = min(self.bets) / 2, default = 0)
                 if isinstance(insure, int):
                     self.insurance = insure
-                    self.scores[self.human.name] -= self.insurance
+                    self.scores[self.human] -= self.insurance
                     break
                 else:
                     self.handle_cmd(insure)
@@ -203,7 +210,7 @@ class Blackjack(game.Game):
             # Check for insurance.
             if self.insurance:
                 self.human.tell('You won {} bucks from your insurance.'.format(self.insurance * 2))
-                self.scores[self.human.name] += self.insurance * 2
+                self.scores[self.human] += self.insurance * 2
             # Resolve the hand.
             for hand in self.player_hands:
                 hand.status = 'standing'
@@ -212,9 +219,9 @@ class Blackjack(game.Game):
             # Check for player blackjack.
             for hand_index, hand in enumerate(self.player_hands):
                 if hand.blackjack():
-                    self.human.tell('The dealer is showing {}.'.format(self.dealer_hand.cards[-1]))
+                    self.human.tell('The dealer is showing {}.'.format(self.dealer_hand[-1]))
                     self.human.tell('\nYou won with blackjack ({}).'.format(hand))
-                    self.scores[self.human.name] += int(self.bets[hand_index] * 2.5)
+                    self.scores[self.human] += int(self.bets[hand_index] * 2.5)
                     hand.status = 'paid'
                     self.bets[hand_index] = 0
             self.phase = 'play'
@@ -248,8 +255,8 @@ class Blackjack(game.Game):
         hand_index, bet = int_args
         hand = self.player_hands[hand_index]
         # Check for valid bet amount.
-        if bet > self.scores[self.human.name]:
-            self.human.error('You only have {} bucks to bet.'.format(self.scores[self.human.name]))
+        if bet > self.scores[self.human]:
+            self.human.error('You only have {} bucks to bet.'.format(self.scores[self.human]))
         elif self.true_double and bet != self.bets[hand_index]:
             self.human.tell('You can only double the original bet ({})'.format(self.bets[hand_index]))
         elif bet > self.bets[hand_index]:
@@ -263,7 +270,7 @@ class Blackjack(game.Game):
         else:
             # Increase the bet
             self.bets[hand_index] += bet
-            self.scores[self.human.name] -= bet
+            self.scores[self.human] -= bet
             # Deal the card.
             hand.draw()
             score = hand.score()
@@ -304,7 +311,7 @@ class Blackjack(game.Game):
                         continue
                     # Make sure hand can receive cards.
                     if hand.status != 'open':
-                        self.human.error('That hand is {}, you cannot swap card in it.'.format(hand.status))
+                        self.human.error("That hand is {}, you can't swap cards in it.".format(hand.status))
                         continue
                     break
                 # Swap the card.
@@ -370,9 +377,9 @@ class Blackjack(game.Game):
         hand_index = int_args[0]
         hand = self.player_hands[hand_index]
         # Determine which column to use.
-        column = BlackjackHand.card_values[self.dealer_hand.cards[-1].rank] - 2
+        column = BlackjackHand.rank_set.values[self.dealer_hand[-1].rank] - 2
         # Determine the table and row to use.
-        values = [BlackjackHand.card_values[card.rank] for card in hand.cards]
+        values = [card.value for card in hand.cards]
         if hand.score() == 21:
             self.human.tell('Stand, you idiot.')
             return True
@@ -431,19 +438,19 @@ class Blackjack(game.Game):
         Stop playing Blackjack. (!)
         """
         # Determine overall winnings or losses.
-        self.scores[self.human.name] -= self.stake
+        self.scores[self.human] -= self.stake
         # Determine if the game is a win or a loss.
         result = 'won'
-        if self.scores[self.human.name] > 0:
+        if self.scores[self.human] > 0:
             self.win_loss_draw[0] = 1
-        elif self.scores[self.human.name] < 0:
+        elif self.scores[self.human] < 0:
             result = 'lost'
             self.win_loss_draw[1] = 1
         else:
             self.win_loss_draw[2] = 1
         # Inform the user.
-        plural = utility.plural(abs(self.scores[self.human.name]), 'buck')
-        self.human.tell('\nYou {} {} {}.'.format(result, abs(self.scores[self.human.name]), plural))
+        plural = utility.plural(abs(self.scores[self.human]), 'buck')
+        self.human.tell('\nYou {} {} {}.'.format(result, abs(self.scores[self.human]), plural))
         # Keeps turns as number of (dealer) hands.
         if self.phase == 'bet':
             self.turns -= 1
@@ -469,29 +476,29 @@ class Blackjack(game.Game):
         hand_index = int_args[0]
         hand = self.player_hands[hand_index]
         # Check for valid split.
-        if len(hand.cards) != 2:
+        if len(hand) != 2:
             self.human.error('You can only split a hand of two cards.')
-        elif self.split_rank and hand.cards[0].rank != hand.cards[1].rank:
+        elif self.split_rank and hand[0].rank != hand[1].rank:
             self.human.error('You may only split cards of the same rank.')
-        elif hand.card_values[hand.cards[0].rank] != hand.card_values[hand.cards[1].rank]:
+        elif hand.card_values[hand[0].rank] != hand.card_values[hand[1].rank]:
             self.human.error('You may only split cards of the same value.')
         elif not self.resplit and hand.was_split:
             self.human.error('You may not split a hand that was already split.')
-        elif self.bets[hand_index] > self.scores[self.human.name]:
+        elif self.bets[hand_index] > self.scores[self.human]:
             self.human.error('You do not have enough money to split that hand.')
         else:
             # Split the hands.
             new_hand = hand.split()
             self.player_hands.append(new_hand)
             self.bets.append(self.bets[hand_index])
-            self.scores[self.human.name] -= self.bets[-1]
+            self.scores[self.human] -= self.bets[-1]
             # Draw new cards.
             hand.draw()
-            self.human.tell('The original hand drew the {}.'.format(hand.cards[-1].name))
+            self.human.tell('The original hand drew the {}.'.format(hand[-1].name))
             new_hand.draw()
-            self.human.tell('The new hand drew the {}.'.format(new_hand.cards[-1].name))
+            self.human.tell('The new hand drew the {}.'.format(new_hand[-1].name))
             # Stop hitting spit aces, if thems the rules.
-            if not self.hit_split_ace and hand.cards[0].rank == 'A':
+            if not self.hit_split_ace and hand[0].rank == 'A':
                 hand.status = 'standing'
                 new_hand.status = 'standing'
         return True
@@ -551,14 +558,14 @@ class Blackjack(game.Game):
         else:
             # Surrender the hand.
             hand.status = 'surrendered'
-            self.scores[self.human.name] += int(self.bets[hand_index] / 2)
+            self.scores[self.human] += int(self.bets[hand_index] / 2)
             self.bets[hand_index] = 0
         return True
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
         # The game is over when the human is out of money (and live bets).
-        if self.scores[self.human.name] == 0 and self.phase == 'bet':
+        if self.scores[self.human] == 0 and self.phase == 'bet':
             # Set the results.
             self.win_loss_draw[1] = 1
             self.human.tell('\nYou lost all of your money.')
@@ -571,13 +578,13 @@ class Blackjack(game.Game):
         """Get the bet from the user. (None)"""
         # Prepare the query.
         prompt = 'How much would you like to bet this round (return for max): '
-        max_bet = min(self.limit, self.scores[self.human.name])
+        max_bet = min(self.limit, self.scores[self.human])
         # Check for enough to bet one buck for each hand.
-        if self.scores[self.human.name] < self.hand_count:
+        if self.scores[self.human] < self.hand_count:
             # Get rid of unbettable hands.
             plural = utility.number_plural(self.hand_count, 'hand')
             self.human.tell('You do not have enough money to play {}.'.format(plural))
-            self.do_hands(self.scores[self.human.name])
+            self.do_hands(self.scores[self.human])
         # Check for multiple bets.
         if self.hand_count == 1:
             num_bets = [1]
@@ -586,7 +593,7 @@ class Blackjack(game.Game):
         # Loop until you have a bet or no-go command (like quit).
         while True:
             # Query the user.
-            self.human.tell('\nYou have {} bucks.'.format(self.scores[self.human.name]))
+            self.human.tell('\nYou have {} bucks.'.format(self.scores[self.human]))
             bets = self.human.ask_int_list(prompt, low = 1, high = max_bet, default = [max_bet],
                 valid_lens = num_bets)
             # Handle bets.
@@ -595,12 +602,12 @@ class Blackjack(game.Game):
                 if len(bets) == 1:
                     bets = bets * self.hand_count
                 # Check for a valid total.
-                if sum(bets) > self.scores[self.human.name]:
+                if sum(bets) > self.scores[self.human]:
                     self.human.error('You do not have that much money ({} bucks needed).'.format(sum(bets)))
                     continue
                 # Record the bets.
                 self.bets = bets
-                self.scores[self.human.name] -= sum(bets)
+                self.scores[self.human] -= sum(bets)
                 # Continue the game.
                 self.phase = 'play'
                 return True
@@ -753,7 +760,7 @@ class Blackjack(game.Game):
         self.dealer_hand.discard()
         for hand in self.player_hands:
             hand.discard()
-        self.player_hands = [BlackjackHand(self.deck) for hand in range(self.hand_count)]
+        self.player_hands = [BlackjackHand(deck = self.deck) for hand in range(self.hand_count)]
 
     def set_options(self):
         """Define the game options. (None)"""
@@ -796,11 +803,12 @@ class Blackjack(game.Game):
         self.phase = 'bet'
         self.dealer_skip = False
         # Set up the deck.
-        self.deck = cards.Deck(decks = self.decks, shuffle_size = 17 * self.decks)
+        self.deck = cards.Deck(decks = self.decks, shuffle_size = 17 * self.decks,
+            rank_set = BLACKJACK_RANKS)
         self.deck.shuffle()
         # Set up default hands.
-        self.dealer_hand = BlackjackHand(self.deck)
-        self.player_hands = [BlackjackHand(self.deck)]
+        self.dealer_hand = BlackjackHand(deck = self.deck)
+        self.player_hands = [BlackjackHand(deck = self.deck)]
         # Load the hints.
         self.load_hints()
 
@@ -808,7 +816,7 @@ class Blackjack(game.Game):
         """Show the current game situation to the player. (None)"""
         # Show the stake left.
         text = "\nYou have {} bucks in hand and {} bucks in play."
-        text = text.format(self.scores[self.human.name], sum(self.bets))
+        text = text.format(self.scores[self.human], sum(self.bets))
         # Show all of the hands.
         text += "\nThe dealer's hand is {}.".format(self.dealer_hand)
         text += '\nYour hand is {} ({}) [{}].'
@@ -823,7 +831,7 @@ class Blackjack(game.Game):
     def showdown(self):
         """Show and hit the dealer's hand and resolve the round. (None)"""
         # Reveal the dealer's hole card.
-        self.dealer_hand.cards[0].up = True
+        self.dealer_hand[0].up = True
         self.human.tell('\nThe dealer has {}.'.format(self.dealer_hand))
         if self.dealer_skip:
             self.dealer_skip = False
@@ -831,11 +839,11 @@ class Blackjack(game.Game):
             # Draw up to 17.
             while self.dealer_hand.score() < 17:
                 self.dealer_hand.draw()
-                self.human.tell('The dealer draws the {}.'.format(self.dealer_hand.cards[-1].name))
+                self.human.tell('The dealer draws the {}.'.format(self.dealer_hand[-1].name))
             # Hit on soft 17.
             if self.hit_soft_17 and self.dealer_hand.score() == 17 and self.dealer_hand.soft:
                 self.dealer_hand.draw()
-                self.human.tell('The dealer draws the {}.'.format(self.dealer_hand.cards[-1].name))
+                self.human.tell('The dealer draws the {}.'.format(self.dealer_hand[-1].name))
         # Get and show the dealer's final hand value.
         dealer_value = self.dealer_hand.score()
         self.human.tell("The dealer's hand is {}.".format(dealer_value))
@@ -852,7 +860,7 @@ class Blackjack(game.Game):
                     self.human.tell('You pushed with {}.'.format(hand))
                 else:
                     self.human.tell('You lost with {}.'.format(hand))
-                self.scores[self.human.name] += int(self.bets[hand_index] * payout)
+                self.scores[self.human] += int(self.bets[hand_index] * payout)
         self.reset()
 
     def wins(self, hand):
@@ -895,32 +903,46 @@ class BlackjackHand(cards.Hand):
     """
     A hand of Blackjack. (cards.Hand)
 
-    Class Attributes:
-    card_values: A mapping of card ranks to score values. (dict of str: int)
-
     Attributes:
     soft: A flag for the hand being soft (ace = 11). (bool)
     status: Is the hand open, standing, or busted. (str)
     was_split: A flag indicating the hand comes from a split. (bool)
 
+    Methods:
+    blackjack: Check the hand for a blackjack. (bool)
+    split: Split the hand. (BlackjackHand)
+
     Overridden Methods:
     __init__
+    _child
     score
     """
 
-    card_values = dict(zip('23456789TAJQK', list(range(2, 12)) + [10] * 3))
-
-    def __init__(self, deck):
+    def __init__(self, cards = None, deck = None):
         """
         Set up the hand. (None)
 
         Parameters:
+        cards: The starting cards for the hand. (list of Card)
         deck: The deck the hand's cards come from. (Deck)
         """
-        super(BlackjackHand, self).__init__(deck)
+        super(BlackjackHand, self).__init__(cards, deck)
         self.status = 'empty'
         self.was_split = False
         self.soft = False
+
+    def _child(self, cards):
+        """
+        Make a Hand with the same attributes but different cards. (Hand)
+
+        Paramters:
+        cards: The cards to make a hand out of. (list of Card)
+        """
+        new_hand = BlackjackHand(cards, self.deck)
+        new_hand.status = self.status
+        new_hand.was_split = self.was_split
+        new_hand.soft = self.sort
+        return new_hand
 
     def blackjack(self):
         """Check the hand for a blackjack. (bool)"""
@@ -928,7 +950,7 @@ class BlackjackHand(cards.Hand):
 
     def score(self):
         """Score the hand. (int)"""
-        score = sum([self.card_values[card.rank] for card in self.cards])
+        score = super(BlackjackHand, self).score()
         # check for hard hand and adjust ace values.
         ace_count = len([card for card in self.cards if card.rank == 'A'])
         while score > 21 and ace_count:
@@ -938,10 +960,9 @@ class BlackjackHand(cards.Hand):
         return score
 
     def split(self):
-        """Split the hand. (int)"""
+        """Split the hand. (BlackjackHand)"""
         # Create the new hand.
-        new_hand = BlackjackHand(self.deck)
-        new_hand.cards.append(self.cards.pop())
+        new_hand = BlackjackHand(self.cards.pop(), self.deck)
         new_hand.status = 'open'
         # Mark both hands as having been split.
         self.was_split = True

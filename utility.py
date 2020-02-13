@@ -9,6 +9,7 @@ FIBONACCI: Fibonacci numbers under 200. (list of int)
 LOC: tgames location. (str)
 MAX_INT: The largest allowed integer. (int)
 NINETEEN: English words for 1-19. (list of str)
+ORDINAL_ENDS: Endings for numeric ordinals. (dict of int: str)
 ORDINALS: Conversion of cardinal numbers to ordinal numbers. (dict of str: str)
 PRIMES: All primes under 200. (list of int)
 TENS: English words for multiples of 10. (list of str)
@@ -19,8 +20,10 @@ Functions:
 choose: Combinations [n choose r]. (int)
 flip: Returns a random bit. (int)
 hundred_word: Give the word form of a number less than 100. (str)
+levenshtein: Determine the Levenshtein distance between two strings. (int)
 mean: Calculate the mean of a list of values. (float)
 median: Calculate the median of a list of values. (float)
+num_text: Handle text instances of 'n foo'. (str)
 number_plural: Convert a number and word to two words with the plural. (str)
 number_word: Give the word form of a number. (str)
 oxford: Convert a sequence to a word list with an Oxford comma. (str)
@@ -51,6 +54,8 @@ except AttributeError:
 NINETEEN = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
     'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen',
     'nineteen']
+
+ORDINAL_ENDS = {1: 'st', 2: 'nd', 3: 'rd'}  # usage: ORDINAL_ENDS.get(n % 10, 'th')
 
 ORDINALS = {'zero': 'zeroth', 'one': 'first', 'two': 'second', 'three': 'third', 'four': 'fourth',
     'five': 'fifth', 'six': 'sixth', 'seven': 'seventh', 'eight': 'eighth', 'nine': 'ninth', 'ten': 'tenth',
@@ -171,13 +176,71 @@ def median(values):
         return sum(values[(mid_point - 1):(mid_point + 1)]) / 2.0
 
 
+def num_text(number, word = '', *args):
+    """
+    Handle text instances of 'n foo'. (str)
+
+    If the word is empty, then only the number word is returned.
+
+    The args parameters can be up to two modifiers. If a modifier does not start
+    with a colon (:), it is the plural of word. If a plural is not specified this
+    way, an s is just added to the end. If a modifier does start with a colon, it
+    is a format type:
+
+        :e -> add 'es' instead of 's' for the plural.
+        :n -> force numbers to be numerals (numbers < 11 are converted to words by
+            default).
+        :o -> numbers are given as ordinals (ordinals default to words, use :no for
+            '22nd'.
+        :w -> force numbers to words (numbers > 10 are left as numerals by
+            default).
+
+    The format type can have more than one character after the colon. Note that
+    ordinals do not make words plural. If word is an empty string, the word is
+    converted and returned by itself.
+
+    Parameters:
+    number: The number of things. (int)
+    word: The word for the things. (str)
+    *args: Modifiers to the conversion as specified above. (str)
+    """
+    # Parse the modifiers.
+    format_type = ''
+    plural = '{}s'.format(word)
+    for arg in args:
+        if arg.startswith(':'):
+            format_type = arg[1:].lower()
+        else:
+            plural = arg
+    # Check for odd plurals.
+    if 'e' in format_type:
+        plural = '{}es'.format(word)
+    if not word:
+        plural = ''
+    # Check for singleton.
+    if number == 1:
+        plural = word
+    # Convert the number.
+    wordify = (number < 11 or 'w' in format_type) and 'n' not in format_type
+    if wordify:
+        worded = number_word(number, ordinal = 'o' in format_type)
+    else:
+        worded = str(number)
+        if 'o' in format_type:
+            worded = '{}{}'.format(worded, ORDINAL_ENDS.get(number % 10, 'th'))
+    # Undo plurals for ordinals.
+    if 'o' in format_type:
+        plural = word
+    return '{} {}'.format(worded, plural).strip()
+
+
 def number_plural(number, singular, many = ''):
     """
     Convert the number to a word and get the right form of the word counted. (str)
 
     Parameters:
     number: The number determining plural or singular. (int)
-    single: The singular form of the word. (str)
+    singular: The singular form of the word. (str)
     many: The plural form of the word, if not a simple + 's'. (str)
     """
     return '{} {}'.format(number_word(number), plural(number, singular, many))
@@ -253,7 +316,7 @@ def plural(number, singular, many = ''):
 
     Parameters:
     number: The number determining plural or singular. (int)
-    single: The singular form of the word. (str)
+    singular: The singular form of the word. (str)
     many: The plural form of the word, if not a simple + 's'. (str)
     """
     if number == 1:

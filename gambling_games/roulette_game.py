@@ -186,7 +186,6 @@ class Roulette(game.Game):
     do_quit
     game_over
     handle_options
-    player_action
     set_options
     set_up
     """
@@ -209,12 +208,18 @@ class Roulette(game.Game):
         '12', '35', '3', '26']
     help_text = {'house-edge': HOUSE_HELP}
     int_re = re.compile('\d+')
+    move_query = 'Enter a bet or spin: '
     name = 'Roulette'
     num_options = 4
     options = OPTIONS
     red = ['1', '3', '5', '7', '9', '12', '14', '16', '18', '19', '21', '23', '25', '27', '30', '32', '34',
         '36']
     rules = RULES
+
+    def __str__(self):
+        """Generate a human readable text representation. (str)"""
+        bucks = utility.plural(self.scores[self.human.name], 'buck')
+        return '\nYou have {} {}.'.format(self.scores[self.human.name], bucks)
 
     def check_bet(self, arguments):
         """
@@ -665,8 +670,11 @@ class Roulette(game.Game):
     def do_gipf(self, arguments):
         """
         Connect Four allows you to select a square bet, and one of those numbers will
-        come up on the next spin. Blackjack makes the next spin black. Klondike makes
-        the next spin a multiple of seven.
+        come up on the next spin.
+
+        Blackjack makes the next spin black.
+
+        Klondike makes the next spin a multiple of seven.
         """
         # Check/play the gipf game.
         game, losses = self.gipf_check(arguments, ('blackjack', 'connect four', 'klondike'))
@@ -1330,17 +1338,6 @@ class Roulette(game.Game):
             self.human.tell('Your total winnings this spin were {} bucks.'.format(total_winnings))
         else:
             self.human.tell('You did not win anything this spin.')
-
-    def player_action(self, player):
-        """
-        Handle a player's turn or other player actions. (bool)
-
-        Parameters:
-        player: The player whose turn it is. (Player)
-        """
-        player.tell('\nYou have {} bucks.'.format(self.scores[player.name]))
-        move = player.ask('Enter a bet or spin: ')
-        return self.handle_cmd(move)
 
     def set_options(self):
         """Define the game options. (None)"""

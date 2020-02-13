@@ -216,8 +216,9 @@ class NumberGuess(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Canfield makes the game 'forget' your last guess. Ninety-nine tells you the
-        remainder after dividing the secret number by 9.
+        Canfield makes the game 'forget' your last guess.
+
+        Ninety-nine tells you the remainder after dividing the secret number by 9.
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('canfield', 'ninety-nine'))

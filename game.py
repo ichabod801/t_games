@@ -8,6 +8,7 @@ See the top level __init__.py file for details on the t_games license.
 
 Classes:
 Game: A game with a text interface. (OtherCmd)
+Fireball: A game of blowing things up. (Game)
 Flip: A test game of flipping coins. (Game)
 FlipBot: A bot to play Flip against. (Player)
 Sorter: A test game of sorting a sequence. (Game)
@@ -34,12 +35,12 @@ import sys
 
 from . import dice
 from . import options
-from .other_cmd import OtherCmd
-from .player import Player
+from . import other_cmd
+from . import player
 from . import utility
 
 
-class Game(OtherCmd):
+class Game(other_cmd.OtherCmd):
     """
     A game with a text interface. (OtherCmd)
 
@@ -59,23 +60,31 @@ class Game(OtherCmd):
 
     Class Attributes:
     aka: Other names for the game. (list of str)
+    bad_cmd_text: The text for when no matching command is found. (str)
     categories: The interface categories for the game. (list of str)
     credits: The design and programming credits for this game. (str)
     int_re: A regular expression matching integer numbers. (SRE_Pattern)
     float_re: A regular expression matching decimal numbers. (SRE_Pattern)
     help_text: Extra help text for the game. (dict of str: str)
+    move_query: The text used to ask for the player's move. (str)
     name: The primary name of the game. (str)
     num_options: The number of settable options for the game. (str)
     operators: Operator definitions for the RPN command. (dict of str: callable)
+    options: The options for the game. (str)
     rules: The rules of the game. (str)
 
     Attributes:
+    current_player: The currently acting player. (player.Player)
     flags: Flags for different game events tracked in the results. (int)
     force_end: How to force the end of the game. (str)
+    gipfed: The names of games gipfed to. (list of str)
     gonzo: A flag indicating the gonzo option was used. (bool)
     human: The primary player of the game. (Player)
     interface: The interface that started the game playing. (Interface)
+    next_player: The player to force to be the next player. (player.Player)
     option_set: The definitions of allowed options for the game (OptionSet)
+    player_index: The index in self.players of the currently acting player. (int)
+    players: The players in the game. (list of player.Player)
     raw_options: The options as given by the play command. (str)
     scores: The players' scores in the game. (dict of str: int)
     silent: A flag for suppressing pre-game output. (bool)
@@ -91,29 +100,38 @@ class Game(OtherCmd):
     do_quit_quit: Quit the game and the t_games interface. (bool)
     do_rpn: Process reverse Polish notation statements to do calculations. (None)
     do_rules: Show the rules text. (bool)
+    do_xyzzy: Nothing happens. (None)
     game_over: Check for the end of the game. (bool)
+    gipf_check: Check for successful gipfing. (int)
     handle_options: Handle game options and set the player list. (None)
+    help_xyzzy: Help for the xyzzy command. (None)
     play: Play the game. (list of int)
     player_action: Handle a player's turn or other player actions. (bool)
     set_options: Define the options for the game. (bool)
     set_players: Reset/change the list of players. (None)
     set_up: Handle any pre-game tasks. (None)
+    skip_player: Skip a player in the turn sequence. (player.Player)
+    sorted_scores: Get a list of player names sorted by score. (list of tuple)
     tournament: Run a tournament of the game. (dict)
+    wins_by_score: Calculate the win-loss-draw record based on scores. (tuple)
 
     Overridden Methods:
     __init__
     __repr__
+    __str__
     default
     do_debug
     """
 
     aka = []
     aliases = {'!!': 'quit_quit', '=': 'rpn', '!': 'quit'}
+    bad_cmd_text = '\nI do not recognize the command {!r}.'
     categories = ['Test Games']
     credits = '\nNo credits have been specified for this game.'
     help_text = {'help': '\nUse the rules command for instructions on how to play.'}
     int_re = re.compile('-?\d*$')
     float_re = re.compile('-?\d*\.\d+')
+    move_query = '\nWhat is your move? '
     name = 'Null'
     num_options = 0
     operators = {'|': (abs, 1), '+': (operator.add, 2), 'C': (utility.choose, 2), '/%': (divmod, 2),
@@ -130,6 +148,7 @@ class Game(OtherCmd):
         """
         Set up the game. (None)
 
+        Parameters:
         human: The primary player of the game. (player.Player)
         raw_options: The user's option choices as provided by the interface. (str)
         interface: The interface that started the game playing. (interface.Interface)
@@ -143,6 +162,7 @@ class Game(OtherCmd):
         # Set the default attributes.
         self.flags = 0
         self.gipfed = []
+        self.next_player = None
         # Inherit aliases and help text from parent classes.
         self.aliases = {}
         self.help_text = {}
@@ -153,13 +173,20 @@ class Game(OtherCmd):
                 self.help_text.update(cls.help_text)
         # Introduce yourself.
         if self.name != 'Fireball' and not self.silent:
-            self.human.tell('\nWelcome to a game of {}, {}.'.format(self.name, self.human.name))
+            self.human.tell('\nWelcome to a game of {}, {}.'.format(self.name, self.human))
         # Define and process the game options.
         self.option_set = options.OptionSet(self)
         raw_words = self.raw_options.lower().split()
         self.gonzo = 'gonzo' in raw_words or 'gz' in raw_words
         self.set_options()
         self.handle_options()
+        # Handle any errors in the options.
+        if self.option_set.errors:
+            self.human.tell()
+            self.human.error('\n'.join(self.option_set.errors))
+            # Check for playing anyway.
+            if self.human.ask('\nDo you still want to play the game? ') in utility.YES:
+                self.option_set.errors = []
         # Set up the players.
         if not hasattr(self, 'players'):
             self.players = [self.human]
@@ -170,6 +197,14 @@ class Game(OtherCmd):
         """Generate a debugging text representation. (str)"""
         plural = utility.plural(len(self.players), 'player')
         return '<Game of {} with {} {}>'.format(self.name, len(self.players), plural)
+
+    def __str__(self):
+        """Genrate a human readable text representation. (str)"""
+        player = self.current_player
+        score = self.scores[player]
+        turn_text = utility.number_word(self.turns + 1, ordinal = True)
+        points = utility.plural(score, 'point')
+        return '\nThis is the {} turn and you have {} {}.'.format(turn_text, score, points)
 
     def clean_up(self):
         """Handle any end of game tasks. (None)"""
@@ -183,7 +218,7 @@ class Game(OtherCmd):
         text: The raw text input by the user. (str)
         """
         player = self.players[self.player_index]
-        player.error('\nI do not recognize the command {!r}.'.format(text))
+        player.error(self.bad_cmd_text.format(text))
         return True
 
     def do_credits(self, arguments):
@@ -374,7 +409,7 @@ class Game(OtherCmd):
 
         Parameters:
         argument: The argument to the gipf command. (str)
-        game_name: The names of the games to check. (list of str)
+        game_names: The names of the games to check. (list of str)
         """
         # Get the possible games and their aliases.
         if self.name == 'Oregon Trail':
@@ -464,28 +499,34 @@ class Game(OtherCmd):
         self.scores = {}
         self.set_up()
         if not self.scores:
-            self.scores = {player.name: 0 for player in self.players}
+            self.scores = {player: 0 for player in self.players}
         for player in self.players:
+            player.game = self
             player.set_up()
         # Loop through the players repeatedly.
         self.player_index = 0
         while True:
             # Loop through player actions until their turn is done.
-            while self.player_action(self.players[self.player_index]):
+            self.current_player = self.players[self.player_index]
+            while self.player_action(self.current_player):
                 pass
             self.turns += 1
             # Check for the end of game.
             if self.force_end or self.game_over():
                 break
             # Move to the next player.
-            self.player_index = (self.player_index + 1) % len(self.players)
+            if self.next_player:
+                self.player_index = self.players.index(self.next_player)
+                self.next_player = None
+            else:
+                self.player_index = (self.player_index + 1) % len(self.players)
         # Clean up the game.
         self.clean_up()
         for player in self.players:
             player.clean_up()
         self.gipfed = []
         # Report the results.
-        results = [self.scores[self.human.name], self.turns, self.flags, self.option_set.settings_text]
+        results = [self.scores[self.human], self.turns, self.flags, self.option_set.settings_text]
         return self.win_loss_draw + results
 
     def player_action(self, player):
@@ -497,7 +538,9 @@ class Game(OtherCmd):
         Parameters:
         player: The player whose turn it is. (Player)
         """
-        move = player.ask('What is your move, {}? '.format(player.name))
+        player.tell(self)
+        move = player.ask(self.move_query)
+        return self.handle_cmd(move)
 
     def set_options(self):
         """Define the options for the game. (None)"""
@@ -528,6 +571,26 @@ class Game(OtherCmd):
         """Handle any pre-game tasks. (None)"""
         pass
 
+    def skip_player(self):
+        """
+        Skip a player in the turn sequence. (player.Player)
+
+        If self.next_player is set, this goes to the player after next_player, and
+        resets next_player. The return value is the player skiped to, who will be the
+        player skipped over when the turn ends.
+        """
+        if self.next_player:
+            self.player_index = self.players.index(self.next_player)
+            self.next_player = None
+        self.player_index = (self.player_index + 1) % len(self.players)
+        return self.players[self.player_index]
+
+    def sorted_scores(self):
+        """Get a list of player names sorted by score. (list of tuple)"""
+        scores = [(score, name) for name, score in self.scores.items()]
+        scores.sort(reverse = True)
+        return scores
+
     def tournament(self, players, rounds):
         """
         Run a tournament of the game. (dict)
@@ -543,8 +606,8 @@ class Game(OtherCmd):
             # Set up the players.
             human_hold = self.set_players(players)
             # Set up results tracking.
-            score_tracking = {player.name: [] for player in self.players}
-            place_tracking = {player.name: [] for player in self.players}
+            score_tracking = {player: [] for player in self.players}
+            place_tracking = {player: [] for player in self.players}
             # Run the tournament.
             for game_index in range(rounds):
                 # Run the game.
@@ -560,121 +623,60 @@ class Game(OtherCmd):
             sys.stdout = save_stdout
         return {'scores': score_tracking, 'places': place_tracking}
 
-
-class Flip(Game):
-    """
-    A test game of flipping coins. (Game)
-
-    Attributes:
-    bot: The non-human player. (FlipBot)
-
-    Overridden Methods:
-    game_over
-    handle_options
-    player_action
-    """
-
-    credits = '\nDesign and programming by Craig "Ichabod" O''Brien'
-    name = 'Flip'
-    rules = '\nWhoever gets two more heads than their opponent wins.'
-
-    def game_over(self):
-        """Check for the end of the game. (bool)"""
-        # Only check after both players get a chance to flip.
-        if not self.turns % 2:
-            # Check for someone ahead by 2 flips.
-            score_values = list(self.scores.values())
-            score_diff = abs(score_values[1] - score_values[0])
-            if score_diff == 2:
-                # Figure out who won.
-                winning_score = max(score_values)
-                if self.scores[self.human.name] == winning_score:
-                    self.win_loss_draw[0] = 1
-                    self.human.tell('You beat {} with {} heads!'.format(self.bot.name, winning_score))
-                else:
-                    self.win_loss_draw[1] = 1
-                    message = 'You lost to {} with {} heads.'
-                    self.human.tell(message.format(self.bot.name, winning_score - 2))
-                return True
-
-    def handle_options(self):
-        """Handle game options and set the player list. (None)"""
-        # Make sure the bot has a unique name.
-        if self.human.name != 'Flip':
-            self.bot = FlipBot('Flip')
-        else:
-            self.bot = FlipBot('Tosser')
-        # Set up the players as the human and the bot.
-        self.players = [self.human, self.bot]
-        random.shuffle(self.players)
-        return True
-
-    def player_action(self, player):
+    def wins_by_score(self, show_self = True, silent = False):
         """
-        Handle a player's turn or other player actions. (bool)
+        Calculate the win-loss-draw record based on player scores. (tuple)
+
+        The return value is a tuple of the winning score, a list of the players who
+        got the winning score, and the human's rank based on their score.
 
         Parameters:
-        player: The player whose turn it is. (Player)
+        show_self: A flag for showing the game state before reporing wins. (bool)
+        silent: A flag for suppressing output. (bool)
         """
-        # Get the number of flips.
-        flips = player.ask('How many times would you like to flip the coin (only the last flip counts)? ')
-        # Check for invalid answers.
-        if not flips.strip().isdigit():
-            return self.handle_cmd(flips)
-        # Flip a coin the specified number of times.
-        for flip_index in range(int(flips)):
-            if random.random() < 0.5:
-                flip = 'tails'
-            else:
-                flip = 'heads'
-            player.tell('Flip #{} is {}.'.format(flip_index + 1, flip))
-        # Record the final flip.
-        if flip == 'heads':
-            self.scores[player.name] += 1
-        # Update the player.
-        player.tell('You now have {} heads.'.format(self.scores[player.name]))
-        player.tell()
-
-
-class FlipBot(Player):
-    """
-    A bot to play Flip against. (Player)
-
-    Class Attributes:
-    count_words: Words for the number of flips the bot requests. (list of str)
-
-    Overridden Methods:
-    ask
-    tell
-    """
-
-    count_words = ['none', 'once', 'twice', 'three times']
-
-    def ask(self, prompt):
-        """
-        Get information from the player. (str)
-
-        Parameters:
-        prompt: The question being asked of the player. (str)
-        """
-        flips = random.randint(1, 3)
-        self.game.human.tell('{} chooses to flip {}.'.format(self.name, self.count_words[flips]))
-        return str(flips)
-
-    def tell(self, *args, **kwargs):
-        """
-        Give information to the player. (None)
-
-        Parameters:
-        The parameters are as per the built-in print function.
-        """
-        if args:
-            self.game.human.tell(args[0].replace('You', self.name).replace('have', 'has'))
+        # Calculate win/loss/draw and winners.
+        winners = []
+        best_score = max(self.scores.values())
+        human_score = self.scores[self.human]
+        # Check each score.
+        for player in self.players:
+            score = self.scores[player]
+            # Save winners.
+            if score == best_score:
+                winners.append(player)
+            # Update win/loss/draw
+            if score < human_score:
+                self.win_loss_draw[0] += 1
+            elif score > human_score:
+                self.win_loss_draw[1] += 1
+            elif score == human_score and player != self.human:
+                self.win_loss_draw[2] += 1
+        # Calculate the human's rank.
+        human_rank = self.win_loss_draw[1] + 1
+        # Report results.
+        if not silent:
+            # Show the final game state.
+            if show_self:
+                self.human.tell(self)
+            # Announce the winner(s).
+            winner_text = utility.oxford(winners)
+            points_text = utility.plural(best_score, 'point')
+            self.human.tell('\n{} won with {} {}.'.format(winner_text, best_score, points_text))
+            # Show the human's rank if they lost.
+            if self.human not in winners:
+                rank_text = utility.number_word(human_rank, ordinal = True)
+                total_text = utility.number_word(len(self.players))
+                self.human.tell('You came in {} out of {} players.'.format(rank_text, total_text))
+        # Return calculated numbers.
+        return (best_score, winners, human_rank)
 
 
 class Fireball(Game):
     """
     A game of blowing things up. (Game)
+
+    Attributes:
+    target: What the player is trying to blow up. (str)
 
     Overridden Methods:
     game_over
@@ -691,7 +693,7 @@ class Fireball(Game):
     def game_over(self):
         """Declare the end of the game."""
         # Check for no games as a loss.
-        if not self.scores[self.human.name]:
+        if not self.scores[self.human]:
             self.win_loss_draw[1] = 1
             self.human.tell('\nPing.')
         # Skip play again and counting this game.
@@ -732,7 +734,7 @@ class Fireball(Game):
         pool.roll()
         damage = sum(pool) + bonus
         self.human.tell('\nYou did {} {} of damage.'.format(damage, utility.plural(damage, 'point')))
-        self.scores[self.human.name] = damage
+        self.scores[self.human] = damage
         # Check for a win.
         expected = (sides / 2.0 + 0.5) * dice_count
         percent = damage / expected
@@ -746,6 +748,117 @@ class Fireball(Game):
         else:
             self.human.tell('You failed to destroy {}.'.format(self.target))
             self.win_loss_draw[1] = 1
+
+
+class Flip(Game):
+    """
+    A test game of flipping coins. (Game)
+
+    Attributes:
+    bot: The non-human player. (FlipBot)
+
+    Overridden Methods:
+    game_over
+    handle_options
+    player_action
+    """
+
+    credits = '\nDesign and programming by Craig "Ichabod" O''Brien'
+    name = 'Flip'
+    rules = '\nWhoever gets two more heads than their opponent wins.'
+
+    def game_over(self):
+        """Check for the end of the game. (bool)"""
+        # Only check after both players get a chance to flip.
+        if not self.turns % 2:
+            # Check for someone ahead by 2 flips.
+            score_values = list(self.scores.values())
+            score_diff = abs(score_values[1] - score_values[0])
+            if score_diff == 2:
+                # Figure out who won.
+                winning_score = max(score_values)
+                if self.scores[self.human] == winning_score:
+                    self.win_loss_draw[0] = 1
+                    self.human.tell('You beat {} with {} heads!'.format(self.bot, winning_score))
+                else:
+                    self.win_loss_draw[1] = 1
+                    message = 'You lost to {} with {} heads.'
+                    self.human.tell(message.format(self.bot, winning_score - 2))
+                return True
+
+    def handle_options(self):
+        """Handle game options and set the player list. (None)"""
+        # Make sure the bot has a unique name.
+        if self.human.name != 'Flip':
+            self.bot = FlipBot('Flip')
+        else:
+            self.bot = FlipBot('Tosser')
+        # Set up the players as the human and the bot.
+        self.players = [self.human, self.bot]
+        random.shuffle(self.players)
+        return True
+
+    def player_action(self, player):
+        """
+        Handle a player's turn or other player actions. (bool)
+
+        Parameters:
+        player: The player whose turn it is. (Player)
+        """
+        # Get the number of flips.
+        flips = player.ask('How many times would you like to flip the coin (only the last flip counts)? ')
+        # Check for invalid answers.
+        if not flips.strip().isdigit():
+            return self.handle_cmd(flips)
+        # Flip a coin the specified number of times.
+        for flip_index in range(int(flips)):
+            if random.random() < 0.5:
+                flip = 'tails'
+            else:
+                flip = 'heads'
+            player.tell('Flip #{} is {}.'.format(flip_index + 1, flip))
+        # Record the final flip.
+        if flip == 'heads':
+            self.scores[player] += 1
+        # Update the player.
+        player.tell('You now have {} heads.'.format(self.scores[player]))
+        player.tell()
+
+
+class FlipBot(player.Player):
+    """
+    A bot to play Flip against. (Player)
+
+    Class Attributes:
+    count_words: Words for the number of flips the bot requests. (list of str)
+
+    Overridden Methods:
+    ask
+    tell
+    """
+
+    count_words = ['none', 'once', 'twice', 'three times']
+
+    def ask(self, prompt):
+        """
+        Get information from the player. (str)
+
+        Parameters:
+        prompt: The question being asked of the player. (str)
+        """
+        flips = random.randint(1, 3)
+        self.game.human.tell('{} chooses to flip {}.'.format(self, self.count_words[flips]))
+        return str(flips)
+
+    def tell(self, *args, **kwargs):
+        """
+        Give information to the player. (None)
+
+        Parameters:
+        The parameters are as per the built-in print function.
+        """
+        if args:
+            self.game.human.tell(args[0].replace('You', self.name).replace('have', 'has'))
 
 
 class Sorter(Game):
@@ -782,7 +895,7 @@ class Sorter(Game):
                 self.win_loss_draw[1] = 1
                 self.human.tell('You lost. The sequence could be sorted in {} swaps.'.format(self.minimum))
             # Set the score and end the game.
-            self.scores[self.human.name] = self.minimum - self.turns
+            self.scores[self.human] = self.minimum - self.turns
             return True
 
     def handle_options(self):

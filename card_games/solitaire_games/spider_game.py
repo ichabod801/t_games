@@ -130,8 +130,9 @@ class Spider(solitaire.MultiSolitaire):
 
     def do_gipf(self, arguments):
         """
-        Bisley allows your next build to be up or down one rank. Freecell lets you move
-        a stack regardless of suit.
+        Bisley allows your next build to be up or down one rank.
+
+        Freecell lets you move a stack regardless of suit.
         """
         game, losses = self.gipf_check(arguments, ('bisley', 'freecell'))
         # Winning Bisley gets you an up or down build.
@@ -159,7 +160,7 @@ class Spider(solitaire.MultiSolitaire):
         # Check for no stock.
         if not self.stock:
             self.human.error('There are no more cards to turn over.')
-        # Check for empty piles (or relaxed-turn option)
+        # Check for empty piles (or relaxed-turn option)  !! This should be a rule checker.
         elif not all(self.tableau) and not self.relaxed_turn:
             self.human.error('You cannot turn over cards from the stock if you have empty tableau piles.')
         else:
@@ -186,10 +187,10 @@ class Spider(solitaire.MultiSolitaire):
         self.options = {'num-foundations': 8, 'num-tableau': 10}
         # Set the deal options.
         self.option_set.add_option('one-suit', ['1s'], action = 'key=deck-specs', target = self.options,
-            value = (8, cards.TrackOneSuit), default = None,
+            value = (0, 8, cards.STANDARD_RANKS, cards.ONE_SUIT), default = None,
             question = 'Should the deck only have one suit? bool')
         self.option_set.add_option('two-suit', ['2s'], action = 'key=deck-specs', target = self.options,
-            value = (4, cards.TrackTwoSuit), default = None,
+            value = (0, 4, cards.STANDARD_RANKS, cards.TWO_SUITS), default = None,
             question = 'Should the deck only have two suits? bool')
         self.option_set.add_option('open', ['o'], question = 'Should the tableau be dealt face up? bool')
         # Set the play options.

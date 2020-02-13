@@ -9,14 +9,17 @@ GameGipfCheckTest: Test of validating a gipf move. (unittest.TestCase)
 GameInitTest: Test of game initialization. (unittest.TestCase)
 GamePlayTest: Tests of playing the game. (unittest.TestCase)
 GameRPNTest: Test of the RPN calculator in game.Game. (unittest.TestCase)
+GameSkipTest: Tests of the skipping around the turn order. (unittest.TestCase)
+GameSortedScoresTest: Tests of providing players sorted by score. (TestCase)
 GameTextTest: Tests of the base game class text versions. (unittest.TestCase)
 GameTournamentTest: Tests of tournaments. (unittest.TestCase)
+GameWinsByScoreTest: Tests of the win_by_scores method. (unittest.TestCase)
 GameXyzzyTest: Tests of the xyzzy command. (unittest.TestCase)
 GameXyzzyHelpText: Tests of Game.help_xyzzy. (unittest.TestCase)
 LoadGamesTest: Tests of the load_games function. (unittest.TestCase)
 
 Functions:
-rpn_tests: Make a test class for the Game.do_rpn calculations. (unittest.TestCase)
+rpn_tests: Make a test class for Game.do_rpn calculations. (unittest.TestCase)
 """
 
 
@@ -58,6 +61,14 @@ class GameCommandTest(unittest.TestCase):
         check = "\nI do not recognize the command 'obey'.\n"
         self.game.player_index = 0
         self.game.handle_cmd('obey')
+        self.assertEqual(check, self.bot.errors[0])
+
+    def testDefaultChanged(self):
+        """Test handling unknown commands with a custom message."""
+        self.game.bad_cmd_text = '\nI pity the fool who thinks I will {}.'
+        check = '\nI pity the fool who thinks I will bark.\n'
+        self.game.player_index = 0
+        self.game.handle_cmd('bark')
         self.assertEqual(check, self.bot.errors[0])
 
     def testInfo(self):
@@ -418,6 +429,103 @@ def rpn_tests():
 GameRPNTest = rpn_tests()
 
 
+class GameSkipTest(unittest.TestCase):
+    """Tests of the skipping a player in the turn order. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.game = game.Game(unitility.AutoBot(), '')
+        players = [self.game.human]
+        for bot in range(3):
+            players.append(unitility.AutoBot(taken_names = [player.name for player in players]))
+        self.game.set_players(players)
+        self.game.scores = {player.name: random.randint(25, 75) for player in self.game.players}
+
+    def testBasicSkipNum(self):
+        """Test a simple player skip changing player_index."""
+        self.game.player_index = 0
+        skipped = self.game.skip_player()
+        self.assertEqual(1, self.game.player_index)
+
+    def testBasicSkipPlayer(self):
+        """Test a simple player skip returning a player."""
+        self.game.player_index = 0
+        skipped = self.game.skip_player()
+        self.assertEqual(self.game.players[1], skipped)
+
+    def testEndSkipNum(self):
+        """Test a skip of the last player changing player_index."""
+        self.game.player_index = 3
+        skipped = self.game.skip_player()
+        self.assertEqual(0, self.game.player_index)
+
+    def testEndSkipPlayer(self):
+        """Test a skip of the last player returning a player."""
+        self.game.player_index = 3
+        skipped = self.game.skip_player()
+        self.assertEqual(self.game.players[0], skipped)
+
+    def testNextSkipNum(self):
+        """Test a skip with next_player set changing player_index."""
+        self.game.player_index = 1
+        self.game.next_player = self.game.players[2]
+        skipped = self.game.skip_player()
+        self.assertEqual(3, self.game.player_index)
+
+    def testNextSkipPlayer(self):
+        """Test a skip with next_player set returning a player."""
+        self.game.player_index = 3
+        self.game.next_player = self.game.players[2]
+        skipped = self.game.skip_player()
+        self.assertEqual(self.game.players[3], skipped)
+
+
+class GameSortedScoresTest(unittest.TestCase):
+    """Tests of providing players sorted by score. (unittest.TestCase)"""
+
+    def setScores(self, scores):
+        """
+        Set the game scores prior to testing a sort. (None)
+
+        Parameters:
+        scores: The scores in self.players order. (tuple of int)
+        """
+        for player, score in zip(self.game.players, scores):
+            self.game.scores[player.name] = score
+
+    def setUp(self):
+        self.game = game.Game(unitility.AutoBot(), '')
+        players = [self.game.human]
+        for bot in range(3):
+            players.append(unitility.AutoBot(taken_names = [player.name for player in players]))
+        self.game.set_players(players)
+        self.game.scores = {player.name: random.randint(25, 75) for player in self.game.players}
+
+    def testSorted(self):
+        """Test sorting scores already in turn order."""
+        scores = (99, 81, 77, 69)
+        self.setScores(scores)
+        check = list(zip(scores, (player.name for player in self.game.players)))
+        self.assertEqual(check, self.game.sorted_scores())
+
+    def testMixed(self):
+        """Test sorting scores not already in turn order."""
+        scores = (95, 45, 91, 21)
+        self.setScores(scores)
+        players = self.game.players
+        check = [(95, players[0].name), (91, players[2].name), (45, players[1].name), (21, players[3].name)]
+        self.assertEqual(check, self.game.sorted_scores())
+
+    def testTie(self):
+        """Test sorting scores not already in turn order."""
+        scores = (17, 84, 59, 59)
+        self.setScores(scores)
+        players = self.game.players
+        check = [(84, players[1].name), (59, players[2].name), (59, players[3].name), (17, players[0].name)]
+        if check[1][1] < check[2][1]:
+            check[1:3] = check[2:0:-1]
+        self.assertEqual(check, self.game.sorted_scores())
+
+
 class GameTextTest(unittest.TestCase):
     """Tests of the base game class text representations. (unittest.TestCase)"""
 
@@ -478,8 +586,69 @@ class GameTournamentTest(unittest.TestCase):
         self.assertEqual(check, self.results['scores'])
 
 
+class GameWinsByScoreTest(unittest.TestCase):
+    """Tests of the win_by_scores method. (unittest.TestCase)"""
+
+    def setUp(self):
+        self.game = game.Game(unitility.AutoBot(), '')
+        players = [self.game.human]
+        for bot in range(3):
+            players.append(unitility.AutoBot(taken_names = [player.name for player in players]))
+        self.game.set_players(players)
+        self.game.scores = {player.name: random.randint(25, 75) for player in self.game.players}
+        self.game.win_loss_draw = [0, 0, 0]
+        self.game.player_index = 0
+        self.game.turns = 0
+
+    def testBestScore(self):
+        """Test calculation of the winning score."""
+        bot = self.game.players[-1]
+        self.game.scores[bot.name] = 81
+        check = '\n{} won with 81 points.\n'.format(bot)
+        best_score, winner, human_rank = self.game.wins_by_score()
+        self.assertEqual(81, best_score)
+
+    def testHumanLoss(self):
+        """Test correctly identifying a human loser."""
+        self.game.scores[self.game.human.name] = 18
+        best_score, winner, human_rank = self.game.wins_by_score()
+        self.assertNotEqual([self.game.human], winner)
+        self.assertEqual(4, human_rank)
+        win_text = '\n{} won with 81 points.\n'.format(self.game.human)
+        self.assertNotIn(win_text, self.game.human.info)
+        loss_text = 'You came in fourth out of four players.\n'
+        self.assertIn(loss_text, self.game.human.info)
+
+    def testHumanWin(self):
+        """Test correctly identifying a human winner."""
+        self.game.scores[self.game.human.name] = 81
+        best_score, winner, human_rank = self.game.wins_by_score()
+        self.assertEqual([self.game.human], winner)
+        self.assertEqual(1, human_rank)
+        win_text = '\n{} won with 81 points.\n'.format(self.game.human)
+        self.assertIn(win_text, self.game.human.info)
+
+    def testWinLossDraw(self):
+        """Test correctly setting the win/loss/draw record."""
+        win = self.game.players[-1]
+        tie = self.game.players[-2]
+        self.game.scores[win.name] = 108
+        self.game.scores[tie.name] = 81
+        self.game.scores[self.game.human.name] = 81
+        self.game.wins_by_score()
+        self.assertEqual([1, 1, 1], self.game.win_loss_draw)
+
+    def testWinner(self):
+        """Test correctly identifying the winner."""
+        bot = self.game.players[-1]
+        self.game.scores[bot.name] = 81
+        check = '\n{} won with 81 points.\n'.format(bot)
+        best_score, winner, human_rank = self.game.wins_by_score()
+        self.assertIn(check, self.game.human.info)
+        self.assertEqual([bot], winner)
+
 class GameXyzzyTest(unittest.TestCase):
-    """Tests of the xyzzy command. (unittest.TestCase)s"""
+    """Tests of the xyzzy command. (unittest.TestCase)"""
 
     def setUp(self):
         # Set up the interface, with a programmable valve.
