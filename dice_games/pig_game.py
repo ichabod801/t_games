@@ -345,7 +345,7 @@ class PigBotRolls(player.Bot):
         elif my_score + turn_score > 99:
             return 'stop'
         # Stop if the number of rolls is met.
-        if self.rolls == self.max_rolls:
+        if self.rolls > self.max_rolls:
             self.rolls = 0
             return 'stop'
         else:
