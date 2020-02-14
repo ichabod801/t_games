@@ -491,6 +491,37 @@ class OptionSet(object):
             else:
                 self.settings['bots'].append((bot_class, [setting]))
 
+    def validate_setting(self, definition, setting):
+        """
+        Validate a text setting and return the converted setting. (object)
+
+        A return value of None indicates the setting was invalid.
+
+        Parameters:
+        definition: The option definition. (dict)
+        setting: The text setting for the option. (str)
+        """
+        # Check for a list of settings.
+        if '/' in setting or isinstance(definition['default'], (list, tuple)):
+            try:
+                setting = [definition['converter'](item) for item in setting.split('/')]
+            except ValueError:
+                return None
+        # Check for a single item setting.
+        else:
+            try:
+                setting = definition['converter'](setting)
+            except ValueError:
+                return None
+        try:
+            checks_out = definition['check'](setting)
+        except TypeError, ValueError:
+            return None
+        if checks_out and setting in definition['valid']:
+            return setting
+        else:
+            return None
+
 
 def lower(text):
     """
