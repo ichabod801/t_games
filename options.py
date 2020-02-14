@@ -203,7 +203,7 @@ class OptionSet(object):
                         self.take_action(definition, definition['value'])
                     else:
                         validated = self.validate_setting(definition, setting)
-                        if setting is None:
+                        if validated is None:
                             self.errors.append(error.format(definition['name'], setting))
                         else:
                             self.take_action(definition, validated)
@@ -495,7 +495,7 @@ class OptionSet(object):
                 return None
         try:
             checks_out = definition['check'](setting)
-        except TypeError, ValueError:
+        except (TypeError, ValueError):
             return None
         if checks_out and setting in definition['valid']:
             return setting
