@@ -492,9 +492,12 @@ class Pig(game.Game):
     turn_score: The current player's turn score. (int)
 
     Methods:
+    do_roll: Roll the die and risk scoring nothing. (bool)
     do_scores: Show the current scores. (None)
+    do_stop: Stop rolling and score the current turn score. (bool)
 
     Overridden Methods:
+    __str__
     clean_up
     game_over
     handle_options
@@ -503,15 +506,27 @@ class Pig(game.Game):
     set_up
     """
 
-    name = 'Pig'
-    categories = ['Dice Games']
-    credits = CREDITS
+    aliases = {'go': 'roll', 'r': 'roll', 's': 'stop', 'whoa': 'stop'}
     bot_classes = {'value': PigBotValue, 'base-pace-race': PigBotBasePaceRace,
         'scoring-turns': PigBotScoringTurns, 'penoptimus': PigBotPenoptimal, 'pace-race': PigBotPaceRace,
         'rolls': PigBotRolls}
+    categories = ['Dice Games']
+    credits = CREDITS
+    name = 'Pig'
     num_options = 3
     options = OPTIONS
     rules = RULES
+
+    def __str__(self):
+        """Human readable text representation. (str)"""
+        if self.turn_score:
+            scores = sorted([(score, name) for name, score in self.scores.items()], reverse = True)
+            lines = ['']
+            for score, name in scores:
+                lines.append('{}: {}'.format(name, score))
+        else:
+            lines = ['']
+        return '\n'.join(lines)
 
     def clean_up(self):
         """Set the loser to go first next round. (None)"""
@@ -532,24 +547,25 @@ class Pig(game.Game):
         if game == 'battleships':
             if not losses:
                 self.turn_score += 2
-                self.human.tell('\nYou rolled a 2. Your turn score is now {}.'.format(self.turn_score))
+                text = '\nYou rolled a 2. Your turn score is now {}.'
+                self.current_player.tell(text.format(self.turn_score))
         # Hunt the Wumpus let's you know what your next roll will be.
         elif game == 'wumpus':
             if not losses:
                 roll = self.die.roll()
-                self.human.tell('\nYour turn score is {}.'.format(self.turn_score))
+                self.current_player.tell('\nYour turn score is {}.'.format(self.turn_score))
                 question = 'Your next roll will be a {}. Would you like to roll or stop? '
-                move = self.human.ask(question.format(roll))
+                move = self.current_player.ask(question.format(roll))
                 move = move.strip().lower()
                 if move in ('s', 'stop', 'whoa'):
-                    self.scores[self.human] += self.turn_score
+                    self.scores[self.current_player] += self.turn_score
                     go = False
                 elif move in ('r', 'roll', 'go'):
                     if roll == self.bad:
                         go = False
                     else:
                         self.turn_score += roll
-                        self.human.tell('Your turn score is {}.'.format(self.turn_score))
+                        self.current_player.tell('Your turn score is {}.'.format(self.turn_score))
         # Solitiare dice gives you the choice of two rolls.
         elif game == 'solitaire dice':
             if not losses:
@@ -558,22 +574,38 @@ class Pig(game.Game):
                     second = self.die.roll()
                     if second != first:
                         break
-                self.human.tell('\nYour turn score is {}.'.format(self.turn_score))
+                self.current_player.tell('\nYour turn score is {}.'.format(self.turn_score))
                 prompt = 'Do you want to roll a {} or a {}? '.format(first, second)
-                choice = self.human.ask_int(prompt, valid = [first, second], cmd = False)
+                choice = self.current_player.ask_int(prompt, valid = [first, second], cmd = False)
                 if choice == self.bad:
                     go = False
                 else:
                     self.turn_score += choice
                     message = 'You rolled a {}. Your turn score is now {}.'
-                    self.human.tell(message.format(choice, self.turn_score))
+                    self.current_player.tell(message.format(choice, self.turn_score))
         # Otherwise I'm confused.
         else:
-            self.human.error('Say what?')
+            self.current_player.error('Say what?')
         # Update after loss.
         if game:
-            self.human.tell('\nYour turn score is {}.'.format(self.turn_score))
+            self.current_player.tell('\nYour turn score is {}.'.format(self.turn_score))
         return go
+
+    def do_roll(self, arguments):
+        """
+        Roll the die and risk scoring nothing. (r, go)
+        """
+        self.die.roll()
+        if self.die == self.bad:
+            # Handle ending the turn.
+            self.current_player.tell('You rolled a {}, your turn is over.'.format(self.bad))
+            return False
+        else:
+            # Handle scoring.
+            self.turn_score += self.die
+            message = 'You rolled a {}, your turn score is {}'
+            self.current_player.tell(message.format(self.die, self.turn_score))
+            return True
 
     def do_scores(self, arguments):
         """
@@ -584,6 +616,17 @@ class Pig(game.Game):
         for score, name in scores:
             self.human.tell('{}: {}'.format(name, score))
         return True
+
+    def do_stop(self, arguments):
+        """
+        Stop rolling and score the current turn score. (s, whoa)
+        """
+        if self.turn_score:
+            self.scores[self.current_player] += self.turn_score
+            return False
+        else:
+            self.current_player.tell('\nYou must roll at least once.')
+            return True
 
     def game_over(self):
         """Check a score being over 100. (bool)"""
@@ -598,7 +641,7 @@ class Pig(game.Game):
 
     def handle_options(self):
         """Handle game options and set up players. (None)"""
-        self.option_set.handle_settings(self.raw_options)
+        super(Pig, self).handle_options()
         random.shuffle(self.players)
 
     def player_action(self, player):
@@ -609,34 +652,7 @@ class Pig(game.Game):
         player: The player whose turn it is. (Player)
         """
         # Get the player's move (they must roll to start the turn).
-        if self.turn_score:
-            move = player.ask('Would you like to roll or stop? ')
-        else:
-            # Show the scores at the start of the turn.
-            self.do_scores('')
-            player.tell()
-            move = 'roll'
-        if move.lower() in ('s', 'stop', 'whoa'):
-            # End the turn and score.
-            self.scores[player] += self.turn_score
-            go = False
-        elif move.lower() in ('r', 'roll', 'go'):
-            # Roll and risk scoring nothing.
-            roll = self.die.roll()
-            if roll == self.bad:
-                # Handle ending the turn.
-                player.tell('You rolled a {}, your turn is over.'.format(self.bad))
-                go = False
-            else:
-                # Handle scoring.
-                self.turn_score += roll
-                player.tell('You rolled a {}, your turn score is {}'.format(roll, self.turn_score))
-                go = True
-        else:
-            # Handle other commands.
-            go = self.handle_cmd(move)
-            if not self.force_end:
-                player.tell()
+        go = super(Pig, self).player_action(player)
         if not go and not self.force_end:
             # Inform the player of their current total score.
             player.tell("{}'s score is now {}.".format(player, self.scores[player]))
