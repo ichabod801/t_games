@@ -293,7 +293,8 @@ class OptionSet(object):
                 except ValueError:
                     pass
                 else:
-                    if setting in definition['valid'] and definition['check'](setting):
+                    checks_out = all(definition['check'](value) for value in setting)
+                    if checks_out and setting in definition['valid']:
                         break
                 self.game.human.error('That input is not valid.')
                 if definition['error_text']:

@@ -115,7 +115,6 @@ class Interface(other_cmd.OtherCmd):
     do_random: Play a random game. (bool)
     do_rules: Show the rules for the specified game. (bool)
     do_stats: Show game statistics. (bool)
-    load_games: Load all of the games defined locally. (None)
     menu: Run the game selection menu. (None)
     play_game: Play a selected game. (None)
     show_menu: Display the menu options to the user. (dict)
