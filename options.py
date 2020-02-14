@@ -201,32 +201,12 @@ class OptionSet(object):
                     # Add the value for simple options.
                     if setting is None:
                         self.take_action(definition, definition['value'])
-                    # Check for a list of settings.
-                    elif '/' in setting or isinstance(definition['default'], (list, tuple)):
-                        try:
-                            setting = [definition['converter'](item) for item in setting.split('/')]
-                        except ValueError:
-                            # Give an error message for invalid items in the list.
-                            self.errors.append(error.format(definition['name'], setting))
-                        else:
-                            # Check the list for validity.
-                            if not (setting in valid and check(setting)):
-                                self.errors.append(error.format(definition['name'], setting))
-                            else:
-                                self.take_action(definition, setting)
-                    # Check for a single item setting.
                     else:
-                        try:
-                            setting = definition['converter'](setting)
-                        except ValueError:
-                            # Give an error message for invalid type of setting.
+                        validated = self.validate_setting(definition, setting)
+                        if setting is None:
                             self.errors.append(error.format(definition['name'], setting))
                         else:
-                            # Check the setting for validity.
-                            if not (setting in valid and check(setting)):
-                                self.errors.append(error.format(definition['name'], setting))
-                            else:
-                                self.take_action(definition, setting)
+                            self.take_action(definition, validated)
                     # Apply default on error
                     if self.errors and self.errors[-1][8:].startswith(definition['name']):
                         if definition['default'] is not None:
