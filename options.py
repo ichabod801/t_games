@@ -267,18 +267,13 @@ class OptionSet(object):
                 if not raw_params:
                     setting = ()
                     break
-                try:
-                    converter = definition['converter']
-                    setting = [converter(param) for param in raw_params.split('/')]
-                except ValueError:
-                    pass
+                setting = self.validate_setting(definition, raw_params)
+                if setting is None:
+                    self.game.human.error('That input is not valid.')
+                    if definition['error_text']:
+                        self.game.human.error(definition['error_text'])
                 else:
-                    checks_out = all(definition['check'](value) for value in setting)
-                    if checks_out and setting in definition['valid']:
-                        break
-                self.game.human.error('That input is not valid.')
-                if definition['error_text']:
-                    self.game.human.error(definition['error_text'])
+                    break
             # Apply the bot and the parameters.
             pairs.append((definition['name'], ''.join(raw_params.split())))
             self.take_action(definition, setting)
