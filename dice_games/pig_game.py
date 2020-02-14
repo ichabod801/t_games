@@ -360,7 +360,7 @@ class PigBotRolls(player.Bot):
         """
         super(PigBotRolls, self).tell(text)
         # Catch turn endings.
-        if 'turn is over' in text:
+        if isinstance(text, str) and 'turn is over' in text:
             self.rolls = 0
 
 
@@ -512,6 +512,7 @@ class Pig(game.Game):
         'rolls': PigBotRolls}
     categories = ['Dice Games']
     credits = CREDITS
+    move_query = 'Would you like to roll or stop? '
     name = 'Pig'
     num_options = 3
     options = OPTIONS
@@ -520,12 +521,13 @@ class Pig(game.Game):
     def __str__(self):
         """Human readable text representation. (str)"""
         if self.turn_score:
+            lines = ['']
+        else:
             scores = sorted([(score, name) for name, score in self.scores.items()], reverse = True)
             lines = ['']
             for score, name in scores:
                 lines.append('{}: {}'.format(name, score))
-        else:
-            lines = ['']
+            lines.append('')
         return '\n'.join(lines)
 
     def clean_up(self):
