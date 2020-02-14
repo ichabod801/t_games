@@ -299,16 +299,13 @@ class OptionSet(object):
             if not raw_setting:
                 setting = definition['default']
                 break
-            try:
-                setting = definition['converter'](raw_setting)
-            except ValueError:
-                pass
+            setting = self.validate_setting(definition, raw_setting)
+            if setting is None:
+                self.game.human.error('That input is not valid.')
+                if definition['error_text']:
+                    self.game.human.error(definition['error_text'])
             else:
-                if setting in definition['valid'] and definition['check'](setting):
-                    break
-            self.game.human.error('That input is not valid.')
-            if definition['error_text']:
-                self.game.human.error(definition['error_text'])
+                break
         # Apply the parameter.
         if raw_setting:
             pairs.append((definition['name'], raw_setting))
