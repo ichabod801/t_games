@@ -552,7 +552,7 @@ class Humanoid(Player):
         if cmd and self.game.force_end:
             return False
         while True:
-            raw = input(prompt).strip()
+            raw = self.ask(prompt).strip()
             yes_no = raw.lower()
             if yes_no in YES or yes_no in yes:
                 return True
