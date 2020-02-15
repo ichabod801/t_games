@@ -552,7 +552,7 @@ class Pig(game.Game):
                 text = '\nYou rolled a 2. Your turn score is now {}.'
                 self.current_player.tell(text.format(self.turn_score))
         # Hunt the Wumpus let's you know what your next roll will be.
-        elif game == 'wumpus':
+        elif game == 'hunt the wumpus':
             if not losses:
                 roll = self.die.roll()
                 self.current_player.tell('\nYour turn score is {}.'.format(self.turn_score))
