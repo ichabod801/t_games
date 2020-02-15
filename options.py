@@ -221,10 +221,7 @@ class OptionSet(object):
         Parameters:
         definition: The definition of the option to ask about. (dict)
         """
-        # Ask the question.
-        yes_no = self.game.human.ask(definition['question']) in utility.YES
-        # Process the response.
-        if yes_no:
+        if self.game.human.ask_yes_no(definition['question']):
             setting = self.take_action(definition, definition['value'])
             return [(definition['name'], None)]
         else:
@@ -260,7 +257,7 @@ class OptionSet(object):
         bot_query = 'Would you like to add a {} bot? '.format(definition['name'])
         param_query = 'What parameters should the {} bot have? '.format(definition['name'])
         # Ask if they want to add one until they don't.
-        while self.game.human.ask(bot_query) in utility.YES:
+        while self.game.human.ask_yes_no(bot_query):
             # Ask for parameters until they enter a valid set.
             while True:
                 raw_params = self.game.human.ask(param_query)
@@ -312,7 +309,7 @@ class OptionSet(object):
         """Get the setttings by asking the user. (None)"""
         # Ask if the user if they want to change the options.
         query = '\nWould you like to change the options? '
-        if self.definitions and self.game.human.ask(query) in utility.YES:
+        if self.definitions and self.game.human.ask_yes_no(query):
             # Mark that options have been changed.
             self.game.flags |= 1
             # Ask questions, retaining settings text information.
