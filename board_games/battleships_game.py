@@ -523,6 +523,8 @@ class Ship(object):
     Overridden Methods:
     __init__
     __bool__
+    __repr__
+    __str__
     """
 
     def __init__(self, name, sections):
@@ -539,6 +541,14 @@ class Ship(object):
     def __bool__(self):
         """Convert to true or false. (bool)"""
         return bool(self.sections)
+
+    def __nonzero__(self):
+        """Convert to true or false. (bool)"""
+        return bool(self.sections)
+
+    def __repr__(self):
+        """Dubugging text representation. (str)"""
+        return '<Ship {}>'.format(', '.join(str(cell) for cell in self.sections))
 
     def __str__(self):
         """Human readable text representation. (str)"""
@@ -597,6 +607,7 @@ class Section(Wake):
 
     Overridden Methods:
     __init__
+    __repr__
     __str__
     """
 
@@ -610,6 +621,10 @@ class Section(Wake):
         """
         self.square = square
         self.ship = ship
+
+    def __repr__(self):
+        """Debugging text representation. (str)"""
+        return '<{} of {!r}>'.format(self.square, self.ship)
 
     def __str__(self):
         """Human readable text representation. (str)"""
