@@ -684,6 +684,7 @@ class SeaBoard(board.DimBoard):
         foe: The player making the shot. (player.Player)
         """
         # Check the cell for a ship section.
+        square = self.convert(square)
         current = self.cells[square].contents
         if isinstance(current, Section):
             # Hit the section
@@ -728,13 +729,12 @@ class SeaBoard(board.DimBoard):
             squares.append(squares[-1] + offset)
         return squares
 
-    def place_random(self, size, invalid_squares):
+    def place_random(self, size):
         """
         Place a ship randomly. (list of str)
 
         Parameters:
         size: The size of the ship to place. (int)
-        invalid_squares: Squares blocked by previously placed ships. (set of str)
         """
         while True:
             # Get a random line of the specified size.
@@ -743,11 +743,11 @@ class SeaBoard(board.DimBoard):
             end_index = start_index + size - 1
             # Get the start and end squares, randomly horizontal or vertical.
             if random.random() < 0.5:
-                start = board.Coordinate(same_index, start_index)
-                end = board.Coordinate(same_index, end_index)
+                start = board.Coordinate((same_index, start_index))
+                end = board.Coordinate((same_index, end_index))
             else:
-                start = board.Coordinate(start_index, same_index)
-                end = board.Coordinate(end_index, same_index)
+                start = board.Coordinate((start_index, same_index))
+                end = board.Coordinate((end_index, same_index))
             # Check the ship for valid placement
             ship_squares = self.make_ship(start, end)
             for square in ship_squares:
@@ -776,7 +776,7 @@ class SeaBoard(board.DimBoard):
                     squares = [self.convert(square) for square in SQUARE_RE.findall(move.upper())]
                     # Check for random placement.
                     if move.lower() in ('r', 'rand', 'random'):
-                        squares = self.place_random(size, invalid_squares)
+                        squares = self.place_random(size)
                     # Check for the correct number of squares.
                     elif size == 1 and len(squares) != 1:
                         self.player.error('You must enter one square for a {}.'.format(ship_type.lower()))
@@ -808,7 +808,7 @@ class SeaBoard(board.DimBoard):
                             self.place(square, Section(square, ship))
                             for offset in ((0, 1), (1, 0), (0, -1), (-1, 0)):
                                 wake_cell = square + offset
-                                if wake_cell in self.cells:
+                                if wake_cell in self.cells and not self.cells[wake_cell]:
                                     self.place(wake_cell, Wake())
                         self.fleet.append(ship)
                         break
@@ -824,13 +824,13 @@ class SeaBoard(board.DimBoard):
         """
         # Start with an axis label.
         lines = ['\n 0123456789']
-        for row in range(1, 11):
+        for row in range(10, 0, -1):
             line = [self.letters[row - 1]]
             for column in range(1, 11):
-                line.append(str(self.cells((row, column))))
+                line.append(str(self.cells[(row, column)]))
             line_text = ''.join(line)
             if to == 'foe':
-                line_text.replace('O', '.')
+                line_text = line_text.replace('O', '.')
             lines.append(line_text)
         # End with an axis label.
         lines.append(' 0123456789')
