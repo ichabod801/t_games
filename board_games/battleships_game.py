@@ -27,6 +27,7 @@ test: Basic testing of the board object. (None)
 import random
 import re
 
+from .. import board
 from .. import game
 from .. import options
 from .. import player
@@ -510,28 +511,140 @@ class SmarterBot(BattleBot):
         if 'sank a' in text:
             self.search_squares = list(set(self.search_squares) - self.dont_shoot)
 
-class SeaBoard(object):
+
+class Ship(object):
+    """
+    A ship in the game of Battleships. (object)
+
+    Attributes:
+    name: The name of the type of ship. (str)
+    sections: The cells the ship is in. (list of Coordinate)
+
+    Overridden Methods:
+    __init__
+    __bool__
+    """
+
+    def __init__(self, name, sections):
+        """
+        Set up the ship. (None)
+
+        Parameters:
+        name: The name of the type of ship. (str)
+        sections: The cells the ship is in. (list of Coordinate)
+        """
+        self.name = name
+        self.sections = sections
+
+    def __bool__(self):
+        """Convert to true or false. (bool)"""
+        return bool(self.sections)
+
+    def __str__(self):
+        """Human readable text representation. (str)"""
+        return self.name.lower()
+
+
+class Wake(object):
+    """
+    A piece representing a square adjacent to a ship. (object)
+
+    Overridden Methods:
+    __str__
+    """
+
+    def __str__(self):
+        """Human readable text representation. (str)"""
+        return '.'
+
+
+class Hit(Wake):
+    """
+    A piece representing a square that had been successfully hit. (Wake)
+
+    Overridden Methods:
+    __str__
+    """
+
+    def __str__(self):
+        """Human readable text representation. (str)"""
+        return 'X'
+
+
+class Miss(Wake):
+    """
+    A piece representing a square that had been unsuccessfully shot. (Wake)
+
+    Overridden Methods:
+    __str__
+    """
+
+    def __str__(self):
+        """Human readable text representation. (str)"""
+        return '/'
+
+
+class Section(Wake):
+    """
+    A piece representing part of a ship. (Wake)
+
+    Attributes:
+    ship: The ship the square is a part of. (Ship)
+    square: The square the ship is in. (board.Coordinate)
+
+    Methods:
+    hit: Record a hit to this section of the ship. (None)
+
+    Overridden Methods:
+    __init__
+    __str__
+    """
+
+    def __init__(self, square, ship):
+        """
+        Record the section's attributes. (None)
+
+        Parameters:
+        square: The square the ship is in. (board.Coordinate)
+        ship: The ship the square is a part of. (Ship)
+        """
+        self.square = square
+        self.ship = ship
+
+    def __str__(self):
+        """Human readable text representation. (str)"""
+        return 'O'
+
+    def hit(self):
+        """Record a hit to this section of the ship. (None)"""
+        self.ship.sections.remove(self.square)
+
+
+class Water(board.BoardCell):
+    """
+    A cell in a SeaBoard. (board.BoardCell)
+
+    Overridden Methods:
+    __init__
+    """
+
+    def __init__(self, location):
+        """
+        Initialize the cell. (None)
+
+        Parameters:
+        location: The location of the cell on the board. (hashable)
+        """
+        super(Water, self).__init__(location, piece = None, empty = '.')
+
+
+class SeaBoard(board.DimBoard):
     """
     A board in a game of Battleships. (object)
 
     Class Attributes:
     letters: The letters for coordinates. (str)
     numbers: The numbers for coordinates. (str)
-
-    Attributes:
-    fleet: The ships on the board. (list of tuple)
-    hits: The squares with made shots. (set of str)
-    inventory: The inventory of ships used for the game. (dict)
-    misses: The squares with missed shots. (set of str)
-    player: The player the board belongs to. (player.Player)
-
-    Methods:
-    adjacent_squares: Get the adjacent squares for a given square. (list of str)
-    fire: Fire a shot on the board. (None)
-    make_ship: Get a list of ship coordinates from the end points. (list of str)
-    place_random: Place a ship randomly. (list of str)
-    place_ships: Get the placement of the ships from the player. (None)
-    show: Show the current status of the board. (str)
     """
 
     letters = 'ABCDEFGHIJ'
@@ -545,71 +658,49 @@ class SeaBoard(object):
         player: The player the board is for. (player.Player)
         inventory_name: The name of the inventory to use. (str)
         """
+        # Set up the base board object.
+        super(SeaBoard, self).__init__((10, 10), Water)
         # Set the specified attributes.
         self.player = player
         self.inventory = INVENTORIES[inventory_name]
-        # Set the default attributes.
-        self.hits = set()
-        self.misses = set()
         # Get the ships placed.
         self.place_ships()
 
-    def __repr__(self):
-        """Create a debugging text representation. (str)"""
-        fleet_squares = sum([squares for ship, squares in self.fleet], [])
-        text = '<SeaBoard for {!r} with {} of {} hits>'
-        return text.format(self.player, len(self.hits), len(self.hits) + len(fleet_squares))
-
-    def adjacent_squares(self, square):
+    def convert(self, square):
         """
-        Get the adjacent board squares for a given square. (list of str)
+        Convert a letter-number square id to a coordinate. (Coordinate)
 
         Parameters:
-        square: The square to get adjacents for. (str)
+        square: an A1 style square identifier. (str)
         """
-        # Turn the square into numeric components.
-        coordinates = (self.letters.index(square[0]), int(square[1]))
-        # Get valid adjacencies.
-        adjacent = []
-        if coordinates[0] > 0:
-            adjacent.append(self.letters[coordinates[0] - 1] + str(coordinates[1]))
-        if coordinates[0] < 9:
-            adjacent.append(self.letters[coordinates[0] + 1] + str(coordinates[1]))
-        if coordinates[1] > 0:
-            adjacent.append(square[0] + str(coordinates[1] - 1))
-        if coordinates[1] < 9:
-            adjacent.append(square[0] + str(coordinates[1] + 1))
-        # Return the adjancent squares.
-        return adjacent
+        return board.Coordinate((self.letters.index(square[0]) + 1, self.numbers.index(square[1]) + 1))
 
     def fire(self, square, foe):
         """
         Fire a shot on the board. (None)
 
         Parameters:
-        square: The square to shoot at. (str)
+        square: The square to shoot at. (board.Coordinate)
         foe: The player making the shot. (player.Player)
         """
-        # Check all of the ships in the fleet.
-        for ship, squares in self.fleet:
-            if square in squares:
-                # Record the hit to the ship.
-                self.hits.add(square)
-                foe.tell('You hit.')
-                # Check for sinking the ship.
-                squares.remove(square)
-                if not squares:
-                    self.player.tell('Your {} has been sunk.'.format(ship.lower()))
-                    foe.tell('You sank a {}.'.format(ship.lower()))
-                    # Check for sinking the fleet (an empty fleet is a flag for Battleships.game_over).
-                    fleet_squares = sum([squares for ship, squares in self.fleet], [])
-                    if not fleet_squares:
-                        self.fleet = []
-                break
+        # Check the cell for a ship section.
+        current = self.cells[square].contents
+        if isinstance(current, Section):
+            # Hit the section
+            foe.tell('You hit.')
+            ship = current.ship
+            current.hit()
+            self.place(square, Hit())
+            # Check for sinking a ship.
+            if not ship:
+                self.player.tell('Your {} has been sunk.'.format(ship))
+                foe.tell('You sank a {}.'.format(ship))
+                self.fleet.remove(ship)
         else:
-            # If it doesn't hit, you must have missed.
-            self.misses.add(square)
+            # Handle a miss.
             foe.tell('You missed.')
+            if not isinstance(current, Hit):
+                self.place(square, Miss())
 
     def make_ship(self, start, end):
         """
@@ -619,27 +710,22 @@ class SeaBoard(object):
         an invalid ship definition.
 
         Parameters:
-        start: The starting square of the ship. (str)
-        end: The ending square of the ship. (str)
+        start: The starting square of the ship. (board.Coordinate)
+        end: The ending square of the ship. (board.Coordinate)
         """
-        # General set up.
+        # Make the direction positive.
         start, end = sorted([start, end])
-        squares = []
         # Determine ship orientation.
         if start[0] == end[0]:
-            # Set up vertical loop.
-            start_index = int(start[1])
-            end_index = int(end[1])
-            # Loop through squares.
-            for number in range(start_index, end_index + 1):
-                squares.append(start[0] + str(number))
+            offset = (0, 1)
         elif start[1] == end[1]:
-            # Set up horizontal loop.
-            start_index = self.letters.index(start[0])
-            end_index = self.letters.index(end[0])
-            # Loop through squares.
-            for letter in self.letters[start_index:end_index + 1]:
-                squares.append(letter + start[1])
+            offset = (1, 0)
+        else:
+            return []
+        # Generate the ship squares
+        squares = [start]
+        while squares[-1] != end:
+            squares.append(squares[-1] + offset)
         return squares
 
     def place_random(self, size, invalid_squares):
@@ -652,20 +738,20 @@ class SeaBoard(object):
         """
         while True:
             # Get a random line of the specified size.
-            same_index = random.randrange(10)
-            start_index = random.randrange(11 - size)
+            same_index = random.randrange(1, 11)
+            start_index = random.randrange(1, 12 - size)
             end_index = start_index + size - 1
             # Get the start and end squares, randomly horizontal or vertical.
             if random.random() < 0.5:
-                start = self.letters[same_index] + self.numbers[start_index]
-                end = self.letters[same_index] + self.numbers[end_index]
+                start = board.Coordinate(same_index, start_index)
+                end = board.Coordinate(same_index, end_index)
             else:
-                start = self.letters[start_index] + self.numbers[same_index]
-                end = self.letters[end_index] + self.numbers[same_index]
+                start = board.Coordinate(start_index, same_index)
+                end = board.Coordinate(end_index, same_index)
             # Check the ship for valid placement
             ship_squares = self.make_ship(start, end)
             for square in ship_squares:
-                if square in invalid_squares:
+                if self.cells[square]:
                     break
             else:
                 # Return the first valid placement found.
@@ -676,10 +762,9 @@ class SeaBoard(object):
         # Get the available ships sorted by size.
         ships = sorted(self.inventory.items(), key = lambda ship: (ship[1][0], ship[0]), reverse = True)
         # Set up the tracking variables.
-        invalid_squares = set()
         self.fleet = []
         # Loop through the ships.
-        for ship, (size, count) in ships:
+        for ship_type, (size, count) in ships:
             # Loop through multiple copies of the same size.
             for ship_index in range(count):
                 # Show the current layout to the player.
@@ -687,14 +772,14 @@ class SeaBoard(object):
                 while True:
                     # Get the start and end squares from the player
                     message = '\nPlace {} #{} of {}, length {}: '
-                    move = self.player.ask(message.format(ship.lower(), ship_index + 1, count, size))
-                    squares = SQUARE_RE.findall(move.upper())
+                    move = self.player.ask(message.format(ship_type.lower(), ship_index + 1, count, size))
+                    squares = [self.convert(square) for square in SQUARE_RE.findall(move.upper())]
                     # Check for random placement.
                     if move.lower() in ('r', 'rand', 'random'):
                         squares = self.place_random(size, invalid_squares)
                     # Check for the correct number of squares.
                     elif size == 1 and len(squares) != 1:
-                        self.player.error('You must enter one square for a {}.'.format(ship.lower()))
+                        self.player.error('You must enter one square for a {}.'.format(ship_type.lower()))
                         continue
                     elif size > 1 and len(squares) != 2:
                         self.player.error('Please enter a start and end square.')
@@ -714,14 +799,18 @@ class SeaBoard(object):
                         continue
                     # Check for adjacent or overlapping ships.
                     for square in ship_squares:
-                        if square in invalid_squares:
+                        if self.cells[square]:
                             break
                     else:
                         # Track and store valid ships.
+                        ship = Ship(ship_type, ship_squares)
                         for square in ship_squares:
-                            invalid_squares.add(square)
-                            invalid_squares.update(self.adjacent_squares(square))
-                        self.fleet.append((ship, ship_squares))
+                            self.place(square, Section(square, ship))
+                            for offset in ((0, 1), (1, 0), (0, -1), (-1, 0)):
+                                wake_cell = square + offset
+                                if wake_cell in self.cells:
+                                    self.place(wake_cell, Wake())
+                        self.fleet.append(ship)
                         break
                     # Warn player about overlapping or adjacent ships.
                     self.player.error('That ship is adjacent to or overlaps another ship.')
@@ -735,24 +824,14 @@ class SeaBoard(object):
         """
         # Start with an axis label.
         lines = ['\n 0123456789']
-        for letter in reversed(self.letters):
-            # Left axis label.
-            line = letter
-            # Squares for that row.
-            for number in range(10):
-                square = letter + str(number)
-                if square in self.hits:
-                    line += 'X'
-                elif square in self.misses:
-                    line += '/'
-                # Only show ships to friends.
-                elif to == 'friend' and any([square in squares for ship, squares in self.fleet]):
-                    line += 'O'
-                else:
-                    line += '.'
-            # Right axis label.
-            line += letter
-            lines.append(line)
+        for row in range(1, 11):
+            line = [self.letters[row - 1]]
+            for column in range(1, 11):
+                line.append(str(self.cells((row, column))))
+            line_text = ''.join(line)
+            if to == 'foe':
+                line_text.replace('O', '.')
+            lines.append(line_text)
         # End with an axis label.
         lines.append(' 0123456789')
         return '\n'.join(lines)
