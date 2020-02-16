@@ -358,14 +358,14 @@ class BattleBot(player.Bot):
         """Make a shot when there are no current targets. (str)"""
         # Shoot ranomly.
         while True:
-            new_shot = random.choice(SeaBoard.letters) + random.choice(SeaBoard.numbers)
+            new_shot = board.Coordinate(random.randint(1, 10), random.randint(1, 10))
             if new_shot not in self.dont_shoot:
                 break
         return new_shot
 
     def retarget(self):
         """Reset target list based on a recent hit. (None)"""
-        adjacents = self.game.boards[self].adjacent_squares(self.last_shot)
+        adjacents = list(self.game.boards[self].adjacent_squares(self.last_shot))
         # Handle working your way down the ship.
         if self.target_ship:
             # Add to the target ship.
@@ -443,12 +443,12 @@ class SmarterBot(BattleBot):
         self.search_starts.append(start)
         # Get the new squares.
         new_line = []
-        for letter in SeaBoard.letters:
-            new_line.append('{}{}'.format(letter, start))
+        for row in range(1, 11):
+            new_line.append(board.Coordinate((start + 1, row)))
             start = (start + self.search_direction) % 10
         # Add them to the search pattern without impossible squares
-        self.search_squares = list(set(self.search_squares) - self.dont_shoot)
         self.search_squares.extend(new_line)
+        self.search_squares = list(set(self.search_squares) - self.dont_shoot)
 
     def expand_search(self):
         """Add another search line to the search pattern. (None)"""
@@ -666,6 +666,20 @@ class SeaBoard(board.DimBoard):
         # Get the ships placed.
         self.place_ships()
 
+    def adjacent_squares(self, square):
+        """
+        Create a generator for the squares around a square. (generator)
+
+        Parameters:
+        square: The square to get the neighbors of. (board.Coordinate)
+        """
+        if isinstance(square, str):
+            square = self.convert(square)
+        for offset in ((0, 1), (1, 0), (0, -1), (-1, 0)):
+            adjacent = square + offset
+            if adjacent in self.cells:
+                yield adjacent
+
     def convert(self, square):
         """
         Convert a letter-number square id to a coordinate. (Coordinate)
@@ -684,7 +698,8 @@ class SeaBoard(board.DimBoard):
         foe: The player making the shot. (player.Player)
         """
         # Check the cell for a ship section.
-        square = self.convert(square)
+        if isinstance(square, str):
+            square = self.convert(square)
         current = self.cells[square].contents
         if isinstance(current, Section):
             # Hit the section
@@ -806,9 +821,8 @@ class SeaBoard(board.DimBoard):
                         ship = Ship(ship_type, ship_squares)
                         for square in ship_squares:
                             self.place(square, Section(square, ship))
-                            for offset in ((0, 1), (1, 0), (0, -1), (-1, 0)):
-                                wake_cell = square + offset
-                                if wake_cell in self.cells and not self.cells[wake_cell]:
+                            for wake_cell in self.adjacent_squares(square):
+                                if not self.cells[wake_cell]:
                                     self.place(wake_cell, Wake())
                         self.fleet.append(ship)
                         break
