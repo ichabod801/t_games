@@ -33,9 +33,9 @@ from .. import player
 
 
 CREDITS = """
-Although Milton-Bradley did make a version of this game, it is a traditional
-    game dating back to the First World War.
-Programming by Craig "Ichabod" O'Brien.
+Game Design: Although Milton-Bradley did make a version of this game, it is a
+    traditional game dating back to the First World War.
+Game Programming: Craig "Ichabod" O'Brien.
 """
 
 OPTIONS = """
@@ -133,7 +133,7 @@ class Battleships(game.Game):
         game, losses = self.gipf_check(arguments, ('wumpus', 'pig', 'canfield'))
         go = True
         # Hunt the Wumpus tells you where a particular ship type is.
-        if game == 'wumpus':
+        if game == 'hunt the wumpus':
             if not losses:
                 self.gipf_wumpus()
                 go = False
@@ -151,29 +151,29 @@ class Battleships(game.Game):
             self.human.tell('Gesundheit.')
         # Update the human after a loss.
         if game != 'invalid-game' and losses:
-            self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
-            self.human.tell(self.boards[self.human.name].show())
+            self.human.tell(self.boards[self.bot].show(to = 'foe'))
+            self.human.tell(self.boards[self.human].show())
         return go
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
         # Check for a tie.
-        if not (self.boards[self.bot.name].fleet or self.boards[self.human.name].fleet):
+        if not (self.boards[self.bot].fleet or self.boards[self.human].fleet):
             self.human.tell("\nIt's a draw! You destroyed each other's fleets at the same time.")
             self.win_loss_draw[2] = 1
         # Check for a win.
-        elif not self.boards[self.bot.name].fleet:
-            self.human.tell("\nYou sank {}'s fleet and won!".format(self.bot.name))
-            squares_left = sum([len(squares) for ship, squares in self.boards[self.human.name].fleet])
-            self.scores[self.human.name] = squares_left
+        elif not self.boards[self.bot].fleet:
+            self.human.tell("\nYou sank {}'s fleet and won!".format(self.bot))
+            squares_left = sum([len(squares) for ship, squares in self.boards[self.human].fleet])
+            self.scores[self.human] = squares_left
             self.human.tell("You have {} squares of ships left.".format(squares_left))
             self.win_loss_draw[0] = 1
         # Check for a loss.
-        elif not self.boards[self.human.name].fleet:
-            self.human.tell("\n{} sank your fleet. You lose.".format(self.bot.name))
-            squares_left = sum([len(squares) for ship, squares in self.boards[self.bot.name].fleet])
-            self.scores[self.human.name] = squares_left * -1
-            self.human.tell("{} had {} squares of ships left.".format(self.bot.name, squares_left))
+        elif not self.boards[self.human].fleet:
+            self.human.tell("\n{} sank your fleet. You lose.".format(self.bot))
+            squares_left = sum([len(squares) for ship, squares in self.boards[self.bot].fleet])
+            self.scores[self.human] = squares_left * -1
+            self.human.tell("{} had {} squares of ships left.".format(self.bot, squares_left))
             self.win_loss_draw[1] = 1
         else:
             # Otherwise, game on.
@@ -185,50 +185,50 @@ class Battleships(game.Game):
         """Handle the Canfield edge. (None)"""
         # Get a random hit for the human.
         not_hit = []
-        for ship, ship_squares in self.boards[self.bot.name].fleet:
-            not_hit.extend(set(ship_squares) - self.boards[self.bot.name].hits)
+        for ship, ship_squares in self.boards[self.bot].fleet:
+            not_hit.extend(set(ship_squares) - self.boards[self.bot].hits)
         human_shot = random.choice(not_hit)
         self.human.tell('You fired on {}.'.format(human_shot))
         # Get the bot's shot.
         bot_shot = self.bot.ask('\nWhere do you want to shoot? ')
         # Fire the shots.
-        self.boards[self.bot.name].fire(human_shot.upper(), self.human)
-        self.boards[self.human.name].fire(bot_shot, self.bot)
+        self.boards[self.bot].fire(human_shot.upper(), self.human)
+        self.boards[self.human].fire(bot_shot, self.bot)
         # Update the human. (Bots don't need updates.)
-        self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
-        self.human.tell(self.boards[self.human.name].show())
+        self.human.tell(self.boards[self.bot].show(to = 'foe'))
+        self.human.tell(self.boards[self.human].show())
 
     def gipf_pig(self):
         """Handle the Pig edge. (None)"""
         # Remind the human.
-        self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
-        self.human.tell(self.boards[self.human.name].show())
+        self.human.tell(self.boards[self.bot].show(to = 'foe'))
+        self.human.tell(self.boards[self.human].show())
         # Get the first shot.
         while True:
-            human_shot = self.human.ask('\nWhere do you want to shoot? ').upper().strip()
+            human_shot = self.human.ask('\nWhere do you want to shoot? ').upper()
             if SQUARE_RE.match(human_shot):
                 break
         bot_shot = self.bot.ask('Where do you want to shoot? ')
         # Fire the shots.
-        self.boards[self.bot.name].fire(human_shot, self.human)
-        self.boards[self.human.name].fire(bot_shot, self.bot)
+        self.boards[self.bot].fire(human_shot, self.human)
+        self.boards[self.human].fire(bot_shot, self.bot)
         # Check for second shot.
-        if human_shot in self.boards[self.bot.name].hits:
+        if human_shot in self.boards[self.bot].hits:
             self.human.tell('You hit, so you get a bonus shot.')
             while True:
-                human_shot = self.human.ask('Where do you want to shoot? ').upper().strip()
+                human_shot = self.human.ask('Where do you want to shoot? ').upper()
                 if SQUARE_RE.match(human_shot):
                     break
-            self.boards[self.bot.name].fire(human_shot, self.human)
+            self.boards[self.bot].fire(human_shot, self.human)
         # Update the human. (Bots don't need updates.)
-        self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
-        self.human.tell(self.boards[self.human.name].show())
+        self.human.tell(self.boards[self.bot].show(to = 'foe'))
+        self.human.tell(self.boards[self.human].show())
 
     def gipf_wumpus(self):
         """Handle the Hunt the Wumpus edge. (None)"""
         # Remind the human.
-        self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
-        self.human.tell(self.boards[self.human.name].show())
+        self.human.tell(self.boards[self.bot].show(to = 'foe'))
+        self.human.tell(self.boards[self.human].show())
         # Get a ship type.
         while True:
             ship = self.human.ask('\nEnter a ship type: ')
@@ -254,9 +254,9 @@ class Battleships(game.Game):
         self.inventory_name = self.inventory_aliases.get(self.inventory_name, self.inventory_name)
         # Set up the players.
         if self.bot_level.startswith('e'):
-            self.bot = BattleBot(taken_names = [self.human.name])
+            self.bot = BattleBot(taken_names = [self.human])
         elif self.bot_level.startswith('m'):
-            self.bot = SmarterBot(taken_names = [self.human.name])
+            self.bot = SmarterBot(taken_names = [self.human])
         self.players = [self.human, self.bot]
 
     def player_action(self, player):
@@ -267,17 +267,17 @@ class Battleships(game.Game):
         player: The player whose turn it is. (Player)
         """
         # Update the human. (Bots don't need updates.)
-        self.human.tell(self.boards[self.bot.name].show(to = 'foe'))
-        self.human.tell(self.boards[self.human.name].show())
+        self.human.tell(self.boards[self.bot].show(to = 'foe'))
+        self.human.tell(self.boards[self.human].show())
         # Get the players' moves.
-        human_shot = self.human.ask('\nWhere do you want to shoot? ').strip()
+        human_shot = self.human.ask('\nWhere do you want to shoot? ')
         if not SQUARE_RE.match(human_shot.upper()):
             self.player_index = 0  # Make sure output goes to the human.
             return self.handle_cmd(human_shot)
         bot_shot = self.bot.ask('\nWhere do you want to shoot? ')
         # Fire the shots.
-        self.boards[self.bot.name].fire(human_shot.upper(), self.human)
-        self.boards[self.human.name].fire(bot_shot, self.bot)
+        self.boards[self.bot].fire(human_shot.upper(), self.human)
+        self.boards[self.human].fire(bot_shot, self.bot)
 
     def set_options(self):
         """Define the options for the game. (None)"""
@@ -288,14 +288,14 @@ class Battleships(game.Game):
             error_text = 'The available inventories are Bradley, Bednar, Ichabod, and Wikipedia')
         self.option_set.add_option('bot-level', ['b'], converter = options.lower, default = 'medium',
             valid = ['e', 'easy', 'm', 'medium'],
-            question = 'How hard should the bot be (Easy, Medium, or Hard, return for medium)? ')
+            question = 'How hard should the bot be (Easy or Medium, return for medium)? ')
         self.option_set.add_group('gonzo', ['gz'], 'inventory = gonzo')
 
     def set_up(self):
         """Set up a board for each player. (None)"""
-        self.bot = [player for player in self.players if player.name != self.human.name][0]
-        self.boards = {self.bot.name: SeaBoard(self.bot, self.inventory_name)}
-        self.boards[self.human.name] = SeaBoard(self.human, self.inventory_name)
+        self.bot = [player for player in self.players if player != self.human][0]
+        self.boards = {self.bot: SeaBoard(self.bot, self.inventory_name)}
+        self.boards[self.human] = SeaBoard(self.human, self.inventory_name)
 
 
 class BattleBot(player.Bot):
