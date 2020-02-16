@@ -40,14 +40,14 @@ Game Programming: Craig "Ichabod" O'Brien.
 
 OPTIONS = """
 bot-level= (b=): How strong the computer opponent is. Can be easy (e) or
-    medium (m).
+    medium (m). Defaults to medium.
 inventory= (i=): This determines the number and size of ships played with. The
 value can be Bradley (the Milton Bradley version), Bednar (an open source
 version by Samuel Bednar), Ichabod (the version I remember), and Wikipedia
 (the inventory shown in a picture in the Wikipedia article on the game.) the
 inventories give the following ships (name size x count):
     Bradley/Br: Carrier 5x1, Battleship 4x1, Cruiser 3x1, Destroyer 2x1,
-        Submarine 3x1.
+        Submarine 3x1. This is the default layout.
     Bednar/Bd: Carrier 5x1, Battleship 4x1, Cruiser 3x1, Destroyer 2x2,
         Submarine 1x2.
     Gonzo/Gz: Battleship 7x1, Submarine 2x1
@@ -324,7 +324,7 @@ class BattleBot(player.Bot):
     def add_adjacents(self):
         """Add adjacent squares of a ship to the don't shoot set."""
         for square in self.target_ship:
-            self.dont_shoot.update(self.game.boards[self.name].adjacent_squares(square))
+            self.dont_shoot.update(self.game.boards[self].adjacent_squares(square))
 
     def ask(self, prompt):
         """
@@ -339,20 +339,6 @@ class BattleBot(player.Bot):
         # Handle firing shots.
         elif prompt.startswith('\nWhere'):
             return self.fire()
-
-    def error(self, *args, **kwargs):
-        """
-        Warn the player about an invalid play. (None)
-
-        Parameters:
-        The parameters are as teh built-in print function.
-        """
-        # Ignore errors when placing ships, as the bot places at random until it fits.
-        if 'overlaps' in args[0]:
-            pass
-        # Handle other errrors normally.
-        else:
-            super(BattleBot, self).error(*args, **kwargs)
 
     def fire(self):
         """Decide where to fire the next shot. (str)"""
@@ -378,7 +364,7 @@ class BattleBot(player.Bot):
 
     def retarget(self):
         """Reset target list based on a recent hit. (None)"""
-        adjacents = self.game.boards[self.name].adjacent_squares(self.last_shot)
+        adjacents = self.game.boards[self].adjacent_squares(self.last_shot)
         # Handle working your way down the ship.
         if self.target_ship:
             # Add to the target ship.
