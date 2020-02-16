@@ -165,14 +165,14 @@ class Battleships(game.Game):
         # Check for a win.
         elif not self.boards[self.bot].fleet:
             self.human.tell("\nYou sank {}'s fleet and won!".format(self.bot))
-            squares_left = sum([len(squares) for ship, squares in self.boards[self.human].fleet])
+            squares_left = sum([len(ship) for ship in self.boards[self.human].fleet])
             self.scores[self.human] = squares_left
             self.human.tell("You have {} squares of ships left.".format(squares_left))
             self.win_loss_draw[0] = 1
         # Check for a loss.
         elif not self.boards[self.human].fleet:
             self.human.tell("\n{} sank your fleet. You lose.".format(self.bot))
-            squares_left = sum([len(squares) for ship, squares in self.boards[self.bot].fleet])
+            squares_left = sum([len(ship) for ship in self.boards[self.bot].fleet])
             self.scores[self.human] = squares_left * -1
             self.human.tell("{} had {} squares of ships left.".format(self.bot, squares_left))
             self.win_loss_draw[1] = 1
@@ -358,7 +358,7 @@ class BattleBot(player.Bot):
         """Make a shot when there are no current targets. (str)"""
         # Shoot ranomly.
         while True:
-            new_shot = board.Coordinate(random.randint(1, 10), random.randint(1, 10))
+            new_shot = board.Coordinate((random.randint(1, 10), random.randint(1, 10)))
             if new_shot not in self.dont_shoot:
                 break
         return new_shot
@@ -541,6 +541,10 @@ class Ship(object):
     def __bool__(self):
         """Convert to true or false. (bool)"""
         return bool(self.sections)
+
+    def __len__(self):
+        """Give the length (sections left) of the ship. (int)"""
+        return len(self.sections)
 
     def __nonzero__(self):
         """Convert to true or false. (bool)"""
