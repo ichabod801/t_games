@@ -137,7 +137,7 @@ class Battleships(game.Game):
         if game == 'hunt the wumpus':
             if not losses:
                 self.gipf_wumpus()
-                go = False
+                go = True
         # Pig gives you a bonus shot if you hit your next shot.
         elif game == 'pig':
             if not losses:
@@ -230,21 +230,21 @@ class Battleships(game.Game):
         self.human.tell(self.boards[self.human].show())
         # Get a ship type.
         while True:
-            ship = self.human.ask('\nEnter a ship type: ')
-            if ship in INVENTORIES[self.inventory_name]:
+            ship_type = self.human.ask('\nEnter a ship type: ')
+            if ship_type.capitalize() in INVENTORIES[self.inventory_name]:
                 break
             self.human.error('I do not recognize that ship type.')
         # Get that ship type.
         board = self.boards[self.bot.name]
-        ships = [(name, squares) for name, squares in board.fleet if name == ship and squares]
+        ships = [ship.sections for ship in board.fleet if ship_type == ship.name]
         if not ships:
             # Warn the player if there are no more of that ship.
-            self.human.error('There are no more {}s.'.format(ship.lower()))
+            self.human.error('There are no more {}s.'.format(ship_type.lower()))
         else:
             # Get a random square from one of those ships.
-            name, squares = random.choice(ships)
-            square = random.choice(squares)
-            self.human.tell('There is a {} at {}.'.format(ship, square))
+            sections = random.choice(ships)
+            square = random.choice(sections)
+            self.human.tell('There is a {} at {}.'.format(ship_type.lower(), square))
 
     def handle_options(self):
         """Handle the option settings for the current game. (None)"""
