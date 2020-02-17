@@ -222,9 +222,6 @@ class Battleships(game.Game):
                 if SQUARE_RE.match(human_shot):
                     break
             self.boards[self.bot].fire(human_shot, self.human)
-        # Update the human. (Bots don't need updates.)
-        self.human.tell(self.boards[self.bot].show(to = 'foe'))
-        self.human.tell(self.boards[self.human].show())
 
     def gipf_wumpus(self):
         """Handle the Hunt the Wumpus edge. (None)"""
