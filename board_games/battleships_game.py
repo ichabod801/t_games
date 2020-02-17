@@ -829,7 +829,7 @@ class SeaBoard(board.DimBoard):
                         continue
                     # Check for the correct size of ship.
                     elif len(ship_squares) != size:
-                        self.player.error('{}s must be {} squares long.'.format(ship, size))
+                        self.player.error('{}s must be {} squares long.'.format(ship_type, size))
                         continue
                     # Check for adjacent or overlapping ships.
                     for square in ship_squares:
