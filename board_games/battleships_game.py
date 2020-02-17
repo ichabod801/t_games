@@ -208,13 +208,14 @@ class Battleships(game.Game):
         while True:
             human_shot = self.human.ask('\nWhere do you want to shoot? ').upper()
             if SQUARE_RE.match(human_shot):
+                human_shot = self.boards[self.human].convert(human_shot)
                 break
-        bot_shot = self.bot.ask('Where do you want to shoot? ')
+        bot_shot = self.bot.ask('\nWhere do you want to shoot? ')
         # Fire the shots.
         self.boards[self.bot].fire(human_shot, self.human)
         self.boards[self.human].fire(bot_shot, self.bot)
         # Check for second shot.
-        if human_shot in self.boards[self.bot].hits:
+        if isinstance(self.boards[self.bot][human_shot].contents, Hit):
             self.human.tell('You hit, so you get a bonus shot.')
             while True:
                 human_shot = self.human.ask('Where do you want to shoot? ').upper()
@@ -340,6 +341,9 @@ class BattleBot(player.Bot):
         # Handle firing shots.
         elif prompt.startswith('\nWhere'):
             return self.fire()
+        # Handle everything else.
+        else:
+            return super(BattleBot, self).ask(prompt)
 
     def fire(self):
         """Decide where to fire the next shot. (str)"""
