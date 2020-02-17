@@ -43,10 +43,10 @@ OPTIONS = """
 bot-level= (b=): How strong the computer opponent is. Can be easy (e) or
     medium (m). Defaults to medium.
 inventory= (i=): This determines the number and size of ships played with. The
-value can be Bradley (the Milton Bradley version), Bednar (an open source
-version by Samuel Bednar), Ichabod (the version I remember), and Wikipedia
-(the inventory shown in a picture in the Wikipedia article on the game.) the
-inventories give the following ships (name size x count):
+    value can be Bradley (the Milton Bradley version), Bednar (an open source
+    version by Samuel Bednar), Ichabod (the version I remember), and Wikipedia
+    (the inventory shown in a picture in the Wikipedia article on the game.)
+    The inventories give the following ships (name size x count):
     Bradley/Br: Carrier 5x1, Battleship 4x1, Cruiser 3x1, Destroyer 2x1,
         Submarine 3x1. This is the default layout.
     Bednar/Bd: Carrier 5x1, Battleship 4x1, Cruiser 3x1, Destroyer 2x2,
