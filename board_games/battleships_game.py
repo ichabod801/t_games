@@ -185,19 +185,18 @@ class Battleships(game.Game):
     def gipf_canfield(self):
         """Handle the Canfield edge. (None)"""
         # Get a random hit for the human.
+        bot_board = self.boards[self.bot]
         not_hit = []
-        for ship, ship_squares in self.boards[self.bot].fleet:
-            not_hit.extend(set(ship_squares) - self.boards[self.bot].hits)
+        for ship in bot_board.fleet:
+            not_hit.extend(ship.sections)
         human_shot = random.choice(not_hit)
-        self.human.tell('You fired on {}.'.format(human_shot))
+        shot_text = bot_board.letters[human_shot[0] - 1] + bot_board.numbers[human_shot[1] - 1]
+        self.human.tell('You fired on {}.'.format(shot_text))
         # Get the bot's shot.
         bot_shot = self.bot.ask('\nWhere do you want to shoot? ')
         # Fire the shots.
-        self.boards[self.bot].fire(human_shot.upper(), self.human)
+        bot_board.fire(human_shot, self.human)
         self.boards[self.human].fire(bot_shot, self.bot)
-        # Update the human. (Bots don't need updates.)
-        self.human.tell(self.boards[self.bot].show(to = 'foe'))
-        self.human.tell(self.boards[self.human].show())
 
     def gipf_pig(self):
         """Handle the Pig edge. (None)"""
