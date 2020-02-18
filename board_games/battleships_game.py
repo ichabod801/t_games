@@ -230,8 +230,8 @@ class Battleships(game.Game):
         self.human.tell(self.boards[self.human].show())
         # Get a ship type.
         while True:
-            ship_type = self.human.ask('\nEnter a ship type: ')
-            if ship_type.capitalize() in INVENTORIES[self.inventory_name]:
+            ship_type = self.human.ask('\nEnter a ship type: ').capitalize()
+            if ship_type in INVENTORIES[self.inventory_name]:
                 break
             self.human.error('I do not recognize that ship type.')
         # Get that ship type.
@@ -244,7 +244,8 @@ class Battleships(game.Game):
             # Get a random square from one of those ships.
             sections = random.choice(ships)
             square = random.choice(sections)
-            self.human.tell('There is a {} at {}.'.format(ship_type.lower(), square))
+            square_text = '{}{}'.format(board.letters[square[0] - 1], board.numbers[square[1] - 1])
+            self.human.tell('There is a {} at {}.'.format(ship_type.lower(), square_text))
 
     def handle_options(self):
         """Handle the option settings for the current game. (None)"""
