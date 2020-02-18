@@ -150,10 +150,6 @@ class Battleships(game.Game):
         # Game with no gipf link
         else:
             self.human.tell('Gesundheit.')
-        # Update the human after a loss.
-        if game != 'invalid-game' and losses:
-            self.human.tell(self.boards[self.bot].show(to = 'foe'))
-            self.human.tell(self.boards[self.human].show())
         return go
 
     def game_over(self):
@@ -191,7 +187,7 @@ class Battleships(game.Game):
             not_hit.extend(ship.sections)
         human_shot = random.choice(not_hit)
         shot_text = bot_board.letters[human_shot[0] - 1] + bot_board.numbers[human_shot[1] - 1]
-        self.human.tell('You fired on {}.'.format(shot_text))
+        self.human.tell('\nYou fired on {}.'.format(shot_text))
         # Get the bot's shot.
         bot_shot = self.bot.ask('\nWhere do you want to shoot? ')
         # Fire the shots.
