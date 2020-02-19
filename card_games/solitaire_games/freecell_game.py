@@ -121,7 +121,7 @@ class FreeCell(solitaire.Solitaire):
                 self.pair_checkers = []
                 # Get the cards to move.
                 while True:
-                    cards_raw = self.human.ask('Enter a free cell card and a card to build it on: ')
+                    cards_raw = self.human.ask('\nEnter a free cell card and a card to build it on: ')
                     cards = cards_raw.upper().split()
                     if cards[0] not in cell_check:
                         self.human.error('You must build with a free cell card.')

@@ -432,7 +432,7 @@ class Game(other_cmd.OtherCmd):
         argument = argument.lower()
         if argument in games and games[argument].name not in self.gipfed:
             # Play the game.
-            options = 'gonzo' if self.gonzo else 'none'
+            options = 'gonzo' if 'gonzo' in self.raw_options else 'none'
             game = games[argument](self.human, options, self.interface)
             results = game.play()
             # Record the giphing.
