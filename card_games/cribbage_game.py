@@ -242,13 +242,11 @@ class Cribbage(game.Game):
             cut_index = self.players[left].ask_int(query, cmd = False, default = 0)
             self.deck.cut(cut_index)
         # Deal the cards
-        for card in range(self.cards):
-            for player in self.players:
-                self.hands[player].draw()
+        self.deck.deal_n_each(self.cards, self.players)
         for card in range(4 - len(self.players) * self.discards):
             self.hands['The Crib'].draw()
         # Make a dummy starter card.
-        self.starter = cards.Card('X', 'S')
+        self.starter = self.deck.parse_text('XS')
         # Reset the tracking variables.
         self.phase = 'discard'
 
@@ -283,9 +281,8 @@ class Cribbage(game.Game):
             hand.draw()
         # Crazy Eights skips the next player's play.
         elif game == 'crazy eights':
-            next_player = self.players[(self.player_index + 1) % len(self.players)]
-            self.skip_player = next_player
-            self.human.tell("{}'s next discard will be skipped.".format(next_player.name))
+            next_player = self.skip_player()
+            self.human.tell("{}'s next discard will be skipped.".format(next_player))
         # Otherwise I'm confused.
         else:
             self.human.error("I'm sorry, sir, but that is simply not acceptable in this venue.")
@@ -300,7 +297,7 @@ class Cribbage(game.Game):
             # Determine the winner.
             scores = self.sorted_scores()
             names = ' and '.join(self.teams[scores[0][1]])
-            plural = ('s', '')[' and ' in names]
+            plural = '' if ' and ' in names else 's'
             self.human.tell('\n{} win{} with {} points.'.format(names, plural, scores[0][0]))
             # Check for skunk.
             game_score = self.skunk_scores[0]
@@ -314,7 +311,7 @@ class Cribbage(game.Game):
             self.match_scores[scores[0][1]] += game_score
             if self.match > 1:
                 self.show_match()
-            # Calcualte win/loss/draw stats.
+            # Calculate win/loss/draw stats.
             human_score = self.scores[self.human]
             for score, name in scores:
                 if name in self.teams[self.human]:
@@ -411,12 +408,7 @@ class Cribbage(game.Game):
             return self.player_discards(player)
         # Handle playing cards for pegging.
         elif self.phase == 'play':
-            if self.skip_player == player:
-                print("{}'s discard is skipped.".format(player))
-                self.skip_player = None
-                return False
-            else:
-                return self.player_play(player)
+            return self.player_play(player)
 
     def player_discards(self, player):
         """
@@ -436,7 +428,7 @@ class Cribbage(game.Game):
         to_discard = self.discards
         while to_discard:
             # Get and parse the discards.
-            discard_plural = utility.number_plural(to_discard, 'card')
+            discard_plural = utility.num_text(to_discard, 'card')
             query = '\nWhich {} would you like to discard to the crib, {}? '
             answer = player.ask(query.format(discard_plural, player))
             discards = self.deck.card_re.findall(answer)
