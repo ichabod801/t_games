@@ -473,8 +473,8 @@ class Cribbage(game.Game):
         player: The current player. (player.Player)
         """
         # Get the player information
-        hand = self.hands[player.name]
-        in_play = self.in_play[player.name]
+        hand = self.hands[player]
+        in_play = self.in_play[player]
         # Check for playable cards.
         playable = [card for card in hand if card + self.card_total <= 31]
         if not playable:
@@ -496,7 +496,7 @@ class Cribbage(game.Game):
         answer = player.ask('\nWhich card would you like to play, {}? '.format(player))
         card = self.deck.card_re.match(answer)
         if card:
-            card = cards.Card(*answer[:2].upper())
+            card = self.deck.parse_text(*answer[:2])
             if card not in hand:
                 # Warn the player about cards they don't have.
                 player.error('You do not have that card in your hand.')
@@ -560,7 +560,7 @@ class Cribbage(game.Game):
         cards: The cards to score. (list of Card)
         """
         score = 0
-        suits = set([card.suit for card in cards])
+        suits = set(cards.suits())
         if len(suits) == 1:
             # Check for five card flush.
             if self.starter.suit in suits:
@@ -589,11 +589,11 @@ class Cribbage(game.Game):
             self.human.tell()
             # Score the crib to the dealer.
             if name == 'The Crib':
-                cards = self.hands['The Crib'].cards
+                cards = self.hands['The Crib'].copy()
                 name = self.players[self.dealer_index].name
                 message = 'Now scoring the crib for the dealer ({}): {} + {}'
             else:
-                cards = self.hands[name].cards + self.in_play[name].cards
+                cards = self.hands[name] + self.in_play[name]
                 message = "Now scoring {}'s hand: {} + {}"
             self.human.tell(message.format(name, ', '.join([str(card) for card in cards]), self.starter))
             hand_score = self.score_one_hand(cards, name)
@@ -834,9 +834,9 @@ class Cribbage(game.Game):
         self.deck = cards.Deck()
         self.deck.shuffle()
         # Set up the hands.
-        self.hands = {player.name: cards.Hand(deck = self.deck) for player in self.players}
+        self.hands = self.deck.player_hands(self.players)
         self.hands['The Crib'] = cards.Hand(deck = self.deck)
-        self.in_play = {player.name: cards.Hand(deck = self.deck) for player in self.players}
+        self.in_play = self.deck.player_hands(self.players)
         self.in_play['Play Sequence'] = cards.Hand(deck = self.deck)
         # Pick the dealer.
         if self.no_pick:
