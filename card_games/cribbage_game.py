@@ -496,7 +496,7 @@ class Cribbage(game.Game):
         answer = player.ask('\nWhich card would you like to play, {}? '.format(player))
         card = self.deck.card_re.match(answer)
         if card:
-            card = self.deck.parse_text(*answer[:2])
+            card = self.deck.parse_text(answer[:2])
             if card not in hand:
                 # Warn the player about cards they don't have.
                 player.error('You do not have that card in your hand.')
@@ -560,7 +560,7 @@ class Cribbage(game.Game):
         cards: The cards to score. (list of Card)
         """
         score = 0
-        suits = set(cards.suits())
+        suits = set(card.suit for card in cards)
         if len(suits) == 1:
             # Check for five card flush.
             if self.starter.suit in suits:
@@ -589,7 +589,7 @@ class Cribbage(game.Game):
             self.human.tell()
             # Score the crib to the dealer.
             if name == 'The Crib':
-                cards = self.hands['The Crib'].copy()
+                cards = self.hands['The Crib'][:]
                 name = self.players[self.dealer_index].name
                 message = 'Now scoring the crib for the dealer ({}): {} + {}'
             else:
