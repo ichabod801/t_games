@@ -267,15 +267,7 @@ class Cribbage(game.Game):
         elif game == 'craps':
             # Get a valid card to discard.
             hand = self.hands[self.human]
-            while True:
-                card_text = self.human.ask('Pick a card to replace: ')
-                card = self.deck.card_re.search(card_text)
-                if not card:
-                    self.human.error('Please enter a valid card.')
-                elif card not in hand:
-                    self.human.error('You do not have that card to discard.')
-                else:
-                    break
+            card = self.human.ask_card('Pick a card to replace: ', valid = hand, cmd = False)
             # Replace that card.
             hand.discard(card)
             hand.draw()
@@ -424,32 +416,19 @@ class Cribbage(game.Game):
             self.discards = self.cards - self.discards
             # Reset the crib.
             self.hands['The Crib'] = cards.Hand(deck = self.deck)
-        # Loop until the right number of discards have been made
-        to_discard = self.discards
-        while to_discard:
-            # Get and parse the discards.
-            discard_plural = utility.num_text(to_discard, 'card')
-            query = '\nWhich {} would you like to discard to the crib, {}? '
-            answer = player.ask(query.format(discard_plural, player))
-            discards = self.deck.card_re.findall(answer)
-            if not discards:
-                # If no discards, assume it's another command.
+        # Get the discards.
+        discard_plural = utility.num_text(to_discard, 'card')
+        query = '\nWhich {} would you like to discard to the crib, {}? '.format(discard_plural, player)
+        while True:
+            answer = player.ask_card_list(query, self.hands[player], [to_discard])
+            if isinstance(answer, str):
                 if not self.handle_cmd(answer):
                     return False
-                else:
-                    # Update the player after command output.
-                    player.tell(self)
-            elif len(discards) > to_discard:
-                # Warn on the wrong number of discards.
-                player.error('You can only discard {}.'.format(discard_plural))
-            elif not all(card in self.hands[player] for card in discards):
-                # Block discarding cards you don't have.
-                player.error('You do not have all of those cards in your hand.')
             else:
-                # Handle discards.
-                for card in discards:
-                    self.hands[player].shift(card, self.hands['The Crib'])
-                to_discard -= len(discards)
+                break
+        # Handle discards.
+        for card in discards:
+            self.hands[player].shift(card, self.hands['The Crib'])
         # Check for starting play after dealer discards.
         if self.players.index(player) == self.dealer_index:
             self.phase = 'play'
@@ -493,40 +472,36 @@ class Cribbage(game.Game):
                 self.reset()
             return False
         # Get card to play.
-        answer = player.ask('\nWhich card would you like to play, {}? '.format(player))
-        card = self.deck.card_re.match(answer)
-        if card:
-            card = self.deck.parse_text(answer[:2])
-            if card not in hand:
-                # Warn the player about cards they don't have.
-                player.error('You do not have that card in your hand.')
-                return True
-            if card + self.card_total > 31:
+        while True:
+            query = '\nWhich card would you like to play, {}? '.format(player)
+            card = player.ask_card(query, valid = hand)
+            if isinstance(card, str):
+                if not self.handle_cmd(card):
+                    return False
+            elif card + self.card_total > 31:
                 # Warn the player about unplayable cards.
                 player.error('That card would put the running total over 31.')
                 return True
             else:
-                # Score the card.
-                points, message = self.score_sequence(player, card)
-                if points:
-                    self.add_points(player, points)
-                    # Inform the user.
-                    self.human.tell(message)
-                    if not self.auto_score:
-                        self.human.ask(ENTER_TEXT)
-                # Play the card.
-                hand.shift(card, in_play)
-                self.in_play['Play Sequence'].cards.append(in_play.cards[-1])
-                # Update the tracking variables.
-                self.card_total += card
-                self.go_count = 0
-                # Check for end of round
-                if self.card_total == 31:
-                    self.reset()
-                return False
-        else:
-            # Handle anything that isn't a playing card.
-            return self.handle_cmd(answer)
+                break
+        # Score the card.
+        points, message = self.score_sequence(player, card)
+        if points:
+            self.add_points(player, points)
+            # Inform the user.
+            self.human.tell(message)
+            if not self.auto_score:
+                self.human.ask(ENTER_TEXT)
+        # Play the card.
+        hand.shift(card, in_play)
+        self.in_play['Play Sequence'].cards.append(in_play.cards[-1])
+        # Update the tracking variables.
+        self.card_total += card
+        self.go_count = 0
+        # Check for end of round
+        if self.card_total == 31:
+            self.reset()
+        return False
 
     def reset(self):
         """Reset the game after a pegging round. (None)"""
