@@ -798,7 +798,7 @@ class Deck(Pile):
             for card in range(n):
                 game = players[0].game
                 for player in players:
-                    game.hands[player].draw(())
+                    game.hands[player].draw()
 
     def discard(self, card, up = False):
         """

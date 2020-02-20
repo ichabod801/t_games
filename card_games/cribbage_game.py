@@ -962,7 +962,7 @@ class CribBot(player.Bot):
             possibles.append((score, discards))
         # Discard the highest rated batch.
         possibles.sort(reverse = True)
-        return ' '.join([str(card) for card in possibles[0][1]])
+        return ' '.join([card.up_text for card in possibles[0][1]])
 
     def get_play(self):
         """Get a card to play. (str)"""
@@ -998,7 +998,7 @@ class CribBot(player.Bot):
             play = playable[0]
         # Make the play.
         self.game.human.tell('\n{} played the {:n}.'.format(self.name, play))
-        return str(play)
+        return play.up_text
 
     def score_discards(self, cards):
         """
