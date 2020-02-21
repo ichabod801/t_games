@@ -403,6 +403,21 @@ class Game(other_cmd.OtherCmd):
             self.win_loss_draw[0] = 1
         return sum(self.win_loss_draw)
 
+    def get_next_player(self, player = None):
+        """
+        Get the next player in play order after the specified player. (player.Player)
+
+        If no player is specified, the player after the current player is returned.
+
+        Parameters:
+        player: The player before the player you want. (player.Player)
+        """
+        if player is None:
+            player_index = self.player_index
+        else:
+            player_index = self.players.index(player)
+        return self.players[(player_index + 1) % len(self.players)]
+
     def gipf_check(self, argument, game_names):
         """
         Check for successful gipfing. (int)
