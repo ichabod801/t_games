@@ -218,7 +218,7 @@ class Cribbage(game.Game):
         self.dealer = self.get_next_player(self.dealer)
         self.next_player = self.get_next_player(self.dealer)
         self.dealer_index = self.players.index(self.dealer)
-        print('\nThe current dealer is {}.'.format(dealer.name))
+        print('\nThe current dealer is {}.'.format(self.dealer.name))
         # Handle the solo option.
         if self.solo:
             # Set up teams.
@@ -239,7 +239,7 @@ class Cribbage(game.Game):
         if not self.no_cut:
             left = self.next_player
             query = 'Enter a number to cut the deck: '
-            cut_index = self.players[left].ask_int(query, cmd = False, default = 0)
+            cut_index = left.ask_int(query, cmd = False, default = 0)
             self.deck.cut(cut_index)
         # Deal the cards
         self.deck.deal_n_each(self.cards, self.players)
