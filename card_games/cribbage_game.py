@@ -369,14 +369,8 @@ class Cribbage(game.Game):
             elif self.skunk_scores == 'four':
                 self.skunk_scores = (1, 2, 4)
             else:
-                # Set custom skunk scores or report an error.
-                try:
-                    self.skunk_scores = [int(score) for score in self.skunk_scores.split('/')]
-                    check = self.skunk_scores[2]
-                except (ValueError, IndexError):
-                    warning = 'Invalid setting for match-scores option: {!r}.'
-                    self.human.error(warning.format(self.skunk_scores))
-                    self.skunk_scores = (2, 3, 3)
+                # Set custom skunk scores.
+                self.skunk_scores = tuple(int(score) for score in self.skunk_scores)
         else:
             # Set dummy values for non-match play.
             self.match = 1
@@ -770,7 +764,7 @@ class Cribbage(game.Game):
         # Set the match options.
         self.option_set.add_option('match', ['m'], converter = int, default = 1,
             question = 'How many games for match play (return for single game)? ')
-        self.option_set.add_option('skunk-scores', ['ss'], valid = ('acc', 'long', 'free', 'four'),
+        self.option_set.add_option('skunk-scores', ['ss'], str.lower, check = skunk_check,
             default = 'acc', question = 'Should match scores be ACC, long, free, or triple? ')
         # Set the variant groups.
         five_card = 'one-go cards=5 discards=1 win=61 skunk=31 last=3'
@@ -1052,3 +1046,18 @@ class CribBot(player.Bot):
             pass
         else:
             super(CribBot, self).tell(message)
+
+def skunk_check(text):
+    """
+    Check a skunk-scores option setting. (bool)
+
+    Parameters:
+    text: The option setting to check. (str)
+    """
+    if text in ('acc', 'long', 'free', 'four'):
+        return True
+    else:
+        nums = text.split('/')
+        if len(nums) != 3:
+            return False
+        return(all(num.isdigit() for num in nums))
