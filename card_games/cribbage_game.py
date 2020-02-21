@@ -215,9 +215,9 @@ class Cribbage(game.Game):
             hand.discard()
         self.deck.shuffle()
         # Find the dealer and the player on their left.
-        self.dealer_index = (self.dealer_index + 1) % len(self.players)
-        dealer = self.players[self.dealer_index]
-        self.player_index = self.dealer_index
+        self.dealer = self.get_next_player(self.dealer)
+        self.next_player = self.get_next_player(self.dealer)
+        self.dealer_index = self.players.index(self.dealer)
         print('\nThe current dealer is {}.'.format(dealer.name))
         # Handle the solo option.
         if self.solo:
@@ -237,7 +237,7 @@ class Cribbage(game.Game):
                 self.human.ask(ENTER_TEXT)
         # Cut the deck.
         if not self.no_cut:
-            left = (self.dealer_index + 1) % len(self.players)
+            left = self.next_player
             query = 'Enter a number to cut the deck: '
             cut_index = self.players[left].ask_int(query, cmd = False, default = 0)
             self.deck.cut(cut_index)
@@ -410,7 +410,7 @@ class Cribbage(game.Game):
         player: The current player. (player.Player)
         """
         # Handle solo option for dealer.
-        if self.solo and player == self.players[self.dealer_index]:
+        if self.solo and player == self.dealer:
             # Handle different discard count.
             discard_save = self.discards
             self.discards = self.cards - self.discards
@@ -430,7 +430,7 @@ class Cribbage(game.Game):
         for card in discards:
             self.hands[player].shift(card, self.hands['The Crib'])
         # Check for starting play after dealer discards.
-        if self.players.index(player) == self.dealer_index:
+        if player == self.dealer:
             self.phase = 'play'
             self.starter = self.deck.deal(up = True)
             if self.solo:
@@ -440,8 +440,7 @@ class Cribbage(game.Game):
                 self.human.tell('The dealer got their heels.')
                 if not self.auto_score:
                     self.human.ask(ENTER_TEXT)
-                dealer = self.players[self.dealer_index]
-                self.add_points(dealer, 2)
+                self.add_points(self.dealer, 2)
         return False
 
     def player_play(self, player):
@@ -565,7 +564,7 @@ class Cribbage(game.Game):
             # Score the crib to the dealer.
             if name == 'The Crib':
                 cards = self.hands['The Crib'][:]
-                name = self.players[self.dealer_index].name
+                name = self.dealer.name
                 message = 'Now scoring the crib for the dealer ({}): {} + {}'
             else:
                 cards = self.hands[name] + self.in_play[name]
@@ -839,6 +838,7 @@ class Cribbage(game.Game):
                 else:
                     break
             self.dealer_index = -1
+        self.dealer = self.players[self.dealer_index]
         # Set up teams.
         self.teams = {player.name: [player.name] for player in self.players}
         if self.partners:
