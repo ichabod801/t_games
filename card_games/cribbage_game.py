@@ -417,12 +417,12 @@ class Cribbage(game.Game):
             # Reset the crib.
             self.hands['The Crib'] = cards.Hand(deck = self.deck)
         # Get the discards.
-        discard_plural = utility.num_text(to_discard, 'card')
+        discard_plural = utility.num_text(self.discards, 'card')
         query = '\nWhich {} would you like to discard to the crib, {}? '.format(discard_plural, player)
         while True:
-            answer = player.ask_card_list(query, self.hands[player], [to_discard])
-            if isinstance(answer, str):
-                if not self.handle_cmd(answer):
+            discards = player.ask_card_list(query, self.hands[player], [self.discards])
+            if isinstance(discards, str):
+                if not self.handle_cmd(discards):
                     return False
             else:
                 break
@@ -880,24 +880,52 @@ class CribBot(player.Bot):
         Parameters:
         query: The question the game asked. (str)
         """
-        # Get you hand.
-        hand = self.game.hands[self]
-        # Discard a card.
-        if 'discard' in query:
-            return self.get_discard()
         # Pass when you can't play.
-        elif 'no playable' in query:
+        if 'no playable' in query:
             self.game.human.tell('\n{} calls "go."'.format(self))
             return ''
-        # Play a card for pegging.
-        elif 'play' in query:
-            return self.get_play()
         # Press enter.
         elif query.startswith('Please press enter'):
             return ''
         # Raise error on unknown question.
         else:
             raise player.BotError('Unexepected question to CribBot: {!r}'.format(query))
+
+    def ask_card(self, prompt, valid = [], default = None, cmd = True):
+        """
+        Get a card from the player. (cards.Card)
+
+        Parameters:
+        prompt: The question asking for the card. (str)
+        valid: The valid values for the card. (container of cards.Card)
+        default: The default choice. (cards.Card or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        # Play a card for pegging.
+        if 'play' in prompt:
+            return self.get_play()
+        # Raise error on unknown question.
+        else:
+            raise player.BotError('Unexepected question to CribBot: {!r}'.format(query))
+
+    def ask_card_list(self, prompt, valid = [], valid_lens = [], default = None, cmd = True):
+        """
+        Get a multiple card response from the human. (int)
+
+        Parameters:
+        prompt: The question asking for the card. (str)
+        valid: The valid values for the cards. (list of int)
+        valid_lens: The valid numbers of values. (list of int)
+        default: The default choice. (list or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        # Discard a card.
+        if 'discard' in prompt:
+            return self.get_discard()
+        # Raise error on unknown question.
+        else:
+            raise player.BotError('Unexepected question to CribBot: {!r}'.format(query))
+
 
     def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
         """
@@ -937,7 +965,7 @@ class CribBot(player.Bot):
             possibles.append((score, discards))
         # Discard the highest rated batch.
         possibles.sort(reverse = True)
-        return ' '.join([card.up_text for card in possibles[0][1]])
+        return possibles[0][1]
 
     def get_play(self):
         """Get a card to play. (str)"""
@@ -973,7 +1001,7 @@ class CribBot(player.Bot):
             play = playable[0]
         # Make the play.
         self.game.human.tell('\n{} played the {:n}.'.format(self.name, play))
-        return play.up_text
+        return play
 
     def score_discards(self, cards):
         """
