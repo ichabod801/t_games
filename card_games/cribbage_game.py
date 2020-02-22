@@ -313,9 +313,9 @@ class Cribbage(game.Game):
                     points_type = ''
                 # Calculate win/loss/draw stats.
                 human_score = score_data[self.human]
-                max_score, max_name = 0, ''
-                for score, name in score_data.items():
-                    if name in self.teams[self.human]:
+                max_score, max_player = 0, ''
+                for player, score in score_data.items():
+                    if player in self.teams[self.human]:
                         continue
                     elif score < human_score:
                         self.win_loss_draw[0] += 1
@@ -324,10 +324,10 @@ class Cribbage(game.Game):
                     elif score == human_score:
                         self.win_loss_draw[2] += 1
                     if score > max_score:
-                        max_score, max_name = score, name
+                        max_score, max_player = score, player
                 # Declare the match winner.
                 if self.match > 1:
-                    self.human.tell('{} won the match with {} match points.'.format(max_name, max_score))
+                    self.human.tell('{} won the match with {} match points.'.format(max_player, max_score))
                 # Tell human their place, if they didn't win.
                 if self.win_loss_draw[1]:
                     place = utility.number_word(self.win_loss_draw[1] + 1, ordinal = True)
