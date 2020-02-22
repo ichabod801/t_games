@@ -188,7 +188,7 @@ class Cribbage(game.Game):
         lines.append('\nCards in Hand: {}'.format(hand.show_player()))
         # Show the current cards in play.
         if self.phase != 'discard':
-            lines.append('\nStarter Card: {}.'.format(self.starter))
+            lines.append('\nStarter Card: {}'.format(self.starter))
             lines.append('\nCards played: {}'.format(self.in_play['Play Sequence']))
         lines.append('\nRunning Total: {}'.format(self.card_total))
         return '\n'.join(lines)
@@ -313,7 +313,7 @@ class Cribbage(game.Game):
                     points_type = ''
                 # Calculate win/loss/draw stats.
                 human_score = score_data[self.human]
-                max_score, max_player = 0, ''
+                max_score, max_player = human_score, self.human
                 for player, score in score_data.items():
                     if player in self.teams[self.human]:
                         continue
@@ -836,8 +836,8 @@ class Cribbage(game.Game):
                     self.human.tell('{} picked the {:n}.'.format(player, card))
                     self.deck.discard(card)
                     cards_picked.append((card.rank_num, player))
-                # Determine the highest rangk.
-                cards_picked.sort()
+                # Determine the highest rank.
+                cards_picked.sort(reverse = True)
                 # Sort players by card, no tie for winner.
                 self.players[:len(cards_picked)] = [player for card, player in cards_picked]
                 if cards_picked[0][0] == cards_picked[1][0]:
