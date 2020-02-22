@@ -304,7 +304,7 @@ class Cribbage(game.Game):
             if self.match > 1:
                 self.show_match()
             # Determine end of match.
-            if max(self.match_scores.values()) > self.match:
+            if max(self.match_scores.values()) >= self.match:
                 if self.match > 1:
                     score_data = self.match_scores
                     points_type = 'match '
