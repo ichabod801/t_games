@@ -292,39 +292,52 @@ class Cribbage(game.Game):
             plural = '' if ' and ' in names else 's'
             self.human.tell('\n{} win{} with {} points.'.format(names, plural, scores[0][0]))
             # Check for skunk.
-            game_score = self.skunk_scores[0]
-            if scores[1][0] < self.skunk:
-                game_score = self.skunk_scores[1]
-                self.human.tell('{1} got skunked with {0} points.'.format(*scores[1]))
-            elif scores[1][0] < self.double_skunk:
-                game_score = self.skunk_scores[2]
+            match_points = self.skunk_scores[0]
+            if scores[1][0] < self.double_skunk:
+                match_points = self.skunk_scores[2]
                 self.human.tell('{1} got double skunked with {0} points.'.format(*scores[1]))
+            elif scores[1][0] < self.skunk:
+                match_points = self.skunk_scores[1]
+                self.human.tell('{1} got skunked with {0} points.'.format(*scores[1]))
             # Record the match scores.
-            self.match_scores[scores[0][1]] += game_score
+            self.match_scores[scores[0][1]] += match_points
             if self.match > 1:
                 self.show_match()
-            # Calculate win/loss/draw stats.
-            human_score = self.scores[self.human]
-            for score, name in scores:
-                if name in self.teams[self.human]:
-                    continue
-                elif score < human_score:
-                    self.win_loss_draw[0] += game_score
-                elif score > human_score:
-                    self.win_loss_draw[1] += game_score
-                elif score == human_score:
-                    self.win_loss_draw[2] += game_score
-            # Tell human their place, if they didn't win.
-            if self.win_loss_draw[1]:
-                place = utility.number_word(self.win_loss_draw[1] + 1, ordinal = True)
-                if not self.win_loss_draw[0]:
-                    place = 'last'
-                self.human.tell('You came in {} place with {} points.'.format(place, human_score))
-            # Halve win/loss/draw for team games, so it's per team not per preson.
-            if self.partners:
-                self.win_loss_draw = [x // 2 for x in self.win_loss_draw]
-            # Check for a match win.
-            if max(self.match_scores.values()) >= self.match:
+            # Determine end of match.
+            if max(self.match_scores.values()) > self.match:
+                if self.match > 1:
+                    score_data = self.match_scores
+                    points_type = 'match '
+                else:
+                    score_data = self.scores
+                    points_type = ''
+                # Calculate win/loss/draw stats.
+                human_score = score_data[self.human]
+                max_score, max_name = 0, ''
+                for score, name in score_data.items():
+                    if name in self.teams[self.human]:
+                        continue
+                    elif score < human_score:
+                        self.win_loss_draw[0] += 1
+                    elif score > human_score:
+                        self.win_loss_draw[1] += 1
+                    elif score == human_score:
+                        self.win_loss_draw[2] += 1
+                    if score > max_score:
+                        max_score, max_name = score, name
+                # Declare the match winner.
+                if self.match > 1:
+                    self.human.tell('{} won the match with {} match points.'.format(max_name, max_score))
+                # Tell human their place, if they didn't win.
+                if self.win_loss_draw[1]:
+                    place = utility.number_word(self.win_loss_draw[1] + 1, ordinal = True)
+                    if not self.win_loss_draw[0]:
+                        place = 'last'
+                    message = 'You came in {} place with {} {}points.'
+                    self.human.tell(message.format(place, human_score, points_type))
+                # Halve win/loss/draw for team games, so it's per team not per preson.
+                if self.partners:
+                    self.win_loss_draw = [x // 2 for x in self.win_loss_draw]
                 return True
             else:
                 # Reset for the next game in the match.
@@ -333,6 +346,7 @@ class Cribbage(game.Game):
                 self.card_total = 0
                 self.go_count = 0
                 self.in_play['Play Sequence'].cards = []
+                return False
         else:
             return False
 
