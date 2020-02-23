@@ -1061,17 +1061,16 @@ class CribBot(player.Bot):
         else:
             super(CribBot, self).tell(message)
 
-def skunk_check(text):
+def skunk_check(setting):
     """
     Check a skunk-scores option setting. (bool)
 
     Parameters:
-    text: The option setting to check. (str)
+    setting: The option setting to check. (str)
     """
-    if text in ('acc', 'long', 'free', 'four'):
+    if setting in ('acc', 'long', 'free', 'four'):
         return True
     else:
-        nums = text.split('/')
-        if len(nums) != 3:
+        if len(setting) != 3:
             return False
-        return(all(num.isdigit() for num in nums))
+        return(all(num.isdigit() for num in setting))
