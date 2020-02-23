@@ -742,7 +742,7 @@ class Cribbage(game.Game):
             text = '{} scores {} points for getting a {}-card straight.'
             message.append(text.format(player.name, run_count, utility.number_word(run_count)))
         # Check for a total of 31.
-        elif next_total == 31:
+        if next_total == 31:
             points += 2
             text = '\nThe count has reached 31.\n{} scores 2 points for reaching 31.'
             message.append(text.format(player.name))
