@@ -18,6 +18,12 @@ Battleships: A game of Battleships. (game.Game)
 BattleBot: A bot for playing Battleships. (player.Bot)
 SmarterBot: A smarter BattleBot with a search pattern. (BattleBot)
 SeaBoard: A board in a game of Battleships. (object)
+Ship: A ship in the game of Battleships. (object)
+Wake: A piece representing a square adjacent to a ship. (object)
+Hit: A piece representing a square that had been successfully hit. (Wake)
+Miss: A piece representing a square that had been unsuccessfully shot. (Wake)
+Section: A piece representing part of a ship. (Wake)
+Water: A cell in a SeaBoard. (board.BoardCell)
 
 Functions:
 test: Basic testing of the board object. (None)
@@ -509,151 +515,6 @@ class SmarterBot(BattleBot):
             self.search_squares = list(set(self.search_squares) - self.dont_shoot)
 
 
-class Ship(object):
-    """
-    A ship in the game of Battleships. (object)
-
-    Attributes:
-    name: The name of the type of ship. (str)
-    sections: The cells the ship is in. (list of Coordinate)
-
-    Overridden Methods:
-    __init__
-    __bool__
-    __repr__
-    __str__
-    """
-
-    def __init__(self, name, sections):
-        """
-        Set up the ship. (None)
-
-        Parameters:
-        name: The name of the type of ship. (str)
-        sections: The cells the ship is in. (list of Coordinate)
-        """
-        self.name = name
-        self.sections = sections
-
-    def __bool__(self):
-        """Convert to true or false. (bool)"""
-        return bool(self.sections)
-
-    def __len__(self):
-        """Give the length (sections left) of the ship. (int)"""
-        return len(self.sections)
-
-    def __nonzero__(self):
-        """Convert to true or false. (bool)"""
-        return bool(self.sections)
-
-    def __repr__(self):
-        """Dubugging text representation. (str)"""
-        return '<Ship {}>'.format(', '.join(str(cell) for cell in self.sections))
-
-    def __str__(self):
-        """Human readable text representation. (str)"""
-        return self.name.lower()
-
-
-class Wake(object):
-    """
-    A piece representing a square adjacent to a ship. (object)
-
-    Overridden Methods:
-    __str__
-    """
-
-    def __str__(self):
-        """Human readable text representation. (str)"""
-        return '.'
-
-
-class Hit(Wake):
-    """
-    A piece representing a square that had been successfully hit. (Wake)
-
-    Overridden Methods:
-    __str__
-    """
-
-    def __str__(self):
-        """Human readable text representation. (str)"""
-        return 'X'
-
-
-class Miss(Wake):
-    """
-    A piece representing a square that had been unsuccessfully shot. (Wake)
-
-    Overridden Methods:
-    __str__
-    """
-
-    def __str__(self):
-        """Human readable text representation. (str)"""
-        return '/'
-
-
-class Section(Wake):
-    """
-    A piece representing part of a ship. (Wake)
-
-    Attributes:
-    ship: The ship the square is a part of. (Ship)
-    square: The square the ship is in. (board.Coordinate)
-
-    Methods:
-    hit: Record a hit to this section of the ship. (None)
-
-    Overridden Methods:
-    __init__
-    __repr__
-    __str__
-    """
-
-    def __init__(self, square, ship):
-        """
-        Record the section's attributes. (None)
-
-        Parameters:
-        square: The square the ship is in. (board.Coordinate)
-        ship: The ship the square is a part of. (Ship)
-        """
-        self.square = square
-        self.ship = ship
-
-    def __repr__(self):
-        """Debugging text representation. (str)"""
-        return '<{} of {!r}>'.format(self.square, self.ship)
-
-    def __str__(self):
-        """Human readable text representation. (str)"""
-        return 'O'
-
-    def hit(self):
-        """Record a hit to this section of the ship. (None)"""
-        self.ship.sections.remove(self.square)
-
-
-class Water(board.BoardCell):
-    """
-    A cell in a SeaBoard. (board.BoardCell)
-
-    Overridden Methods:
-    __init__
-    """
-
-    def __init__(self, location):
-        """
-        Initialize the cell. (None)
-
-        Parameters:
-        location: The location of the cell on the board. (hashable)
-        """
-        super(Water, self).__init__(location, piece = None, empty = '.')
-
-
 class SeaBoard(board.DimBoard):
     """
     A board in a game of Battleships. (object)
@@ -865,3 +726,150 @@ class SeaBoard(board.DimBoard):
         # End with an axis label.
         lines.append(' 0123456789')
         return '\n'.join(lines)
+
+
+class Ship(object):
+    """
+    A ship in the game of Battleships. (object)
+
+    Attributes:
+    name: The name of the type of ship. (str)
+    sections: The cells the ship is in. (list of Coordinate)
+
+    Overridden Methods:
+    __init__
+    __bool__
+    __len__
+    __nonzero__
+    __repr__
+    __str__
+    """
+
+    def __init__(self, name, sections):
+        """
+        Set up the ship. (None)
+
+        Parameters:
+        name: The name of the type of ship. (str)
+        sections: The cells the ship is in. (list of Coordinate)
+        """
+        self.name = name
+        self.sections = sections
+
+    def __bool__(self):
+        """Convert to true or false. (bool)"""
+        return bool(self.sections)
+
+    def __len__(self):
+        """Give the length (sections left) of the ship. (int)"""
+        return len(self.sections)
+
+    def __nonzero__(self):
+        """Convert to true or false. (bool)"""
+        return bool(self.sections)
+
+    def __repr__(self):
+        """Dubugging text representation. (str)"""
+        return '<Ship {}>'.format(', '.join(str(cell) for cell in self.sections))
+
+    def __str__(self):
+        """Human readable text representation. (str)"""
+        return self.name.lower()
+
+
+class Wake(object):
+    """
+    A piece representing a square adjacent to a ship. (object)
+
+    Overridden Methods:
+    __str__
+    """
+
+    def __str__(self):
+        """Human readable text representation. (str)"""
+        return '.'
+
+
+class Hit(Wake):
+    """
+    A piece representing a square that had been successfully hit. (Wake)
+
+    Overridden Methods:
+    __str__
+    """
+
+    def __str__(self):
+        """Human readable text representation. (str)"""
+        return 'X'
+
+
+class Miss(Wake):
+    """
+    A piece representing a square that had been unsuccessfully shot. (Wake)
+
+    Overridden Methods:
+    __str__
+    """
+
+    def __str__(self):
+        """Human readable text representation. (str)"""
+        return '/'
+
+
+class Section(Wake):
+    """
+    A piece representing part of a ship. (Wake)
+
+    Attributes:
+    ship: The ship the square is a part of. (Ship)
+    square: The square the ship is in. (board.Coordinate)
+
+    Methods:
+    hit: Record a hit to this section of the ship. (None)
+
+    Overridden Methods:
+    __init__
+    __repr__
+    __str__
+    """
+
+    def __init__(self, square, ship):
+        """
+        Record the section's attributes. (None)
+
+        Parameters:
+        square: The square the ship is in. (board.Coordinate)
+        ship: The ship the square is a part of. (Ship)
+        """
+        self.square = square
+        self.ship = ship
+
+    def __repr__(self):
+        """Debugging text representation. (str)"""
+        return '<{} of {!r}>'.format(self.square, self.ship)
+
+    def __str__(self):
+        """Human readable text representation. (str)"""
+        return 'O'
+
+    def hit(self):
+        """Record a hit to this section of the ship. (None)"""
+        self.ship.sections.remove(self.square)
+
+
+class Water(board.BoardCell):
+    """
+    A cell in a SeaBoard. (board.BoardCell)
+
+    Overridden Methods:
+    __init__
+    """
+
+    def __init__(self, location):
+        """
+        Initialize the cell. (None)
+
+        Parameters:
+        location: The location of the cell on the board. (hashable)
+        """
+        super(Water, self).__init__(location, piece = None, empty = '.')
