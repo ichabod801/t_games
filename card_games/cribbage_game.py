@@ -825,7 +825,7 @@ class Cribbage(game.Game):
             random.shuffle(self.players)
             self.dealer_index = -1
         else:
-            players = self.players
+            players = self.players[:]
             while True:
                 # Have every player pick a card.
                 cards_picked = []
@@ -842,7 +842,7 @@ class Cribbage(game.Game):
                 self.players[:len(cards_picked)] = [player for card, player in cards_picked]
                 if cards_picked[0][0] == cards_picked[1][0]:
                     self.human.tell('Tie! Pick again.')
-                    players = [plyr for crd, plyr in cards_picked if crd.rank_num == cards_picked[0][0]]
+                    players = [player for card, player in cards_picked if card == cards_picked[0][0]]
                 else:
                     break
             self.dealer_index = -1
