@@ -368,7 +368,7 @@ class Cribbage(game.Game):
         # Warn user for trying to make a team with an odd number of players.
         if self.partners and len(self.players) % 2:
             warning = 'Invalid number of players for the partners option: {}.'
-            self.human.error(warning.format(len(self.players)))
+            self.option_set.errors.append(warning.format(len(self.players)))
             self.partners = False
         # Set up match play.
         if self.match > 1:
@@ -850,12 +850,14 @@ class Cribbage(game.Game):
         # Set up teams.
         self.teams = {player.name: [player.name] for player in self.players}
         if self.partners:
+            self.human.tell('\nThe teams are:')
             num_teams = len(self.players) // 2
             for player_index, player in enumerate(self.players[:num_teams]):
                 team_mate = self.players[player_index + num_teams]
-                team = [player.name, team_mate.name]
-                self.teams[player.name] = team
-                self.teams[team_mate.name] = team
+                team = [player, team_mate]
+                self.teams[player] = team
+                self.teams[team_mate] = team
+                self.human.tell('{} and {}'.format(player, team_mate))
 
     def show_match(self):
         """Show the match scores. (None)"""
