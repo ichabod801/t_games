@@ -222,11 +222,11 @@ class Cribbage(game.Game):
         # Handle the solo option.
         if self.solo:
             # Set up teams.
-            self.teams[dealer] = [dealer]
-            non_dealers = [player for player in self.players if player != dealer]
+            self.teams[self.dealer] = [self.dealer]
+            non_dealers = [player for player in self.players if player != self.dealer]
             self.teams.update({player: non_dealers for player in non_dealers})
             # Redirect the crib.
-            self.hands['The Crib'] = self.hands[dealer]
+            self.hands['The Crib'] = self.hands[self.dealer]
         # Score the last bonus.
         if self.last and max(self.scores.values()) == 0:
             last_index = (self.dealer_index - 1) % len(self.players)
