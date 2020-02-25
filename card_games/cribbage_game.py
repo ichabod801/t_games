@@ -288,7 +288,7 @@ class Cribbage(game.Game):
                 self.teams = {player: [player] for player in self.players}
             # Determine the winner.
             scores = self.sorted_scores()
-            names = ' and '.join(self.teams[scores[0][1]])
+            names = ' and '.join(player.name for player in self.teams[scores[0][1]])
             plural = '' if ' and ' in names else 's'
             self.human.tell('\n{} win{} with {} points.'.format(names, plural, scores[0][0]))
             # Check for skunk.
