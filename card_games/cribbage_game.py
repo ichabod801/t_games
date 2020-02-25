@@ -848,7 +848,7 @@ class Cribbage(game.Game):
             self.dealer_index = -1
         self.dealer = self.players[self.dealer_index]
         # Set up teams.
-        self.teams = {player: [player.name] for player in self.players}
+        self.teams = {player: [player] for player in self.players}
         if self.partners:
             self.human.tell('\nThe teams are:')
             num_teams = len(self.players) // 2
