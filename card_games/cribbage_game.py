@@ -261,26 +261,26 @@ class Cribbage(game.Game):
         game, losses = self.gipf_check(arguments, ('backgammon', 'craps', 'crazy eights'))
         # Backgammon doubles the score for pairs.
         if game == 'backgammon':
+            self.human.tell(self)
             if not losses:
-                self.human.tell('Pairs score four points each this round.')
-                self.human.tell(self)
+                self.human.tell('\nPairs score four points each this round.')
                 self.double_pairs = True
         # Craps lets you swap a card with one from the deck.
         elif game == 'craps':
+            self.human.tell(self)
             if not losses:
                 # Get a valid card to discard.
-                self.human.tell(self)
                 hand = self.hands[self.human]
-                card = self.human.ask_card('Pick a card to replace: ', valid = hand, cmd = False)
+                card = self.human.ask_card('\nPick a card to replace: ', valid = hand, cmd = False)
                 # Replace that card.
                 hand.discard(card)
                 hand.draw()
         # Crazy Eights skips the next player's play.
         elif game == 'crazy eights':
+            self.human.tell(self)
             if not losses:
                 next_player = self.skip_player()
-                self.human.tell("{}'s next discard will be skipped.".format(next_player))
-                self.human.tell(self)
+                self.human.tell("\n{}'s next discard will be skipped.".format(next_player))
         # Otherwise I'm confused.
         else:
             self.human.error("I'm sorry, sir, but that is simply not acceptable in this venue.")
