@@ -274,7 +274,8 @@ class Cribbage(game.Game):
                 card = self.human.ask_card('\nPick a card to replace: ', valid = hand, cmd = False)
                 # Replace that card.
                 hand.discard(card)
-                hand.draw()
+                new_card = hand.draw()
+                self.human.tell('\nThe {:u} was replaced with the {:u}.'.format(card, new_card))
         # Crazy Eights skips the next player's play.
         elif game == 'crazy eights':
             self.human.tell(self)
