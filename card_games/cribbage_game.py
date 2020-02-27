@@ -262,10 +262,12 @@ class Cribbage(game.Game):
         # Backgammon doubles the score for pairs.
         if game == 'backgammon':
             self.human.tell('Pairs score four points each this round.')
+            self.human.tell(self)
             self.double_pairs = True
         # Craps lets you swap a card with one from the deck.
         elif game == 'craps':
             # Get a valid card to discard.
+            self.human.tell(self)
             hand = self.hands[self.human]
             card = self.human.ask_card('Pick a card to replace: ', valid = hand, cmd = False)
             # Replace that card.
@@ -275,6 +277,7 @@ class Cribbage(game.Game):
         elif game == 'crazy eights':
             next_player = self.skip_player()
             self.human.tell("{}'s next discard will be skipped.".format(next_player))
+            self.human.tell(self)
         # Otherwise I'm confused.
         else:
             self.human.error("I'm sorry, sir, but that is simply not acceptable in this venue.")
