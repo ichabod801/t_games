@@ -812,7 +812,6 @@ class Cribbage(game.Game):
         self.go_count = 0
         self.match_scores = {player.name: 0 for player in self.players}
         self.double_pairs = False
-        self.skip_player = None
         # Set up the deck.
         self.deck = cards.Deck()
         self.deck.shuffle()
