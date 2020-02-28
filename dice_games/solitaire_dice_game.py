@@ -229,8 +229,8 @@ class SolitaireDice(game.Game):
         player.tell('\nDISCARDS:')
         player.tell('#  Count')
         player.tell('-- -----')
-        for value in self.discards:
-            player.tell('{}: {}'.format(value, self.discards[value]))
+        for value in sorted(self.discards.items()):
+            player.tell('{}: {}'.format(*value))
         # show score
         player.tell('\nYour current score is {}.'.format(self.scores[player]))
         # show message
