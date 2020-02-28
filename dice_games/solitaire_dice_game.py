@@ -103,6 +103,7 @@ class SolitaireDice(game.Game):
             if not allowed_discards or self.free_free:
                 player.tell('Free ride! You may discard any die you want.')
                 allowed_discards = self.dice
+                self.free_free = False
         else:
             allowed_discards = self.dice
         # Get the required/requested discard.
@@ -116,7 +117,6 @@ class SolitaireDice(game.Game):
             if len(self.discards) < 3 or discard in self.discards:
                 self.discards[discard] += 1
             self.dice.hold(discard)
-            self.free_free = False
             self.mode = 'split'
         else:
             return self.handle_cmd(discard)
