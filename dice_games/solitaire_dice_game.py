@@ -154,7 +154,7 @@ class SolitaireDice(game.Game):
     def game_over(self):
         """Check for any number being discarded 8 times. (bool)"""
         if self.mode == 'roll' and max(self.discards.values()) == 8:
-            score = self.scores[self.human.name]
+            score = self.scores[self.human]
             # Win
             if score < 0:
                 self.human.tell('You lost with {} points. :('.format(score))
@@ -238,7 +238,7 @@ class SolitaireDice(game.Game):
         for value in self.discards:
             player.tell('{}: {}'.format(value, self.discards[value]))
         # show score
-        player.tell('\nYour current score is {}.'.format(self.scores[player.name]))
+        player.tell('\nYour current score is {}.'.format(self.scores[player]))
         # show message
         if self.message:
             player.tell(self.message.strip())
@@ -283,4 +283,4 @@ class SolitaireDice(game.Game):
                 score -= 200
             elif total:
                 score += (min(total, 10) - 5) * value
-        self.scores[player.name] = score
+        self.scores[player] = score
