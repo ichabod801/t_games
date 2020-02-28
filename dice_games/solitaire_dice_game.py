@@ -61,10 +61,6 @@ class SolitaireDice(game.Game):
     """
     A game of Solitaire Dice. (game.Game)
 
-    Class Attributes:
-    three_numbers_re: A regular expression for three dice. (re.SRE_Expression)
-    two_numbers_re: A regular expression for two dice. (re.SRE_Expression)
-
     Attributes:
     dice: The dice that are rolled. (dice.Pool)
     discards: The numbers discarded and how many times. (dict of int: int)
@@ -92,8 +88,6 @@ class SolitaireDice(game.Game):
     credits = CREDITS
     name = 'Solitaire Dice'
     rules = RULES
-    three_numbers_re = re.compile('([123456]).*?([123456]).*?([123456])')
-    two_numbers_re = re.compile('([123456]).*?([123456])')
 
     def discard_mode(self, player):
         """
