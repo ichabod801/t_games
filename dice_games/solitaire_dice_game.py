@@ -135,7 +135,7 @@ class SolitaireDice(game.Game):
         # Gargantua lets you change one die to a six.
         elif game == 'gargantua':
             if not losses:
-                self.human.tell('Your roll is: {}.', self.dice)
+                self.human.tell('\nYour roll is: {}.'.format(self.dice))
                 query = 'Which value would you like to change to a six? '
                 to_six = self.human.ask_int(query, valid = self.dice)
                 to_change = self.dice.index(to_six)
