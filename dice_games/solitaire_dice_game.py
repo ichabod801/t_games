@@ -98,13 +98,13 @@ class SolitaireDice(game.Game):
         """
         # Determine what can be discarded.
         if len(self.discards) == 3:
-            allowed_discards = [d for d in self.discards if d in self.roll]
+            allowed_discards = [d for d in self.discards if d in self.dice]
             # Check for a free ride.
             if not allowed_discards or self.free_free:
                 player.tell('Free ride! You may discard any die you want.')
-                allowed_discards = set(self.roll)
+                allowed_discards = self.dice
         else:
-            allowed_discards = set(self.roll)
+            allowed_discards = self.dice
         # Get the required/requested discard.
         if len(allowed_discards) == 1:
             discard = allowed_discards.pop()
@@ -115,7 +115,7 @@ class SolitaireDice(game.Game):
             # Process valid discards (don't store free rides).
             if len(self.discards) < 3 or discard in self.discards:
                 self.discards[discard] += 1
-            self.roll.remove(discard)
+            self.dice.hold(discard)
             self.free_free = False
             self.mode = 'split'
         else:
@@ -135,11 +135,11 @@ class SolitaireDice(game.Game):
         # Gargantua lets you change one die to a six.
         elif game == 'gargantua':
             if not losses:
-                self.human.tell('Your roll is:', ', '.join([str(x) for x in self.roll]))
+                self.human.tell('Your roll is: {}.', self.dice)
                 query = 'Which value would you like to change to a six? '
-                to_six = self.human.ask_int(query, valid = set(self.roll))
-                self.roll.remove(to_six)
-                self.roll.append(6)
+                to_six = self.human.ask_int(query, valid = self.dice)
+                to_change = self.dice.index(to_six)
+                self.dice[to_change].value = 6
                 return True
         # Otherwise I'm confused.
         else:
@@ -189,9 +189,9 @@ class SolitaireDice(game.Game):
         player: The player whose turn it is. (Player)
         """
         # Roll the dice.
+        self.dice.release()
         self.dice.roll()
-        self.roll = self.dice.values
-        self.roll.sort()
+        self.dice.sort()
         # Set tracking variables.
         self.mode = 'discard'
         self.message = ''
@@ -238,7 +238,7 @@ class SolitaireDice(game.Game):
             player.tell(self.message.strip())
             self.message = ''
         # show roll
-        player.tell('Your roll is:', ', '.join([str(x) for x in self.roll]))
+        player.tell('Your roll is: {}.'.format(self.dice))
 
     def split_mode(self, player):
         """
@@ -249,13 +249,13 @@ class SolitaireDice(game.Game):
         """
         # Get the split
         prompt = 'Choose two numbers to make a pair: '
-        split = player.ask_int_list(prompt, valid = self.roll, valid_lens = [2])
+        split = player.ask_int_list(prompt, valid = self.dice, valid_lens = [2])
         if isinstance(split, list):
             # Handle a valid split
             self.totals[sum(split)] += 1
-            self.roll.remove(split[0])
-            self.roll.remove(split[1])
-            self.totals[sum(self.roll)] += 1
+            self.dice.hold(split[0])
+            self.dice.hold(split[1])
+            self.totals[sum(self.dice.get_free())] += 1
             self.update_score(player, split)
             self.mode = 'roll'
         else:
