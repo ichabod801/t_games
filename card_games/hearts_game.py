@@ -398,29 +398,35 @@ class SmeartBot(HeartBot):
 
     def defend(self):
         """Make a move to stop a player from shooting the moon. (cards.Card)"""
+        # Get the standard play as a card.
         standard = super(SmeartBot, self).play()
         if isinstance(standard, str):
             standard = self.game.deck.parse_text(standard)
             standard.up = True
+        # Reconsider playing point cards.
         base_check = (standard.suit == 'H' or standard in self.danger_cards) and self.game.trick
         if base_check or (self.game.joker_points and standard.rank == 'X'):
+            # Get data about the trick.
             suit_cards = self.game.trick.find(suit = self.game.trick[0].suit)
             suit_cards.sort(key = cards.by_rank)
             best_card = suit_cards[-1]
             best_index = self.game.trick.index(best_card)
             best_player = self.game.players[self.game.player_index - len(self.game.trick) + best_index]
             self.hand.sort(key = cards.by_rank)
+            # Check for the suspected shooter being the current winner of the trick.
             if best_player.name == self.shooter:
                 playable = self.hand.find(suit = self.game.trick[0].suit)
                 if playable:
+                    # If you can take the trick, do so.
                     winners = [card for card in playable if card.rank_num > best_card.rank_num]
                     if winners:
                         return winners[0]
-                    elif playable[0].suit == 'X':
+                    elif playable[0].rank == 'X':
                         return playable[1]
                     else:
                         return playable[0]
                 else:
+                    # If you can't take the trick, try to save point cards for a later trick.
                     non_points = [card for card in self.hand if card.value == 0]
                     if self.game.joker_points:
                         non_points = [card for card in non_points if card.rank != 'X']
@@ -441,7 +447,7 @@ class SmeartBot(HeartBot):
         """
         self.set_tracking()
         by_suit = collections.Counter(card.suit for card in self.hand)
-        if len(set(['QS', 'KS', 'AS', 'KH', 'AH']).intersection(self.hand)) >= 4:
+        if len(self.hand.find(regex = '([QKA]S)|([KA]H)')) >= 4:
             if ('QH' in self.hand and by_suit['H'] > 4) or by_suit['H'] > 5:
                 self.strategy = 'shoot'
                 to_pass = self.hand[:]
@@ -449,13 +455,13 @@ class SmeartBot(HeartBot):
         if self.strategy == 'standard':
             to_pass = []
             # Don't pass spades unless you have high ones and few spades.
-            high_spades = set(['QS', 'KS', 'AS']).intersection(self.hand)
-            low_spades = [card for card in self.hand if card.suit == 'S' and card.rank_num < 12]
+            high_spades = self.hand.find(rank = 'QKA', suit = 'S')
+            low_spades = self.hand.find(rank = '23456789TJ', suit = 'S')
             if high_spades and len(low_spades) < 3:
                 to_pass.extend(high_spades)
             # Don't pass the ace of hearts, but pass other high hearts if you have few low hearts.
-            high_hearts = set(['JH', 'QH', 'KH']).intersection(self.hand)
-            low_hearts = set(char + 'H' for char in '234567').intersection(self.hand)
+            high_hearts = self.hand.find(rank = 'JQK', suit = 'H')
+            low_hearts = self.hand.find(rank = '234567', suit = 'H')
             if high_hearts and len(low_hearts) < 3:
                 to_pass.extend(high_hearts)
             # Pass the low club if it's the starter card.
@@ -527,12 +533,12 @@ class SmeartBot(HeartBot):
         self.hand.cards.sort(key = cards.by_rank)
         if self.game.trick:
             # Try to win the trick.
-            matching = [card for card in self.hand if card.suit == self.game.trick[0].suit]
+            matching = self.hand.find(suit = self.game.trick[0].suit)
             if matching:
                 return matching[-1]
             else:
                 # If you can't win the trick, lose without giving points while maintaining high cards.
-                not_hearts = [card for card in self.hand if card.suit != 'H']
+                not_hearts = self.hand.find(not_suit = 'H')
                 if not_hearts:
                     return not_hearts[0]
                 else:
@@ -549,11 +555,9 @@ class SmeartBot(HeartBot):
         self.tricks += 1
         if self.game.last_trick:
             # Get the points from the last trick.
-            last_penalties = [card for card in self.game.last_trick if card.suit == 'H']
-            if self.game.joker_points:
-                last_penalties.extend([card for card in self.game.last_trick if card.rank == 'X'])
+            last_penalties = [card for card in self.game.last_trick if card.value]
             # Update who has scored points.
-            if last_penalties or 'QS' in self.game.last_trick:
+            if last_penalties:
                 self.got_points[self.game.last_winner.name] = True
         # Look for signs of someone trying to shoot (leading a high card early).
         if self.strategy == 'standard':
