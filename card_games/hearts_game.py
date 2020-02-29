@@ -245,8 +245,6 @@ class HeartBot(player.Bot):
         trick_cards = self.game.trick.find(suit = trick_starter.suit)
         trick_max = sorted(trick_cards, key = cards.by_rank)[-1]
         point_cards = [card for card in self.game.trick if card.value > 0]
-        if self.game.joker_points:
-            point_cards.extend(self.game.trick.find(rank = 'X'))
         last_player = len(self.game.trick) + 1 == len(self.game.players)
         playable = self.hand.find(suit = trick_starter.suit)
         if playable:
@@ -281,8 +279,8 @@ class HeartBot(player.Bot):
                 card = self.game.deck.parse_text('QS')
             # Otherwise get rid of hearts if you can.
             else:
-                hearts = [card for card in self.hand if card.suit == 'H']
-                hearts.sort(key = cards.by_rank)
+                hearts = self.hand.find(suit = 'H')
+                hearts.sort()
                 if hearts:
                     card = hearts[-1]
                 else:
@@ -930,6 +928,8 @@ class Hearts(game.Game):
             self.breakers.add('QS')
         if self.joker_points:
             jokers = [card for card in self.deck if card.rank == 'X']
+            for joker in jokers:
+                joker.value = 1
             self.max_score += len(jokers)
             if self.all_break:
                 self.breakers.update(jokers)

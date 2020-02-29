@@ -1007,7 +1007,7 @@ class Hand(Pile):
         """
         Get a subset of the cards in the hand. (Hand)
 
-        Parameters are processed in the following order: rank, suit, re, not_rank,
+        Parameters are processed in the following order: rank, suit, regex, not_rank,
         not_suit. Without parameters it returns a shallow copy of the hand.
 
         Parameters:
