@@ -614,7 +614,6 @@ class Hearts(game.Game):
     this_pass: Then direction to pass cards for this hand. (str)
 
     Class Attributes:
-    card_re: A regular expression detecting cards. (re.SRE_Pattern)
     pass_aliases: Aliases of pass-dir option settings. (dict of str: str)
     pass_dirs: The directions to pass for pass-dire settings. (dict)
 
@@ -648,7 +647,6 @@ class Hearts(game.Game):
 
     aka = ['Black Lady', 'Black Maria', 'Black Widow', '<3']
     aliases = {'p': 'play'}
-    card_re = re.compile(r'\s*[x123456789tjqka][cdhs]\s*', re.IGNORECASE)
     categories = ['Card Games']
     credits = CREDITS
     name = 'Hearts'
@@ -665,11 +663,10 @@ class Hearts(game.Game):
         """Deal the cards to the players. (None)"""
         # Deal the cards out equally, leaving any extras aside.
         self.deck.shuffle()
+        num_cards = len(self.deck) // len(self.players)
         player_index = (self.players.index(self.dealer) + 1) % len(self.players)
-        for player in itertools.cycle(self.players[player_index:] + self.players[:player_index]):
-            self.hands[player].draw()
-            if player == self.dealer and len(self.deck) < len(self.players):
-                break
+        player_order = self.players[player_index:] + self.players[:player_index]
+        self.deck.deal_n_each(num_cards, player_order)
         for hand in self.hands.values():
             hand.sort()
         self.human.tell('{} deals.'.format(self.dealer))
@@ -736,27 +733,22 @@ class Hearts(game.Game):
         # Get the player and their hand.
         player = self.current_player
         hand = self.hands[player]
-        #print('{} passes {} from {}.'.format(player, arguments, hand))
         # Get the actual card objects.
         if isinstance(arguments, str):
             cards = self.deck.parse_text(arguments)
         else:
             cards = arguments
         # Make sure all of the cards are in their hand and legal.
-        error = False
         for card in cards:
             if card not in hand:
                 player.error('You do not have the {}.'.format(card))
-                error = True
+                return True
             elif self.keep_spades and card in ('QS', 'KS', 'AS'):
                 player.error('You may not pass the {}.'.format(card))
-                error = True
-        if error:
-            return True
-        else:
-            # Shift the cards to their passing stack.
-            for card in cards:
-                hand.shift(card, self.passes[player])
+                return True
+        # Shift the cards to their passing stack.
+        for card in cards:
+            hand.shift(card, self.passes[player])
 
     def do_play(self, arguments):
         """
@@ -769,11 +761,11 @@ class Hearts(game.Game):
         # Check for a valid card.
         if isinstance(arguments, cards.Card):
             to_play = arguments
-        elif self.card_re.match(arguments):
-            to_play = self.deck.parse_text(arguments)
         else:
-            player.error('{!r} is not a card in the deck.'.format(arguments))
-            return True
+            to_play = self.deck.parse_text(arguments)
+            if not to_play:
+                player.error('{!r} is not a card in the deck.'.format(arguments))
+                return True
         # Check for valid timing.
         if self.phase != 'trick':
             player.error('This is not the right time to play cards.')
@@ -793,11 +785,9 @@ class Hearts(game.Game):
                 self.human.tell('{} played the {:u}.'.format(player, to_play))
         else:
             # Get the player's playable cards.
-            playable = hand.cards[:]
-            if self.jokers_follow:
-                playable = [card for card in playable if card.rank != 'X']
-            if not self.hearts_broken:
-                playable = [card for card in playable if card.suit != 'H']
+            bad_rank = 'X' if self.jokers_follow else ''
+            bad_suit = 'H' if not self.hearts_broken else ''
+            playable = hand.find(not_rank = bad_rank, not_suit = bad_suit)
             # Validate the card they are leading with.
             if to_play.rank == 'X' and self.jokers_follow and playable:
                 player.error('You cannot lead with a joker.')
@@ -816,7 +806,7 @@ class Hearts(game.Game):
         current = self.current_player
         current.tell()
         for player in self.players:
-            current.tell('{}: {}'.format(player, self.scores[player.name]))
+            current.tell('{}: {}'.format(player, self.scores[player]))
         current.tell('\nThe game ends when a player reaches {} points.\n'.format(self.end))
         return True
 
@@ -872,7 +862,7 @@ class Hearts(game.Game):
         elif self.extras[0] == 'j':
             suits = itertools.cycle('CD')
             while len(self.deck) % len(self.players):
-                self.deck.append(cards.Card('X', next(suits)))
+                self.deck.append(self.deck.parse_text('X{}'.format(next(suits))))
 
     def handle_opt_pass(self):
         """Handle the passing option settings for this game. (None)"""
@@ -904,6 +894,8 @@ class Hearts(game.Game):
         self.players = [self.human]
         if self.easy + self.medium > 5:
             self.option_set.errors.append('There can be at most five bots in the game.')
+            self.medium = min(5, self.medium)
+            self.easy = 5 - self.medium
         for bot in range(self.easy):
             self.players.append(HeartBot(taken_names = [player.name for player in self.players]))
         for bot in range(self.medium):
@@ -923,7 +915,7 @@ class Hearts(game.Game):
         self.deck[lady_index].value = self.lady_points
         self.max_score = sum(rank_set.values.values()) + self.lady_points
         if self.bonus:
-            # does not count toward max score.
+            # The bonus does not count toward max score, that is handled when checking shooting the moon.
             bonus_index = self.deck.index(self.bonus)
             self.bonus = self.deck[bonus_index]
             self.bonus.value = -10
@@ -951,26 +943,20 @@ class Hearts(game.Game):
         """Handle the actual passing of the cards between players. (None)"""
         # Handle passing to the center.
         if self.this_pass == 'center':
-            center = []
+            center = cards.Deck(cards = [], rank_set = self.deck.rank_set, suit_set = self.deck.suit_set)
             for player in self.players:
                 center.extend(self.passes[player])
                 self.passes[player].cards = []
-            random.shuffle(center)
-            for player in itertools.cycle(self.players):
-                self.hands[player].append(center.pop())
-                if not center:
-                    break
+            center.shuffle()
+            center.deal_n_each(self.num_pass, self.players)
         # Handle scatter passing.
         elif self.this_pass == 'scatter':
-            for pass_from in self.players:
-                for pass_to in self.players:
-                    if pass_from != pass_to:
-                        self.hands[pass_to].append(self.passes[pass_from].pop(0))
+            for pass_from, pass_to in itertools.permutations(self.players, 2):
+                self.hands[pass_to].append(self.passes[pass_from].pop(0))
         # Handle passing from player to player.
         else:
             for pass_from in self.players:
                 pass_to = self.pass_to[pass_from]
-                #print('passing from {} to {}'.format(pass_from, pass_to))
                 self.hands[pass_to].extend(self.passes[pass_from])
                 self.passes[pass_from].cards = []
         human_got = self.hands[self.human][-self.num_pass:]
@@ -1064,20 +1050,17 @@ class Hearts(game.Game):
             lady = 'QS' in self.taken[player]
             jokers = len([card for card in self.taken[player] if card.rank == 'X'])
             # Calculate and store the unadjusted points.
-            if self.joker_points:
-                points += jokers
             points = max(0, points)
             round_points[player] = points
             # Display the card counts and points.
-            score_text = '{} had {} {}'.format(player.name, hearts, utility.plural(hearts, 'heart'))
-            score_bits = ['{} {}'.format(hearts, utility.plural(hearts, 'heart'))]
+            score_bits = [utility.num_text(hearts, 'heart')]
             if lady:
                 score_bits.append('the Queen of Spades')
             if self.joker_points and jokers:
-                score_bits.append('{} {}'.format(jokers, utility.plural(jokers, 'joker')))
+                score_bits.append(utility.num_text(jokers, 'joker'))
             if bonus:
                 score_bits.append('the {:n}'.format(bonus))
-            point_text = '{} {}'.format(points, utility.plural(points, 'point'))
+            point_text = utility.num_text(points, 'point')
             base_text = '{} had {}, for {} this round.'
             score_text = base_text.format(player, utility.oxford(score_bits), point_text)
             self.human.tell(score_text)
@@ -1167,7 +1150,7 @@ class Hearts(game.Game):
         # Set the deal/card options.
         self.option_set.add_option('extras', ['x'], default = 'ditch',
             valid = ('d', 'ditch', 'f', 'first', 'h', 'heart', 'j', 'joker'),
-            question = 'How should extra cards be handled (return or ditch them)? ',
+            question = 'How should extra cards be handled (return for ditch them)? ',
             error_text = 'Please choose ditch, first, heart, or joker.')
         self.option_set.add_option('jokers-follow', ['jf'],
             question = 'Should jokers not be allowed to lead? bool')
