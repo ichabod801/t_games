@@ -1060,7 +1060,7 @@ class Hearts(game.Game):
                 score_bits.append(utility.num_text(jokers, 'joker'))
             if bonus:
                 score_bits.append('the {:n}'.format(bonus))
-            point_text = utility.num_text(points, 'point')
+            point_text = utility.num_text(points, 'point', ':n')
             base_text = '{} had {}, for {} this round.'
             score_text = base_text.format(player, utility.oxford(score_bits), point_text)
             self.human.tell(score_text)
@@ -1274,7 +1274,7 @@ class Hearts(game.Game):
                 points_lost = min(self.scores[self.human], 5)
                 self.scores[self.human] -= points_lost
                 message = '{} removed {} because the trick has a pair in it.'
-                self.human.tell(message.format(self.human, utility.num_text(points_lost, 'point')))
+                self.human.tell(message.format(self.human, utility.num_text(points_lost, 'point', ':n')))
             self.pair_bonus = False
         # Clear the trick.
         self.last_trick = self.trick
