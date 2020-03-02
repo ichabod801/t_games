@@ -1203,31 +1203,31 @@ class Hearts(game.Game):
                 self.human.tell('\nThere is no passing this round.')
             self.phase = 'trick'
             return None
-        # Translate the pass direction into passees.
-        if self.this_pass == 'left':
-            pass_to = self.players[1:] + self.players[:1]
-        elif self.this_pass == 'right':
-            pass_to = self.players[-1:] + self.players[:-1]
-        elif self.this_pass == 'across':
-            offset = len(self.players) // 2
-            pass_to = self.players[offset:] + self.players[:offset]
-        elif self.this_pass.startswith('left-'):
-            offset = int(self.this_pass.split('-')[1])
-            pass_to = self.players[offset:] + self.players[:offset]
         # Set up the passing dictionary.
         if self.this_pass == 'center':
             self.pass_to = {pass_from: 'the center' for pass_from in self.players}
         elif self.this_pass == 'scatter':
             self.pass_to = {pass_from: self.this_pass for pass_from in self.players}
         else:
+            # Translate the pass direction into passees.
+            if self.this_pass == 'left':
+                pass_to = self.players[1:] + self.players[:1]
+            elif self.this_pass == 'right':
+                pass_to = self.players[-1:] + self.players[:-1]
+            elif self.this_pass == 'across':
+                offset = len(self.players) // 2
+                pass_to = self.players[offset:] + self.players[:offset]
+            elif self.this_pass.startswith('left-'):
+                offset = int(self.this_pass.split('-')[1])
+                pass_to = self.players[offset:] + self.players[:offset]
             self.pass_to = {passer: passee.name for passer, passee in zip(self.players, pass_to)}
 
     def set_up(self):
         """Set up the game. (None)"""
         # Set up hands, including pseudo-hands for holding various sets of cards.
-        self.hands = {player: cards.Hand(deck = self.deck) for player in self.players}
-        self.passes = {player: cards.Hand(deck = self.deck) for player in self.players}
-        self.taken = {player: cards.Hand(deck = self.deck) for player in self.players}
+        self.hands = self.deck.player_hands(self.players)
+        self.passes = self.deck.player_hands(self.players)
+        self.taken = self.deck.player_hands(self.players)
         self.trick = cards.Hand(deck = self.deck)
         self.last_trick = cards.Hand(deck = self.deck)
         random.shuffle(self.players)
@@ -1244,7 +1244,7 @@ class Hearts(game.Game):
         """Determine who won the trick. (None)"""
         # Find the winning card.
         trick_suit = self.trick[0].suit
-        suit_cards = [card for card in self.trick if card.suit == trick_suit]
+        suit_cards = self.trick.find(suit = trick_suit)
         winning_card = sorted(suit_cards)[-1]
         card_index = self.trick.cards.index(winning_card)
         # Find the winning player.
@@ -1256,7 +1256,7 @@ class Hearts(game.Game):
         # Handle any kitty.
         if self.deck:
             kitty_win = self.kitty == 'first'
-            kitty_win = kitty_win or 'heart' and [card for card in self.trick if card.suit == 'H']
+            kitty_win = kitty_win or 'heart' and self.trick.find(suit = 'H')
             if kitty_win:
                 self.taken[winner].cards.extend(self.deck)
                 text = 'You won {} from the kitty.'
@@ -1269,7 +1269,7 @@ class Hearts(game.Game):
             self.hearts_broken = True
         # Check for a pair bonus.
         if self.pair_bonus:
-            ranks = [card.rank for card in self.trick]
+            ranks = self.trick.ranks()
             if len(set(ranks)) < len(ranks):
                 points_lost = min(self.scores[self.human], 5)
                 self.scores[self.human] -= points_lost
@@ -1290,4 +1290,4 @@ class Hearts(game.Game):
                 self.deal()
                 self.set_pass()
         else:
-            self.player_index = winner_index - 1
+            self.next_player = winner
