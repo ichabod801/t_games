@@ -736,16 +736,21 @@ class Hearts(game.Game):
         # Get the actual card objects.
         if isinstance(arguments, str):
             cards = self.deck.parse_text(arguments)
+            # Make sure all of the cards are in their hand and legal.
+            if len(cards) != self.num_pass:
+                player.error('You must pass {} cards.'.format(self.num_pass))
+                return True
+            errors = []
+            for card in cards:
+                if card not in hand:
+                    errors.append('You do not have the {}.'.format(card))
+                elif self.keep_spades and card in ('QS', 'KS', 'AS'):
+                    errors.append('You may not pass the {}.'.format(card))
+            if errors:
+                player.error('\n'.join(errors))
+                return True
         else:
             cards = arguments
-        # Make sure all of the cards are in their hand and legal.
-        for card in cards:
-            if card not in hand:
-                player.error('You do not have the {}.'.format(card))
-                return True
-            elif self.keep_spades and card in ('QS', 'KS', 'AS'):
-                player.error('You may not pass the {}.'.format(card))
-                return True
         # Shift the cards to their passing stack.
         for card in cards:
             hand.shift(card, self.passes[player])
@@ -766,14 +771,14 @@ class Hearts(game.Game):
             if not to_play:
                 player.error('{!r} is not a card in the deck.'.format(arguments))
                 return True
-        # Check for valid timing.
-        if self.phase != 'trick':
-            player.error('This is not the right time to play cards.')
-            return True
-        # Check for possession of the card.
-        elif to_play not in hand:
-            player.error('You do not have the {:u} to play.'.format(to_play))
-            return True
+            # Check for valid timing.
+            if self.phase != 'trick':
+                player.error('This is not the right time to play cards.')
+                return True
+            # Check for possession of the card.
+            elif to_play not in hand:
+                player.error('You do not have the {:u} to play.'.format(to_play))
+                return True
         if self.trick:
             # Check that the card follows suit, or that the player is void in that suit.
             trick_suit = self.trick[0].suit
