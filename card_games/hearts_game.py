@@ -71,8 +71,8 @@ extras= (x=): How do deal with extra cards where there are not four players.
     heart (h): The extra cards form a kitty that goes to the winner of the
         first heart.
     jokers (j): Jokers are added to the deck to even out the hands.
-gonzo: Equivalent to 'bonus = jd break-hearts heart-score = face low-club
-    no-tricks = 5 pass-dir = rot-left'. b=jd bh hs=f lc nt=5 pd=@
+gonzo (gz): Equivalent to 'bonus = jd break-hearts heart-score = face low-club
+    no-tricks = 5 pass-dir = rot-left'.
 heart-score= (hs=): How hearts are scored. Valid setting are:
     face (f): Hearts score 1, face cards score more: J = 2, Q = 3, K = 4, A =5.
     one (o): Hearts score one point each.
@@ -237,6 +237,21 @@ class HeartBot(player.Bot):
             return self.pass_count(low, high)
         else:
             return super(HeartBot, self).ask(prompt)
+
+    def error(self, *args, **kwargs):
+        """
+        Stop play due to a bot malfunction. (None)
+
+        Parameters:
+        The parameters are the same as the built-in bot function.
+        """
+        # Get the base text.
+        kwargs['sep'] = kwargs.get('sep', ' ')
+        kwargs['end'] = kwargs.get('end', '\n')
+        text = kwargs['sep'].join([str(arg) for arg in args]) + kwargs['end']
+        text = '{}\n{}'.format(self.hand)
+        # Raise an error.
+        raise BotError(text.strip())
 
     def follow(self):
         """Play a card to an existing trick. (str)"""
