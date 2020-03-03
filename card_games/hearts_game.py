@@ -86,7 +86,7 @@ lady-score= (lp=): The points scored for the QS. Defaults to 13, sometimes it
     is 0 or 25.
 low-club (lc): The player with the lowest club in the deck (typically 2C) must
     start the first trick of each hand.
-keep-spades: Players may not pass the Queen, King, or Ace of Spades.
+keep-spades (ks): Players may not pass the Queen, King, or Ace of Spades.
 medium= (md=): The number of medium hard bots to play against.
 moon= (m=): How shooting the Moon is scored. Valid settings are:
     old (o): Every player that didn't shoot gains 26 points.
@@ -988,7 +988,10 @@ class Hearts(game.Game):
                 pass_text = self.pass_to[player]
             query = '\nWhich {} do you want to pass to {}? '
             query = query.format(utility.number_plural(self.num_pass, 'card'), pass_text)
-            move = player.ask_card_list(query, valid = self.hands[player], valid_lens = [self.num_pass])
+            valid = self.hands[player].find()
+            if self.keep_spades:
+                valid = set(valid) - set(('QS', 'KS', 'AS'))
+            move = player.ask_card_list(query, valid = valid, valid_lens = [self.num_pass])
             #print(move)
             if isinstance(move, str):
                 # Treat strings as commands.
