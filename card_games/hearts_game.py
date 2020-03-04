@@ -1018,15 +1018,7 @@ class Hearts(game.Game):
                 if all(self.passes.values()):
                     self.pass_cards()
                     self.phase = 'trick'
-                    # Set the first player.
-                    if self.low_club:
-                        for player in self.players:
-                            if self.low_club in self.hands[player]:
-                                self.next_player = player
-                                break
-                    else:
-                        # Note that self.dealer refers to the next dealer, to the left of the current one.
-                        self.next_player = self.dealer
+                    self.set_first_player()
                 return go
         # Handle playing tricks
         elif self.phase == 'trick':
@@ -1160,6 +1152,18 @@ class Hearts(game.Game):
                     max_players = []
                     player_index = 0
 
+    def set_first_player(self):
+        """Set the player to play the first card this deal. (None)"""
+        # Check for low club determining next player.
+        if self.low_club:
+            for player in self.players:
+                if self.low_club in self.hands[player]:
+                    self.next_player = player
+                    break
+        else:
+            # Note that self.dealer refers to the next dealer, to the left of the current one.
+            self.next_player = self.dealer
+
     def set_options(self):
         """Set the possible options for the game. (None)"""
         # Get a card verifier.
@@ -1225,6 +1229,7 @@ class Hearts(game.Game):
             if self.not_warning:
                 self.human.tell('\nThere is no passing this round.')
             self.phase = 'trick'
+            self.set_first_player()
             return None
         # Set up the passing dictionary.
         if self.this_pass == 'center':
