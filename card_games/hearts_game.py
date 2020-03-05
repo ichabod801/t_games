@@ -883,6 +883,10 @@ class Hearts(game.Game):
             suits = itertools.cycle('CD')
             while len(self.deck) % len(self.players):
                 self.deck.append(self.deck.parse_text('X{}'.format(next(suits))))
+                if self.joker_points:
+                    self.deck[-1].value = 1
+                    self.max_score += 1
+                    self.breakers.add(self.deck[-1])
 
     def handle_opt_pass(self):
         """Handle the passing option settings for this game. (None)"""
@@ -942,13 +946,6 @@ class Hearts(game.Game):
         self.breakers = set([card for card in self.deck if card.suit == 'H'])
         if self.all_break:
             self.breakers.add('QS')
-        if self.joker_points:
-            jokers = [card for card in self.deck if card.rank == 'X']
-            for joker in jokers:
-                joker.value = 1
-            self.max_score += len(jokers)
-            if self.all_break:
-                self.breakers.update(jokers)
 
     def handle_options(self):
         """Handle the option settings for this game. (None)"""
