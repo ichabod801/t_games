@@ -1264,6 +1264,11 @@ class Hearts(game.Game):
         self.deal()
         # Set up the tracking variables.
         self.set_pass()
+        if self.this_pass == 'not' and self.low_club:
+            self.set_first_player()
+            player_index = self.players.index(self.next_player)
+            self.players = self.players[player_index:] + self.players[:player_index]
+            self.next_player = None
         self.tricks = 0
         self.random_move = False
         self.pair_bonus = False
