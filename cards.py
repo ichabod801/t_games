@@ -795,10 +795,10 @@ class Deck(Pile):
             return [self.deal(up = up) for card in range(n)]
         else:
             # Deal n cards to each player.
+            game = players[0].game
             for card in range(n):
-                game = players[0].game
                 for player in players:
-                    game.hands[player].draw()
+                    game.hands[player].append(self.deal(up = up))
 
     def discard(self, card, up = False):
         """
