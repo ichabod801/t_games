@@ -245,8 +245,8 @@ class CalvinCards(solitaire.Solitaire):
 
     def increase_sorting_base(self):
         """Increase the base card for sorting. (None)"""
-        current = self.deck.ranks.index(self.foundation_rank)
-        self.foundation_rank = self.deck.ranks[(current + 1) % len(self.deck.ranks)]
+        current = self.deck.rank_set.index(self.foundation_rank)
+        self.foundation_rank = self.deck.rank_set.chars[(current + 1) % len(self.deck.rank_set.chars)]
         if self.foundation_rank == 'X':
             self.foundation_rank = 'A'
         self.lane_ranks.append(self.sort_to_lane[self.foundation_rank])
@@ -320,7 +320,7 @@ class CalvinCards(solitaire.Solitaire):
 
     def randomize_build(self):
         """Randomize the building and pairing rules. (None)"""
-        # Get a random build type, but let it stay on by_suit if it is already there.
+        # Get a random build type, but don't let it stay on by_suit if it is already there.
         suit_build = solitaire.pair_suit in self.build_checkers
         while True:
             build_type = random.choice(self.build_types)
@@ -341,7 +341,7 @@ class CalvinCards(solitaire.Solitaire):
         self.deck.cards = reserve_cards
         for card_index in range(len(reserve_cards)):
             self.deck.deal(self.reserve[card_index % len(self.reserve)])
-        self.deck.in_play = self.deck.in_play[:52]  # clean up card tracking.
+        self.deck.in_play = self.deck.in_play[:52]  # clean duplicates out of card tracking.
 
     def set_checkers(self):
         """Randomize the initial rule checkers. (None)"""
