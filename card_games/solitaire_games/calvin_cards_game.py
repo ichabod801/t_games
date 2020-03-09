@@ -170,10 +170,13 @@ class CalvinCards(solitaire.Solitaire):
                     self.max_passes += 1
                 item = 'tree'
             elif change == 'free':
-                # Increase the number of free cells.
-                self.options['num-cells'] += 1
-                self.num_cells += 1
-                item = 'flag'
+                # Increase the number of free cells, but only to one past max.
+                if self.num_cells <= self.max_cells:
+                    self.options['num-cells'] += 1
+                    self.num_cells += 1
+                    item = 'flag'
+                else:
+                    continue
             elif change == 'reserve':
                 # Redeal the reserve into a random number of piles, if there are enough reserve cards.
                 reserve_cards = sum(self.reserve, [])
