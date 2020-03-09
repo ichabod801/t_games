@@ -209,14 +209,16 @@ class CalvinCards(solitaire.Solitaire):
         game, losses = self.gipf_check(arguments, ('gin rummy', 'rock-paper-scissors'))
         # Gin Rummy forces the build rules to change.
         if game == 'gin rummy':
-            self.change_rules('build')
-            self.keep_rules = 8
+            if not losses:
+                self.change_rules('build')
+                self.keep_rules = 8
         # RPS flips half the cards face up.
         elif game == 'rock-paper-scissors':
-            for pile in self.tableau:
-                for card in pile:
-                    if not card.up and random.randrange(2):
-                        card.up = True
+            if not losses:
+                for pile in self.tableau:
+                    for card in pile:
+                        if not card.up and random.randrange(2):
+                            card.up = True
         # Otherwise I'm confused.
         else:
             self.human.tell('You have stumbled past the perimeter of confusion.')
