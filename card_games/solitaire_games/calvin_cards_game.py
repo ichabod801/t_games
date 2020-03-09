@@ -189,9 +189,9 @@ class CalvinCards(solitaire.Solitaire):
             elif change == 'tableau':
                 # Increase the number of tableau piles.
                 if self.tableau.count([]) < 2:
-                    self.options['num-cells'] += 1
-                    self.num_cells += 1
-                    item = 'flag'
+                    self.options['num-tableau'] += 1
+                    self.tableau.append([])
+                    item = 'wicket'
                 else:
                     continue
             break
@@ -311,7 +311,7 @@ class CalvinCards(solitaire.Solitaire):
                     # Remove the tableau pile.
                     self.options['num-tableau'] -= 1
                     del self.tableau[[old_loc is pile for pile in self.tableau].index(True)]
-                    item = 'ball'
+                    item = 'wicket'
                 # Set a message if anything was removed.
                 if item:
                     of = random.choice(self.ofs)
