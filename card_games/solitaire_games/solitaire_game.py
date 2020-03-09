@@ -288,6 +288,7 @@ class Solitaire(game.Game):
         # No cards is just standard error.
         if not cards:
             self.human.error('\nI do not recognize that command.')
+            return True
         # One or two cards are guess moves.
         elif len(cards) == 1:
             return self.guess(cards[0])
@@ -296,6 +297,7 @@ class Solitaire(game.Game):
         # More than two cards is someone being silly.
         else:
             self.human.error("\nI don't know what to do with that many cards.")
+            return True
 
     def do_auto(self, arguments):
         """
