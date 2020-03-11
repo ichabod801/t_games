@@ -78,7 +78,7 @@ class Mate(game.Game):
 
     Attributes:
     dice: The dice for each player, keyed by player name. (dict of str: dice.Pool)
-    turns_left: The number of turns left after a winning tie. (int)
+    skip_turns: The number of turns to skip after a winning tie. (int)
 
     Methods:
     dice_line: Show a player's dice with their columns. (str)
@@ -245,11 +245,11 @@ class Mate(game.Game):
         bot_score = self.scores[bot]
         human_score = self.scores[self.human]
         # Check for a continuing play.
-        if self.turns_left:
-            self.turns_left -= 1
+        if self.skip_turns:
+            self.skip_turns -= 1
             return False
         elif bot_score == human_score and bot_score >= self.win:
-            self.turns_left = 2
+            self.skip_turns = 1
             return False
         elif bot_score < self.win and human_score < self.win:
             return False
@@ -349,7 +349,7 @@ class Mate(game.Game):
         for player in self.players:
             self.dice[player] = dice.Pool([self.sides for die in range(5)])
         # Set up end of game tracking.
-        self.turns_left = 0
+        self.skip_turns = 0
 
 
 class MateBot(player.Bot):
