@@ -411,16 +411,16 @@ class GinBot(player.Bot):
         Note that if a card is in a run and a set, this tracks the run as a meld and
         the set as a potential meld.
         """
-        cards = self.hand[:]
+        my_cards = self.hand[:]
         # Check for runs.
-        cards.sort()
-        full_runs, part_runs = self.find_melds(cards, self.run_pair)
+        my_cards.sort()
+        full_runs, part_runs = self.find_melds(my_cards, self.run_pair)
         # Remove cards in full runs.
         used = set(sum(full_runs, []))
-        cards = [card for card in cards if card not in used]
+        my_cards = [card for card in my_cards if card not in used]
         # Check for sets.
-        cards.sort(key = cards.by_rank)
-        full_sets, part_sets = self.find_melds(cards, self.set_pair)
+        my_cards.sort(key = cards.by_rank)
+        full_sets, part_sets = self.find_melds(my_cards, self.set_pair)
         # Find partial sets matching full runs.
         breaks = []
         for part_set in part_sets:
@@ -446,13 +446,13 @@ class GinBot(player.Bot):
                 full_runs.extend(remainder)
         # Find the partial runs with the remaining cards.
         used = set(sum(full_sets + full_runs + part_sets, []))
-        cards = [card for card in self.hand if card not in used]
-        cards.sort(key = cards.by_suit_rank)
-        empty, part_runs = self.find_melds(cards, self.run_pair)
+        my_cards = [card for card in self.hand if card not in used]
+        my_cards.sort(key = cards.by_suit_rank)
+        empty, part_runs = self.find_melds(my_cards, self.run_pair)
         # Calculate deadwood, and store the full and partial melds.
         used.update(*part_runs)
         self.tracking = {'attacks': [], 'full-run': full_runs, 'full-set': full_sets, 'part-run': part_runs,
-            'part-set': part_sets, 'deadwood': [card for card in cards if card not in used]}
+            'part-set': part_sets, 'deadwood': [card for card in my_cards if card not in used]}
 
     def tell(self, *args, **kwargs):
         """
@@ -552,17 +552,18 @@ class TrackingBot(GinBot):
         """
         # Loop through the target cards.
         adjacents = set()
-        targets = self.deck.parse_text(targets)
+        targets = self.game.deck.parse_text(' '.join(targets))
+        if not isinstance(targets, list):
+            targets = [targets]
         for card in targets:
             # Add other cards of the same rank.
             for suit in self.game.deck.suits:
                 if suit != card.suit:
-                    adjacents.add(self.deck.parse_text(card.rank + suit))
+                    adjacents.add(self.game.deck.parse_text(card.rank + suit))
             # Add other cards of the same suit and adjacent rank.
-            rank_index = self.game.deck.ranks.index(card[0])
-            if rank_index > 1:
+            if card.rank_num > 1:
                 adjacents.add(card.previous())
-            if rank_index < 13:
+            if card.rank_num < 13:
                 adjacents.add(card.next())
         return adjacents
 
@@ -584,7 +585,7 @@ class TrackingBot(GinBot):
                 possibles = sum([meld for meld in melds if len(meld) > 3], [])
                 possibles = [card for card in possibles if card not in dangerous]
             # Return the highest rank.
-            possibles.sort(key = card.rank_num)
+            possibles.sort(key = cards.by_rank)
             if possibles:
                 return possibles[-1]
         if not possibles:
