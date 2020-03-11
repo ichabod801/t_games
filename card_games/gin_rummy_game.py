@@ -552,17 +552,18 @@ class TrackingBot(GinBot):
         """
         # Loop through the target cards.
         adjacents = set()
+        targets = self.deck.parse_text(targets)
         for card in targets:
             # Add other cards of the same rank.
             for suit in self.game.deck.suits:
-                if suit != card[1]:
-                    adjacents.add(cards.Card(card[0], suit))
+                if suit != card.suit:
+                    adjacents.add(self.deck.parse_text(card.rank + suit))
             # Add other cards of the same suit and adjacent rank.
             rank_index = self.game.deck.ranks.index(card[0])
             if rank_index > 1:
-                adjacents.add(cards.Card(self.game.deck.ranks[rank_index - 1], card[1]))
+                adjacents.add(card.previous())
             if rank_index < 13:
-                adjacents.add(cards.Card(self.game.deck.ranks[rank_index + 1], card[1]))
+                adjacents.add(card.next())
         return adjacents
 
     def get_discard(self):
