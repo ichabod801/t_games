@@ -13,6 +13,9 @@ RULES: The rules of Mate. (str)
 
 Classes:
 Mate: A game of mate. (game.Game)
+MateBot: A bot player for the game of Mate. (player.Bot)
+MateAttackBot: A bot that goes after the biggest target. (MateBot)
+MateDefendBot: A bot that removes it's biggest piece. (MateAttackBot)
 """
 
 
@@ -129,7 +132,7 @@ class Mate(game.Game):
         Parameters:
         pool: The dice to show. (dice.Pool)
         """
-        text = ['{}: {:<8}'.format(column, die) for column, die in enumerate(pool)]
+        text = ['{}: {:<8}'.format(column, die.value) for column, die in enumerate(pool)]
         return ''.join(text)
 
     def default(self, text):
