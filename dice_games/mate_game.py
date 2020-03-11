@@ -377,10 +377,10 @@ class MateBot(player.Bot):
             valid_targets = [move[1] for move in moves if move[0] == attacker]
             target = self.choose_target(valid_targets)
             # Show the move.
-            attacker_name = self.game.dice[self.name].values[attacker]
-            foe = self.game.players[1 - self.game.players.index(self)]
-            target_name = self.game.dice[foe.name].values[target]
-            fields = (self.name, target_name, target, attacker_name, attacker)
+            attacker_name = self.game.dice[self].values[attacker]
+            foe = self.game.get_next_player()
+            target_name = self.game.dice[foe].values[target]
+            fields = (self, target_name, target, attacker_name, attacker)
             self.game.human.tell('\n{} takes your {} ({}) with their {} ({}).'.format(*fields))
             # Make the move.
             return 'take {} {}'.format(target, attacker)
@@ -405,6 +405,9 @@ class MateBot(player.Bot):
 class MateAttackBot(MateBot):
     """
     A bot that goes after the biggest target. (MateBot)
+
+    Methods:
+    value_moves: Value moves by highest points, then biggest attacker. (list)
 
     Overridden Methods:
     choose_attacker
