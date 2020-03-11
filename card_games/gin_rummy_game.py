@@ -309,12 +309,12 @@ class GinBot(player.Bot):
         discard = self.get_discard()
         # Determine score (if you knock).
         dead = sum(self.tracking['part-run'] + self.tracking['part-set'], []) + self.tracking['deadwood']
-        score = sum(self.game.card_values[card.rank] for card in dead)
+        score = sum(dead)
         if dead:
-            dead.sort(key = lambda card: card.rank_num)
-            discard_score = self.game.card_values[dead[-1].rank]
+            dead.sort(key = cards.by_rank)
+            discard_score = dead[-1].value
         else:
-            discard_score = self.game.card_values[discard.rank]
+            discard_score = discard.value
         # Check if knocking is possible/reasonable.
         command = 'discard'
         if score - discard_score <= self.knock_max():
@@ -419,7 +419,7 @@ class GinBot(player.Bot):
         used = set(sum(full_runs, []))
         cards = [card for card in cards if card not in used]
         # Check for sets.
-        cards.sort(key = lambda card: card.rank_num)
+        cards.sort(key = cards.by_rank)
         full_sets, part_sets = self.find_melds(cards, self.set_pair)
         # Find partial sets matching full runs.
         breaks = []
@@ -427,11 +427,11 @@ class GinBot(player.Bot):
             for run in full_runs:
                 if part_set[0].rank in [card.rank for card in run]:
                     # Compare the score of the broken run to the broken group.
-                    rank_score = self.game.card_values[part_set[0].rank]
+                    rank_score = part_set[0].value
                     broken_run = [card for card in run if card.rank != part_set[0].rank]
                     remainder, waste = self.find_melds(broken_run, self.run_pair)
-                    remainder_score = sum([self.game.card_values[card.rank] for card in sum(remainder, [])])
-                    run_score = sum([self.game.card_values[card.rank] for card in run])
+                    remainder_score = sum(sum(remainder, []))
+                    run_score = sum(run)
                     # If the broken run leaves less points in hand, mark it for breaking.
                     if run_score - remainder_score - rank_score < 2 * rank_score:
                         full_set = part_set + [card for card in run if card.rank == part_set[0].rank]
