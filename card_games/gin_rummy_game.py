@@ -1349,7 +1349,7 @@ class GinRummy(game.Game):
                     for target in attack:
                         valid = self.validate_meld([card.up_text for card in target] + meld)
                         if valid:
-                            target.extend(self.deck.parse_text(meld))
+                            target.extend([self.deck.parse_text(card) for card in meld])
                             target.sort(key = cards.by_rank)
                             break
                 # Handle the cards.
