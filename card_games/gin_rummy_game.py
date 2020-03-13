@@ -986,12 +986,14 @@ class GinRummy(game.Game):
         """
         self.human.tell('\nThe {}game is over.'.format(nth))
         # Give the ender the game bonus.
-        ender = self.current_player        # !! not if there was an undercut.
+        score_pairs = [(score, player) for player, score in scores.items()]
+        score_pairs.sort()
+        ender = score_pairs[-1][1]
         text = '{} scores {} points for ending the {}game.'
-        self.human.tell(text.format(ender, self.game_bonus, nth))
+        self.human.tell(text.format(ender, self.game_bonus, nth)) # !! you can score 1 point.
         scores[ender] += self.game_bonus
         # Check for a sweep bonus.
-        opponent = self.get_next_player()        # !! not if there was an undercut.
+        opponent = score_pairs[0][1]
         if not wins[opponent]:
             self.human.tell('{} doubles their score for sweeping the {}game.'.format(ender, nth))
             scores[ender] *= 2
