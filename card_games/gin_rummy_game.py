@@ -940,6 +940,7 @@ class GinRummy(game.Game):
                 reciever.tell('{}: {}/{}/{}'.format(player, *scores))
             else:
                 reciever.tell('{}: {}'.format(player, self.scores[player]))
+        return True
 
     def game_over(self):
         """Check for end of game and calculate the final score. (bool)"""
