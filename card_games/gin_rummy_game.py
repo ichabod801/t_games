@@ -1184,6 +1184,7 @@ class GinRummy(game.Game):
             while True:
                 move = player.ask('Would you like to draw from the diScards or the top of the decK? ')
                 move = move.lower()
+                words = move.split()
                 if move in ('discard', 'discards', self.deck.discards[-1], 's'):
                     draw_text = '\n{} drew the {} from the discard pile.'
                     foe.tell(draw_text.format(player, self.deck.discards[-1]))
@@ -1193,7 +1194,7 @@ class GinRummy(game.Game):
                     foe.tell('\n{} drew from the deck.'.format(player))
                     self.hands[player].draw()
                     break
-                elif move.split()[0] in ('l', 'left', 'r', 'right'):
+                elif words and words[0] in ('l', 'left', 'r', 'right'):
                     self.handle_cmd(move)
                     player.tell('\nDiscard Pile: {}'.format(discard_text))
                     player.tell('Your Hand: {}'.format(self.hands[player]))
