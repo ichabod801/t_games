@@ -252,8 +252,7 @@ class GinBot(player.Bot):
             return [], []
         # Loop through pairs of cards
         full, part, current = [], [], []
-        previous = cards[0]
-        for card in cards[1:]:
+        for previous, card in zip(cards, cards[1:]):
             if check_function(previous, card):
                 # Track melds as they grow.
                 if current:
@@ -261,17 +260,18 @@ class GinBot(player.Bot):
                 else:
                     current = [previous, card]
                 # Check for continuing high/low straights.
-                if card.rank == 'K' and self.game.high_low and 'A' + card.suit in cards:
-                    for meld in full + part:
-                        if 'A' + card.suit in meld and meld[-1].rank != 'A':
-                            current += meld
-                            if meld in full:
-                                full.remove(meld)
-                            else:
-                                part.remove(meld)
-                            break
-                    else:
-                        current.append(cards[cards.index('A' + card.suit)])
+                if self.game.high_low:
+                    if card.rank == 'K' and previous.rank == 'Q' and 'A' + card.suit in cards:
+                        for meld in full + part:
+                            if 'A' + card.suit in meld and meld[-1].rank != 'A':
+                                current += meld
+                                if meld in full:
+                                    full.remove(meld)
+                                else:
+                                    part.remove(meld)
+                                break
+                        else:
+                            current.append(cards[cards.index('A' + card.suit)])
             else:
                 # If the current pair is not a meld, store any previous melds and reset.
                 if len(current) >= 3:
@@ -279,7 +279,6 @@ class GinBot(player.Bot):
                 elif current:
                     part.append(current)
                 current = []
-            previous = card
         # Catch the last match, if any.
         if len(current) >= 3:
             full.append(current)
@@ -862,7 +861,7 @@ class GinRummy(game.Game):
         if attack_score > knock_max:
             if attack_melds:
                 text = 'You need {} points or less to knock, but you have {}.'
-                attacker.error(text.format(knock_max, attack_score), attack_melds, attack_deadwood, end = '\n')
+                attacker.error(text.format(knock_max, attack_score))
                 self.hands[attacker].extend(attack_spread.cards)
             return False
         self.show_melds(attack_melds, attack_deadwood, defender, 'attacking')
@@ -1367,7 +1366,7 @@ class GinRummy(game.Game):
                 elif has_cards:   # only print one error message.
                     # Warn if the meld or layoff is invalid.
                     layoff = ' or layoff' if attack else ''
-                    player.error('That is not a valid meld{}.'.format(layoff))
+                    player.error('{!r} is not a valid meld{}.'.format(meld_text, layoff))
         # Return the melds and the deadwood.
         return scoring_sets, unspread, spread
 
@@ -1405,6 +1404,7 @@ class GinRummy(game.Game):
         try:
             meld.sort(key = lambda card: self.deck.rank_set.index(card[0].upper()))
         except ValueError:
+            print('Meld sort error')
             return False
         # Check for a set.
         if len(set(card[0].upper() for card in meld)) == 1:
