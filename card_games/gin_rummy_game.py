@@ -665,6 +665,7 @@ class GinRummy(game.Game):
     knock_max: The maximum number of points you can have when knocking. (int)
     match: How many games are played to determine the winner. (int)
     match_scores: The total points scored by each player in the match. (dict)
+    rank_set: The ranks of cards used by the game. (cards.FeatureSet)
     side_deck: A deck of cards for determining knock limits. (cards.Deck)
     side_limit: A flag for using another deck to set the knock limit. (bool)
     spade_doubles: A flag for an intial spade discard doubling the score. (bool)
@@ -710,7 +711,7 @@ class GinRummy(game.Game):
     def deal(self):
         """Deal the cards. (None)"""
         # Rest the deck and the hands.
-        self.deck = cards.Deck()
+        self.deck = cards.Deck(rank_set = self.rank_set)
         self.hands = self.deck.player_hands(self.players)
         self.deck.shuffle()
         # Deal 10 cards to each player.
@@ -1270,10 +1271,10 @@ class GinRummy(game.Game):
     def set_up(self):
         """Set up the game. (None)"""
         # Set up the cards.
-        rank_set = cards.STANDARD_RANKS.copy()
-        rank_set.values['A'] = self.ace_penalty
-        self.card_values = rank_set.values
-        self.deck = cards.Deck(rank_set = rank_set)
+        self.rank_set = cards.STANDARD_RANKS.copy()
+        self.rank_set.values['A'] = self.ace_penalty
+        self.card_values = self.rank_set.values
+        self.deck = cards.Deck(rank_set = self.rank_set)
         self.hands = self.deck.player_hands(self.players)
         self.dealer = random.choice(self.players)
         self.side_deck = cards.Deck()
