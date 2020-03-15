@@ -267,7 +267,7 @@ class TenKBot(player.Bot):
     def second_chance(self):
         """Choose a pair to try to complete. (str)"""
         # Go for the highest scoring pair.
-        values = [die.value for die in self.game.dice if not die.held]
+        values = self.game.dice.get_free().values
         pairs = [value for value in range(1, 7) if values.count(value) == 2]
         if 1 in pairs:
             return [1, 1]
@@ -317,7 +317,7 @@ class GamblerBot(TenKBot):
     def roll_or_score(self):
         """Decide whether to roll for more or score what you've got. (str)"""
         # Roll with a chance equal to the chance you will score.
-        to_roll = len([die for die in self.game.dice if die.held])
+        to_roll = len(self.game.dice.get_held())
         if random.random() < self.score_chance[to_roll]:
             return 'roll'
         else:
@@ -329,8 +329,8 @@ class GeneticBot(TenKBot):
     A bot for a genetic algorithm. (TenKBot)
 
     The gene is a list of eleven integers, corresponding to the following
-    attributes in order: min_value, min_behind, min_mod, min_dice, rolls, turns, s
-    core_and, combo_ones, combo_fives, plain_ones, plain_fives.
+    attributes in order: min_value, min_behind, min_mod, min_dice, rolls, turns,
+    score_and, combo_ones, combo_fives, plain_ones, plain_fives.
 
     Class Attributes:
     attributes: The names of the genetic attributes. (list of str)
@@ -411,7 +411,7 @@ class GeneticBot(TenKBot):
     def hold(self):
         """Determine the hold command (which dice to hold). (str)"""
         # Get what rolls have been made.
-        values = [die.value for die in self.game.dice if not die.held]
+        values = self.game.dice.get_free().values[:]
         values.sort()
         counts = [values.count(value) for value in range(7)]
         # Find any combos in the roll.
