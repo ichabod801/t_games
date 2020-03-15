@@ -1319,9 +1319,11 @@ class GinRummy(game.Game):
         spread = cards.Hand(deck = self.deck)
         # Get the melds and layoffs.
         scoring_sets = []
+        player.tell('\nWhile spreading cards you may hit enter to finish, cancel to abort, or')
+        player.tell('   reset to start over again.')
         while True:
             player.tell('\nThe following cards are still in your hand: {}'.format(unspread))
-            meld_text = player.ask('Enter a set of cards to spread (return to finish, cancel to abort): ')
+            meld_text = player.ask('Enter a set of cards to spread (or enter/cancel/reset): ')
             meld = self.parse_meld(meld_text, unspread)
             # Check for no more scoring cards.
             if not meld:
