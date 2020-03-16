@@ -1053,7 +1053,7 @@ class TenThousand(game.Game):
                 return False
             elif player == self.last_player:
                 # End the game.
-                self.human.tell('Final Scores:')
+                self.human.tell('\nFinal Scores:')
                 score_text = '\n'.join('{}: {}'.format(name, score) for name, score in self.scores.items())
                 self.human.tell(score_text)
                 self.wins_by_score(show_self = False)
