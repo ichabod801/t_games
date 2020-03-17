@@ -15,7 +15,7 @@ Classes:
 TenKBot: A base bot for the game of Ten Thousand. (player.Bot)
 GamblerBot: A bot that rolls as often as it's chance of scoring. (TenKBot)
 GeneticBot: A bot for a genetic algorithm. (TenKBot)
-BasePaceRaceBot: A bot with a set score that chases the lead. (GeneticBot)
+BasePaceBot: A bot with a set score that chases the lead. (GeneticBot)
 ModifierBot: A bot that modifies its target by how far its behind. (GeneticBot)
 ValueBot: A bot that tries to score a set score each round. (GeneticBot)
 KniziaBot: A bot following Reiner Knizia's Strategy. (TenKBot)
