@@ -65,7 +65,7 @@ four-mult (4m): The score multiplied by the die face for four of a kind,
     typically 200. If this and four-kind are 0, four of a kind is not allowed.
 full-house (fh): The bonus added to the three of a kind score when scoring a
     full house. Defaults to 0, or no full houses.
-gonzo (gz): Equivalent to three-pair=600 sstraight=1500 full-house=250
+gonzo (gz): Equivalent to three-pair=600 straight=1500 full-house=250
     four_mult=200 five-mult=400 six-mult=800 three-strikes=500 train-wreck
     carry-on clear-combo force-combo force-six entry=350 min-grows
     second-chance explosion instant-win wild
