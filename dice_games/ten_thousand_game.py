@@ -970,6 +970,7 @@ class TenThousand(game.Game):
             while any(combo in rolled for combo in self.last_combo):
                 player.tell('You rolled: {}.'.format(', '.join(map(str, rolled))))
                 player.tell(message)
+                print(self.last_combo)
                 self.dice.roll()
                 if self.wild and -1 in self.dice:
                     self.wild_roll(player)
@@ -1231,7 +1232,7 @@ class TenThousand(game.Game):
         for die in to_roll:
             die.roll()
         if self.wild and -1 in self.dice:
-            self.wild_roll()
+            self.wild_roll(player)
         player.tell('You rolled: {}.'.format(', '.join(map(str, to_roll))))
         # Check for a match.
         if keepers[0] == keepers[1]:
