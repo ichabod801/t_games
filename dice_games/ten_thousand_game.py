@@ -906,7 +906,7 @@ class TenThousand(game.Game):
             else:
                 # Otherwise, get any combos or loose dice.
                 values = []
-                for possible in set(possibles.values):
+                for possible in set(possibles):
                     for count in range(counts[possible], 0, -1):
                         if self.combo_scores[possible][count]:
                             values.extend([possible] * count)
@@ -971,7 +971,6 @@ class TenThousand(game.Game):
             while any(combo in rolled for combo in self.last_combo):
                 player.tell('You rolled: {}.'.format(', '.join(map(str, rolled))))
                 player.tell(message)
-                print(self.last_combo)
                 self.dice.roll()
                 if self.wild and -1 in self.dice:
                     self.wild_roll(player)
