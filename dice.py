@@ -714,7 +714,9 @@ class Pool(object):
         values: The values of the dice to hold. (int or list of int)
         """
         # Check for single value.
-        if not isinstance(values, (list, tuple, set)):
+        try:
+            values = iter(values)
+        except TypeError:
             values = [values]
         # Loop through the values.
         unheld = [die for die in self.dice if not die.held]
