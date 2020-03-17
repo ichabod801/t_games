@@ -866,7 +866,7 @@ class TenThousand(game.Game):
         """
         # !! refactor
         player = self.players[self.player_index]
-        possibles = self.dice.get_free()
+        possibles = self.dice.get_free().values
         counts = possibles.counts()
         # Process the arguments.
         if arguments.strip():
