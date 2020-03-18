@@ -288,18 +288,7 @@ class TenKBot(player.Bot):
         Parameters:
         The parameters are as per the built-in print function.
         """
-        if isinstance(args[0], TenThousand):
-            # Inform the human of the bot's scoring.
-            new_bank = self.game.turn_score
-            if new_bank == 0:
-                self.bank = new_bank
-            elif new_bank != self.bank:
-                if new_bank > self.bank:
-                    self.game.human.tell('{} banked {} points.'.format(self.name, new_bank - self.bank))
-                self.bank = new_bank
-        else:
-            # Handle other tells the standard way.
-            super(TenKBot, self).tell(*args, **kwargs)
+        pass
 
 
 class GamblerBot(TenKBot):
@@ -868,7 +857,7 @@ class TenThousand(game.Game):
         chance to score, use the second command.
         """
         # !! refactor
-        player = self.players[self.player_index]
+        player = self.current_player
         free = self.dice.get_free()
         counts = free.counts()
         possibles = free.values
@@ -932,7 +921,10 @@ class TenThousand(game.Game):
             return True
         # Record the score and hold the dice.
         self.dice.hold(values)
+        if not self.turn_score:
+            self.human.tell('')
         self.turn_score += held_score
+        self.human.tell('{} held {} points.'.format(player, held_score))
         self.held_this_turn = True
         # Check for holding all of the dice (force-six option).
         if self.force_six and not self.dice.get_free():
@@ -970,10 +962,10 @@ class TenThousand(game.Game):
             rolled = self.dice.get_free()
             if self.wild and -1 in rolled:
                 self.wild_die(player)
-            message = 'You must reroll because you matched the last combo.'
+            message = '{} must reroll because you matched the last combo.'.format(player)
             while any(combo in rolled for combo in self.last_combo):
-                player.tell('You rolled: {}.'.format(', '.join(map(str, rolled))))
-                player.tell(message)
+                self.human.tell('{} rolled: {}.'.format(player, rolled))
+                self.human.tell(message)
                 self.dice.roll()
                 if self.wild and -1 in self.dice:
                     self.wild_roll(player)
@@ -983,7 +975,7 @@ class TenThousand(game.Game):
             combo_hold = []
         self.held_this_turn = False
         values = sorted(self.dice.get_free().values)
-        player.tell('\n{} rolled: {}.'.format(player, ', '.join([str(value) for value in values])))
+        self.human.tell('\n{} rolled: {}.'.format(player, ', '.join([str(value) for value in values])))
         # Check for no score (end the turn if there isn't).
         roll_score = self.score_dice(values, validate = False)
         go = True
@@ -991,14 +983,15 @@ class TenThousand(game.Game):
             go = self.no_score(player, values, combo_hold)
         # Check for too many points.
         elif self.explosion and values == [1] * len(self.dice):
-            player.tell("You rolled {} ones. That is too many points, so you lose.".format(len(self.dice)))
+            message = "{0} rolled {1} ones. That is too many points, so {0} loses."
+            player.tell(message.format(player, len(self.dice)))
             self.scores[player] = 0
             self.players.remove(player)
             self.player_index -= 1
             return False
         # Check for an instant win.
         elif self.instant_win and values == [6] * len(self.dice):
-            player.tell("You rolled {} sixes. You win instantly.".format(len(self.dice)))
+            player.tell("{0} rolled {1} sixes. {0} wins instantly.".format(player, len(self.dice)))
             self.scores[player] = max(self.win, max(self.scores.values() + 50))
             self.last_player = player
             return False
@@ -1029,6 +1022,7 @@ class TenThousand(game.Game):
         else:
             # Score the dice.
             self.scores[player] += self.turn_score
+            self.human.tell('{} scored {} points.'.format(self.turn_score))
             # Clear the tracking variables.
             self.entered[player] = True
             self.strikes[player] = 0
@@ -1110,7 +1104,7 @@ class TenThousand(game.Game):
         combos: Any combos that need to be cleared. (list of int)
         """
         # Alert the player.
-        player.tell('{} did not score with that roll.'.format(player.name))
+        self.human.tell('{} did not score with that roll.'.format(player))
         # Check for second chances.
         if self.second_chance and self.retry(player, values, combos):
             return True
@@ -1119,7 +1113,7 @@ class TenThousand(game.Game):
             values = self.dice.get_free().values
         # Score anyway if the no-risk option is in effect..
         if self.no_risk:
-            player.tell('{} scored {} points this turn.'.format(player, self.turn_score))
+            self.human.tell('{} scored {} points this turn.'.format(player, self.turn_score))
             self.scores[player] += self.turn_score
         elif not self.zen:
             # Record strikes and check for three strikes.
@@ -1128,24 +1122,24 @@ class TenThousand(game.Game):
                 self.strikes[player] = 0
                 if self.three_strikes:
                     message = '{} gets three strikes, and loses {} points.'
-                    player.tell(message.format(player, self.three_strikes))
+                    self.human.tell(message.format(player, self.three_strikes))
                     self.scores[player] = max(self.scores[player] - self.three_strikes, 0)
                 elif self.super_strikes:
-                    player.tell('Three strikes, you lose all of your points.')
+                    self.human.tell('{} gets three strikes, and loses all of their points.'.format(player))
                     self.scores[player] = 0
         # Check for failing to score on all six dice (crash/train-wreck/zen options)
         if not self.dice.get_held():
             # Lose some points.
             if self.crash:
-                player.tell('That is a crash, you lose {} points.'.format(self.crash))
+                self.human.tell('That is a crash, {} loses {} points.'.format(player, self.crash))
                 self.scores[player] = max(0, self.scores[player] - self.crash)
             # Lose all points.
             elif self.train_wreck:
-                player.tell('That is a train wreck, you lose all of your points.')
+                self.human.tell('That is a train wreck, {} loses all of their points.'.format(player))
                 self.scores[player] = 0
             # Score some points.
             elif self.zen:
-                player.tell('How Zen.'.format(player, self.zen))
+                self.human.tell('How Zen. {} gets {} points.'.format(player, self.zen))
                 self.turn_score += self.zen
                 self.dice.hold(values)
                 self.held_this_turn = True
@@ -1222,7 +1216,7 @@ class TenThousand(game.Game):
         # Make any mandatory choice.
         elif counts.count(2):
             keepers = [counts.index(2)] * 2
-            player.tell('Holding back a pair of {}s'.format(keepers[0]))
+            self.human.tell('{} holds back a pair of {}s'.format(player, keepers[0]))
         # Hold back the dice.
         base, to_roll = [], []
         if keepers[0] == keepers[1]:
@@ -1243,23 +1237,23 @@ class TenThousand(game.Game):
                 die.roll()
             if self.wild and -1 in self.dice:
                 self.wild_roll(player)
-            player.tell('You rolled: {}.'.format(', '.join(map(str, to_roll))))
+            self.human.tell('{} rolled: {}.'.format(player, ', '.join(map(str, to_roll))))
             if [die for die in to_roll if die in combos]:
-                player.tell("You matched the last combo and must roll again.")
+                self.human.tell("{} matched the last combo and must roll again.".format(player))
                 continue
             break
         # Check for a match.
         if keepers[0] == keepers[1]:
             if keepers[0] in to_roll:
-                player.tell('You matched the pair.')
+                self.human.tell('{} matched the pair.'.format(player))
                 return True
         else:
             new_values = [die.value for die in base + to_roll]
             if len(set(new_values)) == len(self.dice):
-                player.tell('You completed the straight.')
+                self.human.tell('{} completed the straight.'.format(player))
                 return True
         # Note a failed match.
-        player.tell('You failed to match the kept dice.')
+        self.human.tell('{} failed to match the kept dice.'.format(player))
         return False
 
     def set_options(self):
@@ -1429,7 +1423,7 @@ class TenThousand(game.Game):
         # Alert the player if there is only one option.
         if len(valid) == 1:
             wild_die.value = valid[0]
-            player.tell('\nYou rolled a wild, which must be used as a {}.'.format(valid[0]))
+            self.human.tell('\n{} rolled a wild, which must be used as a {}.'.format(player, valid[0]))
         # If there are multiple options, have the player select one.
         else:
             if values:
@@ -1441,4 +1435,5 @@ class TenThousand(game.Game):
                 choice = player.ask_int(query, valid = valid, cmd = False)
             else:
                 choice = player.ask_int('What do you want the wild to be? ', low = 1, high = 6, cmd = False)
+            self.human.tell('\n{} rolled a wild, and set it to {}.'.format(player, choice))
             wild_die.value = choice
