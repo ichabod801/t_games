@@ -811,6 +811,13 @@ class TenThousand(game.Game):
             else:
                 min_roll = self.minimum
             full_text = '{}\nThe minimum turn score is {}.'.format(full_text, min_roll)
+        if (self.three_strikes or self.super_strikes) and self.strikes[self.current_player]:
+            strike_text = utility.num_text(self.strikes[self.current_player], 'strike')
+            full_text = '{}\nYou have {}.'.format(full_text, strike_text)
+        if self.last_player is not None:
+            scores = [(score, player) for player, score in self.scores.items()]
+            scores.sort()
+            full_text = '{}\nThis is your last chance to beat {}.'.format(full_text, scores[-1][1])
         return full_text.format(score_text, self.turn_score, self.dice)
 
     def do_gipf(self, arguments):
