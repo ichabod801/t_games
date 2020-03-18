@@ -977,7 +977,10 @@ class TenThousand(game.Game):
                 self.dice.roll()
                 if self.wild and -1 in self.dice:
                     self.wild_roll(player)
+            combo_hold = self.last_combo
             self.last_combo = []
+        else:
+            combo_hold = []
         self.held_this_turn = False
         values = sorted(self.dice.get_free().values)
         player.tell('\n{} rolled: {}.'.format(player, ', '.join([str(value) for value in values])))
@@ -985,7 +988,7 @@ class TenThousand(game.Game):
         roll_score = self.score_dice(values, validate = False)
         go = True
         if not roll_score:
-            go = self.no_score(player, values)
+            go = self.no_score(player, values, combo_hold)
         # Check for too many points.
         elif self.explosion and values == [1] * len(self.dice):
             player.tell("You rolled {} ones. That is too many points, so you lose.".format(len(self.dice)))
@@ -1097,18 +1100,19 @@ class TenThousand(game.Game):
         if self.wild:
             self.dice.dice[-1].sides[1] = -1
 
-    def no_score(self, player, values):
+    def no_score(self, player, values, combos):
         """
         Handle rolls that do not score. (bool)
 
         Parameters:
         player: The current player. (player.Player)
         values: The faces of the unrolled dice. (list of int)
+        combos: Any combos that need to be cleared. (list of int)
         """
         # Alert the player.
         player.tell('{} did not score with that roll.'.format(player.name))
         # Check for second chances.
-        if self.second_chance and self.retry(player, values):
+        if self.second_chance and self.retry(player, values, combos):
             return True
         elif self.second_chance:
             # Recalculate value list after rolls in retry.
@@ -1153,6 +1157,7 @@ class TenThousand(game.Game):
             if next_player.ask(query.format(player)) in utility.YES:
                 self.must_roll = "you chose to carry on {}'s roll".format(player)
                 self.held_this_turn = True
+                self.last_combo = combos
                 return False
         # Reset for the next turn.
         self.end_turn()
@@ -1182,13 +1187,14 @@ class TenThousand(game.Game):
         move = player.ask('\nWhat is your move? ')
         return self.handle_cmd(move)
 
-    def retry(self, player, values):
+    def retry(self, player, values, combos):
         """
         Handle second chances for rolls that do not score. (bool)
 
         Parameters:
         player: The current player. (player.Player)
         values: The faces of the unrolled dice. (list of int)
+        combos: Any combos that need to be cleared. (list of int)
         """
         # Check for enough dice and a possible completion.
         counts = [values.count(possible) for possible in range(7)]
@@ -1232,11 +1238,16 @@ class TenThousand(game.Game):
                 elif not die.held:
                     to_roll.append(die)
         # Roll the dice.
-        for die in to_roll:
-            die.roll()
-        if self.wild and -1 in self.dice:
-            self.wild_roll(player)
-        player.tell('You rolled: {}.'.format(', '.join(map(str, to_roll))))
+        while True:
+            for die in to_roll:
+                die.roll()
+            if self.wild and -1 in self.dice:
+                self.wild_roll(player)
+            player.tell('You rolled: {}.'.format(', '.join(map(str, to_roll))))
+            if [die for die in to_roll if die in combos]:
+                player.tell("You matched the last combo and must roll again.")
+                continue
+            break
         # Check for a match.
         if keepers[0] == keepers[1]:
             if keepers[0] in to_roll:
