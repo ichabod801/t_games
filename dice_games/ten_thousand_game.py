@@ -1029,7 +1029,7 @@ class TenThousand(game.Game):
         else:
             # Score the dice.
             self.scores[player] += self.turn_score
-            self.human.tell('{} scored {} points.'.format(self.turn_score))
+            self.human.tell('{} scored {} points.'.format(player, self.turn_score))
             # Clear the tracking variables.
             self.entered[player] = True
             self.strikes[player] = 0
