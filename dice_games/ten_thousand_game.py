@@ -1432,7 +1432,10 @@ class TenThousand(game.Game):
             player.tell('\nYou rolled a wild, which must be used as a {}.'.format(valid[0]))
         # If there are multiple options, have the player select one.
         else:
-            player.tell('\nYou rolled a wild and {}.'.format(', '.join(map(str, values))))
+            if values:
+                player.tell('\nYou rolled a wild and {}.'.format(', '.join(map(str, values))))
+            else:
+                player.tell('\nYou rolled a wild with no other dice.')
             if valid:
                 query = 'Do you want the wild to be a {}? '.format(utility.oxford(set(valid), 'or'))
                 choice = player.ask_int(query, valid = valid, cmd = False)
