@@ -118,37 +118,23 @@ value (vu): Add a bot that ties to score a set value.
 
 RULES = """
 At the start of each turn you roll six dice. After each roll you may set aside
-any scoring dice, and roll the remaining dice. Once you have rolled 1,000
-points, you may stop after any scoring roll and score all of the points you
-have rolled this turn. If you have not scored any points in the game yet, you
-must roll 1,500 points before you can stop and score them. This is called
-"getting on the table." If you have scored on all six dice, you may roll all
-six dice again. If at any point you roll the dice and none of the dice you
-just rolled score anything, you turn ends and you get no points for the turn.
-The first person to get 10,000 points wins the game. However, each remaining
-player gets one last chance to beat their score. The highest score wins.
+("hold") any scoring dice, and roll the remaining dice. You may stop after any
+scoring roll and score all of the points you have rolled this turn. If you have
+scored on all six dice, you may roll all six dice again. If at any point you
+roll the dice and none of the dice you just rolled score anything, you turn
+ends and you get no points for the turn. The first person to get 10,000 points
+wins the game. However, each remaining player gets one last chance to beat
+their score. The highest score wins.
 
 Scoring:
 Ones: Each one scores 100 points.
 Fives: Each five scores 50 points.
 Three of a Kind: Three of a kind are worth 100 points times the number rolled,
     or 1,000 points for three ones.
-Four of a Kind: Four of a kind are worth 200 points times the number rolled,
-    or 2,000 points for four ones.
-Five of a Kind: Five of a kind are worth 400 points times the number rolled,
-    or 4,000 points for four ones.
-Six of a Kind: Six of a kind are worth 800 points times the number rolled,
-    or 8,000 points for four ones.
-Straight: A straight from one to six is worth 1,500 points.
-Three Pair: Three pairs are worth 1,000 points.
-* For combinations of dice, all dice in the combination must be rolled at the
-    same time. However, if you have a pair or a partial straight, you can take
-    a second chance roll to complete the three of a kind or the straight. If
-    you fail to complete the score, your turn is over with zero points even if
-    you have other scoring dice.
 
 Commands:
 hold (h): Set aside scoring dice (list the dice as a parameter to the command).
+roll (r): Roll any unheld dice.
 score (s): Score the points rolled this turn and end your turn.
 """
 
@@ -822,13 +808,13 @@ class TenThousand(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Winning Yacht gives you one reroll this turn.
+        Winning Pyramid gives you one reroll this turn.
 
         Winning Yukon allows you to change one unheld die by one pip.
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('pyramid', 'yukon'))
-        # Winning Yacht gives you a choice between two rolls.
+        # Winning Pyramid gives you a choice between two rolls.
         if game == 'pyramid':
             if not losses:
                 self.reroll = True
