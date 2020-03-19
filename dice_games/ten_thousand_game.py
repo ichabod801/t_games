@@ -712,11 +712,12 @@ class TenThousand(game.Game):
     A game of TenThousand. (game.Game)
 
     Class Attributes:
-    combo_scores: The scores for the basic sets of die values. (list of list of int)
+    base_combo_scores: The scores for the default sets of die values. (list)
 
     Attributes:
     carry_on: A flag for being able to take over a failed roll. (bool)
     clear_combo: A flag for having to reroll if you match the last combo. (bool)
+    combo_scores: The current scores for possible sets of die values. (list)
     crash: How many points are lost for not scoring on any dice. (int)
     dice: The dice used to play the game. (dice.Pool)
     entered: The players who have entered the game. (dict of str: bool)
@@ -778,7 +779,7 @@ class TenThousand(game.Game):
     bot_classes = {'base-pace': BasePaceBot, 'gamble': GamblerBot, 'knizia': KniziaBot, 'mod': ModifierBot,
         'prob': ProbabilityBot, 'random': GeneticBot, 'value': ValueBot}
     categories = ['Dice Games']
-    combo_scores = [[0], [0, 100, 200, 1000, 1100, 1200, 2000], [0, 0, 0, 200, 0, 0, 400],
+    base_combo_scores = [[0], [0, 100, 200, 1000, 1100, 1200, 2000], [0, 0, 0, 200, 0, 0, 400],
         [0, 0, 0, 300, 0, 0, 600], [0, 0, 0, 400, 0, 0, 800],
         [0, 50, 100, 500, 550, 600, 1000], [0, 0, 0, 600, 0, 0, 1200]]
     credits = CREDITS
@@ -1064,6 +1065,7 @@ class TenThousand(game.Game):
         for size, kind, mult in zip((4, 5, 6), kinds, mults):
             if kind or mult:
                 self.combo_sizes.append(size)
+        self.combo_scores = [scores[:] for scores in TenThousand.base_combo_scores]
         for value in range(1, 7):
             for count, kind, mult in zip(range(4, 7), kinds, mults):
                 # Check for a set score option.
