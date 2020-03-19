@@ -355,8 +355,8 @@ class RPS(game.Game):
         """Check for the end of the game. (bool)"""
         # Only check if both players have moved.
         if not self.turns % 2:
-            move = self.moves[self.human.name]
-            bot_move = self.moves[self.bot.name]
+            move = self.moves[self.human]
+            bot_move = self.moves[self.bot]
             # Check for a bot win.
             if move in self.wins[bot_move] and not self.loss_draw:
                 self.human.tell('{} beats {}, you lose.'.format(bot_move, move))
@@ -398,7 +398,7 @@ class RPS(game.Game):
         # Parse the options.
         super(RPS, self).handle_options()
         # Set the players.
-        self.bot = self.bot_classes[self.bot_cls]([self.human.name])
+        self.bot = self.bot_classes[self.bot_cls]([self.human])
         self.players = [self.human, self.bot]
         # Set match play flag.
         if self.match > 1:
@@ -415,7 +415,7 @@ class RPS(game.Game):
         move = self.move_aliases.get(move, move)
         # Process game moves.
         if move in self.wins:
-            self.moves[player.name] = move
+            self.moves[player] = move
         # Process other commands.
         else:
             return self.handle_cmd(move)
