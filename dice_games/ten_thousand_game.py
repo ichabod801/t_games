@@ -928,8 +928,6 @@ class TenThousand(game.Game):
             return True
         # Record the score and hold the dice.
         self.dice.hold(values)
-        if not self.turn_score:
-            self.human.tell('')
         self.turn_score += held_score
         self.human.tell('{} held {} points.'.format(player, held_score))
         self.held_this_turn = True
