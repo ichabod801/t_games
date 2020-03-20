@@ -37,8 +37,8 @@ Special Thanks: Matt Groening
 """
 
 OPTIONS = """
-bot= (b=): The bot you will play against. The valid bots are bart (b), lisa
-    (l), memor (m), and Randy (r). Defaults to Memor.
+bot= (b=): The bot you will play against. The valid bots are Bart (b), Lisa
+    (l), Memor (m), and Randy (r). Defaults to Memor.
 gonzo (gz): Equivalent to 'bot=randy lizard-spock match=23'.
 lizard-spock (ls): Add the lizard and Spock moves.
 match= (m=): The number of rounds played. Defaults to 3.
