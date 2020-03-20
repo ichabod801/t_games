@@ -109,8 +109,8 @@ class Memor(player.Bot):
 
     Overridden Methods:
     __init__
-    __del__
     ask
+    clean_up
     tell
     """
 
@@ -127,14 +127,6 @@ class Memor(player.Bot):
         self.file_path = 'rps_memor_data{}.txt'
         self.losses = {}
         self.memory = {}
-
-    def __del__(self):
-        """Garbage collect the instance. (None)"""
-        # Save any stored move data.
-        if '{}' not in self.file_path:
-            with open(self.file_path, 'w') as data_file:
-                for move, count in self.memory.items():
-                    data_file.write('{}:{}\n'.format(move, count))
 
     def ask(self, prompt):
         """
@@ -158,6 +150,14 @@ class Memor(player.Bot):
         else:
             super(Memor, self).ask(prompt)
 
+    def clean_up(self):
+        """Garbage collect the instance. (None)"""
+        # Save any stored move data.
+        if '{}' not in self.file_path:
+            with open(self.file_path, 'w') as data_file:
+                for move, count in self.memory.items():
+                    data_file.write('{}:{}\n'.format(move, count))
+
     def load_data(self):
         """Load stored data of previous plays. (None)"""
         with open(self.file_path) as data_file:
@@ -172,15 +172,14 @@ class Memor(player.Bot):
         data_tag = ''
         if self.game.wins == self.game.lizard_spock:
             data_tag = '_ls'
+        # Seed the initial memory.
+        self.memory = {move: 1 for move in self.game.wins}
         # Check for a true human opponent.
-        if hasattr(self.game.human, 'folder_path'):
+        if hasattr(self.game.human, 'folder_name'):
             # Load any data stored for a human's plays.
-            self.file_path = os.path.join(self.game.human.folder_path, self.file_path.format(data_tag))
+            self.file_path = os.path.join(self.game.human.folder_name, self.file_path.format(data_tag))
             if os.path.exists(self.file_path):
                 self.load_data()
-        else:
-            # Seed the initial memory.
-            self.memory = {move: 1 for move in self.game.wins}
         # Get a reverse wins dictionary.
         self.losses = {move: [] for move in self.game.wins}
         for move, beats in self.game.wins.items():
