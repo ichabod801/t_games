@@ -480,7 +480,7 @@ class Blackjack(game.Game):
             self.human.error('You can only split a hand of two cards.')
         elif self.split_rank and hand[0].rank != hand[1].rank:
             self.human.error('You may only split cards of the same rank.')
-        elif hand.card_values[hand[0].rank] != hand.card_values[hand[1].rank]:
+        elif hand[0].value != hand[1].value:
             self.human.error('You may only split cards of the same value.')
         elif not self.resplit and hand.was_split:
             self.human.error('You may not split a hand that was already split.')
@@ -962,7 +962,7 @@ class BlackjackHand(cards.Hand):
     def split(self):
         """Split the hand. (BlackjackHand)"""
         # Create the new hand.
-        new_hand = BlackjackHand(self.cards.pop(), self.deck)
+        new_hand = BlackjackHand([self.cards.pop()], self.deck)
         new_hand.status = 'open'
         # Mark both hands as having been split.
         self.was_split = True
