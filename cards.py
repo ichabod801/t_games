@@ -155,7 +155,7 @@ class FeatureSet(object):
         Parameters:
         char: The rank character to check validity of. (str)
         """
-        return char in self.names
+        return char in self.chars
 
     def __iter__(self):
         """Iterate over the characters. (iterator)"""
