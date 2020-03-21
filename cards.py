@@ -741,15 +741,15 @@ class Deck(Pile):
         # Get the joker ranks and suits.
         joker_ranks = self.rank_set.chars[:self.rank_set.skip]
         if self.suit_set.skip:
-            joker_suits = self.suit_set.chars
-        else:
             joker_suits = self.suit_set.chars[:self.suit_set.skip]
+        else:
+            joker_suits = self.suit_set.chars
         # Add the jokers.
         for deck in range(decks):
             for rank in joker_ranks:
                 for suit_index in range(self.jokers):
                     suit = joker_suits[suit_index % len(self.suit_set)]
-                    self.cards.append(Card(joker_rank, suit))
+                    self.cards.append(Card(rank, suit))
 
     def cut(self, card_index):
         """
