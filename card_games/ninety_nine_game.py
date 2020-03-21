@@ -38,8 +38,6 @@ OPTIONS = """
     separated by slashes. (default is 9)
 chicago (chi): Equivalent to zero=4/9 skip=9 99=K minus=T plus-minus=!
 easy= (e=): How many easy bots you will play against. (default = 2)
-face=: The ranks that have their face value. This is used to reset default
-    non-face values. Face cards will have a value of 10.
 gonzo (gz): Equivalent to zero=4/k reverse=a jokers=2 99=9/x skip=2 minus=j.
 jokers= (j=): The number of jokers in the deck. Their default value is 99.
 joker-rules (jr): Equivalent to zero=9/k reverse=k jokers=2 99=x skip=!
