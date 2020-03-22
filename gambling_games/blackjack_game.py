@@ -188,8 +188,7 @@ class Blackjack(game.Game):
             self.human.tell('The dealer is showing an ace.')
             self.human.tell('Your hand is {}.'.format(self.player_hands[0]))
             for hand_index, hand in enumerate(self.player_hands[1:]):
-                hand_ordinal = utility.number_word(hand_index + 2, ordinal = True)
-                self.human.tell('Your {} hand is {}.'.format(hand_ordinal, hand))
+                self.human.tell('Your {} is {}.'.format(utility.num_text(hand_index, 'hand', ':o'), hand))
             # Ask until you get a valid insurance amount, blocking other blackjack moves until done.
             self.phase = 'insurance'
             while True:
@@ -351,7 +350,7 @@ class Blackjack(game.Game):
                 message = '\nYou are now playing {}.'
             else:
                 message = '\nNext round you will play {}.'
-            self.human.tell(message.format(utility.number_plural(new_count, 'hand')))
+            self.human.tell(message.format(utility.num_text(new_count, 'hand')))
             # Make the change.
             self.hand_count = new_count
         else:
@@ -449,8 +448,8 @@ class Blackjack(game.Game):
         else:
             self.win_loss_draw[2] = 1
         # Inform the user.
-        plural = utility.plural(abs(self.scores[self.human]), 'buck')
-        self.human.tell('\nYou {} {} {}.'.format(result, abs(self.scores[self.human]), plural))
+        buck_text = utility.num_text(abs(self.scores[self.human]), 'buck', ':n')
+        self.human.tell('\nYou {} {}.'.format(result, buck_text))
         # Keeps turns as number of (dealer) hands.
         if self.phase == 'bet':
             self.turns -= 1
@@ -582,7 +581,7 @@ class Blackjack(game.Game):
         # Check for enough to bet one buck for each hand.
         if self.scores[self.human] < self.hand_count:
             # Get rid of unbettable hands.
-            plural = utility.number_plural(self.hand_count, 'hand')
+            plural = utility.num_text(self.hand_count, 'hand')
             self.human.tell('You do not have enough money to play {}.'.format(plural))
             self.do_hands(self.scores[self.human])
         # Check for multiple bets.
@@ -821,9 +820,9 @@ class Blackjack(game.Game):
         text += "\nThe dealer's hand is {}.".format(self.dealer_hand)
         text += '\nYour hand is {} ({}) [{}].'
         text = text.format(self.player_hands[0], self.player_hands[0].score(), self.player_hands[0].status)
-        hand_text = '\nYour {} hand is {} ({}) [{}].'
+        hand_text = '\nYour {} is {} ({}) [{}].'
         for hand_index, hand in enumerate(self.player_hands[1:]):
-            ordinal = utility.number_word(hand_index + 2, True)
+            ordinal = utility.num_text(hand_index + 2, 'hand', ':o')
             text += hand_text.format(ordinal, hand, hand.score(), hand.status)
         # Send the information to the human.
         self.human.tell(text)
