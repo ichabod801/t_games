@@ -274,7 +274,7 @@ class Blackjack(game.Game):
             # Deal the card.
             hand.draw()
             score = hand.score()
-            self.human.tell('You draw the {}.'.format(hand.cards[-1].name))
+            self.human.tell('You draw the {:n}.'.format(hand.cards[-1]))
             # Check for a busted hand.
             if score > 21:
                 self.human.tell('You busted with {} ({}).'.format(score, hand))
@@ -494,9 +494,9 @@ class Blackjack(game.Game):
             self.scores[self.human] -= self.bets[-1]
             # Draw new cards.
             hand.draw()
-            self.human.tell('The original hand drew the {}.'.format(hand[-1].name))
+            self.human.tell('The original hand drew the {:n}.'.format(hand[-1]))
             new_hand.draw()
-            self.human.tell('The new hand drew the {}.'.format(new_hand[-1].name))
+            self.human.tell('The new hand drew the {:n}.'.format(new_hand[-1]))
             # Stop hitting spit aces, if thems the rules.
             if not self.hit_split_ace and hand[0].rank == 'A':
                 hand.status = 'standing'
@@ -569,7 +569,7 @@ class Blackjack(game.Game):
             # Set the results.
             self.win_loss_draw[1] = 1
             self.human.tell('\nYou lost all of your money.')
-            self.scores[self.human.name] -= self.stake
+            self.scores[self.human] -= self.stake
             return True
         else:
             return False
@@ -797,7 +797,7 @@ class Blackjack(game.Game):
     def set_up(self):
         """Set up the game. (None)"""
         # Set up tracking variables.
-        self.scores = {self.human.name: self.stake}
+        self.scores = {self.human: self.stake}
         self.bets = [0] * self.hand_count
         self.insurance = 0
         self.phase = 'bet'
@@ -839,11 +839,11 @@ class Blackjack(game.Game):
             # Draw up to 17.
             while self.dealer_hand.score() < 17:
                 self.dealer_hand.draw()
-                self.human.tell('The dealer draws the {}.'.format(self.dealer_hand[-1].name))
+                self.human.tell('The dealer draws the {:n}.'.format(self.dealer_hand[-1]))
             # Hit on soft 17.
             if self.hit_soft_17 and self.dealer_hand.score() == 17 and self.dealer_hand.soft:
                 self.dealer_hand.draw()
-                self.human.tell('The dealer draws the {}.'.format(self.dealer_hand[-1].name))
+                self.human.tell('The dealer draws the {:n}.'.format(self.dealer_hand[-1]))
         # Get and show the dealer's final hand value.
         dealer_value = self.dealer_hand.score()
         self.human.tell("The dealer's hand is {}.".format(dealer_value))
