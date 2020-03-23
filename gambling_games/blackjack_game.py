@@ -293,9 +293,10 @@ class Blackjack(game.Game):
         # A Ninety-Nine win stops the dealer from drawing this round.
         if game == 'ninety-nine':
             if not losses:
+                self.human.tell('\nThe dealer may not draw on this hand.')
                 self.dealer_skip = True
         # A Dollar Game win allows you to swap out a card.
-        if game == 'the dollar game':
+        elif game == 'the dollar game':
             if not losses:
                 self.show_status()
                 # Get the card.
