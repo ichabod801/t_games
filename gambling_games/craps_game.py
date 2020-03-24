@@ -256,21 +256,21 @@ class Craps(game.Game):
 
     def __str__(self):
         """Create a human readable text representation. (str)"""
-        player = self.players[self.player_index]
+        player = self.current_player
         # Display shooter and point.
         if self.point:
             point_text = 'point = {}'.format(self.point)
         else:
             point_text = 'off'
-        lines = ['\nThe shooter is {} ({}).'.format(self.players[self.shooter_index].name, point_text)]
+        lines = ['\nThe shooter is {} ({}).'.format(self.players[self.shooter_index], point_text)]
         # Display outstanding bets.
-        bet_text = utility.number_plural(len(self.bets[player.name]), 'bet')
-        total_bet = sum(bet.wager for bet in self.bets[player.name])
+        bet_text = utility.number_plural(len(self.bets[player]), 'bet')
+        total_bet = sum(bet.wager for bet in self.bets[player])
         buck_text = utility.plural(total_bet, 'buck')
         lines.append('You have {} in play totalling {} {}.'.format(bet_text, total_bet, buck_text))
         # Display remaining money.
-        plural = utility.plural(self.scores[player.name], 'buck')
-        lines.append('You have {} {} remaining to bet.'.format(self.scores[player.name], buck_text))
+        plural = utility.plural(self.scores[player], 'buck')
+        lines.append('You have {} {} remaining to bet.'.format(self.scores[player], buck_text))
         return '\n'.join(lines)
 
     def default(self, line):
@@ -281,7 +281,7 @@ class Craps(game.Game):
         line: The command entered by the user. (str)
         """
         # Gather useful data.
-        player = self.players[self.player_index]
+        player = self.current_player
         words = line.lower().split()
         # Check for odds bets.
         if 'odds' in words:
@@ -296,7 +296,7 @@ class Craps(game.Game):
                 player.error('That is an invalid odds bet.')
                 return True
             # Find valid base bet.
-            possibles = [b for b in self.bets[player.name] if b.match(base_bet, number) and not b.odds_bet]
+            possibles = [b for b in self.bets[player] if b.match(base_bet, number) and not b.odds_bet]
             if possibles:
                 # Make the odds bet.
                 bet = OddsBet(player, base_bet + ' odds', number, possibles[0])
@@ -333,18 +333,17 @@ class Craps(game.Game):
             self.get_wager(bet)
         # Add bets with valid wagers.
         if bet.wager:
-            self.bets[player.name].append(bet)
+            self.bets[player].append(bet)
         return True
 
     def do_bets(self, argument):
         """
         Show the player's bets. (b)
         """
-        player = self.players[self.player_index]
+        player = self.current_player
         player.tell('\n---Your Bets---\n')
-        for bet in self.bets[player.name]:
-            plural = utility.plural(bet.wager, 'buck')
-            player.tell('{} for {} {}.'.format(bet, bet.wager, plural).capitalize())
+        for bet in self.bets[player]:
+            player.tell('{} for {}.'.format(bet, utility.num_text(bet.wager, 'buck')).capitalize())
         return True
 
     def do_done(self, argument):
@@ -356,7 +355,7 @@ class Craps(game.Game):
         the done command to automatically roll if you are asked to. Or, you can just
         use the roll command to do that.
         """
-        player = self.players[self.player_index]
+        player = self.current_player
         # Check for shooter's turn.
         if self.player_index == self.shooter_index:
             # Check for a pass or don't pass bet:
@@ -403,19 +402,19 @@ class Craps(game.Game):
         Stop playing Craps. (!)
         """
         # Determine overall winnings or losses.
-        self.scores[self.human.name] -= self.stake
+        self.scores[self.human] -= self.stake
         # Determine if the game is a win or a loss.
         result = 'won'
-        if self.scores[self.human.name] > 0:
+        if self.scores[self.human] > 0:
             self.win_loss_draw[0] = 1
-        elif self.scores[self.human.name] < 0:
+        elif self.scores[self.human] < 0:
             result = 'lost'
             self.win_loss_draw[1] = 1
         else:
             self.win_loss_draw[2] = 1
         # Inform the user.
-        plural = utility.plural(abs(self.scores[self.human.name]), 'buck')
-        self.human.tell('\nYou {} {} {}.'.format(result, abs(self.scores[self.human.name]), plural))
+        winnings_text = utility.num_text(abs(self.scores[self.human.name]), 'buck')
+        self.human.tell('\nYou {} {}.'.format(result, winnings_text))
         # Quit the game.
         self.flags |= 4
         self.force_end = True
@@ -426,27 +425,25 @@ class Craps(game.Game):
 
         You will be shown a list of removable bets, from which you may pick one to
         remove. To remove all of your removable bets, use 'all' or 'a' as an argument
-        to the bet command.
+        to the remove command.
         """
-        player = self.players[self.player_index]
+        player = self.current_player
         # Get the removable bets.
-        removable = [bet for bet in self.bets[player.name] if bet.removable]
+        removable = [bet for bet in self.bets[player] if bet.removable]
         # Check that there are removable bets.
         if not removable:
             player.tell('You have not made any bets that can be removed.')
         # Check for remove all.
         elif argument.lower() in ('a', 'all'):
             for bet in removable:
-                plural = utility.plural(bet.wager, 'buck')
-                player.tell('Removing your {} bet for {} {}.'.format(bet, bet.wager, plural))
+                player.tell('Removing your {} bet for {}.'.format(bet, utility.num_text(bet.wager, plural)))
                 self.remove_bet(bet)
         else:
             # Show the bets.
             player.tell('\n---Removable Bets---\n')
-            row_text = '{}: {} bet for {} {}.'
+            row_text = '{}: {} bet for {}.'
             for bet_index, bet in enumerate(removable):
-                plural = utility.plural(bet.wager, 'buck')
-                player.tell(row_text.format(bet_index, bet, bet.wager, plural))
+                player.tell(row_text.format(bet_index, bet, utility.num_text(bet.wager, plural)))
             # Get the bet to remove.
             query = '\nWhich bet would you like to remove (-1 for none)? '
             choice = player.ask_int(query, low = -1, high = len(removable) - 1)
@@ -455,8 +452,8 @@ class Craps(game.Game):
                 pass
             else:
                 bet = removable[choice]
-                plural = utility.plural(bet.wager, 'buck')
-                player.tell('Removing your {} bet for {} {}.'.format(bet, bet.wager, plural))
+                buck_text = utility.num_text(bet.wager, 'buck')
+                player.tell('Removing your {} bet for {}.'.format(bet, buck_text))
                 self.remove_bet(bet)
         return True
 
@@ -473,10 +470,10 @@ class Craps(game.Game):
     def game_over(self):
         """Check for the end of the game. (bool)"""
         # The game is over when the human is out of money (and live bets).
-        if self.scores[self.human.name] == 0 and not self.bets[self.human.name]:
+        if self.scores[self.human] == 0 and not self.bets[self.human]:
             # Set the results.
             self.win_loss_draw[1] = 1
-            self.scores[self.human.name] -= self.stake
+            self.scores[self.human] = -self.stake
             self.human.tell('\nYou lost all of your money.')
             return True
         else:
@@ -491,7 +488,7 @@ class Craps(game.Game):
         """
         # Calcuate the maximum allowed bet.
         max_bet = bet.max_bet(self.limit, self.limit * self.max_payout)
-        player_max = int(self.scores[bet.player.name] / (1 + bet.commission))
+        player_max = int(self.scores[bet.player] / (1 + bet.commission))
         max_bet = min(player_max, max_bet)
         # Get the bet (or not).
         if max_bet:
@@ -502,11 +499,11 @@ class Craps(game.Game):
             bet.player.error('That is not a valid bet at this time.')
         # Set the bet.
         bet.set_wager(wager)
-        self.scores[bet.player.name] -= wager
+        self.scores[bet.player] -= wager
         if bet.commission:
             commission = int(math.ceil(wager * bet.commission))
-            bet.player.tell('The bank charges a {} dollar commission on that bet.'.format(commission))
-            self.scores[bet.player.name] -= commission
+            bet.player.tell('The bank charges a {} buck commission on that bet.'.format(commission))
+            self.scores[bet.player] -= commission
 
     def handle_options(self):
         """Handle the specified options. (None)"""
@@ -533,13 +530,13 @@ class Craps(game.Game):
             newbie.game = self
             newbie.set_up()
             self.players.append(newbie)
-            self.scores[newbie.name] = self.stake
-            self.bets[newbie.name] = []
-            self.human.tell('\n{} has joined the game.'.format(newbie.name))
+            self.scores[newbie] = self.stake
+            self.bets[newbie] = []
+            self.human.tell('\n{} has joined the game.'.format(newbie))
         # Go to the next player who has money to bet.
         while True:
             self.shooter_index = (self.shooter_index + 1) % len(self.players)
-            if self.scores[self.players[self.shooter_index].name]:
+            if self.scores[self.players[self.shooter_index]]:
                 break
         # Set the next person to the shooter, assuming end of turn will adjust it to the next player.
         self.player_index = self.shooter_index
@@ -555,16 +552,16 @@ class Craps(game.Game):
         '''if not self.turns and not sum(self.bets.values(), []):
             self.human.tell()'''
         # Check for removing a player.
-        if not (self.scores[player.name] or self.bets[player.name]):
+        if not (self.scores[player] or self.bets[player]):
             self.players.remove(player)
-            self.human.tell('{} dropped out due to lack of funds.'.format(player.name))
+            self.human.tell('{} dropped out due to lack of funds.'.format(player))
             self.player_index -= 1
             if self.shooter_index > self.player_index:
                 self.shooter_index -= 1
             return False
         # Pass the dice if the shooter has no money for a pass/don't pass bet.
         elif self.shooter_index == self.player_index and not self.validate_shooter(player):
-            for bet in self.bets[player.name]:
+            for bet in self.bets[player]:
                 if 'pass' in bet.match_text and not bet.number:
                     break
             else:
@@ -586,11 +583,11 @@ class Craps(game.Game):
         bet: The bet to remove. (CrapsBet)
         """
         # Find the bet.
-        player_name = bet.player.name
-        bets = self.bets[player_name]
+        player = bet.player
+        bets = self.bets[player]
         # Refund the wager.
-        self.scores[player_name] += bet.wager
-        self.scores[player_name] += int(math.ceil(bet.wager * bet.commission))
+        self.scores[player] += bet.wager
+        self.scores[player] += int(math.ceil(bet.wager * bet.commission))
         # Remove the bet and any associated odds bet.
         bets.remove(bet)
         if bet.odds_bet:
@@ -603,16 +600,14 @@ class Craps(game.Game):
             for bet in self.bets[player.name][:]:  # loop through copy to allow changes.
                 payout = bet.resolve(self.dice)
                 if payout > 0:
-                    message = '{} won {} {} on their {}.'
-                    plural = utility.plural(payout, 'buck')
-                    self.human.tell(message.format(player.name, payout, plural, bet))
-                    self.scores[player.name] += payout + bet.wager
-                    self.bets[player.name].remove(bet)
+                    message = '{} won {} on their {}.'
+                    self.human.tell(message.format(player.name, utility.num_text(payout, 'buck'), bet))
+                    self.scores[player] += payout + bet.wager
+                    self.bets[player].remove(bet)
                 elif payout < 0:
-                    message = '{} lost {} {} on their {}.'
-                    plural = utility.plural(bet.wager, 'buck')
-                    self.human.tell(message.format(player.name, bet.wager, plural, bet))
-                    self.bets[player.name].remove(bet)
+                    message = '{} lost {} on their {}.'
+                    self.human.tell(message.format(player.name, utility.num_text(bet.wager, 'buck'), bet))
+                    self.bets[player].remove(bet)
         # Set the point and shooter.
         if self.point:
             if sum(self.dice) == self.point:
@@ -659,18 +654,18 @@ class Craps(game.Game):
             classes.extend(cls.__subclasses__())
         # Set up the players.
         self.players = []
-        taken_names = [self.human.name]
+        taken_names = [self.human]
         while True:
             self.players.append(random.choice(self.bot_classes)(taken_names))
-            taken_names.append(self.players[-1].name)
+            taken_names.append(self.players[-1])
             if not random.randrange(self.max_players - len(self.players)):
                 break
         for player in self.players:
             player.game = self
         self.players.append(self.human)
         # Set up the tracking variables.
-        self.scores = {player.name: self.stake for player in self.players}
-        self.bets = {player.name: [] for player in self.players}
+        self.scores = {player: self.stake for player in self.players}
+        self.bets = {player: [] for player in self.players}
         self.shooter_index = len(self.players) - 1
         self.point = 0
         self.force_roll = 0
@@ -693,7 +688,7 @@ class Craps(game.Game):
         Parameters:
         player: The potential shooter to validate. (player.Player)
         """
-        if not self.scores[player.name] and not self.point:
+        if not self.scores[player] and not self.point:
             for bet in self.bets[player.name]:
                 if bet.match('pass', 0) or bet.match("don't pass", 0):
                     return True
