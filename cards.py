@@ -883,6 +883,7 @@ class Hand(Pile):
     A hand of cards held by a player. (Pile)
 
     Attributes:
+    cards: The cards in the hand. (list of Card)
     deck: The deck the cards in the hand come from. (Deck)
 
     Methods:
