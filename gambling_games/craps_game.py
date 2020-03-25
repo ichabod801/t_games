@@ -849,7 +849,7 @@ class HardWayBet(CrapsBet):
             result = 0
         # Check for resolution.
         elif sum(roll) in (self.number, 7):
-            if roll.values[0] == roll.values[1]:
+            if roll[0] == roll[1]:
                 result = self.payout
             else:
                 result = self.wager * -1
@@ -874,7 +874,7 @@ class HardWayBet(CrapsBet):
     def validate(self):
         """Check that the bet is valid. (str)"""
         errors = []
-        bets = self.game.bets[self.player.name]
+        bets = self.game.bets[self.player]
         made = [bet for bet in bets if bet.match(self.match_text, self.number)]
         if made:
             errors.append('You have already made that bet.')
@@ -963,7 +963,7 @@ class ComeBet(PassBet):
             # Catch the parent class setting the number.
             if self.number != number:
                 message = "{}'s {} bet's number was set to {}"
-                self.player.tell(message.format(self.player.name, self.raw_text, self.number))
+                self.player.tell(message.format(self.player, self.raw_text, self.number))
         else:
             result = 0
         return result
@@ -1190,7 +1190,7 @@ class PlaceBet(CrapsBet):
     def validate(self):
         """Check that the bet is valid. (str)"""
         errors = []
-        bets = self.game.bets[self.player.name]
+        bets = self.game.bets[self.player]
         made = [bet for bet in bets if bet.match(self.match_text, self.number)]
         if made:
             errors.append('You have already made that bet.')
@@ -1358,12 +1358,12 @@ class CrapsBot(player.Bot):
         """
         if prompt.startswith('\nWhat kind of bet'):
             # Make pass or don't pass bets, and then odds bets on them.
-            my_bets = self.game.bets[self.name]
+            my_bets = self.game.bets[self]
             # Mandatory actions based on errors.
             if self.last_act[:4] == 'must':
                 self.last_act = self.last_act[5:]
             # One bet per round, when you can.
-            elif not self.game.scores[self.name] or self.last_act == 'wager':
+            elif not self.game.scores[self] or self.last_act == 'wager':
                 self.last_act = 'done'
             # Make the primary bet if no bet.
             elif not my_bets:
@@ -1388,10 +1388,10 @@ class CrapsBot(player.Bot):
         """
         # Find the maximum possible bet.
         max_bet = int(self.max_re.search(args[0]).group())
-        wager = min(max_bet, max(1, self.game.scores[self.name] // 5))
+        wager = min(max_bet, max(1, self.game.scores[self] // 5))
         # Make that bet.
-        message = "\n{} made a {} bet for {} bucks."
-        self.game.human.tell(message.format(self.name, self.last_act, wager))
+        message = "\n{} made a {} bet for {}."
+        self.game.human.tell(message.format(self, self.last_act, utility.num_text(wager, 'buck')))
         # Track making a bet.
         self.last_act = 'wager'
         return wager
@@ -1604,8 +1604,8 @@ class Randy(CrapsBot):
         max_bet = min(int(self.max_re.search(args[0]).group()), self.game.scores[self.name])
         wager = random.randint(1, max_bet)
         # Inform the human.
-        message = "\n{} made a {} bet for {} bucks."
-        self.game.human.tell(message.format(self.name, self.last_act, wager))
+        message = "\n{} made a {} bet for {}."
+        self.game.human.tell(message.format(self, self.last_act, utility.num_text(wager, 'buck')))
         # Track making the bet.
         self.last_act = 'wager'
         return wager
