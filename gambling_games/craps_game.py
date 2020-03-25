@@ -166,11 +166,12 @@ PROPOSITION (SINGLE-ROLL) BETS:
 (To make a proposition bet, type "prop" or "propositon" and the name of the
     bet.)
 2 (snake eyes/aces): Wins if the next roll is a 2. Pays 30:1
-3 (ace-duece): Wins if the next roll is a 3. Pays 15:1
+3 (ace-deuce): Wins if the next roll is a 3. Pays 15:1
 11 (yo): Wins if the next roll is an 11. Pays 15:1
 12 (boxcars/midnight/cornrows): Wins if the next roll is a 12. Pays 30:1
 Any 7: Wins if the next roll is a 7. Pays 4:1
 Any Craps (craps/three-way): Wins if the next roll is a 2, 3, or 12. Pays 7:1
+C&E: Wins if the next roll is a 2, 3, 11, or 12. Pays 7:1 on 11, 3:1 otherwise.
 Field: Wins if the next roll is 2, 3, 4, 9, 10, 11, or 12. Pays 1:1, or 2:1
     if the 2 or 12 are rolled.
 Hi-lo (2 or 12): Wins if the next roll is either a 2 or a 12. Pays 15:1
@@ -1240,11 +1241,12 @@ class PropositionBet(CrapsBet):
     """
 
     prop_aliases = {'2': '2', '2 or 12': 'hi-lo', '3': '3', '6': '6', '7': '7', '8': '8', '11': 'yo',
-        '12': '12', 'ace-duece': '3', 'aces': '2', 'any 7': '7', 'any craps': 'craps', 'boxcars': '12',
-        'c&e': 'c & e', 'c & e': 'c & e', 'cornrows': '12', 'craps': 'craps', 'field': 'field',
-        'hi-lo': 'hi-lo', 'hi-low': 'hi-lo', 'high-lo': 'hi-lo', 'high-low': 'hi-lo', 'horn': 'horn',
-        'midnight': '12', 'snake-eyes': '2', 'three-way': 'craps', 'whirl': 'whirl', 'world': 'whirl',
-        'yo': 'yo'}
+        '12': '12', 'ace deuce': '3', 'ace-deuce': '3', 'aces': '2', 'any 7': '7', 'any-7': '7',
+        'any craps': 'craps', 'any-craps': 'craps', 'boxcars': '12', 'c&e': 'c & e', 'c & e': 'c & e',
+        'cornrows': '12', 'craps': 'craps', 'field': 'field', 'hi lo': 'hi-lo', 'hi-lo': 'hi-lo',
+        'hi-low': 'hi-lo', 'high-lo': 'hi-lo', 'high-low': 'hi-lo', 'horn': 'horn', 'midnight': '12',
+        'snake eyes': '2', 'snake-eyes': '2', 'three-way': 'craps', 'three-way': 'craps', 'whirl': 'whirl',
+        'world': 'whirl', 'yo': 'yo'}
     prop_bets = {'2': ((2,), 30, 1), '3': ((3,), 15, 1), '6': ((6,), 1, 1), '7': ((7,), 4, 1),
         '8': ((8,), 1, 1), 'yo': ((11,), 15, 1), '12': ((12,), 30, 1), 'hi-lo': ((2, 12), 15, 1),
         'craps': ((2, 3, 12), 7, 1), 'c & e': ((2, 3, 11, 12), 3, 1, {11: (7, 1)}),
