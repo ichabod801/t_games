@@ -165,15 +165,15 @@ Hard Way (Hard): A hard way bet can be played on 4, 6, 8, or 10. It is a bet
 PROPOSITION (SINGLE-ROLL) BETS:
 (To make a proposition bet, type "prop" or "propositon" and the name of the
     bet.)
-2 (snake eyes/aces): Wins if the next roll is a 2. Pays
-3 (ace-duece): Wins if the next roll is a 3. Pays
-11 (yo): Wins if the next roll is an 11. Pays
-12 (boxcars/midnight/cornrows): Wins if the next roll is a 12. Pays
+2 (snake eyes/aces): Wins if the next roll is a 2. Pays 30:1
+3 (ace-duece): Wins if the next roll is a 3. Pays 15:1
+11 (yo): Wins if the next roll is an 11. Pays 15:1
+12 (boxcars/midnight/cornrows): Wins if the next roll is a 12. Pays 30:1
 Any 7: Wins if the next roll is a 7. Pays 4:1
-Any Craps (craps/three-way): Wins if the next roll is a 2, 3, or 12. Pays
+Any Craps (craps/three-way): Wins if the next roll is a 2, 3, or 12. Pays 7:1
 Field: Wins if the next roll is 2, 3, 4, 9, 10, 11, or 12. Pays 1:1, or 2:1
     if the 2 or 12 are rolled.
-Hi-lo (2 or 12): Wins if the next roll is either a 2 or a 12. Pays
+Hi-lo (2 or 12): Wins if the next roll is either a 2 or a 12. Pays 15:1
 Horn: Wins if the next roll is 2, 3, 11, or 12. Pays 27:4 if 2 or 12 is
     rolled, 3:1 if 3 or 11 is rolled.
 Whirl (world): Wins if the next rolls is a 2, 3, 11, or 12. Pays 26:5 if 2 or
