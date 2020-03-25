@@ -437,14 +437,14 @@ class Craps(game.Game):
         # Check for remove all.
         elif argument.lower() in ('a', 'all'):
             for bet in removable:
-                player.tell('Removing your {} bet for {}.'.format(bet, utility.num_text(bet.wager, plural)))
+                player.tell('Removing your {} bet for {}.'.format(bet, utility.num_text(bet.wager, 'buck')))
                 self.remove_bet(bet)
         else:
             # Show the bets.
             player.tell('\n---Removable Bets---\n')
             row_text = '{}: {} bet for {}.'
             for bet_index, bet in enumerate(removable):
-                player.tell(row_text.format(bet_index, bet, utility.num_text(bet.wager, plural)))
+                player.tell(row_text.format(bet_index, bet, utility.num_text(bet.wager, 'buck')))
             # Get the bet to remove.
             query = '\nWhich bet would you like to remove (-1 for none)? '
             choice = player.ask_int(query, low = -1, high = len(removable) - 1)
