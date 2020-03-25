@@ -381,6 +381,8 @@ class Craps(game.Game):
     def do_gipf(self, arguments):
         """
         Crazy Eights makes the next roll an eight.
+
+        Slot Machines forces the next roll to be a pair.
         """
         game, losses = self.gipf_check(arguments, ('crazy eights', 'slot machines'))
         # Crazy Eights forces the next roll to be an eight.
