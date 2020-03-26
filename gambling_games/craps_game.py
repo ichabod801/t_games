@@ -92,13 +92,13 @@ cars-pay-3 (c3): Make 12 (boxcars) pay 3:1 on a field bet.
 gonzo (gz): Equivalent to 'cars-pay-3 limit=1000 max-payout=5 odds-max=81
     yo-pays-2'.
 lazy-hard (lh): Turns hard way bets off during the come out roll.
-limit= (l=): The maximum ammount that can be bet (20).
+limit= (l=): The maximum ammount that can be bet (8).
 max-payout= (m$=): The multiple of the limit that is the maximum payout (3).
 max-players= (mp=): The maximum number of players at the table (7).
 odds-max= (om=): The multiple of the limit for odds bets. If odds-max = 345,
     the maximum is 3x the limit for 4 or 10, 4x the limit for 5 or 9, and 5x
     the limit for 6 or 10. (345)
-stake= (s=): The ammount of money the player starts with (250).
+stake= (s=): The ammount of money the player starts with (100).
 yo-pays-2 (y2): Makes 11 (yo) pay 2:1 on a field bet.
 """
 
@@ -211,7 +211,7 @@ class Craps(game.Game):
     bets: The bets the players have made this round. (dict of str: list)
     cars_pay_3: A flag for 12 paying at 3:1 on field bets. (bool)
     dice: The dice that get rolled. (dice.Pool)
-    force_roll: The number that must be rolled next (0 means no forced roll). (int)
+    force_roll: The number that must be rolled next (tuple).
     lazy_hard: A flag for hard ways bets to be off on come out rolls. (bool)
     limit: The maximum bet that can be made. (int)
     max_payout: The multiple of the limit that can be paid out on one bet. (int)
@@ -1288,10 +1288,11 @@ class PropositionBet(CrapsBet):
 
     def max_bet(self, limit, max_payout):
         """
-        Calculate the maximum odds wager. (int)
+        Calculate the maximum wager. (int)
 
         Parameters:
-        odds_multiples: The multipliers for odds bets. (dict of int: int)
+        limit: The game's maximum bet. (int)
+        max_payout: The game's maximum payout. (int)
         """
         return max(1, int(max_payout * self.divisor / self.multiplier))
 
