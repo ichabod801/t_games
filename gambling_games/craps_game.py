@@ -223,6 +223,7 @@ class Craps(game.Game):
     yo_pays_2: A flag for 11 paying at 2:1 on field bets. (bool)
 
     Methods:
+    add_player: Add a new player to the game. (None)
     do_bets: Show the player's bets. (bool)
     do_done: Finish the player's turn. (bool)
     do_remove: Remove bets that are in play. (bool)
@@ -273,6 +274,16 @@ class Craps(game.Game):
         plural = utility.plural(self.scores[player], 'buck')
         lines.append('You have {} {} remaining to bet.'.format(self.scores[player], buck_text))
         return '\n'.join(lines)
+
+    def add_player(self):
+        """Add a new player to the game. (None)"""
+        newbie = random.choice(self.bot_classes)(self.scores.keys())
+        newbie.game = self
+        newbie.set_up()
+        self.players.append(newbie)
+        self.scores[newbie] = self.stake
+        self.bets[newbie] = []
+        self.human.tell('\n{} has joined the game.'.format(newbie))
 
     def default(self, line):
         """
@@ -529,18 +540,23 @@ class Craps(game.Game):
         """"Determine the next shooter and the next player (better). (None)"""
         # Check for new players.
         if len(self.players) < self.max_players and random.random() < (1 / len(self.players)):
-            newbie = random.choice(self.bot_classes)(self.scores.keys())
-            newbie.game = self
-            newbie.set_up()
-            self.players.append(newbie)
-            self.scores[newbie] = self.stake
-            self.bets[newbie] = []
-            self.human.tell('\n{} has joined the game.'.format(newbie))
+            self.add_player()
         # Go to the next player who has money to bet.
-        while True:
+        for player in range(len(self.players)):
             self.shooter_index = (self.shooter_index + 1) % len(self.players)
             if self.scores[self.players[self.shooter_index]]:
                 break
+        else:
+            # If no one has money,
+            if len(self.players) < self.max_players:
+                # Add a player if possible.
+                self.add_player()
+            else:
+                # Otherwise give out loans.
+                self.stake += 18
+                for player in self.players:
+                    self.scores[player] += 18
+                self.human.tell('\nAs no one has any money, each player has been given a 18 buck loan.')
         # Set the next person to the shooter, assuming end of turn will adjust it to the next player.
         self.player_index = self.shooter_index
 
