@@ -1363,7 +1363,6 @@ class CrapsBot(player.Bot):
 
     Class Attributes:
     bet_type: The main type of bet to make. (str)
-    max_re: A regex for getting the max bet from a question. (SRE_Pattern)
 
     Attributes:
     last_act: The last action taken by the bot. (int)
@@ -1377,7 +1376,6 @@ class CrapsBot(player.Bot):
     """
 
     bet_type = "don't pass"
-    max_re = re.compile('\d+')
 
     def ask(self, prompt):
         """
@@ -1409,16 +1407,20 @@ class CrapsBot(player.Bot):
         else:
             raise player.BotError('Unexpected question to CrapsBot: {!r}'.format(prompt))
 
-    def ask_int(self, *args, **kwargs):
+    def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
         """
-        Ask the bot for an integer. (int)
+        Get an integer response from the player. (int)
 
         Parameters:
-        the parameters are ingored.
+        prompt: The question asking for the integer. (str)
+        low: The lowest acceptable value for the integer. (int or None)
+        high: The highest acceptable value for the integer. (int or None)
+        valid: The valid values for the integer. (container of int)
+        default: The default choice. (int or None)
+        cmd: A flag for returning commands for processing. (bool)
         """
         # Find the maximum possible bet.
-        max_bet = int(self.max_re.findall(args[0])[-1])
-        wager = min(max_bet, max(1, self.game.scores[self] // 5))
+        wager = min(high, max(1, self.game.scores[self] // 5))
         # Make that bet.
         message = "\n{} made a {} bet for {}."
         self.game.human.tell(message.format(self, self.last_act, utility.num_text(wager, 'buck')))
@@ -1623,16 +1625,20 @@ class Randy(CrapsBot):
         else:
             raise player.BotError('Unexpected question to Randy: {!r}'.format(prompt))
 
-    def ask_int(self, *args, **kwargs):
+    def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
         """
-        Ask the bot for an integer. (int)
+        Get an integer response from the player. (int)
 
         Parameters:
-        the parameters are ingored.
+        prompt: The question asking for the integer. (str)
+        low: The lowest acceptable value for the integer. (int or None)
+        high: The highest acceptable value for the integer. (int or None)
+        valid: The valid values for the integer. (container of int)
+        default: The default choice. (int or None)
+        cmd: A flag for returning commands for processing. (bool)
         """
         # Make a random bet.
-        max_bet = min(int(self.max_re.search(args[0]).group()), self.game.scores[self.name])
-        wager = random.randint(1, max_bet)
+        wager = random.randint(low, high)
         # Inform the human.
         message = "\n{} made a {} bet for {}."
         self.game.human.tell(message.format(self, self.last_act, utility.num_text(wager, 'buck')))
