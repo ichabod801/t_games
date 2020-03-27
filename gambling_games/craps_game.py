@@ -576,9 +576,6 @@ class Craps(game.Game):
         Parameters:
         player: The current player. (player.Player)
         """
-        # Check for no output yet.
-        '''if not self.turns and not sum(self.bets.values(), []):
-            self.human.tell()'''
         # Check for removing a player.
         if not (self.scores[player] or self.bets[player]):
             self.players.remove(player)
@@ -772,7 +769,6 @@ class CrapsBet(object):
         # Set the calculated attributes.
         self.game = self.player.game
         # Set the default attributes.
-        self.ammo = False
         self.odds_bet = None
         self.wager = 0
 
@@ -1303,7 +1299,6 @@ class PropositionBet(CrapsBet):
         else:
             self.special_odds = {}
         # Set the default attributes.
-        self.ammo = False
         self.odds_bet = None
         self.wager = 0
 
