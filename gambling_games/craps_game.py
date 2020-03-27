@@ -504,10 +504,19 @@ class Craps(game.Game):
         max_bet = bet.max_bet(self.limit, self.limit * self.max_payout)
         player_max = int(self.scores[bet.player] / (1 + bet.commission))
         max_bet = min(player_max, max_bet)
+        # Calculate the minimum allowed bet.
+        min_bet = 1
+        while True:
+            bet.set_wager(min_bet)
+            if bet.payout > 0:
+                break
+            min_bet += 1
+        if min_bet > max_bet:
+            min_bet = 0
         # Get the bet (or not).
-        if max_bet:
-            query = 'How much would you like to bet (max = {})? '.format(max_bet)
-            wager = bet.player.ask_int(query, low = 1, high = max_bet, cmd = False)
+        if min_bet and max_bet:
+            query = 'How much would you like to bet ({} to {} bucks)? '.format(min_bet, max_bet)
+            wager = bet.player.ask_int(query, low = min_bet, high = max_bet, cmd = False)
         else:
             wager = 0
             bet.player.error('That is not a valid bet at this time.')
@@ -1408,7 +1417,7 @@ class CrapsBot(player.Bot):
         the parameters are ingored.
         """
         # Find the maximum possible bet.
-        max_bet = int(self.max_re.search(args[0]).group())
+        max_bet = int(self.max_re.findall(args[0])[-1])
         wager = min(max_bet, max(1, self.game.scores[self] // 5))
         # Make that bet.
         message = "\n{} made a {} bet for {}."
