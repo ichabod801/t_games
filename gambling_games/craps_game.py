@@ -1426,7 +1426,6 @@ class CrapsBot(player.Bot):
         Parameters:
         message: The error warning. (str)
         """
-        print(message)
         # Dictate the next action based on the error.
         if message.startswith('You can only have'):
             self.last_act = 'must done'
