@@ -387,6 +387,9 @@ class Craps(game.Game):
             self.human.tell('\n{} rolled {}.'.format(player.name, self.dice))
             self.resolve_bets()
             self.human.ask('Press enter to continue: ')
+            # Pass the dice if the shooter has no money for a pass/don't pass bet.
+            if not self.validate_shooter(player):
+                    self.next_shooter()
         return False
 
     def do_gipf(self, arguments):
@@ -584,14 +587,6 @@ class Craps(game.Game):
             if self.shooter_index > self.player_index:
                 self.shooter_index -= 1
             return False
-        # Pass the dice if the shooter has no money for a pass/don't pass bet.
-        elif self.shooter_index == self.player_index and not self.validate_shooter(player):
-            for bet in self.bets[player]:
-                if 'pass' in bet.match_text and not bet.number:
-                    break
-            else:
-                self.next_shooter()
-                return False
         # Display the game status.
         player.tell(str(self))
         # Get the bet or other command.
