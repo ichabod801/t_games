@@ -1411,6 +1411,7 @@ class CrapsBot(player.Bot):
         """
         # Find the maximum possible bet.
         wager = min(high, max(1, self.game.scores[self] // 5))
+        wager = max(wager, low)
         # Make that bet.
         message = "\n{} made a {} bet for {}."
         self.game.human.tell(message.format(self, self.last_act, utility.num_text(wager, 'buck')))
@@ -1425,6 +1426,7 @@ class CrapsBot(player.Bot):
         Parameters:
         message: The error warning. (str)
         """
+        print(message)
         # Dictate the next action based on the error.
         if message.startswith('You can only have'):
             self.last_act = 'must done'
