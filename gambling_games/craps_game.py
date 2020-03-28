@@ -266,13 +266,13 @@ class Craps(game.Game):
             point_text = 'off'
         lines = ['\nThe shooter is {} ({}).'.format(self.players[self.shooter_index], point_text)]
         # Display outstanding bets.
-        bet_text = utility.number_plural(len(self.bets[player]), 'bet')
+        bet_text = utility.num_text(len(self.bets[player]), 'bet')
         total_bet = sum(bet.wager for bet in self.bets[player])
-        buck_text = utility.plural(total_bet, 'buck')
-        lines.append('You have {} in play totalling {} {}.'.format(bet_text, total_bet, buck_text))
+        buck_text = utility.num_text(total_bet, 'buck')
+        lines.append('You have {} in play totalling {}.'.format(bet_text, buck_text))
         # Display remaining money.
-        plural = utility.plural(self.scores[player], 'buck')
-        lines.append('You have {} {} remaining to bet.'.format(self.scores[player], buck_text))
+        buck_text = utility.num_text(self.scores[player], 'buck')
+        lines.append('You have {} remaining to bet.'.format(buck_text))
         return '\n'.join(lines)
 
     def add_player(self):
@@ -582,7 +582,7 @@ class Craps(game.Game):
         # Check for removing a player.
         if not (self.scores[player] or self.bets[player]):
             self.players.remove(player)
-            self.human.tell('{} dropped out due to lack of funds.'.format(player))
+            self.human.tell('\n{} dropped out due to lack of funds.'.format(player))
             self.player_index -= 1
             if self.shooter_index > self.player_index:
                 self.shooter_index -= 1
