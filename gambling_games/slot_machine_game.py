@@ -222,8 +222,8 @@ class Machine(object):
     def __repr__(self):
         """Debugging text representation. (str)"""
         text = '<{} Machine with {} and {}>'
-        reel_text = '{} {}'.format(len(self.reels), utility.plural(len(self.reels), 'reel'))
-        row_text = '{} {}'.format(rows, utility.plural(rows, 'row'))
+        reel_text = utility.num_text(len(self.reels), 'reel')
+        row_text = utility.num_text(rows, 'row')
         return text.format(self.name, reel_text, row_text)
 
     def __str__(self):
@@ -308,7 +308,7 @@ class Machine(object):
         """
         Spin the reels. (list)
 
-        The return value explained in the help for all_payouts.
+        The return value is explained in the help for all_payouts.
 
         Parameters:
         player: The player making the spin. (player.Player)
@@ -651,7 +651,6 @@ class Slots(game.Game):
     default
     do_quit
     game_over
-    player_action
     set_options
     set_up
     """
@@ -661,6 +660,7 @@ class Slots(game.Game):
     aliases = {'s': 'spin', 'sw': 'switch', 'pull': 'spin', 'p': 'spin', '': 'spin'}
     credits = CREDITS
     categories = ['Gambling Games']
+    move_query = '\nWhat would you like to do? '
     name = 'Slot Machines'
     num_options = 1
     options = OPTIONS
@@ -668,9 +668,9 @@ class Slots(game.Game):
 
     def __str__(self):
         """Human readable text representation. (str)"""
-        text = '\nYou are playing {}.\nYou have {} {} left'
-        bucks = utility.plural(self.scores[self.human.name], 'buck')
-        return text.format(self.machine.name, self.scores[self.human.name], bucks)
+        text = '\nYou are playing {}.\nYou have {} left'
+        bucks = utility.num_text(self.scores[self.human.name], 'buck')
+        return text.format(self.machine.name, bucks)
 
     def do_gipf(self, arguments):
         """
@@ -722,19 +722,19 @@ class Slots(game.Game):
         Stop playing Blackjack. (!)
         """
         # Determine overall winnings or losses.
-        self.scores[self.human.name] -= self.stake
+        self.scores[self.human] -= self.stake
         # Determine if the game is a win or a loss.
         result = 'won'
-        if self.scores[self.human.name] > 0:
+        if self.scores[self.human] > 0:
             self.win_loss_draw[0] = 1
-        elif self.scores[self.human.name] < 0:
+        elif self.scores[self.human] < 0:
             result = 'lost'
             self.win_loss_draw[1] = 1
         else:
             self.win_loss_draw[2] = 1
         # Inform the user.
-        plural = utility.plural(abs(self.scores[self.human.name]), 'buck')
-        self.human.tell('\nYou {} {} {}.'.format(result, abs(self.scores[self.human.name]), plural))
+        plural = utility.num_text(abs(self.scores[self.human]), 'buck')
+        self.human.tell('\nYou {} {}.'.format(result, plural))
         # Quit the game.
         self.flags |= 4
         self.force_end = True
@@ -759,7 +759,7 @@ class Slots(game.Game):
             # Use the default if there are no arguments.
             plays = self.default_plays
         # Make sure the player has enough money.
-        if plays * self.machine.cost > self.scores[self.human.name]:
+        if plays * self.machine.cost > self.scores[self.human]:
             self.human.error('\nYou do not have enough money to do that.')
             return True
         # Spin the machine.
@@ -772,7 +772,7 @@ class Slots(game.Game):
         freebies = min(self.free_spins, plays)
         plays -= freebies
         self.free_spins -= freebies
-        self.scores[self.human.name] -= self.machine.cost * plays
+        self.scores[self.human] -= self.machine.cost * plays
         # Inform the player of the results.
         self.human.tell('')
         total_payout = 0
@@ -788,8 +788,8 @@ class Slots(game.Game):
             total_payout += bucks
         # Give the overall results.
         if total_payout:
-            bucks = utility.plural(total_payout, 'buck')
-            self.human.tell('\nYour won a total of {} {} this spin.'.format(total_payout, bucks))
+            bucks = utility.num_text(total_payout, 'buck')
+            self.human.tell('\nYour won a total of {} this spin.'.format(bucks))
             self.scores[self.human.name] += total_payout
         else:
             self.human.tell('\nYou did not win anything this spin.')
@@ -845,17 +845,6 @@ class Slots(game.Game):
             return True
         else:
             return False
-
-    def player_action(self, player):
-        """
-        Handle a player's turn or other player actions. (bool)
-
-        Parameters:
-        player: The player whose turn it is. (Player)
-        """
-        player.tell(self)
-        move = player.ask('\nWhat would you like to do? ')
-        return self.handle_cmd(move)
 
     def set_options(self):
         """Define the game options. (None)"""
