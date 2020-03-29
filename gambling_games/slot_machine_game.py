@@ -254,7 +254,7 @@ class Machine(object):
 
     def finish(self):
         """Fill in the extra rows of the machine. (None)"""
-        for reel in range(len(self.reels) - 1):
+        for reel in range(self.rows - 1):
             self.state.append([(index + 1) % len(reel) for index, reel in zip(self.state[-1], self.reels)])
         self.state = self.state[-self.rows:]
 
