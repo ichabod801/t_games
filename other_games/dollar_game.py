@@ -140,7 +140,7 @@ class DollarGame(game.Game):
                 self.graph.values[give] += 1
                 go = True
         else:
-            beg = self.human.ask("\nCould you gipf a dollar to a fellow American who's down on his luck?")
+            beg = self.human.ask("\nCould you gipf a dollar to a fellow American who's down on his luck? ")
             if beg in utility.YES:
                 self.human.tell('Thank you.')
         return go
@@ -164,7 +164,7 @@ class DollarGame(game.Game):
         if min(self.graph.values.values()) >= 0:
             self.human.tell('You won in {} turns!'.format(self.turns))
             self.win_loss_draw = [1, 0, 0]
-            self.scores[self.human.name] = self.genus - self.ease
+            self.scores[self.human] = self.genus - self.ease
             return True
         else:
             return False
@@ -177,17 +177,6 @@ class DollarGame(game.Game):
         self.edges = self.genus + self.nodes - 1
         self.total_value = self.genus + self.ease - 1
         self.auto_cap = (self.nodes < 27)
-
-    def player_action(self, player):
-        """
-        Handle a player's turn or other player actions. (bool)
-
-        Parameters:
-        player: The player whose turn it is. (Player)
-        """
-        print(self.graph)
-        move = player.ask('\nWhat is your move? ')
-        self.handle_cmd(move)
 
     def set_options(self):
         """Set up the game options. (None)"""
@@ -268,7 +257,7 @@ class DollarGraph(object):
         """
         Generate a random set of edges. (None)
 
-        Algorithm from David Bruce Wilson. Should generate every possible tree with
+        Algorithm from David Bruce Wilson. It should generate every possible tree with
         equal probability.
 
         Parameters:
