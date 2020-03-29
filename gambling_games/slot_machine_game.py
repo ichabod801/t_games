@@ -609,10 +609,9 @@ class SevenWords(Machine):
         elif counts == [4, 4, 4, 4]:
             payout, text = 1080, "four-of-a-kind ({}'s)".format(values[0])
         elif counts == [1, 3, 3, 3]:
-            values.sort()
-            payout, text = 40, "three-of-a-kind ({}'s)".format(values[1])
+            payout, text = 40, "three-of-a-kind ({}'s)".format(sorted(values)[1])
         elif counts == [2, 2, 2, 2]:
-            values.sort()
+            values = sorted(values)
             payout, text = 22, "two pair ({}'s and {}'s)".format(values[0], values[2])
         elif word in self.words_four:
             payout, text = 16, 'a four letter English word ({})'.format(word.lower())
