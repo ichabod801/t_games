@@ -499,11 +499,11 @@ class FullHouse(Machine):
         has_letters = has_lowers or has_uppers
         # Determine the payouts.
         if has_digits and has_lowers and has_uppers and has_symbols:
-            payout, text = 2, 'a password'
+            payout, text = 4, 'a password'
         else:
             payout, text = 0, 'nothing'
         if counts == [5, 5, 5, 5, 5]:
-            payout, text = 10000, 'the fiver jackpot'
+            payout, text = 100000, 'the fiver jackpot'
         elif has_digits and not has_letters and not has_symbols:
             payout, text = 30, 'pure digits'
         elif ''.join(raw_values).lower() == 'xyzzy':
@@ -521,7 +521,7 @@ class FullHouse(Machine):
             if text == 'a password':
                 payout, text = 12, "a password pair ({}'s)".format(pair)
             else:
-                payout, text = 4, "a pair ({}'s)".format(pair)
+                payout, text = 2, "a pair ({}'s)".format(pair)
         elif counts == [1, 2, 2, 2, 2]:
             high, low = values[3], values[1]
             payout, text = 15, "two pair ({}'s and {}'s)".format(high, low)
