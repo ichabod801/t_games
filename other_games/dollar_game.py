@@ -84,6 +84,7 @@ class DollarGame(game.Game):
     do_take: Take one dollar from each of a node's neighbors. (bool)
 
     Overridden Methods:
+    __str__
     handle_options
     player_action
     set_options
@@ -98,6 +99,10 @@ class DollarGame(game.Game):
     num_options = 4
     options = OPTIONS
     rules = RULES
+
+    def __str__(self):
+        """Human readable text representation. (str)"""
+        return str(self.graph)
 
     def do_donate(self, arguments):
         """
