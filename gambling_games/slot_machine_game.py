@@ -325,9 +325,9 @@ class Machine(object):
             player.tell(self.row_text(self.state[-1]))
             time.sleep(pause)
             if step >= 66:
-                pause += 0.005
+                pause += 0.003
             if step >= 97:
-                pause += 0.005
+                pause += 0.007
             self.step()
         # Show the final state of the machine.
         self.finish()
