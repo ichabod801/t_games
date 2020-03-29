@@ -80,8 +80,8 @@ The Lotus       (1-0-8): 24 bucks
 The Wheel       (8-0-1): 24 bucks
 
 One or more eights in the result doubles the payout, so the Lotus and the
-Wheel payout 48 bucks total. Downers and uppers must be sequences in order,
-and the Lotus and the Wheel must be those exact numbers.
+Wheel payout 48 bucks total. Downers, uppers, the Lotus, and the Wheel must be
+in order.
 
 Eight Ball only has one play.
 """
@@ -105,8 +105,8 @@ Five-of-a-Kind   100000 bucks
 
 A password has at least one digit, at least one symbol, at least one upper
 case letter, and at least one lower case letter. A purity has only numbers,
-symbols, or letters. A full house is a pair and three-of-a-kind. Xyzzy can be
-any case.
+only symbols, or only letters. A full house is a pair and three-of-a-kind.
+Xyzzy can be any case, but must be in order.
 
 Getting a full house with mutliple plays doubles every other play you score on.
 Getting a pair and a three-of-a-kind on separate plays doubles both of them.
@@ -137,7 +137,7 @@ RULES = """
 At the start you choose which game (type of slot machine) you want to play.
 Pick one, and enter the spin command. The cost of the machine will be auto-
 matically deducted from your stake. The reels will spin, as shown on the
-screen, and based on the final values, you may get a payout in return.
+screen. Based on the final values, you may get a payout in return.
 
 Some machines will have more than row in the final output, and will allow you
 to make multiple plays each spin. To make more than one play, you entere the
@@ -173,7 +173,7 @@ The Seven       (?-?-?-?): 2626 bucks
 The Seven Words that give the max payout are secret, but the Ginger Oracle
 knows. Pairs and three of a kind can be in any order. Three letter words
 must be either the first three letters or the last three letters. All words
-must be in order.
+must have the letters in the correct order.
 
 Seven Words has three rows and one, two, or three plays. One play plays the
 center row, two plays plays the top and bottom row, and three plays plays all
