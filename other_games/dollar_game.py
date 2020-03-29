@@ -114,9 +114,9 @@ class DollarGame(game.Game):
             arguments = arguments.upper()
         try:
             self.graph.donate(arguments)
-            return True
         except KeyError:
             self.human.error('{} is not a node in the graph.'.format(arguments))
+            return True
 
     def do_gipf(self, arguments):
         """
@@ -160,9 +160,9 @@ class DollarGame(game.Game):
             arguments = arguments.upper()
         try:
             self.graph.take(arguments)
-            return True
         except KeyError:
             self.human.error('{} is not a node in the graph.'.format(arguments))
+            return True
 
     def game_over(self):
         """Determine if the game has been won. (bool)"""
