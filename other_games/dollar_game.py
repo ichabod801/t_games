@@ -148,6 +148,7 @@ class DollarGame(game.Game):
             beg = self.human.ask("\nCould you gipf a dollar to a fellow American who's down on his luck? ")
             if beg in utility.YES:
                 self.human.tell('Thank you.')
+            go = False
         return go
 
     def do_take(self, arguments):
