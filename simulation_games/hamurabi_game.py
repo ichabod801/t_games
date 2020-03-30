@@ -50,6 +50,9 @@ You have ten turns to run ancient Sumeria. Each turn you can buy or sell land,
 buy or sell grain, decide how much to feed your people, and decide how much
 grain to plant. You will have to deal with disasters such as rats and plagues.
 
+Note that it takes 20 bushels of grain to feed one person, and it takes 1
+person and 5 bushels of grain to plant 10 acres.
+
 Commands:
 buy (b): Buy the specified number of acres.
 feed (f): Release the specified number of bales of grain to the people.
