@@ -215,7 +215,7 @@ class Hamurabi(game.Game):
             if not self.human.ask_yes_no('You have not fed anyone. Are you sure you want to continue? '):
                 return True
         if self.seed == 0:
-            if not self.human.ask_yes_no("No seed has been planted. Are you sure you want to continue? ")
+            if not self.human.ask_yes_no("No seed has been planted. Are you sure you want to continue? "):
                 return True
         # Determine values for next turn.
         # Update grain values and reset the grain bonus.
