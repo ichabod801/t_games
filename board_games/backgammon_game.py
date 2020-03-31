@@ -206,13 +206,6 @@ class BackgammonBot(player.Bot):
         # Handle pauses in game play.
         elif prompt.startswith('Press Enter'):
             return 'Cowabunga'
-        # Respond to be able to double.
-        elif prompt.startswith('Would you like to double'):
-            features, points = self.describe_board(self.game.board)
-            if self.eval_board(features, 'double') > 25:
-                return '1'
-            else:
-                return '0'
         # Raise an error for any other question.
         else:
             raise player.BotError('Unexpected question to BackgammonBot: {}'.format(prompt))
@@ -285,6 +278,28 @@ class BackgammonBot(player.Bot):
                 # Return an integer list for standard moves.
                 return move[:2]
         # Raise an error for any other question.
+        else:
+            raise player.BotError('Unexpected question to BackgammonBot: {}'.format(prompt))
+
+    def ask_yes_no(self, prompt, yes = (), no = (), other = (), cmd = False):
+        """
+        Get a yes or no answer from the bot. (str)
+
+        Parameters:
+        prompt: The question to ask the bot. (str)
+        yes: Extra answers accepted as yes. (tuple of str)
+        no: Extra answers accepted as no. (tuple of str)
+        other: Other answers to be returned as strings. (tuple of str)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        # Respond to be able to double.
+        if prompt.startswith('Would you like to double'):
+            features, points = self.describe_board(self.game.board)
+            if self.eval_board(features, 'double') > 25:
+                return True
+            else:
+                return False
+        # Respond to other questions.
         else:
             raise player.BotError('Unexpected question to BackgammonBot: {}'.format(prompt))
 
@@ -669,12 +684,6 @@ class PubEvalBot(BackgammonBot):
             return ''
         # Respond to being able to double.
         elif prompt.startswith('\nWould you like to double the stakes'):
-            if self.eval_board(self.game.board.copy()) > 25:
-                return '1'
-            else:
-                return '0'
-        # Respond to doubling requests.
-        elif prompt.startswith('\nYour opponent wants to double'):
             if self.eval_board(self.game.board.copy()) < -25:
                 return '1'
             else:
@@ -735,6 +744,28 @@ class PubEvalBot(BackgammonBot):
         # Raise an error for any other question.
         else:
             raise ValueError('Unexpected question to BackgammonBot: {}'.format(prompt))
+
+    def ask_yes_no(self, prompt, yes = (), no = (), other = (), cmd = False):
+        """
+        Get a yes or no answer from the bot. (str)
+
+        Parameters:
+        prompt: The question to ask the bot. (str)
+        yes: Extra answers accepted as yes. (tuple of str)
+        no: Extra answers accepted as no. (tuple of str)
+        other: Other answers to be returned as strings. (tuple of str)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        # Respond to be able to double.
+        elif prompt.startswith('Would you like to double'):
+            features, points = self.describe_board(self.game.board)
+            if self.eval_board(features, 'double') < -25:
+                return True
+            else:
+                return False
+        # Respond to other questions.
+        else:
+            raise player.BotError('Unexpected question to BackgammonBot: {}'.format(prompt))
 
     def eval_board(self, board):
         """
@@ -1163,42 +1194,46 @@ class Backgammon(game.Game):
         if self.doubling_status in ('', piece):
             # Ask for a double.
             query = '\nWould you like to double the stakes from {} to {} (return to roll)? '
-            double = player.ask(query.format(self.doubling_die, self.doubling_die *2))
-            if double.lower() not in utility.YES:
+            if not player.ask_yes_no(query.format(self.doubling_die, self.doubling_die *2)):
                 return True
             # See if the opponent accepts.
             opponent = self.get_next_player()
             opponent.tell(self.board.get_text(self.pieces[opponent]))
             query = '\nYour opponent wants to double the stakes to {}. Do you accept the new stakes? '
-            accept = opponent.ask(query.format(self.doubling_die * 2))
-            if accept.lower() in utility.YES:
-                # Process acceptance
-                self.doubling_die *= 2
-                self.doubling_status = 'O' if piece == 'X' else 'X'
-                message = '\n{} accepts the double, the doubling die is now at {}.'
-                player.tell(message.format(opponent, self.doubling_die))
-            else:
-                # Process rejection.
-                player.tell('\n{} refuses the double, you win the game.'.format(opponent))
-                # Set the match score.
-                self.scores[player] += self.doubling_die
-                # Check for the end of the match (or reset for the next game).
-                if self.scores[self.human] >= self.match:
-                    self.force_end = 'win'
-                elif self.scores[self.bot] >= self.match:
-                    self.force_end = 'loss'
+            while True:
+                accept = opponent.ask(query.format(self.doubling_die * 2)).lower()
+                if accept.lower() in player.YES:
+                    # Process acceptance
+                    self.doubling_die *= 2
+                    self.doubling_status = 'O' if piece == 'X' else 'X'
+                    message = '\n{} accepts the double, the doubling die is now at {}.'
+                    player.tell(message.format(opponent, self.doubling_die))
+                    break
+                elif accept == '' or accept not in player.NO:
+                    opponent.error('Please enter an explicit yes or no.')
+                    continue
                 else:
-                    self.reset()
-                # Update the human on the match status.
-                match_score = self.scores[self.human], self.scores[self.bot]
-                self.human.tell('\nThe match score is now {} to {}.'.format(*match_score))
-                if self.force_end == 'win':
-                    self.human.tell('You won the match. :)')
-                elif self.force_end:
-                    self.human.tell('You lost the match. :(')
-                else:
-                    self.human.ask('Press Enter to continue: ')
-                return False
+                    # Process rejection.
+                    player.tell('\n{} refuses the double, you win the game.'.format(opponent))
+                    # Set the match score.
+                    self.scores[player] += self.doubling_die
+                    # Check for the end of the match (or reset for the next game).
+                    if self.scores[self.human] >= self.match:
+                        self.force_end = 'win'
+                    elif self.scores[self.bot] >= self.match:
+                        self.force_end = 'loss'
+                    else:
+                        self.reset()
+                    # Update the human on the match status.
+                    match_score = self.scores[self.human], self.scores[self.bot]
+                    self.human.tell('\nThe match score is now {} to {}.'.format(*match_score))
+                    if self.force_end == 'win':
+                        self.human.tell('You won the match. :)')
+                    elif self.force_end:
+                        self.human.tell('You lost the match. :(')
+                    else:
+                        self.human.ask('Press Enter to continue: ')
+                    return False
         return True
 
     def game_over(self):
