@@ -961,9 +961,9 @@ class Backgammon(game.Game):
             # Check for gammon/backgammon.
             if other_piece not in self.board[OUT]:
                 if piece == 'X':
-                    home = range(1, 7)
+                    home = list(range(1, 7))
                 else:
-                    home = range(19, 25)
+                    home = list(range(19, 25))
                 if self.board.find(other_piece, home + [BAR]):
                     self.human.tell('\nBackgammon!')
                     result *= 3
