@@ -146,7 +146,9 @@ can be used to double the stakes. At the beginning of their turn, each player
 is asked if they want to double the stakes of the game. The other player must
 accept the doubled stakes or concede the game. After the initial doubling of
 the stakes, control of the doubling die goes to the player who accepted the
-doubling of the stakes, and only they can double the stakes again.
+doubling of the stakes, and only they can double the stakes again. You cannot
+double if doing so would lead to winning the match. That is, you must win the
+match with an undoubled game.
 
 You may get both players' pip counts at any time with the pips command.
 """
