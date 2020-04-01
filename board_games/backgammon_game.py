@@ -1133,7 +1133,7 @@ class Backgammon(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Connect Four allows you to move a piece vertically, ending your turn.
+        Connect Four allows you to move a piece vertically, as an extra move.
 
         Hearts gives you a free turn if you rolled a non-double less than seven.
         """
@@ -1160,7 +1160,6 @@ class Backgammon(game.Game):
                         break
                 # Make the move.
                 self.board.move(point, target, piece)
-                go = False
         # Hearts gets you a free turn if your roll sucked.
         elif game == 'hearts':
             if not losses:
