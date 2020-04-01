@@ -1133,7 +1133,7 @@ class Backgammon(game.Game):
 
     def do_gipf(self, arguments):
         """
-        Connect Four allows you to move a piece vertically.
+        Connect Four allows you to move a piece vertically, ending your turn.
 
         Hearts gives you a free turn if you rolled a non-double less than seven.
         """
@@ -1162,11 +1162,12 @@ class Backgammon(game.Game):
                 self.board.move(point, target, piece)
                 go = False
         # Hearts gets you a free turn if your roll sucked.
-        if game == 'hearts':
+        elif game == 'hearts':
             if not losses:
                 roll = self.dice.values[:]
                 if roll[0] != roll[1] and sum(roll) < 7:
                     self.free_turn = True
+                    self.current_player.tell('\nYou will get a free turn after this one.')
         # I'm confused.
         else:
             self.current_player.tell("I'm sorry, I didn't catch that.")
