@@ -646,7 +646,11 @@ class Roulette(game.Game):
         if numbers and self.check_two_numbers(numbers, 'double street'):
             # Check for valid double street.
             low, high = sorted([int(x) for x in numbers.split('-')])
-            if high - low == 5 and not high % 3:
+            if high - low != 5:
+                self.human.error('Double street bets must cover 6 numbers.')
+            elif high % 3:
+                self.human.error('Double street bets must end in a multiple of 3.')
+            else:
                 # Make the bet.
                 self.scores[self.human.name] -= bet
                 targets = [str(number) for number in range(low, high + 1)]
