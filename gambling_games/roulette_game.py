@@ -683,7 +683,7 @@ class Roulette(game.Game):
             if not losses:
                 # Get a a corner bet
                 while True:
-                    corner = self.human.ask('Pick a square on the layout (low-high): ')
+                    corner = self.human.ask('\nPick a square on the layout (low-high): ')
                     try:
                         low, high = sorted([int(word) for word in corner.split('-')])
                     except ValueError:
