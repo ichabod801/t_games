@@ -68,7 +68,9 @@ corner bet on 10, 11, 13, and 14.
 The bets are listed below. The number in brackets is the number of numbers
 that must be specified for the bet. Bets with a capital F in the brackets may
 only be made on the French layout, and bets with a capital A may only be made
-on the American layout (see options).
+on the American layout (see options). Bets with xN after them are actually N
+bets, so whatever you bet will be mutliplied by N. This only occurs for called
+bets.
 
 Your score in the results and statistics will be how much money you won
 (positive) or lost (negative). This means you can calcuate your total winnings
@@ -105,26 +107,29 @@ Red/Rouge/rd/ro: Bet on the red numbers. [0]
 CALLED BETS:
 Complete/cmp: Make every inside bet that contains the specified number. May be
     done as 'complete progressive,' which multiplies each bet by the number
-    of numbers in the bet. [1]
+    of numbers in the bet. [1, x7-12, x17-40 progressive]
 Final/Finals/Finale/fn: Bet on all non-zero numbers ending with the specified
-    digit. [1]
+    digit. [1, x3-4]
 Neighbors of Zero/Voisins du Zero/nb zero: Nine bets covering 17 numbers around
-    zero on the French layout. [0F]
+    zero on the French layout. [0F, x9]
 Neighbors/nb: The neighbors bet with a number specified bets on that number and
-    the two numbers on either side on the wheel. [1]
-Niner/9r: Bet on a number and the four numbers on either side on the wheel. [1]
+    the two numbers on either side on the wheel. [1, x5]
+Niner/9r: Bet on a number and the four numbers on either side on the wheel.
+    [1, x9]
 Orphans/Orphelins/or: Bet on numbers not in Neighbors of Zero or Third of the
-    Wheel. [0F]
-Prime/pr: Bet on the prime numbers. Twins can be used to exclude 2 and 23. [0]
+    Wheel. [0F, x5]
+Prime/pr: Bet on the prime numbers. Twins can be used to exclude 2 and 23.
+    [0, x11, x9 for twins]
 Seven/sv: Bet on a number and the three numbers on either side on the wheel.
-    [1]
-Snake/sn: A bet on the zig-zag of red numbers from 1 to 34. [0]
+    [1, x7]
+Snake/sn: A bet on the zig-zag of red numbers from 1 to 34. [0, x1]
 Third of the Wheel/Le Tiers du Cylindre/3d: Bet on a specific third of the
     wheel on the French layout. If made with '5-8-10-11', those numbers are
-    doubled up. If made with 'gioco Ferrari', 8, 11, 12, and 30 are doubled up.
-    [0F]
+    doubled up. If made with 'gioco Ferrari', 8, 11, 12, and 30 are also
+    doubled up. [0F, x6, x10 5-8-10-11, x14 Ferrari]
 Zero Game/Zero Spiel/Jeu Zero/0g: Bet on zero and six numbers near it on the
-    French layout. [0F]
+    French layout. If 'naca' is included, there is also a bet on 19.
+    [0F, x4, x5 naca]
 
 OTHER COMMANDS:
 Bets/bt: Show a numbered list of the current bets.
