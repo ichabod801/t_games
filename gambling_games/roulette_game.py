@@ -147,6 +147,7 @@ class Roulette(game.Game):
     black: The black numbers. (list of str)
     french: The order of the wheel in the French layout. (list of str)
     int_re: A regular expression to capture numbers. (re.SRE_Pattern)
+    ordinals: The aliases for ordinals in bets. (dict of str: int)
     red: The red numbers. (list of str)
 
     Attributes
@@ -235,6 +236,8 @@ class Roulette(game.Game):
     move_query = 'Enter a bet or spin: '
     name = 'Roulette'
     num_options = 4
+    ordinals = {'1': 1, '2': 2, '3': 3, 'p': 1, 'm': 2, 'd': 3, 'premiere': 1, 'moyenne': 2, 'derniere': 3,
+        'f': 1, 's': 2, 't': 3, 'first': 1, 'second': 2, 'third': 3}
     options = OPTIONS
     red = ['1', '3', '5', '7', '9', '12', '14', '16', '18', '19', '21', '23', '25', '27', '30', '32', '34',
         '36']
@@ -529,19 +532,11 @@ class Roulette(game.Game):
         # Check the bet
         column, bet = self.check_bet(arguments)
         if column:
-            # Get the numbers for the column
-            targets = []
-            # Check for first column.
-            if column.lower() in ('1', 'p', 'f'):
-                targets = [str(number) for number in range(1, 37, 3)]
-            # Check for second column.
-            elif column.lower() in ('2', 'm', 's'):
-                targets = [str(number) for number in range(2, 37, 3)]
-            # Check for third column.
-            elif column.lower() in ('3', 'd', 't'):
-                targets = [str(number) for number in range(3, 37, 3)]
-            if targets:
+            # Get the the column number.
+            column = self.ordinals.get(column.lower(), 0)
+            if column:
                 # Make the bet.
+                targets = [str(number) for number in range(column, 37, 3)]
                 self.scores[self.human.name] -= bet
                 self.bets.append(('column bet on {}'.format(column), targets, bet))
             else:
@@ -675,16 +670,12 @@ class Roulette(game.Game):
         # Check the bet.
         dozen, bet = self.check_bet(arguments)
         if dozen:
-            # Get the numbers in the dozen.
-            targets = []
-            if dozen.lower() in ('1', 'p', 'f'):
-                targets = [str(number) for number in range(1, 13)]
-            elif dozen.lower() in ('2', 'm', 's'):
-                targets = [str(number) for number in range(12, 25)]
-            elif dozen.lower() in ('3', 'd', 't'):
-                targets = [str(number) for number in range(24, 37)]
-            if targets:
+            # Get the the dozen number.
+            dozen = self.ordinals.get(dozen.lower(), 0)
+            if dozen:
                 # Make the bet.
+                end = dozen * 12 + 1
+                targets = [str(number) for number in range(end - 12, end)]
                 self.scores[self.human.name] -= bet
                 self.bets.append(('dozen bet on {}'.format(dozen), targets, bet))
             else:
