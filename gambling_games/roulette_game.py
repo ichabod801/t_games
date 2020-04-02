@@ -58,7 +58,8 @@ based on a layout of the numbers in three columns. There are outside bets
 based on the features of the number, including high/low, even/odd and red/
 black (each number has a color, with the zeroes being green). There are also
 called bets that are groups of other bets. Once all of your bets are placed,
-use the spin command to spin the wheel to detrmine the winning number.
+use the spin command (or 's' or '@') to spin the wheel to detrmine the winning
+number.
 
 The bets are listed below. The number in brackets is the number of numbers
 that must be specified for the bet. Bets with a capital F in the brackets may
@@ -71,54 +72,60 @@ or losses by multiplying you average score times the number of games you have
 played.
 
 INSIDE BETS:
-Basket/First Four: A bet on the first two rows of numbers (0, 1, 2, 3). [0F]
-Corner/Square: Bet on four numbers in a square. Specify the highest and lowest
-    numbers in the square. [2]
-Double Street/Six Line: Bet on six numbers that form two rows. Specify the
-    first number of the first row and the last number of the second row. [2]
-Split: Bet on two numbers that are adjacent on the board. [2]
-Straight/Single: Bet on one number. [1]
-Street: Bet on a three number row. Specify the last number in the row. [1]
-Top Line: Bet on the first two rowns of the American layout. (0-3 and 00) [0]
-Trio: Bet on three adjacent numbers, including at least one zero. [3]
+Basket/First Four/bk/f4: A bet on the first two rows of numbers (0, 1, 2, 3).
+    [0F]
+Corner/Square/cnr/sq: Bet on four numbers in a square. Specify the lowest and
+    highest numbers in the square (low-high). [2]
+Double Street/Six Line/ds/6l: Bet on six numbers that form two rows. Specify
+    the first number of the first row and the last number of the second row
+    (first-last). [2]
+Split/sp: Bet on two numbers that are adjacent on the board. [2]
+Straight/Single/str/sng: Bet on one number. [1]
+Street/st: Bet on a three number row. Specify the last number in the row. [1]
+Top Line (tl): Bet on the first two rowns of the American layout. (0-3/00) [0]
+Trio (tr): Bet on three adjacent numbers, including at least one zero. [3]
 
 OUTSIDE BETS:
-Black/Noir: Bet on the black numbers. [0]
-Column: Bet on a column of 12 numbers. The column can be specified with 1/2/3,
-    P/M/D (Premiere, Moyenne, Derniere) or F/S/T (First, Second, Third). [1]
-Dozen: Bet on the first, second, or third dozen. Use 1/2/3, P/M/D, or F/S/T
-    to specify the dozen (see column bet). [1]
-Even/Pair: Bet on the even numbers. [0]
-High/19-36: Bet on the high numbers (over 18). [0]
-Low/1-18: Bet on the low numbers (18 and under). [0]
-Odd/Impair: Bet on the odd numbers. [0]
-Red/Rouge: Bet on the red numbers. [0]
+Black/Noir/bl/nr: Bet on the black numbers. [0]
+Column/col: Bet on a column of 12 numbers. The column can be specified with
+    1/2/3, P/M/D (Premiere, Moyenne, Derniere) or F/S/T (First, Second, Third).
+    [1]
+Dozen/Douzaine/doz/dz: Bet on the first, second, or third dozen. Use 1/2/3,
+    P/M/D, or F/S/T to specify the dozen (see column bet). [1]
+Even/Pair/ev/pa: Bet on the even numbers. [0]
+High/Passe/19-36/hi/ps: Bet on the high numbers (over 18). [0]
+Low/Manque/1-18/lo/mq: Bet on the low numbers (18 and under). [0]
+Odd/Impair/od/im: Bet on the odd numbers. [0]
+Red/Rouge/rd/ro: Bet on the red numbers. [0]
 
 CALLED BETS:
-Complete: Make every inside bet that contains the specified number. May be
+Complete/cmp: Make every inside bet that contains the specified number. May be
     done as 'complete progressive,' which multiplies each bet by the number
     of numbers in the bet. [1]
-Final/Finals/Finale: Bet on all non-zero numbers ending with the specified
+Final/Finals/Finale/fn: Bet on all non-zero numbers ending with the specified
     digit. [1]
-Neighbors of Zero/Voisins du Zero: Nine bets covering 17 numbers around zero
-    on the French layout. [0F]
-Neighbors: The neighbors bet with a number specified bets on that number and
+Neighbors of Zero/Voisins du Zero/nb zero: Nine bets covering 17 numbers around
+    zero on the French layout. [0F]
+Neighbors/nb: The neighbors bet with a number specified bets on that number and
     the two numbers on either side on the wheel. [1]
-Niner: Bet on a number and the four numbers on either side on the wheel. [1]
-Orphans: Bet on numbers not in Neighbors of Zero or Third of the Wheel. [0F]
-Prime: Bet on the prime numbers. Twins can be used to exclude 2 and 23. [0]
-Seven: Bet on a number and the three numbers on either side on the wheel. [1]
-Snake: A bet on the zig-zag of red numbers from 1 to 34. [0]
-Third of the Wheel/Le Tiers du Cylindre: Bet on a specific third of the wheel
-    on the French layout. If made with '5-8-10-11', those numbers are doubled
-    up. If made with 'gioco Ferrari', 8, 11, 12, and 30 are doubled up. [0F]
-Zero Game/Zero Spiel/Jeu Zero: Bet on zero and six numbers near it on the
+Niner/9r: Bet on a number and the four numbers on either side on the wheel. [1]
+Orphans/Orphelins/or: Bet on numbers not in Neighbors of Zero or Third of the
+    Wheel. [0F]
+Prime/pr: Bet on the prime numbers. Twins can be used to exclude 2 and 23. [0]
+Seven/sv: Bet on a number and the three numbers on either side on the wheel.
+    [1]
+Snake/sn: A bet on the zig-zag of red numbers from 1 to 34. [0]
+Third of the Wheel/Le Tiers du Cylindre/3d: Bet on a specific third of the
+    wheel on the French layout. If made with '5-8-10-11', those numbers are
+    doubled up. If made with 'gioco Ferrari', 8, 11, 12, and 30 are doubled up.
+    [0F]
+Zero Game/Zero Spiel/Jeu Zero/0g: Bet on zero and six numbers near it on the
     French layout. [0F]
 
 OTHER COMMANDS:
-Bets: Show a numbered list of the current bets.
-Layout: Show the current layout, with colors marked.
-Remove: Remove a bet, using the number from the bets command.
+Bets/bt: Show a numbered list of the current bets.
+Layout/ly: Show the current layout, with colors marked.
+Remove/rm: Remove a bet, using the number from the bets command.
 """
 
 
@@ -191,11 +198,18 @@ class Roulette(game.Game):
     """
 
     aka = ['Roul']
-    aliases = {'1-18': 'low', '19-36': 'high', 'double-street': 'double', 'douzaine': 'dozen',
-        'finale': 'final', 'finals': 'final', 'first': 'basket', 'impair': 'odd', 'jeu': 'zero',
-        'le': 'third', 'manque': 'low', 'noir': 'black', 'orphelins': 'orphans', 'pair': 'even',
-        'passe': 'high', 'rouge': 'red', 'single': 'straight', 'six': 'double', 'six-line': 'double',
-        'square': 'corner', 'tiers': 'third', 'voisins': 'neighbors'}
+    aliases = {'0g': 'zero', '1-18': 'low', '19-36': 'high', '3d': 'third', '6l': 'double', '9r': 'niner',
+        'bk': 'basket', 'bl': 'black', 'bt': 'bets', 'cmp': 'complete', 'cnr': 'corner', 'col': 'column',
+        'double-street': 'double', 'doz': 'dozen', 'douzaine': 'dozen', 'ds': 'double', 'dz': 'dozen',
+        'ev': 'even', 'f4': 'basket', 'fin': 'final', 'finale': 'final', 'finals': 'final',
+        'first': 'basket', 'fn': 'final', 'hi': 'high', 'im': 'odd', 'impair': 'odd', 'jeu': 'zero',
+        'le': 'third', 'ly': 'layout', 'manque': 'low', 'mq': 'low', 'noir': 'black', 'nr': 'black',
+        'od': 'odd', 'or': 'orphans', 'orphelins': 'orphans', 'pa': 'even', 'pair': 'even', 'passe': 'high',
+        'pr': 'prime', 'primes': 'prime', 'ps': 'high', 'rd': 'red', 'rm': 'remove', 'ro': 'red',
+        'rouge': 'red', 'single': 'straight', 'six': 'double', 'six-line': 'double', 'sn': 'snake',
+        'sng': 'straight', 'sp': 'split', 'sq': 'corner', 'square': 'corner', 'st': 'street',
+        'str': 'straight', 'sv': 'seven', 'tiers': 'third', 'tl': 'top', 'tr': 'trio',
+        'voisins': 'neighbors', 'lo': 'low', 'nb': 'neighbors', '@': 'spin', 's': 'spin'}
     american = ['0', '28', '9', '26', '30', '11', '7', '20', '32', '17', '5', '22', '34', '15', '3', '24',
         '36', '13', '1', '00', '27', '10', '25', '29', '12', '8', '19', '31', '18', '6', '21', '33', '16',
         '4', '23', '35', '14', '2']
