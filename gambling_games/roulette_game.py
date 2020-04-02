@@ -1175,14 +1175,17 @@ class Roulette(game.Game):
         The second argument to the street command should be the amount bet.
         """
         # Check the bet.
-        number, bet = self.check_bet(arguments)
-        if number:
+        numbers, bet = self.check_bet(arguments)
+        if numbers and self.check_two_numbers(numbers, 'split'):
             # Check for a valid end of a row.
-            numbers = number.split('-')
+            numbers = numbers.split('-')
+            start = int(numbers[0])
             end = int(numbers[-1])
             if end % 3:
                 # Warn the user on invalid input.
                 self.human.error('A valid street must end in a multiple of three.')
+            elif end - start != 2:
+                self.human.error('A valid street bet must cover three numbers.')
             else:
                 # Make the bet.
                 text = '{}-{}-{}'.format(end - 2, end - 1, end)
