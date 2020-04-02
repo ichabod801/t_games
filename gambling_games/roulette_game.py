@@ -61,6 +61,10 @@ called bets that are groups of other bets. Once all of your bets are placed,
 use the spin command (or 's' or '@') to spin the wheel to detrmine the winning
 number.
 
+Inside bets not involving 0 may be made without the name of the bet. So '18 5'
+works as a five buck straight bet on 18, and '10-14 2' works as a two buck
+corner bet on 10, 11, 13, and 14.
+
 The bets are listed below. The number in brackets is the number of numbers
 that must be specified for the bet. Bets with a capital F in the brackets may
 only be made on the French layout, and bets with a capital A may only be made
@@ -190,6 +194,7 @@ class Roulette(game.Game):
     pay_out: Pay the winning bets. (None)
 
     Overridden Methods:
+    default
     do_quit
     game_over
     handle_options
@@ -405,6 +410,47 @@ class Roulette(game.Game):
             sub_bets.append(('trio bet on 0-00-2', ['0', '00', '2'], wager))
             sub_bets.append(('top line bet', ['0', '00', '1', '2', '3'], wager))
         return [bet for bet in sub_bets if str(number) in bet[1]]
+
+    def default(self, line):
+        """
+        Handle unrecognized commands, checking for bets. (bool)
+
+        Note that this doesn't check for a valid foo bet. It lets the do_foo method
+        do that, so that the user gets a better error message.
+
+        Parameters:
+        line: The command entered by the user. (str)
+        """
+        # Check for two words with the second one a number.
+        words = line.split()
+        if len(words) == 2 and words[1].isdigit():
+            if words[0].isdigit():
+                # Two numbers is a straight bet.
+                self.do_straight(line)
+            # Check for dash separated numbers.
+            elif '-' in words[0]:
+                # Translate the numbers.
+                try:
+                    a, b = [int(number) for number in words[0].split('-')]
+                except ValueError:
+                    return super(Roulette, self).default(line)
+                # Reject bets with 0 in them.
+                if not b * a:
+                    return super(Roulette, self).default(line)
+                # Check for split bets.
+                elif b - a in (1, 3):
+                    self.do_split(line)
+                # Check for street bets.
+                elif b - a == 2:
+                    self.do_street(line)
+                # Check for corner bets.
+                elif b - a == 4:
+                    self.do_corner(line)
+                # Check for double street bets.
+                elif b - a == 5:
+                    self.do_double(line)
+        else:
+            return super(Roulette, self).default(line)
 
     def do_basket(self, arguments):
         """
