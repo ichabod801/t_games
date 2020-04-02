@@ -242,8 +242,13 @@ class Roulette(game.Game):
 
     def __str__(self):
         """Generate a human readable text representation. (str)"""
-        bucks = utility.plural(self.scores[self.human.name], 'buck')
-        return '\nYou have {} {}.'.format(self.scores[self.human.name], bucks)
+        in_hand = utility.num_text(self.scores[self.human.name], 'buck', ':n')
+        total_bets = sum(bet for foo, bar, bet in self.bets)
+        if total_bets:
+            in_play = ', and {} in play'.format(utility.num_text(total_bets, 'buck', ':n'))
+        else:
+            in_play = ''
+        return '\nYou have {}{}.'.format(in_hand, in_play)
 
     def check_bet(self, arguments):
         """
@@ -485,7 +490,7 @@ class Roulette(game.Game):
         """
         text = '\n'
         for bet_index, bet in enumerate(self.bets):
-            text += '{}: {} ({} bucks)\n'.format(bet_index + 1, bet[0], bet[2])
+            text += '{}: {} ({})\n'.format(bet_index + 1, bet[0], utility.num_text(bet[2], 'buck'))
         self.human.tell(text[:-1])
         return True
 
@@ -1388,9 +1393,9 @@ class Roulette(game.Game):
             if winner in target:
                 self.human.tell('Your {} won!'.format(text))
                 winnings = bet * (36 // len(target))
-                self.human.tell('You won {} bucks!'.format(winnings))
+                self.human.tell('You won {} bucks!'.format(winnings - bet))
                 self.scores[self.human.name] += winnings
-                total_winnings += winnings
+                total_winnings += winnings - bet
             # Handle losers
             else:
                 self.human.tell('Your {} lost.'.format(text, target))
