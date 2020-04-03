@@ -236,8 +236,8 @@ class Roulette(game.Game):
     move_query = 'Enter a bet or spin: '
     name = 'Roulette'
     num_options = 4
-    ordinals = {'1': 1, '2': 2, '3': 3, 'p': 1, 'm': 2, 'd': 3, 'premiere': 1, 'moyenne': 2, 'derniere': 3,
-        'f': 1, 's': 2, 't': 3, 'first': 1, 'second': 2, 'third': 3}
+    ordinals = {'1': '1', '2': '2', '3': '3', 'p': '1', 'm': '2', 'd': '3', 'premiere': '1', 'moyenne': '2',
+        'derniere': '3', 'f': '1', 's': '2', 't': '3', 'first': '1', 'second': '2', 'third': '3'}
     options = OPTIONS
     red = ['1', '3', '5', '7', '9', '12', '14', '16', '18', '19', '21', '23', '25', '27', '30', '32', '34',
         '36']
@@ -473,18 +473,13 @@ class Roulette(game.Game):
 
         The argument to the basket command should be the amount bet.
         """
-        # Handle aliases.
-        words = arguments.split()
-        if words[0].lower() != 'four':
-            words = ['basket'] + words
-        # Check the bet.
-        numbers, bet = self.check_bet(' '.join(words))
-        # Check the layout.
-        if numbers and self.layout == 'french':
-            self.scores[self.human.name] -= bet
-            self.bets.append(('basket bet', ('0', '1', '2', '3'), bet))
-        elif numbers:
+        if self.layout == 'american':
             self.human.error('That bet can only be made on a French layout.')
+            return True
+        target, wager, ignored = self.parse_bet('basket', arguments, [], ignore = ['four'])
+        if target and wager:
+            self.scores[self.human] -= wager
+            self.bets.append(('basket bet', ('0', '1', '2', '3'), wager))
         return True
 
     def do_bets(self, arguments):
@@ -507,11 +502,11 @@ class Roulette(game.Game):
         The argument to the black command should be the amount bet.
         """
         # Check the bet.
-        numbers, bet = self.check_bet('black {}'.format(arguments))
-        if numbers:
+        target, wager, ignored = self.parse_bet('black', arguments, [])
+        if wager:
             # Make the bet.
-            self.scores[self.human.name] -= bet
-            self.bets.append(('black bet', self.black, bet))
+            self.scores[self.human] -= wager
+            self.bets.append(('black bet', self.black, wager))
         return True
 
     def do_column(self, arguments):
@@ -529,19 +524,12 @@ class Roulette(game.Game):
 
         The second argument to the column command should be the amount bet.
         """
-        # Check the bet
-        column, bet = self.check_bet(arguments)
-        if column:
-            # Get the the column number.
-            column = self.ordinals.get(column.lower(), 0)
-            if column:
-                # Make the bet.
-                targets = [str(number) for number in range(column, 37, 3)]
-                self.scores[self.human.name] -= bet
-                self.bets.append(('column bet on {}'.format(column), targets, bet))
-            else:
-                # Warn on invalid column
-                self.human.error('That is not a valid column. Please use 1/2/3, P/M/D, or F/S/T.')
+        target, wager, ignored = self.parse_bet('column', arguments, [0])
+        if target and wager:
+            # Make the bet.
+            targets = [str(number) for number in range(int(column), 37, 3)]
+            self.scores[self.human] -= wager
+            self.bets.append(('column bet on {}'.format(column), targets, wager))
         return True
 
     def do_complete(self, arguments):
@@ -557,40 +545,32 @@ class Roulette(game.Game):
 
         The second argument to the complete command should be the amount bet.
         """
-        # Check for progressive bets.
-        words = arguments.split()
-        progressive = 'progressive' in words
-        if progressive:
-            words.remove('progressive')
+        target, wager, ignored = self.parse_bet('complete', arguments, [1], ignore = ['progressive'])
+        progressive = 'progressive' in ingored
         # Check the wager
-        number_text, wager = self.check_bet(' '.join(words))
-        if number_text:
-            if number_text in self.numbers:
-                number = int(number_text)
-                # Add the single wager.
-                bets = [('single bet on {}'.format(number), [number_text], wager)]
-                # Add the multi-number bets bets.
-                bets = self.complete_splits(bets, number, wager)
-                bets = self.complete_streets(bets, number, wager)
-                bets.extend(self.complete_zero(number, wager))
-                bets = self.complete_corners(bets, number, wager)
-                # Convert to progressive betting if required.
-                if progressive:
-                    prog_bets = []
-                    for text, targets, wager in bets:
-                        prog_bets.append((text, targets, wager * len(targets)))
-                    bets = prog_bets
-                # Check wager against what player has.
-                total_bet = sum([wager for text, targets, wager in bets])
-                if total_bet > self.scores[self.human.name]:
-                    self.human.error('You do not have enough bucks for the total wager.')
-                else:
-                    # Maket the bets.
-                    self.bets.extend(bets)
-                    self.scores[self.human.name] -= total_bet
+        if target and wager:
+            number = int(number_text)
+            # Add the single wager.
+            bets = [('single bet on {}'.format(number), [number_text], wager)]
+            # Add the multi-number bets bets.
+            bets = self.complete_splits(bets, number, wager)
+            bets = self.complete_streets(bets, number, wager)
+            bets.extend(self.complete_zero(number, wager))
+            bets = self.complete_corners(bets, number, wager)
+            # Convert to progressive betting if required.
+            if progressive:
+                prog_bets = []
+                for text, targets, wager in bets:
+                    prog_bets.append((text, targets, wager * len(targets)))
+                bets = prog_bets
+            # Check wager against what player has.
+            total_wager = sum([wager for text, targets, wager in bets])
+            if total_wager > self.scores[self.human]:
+                self.human.error('You do not have enough bucks for the total wager.')
             else:
-                # Warning for an invalid number_text.
-                self.human.error('That number is not in the current layout.')
+                # Maket the bets.
+                self.bets.extend(bets)
+                self.scores[self.human.name] -= total_wager
         return True
 
     def do_corner(self, arguments):
@@ -604,20 +584,18 @@ class Roulette(game.Game):
 
         The second argument to the corner command should be the amount bet.
         """
-        # Check the bet.
-        numbers, bet = self.check_bet(arguments)
-        # Check for two numbers.
-        if numbers and self.check_two_numbers(numbers, 'corner'):
+        targets, wager, ignored = self.parse_bet('corner', arguments, [0, 5])
+        if targets and wager:
             # Check for a valid corner.
-            low, high = sorted([int(corner) for corner in numbers.split('-')])
-            if high - low == 4 and low % 3:
+            low = int(targets[0])
+            if low % 3:
                 # Make the bet.
-                self.scores[self.human.name] -= bet
-                targets = [str(number) for number in (low, low + 1, high - 1, high)]
-                self.bets.append(('corner bet on {}'.format(numbers), targets, bet))
+                self.scores[self.human.name] -= wager
+                numbers = [str(number) for number in (low, low + 1, low + 3, low + 4)]
+                self.bets.append(('corner bet on {}-{}'.format(targets), numbers, wager))
             else:
                 message = '{} and {} are not the low and high of a square of numbers.'
-                self.human.error(message.format(low, high))
+                self.human.error(message.format(*targets))
         return True
 
     def do_double(self, arguments):
@@ -1376,6 +1354,153 @@ class Roulette(game.Game):
                     slot = wheel[index % len(wheel)]
                     self.bets.append(('single on {}'.format(slot), [slot], bet))
                 self.scores[self.human.name] -= width * bet
+
+    def parse_bet(self, bet_type, arguments, target_spec, bet_count = 1, ignore = []):
+        """
+        Parse the arguments to a bet command. (tuple)
+
+        The return value is the target number(s) (str or list of str), the bet, and
+        any words in the argument that were ignored.
+
+        The target_spec is a list of numbers defining how to parse and validate the
+        target of the bet. Valid target_specs include:
+            * []: There is no target (useful for outside bets).
+            * [-1]: The target should not be validated, the bet method will do that.
+            * [0]: The target is an ordinal, not a number (as in dozen or column bets).
+            * [1]: The target is one number.
+            * [0, N]: The target is two numbers, with a difference of N. If only one
+                number is provided, the second will be calculated automatically.
+            * [0, N, M, ...]: The target is two numbers, with a difference in
+                [N, M, ...]. If only one number is provided, the second will be
+                calculated with N (the first difference in the target_spec).
+
+        Parameters:
+        bet_type: The type of bet being made. (str)
+        arguments: The arguments to the bet command. (str)
+        target_spec: A specification of allowed targets. (list of int)
+        bet_count: How many bets are being made. (int)
+        ignore: Words in the arguments to ignore. (list of str)
+        """
+        errors, words, ignored = [], [], []
+        for word in arguments.lower().split():
+            if word in ignore:
+                ignored.append(word)
+            else:
+                words.append(word)
+        # Handle no target.
+        if not target_spec:
+            target = ''
+            words = ['null'] + words
+        # Handle one target.
+        elif len(target_spec) == 1:
+            target = self.parse_one(bet_type, words, target_spec, errors)
+        # Handle two number targets.
+        elif len(target_spec) >= 2:
+            target = self.parse_two(bet_type, words, target_spec, errors)
+        # Check for a valid wager.
+        wager = self.parse_wager(bet_type, words, bet_count, errors)
+        # Inform the user of any errors.
+        for error in errors:
+            self.human.tell(error)
+        return target, wager, ignored
+
+    def parse_one(self, bet_type, words, target_spec, errors):
+        """
+        Parse a single target number. (str)
+
+        Parameters:
+        bet_type: The type of bet being made. (str)
+        words: The arguments to the bet command. (list of str)
+        target_spec: A specification of allowed targets. (list of int)
+        errors: The accumulated parsing errors. (list of str)
+        """
+        target = ''
+        # Deal with targets that need special handling by bet method.
+        # !! maybe check valid numbers, if all bets are using this for numbers.
+        if target_spec[0] == -1:
+            if len(words) == 2:
+                target = words[0]
+            else:
+                errors.append('Invalid number of arguments for {} bet.'.format(bet_type))
+        # Verify single number targets.
+        elif target_spec[0] and words[0].isdigit():
+            if words[0] in self.numbers:
+                target = words[0]
+            else:
+                errors.append('{} is not a number in the current layout.'.format(words[0]))
+        # Convert ordinal targets.
+        elif words[0] in self.ordinals:
+            target = self.ordinals[words[0]] # !! redo ordinals to be str values.
+        # Otherwise pop an error.
+        else:
+            errors.append('Invalid target specification for {} bet: {!r}.'.format(bet_type, words[0]))
+        return target
+
+    def parse_two(self, bet_type, words, target_spec, errors):
+        """
+        Parse a two-number target number range. (str)
+
+        Parameters:
+        bet_type: The type of bet being made. (str)
+        words: The arguments to the bet command. (list of str)
+        target_spec: A specification of allowed targets. (list of int)
+        errors: The accumulated parsing errors. (list of str)
+        """
+        target = ['', '']
+        numbers = words[0].split('-')
+        # Calculate second number if only one given.
+        if len(numbers) == 1 and numbers[0].isdigit():
+            numbers.append(str(int(numbers[0]) + target_spec[1]))
+        # Convert targets to integers.
+        try:
+            a, b = [int(num) for num in numbers]
+        except ValueError:
+            errors.append('Invalid target specification for {} bet: {!r}.'.format(bet_type, words[0]))
+        else:
+            # Validate targets.
+            if numbers[0] not in self.numbers:
+                errors.append('{} is not a number in the current layout.'.format(numbers[0]))
+            if numbers[1] not in self.numbers:
+                errors.append('{} is not a number in the current layout.'.format(numbers[1]))
+            if b - a not in target_spec[1:]:
+                # !! message is incomplete for multiple possible differences.
+                err = 'Numbers for {} bets must be {} apart.'
+                errors.append(err.format(bet_type, utility.num_text(target_spec[1], 'number')))
+        # Apply valid targets.
+        if not errors:
+            target = numbers
+        return target
+
+    def parse_wager(self, bet_type, words, bet_count, errors):
+        """
+        Parse a wager. (str)
+
+        Parameters:
+        bet_type: The type of bet being made. (str)
+        words: The arguments to the bet command. (list of str)
+        bet_count: How many bets are being made. (int)
+        errors: The accumulated parsing errors. (list of str)
+        """
+        wager = 0
+        if len(words) == 1:
+            errors.append('All bets must specify a wager.')
+        elif len(words) > 2:
+            err = 'Invalid wager specification for {} wager: {!r}.'
+            errors.append(err.format(bet_type, ' '.join(words[1:])))
+        elif words[1].isdigit():
+            # Validate the size of the wager.
+            wager = int(words[1])
+            max_bet = min(self.max_bet, self.scores[self.human])
+            # Warn the user about invalid bets.
+            if wager < 1:
+                errors.append('That wager is too small. You must wager at least 1 buck.')
+            elif wager * bet_count > max_bet:
+                err = 'That wager is too large. You may only wager {}.'
+                errors.append(err.format(utility.num_text(max_bet // bet_count, 'buck', ':n')))
+                wager = 0
+        else:
+            errors.append('All wagers must be positive integers.')
+        return wager
 
     def pay_out(self, winner):
         """
