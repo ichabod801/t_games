@@ -1082,22 +1082,16 @@ class Roulette(game.Game):
 
         The second argument to the split command should be the amount bet.
         """
-        # Check the bet and two numbers.
-        numbers, bet = self.check_bet(arguments)
-        if numbers and self.check_two_numbers(numbers, 'split'):
-            # Check for a valid split.
-            low, high = sorted([int(x) for x in numbers.split('-')])
-            valid = (low and high and abs(high - low) == 1 and min(low, high) % 3)
-            valid = valid or (low and high and abs(high - low) == 3)
-            valid = valid or (self.layout == 'american' and numbers in ('0-1', '0-2', '00-2', '00-3'))
-            valid = valid or (self.layout == 'french' and numbers in ('0-1', '0-2', '0-3'))
-            if valid:
-                # Make the bet.
-                self.scores[self.human.name] -= bet
-                self.bets.append(('split bet on {}'.format(numbers), numbers.split('-'), bet))
-            else:
-                # Warn the user about invalid input.
-                self.human.error('{} and {} are not adjacent on the layout.'.format(low, high))
+        # Check the bet.
+        if self.layout == 'american':
+            zero = ('0-1', '0-2', '00-2', '00-3')
+        else:
+            zero = ('0-1', '0-2', '0-3')
+        targets, wager, ignored = self.parse_bet('split', arguments, [0, 1, 3], zero = zero)
+        if targets and wager:
+            # Make the bet.
+            self.bets.append(('split bet on {}'.format(targets), targets, wager))
+            self.scores[self.human] -= wager
         return True
 
     def do_straight(self, arguments):
@@ -1108,15 +1102,11 @@ class Roulette(game.Game):
         is the amount to bet.
         """
         # Check the bet.
-        number, bet = self.check_bet(arguments)
-        if number:
-            if number not in self.numbers:
-                # Warn the user about invalid input.
-                self.human.error('That number is not in this layout.')
-            else:
-                # Make the bet.
-                self.scores[self.human.name] -= bet
-                self.bets.append(('straight bet on {}'.format(number), [number], bet))
+        target, wager, ignored = self.parse_bet('straight', arguments, [1])
+        if target and wager:
+            # Make the bet.
+            self.scores[self.human] -= wager
+            self.bets.append(('straight bet on {}'.format(number), [target], wager))
         return True
 
     def do_street(self, arguments):
@@ -1331,7 +1321,7 @@ class Roulette(game.Game):
             self.bets.append(('single on {}'.format(slot), [slot], bet))
         self.scores[self.human] -= width * bet
 
-    def parse_bet(self, bet_type, arguments, target_spec, bet_count = 1, ignore = []):
+    def parse_bet(self, bet_type, arguments, target_spec, bet_count = 1, ignore = [], zero = []):
         """
         Parse the arguments to a bet command. (tuple)
 
@@ -1356,6 +1346,7 @@ class Roulette(game.Game):
         target_spec: A specification of allowed targets. (list of int)
         bet_count: How many bets are being made. (int)
         ignore: Words in the arguments to ignore. (list of str)
+        zero: The allowed bets including zero for two-target bets. (list of str)
         """
         errors, words, ignored = [], [], []
         for word in arguments.lower().split():
@@ -1372,7 +1363,7 @@ class Roulette(game.Game):
             target = self.parse_one(bet_type, words, target_spec, errors)
         # Handle two number targets.
         elif len(target_spec) >= 2:
-            target = self.parse_two(bet_type, words, target_spec, errors)
+            target = self.parse_two(bet_type, words, target_spec, errors, zero)
         # Check for a valid wager.
         wager = self.parse_wager(bet_type, words, bet_count, errors)
         # Inform the user of any errors.
@@ -1412,7 +1403,7 @@ class Roulette(game.Game):
             errors.append('Invalid target specification for {} bet: {!r}.'.format(bet_type, words[0]))
         return target
 
-    def parse_two(self, bet_type, words, target_spec, errors):
+    def parse_two(self, bet_type, words, target_spec, errors, zero):
         """
         Parse a two-number target number range. (str)
 
@@ -1421,6 +1412,7 @@ class Roulette(game.Game):
         words: The arguments to the bet command. (list of str)
         target_spec: A specification of allowed targets. (list of int)
         errors: The accumulated parsing errors. (list of str)
+        zero: The allowed bets including zero. (list of str)
         """
         target = ['', '']
         numbers = words[0].split('-')
@@ -1438,7 +1430,10 @@ class Roulette(game.Game):
                 errors.append('{} is not a number in the current layout.'.format(numbers[0]))
             if numbers[1] not in self.numbers:
                 errors.append('{} is not a number in the current layout.'.format(numbers[1]))
-            if b - a not in target_spec[1:]:
+            if not a:
+                if words[0] not in zero:
+                    errors.append('{!r} is not a valid {} bet.'.format(words[0], bet_type))
+            elif b - a not in target_spec[1:]:
                 # !! message is incomplete for multiple possible differences.
                 err = 'Numbers for {} bets must be {} apart.'
                 errors.append(err.format(bet_type, utility.num_text(target_spec[1], 'number')))
