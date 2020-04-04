@@ -1119,22 +1119,18 @@ class Roulette(game.Game):
         The second argument to the street command should be the amount bet.
         """
         # Check the bet.
-        numbers, bet = self.check_bet(arguments)
-        if numbers and self.check_two_numbers(numbers, 'split'):
+        targets, wager, ignored = self.parse_bet('street', arguments, [0, 2])
+        if targets and wager:
             # Check for a valid end of a row.
-            numbers = numbers.split('-')
-            start = int(numbers[0])
-            end = int(numbers[-1])
+            end = int(targets[1])
             if end % 3:
                 # Warn the user on invalid input.
                 self.human.error('A valid street must end in a multiple of three.')
-            elif end - start != 2:
-                self.human.error('A valid street bet must cover three numbers.')
             else:
                 # Make the bet.
                 text = '{}-{}-{}'.format(end - 2, end - 1, end)
-                self.scores[self.human.name] -= bet
-                self.bets.append(('street bet on {}'.format(text), text.split('-'), bet))
+                self.scores[self.human] -= wager
+                self.bets.append(('street bet on {}'.format(text), text.split('-'), wager))
         return True
 
     def do_third(self, arguments):
@@ -1153,17 +1149,15 @@ class Roulette(game.Game):
         ten) bets.
         """
         # Get the integer arguments
-        int_args = self.int_re.findall(arguments)
-        if int_args and self.layout == 'french':
-            # Check the bet.
-            numbers, bet = self.check_bet('third {}'.format(int_args[-1]))
-            # Check the full wager.
-            full_bet = bet * 6
-            if '5-8-10-11' in arguments or 'ferrari' in arguments.lower():
-                full_bet = bet * 10
-            if full_bet > self.scores[self.human.name]:
+        if self.layout == 'french':
+            ignore = 'of the wheel le teirs du cylindre 5-8-10-11 gioco ferrari'.split()
+            target, wager, ignored = self.parse_bet('third', arguments, [], ignore = ignore)
+            full_wager = wager * 6
+            if '5-8-10-11' in ignore or 'ferrari' in ignore:
+                full_wager = wager * 10
+            if full_wager > self.scores[self.human]:
                 self.human.error('You do not have enough money for the full bet.')
-            elif numbers:
+            elif wager:
                 # Make the bet.
                 self.bets.append(('split bet on 5-8', ['5', '8'], bet))
                 self.bets.append(('split bet on 10-11', ['10', '11'], bet))
@@ -1172,22 +1166,19 @@ class Roulette(game.Game):
                 self.bets.append(('split bet on 27-30', ['27', '30'], bet))
                 self.bets.append(('split bet on 33-36', ['33', '36'], bet))
                 # Add any special bets.
-                if '5-8-10-11' in arguments:
+                if '5-8-10-11' in ignore:
                     self.bets.append(('single bet on 5', ['5'], bet))
                     self.bets.append(('single bet on 8', ['8'], bet))
                     self.bets.append(('single bet on 10', ['10'], bet))
                     self.bets.append(('single bet on 11', ['11'], bet))
-                elif 'ferrari' in arguments.lower():
+                elif 'ferrari' in ignore:
                     self.bets.append(('single bet on 8', ['8'], bet))
                     self.bets.append(('single bet on 11', ['11'], bet))
                     self.bets.append(('single bet on 23', ['23'], bet))
                     self.bets.append(('single bet on 30', ['30'], bet))
-                self.scores[self.human.name] -= full_bet
-        elif self.layout != 'french':
-            self.human.error('You can only make that be on the French layout.')
+                self.scores[self.human] -= full_wager
         else:
-            # Warn the user if no bet is given.
-            self.human.error('You must give an amount to bet.')
+            self.human.error('You can only make that be on the French layout.')
         return True
 
     def do_top(self, arguments):
@@ -1197,17 +1188,14 @@ class Roulette(game.Game):
         This is a bet on the five numbers at the top of the American layout. The
         argument to the top command is the amount to bet.
         """
-        # Handle extra words/aliases.
-        words = arguments.split()
-        if words[0].lower() != 'line':
-            words = ['line'] + words
         # Check the bet and the layout.
         numbers, bet = self.check_bet(' '.join(words))
-        if numbers and self.layout == 'american':
+        if self.layout == 'american':
+            target, wager, ignored = self.parse_bet('top', arguments, [], ignore = 'line')
             # Make the bet.
-            self.scores[self.human.name] -= bet
-            self.bets.append(('top line bet', ('0', '00', '1', '2', '3'), bet))
-        elif numbers:
+            self.scores[self.human] -= wager
+            self.bets.append(('top line bet', ('0', '00', '1', '2', '3'), wager))
+        else:
             # Warn the user if playing on a French layout.
             self.human.error('That bet can only be made on an American layout.')
         return True
@@ -1223,17 +1211,17 @@ class Roulette(game.Game):
         The second argument to the trio command is how much to bet.
         """
         # Check the bet.
-        numbers, bet = self.check_bet(arguments)
-        if numbers:
+        targets, wager, ignored = self.parse_bet('trio', arguments, [-1])
+        if targets and wager:
             # Check the numbers based on the layout.
             if self.layout == 'american':
-                valid = numbers in ('0-1-2', '0-00-2', '00-2-3')
+                valid = targets in ('0-1-2', '0-00-2', '00-2-3')
             else:
-                valid = numbers in ('0-1-2', '0-2-3')
+                valid = targets in ('0-1-2', '0-2-3')
             if valid:
                 # Make the bet.
-                self.scores[self.human.name] -= bet
-                self.bets.append(('trio bet on {}'.format(numbers), numbers.split('-'), bet))
+                self.scores[self.human] -= wager
+                self.bets.append(('trio bet on {}'.format(targets), targets.split('-'), wager))
             else:
                 # Warn the user about invalid input.
                 self.human.error('That is not a valid trio on this layout.')
@@ -1252,31 +1240,30 @@ class Roulette(game.Game):
         The last argument to the zero command is the amount to bet on each of the
         individual bets.
         """
-        # Get the integer arguments.
-        int_args = self.int_re.findall(arguments)
-        if self.layout == 'french' and int_args:
+        # Check the layout.
+        if self.layout == 'french':
             # Check the bet.
-            numbers, bet = self.check_bet('zero {}'.format(int_args[-1]))
-            # Check the full bet.
-            full_bet = bet * 4
-            if 'naca' in arguments.lower():
-                full_bet = bet * 5
-            if full_bet > self.scores[self.human.name]:
-                self.human.error('You do not have enough money for the full bet.')
-            elif numbers:
-                # Make the bet.
-                self.bets.append(('split bet on 0-3', ['0', '3'], bet))
-                self.bets.append(('split bet on 12-15', ['12', '15'], bet))
-                self.bets.append(('single bet on 26', ['26'], bet))
-                self.bets.append(('split bet on 32-35', ['32', '35'], bet))
-                if 'naca' in arguments.lower():
-                    self.bets.append(('single bet on 19', ['19'], bet))
-                self.scores[self.human.name] -= full_bet
-        # Warn the user about invalid input.
-        elif int_args:
-            self.human.error('This bet is only available on the French layout.')
+            ignore = ('game', 'zero', 'spiel', 'naca')
+            target, wager, ignored = self.parse_bet('zero game', arguments, [], ignore = ignore)
+            if wager:
+                # Check the full bet.
+                full_wager = wager * 4
+                if 'naca' in ignored:
+                    full_wager = wager * 5
+                if full_wager > self.scores[self.human]:
+                    self.human.error('You do not have enough money for the full bet.')
+                elif wager:
+                    # Make the bet.
+                    self.bets.append(('split bet on 0-3', ['0', '3'], wager))
+                    self.bets.append(('split bet on 12-15', ['12', '15'], wager))
+                    self.bets.append(('single bet on 26', ['26'], wager))
+                    self.bets.append(('split bet on 32-35', ['32', '35'], wager))
+                    if 'naca' in arguments.lower():
+                        self.bets.append(('single bet on 19', ['19'], wager))
+                    self.scores[self.human] -= full_wager
+        # Warn the user about invalid layout.
         else:
-            self.human.error('You must give an amount to bet.')
+            self.human.error('This bet is only available on the French layout.')
         return True
 
     def game_over(self):
@@ -1397,7 +1384,7 @@ class Roulette(game.Game):
                 errors.append('{} is not a number in the current layout.'.format(words[0]))
         # Convert ordinal targets.
         elif words[0] in self.ordinals:
-            target = self.ordinals[words[0]] # !! redo ordinals to be str values.
+            target = self.ordinals[words[0]]
         # Otherwise pop an error.
         else:
             errors.append('Invalid target specification for {} bet: {!r}.'.format(bet_type, words[0]))
@@ -1434,9 +1421,9 @@ class Roulette(game.Game):
                 if words[0] not in zero:
                     errors.append('{!r} is not a valid {} bet.'.format(words[0], bet_type))
             elif b - a not in target_spec[1:]:
-                # !! message is incomplete for multiple possible differences.
                 err = 'Numbers for {} bets must be {} apart.'
-                errors.append(err.format(bet_type, utility.num_text(target_spec[1], 'number')))
+                delta_text = utility.oxford([utility.number_word(delta) for delta in target_spec[1:]], 'or')
+                errors.append(err.format(bet_type, utility.num_text(delta_text, 'number')))
         # Apply valid targets.
         if not errors:
             target = numbers
