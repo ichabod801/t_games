@@ -477,7 +477,7 @@ class Roulette(game.Game):
             self.human.error('That bet can only be made on a French layout.')
             return True
         target, wager, ignored = self.parse_bet('basket', arguments, [], ignore = ['four'])
-        if target and wager:
+        if wager:
             self.scores[self.human] -= wager
             self.bets.append(('basket bet', ('0', '1', '2', '3'), wager))
         return True
@@ -592,7 +592,7 @@ class Roulette(game.Game):
                 # Make the bet.
                 self.scores[self.human.name] -= wager
                 numbers = [str(number) for number in (low, low + 1, low + 3, low + 4)]
-                self.bets.append(('corner bet on {}-{}'.format(targets), numbers, wager))
+                self.bets.append(('corner bet on {}-{}'.format(*targets), numbers, wager))
             else:
                 message = '{} and {} are not the low and high of a square of numbers.'
                 self.human.error(message.format(*targets))
@@ -613,13 +613,13 @@ class Roulette(game.Game):
         if targets and wager:
             # Check for valid double street.
             low, high = [int(x) for x in targets]
-            if hing % 3:
+            if high % 3:
                 self.human.error('Double street bets must end in a multiple of 3.')
             else:
                 # Make the bet.
                 self.scores[self.human] -= wager
                 numbers = [str(number) for number in range(low, high + 1)]
-                self.bets.append(('double street bet on {}'.format(targets), numbers, wager))
+                self.bets.append(('double street bet on {}-{}'.format(*targets), numbers, wager))
         return True
 
     def do_dozen(self, arguments):
@@ -1090,7 +1090,7 @@ class Roulette(game.Game):
         targets, wager, ignored = self.parse_bet('split', arguments, [0, 1, 3], zero = zero)
         if targets and wager:
             # Make the bet.
-            self.bets.append(('split bet on {}'.format(targets), targets, wager))
+            self.bets.append(('split bet on {}-{}'.format(*targets), targets, wager))
             self.scores[self.human] -= wager
         return True
 
@@ -1106,7 +1106,7 @@ class Roulette(game.Game):
         if target and wager:
             # Make the bet.
             self.scores[self.human] -= wager
-            self.bets.append(('straight bet on {}'.format(number), [target], wager))
+            self.bets.append(('straight bet on {}'.format(target), [target], wager))
         return True
 
     def do_street(self, arguments):
@@ -1189,7 +1189,6 @@ class Roulette(game.Game):
         argument to the top command is the amount to bet.
         """
         # Check the bet and the layout.
-        numbers, bet = self.check_bet(' '.join(words))
         if self.layout == 'american':
             target, wager, ignored = self.parse_bet('top', arguments, [], ignore = 'line')
             # Make the bet.
@@ -1401,7 +1400,7 @@ class Roulette(game.Game):
         errors: The accumulated parsing errors. (list of str)
         zero: The allowed bets including zero. (list of str)
         """
-        target = ['', '']
+        target = []
         numbers = words[0].split('-')
         # Calculate second number if only one given.
         if len(numbers) == 1 and numbers[0].isdigit():
@@ -1421,9 +1420,13 @@ class Roulette(game.Game):
                 if words[0] not in zero:
                     errors.append('{!r} is not a valid {} bet.'.format(words[0], bet_type))
             elif b - a not in target_spec[1:]:
-                err = 'Numbers for {} bets must be {} apart.'
+                err = 'Numbers for {} bets must be {} {} apart.'
                 delta_text = utility.oxford([utility.number_word(delta) for delta in target_spec[1:]], 'or')
-                errors.append(err.format(bet_type, utility.num_text(delta_text, 'number')))
+                if len(target_spec) > 2:
+                    num_text = 'numbers'
+                else:
+                    num_text = utility.plural(target_spec[1], 'number')
+                errors.append(err.format(bet_type, delta_text, num_text))
         # Apply valid targets.
         if not errors:
             target = numbers
