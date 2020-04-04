@@ -584,7 +584,7 @@ class Roulette(game.Game):
 
         The second argument to the corner command should be the amount bet.
         """
-        targets, wager, ignored = self.parse_bet('corner', arguments, [0, 5])
+        targets, wager, ignored = self.parse_bet('corner', arguments, [0, 4])
         if targets and wager:
             # Check for a valid corner.
             low = int(targets[0])
@@ -609,25 +609,17 @@ class Roulette(game.Game):
 
         The second argument to the double command should be the amount bet.
         """
-        # Handle extra words and aliases.
-        words = arguments.lower().split()
-        if words[0] in ('street', 'line'):
-            arguments = ' '.join(words[1:])
-        # Check the bet.
-        numbers, bet = self.check_bet(arguments)
-        # Check for two numbers.
-        if numbers and self.check_two_numbers(numbers, 'double street'):
+        targets, wager, ignored = self.parse_bet('double', arguments, [0, 5], ignore = ['street', 'line'])
+        if targets and wager:
             # Check for valid double street.
-            low, high = sorted([int(x) for x in numbers.split('-')])
-            if high - low != 5:
-                self.human.error('Double street bets must cover 6 numbers.')
-            elif high % 3:
+            low, high = [int(x) for x in targets]
+            if hing % 3:
                 self.human.error('Double street bets must end in a multiple of 3.')
             else:
                 # Make the bet.
-                self.scores[self.human.name] -= bet
-                targets = [str(number) for number in range(low, high + 1)]
-                self.bets.append(('double street bet on {}'.format(numbers), targets, bet))
+                self.scores[self.human] -= wager
+                numbers = [str(number) for number in range(low, high + 1)]
+                self.bets.append(('double street bet on {}'.format(targets), numbers, wager))
         return True
 
     def do_dozen(self, arguments):
@@ -645,20 +637,12 @@ class Roulette(game.Game):
 
         The second argument to the dozen command should be the amount bet.
         """
-        # Check the bet.
-        dozen, bet = self.check_bet(arguments)
-        if dozen:
-            # Get the the dozen number.
-            dozen = self.ordinals.get(dozen.lower(), 0)
-            if dozen:
-                # Make the bet.
-                end = dozen * 12 + 1
-                targets = [str(number) for number in range(end - 12, end)]
-                self.scores[self.human.name] -= bet
-                self.bets.append(('dozen bet on {}'.format(dozen), targets, bet))
-            else:
-                # Warn the user if the dozen is invalid.
-                self.human.error('That is not a valid dozen. Please use 1/2/3, P/M/D, or F/S/T.')
+        target, wager, ignored = self.parse_bet('dozen', arguments, [0])
+        if target and wager:
+                end = int(target) * 12 + 1
+                numbers = [str(number) for number in range(end - 12, end)]
+                self.scores[self.human] -= wager
+                self.bets.append(('dozen bet on {}'.format(dozen), numbers, wager))
         return True
 
     def do_even(self, arguments):
@@ -671,11 +655,11 @@ class Roulette(game.Game):
         The argument to the even command should be the amount bet.
         """
         # Check the bet.
-        numbers, bet = self.check_bet('even {}'.format(arguments))
-        if numbers:
+        target, wager, ignored = self.parse_bet('even', arguments, [])
+        if wager:
             # Make the bet.
-            self.scores[self.human.name] -= bet
-            self.bets.append(('even bet', [str(number) for number in range(2, 37, 2)], bet))
+            self.scores[self.human] -= wager
+            self.bets.append(('even bet', self.even, wager))
         return True
 
     def do_final(self, arguments):
@@ -690,22 +674,22 @@ class Roulette(game.Game):
         The second argument should be the amount to bet on each number.
         """
         # Check the bet.
-        digit, bet = self.check_bet(arguments)
-        if digit:
+        digit, wager, ignored = self.parse_bet('final', arguments, [1])
+        if digit and wager:
             # Check the digit.
-            if digit in '1234567890':
+            if len(digit) == 1 and digit in '1234567890':
                 # Get the numbers to bet on.
                 numbers = [number for number in self.numbers if number[-1] == digit and number not in '00']
                 # Check the full bet.
-                full_bet = bet * len(numbers)
-                if full_bet > self.scores[self.human.name]:
+                full_bet = wager * len(numbers)
+                if full_bet > self.scores[self.human]:
                     # Warn if user can't afford the full bet.
                     self.human.error('You do not have enough bucks for the full bet.')
                 else:
                     # Make the bets.
                     for number in numbers:
-                        self.bets.append(('single bet on {}'.format(number), [number], bet))
-                    self.scores[self.human.name] -= full_bet
+                        self.bets.append(('single bet on {}'.format(number), [number], wager))
+                    self.scores[self.human] -= full_bet
             else:
                 self.human.error('That is not a valid final digit.')
         return True
@@ -766,11 +750,11 @@ class Roulette(game.Game):
         The argument to the high command should be the amount bet.
         """
         # Check the bet.
-        numbers, bet = self.check_bet('high {}'.format(arguments))
-        if numbers:
+        target, wager, ignored = self.parse_bet('high', arguments, [])
+        if wager:
             # Make the bet.
-            self.scores[self.human.name] -= bet
-            self.bets.append(('high bet', [str(number) for number in range(19, 37)], bet))
+            self.scores[self.human] -= wager
+            self.bets.append(('high bet', [str(number) for number in range(19, 37)], wager))
         return True
 
     def do_layout(self, arguments):
@@ -803,11 +787,11 @@ class Roulette(game.Game):
         The argument to the manque command should be the amount bet.
         """
         # Check the bet.
-        numbers, bet = self.check_bet('low {}'.format(arguments))
-        if numbers:
+        target, wager, ignored = self.parse_bet('low', arguments, [])
+        if wager:
             # Make the bet.
-            self.scores[self.human.name] -= bet
-            self.bets.append(('low bet', [str(number) for number in range(1, 19)], bet))
+            self.scores[self.human] -= wager
+            self.bets.append(('low bet', [str(number) for number in range(1, 19)], wager))
         return True
 
     def do_neighbors(self, arguments):
