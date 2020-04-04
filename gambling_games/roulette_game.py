@@ -784,7 +784,7 @@ class Roulette(game.Game):
 
         This bet is on the numbers 1-18.
 
-        The argument to the manque command should be the amount bet.
+        The argument to the low command should be the amount bet.
         """
         # Check the bet.
         target, wager, ignored = self.parse_bet('low', arguments, [])
@@ -821,26 +821,26 @@ class Roulette(game.Game):
         """
         # Pull out the integer arguments.
         int_args = self.int_re.findall(arguments)
-        # If there are two, make a and-the-neighbors bet.
+        # If there are two, make an and-the-neighbors bet.
         if len(int_args) == 2:
-            number, bet = self.check_bet(' '.join(int_args))
-            self.neighborhood(number, 5, bet)
+            target, wager, ignored = self.parse_bet('neighbors', arguments, [1], 5)
+            if target and wager:
+                self.neighborhood(target, 5, wager)
         # Otherwise make a neighbors of zero bet.
         elif self.layout == 'french' and int_args:
             # Check the bet and the full bet.
-            numbers, bet = self.check_bet('neighbors {}'.format(int_args[0]))
-            if bet * 9 > self.scores[self.human.name]:
-                self.human.error('You do not have enough money for the full bet.')
-            elif numbers:
+            ignore = ('zero', 'of', 'du')
+            target, wager, ignored = self.parse_bet('neighbors of zero', arguments, [], 9, ignore)
+            if wager:
                 # Make the bet.
-                self.bets.append(('trio bet on 0-2-3', ['0', '2', '3'], bet * 2))
-                self.bets.append(('split bet on 4-7', ['4', '7'], bet))
-                self.bets.append(('split bet on 12-15', ['12', '15'], bet))
-                self.bets.append(('split bet on 18-21', ['18', '21'], bet))
-                self.bets.append(('split bet on 19-22', ['19', '22'], bet))
-                self.bets.append(('corner bet on 25-29', ['25', '26', '28', '29'], bet * 2))
-                self.bets.append(('split bet on 32-35', ['32', '35'], bet))
-                self.scores[self.human.name] -= 9 * bet
+                self.bets.append(('trio bet on 0-2-3', ['0', '2', '3'], wager * 2))
+                self.bets.append(('split bet on 4-7', ['4', '7'], wager))
+                self.bets.append(('split bet on 12-15', ['12', '15'], wager))
+                self.bets.append(('split bet on 18-21', ['18', '21'], wager))
+                self.bets.append(('split bet on 19-22', ['19', '22'], wager))
+                self.bets.append(('corner bet on 25-29', ['25', '26', '28', '29'], wager * 2))
+                self.bets.append(('split bet on 32-35', ['32', '35'], wager))
+                self.scores[self.human] -= 9 * wager
         # Warn the user if there is invalid input.
         elif int_args:
             self.human.error('This bet is only available on the French layout.')
@@ -859,10 +859,10 @@ class Roulette(game.Game):
         number specified, and on each neighbor.
         """
         # Check the bet.
-        number, bet = self.check_bet(arguments)
-        if number:
+        target, wager, ignored = self.parse_bet('niner', arguments, [1], 9)
+        if target and wager:
             # Make the bet.
-            self.neighborhood(number, 9, bet)
+            self.neighborhood(target, 9, wager)
         return True
 
     def do_odd(self, arguments):
@@ -875,11 +875,11 @@ class Roulette(game.Game):
         The argument to the odd command should be the amount to bet.
         """
         # Check the bet.
-        numbers, bet = self.check_bet('odd {}'.format(arguments))
-        if numbers:
+        target, wager, ignored = self.parse_bet('odd', arguments, [])
+        if wager:
             # Make the bet.
-            self.scores[self.human.name] -= bet
-            self.bets.append(('odd bet', [str(number) for number in range(1, 37, 2)], bet))
+            self.scores[self.human] -= wager
+            self.bets.append(('odd bet', [str(number) for number in range(1, 37, 2)], wager))
         return True
 
     def do_orphans(self, argument):
@@ -894,19 +894,17 @@ class Roulette(game.Game):
         individual bets.
         """
         # Check the bet and the full bet.
-        numbers, bet = self.check_bet('orphans {}'.format(argument))
-        if bet * 5 > self.scores[self.human.name]:
-            self.human.error('You do not have enough money for the full bet.')
-        elif self.layout != 'french':
+        target, wager, ignored = self.parse_bet('orphans', arguments, [], 5)
+        if self.layout != 'french':
             self.human.error('You can only make that bet on the French layout.')
-        elif numbers:
+        elif wager:
             # Make the bet.
-            self.bets.append(('single bet on 1', ['1'], bet))
-            self.bets.append(('split bet on 6-9', ['6', '9'], bet))
-            self.bets.append(('split bet on 14-17', ['14', '17'], bet))
-            self.bets.append(('split bet on 17-20', ['17', '20'], bet))
-            self.bets.append(('split bet on 31-34', ['31', '34'], bet))
-            self.scores[self.human.name] -= 5 * bet
+            self.bets.append(('single bet on 1', ['1'], wager))
+            self.bets.append(('split bet on 6-9', ['6', '9'], wager))
+            self.bets.append(('split bet on 14-17', ['14', '17'], wager))
+            self.bets.append(('split bet on 17-20', ['17', '20'], wager))
+            self.bets.append(('split bet on 31-34', ['31', '34'], wager))
+            self.scores[self.human] -= 5 * wager
         return True
 
     def do_prime(self, arguments):
@@ -923,24 +921,23 @@ class Roulette(game.Game):
         """
         # Check for betting on twin primes.
         primes = ['2', '3', '5', '7', '11', '13', '17', '19', '23', '29', '31']
-        bet_mod = 10
-        if arguments.lower().startswith('twins'):
-            arguments = arguments[6:]
+        wager_mod = 10
+        target, wager, ignored = self.parse_bet('prime', arguments, [], ignore = ('twin', 'twins'))
+        if ignored:
             primes.remove('2')
             primes.remove('23')
-            bet_mod = 9
+            wager_mod = 9
         # Check the bet.
-        numbers, bet = self.check_bet('prime {}'.format(arguments))
-        if bet * bet_mod > self.scores[self.human.name]:
+        if wager * wager_mod > self.scores[self.human]:
             self.human.error('You do not have nough money for the full bet.')
-        elif numbers:
+        elif wager:
             # Make the bet.
-            if bet_mod == 10:
+            if ignored:
                 self.bets.append(('split bet on 2-3', ['2', '3'], bet))
                 primes = primes[2:]
             for prime in primes:
                 self.bets.append(('single bet on {}'.format(prime), [prime], bet))
-            self.scores[self.human.name] -= bet_mod * bet
+            self.scores[self.human] -= wager_mod * wager
         return True
 
     def do_quit(self, argument):
@@ -979,11 +976,11 @@ class Roulette(game.Game):
         The argument to the red command should be the amount to bet.
         """
         # Check the bet.
-        numbers, bet = self.check_bet('red {}'.format(arguments))
-        if numbers:
+        target, wager, ignored = self.parse_bet('red', arguments, [])
+        if wager:
             # Make the bet.
-            self.scores[self.human.name] -= bet
-            self.bets.append(('red bet', self.red, bet))
+            self.scores[self.human] -= wager
+            self.bets.append(('red bet', self.red, wager))
         return True
 
     def do_remove(self, arguments):
@@ -1024,10 +1021,10 @@ class Roulette(game.Game):
         The argument to the sevens bet is the amount to bet on each of the seven
         numbers.
         """
-        number, bet = self.check_bet(arguments)
-        if number:
+        target, wager, ignored = self.parse_bet('seven', arguments, [], 7)
+        if wager:
             # Make the bet.
-            self.neighborhood(number, 7, bet)
+            self.neighborhood('7', 7, wager)
         return True
 
     def do_snake(self, arguments):
@@ -1039,12 +1036,12 @@ class Roulette(game.Game):
         The argument to the snake command is the amount to bet.
         """
         # Check the bet.
-        numbers, bet = self.check_bet('snake {}'.format(arguments))
-        if numbers:
+        target, wager, ignored = self.parse_bet('snake', arguments, [])
+        if wager:
             # Make the bet.
-            self.scores[self.human.name] -= bet
+            self.scores[self.human] -= wager
             targets = ['1', '5', '9', '12', '14', '16', '19', '23', '27', '30', '32', '34']
-            self.bets.append(('snake bet', targets, bet))
+            self.bets.append(('snake bet', targets, wager))
         return True
 
     def do_spin(self, arguments):
@@ -1321,23 +1318,18 @@ class Roulette(game.Game):
         width: How many numbers there are in the neighborhood. (int)
         bet: The amount of each bet. (int)
         """
-        # Check the full bet
-        if bet * width > self.scores[self.human.name]:
-            self.human.error('You do not have enough money for the full bet.')
-        elif number:
-            if number in self.numbers:
-                # Get the right wheel.
-                if self.layout == 'french':
-                    wheel = self.french
-                else:
-                    wheel = self.american
-                # Find the number.
-                location = wheel.index(number)
-                # Make the bets.
-                for index in range(location - width // 2, location + width // 2 + 1):
-                    slot = wheel[index % len(wheel)]
-                    self.bets.append(('single on {}'.format(slot), [slot], bet))
-                self.scores[self.human.name] -= width * bet
+        # Get the right wheel.
+        if self.layout == 'french':
+            wheel = self.french
+        else:
+            wheel = self.american
+        # Find the number.
+        location = wheel.index(number)
+        # Make the bets.
+        for index in range(location - width // 2, location + width // 2 + 1):
+            slot = wheel[index % len(wheel)]
+            self.bets.append(('single on {}'.format(slot), [slot], bet))
+        self.scores[self.human] -= width * bet
 
     def parse_bet(self, bet_type, arguments, target_spec, bet_count = 1, ignore = []):
         """
