@@ -527,9 +527,9 @@ class Roulette(game.Game):
         target, wager, ignored = self.parse_bet('column', arguments, [0])
         if target and wager:
             # Make the bet.
-            targets = [str(number) for number in range(int(column), 37, 3)]
+            targets = [str(number) for number in range(int(target), 37, 3)]
             self.scores[self.human] -= wager
-            self.bets.append(('column bet on {}'.format(column), targets, wager))
+            self.bets.append(('column bet on {}'.format(target), targets, wager))
         return True
 
     def do_complete(self, arguments):
@@ -642,7 +642,7 @@ class Roulette(game.Game):
                 end = int(target) * 12 + 1
                 numbers = [str(number) for number in range(end - 12, end)]
                 self.scores[self.human] -= wager
-                self.bets.append(('dozen bet on {}'.format(dozen), numbers, wager))
+                self.bets.append(('dozen bet on {}'.format(target), numbers, wager))
         return True
 
     def do_even(self, arguments):
@@ -659,7 +659,7 @@ class Roulette(game.Game):
         if wager:
             # Make the bet.
             self.scores[self.human] -= wager
-            self.bets.append(('even bet', self.even, wager))
+            self.bets.append(('even bet', [str(number) for number in range(2, 37, 2)], wager))
         return True
 
     def do_final(self, arguments):
