@@ -1406,7 +1406,8 @@ class Roulette(game.Game):
                 errors.append('That wager is too small. You must wager at least 1 buck.')
             elif wager * bet_count > self.scores[self.human] or wager > self.max_bet:
                 err = 'That wager is too large. You may only wager {}.'
-                errors.append(err.format(utility.num_text(max_bet // bet_count, 'buck', ':n')))
+                max_bet = min(self.scores[self.human] // bet_count, self.max_bet)
+                errors.append(err.format(utility.num_text(max_bet, 'buck', ':n')))
                 wager = 0
         else:
             errors.append('All wagers must be positive integers.')
