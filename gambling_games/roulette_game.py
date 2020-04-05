@@ -467,7 +467,7 @@ class Roulette(game.Game):
 
     def do_basket(self, arguments):
         """
-        Make a four number bet incluidng 0. (first, first four)
+        Make a four number bet incluidng 0. (first, first four, bk, f4)
 
         The bet is on 0, 1, 2, and 3. French layout only.
 
@@ -494,7 +494,7 @@ class Roulette(game.Game):
 
     def do_black(self, arguments):
         """
-        Bet on black. (noir)
+        Bet on black. (noir, bl, nr)
 
         The bet is on 2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33,
         and 35.
@@ -511,7 +511,7 @@ class Roulette(game.Game):
 
     def do_column(self, arguments):
         """
-        Bet on a column.
+        Bet on a column. (col)
 
         The first column is specified by the argument 1, p, or f. That bet is on the
         numbers 1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, and 34.
@@ -534,7 +534,7 @@ class Roulette(game.Game):
 
     def do_complete(self, arguments):
         """
-        Make all inside bets on a given number.
+        Make all inside bets on a given number. (cmp)
 
         This includes the single bet on that number, and any split, street, trio,
         basket, top line, corner, or double street bets available for that number on
@@ -575,7 +575,7 @@ class Roulette(game.Game):
 
     def do_corner(self, arguments):
         """
-        Make a bet on a square of numbers. (square)
+        Make a bet on a square of numbers. (square, cnr, sq)
 
         The first argument must be the high and low number in a square of four numbers
         on the layout, separated by a dash. That is, the high number must be the low
@@ -601,7 +601,7 @@ class Roulette(game.Game):
     def do_double(self, arguments):
         """
         Make a bet on two consecutive rows of numbers. (double street, double line,
-            six line)
+            six line, ds, 6l)
 
         The first argument must the be the high and low number of six numbers in two
         rows on the layout, separated by a dash. That is, the high must be the low
@@ -624,7 +624,7 @@ class Roulette(game.Game):
 
     def do_dozen(self, arguments):
         """
-        Bet on a consecutive dozen. (douzaine)
+        Bet on a consecutive dozen. (douzaine, doz, dz)
 
         The first dozen is specified by the argument 1, p, or f, and is a bet on the
         numbers 1-12.
@@ -647,7 +647,7 @@ class Roulette(game.Game):
 
     def do_even(self, arguments):
         """
-        Bet on the the even numbers. (pair)
+        Bet on the the even numbers. (pair, ev, pa)
 
         this is a bet on the numbers 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26,
         28, 30, 32, 34, and 36.
@@ -664,7 +664,7 @@ class Roulette(game.Game):
 
     def do_final(self, arguments):
         """
-        Bet on numbers ending in a particular digit. (finals, finale)
+        Bet on numbers ending in a particular digit. (finals, finale, fin)
 
         The first argument should be the final digit to bet on. There are four numbers
         ending in each of the digits 0, 1, 2, 3, 4, 5, and 6. There are three numbers
@@ -743,7 +743,7 @@ class Roulette(game.Game):
 
     def do_high(self, arguments):
         """
-        Bet on the the high half of the range. (19-36, passe)
+        Bet on the the high half of the range. (19-36, passe, hi, ps)
 
         This bet is on the numbers 19-36.
 
@@ -780,7 +780,7 @@ class Roulette(game.Game):
 
     def do_low(self, arguments):
         """
-        Bet on the the low half of the range. (1-18, manque)
+        Bet on the the low half of the range. (1-18, manque, lo, mq)
 
         This bet is on the numbers 1-18.
 
@@ -796,7 +796,7 @@ class Roulette(game.Game):
 
     def do_neighbors(self, arguments):
         """
-        Make a neighbors of zero bet or a 'and the neighbors' bet. (voisons)
+        Make a neighbors of zero bet or a 'and the neighbors' bet. (voisons, nb)
 
         If two arguments are given, the first argument is taken as the number to bet
         on. In addition, four more bets are made are made on the two numbers on
@@ -850,7 +850,7 @@ class Roulette(game.Game):
 
     def do_niner(self, arguments):
         """
-        Make a bet on a neighborhood of niner.
+        Make a bet on a neighborhood of niner. (9r)
 
         This bet is the same as a neighbors bet on a specific number, but with eight
         neighbors instead of four. See the help for the neighbors bet for details.
@@ -867,7 +867,7 @@ class Roulette(game.Game):
 
     def do_odd(self, arguments):
         """
-        Bet on the the odd numbers. (impair)
+        Bet on the the odd numbers. (impair, od, im)
 
         This bet is on the numbers 1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27,
         29, 31, 33, and 35.
@@ -884,7 +884,7 @@ class Roulette(game.Game):
 
     def do_orphans(self, arguments):
         """
-        Bet on the orphans: the numbers not in the neighbors or the thirds.
+        Bet on the orphans: the numbers not in the neighbors or the thirds. (orphelins, or)
 
         This bet is only available on the French layout and includes five bets:
             * A single bet on 1.
@@ -909,7 +909,7 @@ class Roulette(game.Game):
 
     def do_prime(self, arguments):
         """
-        Make a bet on the prime numbers.
+        Make a bet on the prime numbers. (primes, pr)
 
         This bets is on the prime numbers on the board: 2, 3, 5, 7, 11, 13, 17, 19, 23,
         29, and 31. The bet can be done as 'prime twins' to exclude 2 and 23. The bet
@@ -968,7 +968,7 @@ class Roulette(game.Game):
 
     def do_red(self, arguments):
         """
-        Bet on red. (rouge)
+        Bet on red. (rouge, rd, ro)
 
         This bet is on the numbers 1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27,
         30, 32, 34, and 36.
@@ -1011,7 +1011,7 @@ class Roulette(game.Game):
 
     def do_seven(self, arguments):
         """
-        Make a bet on a neighborhood of seven.
+        Make a bet on a neighborhood of seven. (sv)
 
         This bet is on the number seven and three numbers on either side of it on the
         wheel, making seven numbers in all. On an American wheel this bet is on the
@@ -1029,7 +1029,7 @@ class Roulette(game.Game):
 
     def do_snake(self, arguments):
         """
-        Make a zig zag bet from 1 to 34.
+        Make a zig zag bet from 1 to 34. (sn)
 
         This bet is on the numbers 1, 5, 9, 12, 14, 16, 19, 23, 27, 30, 32, and 34.
 
@@ -1071,7 +1071,7 @@ class Roulette(game.Game):
 
     def do_split(self, arguments):
         """
-        Make a bet on a two adjacent numbers.
+        Make a bet on a two adjacent numbers. (sp)
 
         The first argument should be the two numbers to bet on, separated by a dash,
         which must be next to each other on the layout. That means one must be one
@@ -1096,7 +1096,7 @@ class Roulette(game.Game):
 
     def do_straight(self, arguments):
         """
-        Make a bet on a single number. (single)
+        Make a bet on a single number. (single, str, sng)
 
         The first argument to the straight command is the number to bet on, the second
         is the amount to bet.
@@ -1111,7 +1111,7 @@ class Roulette(game.Game):
 
     def do_street(self, arguments):
         """
-        Make a bet on a three number row.
+        Make a bet on a three number row. (st)
 
         The first argument to the street command should be three dash-separated numbers
         forming a row on the layout. The bet is on those three numbers.
@@ -1135,7 +1135,7 @@ class Roulette(game.Game):
 
     def do_third(self, arguments):
         """
-        Make a third of the wheel bet. (le tiers, tiers)
+        Make a third of the wheel bet. (le tiers, tiers, 3d)
 
         This is a set of bets covering the third of the wheel (12 numbetr) opposite
         the zero on the French layout. These bets include the following split bets:
@@ -1185,7 +1185,7 @@ class Roulette(game.Game):
 
     def do_top(self, arguments):
         """
-        Make a five number bet incluidng the zeros. (line, top line)
+        Make a five number bet incluidng the zeros. (line, top line, tl)
 
         This is a bet on the five numbers at the top of the American layout. The
         argument to the top command is the amount to bet.
@@ -1203,7 +1203,7 @@ class Roulette(game.Game):
 
     def do_trio(self, arguments):
         """
-        Make a three number bet with one or more zeroes.
+        Make a three number bet with one or more zeroes. (tr)
 
         The first argument should be the three numbers to bet on separated by dashes.
         On the American layout, the valid numbers are 0-1-2, 0-00-2, and 00-2-3. On
@@ -1230,7 +1230,7 @@ class Roulette(game.Game):
 
     def do_zero(self, arguments):
         """
-        Make a zero game bet. (jeu, jeu zero)
+        Make a zero game bet. (jeu, jeu zero, zero game, zero spiel, 0g)
 
         This is a variant of the neighbors bet, which bets on 0 and eight neighbors.
         The exact bets made are a straight bet on 26 and three split bets on 0-3,
