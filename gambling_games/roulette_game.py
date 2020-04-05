@@ -160,8 +160,6 @@ class Roulette(game.Game):
     uk_rule: A flag for getting half back on losing 1:1 bets. (bool)
 
     Methods:
-    check_bet: Do common checking for valid bets. (str, int)
-    check_two_numbers: Check for two numbers in the layout. (bool)
     complete_corners: Get all corner bets for a complete bet. (list of tuple)
     complete_splits: Get all split bets for a complete bet. (list of tuple)
     complete_streets: Get all street and double street bets for a complete bet. (list)
@@ -197,6 +195,10 @@ class Roulette(game.Game):
     do_trio: Make a three number bet with one or more zeroes. (bool)
     do_zero: Make a zero game bet. (bool)
     neighborhood: Bet on adjacent numbers on the wheel. (None)
+    parse_bet: Parse the arguments to a bet command. (tuple)
+    parse_one: Parse a single target number. (str)
+    parse_two: Parse a two-number target number range. (str)
+    parse_wager: Parse a wager. (str)
     pay_out: Pay the winning bets. (None)
 
     Overridden Methods:
@@ -252,60 +254,6 @@ class Roulette(game.Game):
         else:
             in_play = ''
         return '\nYou have {}{}.'.format(in_hand, in_play)
-
-    def check_bet(self, arguments):
-        """
-        Do common checking for valid bets. (str, int)
-
-        This checks the valid number of arguments and a valid bet amount. The
-        specific bet method will need to check that the thing being bet on is valid.
-
-        Parameters:
-        arguments: The arguments to the bet command. (str)
-        """
-        args = arguments.split()
-        # Check for number and bet
-        if len(args) != 2:
-            self.human.error('Invalid number of arguments to a bet command.')
-        else:
-            target, bet = args
-            # Check for a valid bet.
-            if bet.isdigit():
-                bet = int(bet)
-                max_bet = min(self.max_bet, self.scores[self.human.name])
-                # Return valid bet information.
-                if 1 <= bet <= max_bet:
-                    return target, bet
-                # Warn the user about invalid bets.
-                elif bet < 1:
-                    self.human.error('That bet is too small. You must bet at least 1 buck.')
-                else:
-                    self.human.error('That bet is too large. You may only bet {} bucks.'.format(max_bet))
-            else:
-                self.human.error('All bets must be decimal integers.')
-        # Return dummy (False) values on failure.
-        return '', 0
-
-    def check_two_numbers(self, pair, bet_type):
-        """
-        Check for two numbers in the layout. (bool)
-
-        Parameters:
-        pair: The two numbers separated by a dash. (str)
-        bet_type: The type of bet trying to be made. (str)
-        """
-        pair = pair.split('-')
-        # Check for two numbers.
-        if len(pair) != 2:
-            self.human.error('You must enter two numbers for a {} bet.'.format(bet_type))
-        # Check that they are on the wheel.
-        elif pair[0] not in self.numbers:
-            self.human.error('{} is not in this layout.'.format(pair[0]))
-        elif pair[1] not in self.numbers:
-            self.human.error('{} is not in this layout.'.format(pair[1]))
-        else:
-            return True
-        return False
 
     def complete_corners(self, bets, number, wager):
         """
