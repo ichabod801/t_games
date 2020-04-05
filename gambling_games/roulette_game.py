@@ -410,6 +410,10 @@ class Roulette(game.Game):
                 # Check for double street bets.
                 elif b - a == 5:
                     self.do_double(line)
+                else:
+                    return super(Roulette, self).default(line)
+            else:
+                return super(Roulette, self).default(line)
         else:
             return super(Roulette, self).default(line)
 
