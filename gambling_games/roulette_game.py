@@ -110,8 +110,8 @@ Complete/cmp: Make every inside bet that contains the specified number. May be
     of numbers in the bet. [1, x7-12, x17-40 progressive]
 Final/Finals/Finale/fn: Bet on all non-zero numbers ending with the specified
     digit. [1, x3-4]
-Neighbors of Zero/Voisins du Zero/nb zero: Nine bets covering 17 numbers around
-    zero on the French layout. [0F, x9]
+Neighbors of Zero/Voisins du Zero/nb zero: Seven bets covering 17 numbers
+    around zero on the French layout. [0F, x9]
 Neighbors/nb: The neighbors bet with a number specified bets on that number and
     the two numbers on either side on the wheel. [1, x5]
 Niner/9r: Bet on a number and the four numbers on either side on the wheel.
@@ -126,7 +126,7 @@ Snake/sn: A bet on the zig-zag of red numbers from 1 to 34. [0, x1]
 Third of the Wheel/Le Tiers du Cylindre/3d: Bet on a specific third of the
     wheel on the French layout. If made with '5-8-10-11', those numbers are
     doubled up. If made with 'gioco Ferrari', 8, 11, 12, and 30 are also
-    doubled up. [0F, x6, x10 5-8-10-11, x14 Ferrari]
+    doubled up. [0F, x6, x10 5-8-10-11 or Ferrari]
 Zero Game/Zero Spiel/Jeu Zero/0g: Bet on zero and six numbers near it on the
     French layout. If 'naca' is included, there is also a bet on 19.
     [0F, x4, x5 naca]
@@ -546,12 +546,12 @@ class Roulette(game.Game):
         The second argument to the complete command should be the amount bet.
         """
         target, wager, ignored = self.parse_bet('complete', arguments, [1], ignore = ['progressive'])
-        progressive = 'progressive' in ingored
+        progressive = 'progressive' in ignored
         # Check the wager
         if target and wager:
-            number = int(number_text)
+            number = int(target)
             # Add the single wager.
-            bets = [('single bet on {}'.format(number), [number_text], wager)]
+            bets = [('single bet on {}'.format(number), [target], wager)]
             # Add the multi-number bets bets.
             bets = self.complete_splits(bets, number, wager)
             bets = self.complete_streets(bets, number, wager)
@@ -882,7 +882,7 @@ class Roulette(game.Game):
             self.bets.append(('odd bet', [str(number) for number in range(1, 37, 2)], wager))
         return True
 
-    def do_orphans(self, argument):
+    def do_orphans(self, arguments):
         """
         Bet on the orphans: the numbers not in the neighbors or the thirds.
 
@@ -932,11 +932,11 @@ class Roulette(game.Game):
             self.human.error('You do not have nough money for the full bet.')
         elif wager:
             # Make the bet.
-            if ignored:
-                self.bets.append(('split bet on 2-3', ['2', '3'], bet))
+            if not ignored:
+                self.bets.append(('split bet on 2-3', ['2', '3'], wager))
                 primes = primes[2:]
             for prime in primes:
-                self.bets.append(('single bet on {}'.format(prime), [prime], bet))
+                self.bets.append(('single bet on {}'.format(prime), [prime], wager))
             self.scores[self.human] -= wager_mod * wager
         return True
 
@@ -1150,32 +1150,34 @@ class Roulette(game.Game):
         """
         # Get the integer arguments
         if self.layout == 'french':
-            ignore = 'of the wheel le teirs du cylindre 5-8-10-11 gioco ferrari'.split()
+            ignore = 'of the wheel le tiers du cylindre 5-8-10-11 gioco ferrari'.split()
             target, wager, ignored = self.parse_bet('third', arguments, [], ignore = ignore)
             full_wager = wager * 6
-            if '5-8-10-11' in ignore or 'ferrari' in ignore:
-                full_wager = wager * 10
+            if '5-8-10-11' in ignored:
+                full_wager += wager * 4
+            if 'gioco' in ignored or 'ferrari' in ignored:
+                full_wager += wager * 4
             if full_wager > self.scores[self.human]:
                 self.human.error('You do not have enough money for the full bet.')
             elif wager:
                 # Make the bet.
-                self.bets.append(('split bet on 5-8', ['5', '8'], bet))
-                self.bets.append(('split bet on 10-11', ['10', '11'], bet))
-                self.bets.append(('split bet on 13-16', ['13', '16'], bet))
-                self.bets.append(('split bet on 23-24', ['23', '24'], bet))
-                self.bets.append(('split bet on 27-30', ['27', '30'], bet))
-                self.bets.append(('split bet on 33-36', ['33', '36'], bet))
+                self.bets.append(('split bet on 5-8', ['5', '8'], wager))
+                self.bets.append(('split bet on 10-11', ['10', '11'], wager))
+                self.bets.append(('split bet on 13-16', ['13', '16'], wager))
+                self.bets.append(('split bet on 23-24', ['23', '24'], wager))
+                self.bets.append(('split bet on 27-30', ['27', '30'], wager))
+                self.bets.append(('split bet on 33-36', ['33', '36'], wager))
                 # Add any special bets.
-                if '5-8-10-11' in ignore:
-                    self.bets.append(('single bet on 5', ['5'], bet))
-                    self.bets.append(('single bet on 8', ['8'], bet))
-                    self.bets.append(('single bet on 10', ['10'], bet))
-                    self.bets.append(('single bet on 11', ['11'], bet))
-                elif 'ferrari' in ignore:
-                    self.bets.append(('single bet on 8', ['8'], bet))
-                    self.bets.append(('single bet on 11', ['11'], bet))
-                    self.bets.append(('single bet on 23', ['23'], bet))
-                    self.bets.append(('single bet on 30', ['30'], bet))
+                if '5-8-10-11' in ignored:
+                    self.bets.append(('single bet on 5', ['5'], wager))
+                    self.bets.append(('single bet on 8', ['8'], wager))
+                    self.bets.append(('single bet on 10', ['10'], wager))
+                    self.bets.append(('single bet on 11', ['11'], wager))
+                if 'ferrari' in ignored or 'gioco' in ignored:
+                    self.bets.append(('single bet on 8', ['8'], wager))
+                    self.bets.append(('single bet on 11', ['11'], wager))
+                    self.bets.append(('single bet on 23', ['23'], wager))
+                    self.bets.append(('single bet on 30', ['30'], wager))
                 self.scores[self.human] -= full_wager
         else:
             self.human.error('You can only make that be on the French layout.')
@@ -1451,11 +1453,10 @@ class Roulette(game.Game):
         elif words[1].isdigit():
             # Validate the size of the wager.
             wager = int(words[1])
-            max_bet = min(self.max_bet, self.scores[self.human])
             # Warn the user about invalid bets.
             if wager < 1:
                 errors.append('That wager is too small. You must wager at least 1 buck.')
-            elif wager * bet_count > max_bet:
+            elif wager * bet_count > self.scores[self.human] or wager > self.max_bet:
                 err = 'That wager is too large. You may only wager {}.'
                 errors.append(err.format(utility.num_text(max_bet // bet_count, 'buck', ':n')))
                 wager = 0
