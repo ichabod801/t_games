@@ -912,6 +912,8 @@ class Yacht(game.Game):
             # Check for instant win.
             if self.super_five and score and category == self.score_cats[-1] and self.roll_count == 1:
                 self.force_end = True
+                message = '\n{} got five of a kind on the first roll and auotmatically wins!'
+                self.human.tell(message.format(player))
                 if player == self.human:
                     self.win_loss_draw[0] = len(self.players) - 1
                 else:
