@@ -617,6 +617,9 @@ class LiarsDice(game.Game):
             player.tell('\nThe roll passed to you is {}.'.format(self.dice))
         else:
             player.tell('\nYour roll is {}.'.format(self.dice))
+        # Tell the player what they need to beat.
+        if sum(self.claim):
+            player.tell('You need to beat {}.'.format(self.poker_text(self.poker_score(self.claim))))
         # Get the player action
         if self.phase == 'claim':
             # Get the claimed value.
