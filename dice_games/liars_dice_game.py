@@ -49,7 +49,11 @@ liar (lr): Add a dishonest (sometimes) bot to the game.
 tokens= (t=): Change the number of tokens each player has. (default = 3)
 one-six (16): Ones count as sixes.
 one-wild (1w): Ones are wild.
-two-rerolls (2r): Each player can roll the dice twice before stating their claim.
+two-rerolls (2r): Each player can roll the dice twice before stating their
+    claim.
+
+Note that the default is to have one of each bot (honest, challenge, liar, and
+    double trouble).
 """
 
 # The rules for Liar's Dice.
