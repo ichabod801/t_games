@@ -604,7 +604,7 @@ class CrazyEights(game.Game):
             self.suit = ''
         # Handle forced draws.
         if self.draw_rank and self.draw_rank in card_text.upper():
-            self.forced_draw += cards.Card.rank_set.index(card_text[0].upper())
+            self.forced_draw += self.deck.rank_set.index(card_text[0].upper())
         # Check for reversing the order of play.
         if card_text[0].upper() == self.reverse_rank:
             self.human.tell('The order of play is reversed.')
