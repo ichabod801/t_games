@@ -436,7 +436,7 @@ class CrazyEights(game.Game):
             if self.empty_deck != 'pass':
                 if max(self.scores.values()) < self.goal:
                     self.deal(self.empty_deck == 'reshuffle')
-            return self.empty_deck != 'score'
+            return self.empty_deck != 'score' and not self.draw_one
         else:
             return not self.draw_one
 
