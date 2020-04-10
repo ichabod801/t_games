@@ -569,7 +569,7 @@ class OregonTrail(game.Game):
     def poisonous_snake(self):
         """Handle the poisonous snake hazard. (None)"""
         # Update the user.
-        self.human.tell('You kill a poisonous snake rabbit after it bites you.')
+        self.human.tell('You kill a poisonous snake after it bites you.')
         # Update the consumables.
         self.bullets -= 10
         self.miscellaneous -= 5
