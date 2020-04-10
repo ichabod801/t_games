@@ -591,7 +591,7 @@ class OregonTrail(game.Game):
             self.human.tell(INITIAL_PURCHASES.format(self.starting_money))
             # Purchase steeds.
             query = 'How much would you like to spend on steeds? '
-            self.oxen = self.human.ask_int(query, low = 200, high = 300, default = 0, cmd = False)
+            self.oxen = self.human.ask_int(query, low = 200, high = 300, default = 200, cmd = False)
             self.money -= self.oxen
             modifier = 1
         # Purchase food.
