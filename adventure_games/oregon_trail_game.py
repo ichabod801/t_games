@@ -709,6 +709,8 @@ class OregonTrail(game.Game):
         if not self.bullets:
             self.human.tell('You ran out of bullets and got massacred.')
             self.death = 'an attack by riders'
+        else:
+            self.human.tell('You manage to fight off the outlaws.')
 
     def river_fording(self):
         """Handle the river fording hazard. (None)"""
