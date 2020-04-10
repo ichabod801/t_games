@@ -701,7 +701,7 @@ class OregonTrail(game.Game):
             self.bullets = max(self.bullets - int(speed * 200) - 80, 0)
             self.miscellaneous = max(self.miscellaneous - 15, 0)
             self.rider_combat(speed)
-        # Handle continuing on (running away withotu steed loss).
+        # Handle continuing on (running away without steed loss).
         elif tactics == 'continue':
             self.bullets = max(self.bullets - 150, 0)
             self.miscellaneous = max(self.miscellaneous - 15, 0)
