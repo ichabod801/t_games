@@ -43,7 +43,7 @@ OPTIONS = """
 bot-level= (b=): How good the computer opponent is. Can be easy (e),
     medium (m), or hard (h). The default is medium.
 columns (c): How many columns the board should have (4-35, default 7).
-gonzo: Equivalent to 'columns = 17 rows = 18 pop'.
+gonzo: Equivalent to 'columns = 7 rows = 18 pop'.
 pop (p): Allow pop moves, where you remove a piece of yours that is at the
     bottom of a column.
 rows: (r): How many rows the board should have (4-20, default 6).
