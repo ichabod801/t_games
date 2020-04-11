@@ -551,12 +551,12 @@ class ConnectFour(game.Game):
             if not losses:
                 self.bot_random = True
         # Handle Hunt the Wumpus edge.
-        elif game == 'wumpus':
+        elif game == 'hunt the wumpus':
             if not losses:
                 # Remind the human.
                 self.human.tell(self)
                 # Get the column to reverse.
-                query = 'Which column would you like to reverse? '
+                query = '\nWhich column would you like to reverse? '
                 col = self.human.ask_int(query, low = 1, high = self.board.dimensions[0])
                 # Get the cell contents in reverse.
                 pieces = []
