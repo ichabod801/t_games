@@ -98,7 +98,10 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
         prompt: The information needed from the player. (str)
         """
         if prompt == '\nWhat symbol would you like to use? ':
-            self.symbol = random.choice('@#XO')
+            while True:
+                self.symbol = random.choice('@#XO')
+                if self.symbol not in self.game.symbols:
+                    break
             return self.symbol
         else:
             super(C4BotAlphaBeta, self).ask(prompt)
