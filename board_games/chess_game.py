@@ -528,8 +528,12 @@ class Chess(game.Game):
         # Set up disambiguation.
         if match_type == 11:
             column = ' abcdefgh'.index(groups[1])
+            if self.player_index:
+                column = 9 - column
         if match_type == 13:
             row = 10 - int(groups[2])
+            if self.player_index:
+                row = 1 + int(groups[2])
         # Find valid moves with that end and that piece.
         starts = []
         if self.player_index:
