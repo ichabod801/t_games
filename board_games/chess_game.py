@@ -598,7 +598,7 @@ class Chess(game.Game):
         if self.opening:
             self.position = self.parse_fen(self.opening)
         elif self.fen:
-            self.position = self.parse_fen(self.fen)
+            self.position = self.parse_fen('/'.join(self.fen))
         else:
             self.position = sunfish.Position(sunfish.initial, 0, (True,True), (True,True), 0, 0)
         # Set the position history.
