@@ -398,10 +398,10 @@ class Chess(game.Game):
         match_type = sum(2 ** index for index, group in enumerate(groups) if group is not None)
         # Handle single squares (pawn moves).
         if match_type in (8, 10):
-            return self.parse_pawn(groups, match_type)
+            return self.parse_pawn(text, groups, match_type)
         # Handle moves with a piece provided (standard algebraic).
         elif match_type in (9, 11, 13):
-            return self.parse_piece(groups, match_type)
+            return self.parse_piece(text, groups, match_type)
         # Handle two squares (long algebraic notation).
         elif match_type == 14:
             start = sunfish.parse('{}{}'.format(*groups[1:3]))
@@ -484,11 +484,12 @@ class Chess(game.Game):
         else:
             return (None, 'I do not understand that move.')
 
-    def parse_pawn(self, groups, match_type):
+    def parse_pawn(self, text, groups, match_type):
         """
         Parse a single square algebraic move. (tuple)
 
         Parameters:
+        text: The move as entered by the user. (str)
         groups: The groups from the regex match. (list of tuple)
         match_type: Binary flags for which groups matched. (int)
         """
@@ -508,13 +509,14 @@ class Chess(game.Game):
         elif abs(direction) == 10 and board[end + 2 * direction] in 'pP':
             return (end + 2 * direction, end)
         else:
-            return (None, '{} is not a legal move.'.format(groups[3]))
+            return (None, '{} is not a legal move.'.format(text))
 
-    def parse_piece(self, groups, match_type):
+    def parse_piece(self, text, groups, match_type):
         """
         Parse an algebraic move with a piece indicated. (tuple)
 
         Parameters:
+        text: The move as entered by the user. (str)
         groups: The groups from the regex match. (list of tuple)
         match_type: Binary flags for which groups matched. (int)
         """
