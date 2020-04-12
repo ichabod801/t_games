@@ -459,7 +459,7 @@ class Chess(game.Game):
         """
         text = text.strip() # ?? unneccesary?
         match = self.move_re.match(text)
-        castle = self.castle_re.match(text)
+        castle = self.castle_re.match(text.lower())
         # Check for algebraic moves.
         if match:
             return self.parse_algebraic(text, match)
