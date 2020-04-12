@@ -50,6 +50,9 @@ unicode (uni, u): Show the unicode chess piece characters, if your terminal
     supports them.
 white (w): Play as white. If neither black are or white options are used, the
     color of your pieces is determined randomly.
+
+Note that even with the black or white option, if you choose to play again, the
+players will switch colors.
 """
 
 RULES = """
