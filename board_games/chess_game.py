@@ -147,6 +147,7 @@ class Chess(game.Game):
     aliases = {'m': 'move'}
     castle_re = re.compile('o-o(-o)?')
     categories = ['Board Games']
+    credits = CREDITS
     move_re = re.compile('([BNRQK])?([a-h])?([1-8])?[ -x/]?([a-h][1-8])')
     name = 'Chess'
     num_options = 3
@@ -163,6 +164,7 @@ class Chess(game.Game):
         'sicilian': 'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/RNBQKBNR|w|KQkq|-|0|2',
         'mate-test': '8/5K1k/8/6Q1/8/8/8/8|w|-|-|0|81'}
     options = OPTIONS
+    rules = RULES
     unicode_pieces = {'R':'♜', 'N':'♞', 'B':'♝', 'Q':'♛', 'K':'♚', 'P':'♟',
         'r':'♖', 'n':'♘', 'b':'♗', 'q':'♕', 'k':'♔', 'p':'♙', '.':'·'}
 
