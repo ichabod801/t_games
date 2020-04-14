@@ -542,6 +542,8 @@ class PrisonersDilemma(game.Game):
                     if move in ('cooperate', 'defect'):
                         break
                     else:
+                        self.current_player = player
+                        self.player_index = self.players.index(player)
                         self.handle_cmd(move)
                 moves.append(move)
             # Get the scoring results.
