@@ -408,7 +408,9 @@ class PavlovBot(PrisonerMethodBot):
             # Switch the move on a bad result.
             last_move = (self.history['Me vs. {}'.format(foe_name)][-1], self.history[foe_name][-1])
             if last_move in (('cooperate', 'defect'), ('defect', 'defect')):
-                self.next_move = 'cooperate' if self.next_move == 'defect' else 'defect'
+                self.next_move = 'cooperate' if last_move[0] == 'defect' else 'defect'
+            else:
+                self.next_move = last_move[0]
         except IndexError:
             # Cooperate initially
             self.next_move = 'cooperate'
