@@ -13,11 +13,13 @@ RULES: The rules for Prisoner's Dilemma.
 
 Classes:
 PrisonerBot: A bot template for the Iterated Prisoner's Dilemma. (player.Bot)
+FairButFirmBot: Retaliate after sucker bet. (PrisonerBot)
+GradualBot: Retailiate n times after the nth retailiation. (PrisonerBot)
+GrimBot: An IPD bot that defects if its foe ever defected. (PrisonerBot)
+MajorityBot: A bot that moves based on majority of foe moves. (PrisonerBot)
+PavlovBot: Repeats the last choice if he got a bad result (PrisonerBot)
 PrisonerNumBot: An IPD bot set on simple parameters. (PrisonerBot)
-RemorsefulBot: An IPD bot that regrets provoking it's foe. (PrisonerNumBot)
-PrisonerMethodBot: An IPD Bot based on overriding methods. (PrisonerBot)
-GradualBot: Retailiate n times after the nth retailiation. (PrisonerMethodBot)
-PavlovBot: Repeats the last choice if he got a bad result (PrisonerMethodBot)
+ProbeBot: An IPD bot that guesses foe's strategy. (PrisonerNumBot)
 PrisonersDilemma: A game of the Interated Prisoner's Dilemma. (game.Game)
 """
 
@@ -179,9 +181,25 @@ class PrisonerBot(player.Bot):
                 self.data[foe_name]['them'].append('defect')
 
 
+class FirmButFairBot(PrisonerBot):
+    """
+    Retaliate after sucker bet. (PrisonerBot)
+
+    Overridden Methods:
+    get_move
+    """
+
+    def get_move(self, foe_name):
+        """Make a move in the game. (str)"""
+        if self.last_pair() == ('cooperate', 'defect'):
+            return 'defect'
+        else:
+            return 'cooperate'
+
+
 class GrimBot(PrisonerBot):
     """
-    An IPD bot that defects if its foe ever defected. (PrisonerNumBot)
+    An IPD bot that defects if its foe ever defected. (PrisonerBot)
 
     The GrimBot adds the grim key to the foe_data, a boolean.
 
@@ -202,22 +220,6 @@ class GrimBot(PrisonerBot):
         for player in self.game.players:
             if player != self:
                 self.data[player]['grim'] = False
-
-
-class FirmButFairBot(PrisonerBot):
-    """
-    Retaliate after sucker bet. (PrisonerBot)
-
-    Overridden Methods:
-    get_move
-    """
-
-    def get_move(self, foe_name):
-        """Make a move in the game. (str)"""
-        if self.last_pair() == ('cooperate', 'defect'):
-            return 'defect'
-        else:
-            return 'cooperate'
 
 
 class GradualBot(PrisonerMethodBot):
@@ -447,8 +449,8 @@ class PrisonersDilemma(game.Game):
     """
 
     aka = ['prdi']
-    bot_classes = {'num-bot': PrisonerNumBot, 'meth-bot': PrisonerMethodBot, 'firm': FirmButFairBot,
-        'gradual': GradualBot, 'majority': MajorityBot, 'pavlov': PavlovBot, 'probe': ProbeBot}
+    bot_classes = {'num-bot': PrisonerNumBot, 'firm': FirmButFairBot, 'gradual': GradualBot,
+        'grim': GrimBot, 'majority': MajorityBot, 'pavlov': PavlovBot, 'probe': ProbeBot}
     categories = ['Other Games', 'Theoretical Games']
     credits = CREDITS
     move_aliases = {'c': 'cooperate', 'd': 'defect'}
@@ -592,7 +594,7 @@ class PrisonersDilemma(game.Game):
         self.option_set.add_option('all-def', ['ad'], action = 'bot', target = 'num-bot',
             value = ([], 0, 0), default = None)
         self.option_set.add_option('gradual', ['gl'], action = 'bot', target = 'gradual', default = None)
-        self.option_set.add_option('grim', ['gm'], action = 'bot', target = 'meth-bot', default = None)
+        self.option_set.add_option('grim', ['gm'], action = 'bot', target = 'grim', default = None)
         self.option_set.add_option('hard-majr', ['hm'], action = 'bot', target = 'majority',
             value = ('defect', 'defect'), default = None)
         self.option_set.add_option('naive-probe', ['np'], action = 'bot', target = 'num-bot',
