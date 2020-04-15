@@ -632,3 +632,4 @@ class PrisonersDilemma(game.Game):
         self.hypno = False
         self.temp_bonus = False
         self.total_turns = self.num_turns + random.randint(0, self.num_extra)
+        random.shuffle(self.players)
