@@ -156,7 +156,7 @@ class PrisonerBot(player.Bot):
 
     def last_pair(self):
         """Return the last moves by this bot and the current foe. (str)"""
-        return self.last_me(), self.last_pair()
+        return self.last_me(), self.last_them()
 
     def last_them(self):
         """Return the last move by the current foe. (str)"""
@@ -222,9 +222,9 @@ class GrimBot(PrisonerBot):
                 self.data[player]['grim'] = False
 
 
-class GradualBot(PrisonerMethodBot):
+class GradualBot(PrisonerBot):
     """
-    Retailiate n times after the nth retailiation. (PrisonerMethodBot)
+    Retailiate n times after the nth retailiation. (PrisonerBot)
 
     It follows retaliation with two cooperates to cool things down.
 
@@ -283,7 +283,7 @@ class MajorityBot(PrisonerBot):
     def get_move(self):
         """Make a move in the game. (str)"""
         count = self.foe_data['them'].count(self.majority)
-        other_count = len(self.history[foe_name]) - count
+        other_count = len(self.foe_data['them']) - count
         if count >= other_count:
             return self.move
         else:
@@ -303,7 +303,7 @@ class PavlovBot(PrisonerBot):
         """Get a move for the bot. (str)"""
         last_pair = self.last_pair()
         if last_pair in (('cooperate', 'defect'), ('defect', 'defect')):
-            return 'cooperate' if last_move[0] == 'defect' else 'defect'
+            return 'cooperate' if last_pair[0] == 'defect' else 'defect'
         elif last_pair[0]:
             return last_pair[0]
         else:
@@ -375,7 +375,7 @@ class PrisonerNumBot(PrisonerBot):
         super(PrisonerNumBot, self).set_up()
         for player in self.game.players:
             if player != self:
-                self.data[player].update({'current_tits': [], 'tats': self.tats[:], 'tits': self.tits})
+                self.data[player].update({'current_tits': [], 'tats': self.tats, 'tits': self.tits[:]})
                 self.data[player]['prob_nice'] = self.prob_nice
 
 
