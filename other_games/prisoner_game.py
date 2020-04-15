@@ -115,6 +115,9 @@ class PrisonerBot(player.Bot):
 
     Methods:
     get_move: Make a move in the game. (str)
+    last_me: Return the last move by this bot. (str)
+    last_pair: Return the last moves by this bot and the current foe. (str)
+    last_them: Return the last move by the current foe. (str)
 
     Overridden Methods:
     ask
@@ -142,6 +145,24 @@ class PrisonerBot(player.Bot):
         """Make a move in the game. (str)"""
         return random.choice(('cooperate', 'defect'))
 
+    def last_me(self):
+        """Return the last move by this bot. (str)"""
+        try:
+            return self.foe_data['me'][-1]
+        except IndexError:
+            return ''
+
+    def last_pair(self):
+        """Return the last moves by this bot and the current foe. (str)"""
+        return self.last_me(), self.last_pair()
+
+    def last_them(self):
+        """Return the last move by the current foe. (str)"""
+        try:
+            return self.foe_data['them'][-1]
+        except IndexError:
+            return ''
+
     def set_up(self):
         """Set up the bot."""
         self.data = {player: {'me': [], 'them': [], 'name': player.name} for player in self.game.players}
@@ -156,6 +177,77 @@ class PrisonerBot(player.Bot):
                 self.data[foe_name]['them'].append('cooperate')
             else:
                 self.data[foe_name]['them'].append('defect')
+
+
+class GrimBot(PrisonerBot):
+    """
+    An IPD bot that defects if its foe ever defected. (PrisonerNumBot)
+
+    The GrimBot adds the grim key to the foe_data, a boolean.
+
+    Overridden Methods:
+    """
+
+    def get_move(self):
+        """Get the next move. (str)"""
+        self.foe_data['grim'] = self.foe_data['grim'] or self.last_them() == 'defect'
+        if self.foe_data['grim']:
+            return 'defect'
+        else:
+            return 'cooperate'
+
+    def set_up(self):
+        """Set up the bot. (None)"""
+        super(GrimBot, self).set_up()
+        for player in self.game.players:
+            if player != self:
+                self.data[player]['grim'] = False
+
+
+class FirmButFairBot(PrisonerBot):
+    """
+    Retaliate after sucker bet. (PrisonerBot)
+
+    Overridden Methods:
+    get_move
+    """
+
+    def get_move(self, foe_name):
+        """Make a move in the game. (str)"""
+        if self.last_pair() == ('cooperate', 'defect'):
+            return 'defect'
+        else:
+            return 'cooperate'
+
+
+class GradualBot(PrisonerMethodBot):
+    """
+    Retailiate n times after the nth retailiation. (PrisonerMethodBot)
+
+    It follows retaliation with two cooperates to cool things down.
+
+    Overridden Methods:
+    get_move
+    set_up
+    """
+
+    def get_move(self):
+        """Make a move in the game. (str)"""
+        if self.foe_data['tits']:
+            return self.foe_data['tits'].pop()
+        elif self.last_them() == 'defect':
+            self.foe_data['retaliations'] += 1
+            self.foe_data['tits'] = ['c', 'c'] + ['d'] * self.foe_data['retaliations']
+            return self.foe_data['tits'].pop()
+        else:
+            return 'cooperate'
+
+    def set_up(self):
+        """Set up the bot for play. (None)"""
+        super(GradualBot, self).set_up()
+        for player in self.game.players:
+            if player != self:
+                self.data[player].update({'retaliations': 0, 'tits': []})
 
 
 class MajorityBot(PrisonerBot):
@@ -194,6 +286,26 @@ class MajorityBot(PrisonerBot):
             return self.move
         else:
             return self.other
+
+
+class PavlovBot(PrisonerBot):
+    """
+    Repeats the last choice unless he got a bad result (PrisonerBot)
+
+    Overridden Methods:
+    tat
+    tit
+    """
+
+    def get_move(self):
+        """Get a move for the bot. (str)"""
+        last_pair = self.last_pair()
+        if last_pair in (('cooperate', 'defect'), ('defect', 'defect')):
+            return 'cooperate' if last_move[0] == 'defect' else 'defect'
+        elif last_pair[0]:
+            return last_pair[0]
+        else:
+            return 'cooperate'
 
 
 class PrisonerNumBot(PrisonerBot):
@@ -318,152 +430,6 @@ class ProbeBot(PrisonerNumBot):
                     move = 'cooperate'
                     self.foe_data['current_tits'] = ['cooperate']
         return move
-
-
-class PrisonerMethodBot(PrisonerBot):
-    """
-    An IPD Bot based on overriding methods. (PrisonerBot)
-
-    The base bot for this class is the Grim bot, which retaliates forever after any
-    defection.
-
-    If tits and tats can be methods, you can accomodate a lot of strategies. So one
-    that is integer based, and one that is method based with subclasses.
-
-    PrisonerMethodBot adds the 'prob_nice' key to the foe_data dictionary, which is
-    a float.
-
-    Methods:
-    tat: Decide whether or not to retailiate. (bool)
-    tit: Decide how to retailiate. (str)
-
-    Overridden Methods:
-    ask
-    get_move
-    set_up
-    tell
-    """
-
-    def __init__(self, prob_nice = 1, taken_names = [], initial = ''):
-        """
-        Set up the strategy for the bot.
-
-        Parameters:
-        taken_names: Names already used by a player. (list of str)
-        initial: The first letter of the bot's name. (str)
-        tits: How many times the bot retaliates. (int)
-        tats: How many defects it takes for the bot to retaliate. (int)
-        prob_nice: If not retaliating, how like the bot is to cooperate. (float)
-        """
-        super(PrisonerMethodBot, self).__init__(taken_names, initial)
-        self.prob_nice = prob_nice
-
-    def get_move(self, foe_name):
-        """
-        Make a move in the game. (str)
-
-        Parameters:
-        foe_name: The name of the player to make a move against.
-        """
-        if self.tat():
-            return self.tit()
-        elif random.random() < self.foe_data['prob_nice']:
-            return 'cooperate'
-        else:
-            return 'defect'
-
-    def tat(self, foe_name):
-        """Decide whether or not to retailiate. (bool)"""
-        return 'defect' in self.foe_data['them']
-
-    def tit(self):
-        """Decide how to retailiate. (str)"""
-        return 'defect'
-
-    def set_up(self):
-        """Set up the bot. (None)"""
-        super(PrisonerMethodBot, self).set_up()
-        for player in self.game.players:
-            if player != self:
-                self.data[player]['prob_nice'] = self.prob_nice
-
-
-class FirmButFairBot(PrisonerMethodBot):
-    """
-    Retaliate after sucker bet. (PrisonerMethodBot)
-
-    Overridden Methods:
-    tat
-    """
-
-    def tat(self, foe_name):
-        """Decide whether or not to retailiate. (bool)"""
-        if self.foe_data['me']:
-            last_move = [self.foe_data['me'][-1], self.foe_data['them'][-1]]
-            return last_move == ['cooperate', 'defect']
-        else:
-            return False
-
-
-class GradualBot(PrisonerMethodBot):
-    """
-    Retailiate n times after the nth retailiation. (PrisonerMethodBot)
-
-    It follows retaliation with two cooperates to cool things down.
-
-    Overridden Methods:
-    set_up
-    tat
-    tit
-    """
-
-    def set_up(self):
-        """Set up the bot for play. (None)"""
-        super(GradualBot, self).set_up()
-        for player in self.game.players:
-            if player != self:
-                self.data[player].update({'retaliations': 0, 'tits': []})
-
-    def tat(self, foe_name):
-        """Decide whether or not to retailiate. (bool)"""
-        retaliate = self.foe_data['them'] and self.foe_data['them'][-1] == 'defect'
-        if retaliate and not self.foe_data['tits']:
-            self.foe_data['retaliations'] += 1
-            self.foe_data['tits'] = ['c', 'c'] + ['d'] * self.foe_data['retaliations']
-        return retaliate or self.tits
-
-    def tit(self):
-        """Decide how to retailiate. (str)"""
-        return self.foe_data['tits'].pop()
-
-
-class PavlovBot(PrisonerMethodBot):
-    """
-    Repeats the last choice unless he got a bad result (PrisonerMethodBot)
-
-    Overridden Methods:
-    tat
-    tit
-    """
-
-    def tat(self, foe_name):
-        """Decide whether or not to retailiate. (bool)"""
-        try:
-            # Switch the move on a bad result.
-            last_move = (self.foe_data['me'][-1], self.foe_data['them'][-1])
-            if last_move in (('cooperate', 'defect'), ('defect', 'defect')):
-                self.next_move = 'cooperate' if last_move[0] == 'defect' else 'defect'
-            else:
-                self.next_move = last_move[0]
-        except IndexError:
-            # Cooperate initially
-            self.next_move = 'cooperate'
-        # Always use "retaliate" to get the next move.
-        return True
-
-    def tit(self):
-        """Decide how to retailiate. (str)"""
-        return self.next_move
 
 
 class PrisonersDilemma(game.Game):
