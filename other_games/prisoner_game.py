@@ -100,6 +100,19 @@ class PrisonerBot(player.Bot):
     """
     A bot template for the Iterated Prisoner's Dilemma. (player.Bot)
 
+    The foe_data dictionary has the following keys:
+        * name: The name of the player. (str)
+        * me: A history of the moves made against the foe. (list of str)
+        * them: A corresponding history of moves made by the foe. (list of str)
+
+    Bots may add keys to the foe_data dictionary, and that information will
+    be tracked for that foe. The data dictionary is all of the foe_data
+    dictionaries keyed by player.
+
+    Attributes:
+    data: Data on the opponents the bot is playing against. (dict)
+    foe_data: Data on the opponent is currently making a move against. (dict)
+
     Methods:
     get_move: Make a move in the game. (str)
 
@@ -118,26 +131,21 @@ class PrisonerBot(player.Bot):
         """
         if query.startswith('What is your move'):
             foe_name = query[26:-2]
-            last_move = self.get_move(foe_name)
-            self.history['Me vs. {}'.format(foe_name)].append(last_move)
-            return last_move
+            self.foe_data = self.data[foe_name]
+            move = self.get_move()
+            self.foe_data['me'].append(move)
+            return move
         else:
             player.BotError('Unexpected move asked of {}: {!r}'.format(self.__class__.__name__, query))
 
-    def get_move(self, foe_name):
-        """
-        Make a move in the game. (str)
-
-        Parameters:
-        foe_name: The name of the player to make a move against.
-        """
+    def get_move(self):
+        """Make a move in the game. (str)"""
         return random.choice(('cooperate', 'defect'))
 
     def set_up(self):
         """Set up the bot."""
-        self.history = {player.name: [] for player in self.game.players}
-        self.history.update({'Me vs. {}'.format(player.name): [] for player in self.game.players})
-        del self.history[self.name]
+        self.data = {player: {'me': [], 'them': [], 'name': player.name} for player in self.game.players}
+        del self.data[self]
 
     def tell(self, *args, **kwargs):
         """Give the player some information. (None)"""
@@ -145,14 +153,19 @@ class PrisonerBot(player.Bot):
             middle = args[0].index(' chose to ')
             foe_name = args[0][:middle]
             if 'cooperate' in args[0]:
-                self.history[foe_name].append('cooperate')
+                self.data[foe_name]['them'].append('cooperate')
             else:
-                self.history[foe_name].append('defect')
+                self.data[foe_name]['them'].append('defect')
 
 
 class MajorityBot(PrisonerBot):
     """
     An IPD bot that decides based on majoryities of foe moves. (PrisonerBot)
+
+    Attributes:
+    majority: The majority to check for. (str)
+    move: The move to make on a majority. (str)
+    other: The move to make on a minority. (str)
 
     Overridden Methods:
     get_move
@@ -173,14 +186,9 @@ class MajorityBot(PrisonerBot):
         self.majority = majority
         self.other = 'cooperate' if move == 'defect' else 'defect'
 
-    def get_move(self, foe_name):
-        """
-        Make a move in the game. (str)
-
-        Parameters:
-        foe_name: The name of the player to make a move against.
-        """
-        count = self.history[foe_name].count(self.majority)
+    def get_move(self):
+        """Make a move in the game. (str)"""
+        count = self.foe_data['them'].count(self.majority)
         other_count = len(self.history[foe_name]) - count
         if count >= other_count:
             return self.move
@@ -191,6 +199,17 @@ class MajorityBot(PrisonerBot):
 class PrisonerNumBot(PrisonerBot):
     """
     An IPD bot set on simple parameters. (PrisonerBot)
+
+    PrisonerNumBot adds the following keys to foe_data:
+        * current_tits: The queued responses for the given bot. (list of str)
+        * prob_nice: If not retaliating, how nice to be. (float)
+        * tats: How many defects it takes for the bot to retaliate. (int)
+        * tits: How the bot retaliates. (list of str)
+
+    Attributes
+    prob_nice: If not retaliating, how likely the bot is to cooperate. (float)
+    tats: How many defects it takes for the bot to retaliate. (int)
+    tits: How the bot retaliates. (list of str)
 
     Methods:
     be_nice: Generate a 'nice' move. (str)
@@ -207,9 +226,9 @@ class PrisonerNumBot(PrisonerBot):
         Set up the strategy for the bot. (None)
 
         Parameters:
-        tits: How many times the bot retaliates. (int)
+        tits: How the bot retaliates. (list of str)
         tats: How many defects it takes for the bot to retaliate. (int)
-        prob_nice: If not retaliating, how like the bot is to cooperate. (float)
+        prob_nice: If not retaliating, how likely the bot is to cooperate. (float)
         taken_names: Names already used by a player. (list of str)
         initial: The first letter of the bot's name. (str)
         """
@@ -223,27 +242,41 @@ class PrisonerNumBot(PrisonerBot):
         """Generate a 'nice' move. (str)"""
         return 'cooperate'
 
-    def get_move(self, foe_name):
-        """
-        Make a move in the game. (str)
-
-        Parameters:
-        foe_name: The name of the player to make a move against.
-        """
-        if self.current_tits:
-            return self.current_tits.pop()
-        elif self.tats and self.history[foe_name][-self.tats:] == ['defect'] * self.tats:
-            self.current_tits = self.tits[:]
-            return self.current_tits.pop()
-        elif random.random() < self.prob_nice:
+    def get_move(self):
+        """Make a move in the game. (str)"""
+        current_tits = self.foe_data['current_tits']
+        tats = self.foe_data['tats']
+        if current_tits:
+            return current_tits.pop()
+        elif tats and self.foe_data['them'][-tats:] == ['defect'] * tats:
+            self.foe_data['current_tits'] = self.foe_data['tits'][:]
+            return self.foe_data['current_tits'].pop()
+        elif random.random() < self.foe_data['prob_nice']:
             return self.be_nice()
         else:
             return 'defect'
+
+    def set_up(self):
+        """Set up the bot. (None)"""
+        super(PrisonerNumBot, self).set_up()
+        for player in self.game.players:
+            if player != self:
+                self.data[player].update({'current_tits': [], 'tats': self.tats[:], 'tits': self.tits})
+                self.data[player]['prob_nice'] = self.prob_nice
 
 
 class ProbeBot(PrisonerNumBot):
     """
     An IPD bot that guesses foe's strategy. (PrisonerNumBot)
+
+    Attributes:
+    mask: What the bot is looking for. (list of str)
+    remorse: A flag for regretting random probes. (bool)
+    start: The bot's initial plays, or probe. (list of str)
+
+    Overridden Methods:
+    __init__
+    get_move
     """
 
     def __init__(self, start = ['d', 'c', 'c'], mask = ['dc', 'c', 'c'], prob_nice = 0, remorse = False,
@@ -264,29 +297,26 @@ class ProbeBot(PrisonerNumBot):
         self.mask = mask
         self.remorse = remorse and prob_nice < 1
 
-    def get_move(self, foe_name):
-        """
-        Make a move in the game. (str)
-
-        Parameters:
-        foe_name: The name of the player to make a move against.
-        """
-        responses = len(self.history[foe_name])
+    def get_move(self):
+        """Make a move in the game. (str)"""
+        responses = len(self.foe_data['them'])
+        # Determine the strategy based on the starting moves.
         if responses == len(self.start):
-            check = [move[0] in target for move, target in zip(self.history[foe_name], self.mask)]
+            check = [move[0] in target for move, target in zip(self.foe_data['them'], self.mask)]
             if not all(check):
-                self.tats = 1
-                self.prob_nice = 1
-        if len(self.start) <= responses:
-            move = super(ProbeBot, self).get_move(foe_name)
-            if self.remorse:
-                mine_two_back = self.history['Me vs. {}'.format(foe_name)][-2][0]
-                his_last = self.history[foe_name][-1][0] if self.history[foe_name] else 'x'
-                if mine_two_back == 'd' and his_last == 'd':
-                    move = 'cooperate'
-                    self.current_tits = ['cooperate']
-        else:
+                self.foe_data['tats'] = 1
+                self.foe_data['prob_nice'] = 1
+        # Respond to the current move.
+        if responses < len(self.start):
             move = self.start[responses]
+        else:
+            move = super(ProbeBot, self).get_move()
+            if self.remorse:
+                mine_two_back = self.foe_data['me'][-2][0]
+                their_last = self.foe_data['them'][-1][0] if self.foe_data['them'] else 'x'
+                if mine_two_back == 'd' and their_last == 'd':
+                    move = 'cooperate'
+                    self.foe_data['current_tits'] = ['cooperate']
         return move
 
 
@@ -298,15 +328,18 @@ class PrisonerMethodBot(PrisonerBot):
     defection.
 
     If tits and tats can be methods, you can accomodate a lot of strategies. So one
-    that is integer based, and one that is method based with subclasses
+    that is integer based, and one that is method based with subclasses.
+
+    PrisonerMethodBot adds the 'prob_nice' key to the foe_data dictionary, which is
+    a float.
 
     Methods:
-    get_move: Make a move in the game. (str)
     tat: Decide whether or not to retailiate. (bool)
     tit: Decide how to retailiate. (str)
 
     Overridden Methods:
     ask
+    get_move
     set_up
     tell
     """
@@ -332,20 +365,27 @@ class PrisonerMethodBot(PrisonerBot):
         Parameters:
         foe_name: The name of the player to make a move against.
         """
-        if self.tat(foe_name):
+        if self.tat():
             return self.tit()
-        elif random.random() < self.prob_nice:
+        elif random.random() < self.foe_data['prob_nice']:
             return 'cooperate'
         else:
             return 'defect'
 
     def tat(self, foe_name):
         """Decide whether or not to retailiate. (bool)"""
-        return 'defect' in self.history[foe_name]
+        return 'defect' in self.foe_data['them']
 
     def tit(self):
         """Decide how to retailiate. (str)"""
         return 'defect'
+
+    def set_up(self):
+        """Set up the bot. (None)"""
+        super(PrisonerMethodBot, self).set_up()
+        for player in self.game.players:
+            if player != self:
+                self.data[player]['prob_nice'] = self.prob_nice
 
 
 class FirmButFairBot(PrisonerMethodBot):
@@ -358,8 +398,11 @@ class FirmButFairBot(PrisonerMethodBot):
 
     def tat(self, foe_name):
         """Decide whether or not to retailiate. (bool)"""
-        last_move = [self.history['Me vs. {}'.format(foe_name)][-1], self.history[foe_name][-1]]
-        return last_move == ['cooperate', 'defect']
+        if self.foe_data['me']:
+            last_move = [self.foe_data['me'][-1], self.foe_data['them'][-1]]
+            return last_move == ['cooperate', 'defect']
+        else:
+            return False
 
 
 class GradualBot(PrisonerMethodBot):
@@ -377,20 +420,21 @@ class GradualBot(PrisonerMethodBot):
     def set_up(self):
         """Set up the bot for play. (None)"""
         super(GradualBot, self).set_up()
-        self.retaliations = 0
-        self.tits = []
+        for player in self.game.players:
+            if player != self:
+                self.data[player].update({'retaliations': 0, 'tits': []})
 
     def tat(self, foe_name):
         """Decide whether or not to retailiate. (bool)"""
-        retaliate = self.history[foe_name] and self.history[foe_name][-1] == 'defect'
-        if retaliate and not self.tits:
-            self.retaliations += 1
-            self.tits = ['c', 'c'] + ['d'] * self.retaliations
+        retaliate = self.foe_data['them'] and self.foe_data['them'][-1] == 'defect'
+        if retaliate and not self.foe_data['tits']:
+            self.foe_data['retaliations'] += 1
+            self.foe_data['tits'] = ['c', 'c'] + ['d'] * self.foe_data['retaliations']
         return retaliate or self.tits
 
     def tit(self):
         """Decide how to retailiate. (str)"""
-        return self.tits.pop()
+        return self.foe_data['tits'].pop()
 
 
 class PavlovBot(PrisonerMethodBot):
@@ -406,7 +450,7 @@ class PavlovBot(PrisonerMethodBot):
         """Decide whether or not to retailiate. (bool)"""
         try:
             # Switch the move on a bad result.
-            last_move = (self.history['Me vs. {}'.format(foe_name)][-1], self.history[foe_name][-1])
+            last_move = (self.foe_data['me'][-1], self.foe_data['them'][-1])
             if last_move in (('cooperate', 'defect'), ('defect', 'defect')):
                 self.next_move = 'cooperate' if last_move[0] == 'defect' else 'defect'
             else:
