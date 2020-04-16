@@ -13,6 +13,7 @@ RULES: The rules for Prisoner's Dilemma.
 
 Classes:
 PrisonerBot: A bot template for the Iterated Prisoner's Dilemma. (player.Bot)
+ChooserBot: Return a random move from the foe's history. (PrisonerBot)
 FairButFirmBot: Retaliate after sucker bet. (PrisonerBot)
 GradualBot: Retailiate n times after the nth retailiation. (PrisonerBot)
 GrimBot: An IPD bot that defects if its foe ever defected. (PrisonerBot)
@@ -54,9 +55,14 @@ gonzo (gz): Equivalent to 'iterations=12 hard-majr grim pavlov prober random
 Bot Options:
 all-co (ac): Add an Always Cooperate bot.
 all-def (ad): Add an Always Defect bot.
+chooser (ch): Returns a random move from its foe's list of moves.
+generous-tft (gt): Tit for Tat, but 9 out ot 10 times cooperates instead of
+    defecting.
 gradual (gl): Tit for Tat, but n tits for nth tat, with cool down.
 grim (gm): Retaliates forever after a single defect.
 hard-majr (hm): Defects on a majority of defects, otherwise cooperates.
+hard-tft (ht): Tit for Tat, but retaliates for any defect in the last three
+    moves.
 naive-prober (np): Add a Naive Prober bot (Tit for Tat with occasional
     defection)
 pavlov (pv): Add a Pavlov bot (changes his move when he scores poorly, keeps it
@@ -68,8 +74,11 @@ prober-2 (p2): Starts with d, c, c. Cooperates forever if foe plays d, c second
 prober-3 (p3): Starts with d, c. Defects forever if foe plays c on the second
     move, otherwise plays Tit for Tat.
 random (rd): Add a Random bot.
+reverse-tft (rt): Tit for Tat, but defects first, then does opposite of foe's
+    last move.
 soft-grudge (sg): Retailiates four times, followed by two cooperations.
 soft-majr (sm): Cooperates on a majority of cooperations, otherwise defects.
+suspicious-tft (st): Tit for Tat, but defects on the first move.
 tit-tat (tt): Add a Tit for Tat bot.
 tit-2tat (t2): Add a Tit for Two Tats bot.
 2tit-tat (2t): Add a Two Tits for Tat bot.
@@ -179,6 +188,22 @@ class PrisonerBot(player.Bot):
                 self.data[foe_name]['them'].append('cooperate')
             else:
                 self.data[foe_name]['them'].append('defect')
+
+
+class ChooserBot(PrisonerBot):
+    """
+    Return a random move from the foe's history. (PrisonerBot)
+
+    Overridden Methods:
+    get_move
+    """
+
+    def get_move(self):
+        """Make a move in the game. (str)"""
+        try:
+            return random.choice(self.foe_data['them'])
+        except IndexError:
+            return random.choice(('cooperate', 'defect'))
 
 
 class FirmButFairBot(PrisonerBot):
@@ -504,7 +529,7 @@ class PrisonersDilemma(game.Game):
     aka = ['prdi']
     bot_classes = {'num-bot': PrisonerNumBot, 'firm': FirmButFairBot, 'gradual': GradualBot,
         'grim': GrimBot, 'majority': MajorityBot, 'pavlov': PavlovBot, 'probe': ProbeBot,
-        'base': PrisonerBot}
+        'base': PrisonerBot, 'chooser': ChooserBot}
     categories = ['Other Games', 'Theoretical Games']
     credits = CREDITS
     move_aliases = {'c': 'cooperate', 'd': 'defect'}
@@ -649,6 +674,7 @@ class PrisonersDilemma(game.Game):
             value = (0, 0, 0, 1, 1, 0, 1), default = None)
         self.option_set.add_option('all-def', ['ad'], action = 'bot', target = 'num-bot',
             value = (1, 0, 0, 1, 0, 1, 0), default = None)
+        self.option_set.add_option('chooser', ['ch'], action = 'bot', target = 'chooser', default = None)
         self.option_set.add_option('gradual', ['gl'], action = 'bot', target = 'gradual', default = None)
         self.option_set.add_option('grim', ['gm'], action = 'bot', target = 'grim', default = None)
         self.option_set.add_option('hard-majr', ['hm'], action = 'bot', target = 'majority',
@@ -671,6 +697,14 @@ class PrisonersDilemma(game.Game):
             value = (1, 0, 2, 2), default = None)
         self.option_set.add_option('2tit-tat', ['2t'], action = 'bot', target = 'num-bot',
             value = (2, 0, 1, 1), default = None)
+        self.option_set.add_option('generous-tft', ['gt'], action = 'bot', target = 'num-bot',
+            value = (1, 0, 1, 1, 1, 0.9), default = None)
+        self.option_set.add_option('suspicious-tft', ['st'], action = 'bot', target = 'num-bot',
+            value = (1, 0, 1, 1, 1, 1, 0), default = None)
+        self.option_set.add_option('hard-tft', ['ht'], action = 'bot', target = 'num-bot',
+            value = (1, 0, 1, 3), default = None)
+        self.option_set.add_option('reverse-tft', ['rt'], action = 'bot', target = 'num-bot',
+            value = (1, 0, 1, 1, 0, 0, 0), default = None)
         # Set the score options.
         self.points = {}
         self.option_set.add_option('sucker', ['s'], int, default = 0, action = 'key=sucker',
