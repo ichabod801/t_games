@@ -35,9 +35,10 @@ from .. import player
 CREDITS = """
 Game Design: Merrill Flood and Melvin Dresher
 Game Programming: Craig "Ichabod" O'Brien
-Bot Design: Robert Axelrod, B. Beaufils, S. Braver, K. Deb, J. Delahaye, James
-    Friedman, J. Komorita, David Kraines, Vivian Kraines, S. Mittal, Mathieu
-    Our, Anatol Rapoport, J. Sheposh
+Bot Design: Robert Axelrod, B. Beaufils, S. Braver, R. Boyd, K. Deb, J.
+    Delahaye, James Friedman, S. Komorita, David Kraines, Vivian Kraines, J. P.
+    Lorberbaum, S. Mittal, J. Nachbar, Mathieu Our, Anatol Rapoport, J.
+    Sheposh, R. Sugden
 """
 
 OPTIONS = """
