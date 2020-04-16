@@ -559,6 +559,8 @@ class PrisonersDilemma(game.Game):
                         self.current_player = player
                         self.player_index = self.players.index(player)
                         self.handle_cmd(move)
+                        if self.force_end:
+                            return False
                 moves.append(move)
             # Get the scoring results.
             if moves == ['cooperate', 'cooperate']:
