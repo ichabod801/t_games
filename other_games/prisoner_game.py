@@ -314,47 +314,94 @@ class PrisonerNumBot(PrisonerBot):
     """
     An IPD bot set on simple parameters. (PrisonerBot)
 
+    Here's how the bot works. With probability {start_nice}, it opens with
+    cooperation. Each turn after that, it checks back {view} enemy moves. If it
+    finds at least {tats} defections, it defects {tits} times and then cooperates
+    {cool} times (with probability {prob_mean}, otherwise it cooperates). If it
+    does not find enough defects, it cooperates with probability {prob_nice},
+    otherwise it defects. The default settings give a standard tit-for-tat bot.
+
     PrisonerNumBot adds the following keys to foe_data:
         * current_tits: The queued responses for the given bot. (list of str)
+        * cool: How long the cool down period is. (int)
         * prob_nice: If not retaliating, how nice to be. (float)
+        * prob_mean: If retaliating, how mean to be. (float)
         * tats: How many defects it takes for the bot to retaliate. (int)
-        * tits: How the bot retaliates. (list of str)
+        * tits: How many times the bot retaliates. (list of str)
+        * view: How far back to check for tats. (int)
+
+    While only currrent_tits is needed for the base class, they are all stored per
+    foe so that they can be adjusted individually by child classes. The actual
+    decisions are made in the be_mean, be_nice, and start methods, also to assist
+    sub-classing.
 
     Attributes
+    cool: How long the cool down period is. (int)
+    prob_mean: If retaliating, how likely the bot is to defect. (float)
     prob_nice: If not retaliating, how likely the bot is to cooperate. (float)
+    start_nice: The probability of the first move being cooperate. (float)
     tats: How many defects it takes for the bot to retaliate. (int)
     tits: How the bot retaliates. (list of str)
+    view: How far back to check for tats. (int)
 
     Methods:
+    be_mean: Generate a retaliatory move. (str)
     be_nice: Generate a 'nice' move. (str)
-    get_move: Make a move in the game. (str)
+    start: Make the first move of the game. (str)
 
     Overridden Methods:
-    ask
+    __init__
+    __repr__
+    get_move
     set_up
-    tell
     """
 
-    def __init__(self, tits = ['d'], tats = 0, prob_nice = 0.5, taken_names = [], initial = ''):
+    def __init__(self, tits = 1, cool = 0, tats = 1, view = 1, prob_nice = 1, prob_mean = 1,
+        start_nice = 1, taken_names = [], initial = ''):
         """
         Set up the strategy for the bot. (None)
 
         Parameters:
-        tits: How the bot retaliates. (list of str)
+        tits: How many times the bot retaliates. (int)
+        cool: How long the cool down period is. (int)
         tats: How many defects it takes for the bot to retaliate. (int)
+        view: How far back to check for tats. (int)
         prob_nice: If not retaliating, how likely the bot is to cooperate. (float)
+        prob_mean: If retaliating, how likely the bot is to defect. (float)
+        start_nice: The probability of the first move being cooperate. (float)
         taken_names: Names already used by a player. (list of str)
         initial: The first letter of the bot's name. (str)
         """
         super(PrisonerNumBot, self).__init__(taken_names, initial)
         self.tits = tits
+        self.cool = cool
         self.tats = tats
+        self.view = view
         self.prob_nice = prob_nice
-        self.current_tits = []
+        self.prob_mean = prob_mean
+        self.start_nice = start_nice
+
+    def __repr__(self):
+        """Generate a debugging text representation. (str)"""
+        fields = (self.__class__.__name__, self.name, self.tits, self.cool, self.tats, self.view,
+            self.prob_nice, self.prob_mean, self.start_nice)
+        return '<{} {} {} {} {} {} {:.2f} {:.2f} {:.2f}>'.format(*fields)
+
+    def be_mean(self):
+        """Generate a retaliatory move. (str)"""
+        if random.random() < self.foe_data['prob_mean']:
+            self.foe_data['current_tits'] = ['cooperate'] * self.foe_data['cool']
+            self.foe_data['current_tits'] += ['defect'] * self.foe_data['tits']
+            if self.foe_data['current_tits']:
+                return self.foe_data['current_tits'].pop()
+            else:
+                return 'defect'
+        else:
+            return 'cooperate'
 
     def be_nice(self):
         """Generate a 'nice' move. (str)"""
-        return 'cooperate'
+        return 'cooperate' if random.random() < self.foe_data['prob_nice'] else 'defect'
 
     def get_move(self):
         """Make a move in the game. (str)"""
@@ -362,21 +409,26 @@ class PrisonerNumBot(PrisonerBot):
         tats = self.foe_data['tats']
         if current_tits:
             return current_tits.pop()
-        elif tats and self.foe_data['them'][-tats:] == ['defect'] * tats:
-            self.foe_data['current_tits'] = self.foe_data['tits'][:]
-            return self.foe_data['current_tits'].pop()
-        elif random.random() < self.foe_data['prob_nice']:
-            return self.be_nice()
+        elif not self.foe_data['them']:
+            return self.start()
+        elif self.foe_data['them'][-self.foe_data['view']:].count('defect') >= tats:
+            return self.be_mean()
         else:
-            return 'defect'
+            return self.be_nice()
 
     def set_up(self):
         """Set up the bot. (None)"""
         super(PrisonerNumBot, self).set_up()
         for player in self.game.players:
             if player != self:
-                self.data[player].update({'current_tits': [], 'tats': self.tats, 'tits': self.tits[:]})
-                self.data[player]['prob_nice'] = self.prob_nice
+                self.data[player].update({'current_tits': [], 'tats': self.tats, 'tits': self.tits})
+                self.data[player].update({'cool': self.cool, 'view': self.view})
+                self.data[player].update({'prob_mean': self.prob_mean, 'prob_nice': self.prob_nice})
+                self.data[player]['start_nice'] = self.start_nice
+
+    def start(self):
+        """Make the first move of the game. (str)"""
+        return 'cooperate' if random.random() < self.foe_data['start_nice'] else 'defect'
 
 
 class ProbeBot(PrisonerNumBot):
@@ -385,7 +437,7 @@ class ProbeBot(PrisonerNumBot):
 
     Attributes:
     mask: What the bot is looking for. (list of str)
-    remorse: A flag for regretting random probes. (bool)
+    remorse: A flag for regretting defects. (bool)
     start: The bot's initial plays, or probe. (list of str)
 
     Overridden Methods:
@@ -393,7 +445,7 @@ class ProbeBot(PrisonerNumBot):
     get_move
     """
 
-    def __init__(self, start = ['d', 'c', 'c'], mask = ['dc', 'c', 'c'], prob_nice = 0, remorse = False,
+    def __init__(self, start = ['d', 'c', 'c'], mask = ['dc', 'c', 'c'], prob_mean = 1, remorse = False,
         taken_names = [], initial = ''):
         """
         Set up the strategy for the bot. (None)
@@ -401,25 +453,26 @@ class ProbeBot(PrisonerNumBot):
         Parameters:
         start: The bot's initial plays, or probe. (list of str)
         mask: What the bot is looking for. (list of str)
-        prob_nice: If not retaliating, how like the bot is to cooperate. (float)
-        remorse: A flag for regretting random probes. (bool)
+        prob_mean: If the mask matches, how likely the bot is to defect. (float)
+        remorse: A flag for regretting defects. (bool)
         taken_names: Names already used by a player. (list of str)
         initial: The first letter of the bot's name. (str)
         """
-        super(ProbeBot, self).__init__(prob_nice = prob_nice, taken_names = taken_names, initial = initial)
+        super(ProbeBot, self).__init__(tats = 0, prob_mean = prob_mean, taken_names = taken_names,
+            initial = initial)
         self.start = start
         self.mask = mask
-        self.remorse = remorse and prob_nice < 1
+        self.remorse = remorse and prob_mean > 0
 
     def get_move(self):
         """Make a move in the game. (str)"""
         responses = len(self.foe_data['them'])
-        # Determine the strategy based on the starting moves.
+        # Switch to TFT if the enemy moves match the mask.
         if responses == len(self.start):
             check = [move[0] in target for move, target in zip(self.foe_data['them'], self.mask)]
             if not all(check):
                 self.foe_data['tats'] = 1
-                self.foe_data['prob_nice'] = 1
+                self.foe_data['prob_mean'] = 1
         # Respond to the current move.
         if responses < len(self.start):
             move = self.start[responses]
@@ -450,7 +503,8 @@ class PrisonersDilemma(game.Game):
 
     aka = ['prdi']
     bot_classes = {'num-bot': PrisonerNumBot, 'firm': FirmButFairBot, 'gradual': GradualBot,
-        'grim': GrimBot, 'majority': MajorityBot, 'pavlov': PavlovBot, 'probe': ProbeBot}
+        'grim': GrimBot, 'majority': MajorityBot, 'pavlov': PavlovBot, 'probe': ProbeBot,
+        'base': PrisonerBot}
     categories = ['Other Games', 'Theoretical Games']
     credits = CREDITS
     move_aliases = {'c': 'cooperate', 'd': 'defect'}
@@ -592,32 +646,31 @@ class PrisonersDilemma(game.Game):
         """Set the possible game options. (None)"""
         # Set the bot options.
         self.option_set.add_option('all-co', ['ac'], action = 'bot', target = 'num-bot',
-            value = ([], 0, 1), default = None)
+            value = (0, 0, 0, 1, 1, 0, 1), default = None)
         self.option_set.add_option('all-def', ['ad'], action = 'bot', target = 'num-bot',
-            value = ([], 0, 0), default = None)
+            value = (1, 0, 0, 1, 0, 1, 0), default = None)
         self.option_set.add_option('gradual', ['gl'], action = 'bot', target = 'gradual', default = None)
         self.option_set.add_option('grim', ['gm'], action = 'bot', target = 'grim', default = None)
         self.option_set.add_option('hard-majr', ['hm'], action = 'bot', target = 'majority',
             value = ('defect', 'defect'), default = None)
         self.option_set.add_option('naive-probe', ['np'], action = 'bot', target = 'num-bot',
-            value = (['d'], 1, 0.90), default = None)
+            value = (1, 0, 1, 1, 0.90), default = None)
         self.option_set.add_option('pavlov', ['pv'], action = 'bot', target = 'pavlov', default = None)
         self.option_set.add_option('prober', ['pb'], action = 'bot', target = 'probe',
             value = True, default = None)
         self.option_set.add_option('prober-2', ['p2'], action = 'bot', target = 'probe',
-            value = (['d', 'c', 'c'], ['dc', 'd', 'c'], 1), default = None)
+            value = (['d', 'c', 'c'], ['dc', 'd', 'c'], 0), default = None)
         self.option_set.add_option('prober-3', ['p3'], action = 'bot', target = 'probe',
             value = (['d', 'c'], ['dc', 'c']), default = None)
-        self.option_set.add_option('random', ['rd'], action = 'bot', target = 'num-bot', default = None)
+        self.option_set.add_option('random', ['rd'], action = 'bot', target = 'base', default = None)
         self.option_set.add_option('soft-grudge', ['sg'], action = 'bot', target = 'num-bot',
-            value = (['c', 'c', 'd', 'd', 'd', 'd'], 1, 1), default = None)
+            value = (4, 2), default = None)
         self.option_set.add_option('soft-majr', ['sm'], action = 'bot', target = 'majority', default = None)
-        self.option_set.add_option('tit-tat', ['tt'], action = 'bot', target = 'num-bot',
-            value = (['d'], 1, 1), default = None)
+        self.option_set.add_option('tit-tat', ['tt'], action = 'bot', target = 'num-bot', default = None)
         self.option_set.add_option('tit-2tat', ['t2'], action = 'bot', target = 'num-bot',
-            value = (['d'], 2, 1), default = None)
+            value = (1, 0, 2, 2), default = None)
         self.option_set.add_option('2tit-tat', ['2t'], action = 'bot', target = 'num-bot',
-            value = (['d', 'd'], 1, 1), default = None)
+            value = (2, 0, 1, 1), default = None)
         # Set the score options.
         self.points = {}
         self.option_set.add_option('sucker', ['s'], int, default = 0, action = 'key=sucker',
