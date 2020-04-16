@@ -25,6 +25,8 @@ PrisonersDilemma: A game of the Interated Prisoner's Dilemma. (game.Game)
 """
 
 
+from __future__ import division
+
 import itertools
 import random
 
@@ -36,9 +38,9 @@ CREDITS = """
 Game Design: Merrill Flood and Melvin Dresher
 Game Programming: Craig "Ichabod" O'Brien
 Bot Design: Robert Axelrod, B. Beaufils, S. Braver, R. Boyd, K. Deb, J.
-    Delahaye, James Friedman, S. Komorita, David Kraines, Vivian Kraines, J. P.
-    Lorberbaum, S. Mittal, J. Nachbar, Mathieu Our, Anatol Rapoport, J.
-    Sheposh, R. Sugden
+    Delahaye, James Friedman, S. Komorita, David Kraines, Vivian Kraines, J.
+    Li, J. P. Lorberbaum, S. Mittal, J. Nachbar, Mathieu Our, Anatol Rapoport,
+    J. Sheposh, R. Sugden
 """
 
 OPTIONS = """
@@ -54,6 +56,8 @@ gonzo (gz): Equivalent to 'iterations=12 hard-majr grim pavlov prober random
     soft-majr tit-tat tit-2tat 2tit-tat'.
 
 Bot Options:
+adapt (ap): Tests some cooperates and defects, then plays whatever is scoring
+    the best.
 all-co (ac): Add an Always Cooperate bot.
 all-def (ad): Add an Always Defect bot.
 chooser (ch): Returns a random move from its foe's list of moves.
@@ -189,6 +193,55 @@ class PrisonerBot(player.Bot):
                 self.data[foe_name]['them'].append('cooperate')
             else:
                 self.data[foe_name]['them'].append('defect')
+
+
+class AdaptiveBot(PrisonerBot):
+    """
+    Keep track of the score, and play what's working best. (PrisonerBot)
+
+    The AdaptiveBot adds two keys to the foe_data dictionary:
+        * c_scores: The scores achieved with cooperate (list of int)
+        * d_scores: The scores achieved with defect (list of int)
+
+    Overridden Methods:
+    get_move
+    set_up
+    """
+
+    def get_move(self):
+        """Make a move in the game. (str)"""
+        # Score the last move. !! refactor this for all bots, and make it a dict call.
+        moves = len(self.foe_data['them'])
+        if moves:
+            me, them = self.last_pair()
+            c_scores = self.foe_data['c_scores']
+            d_scores = self.foe_data['d_scores']
+            if me == 'cooperate':
+                if them == 'cooperate':
+                    c_scores.append(self.game.points['reward'])
+                else:
+                    c_scores.append(self.game.points['sucker'])
+            else:
+                if them == 'cooperate':
+                    d_scores.append(self.game.points['temptation'])
+                else:
+                    d_scores.append(self.game.points['punishment'])
+        # Determine the current move.
+        if moves < len(self.start):
+            return self.start[moves]
+        elif sum(c_scores) / len(c_scores) > sum(d_scores) / len(d_scores):
+            return 'cooperate'
+        else:
+            return 'defect'
+
+    def set_up(self):
+        """Set up the bot."""
+        super(AdaptiveBot, self).set_up()
+        test_len = min(max(self.game.num_turns // 20, 1), 5)
+        self.start = ['cooperate'] * test_len + ['defect'] * test_len
+        for data in self.data.values():
+            data['c_scores'] = []
+            data['d_scores'] = []
 
 
 class ChooserBot(PrisonerBot):
@@ -530,7 +583,7 @@ class PrisonersDilemma(game.Game):
     aka = ['prdi']
     bot_classes = {'num-bot': PrisonerNumBot, 'firm': FirmButFairBot, 'gradual': GradualBot,
         'grim': GrimBot, 'majority': MajorityBot, 'pavlov': PavlovBot, 'probe': ProbeBot,
-        'base': PrisonerBot, 'chooser': ChooserBot}
+        'adapt': AdaptiveBot, 'base': PrisonerBot, 'chooser': ChooserBot}
     categories = ['Other Games', 'Theoretical Games']
     credits = CREDITS
     move_aliases = {'c': 'cooperate', 'd': 'defect'}
@@ -671,6 +724,7 @@ class PrisonersDilemma(game.Game):
     def set_options(self):
         """Set the possible game options. (None)"""
         # Set the bot options.
+        self.option_set.add_option('adapt', ['dp'], action = 'bot', target = 'adapt', default = None)
         self.option_set.add_option('all-co', ['ac'], action = 'bot', target = 'num-bot',
             value = (0, 0, 0, 1, 1, 0, 1), default = None)
         self.option_set.add_option('all-def', ['ad'], action = 'bot', target = 'num-bot',
