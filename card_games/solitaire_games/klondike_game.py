@@ -290,6 +290,7 @@ class Klondike(solitaire.Solitaire):
                 card = down[card_index]
                 # Reveal the card.
                 self.human.tell('\nThe card you chose is the {}.'.format(card.name))
+                card = None
         # Hangman lets you move one jack to the top of the waste.
         elif game == 'hangman':
             if not losses:
