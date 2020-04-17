@@ -93,7 +93,7 @@ class Klonbot(player.Bot):
     tell
     """
 
-    def __init__(self, start = 1, end = 10):
+    def __init__(self, start = 1, end = 10, taken_names = []):
         """
         Set up the bot. (None)
 
@@ -102,8 +102,9 @@ class Klonbot(player.Bot):
         Parameters:
         start: The first deal number to play. (int)
         end: The last deal number to play. (int)
+        taken_names: The names already in use. (list of str)
         """
-        super(Klonbot, self).__init__()
+        super(Klonbot, self).__init__(taken_names = taken_names)
         # Set up tracking variables
         self.turn_count = 0
         self.made_moves = set()
