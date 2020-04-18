@@ -132,7 +132,7 @@ class Slider(game.Game):
         """
         Move the tile to the east of the blank spot. (e)
         """
-        self.direction_move((0, 1), 'east', argument)
+        self.direction_move((1, 0), 'east', argument)
 
     def do_gipf(self, arguments):
         """
@@ -237,19 +237,19 @@ class Slider(game.Game):
         """
         Move the tile to the north of the blank spot. (n)
         """
-        self.direction_move((-1, 0), 'north', argument)
+        self.direction_move((0, -1), 'north', argument)
 
     def do_south(self, argument):
         """
         Move the tile to the south of the blank spot. (s)
         """
-        self.direction_move((1, 0), 'south', argument)
+        self.direction_move((0, 1), 'south', argument)
 
     def do_west(self, argument):
         """
         Move the tile to the west of the blank spot. (w)
         """
-        self.direction_move((0, -1), 'west', argument)
+        self.direction_move((-1, 0), 'west', argument)
 
     def game_over(self):
         """Determine if the puzzle is solved. (None)"""
