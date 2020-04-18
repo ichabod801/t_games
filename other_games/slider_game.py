@@ -324,7 +324,7 @@ class Slider(game.Game):
             question = 'How many columns and rows should the board have (return to ignore)? ')
         self.option_set.add_option('text', ['t'], default = '',
             question = 'What text should the solution be (return for numbers + letters)? ')
-        self.option_set.add_option('shuffles', ['sh'], default = 3, check = lambda x: x > 0,
+        self.option_set.add_option('shuffles', ['sh'], int, default = 3, check = lambda x: x > 0,
             question = 'How many times should the puzzle be shuffled (return for 3)? ')
         self.option_set.add_group('gonzo', ['gz'], 'columns=7 rows=8')
 
