@@ -31,12 +31,13 @@ Game Programming: Craig "Ichabod" O'Brien
 """
 
 OPTIONS = """
-columns= (c=): The number of columns in the puzzle.
+columns= (c=): The number of columns in the puzzle (defaults to 4).
 gonzo (gz): Equivalent to 'columns=7 rows=8'.
-rows= (r=): The number of rows in the puzzle.
+rows= (r=): The number of rows in the puzzle (defaults to 4).
 size= (s=): The number of columns and rows in the table.
-shuffle= (sh=): The number of times to shuffle the solved puzzle before play.
-text= (t=): The text to use in the puzzle.
+shuffles= (sh=): The number of times to shuffle the solved puzzle before play
+    (defaults to 3).
+text= (t=): The text to use in the puzzle (defaults to 1-9A-Za-z).
 """
 
 RULES = """
@@ -320,7 +321,7 @@ class Slider(game.Game):
         self.option_set.add_option('rows', ['r'], int, 4, check = lambda x: x > 0,
             question = 'How many columns should the board have (return for 4)? ')
         self.option_set.add_option('size', ['s'], int, 0, check = lambda x: x > 0,
-            question = 'How many columns and rows should the board have (return for 4)? ')
+            question = 'How many columns and rows should the board have (return to ignore)? ')
         self.option_set.add_option('text', ['t'], default = '',
             question = 'What text should the solution be (return for numbers + letters)? ')
         self.option_set.add_option('shuffles', ['sh'], default = 3, check = lambda x: x > 0,
