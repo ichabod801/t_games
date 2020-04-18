@@ -286,6 +286,10 @@ class Slider(game.Game):
         elif len(self.text) > text_len:
             self.human.error('Puzzle text truncated because it is too long.')
         self.text = (self.text + self.tiles)[:text_len]
+        if len(self.text) < text_len:
+            self.option_set.errors.append('Puzzle text is too short. Puzzle size shrunk to max square.')
+            self.columns = int(len(self.text) ** 0.5)
+            self.rows = self.columns
 
     def place_text(self):
         """Put the text into the puzzle. (None)"""
