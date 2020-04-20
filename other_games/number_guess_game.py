@@ -222,13 +222,15 @@ class NumberGuess(game.Game):
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('canfield', 'ninety-nine'))
-        # Winning Snakes and Ladders gets you a free spin.
+        # Winning Canfield gets you a free guess.
         if game == 'canfield':
             if not losses:
                 self.guesses -= 1
+        # Winning 99 gets you the secret number mod 9.
         elif game == 'ninety-nine':
             if not losses:
                 self.human.tell('\nThe secret number modulo 9 is {}.'.format(self.number % 9))
+        # Otherwise I'm confused.
         else:
             self.human.tell("\nGipf is inside the innermost possible secret number.")
         return True
