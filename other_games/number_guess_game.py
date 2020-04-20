@@ -149,7 +149,7 @@ class GuessBotter(GuessBot):
         """
         # Start in the middle, with fudging to avoid predictability.
         width = high - low + 1
-        start = width // 2 + random.choice((-1, 0, 1))
+        start = width // 2 + random.choice((-1, 0, 1)) + low
         base = [low, start, high]
         # Run a binary search from there.
         while len(base) < width:
