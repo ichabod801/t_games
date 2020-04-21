@@ -109,7 +109,8 @@ class Canfield(solitaire.Solitaire):
                 self.pair_checkers = []
                 go = True
                 while go:
-                    cards = self.human.ask('Enter a jack and anything to build it on: ')
+                    self.human.tell(self)
+                    cards = self.human.ask('\nEnter a jack and anything to build it on: ')
                     if cards.strip().upper()[0] != 'J':
                         self.human.error('The first card must be a jack.')
                         continue
