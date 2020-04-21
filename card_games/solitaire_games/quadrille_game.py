@@ -18,6 +18,7 @@ Quadrille: A game of Quadrille. (solitaire.Solitaire)
 
 import time
 
+from ... import cards
 from . import solitaire_game as solitaire
 
 
@@ -200,7 +201,7 @@ class Quadrille(solitaire.Solitaire):
     def set_options(self):
         """Set the available game options."""
         self.options = {'num-foundations': 8, 'num-reserve': 4, 'turn-count': 1, 'max-passes': 3,
-            'wrap-ranks': True}
+            'deck-specs': (0, cards.STANDARD_WRAP_RANKS)}
         self.option_set.add_option('cells', ['c'], action = 'key=num-cells', converter = int,
             default = 0, valid = range(1, 5), target = self.options,
             question = 'How many free cells (1-4, return for 4)? ')
