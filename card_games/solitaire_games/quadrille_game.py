@@ -113,14 +113,17 @@ class Quadrille(solitaire.Solitaire):
     def do_gipf(self, arguments):
         """
         Yacht gives you an extra pass through the deck.
+
+        Hearts forces the next high and low hearts to the foundation.
         """
         # Run the edge, if possible.
-        game, losses = self.gipf_check(arguments, ('yacht',))
+        game, losses = self.gipf_check(arguments, ('yacht', 'hearts'))
         # Winning Yacht gives you an extra pass through the deck.
         if game == 'yacht':
             if not losses:
                 self.max_passes += 1
                 self.human.tell('\nYou have gained an extra pass through the deck.')
+        # Winning Hearts forces the next high and low hearts to the foundation.
         elif game == 'hearts':
             if not losses:
                 bottom_heart = self.foundations[2][-1]
