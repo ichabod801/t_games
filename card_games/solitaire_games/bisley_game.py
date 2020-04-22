@@ -25,6 +25,11 @@ Game Design: Traditional
 Game Programming: Craig "Ichabod" O'Brien
 """
 
+OPTIONS = """
+gonzo (gz): equivalent to reserved.
+reserved (r): One pile is used as a reserve pile.
+"""
+
 RULES = """
 Four aces are dealt as four of the eight foundations. Thirteen columns of
 cards are dealt as the tableau: four columns of three cards under the ace
@@ -57,6 +62,7 @@ class Bisley(solitaire.Solitaire):
     credits = CREDITS
     name = 'Bisley'
     num_options = 1
+    options = OPTIONS
     rules = RULES
 
     def __str__(self):
