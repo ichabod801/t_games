@@ -72,7 +72,9 @@ class MonteCarlo(solitaire.Solitaire):
 
     def do_gipf(self, arguments):
         """
-        Quadrille allows you to match non-adjacent cards. Craps randomizes the tableau.
+        Quadrille allows you to match non-adjacent cards.
+
+        Craps randomizes the tableau.
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('quadrille', 'craps'))
