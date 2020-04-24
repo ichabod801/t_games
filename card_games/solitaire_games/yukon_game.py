@@ -139,7 +139,7 @@ class Yukon(solitaire.Solitaire):
         self.options = {}
         # Set the deal options.
         self.option_set.add_option('piles', ['p'], action = 'key=num-tableau', target = self.options,
-            default = 7, converter = int, question = 'How many tableau piles should their be?')
+            default = 7, converter = int, question = 'How many tableau piles should their be? ')
         self.option_set.add_option('suits', ['s', 'russian'],
             question = 'Should building be done by suits instead of alternating colors? bool')
         # Set the option groups.
