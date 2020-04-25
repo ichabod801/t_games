@@ -74,7 +74,7 @@ class Gargantua(solitaire.MultiSolitaire):
                 for card in self.deck.in_play:
                     if card.rank == 'A':
                         card.up = True
-        if game == 'calvin cards':
+        elif game == 'calvin cards':
             if not losses:
                 self.max_passes += 1
         # Otherwise I'm confused.
