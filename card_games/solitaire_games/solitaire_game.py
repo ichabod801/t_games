@@ -1367,12 +1367,11 @@ class MultiSolitaire(Solitaire):
                         # Check laning the card.
                         elif self.lane_check(card, moving_stack, False):
                             moves.append('lane {:u}'.format(card))
-            if moves:
-                break
         # Make a move if you have one.
         if moves:
-            moves.reverse()
-            return self.handle_cmd(moves.pop())
+            # Sort moves in priority order
+            moves.sort(key = lambda move: 'sbmfl'.index(move[0]))
+            return self.handle_cmd(moves[0])
         # If no moves were found, errror out.
         elif cards:
             self.human.error('\nThere is no valid move for {:a}.'.format(card))
