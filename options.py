@@ -290,8 +290,11 @@ class OptionSet(object):
         while True:
             raw_setting = self.game.human.ask(definition['question'])
             if not raw_setting:
-                setting = definition['default']
-                break
+                if definition['default'] is None:
+                    return []
+                else:
+                    setting = definition['default']
+                    break
             setting = self.validate_setting(definition, raw_setting)
             if setting is None:
                 self.game.human.error('That input is not valid.')
