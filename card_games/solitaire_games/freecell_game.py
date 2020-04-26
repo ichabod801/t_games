@@ -151,9 +151,11 @@ class FreeCell(solitaire.Solitaire):
         # Set the dealers
         max_cards = (52 - self.num_cells) if self.fill_free else 52
         if self.challenge:
-            self.dealers = [solitaire.deal_twos, solitaire.deal_aces, solitaire.deal_n(max_cards - 8)]
+            self.dealers = [solitaire.deal_twos, solitaire.deal_aces]
+            self.dealers.append(solitaire.deal_n(max_cards - 8, up = True, start = 8))
         elif self.egnellahc:
-            self.dealers = [solitaire.deal_aces, solitaire.deal_twos, solitaire.deal_n(max_cards - 8)]
+            self.dealers = [solitaire.deal_aces, solitaire.deal_twos]
+            self.dealers.append(solitaire.deal_n(max_cards - 8, up = True, start = 8))
         else:
             self.dealers = [solitaire.deal_n(max_cards)]
         if self.fill_free:

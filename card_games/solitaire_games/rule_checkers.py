@@ -446,7 +446,7 @@ def deal_klondike(game):
             game.deck.deal(pile, up = card_index == pile_index)
 
 
-def deal_n(n, up = True):
+def deal_n(n, up = True, start = 0):
     """
     Create a dealer that deals n cards onto the tableau. (function)
 
@@ -455,10 +455,11 @@ def deal_n(n, up = True):
     Parameters:
     n: The number of cards to deal to the reserve. (int)
     up: A flag for dealing the cards face up. (str)
+    start: The first pile index to deal to. (int)
     """
     def dealer(game):
         # Deal the cards.
-        for card_index in range(n):
+        for card_index in range(start, n + start):
             game.deck.deal(game.tableau[card_index % len(game.tableau)], up = up)
         # Turn the top cards face up.
         for pile in game.tableau:
