@@ -1457,7 +1457,9 @@ class MultiSolitaire(Solitaire):
         deal_text_index = self.option_set.settings_text.find('deal-num')
         if deal_text_index != -1:
             self.option_set.settings_text = self.option_set.settings_text[:(deal_text_index - 1)]
-        if self.raw_options.lower() != 'none' and not self.silent:
+        low_options = self.raw_options.lower()
+        gonzo = 'gonzo' in low_options or 'gz' in low_options
+        if not gonzo and low_options != 'none' and not self.silent:
             prompt = '\nEnter the deal number, or return for a random deal: '
             deal_num = self.human.ask_int(prompt, low = 0, default = -1, cmd = False)
         if deal_num == -1:
