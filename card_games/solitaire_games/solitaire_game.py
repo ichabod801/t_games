@@ -23,6 +23,7 @@ import random
 from ... import cards
 from ... import game
 from .rule_checkers import *
+from ... import utility
 
 
 HELP_TEXT = """
@@ -269,8 +270,10 @@ class Solitaire(game.Game):
         else:
             self.human.tell('\nYou lost. Better luck next time.')
         # Give a contrats message.
-        message = 'You made {} moves (with {} undos), for a score of {}.'
-        self.human.tell(message.format(self.turns, self.undo_count, self.scores[self.human.name]))
+        message = 'You made {} (with {}), for a score of {}.'
+        move_text = utility.num_text(self.turns, 'move', ':n')
+        undo_text = utility.num_text(self.undo_count, 'undo', ':n')
+        self.human.tell(message.format(move_text, undo_text, self.scores[self.human.name]))
 
     def deal(self):
         """Deal the initial set up for the game. (None)"""
