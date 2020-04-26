@@ -225,7 +225,8 @@ class OptionSet(object):
             setting = self.take_action(definition, definition['value'])
             return [(definition['name'], None)]
         else:
-            setting = self.take_action(definition, definition['default'])
+            if definition['default'] is not None:
+                setting = self.take_action(definition, definition['default'])
             return []
 
     def ask_bot_count(self, definition):
