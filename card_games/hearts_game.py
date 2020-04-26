@@ -861,7 +861,8 @@ class Hearts(game.Game):
                     self.win_loss_draw[2] += 1
                 # Tell the human who won.
                 if score == winning_score:
-                    self.human.tell('{} wins with {} points.'.format(name, score))
+                    point_text = utility.num_text(score, 'point', ':n')
+                    self.human.tell('{} wins with {}.'.format(name, point_text))
             # Set the number turns to the number of tricks.
             self.turns = self.tricks
             return True
