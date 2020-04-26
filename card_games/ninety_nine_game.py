@@ -121,7 +121,7 @@ class NinetyNine(game.Game):
     categories = ['Card Games']
     credits = CREDITS
     name = 'Ninety-Nine'
-    ninety_nine_re = re.compile('([1-9atjqkx][cdhs]).*?(-?\d\d?)', re.I)
+    ninety_nine_re = re.compile('\s*([1-9atjqkx][cdhs])[ \t,/:]*(-?\d\d?)', re.I)
     num_options = 7
     options = OPTIONS
     rules = RULES
