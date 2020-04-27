@@ -272,12 +272,15 @@ class Battleships(game.Game):
         self.human.tell(self.boards[self.human].show())
         # Get the players' moves.
         human_shot = self.human.ask('\nWhere do you want to shoot? ')
-        if not SQUARE_RE.match(human_shot.upper()):
-            self.player_index = 0  # Make sure output goes to the human.
-            return self.handle_cmd(human_shot)
+        if isinstance(human_shot, str):
+            if not SQUARE_RE.match(human_shot.upper()):
+                self.player_index = 0  # Make sure output goes to the human.
+                return self.handle_cmd(human_shot)
+            else:
+                human_shot = human_shot.upper()
         bot_shot = self.bot.ask('\nWhere do you want to shoot? ')
         # Fire the shots.
-        self.boards[self.bot].fire(human_shot.upper(), self.human)
+        self.boards[self.bot].fire(human_shot, self.human)
         self.boards[self.human].fire(bot_shot, self.bot)
 
     def set_options(self):
