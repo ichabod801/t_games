@@ -719,6 +719,7 @@ class SeaBoard(board.DimBoard):
             line = [self.letters[row - 1]]
             for column in range(1, 11):
                 line.append(str(self.cells[(row, column)]))
+            line.append(self.letters[row - 1])
             line_text = ''.join(line)
             if to == 'foe':
                 line_text = line_text.replace('O', '.')
