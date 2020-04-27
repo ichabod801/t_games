@@ -598,6 +598,7 @@ class GameWinsByScoreTest(unittest.TestCase):
         self.game.scores = {player.name: random.randint(25, 75) for player in self.game.players}
         self.game.win_loss_draw = [0, 0, 0]
         self.game.player_index = 0
+        self.game.current_player = self.game.players[0]
         self.game.turns = 0
 
     def testBestScore(self):
