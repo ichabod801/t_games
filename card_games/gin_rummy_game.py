@@ -1408,7 +1408,7 @@ class GinRummy(game.Game):
         try:
             meld.sort(key = lambda card: self.deck.rank_set.index(card[0].upper()))
         except ValueError:
-            print('Meld sort error')
+            #print('Meld sort error')
             return False
         # Check for a set.
         if len(set(card[0].upper() for card in meld)) == 1:
