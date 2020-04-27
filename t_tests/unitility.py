@@ -133,7 +133,7 @@ class AutoBot(player.Bot):
         cmd: A flag for returning commands for processing. (bool)
         """
         reply = self.replies.pop(0).lower()
-        if reply in player.YES:
+        if reply in player.YES or reply in other:
             return True
         elif reply in player.NO:
             return False
@@ -418,6 +418,7 @@ class TestGame(game.Game):
         player: The player whose turn it is. (Player)
         """
         self.move = player.ask('What is your move, {}? '.format(player.name)).lower()
+        print(self.move)
         # Check for continuation.
         if self.move == 'continue':
             return True
