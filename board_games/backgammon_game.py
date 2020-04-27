@@ -690,6 +690,13 @@ class PubEvalBot(BackgammonBot):
                 return '1'
             else:
                 return '0'
+        # Respond to accepting double.
+        if prompt.startswith('\nYour opponent wants to double'):
+            features, points = self.describe_board(self.game.board)
+            if self.eval_board(self.game.board.copy()) < -25:
+                return 'yes'
+            else:
+                return 'no'
         # Handle pauses in game play.
         elif prompt.startswith('Press Enter'):
             return 'Bazinga'
@@ -761,7 +768,7 @@ class PubEvalBot(BackgammonBot):
         # Respond to be able to double.
         if prompt.startswith('\nWould you like to double'):
             features, points = self.describe_board(self.game.board)
-            if self.eval_board(features, 'double') < -25:
+            if self.eval_board(self.game.board.copy()) > 25:
                 return True
             else:
                 return False

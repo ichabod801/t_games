@@ -121,6 +121,25 @@ class AutoBot(player.Bot):
         """
         return self.replies.pop(0)
 
+    def ask_yes_no(self, prompt, yes = (), no = (), other = (), cmd = False):
+        """
+        Get a yes or no answer from the user. (str)
+
+        Parameters:
+        prompt: The question to ask the user. (str)
+        yes: Extra answers accepted as yes. (tuple of str)
+        no: Extra answers accepted as no. (tuple of str)
+        other: Other answers to be returned as strings. (tuple of str)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        reply = self.replies.pop(0).lower()
+        if reply in player.YES:
+            return True
+        elif reply in player.NO:
+            return False
+        else:
+            raise player.BotError('Invalid reply in AutoBot.ask_yes_no: {!r}.'.format(reply))
+
     def clean_up(self):
         """Do any necessary post-game processing. (None)"""
         self.all_done = True
