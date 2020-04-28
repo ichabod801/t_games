@@ -100,7 +100,7 @@ class HumanoidAskCardListTest(unittest.TestCase):
     def testAskCardListLenAnswer(self):
         """Test the answer some cards request with valid lengths."""
         sys.stdin.lines = ['7c', '7c QH 8H js', 'QH 8H js']
-        check = [cards.Card(*pair) for pair in 'QH', '8H', 'JS']
+        check = [cards.Card(*pair) for pair in ('QH', '8H', 'JS')]
         self.assertEqual(check, self.human.ask_card_list('Pick some cards: ', valid_lens = [2, 3]))
 
     def testAskCardListLenErrorInvalid(self):
