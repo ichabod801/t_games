@@ -436,7 +436,7 @@ class CrazyEights(game.Game):
             if self.empty_deck != 'pass':
                 if max(self.scores.values()) < self.goal:
                     self.deal(self.empty_deck == 'reshuffle')
-            return self.empty_deck != 'score'
+            return self.empty_deck != 'score' and not self.draw_one
         else:
             return not self.draw_one
 
@@ -581,7 +581,7 @@ class CrazyEights(game.Game):
         card_text: The card to play. (str)
         """
         # Play the card.
-        hand = self.hands[player.name]
+        hand = self.hands[player]
         hand.discard(card_text)
         # Update the tracking variables.
         self.history.append(self.deck.discards[-1])
@@ -604,7 +604,7 @@ class CrazyEights(game.Game):
             self.suit = ''
         # Handle forced draws.
         if self.draw_rank and self.draw_rank in card_text.upper():
-            self.forced_draw += cards.Card.ranks.index(card_text[0].upper())
+            self.forced_draw += self.deck.rank_set.index(card_text[0].upper())
         # Check for reversing the order of play.
         if card_text[0].upper() == self.reverse_rank:
             self.human.tell('The order of play is reversed.')

@@ -9,7 +9,6 @@ GameOverTest: Tests of Battleships.game_over. (unittest.TestCase)
 SeaBoardAdjTest: Test of adjacent squares on a Battleships' board. (TestCase)
 SeaBoardFireTest: Test of firing on a Battleships' board. (unittest.TestCase)
 SeaBoardMakeShipTest: Test getting ship squares from end points. (TestCase)
-SeaBoardPlaceRandomTest: Test generating a random ship. (unittest.TestCase)
 SeaBoardPlaceShipsTest: Test placing ships on the board. (unittest.TestCase)
 SeaBoardTextTest: Tests of text versions of a Battleships' board. (TestCase)
 """
@@ -128,39 +127,39 @@ class SeaBoardAdjTest(unittest.TestCase):
 
     def testBottom(self):
         """Test adjacent squares of a square on the bottom."""
-        self.assertEqual(['B1', 'A0', 'A2'], self.board.adjacent_squares('A1'))
+        self.assertEqual(((1, 3), (2, 2), (1, 1)), tuple(self.board.adjacent_squares('A1')))
 
     def testBottomLeft(self):
         """Test adjacent squares of a square on the bottom left."""
-        self.assertEqual(['B0', 'A1'], self.board.adjacent_squares('A0'))
+        self.assertEqual(((1, 2), (2, 1)), tuple(self.board.adjacent_squares('A0')))
 
     def testLeft(self):
         """Test adjacent squares of a square on the left."""
-        self.assertEqual(['D0', 'F0', 'E1'], self.board.adjacent_squares('E0'))
+        self.assertEqual(((5, 2), (6, 1), (4, 1)), tuple(self.board.adjacent_squares('E0')))
 
     def testLeftTop(self):
         """Test adjacent squares of a square on the left top."""
-        self.assertEqual(['I0', 'J1'], self.board.adjacent_squares('J0'))
+        self.assertEqual(((10, 2), (9, 1)), tuple(self.board.adjacent_squares('J0')))
 
     def testMiddle(self):
         """Test adjacent squares of a square in the middle."""
-        self.assertEqual(['B4', 'D4', 'C3', 'C5'], self.board.adjacent_squares('C4'))
+        self.assertEqual(((3, 6), (4, 5), (3, 4), (2, 5)), tuple(self.board.adjacent_squares('C4')))
 
     def testRight(self):
         """Test adjacent squares of a square on the right."""
-        self.assertEqual(['F9', 'H9', 'G8'], self.board.adjacent_squares('G9'))
+        self.assertEqual(((8, 10), (7, 9), (6, 10)), tuple(self.board.adjacent_squares('G9')))
 
     def testRightBottom(self):
         """Test adjacent squares of a square on the right bottom."""
-        self.assertEqual(['I0', 'J1'], self.board.adjacent_squares('J0'))
+        self.assertEqual(((10, 2), (9, 1)), tuple(self.board.adjacent_squares('J0')))
 
     def testTop(self):
         """Test adjacent squares of a square on the top."""
-        self.assertEqual(['I5', 'J4', 'J6'], self.board.adjacent_squares('J5'))
+        self.assertEqual(((10, 7), (10, 5), (9, 6)), tuple(self.board.adjacent_squares('J5')))
 
     def testTopRight(self):
         """Test adjacent squares of a square on the top right."""
-        self.assertEqual(['I9', 'J8'], self.board.adjacent_squares('J9'))
+        self.assertEqual(((10, 9), (9, 10)), tuple(self.board.adjacent_squares('J9')))
 
 
 class SeaBoardFireTest(unittest.TestCase):
@@ -174,7 +173,7 @@ class SeaBoardFireTest(unittest.TestCase):
     def testHitHit(self):
         """Test a basic hit getting recorded."""
         self.board.fire('J0', self.foe)
-        self.assertIn('J0', self.board.hits)
+        self.assertIsInstance(self.board[(10, 1)].contents, battleships.Hit)
 
     def testHitMessage(self):
         """Test notification of a basic hit."""
@@ -183,8 +182,9 @@ class SeaBoardFireTest(unittest.TestCase):
 
     def testHitRemoval(self):
         """Test a basic hit being marked on the ship."""
+        ship = self.board[6, 3].contents.ship
         self.board.fire('F2', self.foe)
-        self.assertNotIn('F2', self.board.fleet[2][1])
+        self.assertNotIn((6, 3), ship.sections)
 
     def testMissMessage(self):
         """Test notification of a basic miss."""
@@ -194,7 +194,7 @@ class SeaBoardFireTest(unittest.TestCase):
     def testMissMiss(self):
         """Test a basic miss being recorded."""
         self.board.fire('J9', self.foe)
-        self.assertEqual({'J9'}, self.board.misses)
+        self.assertIsInstance(self.board[(10, 10)].contents, battleships.Miss)
 
     def testSinkFleet(self):
         """Test updating a fleet when all ships are sunk."""
@@ -225,62 +225,33 @@ class SeaBoardMakeShipTest(unittest.TestCase):
 
     def testDown(self):
         """Test making a ship going down."""
-        self.assertEqual(['H0', 'H1', 'H2', 'H3', 'H4', 'H5'], self.board.make_ship('H5', 'H0'))
+        start, end = self.board.convert('H5'), self.board.convert('H0')
+        self.assertEqual([(8, 1), (8, 2), (8, 3), (8, 4), (8, 5), (8, 6)], self.board.make_ship(start, end))
 
     def testLeft(self):
         """Test making a ship going to the left."""
-        self.assertEqual(['E5', 'E6', 'E7', 'E8', 'E9'], self.board.make_ship('E9', 'E5'))
+        start, end = self.board.convert('E9'), self.board.convert('E5')
+        self.assertEqual([(5, 6), (5, 7), (5, 8), (5, 9), (5, 10)], self.board.make_ship(start, end))
 
     def testNegative(self):
         """Test failing to make a ship with a negative slope."""
-        self.assertEqual([], self.board.make_ship('D6', 'A3'))
+        start, end = self.board.convert('D6'), self.board.convert('A3')
+        self.assertEqual([], self.board.make_ship(start, end))
 
     def testPositive(self):
         """Test failing to make a ship with a positive slope."""
-        self.assertEqual([], self.board.make_ship('B3', 'F7'))
+        start, end = self.board.convert('B3'), self.board.convert('F7')
+        self.assertEqual([], self.board.make_ship(start, end))
 
     def testRight(self):
         """Test making a ship going to the right."""
-        self.assertEqual(['D6', 'D7', 'D8', 'D9'], self.board.make_ship('D6', 'D9'))
+        start, end = self.board.convert('D6'), self.board.convert('D9')
+        self.assertEqual([(4, 7), (4, 8), (4, 9), (4, 10)], self.board.make_ship(start, end))
 
     def testUp(self):
         """Test maing a ship going up."""
-        self.assertEqual(['A7', 'B7', 'C7'], self.board.make_ship('A7', 'C7'))
-
-
-class SeaBoardPlaceRandomTest(unittest.TestCase):
-    """Test generating a random ship. (unittest.TestCase)"""
-
-    def setUp(self):
-        self.bot = unitility.AutoBot(['J0 J4', 'H0 H3', 'F0 F2', 'D0 D2', 'B0 B1'])
-        self.board = battleships.SeaBoard(self.bot)
-        self.invalid_squares = [''.join(chars) for chars in itertools.product('ABCDEDFGHIJ', '0123456789')]
-
-    def testHorizontalFive(self):
-        """Test generating a random horizontal five space ship."""
-        for square in 'I7 I6 I5 I4 I3'.split():
-            self.invalid_squares.remove(square)
-        self.assertEqual(('I3', 'I7'), self.board.place_random(5, self.invalid_squares))
-
-    def testHorizontalThree(self):
-        """Test generating a random horizontal three space ship."""
-        for square in 'I7 I6 I5 I4 I3'.split():
-            self.invalid_squares.remove(square)
-            check = [('I5', 'I7'), ('I4', 'I6'), ('I3', 'I5')]
-        self.assertIn(self.board.place_random(3, self.invalid_squares), check)
-
-    def testVerticalFive(self):
-        """Test generating a random horizontal five space ship."""
-        for square in 'F0 F1 F2 F3 F4'.split():
-            self.invalid_squares.remove(square)
-        self.assertEqual(('F0', 'F4'), self.board.place_random(5, self.invalid_squares))
-
-    def testVerticalThree(self):
-        """Test generating a random vertical three space ship."""
-        for square in 'B4 B5 B6 B7 B8'.split():
-            self.invalid_squares.remove(square)
-            check = [('B4', 'B6'), ('B5', 'B7'), ('B6', 'B8')]
-        self.assertIn(self.board.place_random(3, self.invalid_squares), check)
+        start, end = self.board.convert('A7'), self.board.convert('C7')
+        self.assertEqual([(1, 8), (2, 8), (3, 8)], self.board.make_ship(start, end))
 
 
 class SeaBoardPlaceShipsTest(unittest.TestCase):
@@ -317,25 +288,29 @@ class SeaBoardPlaceShipsTest(unittest.TestCase):
         """Test placing a horizontal five square ship in the fleet."""
         self.bot.replies = ['i6 i2', 'g6 g3', 'e6 e4', 'c4 c2', 'a7 a8']
         board = battleships.SeaBoard(self.bot)
-        self.assertEqual(('Carrier', ['I2', 'I3', 'I4', 'I5', 'I6']), board.fleet[0])
+        check = battleships.Ship('Carrier', [(9, 3), (9, 4), (9, 5), (9, 6), (9, 7)])
+        self.assertEqual(check.sections, board.fleet[0].sections)
 
     def testHorizontalFourFleet(self):
         """Test placing a horizontal four square ship in the fleet."""
         self.bot.replies = ['i6 i2', 'g6 g3', 'e6 e4', 'c4 c2', 'a7 a8']
         board = battleships.SeaBoard(self.bot)
-        self.assertEqual(('Battleship', ['G3', 'G4', 'G5', 'G6']), board.fleet[1])
+        check = battleships.Ship('Submarine', [(7, 4), (7, 5), (7, 6), (7, 7)])
+        self.assertEqual(check.sections, board.fleet[1].sections)
 
     def testHorizontalThreeFleet(self):
         """Test placing a horizontal three square ship in the fleet."""
         self.bot.replies = ['i6 i2', 'g6 g3', 'e6 e4', 'c4 c2', 'a7 a8']
         board = battleships.SeaBoard(self.bot)
-        self.assertEqual(('Submarine', ['E4', 'E5', 'E6']), board.fleet[2])
+        check = battleships.Ship('Submarine', [(5, 5), (5, 6), (5, 7)])
+        self.assertEqual(check.sections, board.fleet[2].sections)
 
     def testHorizontalTwoFleet(self):
         """Test placing a horizontal two square ship in the fleet."""
         self.bot.replies = ['i6 i2', 'g6 g3', 'e6 e4', 'c4 c2', 'a7 a8']
         board = battleships.SeaBoard(self.bot)
-        self.assertEqual(('Destroyer', ['A7', 'A8']), board.fleet[4])
+        check = battleships.Ship('Destroyer', [(1, 8), (1, 9)])
+        self.assertEqual(check.sections, board.fleet[4].sections)
 
     def testInvalidFirstSquare(self):
         """Test the error from entering an invalid start square."""
@@ -371,7 +346,8 @@ class SeaBoardPlaceShipsTest(unittest.TestCase):
         """Test placing a horizontal one square ship in the fleet."""
         self.bot.replies = ['i6 i2', 'g6 g3', 'e6 e4', 'c4 c3', 'd8 d9', 'a8', 'f8']
         board = battleships.SeaBoard(self.bot, inventory_name = 'bednar')
-        self.assertEqual(('Submarine', ['A8']), board.fleet[5])
+        check = battleships.Ship('Submarine', [(1, 9)])
+        self.assertEqual(check.sections, board.fleet[5].sections)
 
     def testTwoError(self):
         """Test the error from giving one square for a three square ship."""
@@ -383,25 +359,29 @@ class SeaBoardPlaceShipsTest(unittest.TestCase):
         """Test placing a vertical five square ship in the fleet."""
         self.bot.replies = ['A1 e1', 'g3 D3', 'e5 g5', 'I7 G7', 'I9 j9']
         board = battleships.SeaBoard(self.bot)
-        self.assertEqual(('Carrier', ['A1', 'B1', 'C1', 'D1', 'E1']), board.fleet[0])
+        check = battleships.Ship('Battleship', [(1, 2), (2, 2), (3, 2), (4, 2), (5, 2)])
+        self.assertEqual(check.sections, board.fleet[0].sections)
 
     def testVerticalFourFleet(self):
         """Test placing a vertical four square ship in the fleet."""
         self.bot.replies = ['A1 e1', 'g3 D3', 'e5 g5', 'I7 G7', 'I9 j9']
         board = battleships.SeaBoard(self.bot)
-        self.assertEqual(('Battleship', ['D3', 'E3', 'F3', 'G3']), board.fleet[1])
+        check = battleships.Ship('Battleship', [(4, 4), (5, 4), (6, 4), (7, 4)])
+        self.assertEqual(check.sections, board.fleet[1].sections)
 
     def testVerticalThreeFleet(self):
         """Test placing a vertical three square ship in the fleet."""
         self.bot.replies = ['A1 e1', 'g3 D3', 'e5 g5', 'I7 G7', 'I9 j9']
         board = battleships.SeaBoard(self.bot)
-        self.assertEqual(('Cruiser', ['G7', 'H7', 'I7']), board.fleet[3])
+        check = battleships.Ship('Cruiser', [(7, 8), (8, 8), (9, 8)])
+        self.assertEqual(check.sections, board.fleet[3].sections)
 
     def testVerticalTwoFleet(self):
         """Test placing a vertical two square ship in the fleet."""
         self.bot.replies = ['A1 e1', 'g3 D3', 'e5 g5', 'I7 G7', 'I9 j9']
         board = battleships.SeaBoard(self.bot)
-        self.assertEqual(('Destroyer', ['I9', 'J9']), board.fleet[4])
+        check = battleships.Ship('Destroyer', [(9, 10), (10, 10)])
+        self.assertEqual(check.sections, board.fleet[4].sections)
 
 
 class SeaBoardTextTest(unittest.TestCase):
@@ -414,36 +394,22 @@ class SeaBoardTextTest(unittest.TestCase):
 
     def testRepr(self):
         """Test the computer readable representaiton of a starting SeaBoard."""
-        self.assertEqual('<SeaBoard for <AutoBot Ramius> with 0 of 17 hits>', repr(self.board))
-
-    def testReprHit(self):
-        """Test the computer readable representaiton of a SeaBoard with some hits."""
-        # Hit a ship but don't sink it.
-        ship, squares = self.board.fleet[0]
-        for square in squares[:-1]:
-            self.board.fire(square, unitility.AutoBot())
-        # Check the repr.
-        self.assertEqual('<SeaBoard for <AutoBot Ramius> with 4 of 17 hits>', repr(self.board))
-
-    def testReprSunk(self):
-        """Test the computer readable representaiton of a SeaBoard with a ship sunk."""
-        # Sink a ship
-        ship, squares = self.board.fleet[0]
-        for square in squares[:]:
-            self.board.fire(square, unitility.AutoBot())
-        # Check the repr.
-        self.assertEqual('<SeaBoard for <AutoBot Ramius> with 5 of 17 hits>', repr(self.board))
+        self.assertEqual('<SeaBoard with 10x10 Waters>', repr(self.board))
 
     def testShowFoe(self):
         """Test the player's view of their own board."""
-        self.board.hits = set('J2 J1 I5 H5 G5 F5'.split())
-        self.board.misses = set('J6 I0 I1 H4 H9 G3 G8 F2 F7 E1 E6 D0 D5 C4 C9 B3 B8 A2 A7'.split())
+        for hit in 'J2 J1 I5 H5 G5 F5'.split():
+            self.board.place(self.board.convert(hit), battleships.Hit())
+        for miss in 'J6 I0 I1 H4 H9 G3 G8 F2 F7 E1 E6 D0 D5 C4 C9 B3 B8 A2 A7'.split():
+            self.board.place(self.board.convert(miss), battleships.Miss())
         self.assertEqual('\n'.join(BOARD_LINES).replace('O', '.'), self.board.show(to = 'foe'))
 
     def testShowFriend(self):
         """Test the player's view of their own board."""
-        self.board.hits = set('J2 J1 I5 H5 G5 F5'.split())
-        self.board.misses = set('J6 I0 I1 H4 H9 G3 G8 F2 F7 E1 E6 D0 D5 C4 C9 B3 B8 A2 A7'.split())
+        for hit in 'J2 J1 I5 H5 G5 F5'.split():
+            self.board.place(self.board.convert(hit), battleships.Hit())
+        for miss in 'J6 I0 I1 H4 H9 G3 G8 F2 F7 E1 E6 D0 D5 C4 C9 B3 B8 A2 A7'.split():
+            self.board.place(self.board.convert(miss), battleships.Miss())
         self.assertEqual('\n'.join(BOARD_LINES), self.board.show())
 
 

@@ -18,6 +18,7 @@ Quadrille: A game of Quadrille. (solitaire.Solitaire)
 
 import time
 
+from ... import cards
 from . import solitaire_game as solitaire
 
 
@@ -112,22 +113,25 @@ class Quadrille(solitaire.Solitaire):
     def do_gipf(self, arguments):
         """
         Yacht gives you an extra pass through the deck.
+
+        Hearts forces the next high and low hearts to the waste.
         """
         # Run the edge, if possible.
-        game, losses = self.gipf_check(arguments, ('yacht',))
+        game, losses = self.gipf_check(arguments, ('yacht', 'hearts'))
         # Winning Yacht gives you an extra pass through the deck.
         if game == 'yacht':
             if not losses:
                 self.max_passes += 1
                 self.human.tell('\nYou have gained an extra pass through the deck.')
+        # Winning Hearts forces the next high and low hearts to the waste.
         elif game == 'hearts':
             if not losses:
                 bottom_heart = self.foundations[2][-1]
-                self.deck.find(self.deck.ranks[bottom_heart.rank_num - 1] + 'H')
-                self.transfer([bottom_heart], self.waste)
-                top_heart = self.foundations[2][-1]
-                self.deck.find(self.deck.ranks[top_heart.rank_num + 1] + 'H')
-                self.transfer([top_heart], self.waste)
+                lower_heart = self.deck.find(self.deck.ranks[bottom_heart.rank_num - 1] + 'H')
+                self.transfer([lower_heart], self.waste)
+                top_heart = self.foundations[6][-1]
+                higher_heart = self.deck.find(self.deck.ranks[top_heart.rank_num + 1] + 'H')
+                self.transfer([higher_heart], self.waste)
         # Otherwise I'm confused.
         else:
             self.human.tell("I don't know that dance.")
@@ -200,7 +204,7 @@ class Quadrille(solitaire.Solitaire):
     def set_options(self):
         """Set the available game options."""
         self.options = {'num-foundations': 8, 'num-reserve': 4, 'turn-count': 1, 'max-passes': 3,
-            'wrap-ranks': True}
+            'deck-specs': (0, cards.STANDARD_WRAP_RANKS)}
         self.option_set.add_option('cells', ['c'], action = 'key=num-cells', converter = int,
             default = 0, valid = range(1, 5), target = self.options,
             question = 'How many free cells (1-4, return for 4)? ')

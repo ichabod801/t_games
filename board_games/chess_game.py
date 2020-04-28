@@ -50,6 +50,9 @@ unicode (uni, u): Show the unicode chess piece characters, if your terminal
     supports them.
 white (w): Play as white. If neither black are or white options are used, the
     color of your pieces is determined randomly.
+
+Note that even with the black or white option, if you choose to play again, the
+players will switch colors.
 """
 
 RULES = """
@@ -147,6 +150,7 @@ class Chess(game.Game):
     aliases = {'m': 'move'}
     castle_re = re.compile('o-o(-o)?')
     categories = ['Board Games']
+    credits = CREDITS
     move_re = re.compile('([BNRQK])?([a-h])?([1-8])?[ -x/]?([a-h][1-8])')
     name = 'Chess'
     num_options = 3
@@ -163,6 +167,7 @@ class Chess(game.Game):
         'sicilian': 'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/RNBQKBNR|w|KQkq|-|0|2',
         'mate-test': '8/5K1k/8/6Q1/8/8/8/8|w|-|-|0|81'}
     options = OPTIONS
+    rules = RULES
     unicode_pieces = {'R':'♜', 'N':'♞', 'B':'♝', 'Q':'♛', 'K':'♚', 'P':'♟',
         'r':'♖', 'n':'♘', 'b':'♗', 'q':'♕', 'k':'♔', 'p':'♙', '.':'·'}
 
@@ -396,10 +401,10 @@ class Chess(game.Game):
         match_type = sum(2 ** index for index, group in enumerate(groups) if group is not None)
         # Handle single squares (pawn moves).
         if match_type in (8, 10):
-            return self.parse_pawn(groups, match_type)
+            return self.parse_pawn(text, groups, match_type)
         # Handle moves with a piece provided (standard algebraic).
         elif match_type in (9, 11, 13):
-            return self.parse_piece(groups, match_type)
+            return self.parse_piece(text, groups, match_type)
         # Handle two squares (long algebraic notation).
         elif match_type == 14:
             start = sunfish.parse('{}{}'.format(*groups[1:3]))
@@ -457,7 +462,7 @@ class Chess(game.Game):
         """
         text = text.strip() # ?? unneccesary?
         match = self.move_re.match(text)
-        castle = self.castle_re.match(text)
+        castle = self.castle_re.match(text.lower())
         # Check for algebraic moves.
         if match:
             return self.parse_algebraic(text, match)
@@ -482,11 +487,12 @@ class Chess(game.Game):
         else:
             return (None, 'I do not understand that move.')
 
-    def parse_pawn(self, groups, match_type):
+    def parse_pawn(self, text, groups, match_type):
         """
         Parse a single square algebraic move. (tuple)
 
         Parameters:
+        text: The move as entered by the user. (str)
         groups: The groups from the regex match. (list of tuple)
         match_type: Binary flags for which groups matched. (int)
         """
@@ -506,13 +512,14 @@ class Chess(game.Game):
         elif abs(direction) == 10 and board[end + 2 * direction] in 'pP':
             return (end + 2 * direction, end)
         else:
-            return (None, '{} is not a legal move.'.format(groups[3]))
+            return (None, '{} is not a legal move.'.format(text))
 
-    def parse_piece(self, groups, match_type):
+    def parse_piece(self, text, groups, match_type):
         """
         Parse an algebraic move with a piece indicated. (tuple)
 
         Parameters:
+        text: The move as entered by the user. (str)
         groups: The groups from the regex match. (list of tuple)
         match_type: Binary flags for which groups matched. (int)
         """
@@ -521,8 +528,12 @@ class Chess(game.Game):
         # Set up disambiguation.
         if match_type == 11:
             column = ' abcdefgh'.index(groups[1])
+            if self.player_index:
+                column = 9 - column
         if match_type == 13:
             row = 10 - int(groups[2])
+            if self.player_index:
+                row = 1 + int(groups[2])
         # Find valid moves with that end and that piece.
         starts = []
         if self.player_index:
@@ -591,7 +602,7 @@ class Chess(game.Game):
         if self.opening:
             self.position = self.parse_fen(self.opening)
         elif self.fen:
-            self.position = self.parse_fen(self.fen)
+            self.position = self.parse_fen('/'.join(self.fen))
         else:
             self.position = sunfish.Position(sunfish.initial, 0, (True,True), (True,True), 0, 0)
         # Set the position history.

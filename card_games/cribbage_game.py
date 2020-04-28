@@ -46,8 +46,8 @@ five-card (5-card, 5c): equivalent to one-go cards=5 discards=1 target-score=61
     skunk=31 last=3
 four-partners (4-partners, 4p): equivalent to n-bots=3 partners cards=5
     discards=1
-gonzo (gz): equivalent to target-score=61 match=5 skunk=41 double-skunk=21
-    skunk-scores=four
+gonzo (gz): equivalent to target-score=61 match=5 skunk=51 double-skunk=41
+    skunk-scores=four no-cut no-pick auto-go auto-score.
 last= (l=): The initial score of the last player to play (default = 0).
 match= (m=): The number of games to play in a match. (default = 1).
     Match results only make sense for two player games.
@@ -188,7 +188,7 @@ class Cribbage(game.Game):
         lines.append('\nCards in Hand: {}'.format(hand.show_player()))
         # Show the current cards in play.
         if self.phase != 'discard':
-            lines.append('\nStarter Card: {}.'.format(self.starter))
+            lines.append('\nStarter Card: {}'.format(self.starter))
             lines.append('\nCards played: {}'.format(self.in_play['Play Sequence']))
         lines.append('\nRunning Total: {}'.format(self.card_total))
         return '\n'.join(lines)
@@ -215,18 +215,18 @@ class Cribbage(game.Game):
             hand.discard()
         self.deck.shuffle()
         # Find the dealer and the player on their left.
-        self.dealer_index = (self.dealer_index + 1) % len(self.players)
-        dealer = self.players[self.dealer_index]
-        self.player_index = self.dealer_index
-        print('\nThe current dealer is {}.'.format(dealer.name))
+        self.dealer = self.get_next_player(self.dealer)
+        self.next_player = self.get_next_player(self.dealer)
+        self.dealer_index = self.players.index(self.dealer)
+        print('\nThe current dealer is {}.'.format(self.dealer.name))
         # Handle the solo option.
         if self.solo:
             # Set up teams.
-            self.teams[dealer.name] = [dealer.name]
-            non_dealers = [player.name for player in self.players if player != dealer]
-            self.teams.update({name: non_dealers for name in non_dealers})
+            self.teams[self.dealer] = [self.dealer]
+            non_dealers = [player for player in self.players if player != self.dealer]
+            self.teams.update({player: non_dealers for player in non_dealers})
             # Redirect the crib.
-            self.hands['The Crib'] = self.hands[dealer.name]
+            self.hands['The Crib'] = self.hands[self.dealer]
         # Score the last bonus.
         if self.last and max(self.scores.values()) == 0:
             last_index = (self.dealer_index - 1) % len(self.players)
@@ -237,18 +237,16 @@ class Cribbage(game.Game):
                 self.human.ask(ENTER_TEXT)
         # Cut the deck.
         if not self.no_cut:
-            left = (self.dealer_index + 1) % len(self.players)
+            left = self.next_player
             query = 'Enter a number to cut the deck: '
-            cut_index = self.players[left].ask_int(query, cmd = False, default = 0)
+            cut_index = left.ask_int(query, cmd = False, default = 0)
             self.deck.cut(cut_index)
         # Deal the cards
-        for card in range(self.cards):
-            for player in self.players:
-                self.hands[player].draw()
+        self.deck.deal_n_each(self.cards, self.players)
         for card in range(4 - len(self.players) * self.discards):
             self.hands['The Crib'].draw()
         # Make a dummy starter card.
-        self.starter = cards.Card('X', 'S')
+        self.starter = self.deck.parse_text('XS')
         # Reset the tracking variables.
         self.phase = 'discard'
 
@@ -263,29 +261,27 @@ class Cribbage(game.Game):
         game, losses = self.gipf_check(arguments, ('backgammon', 'craps', 'crazy eights'))
         # Backgammon doubles the score for pairs.
         if game == 'backgammon':
-            self.human.tell('Pairs score four points each this round.')
-            self.double_pairs = True
+            self.human.tell(self)
+            if not losses:
+                self.human.tell('\nPairs score four points each this round.')
+                self.double_pairs = True
         # Craps lets you swap a card with one from the deck.
         elif game == 'craps':
-            # Get a valid card to discard.
-            hand = self.hands[self.human]
-            while True:
-                card_text = self.human.ask('Pick a card to replace: ')
-                card = self.deck.card_re.search(card_text)
-                if not card:
-                    self.human.error('Please enter a valid card.')
-                elif card not in hand:
-                    self.human.error('You do not have that card to discard.')
-                else:
-                    break
-            # Replace that card.
-            hand.discard(card)
-            hand.draw()
+            self.human.tell(self)
+            if not losses:
+                # Get a valid card to discard.
+                hand = self.hands[self.human]
+                card = self.human.ask_card('\nPick a card to replace: ', valid = hand, cmd = False)
+                # Replace that card.
+                hand.discard(card)
+                new_card = hand.draw()
+                self.human.tell('\nThe {:u} was replaced with the {:u}.'.format(card, new_card))
         # Crazy Eights skips the next player's play.
         elif game == 'crazy eights':
-            next_player = self.players[(self.player_index + 1) % len(self.players)]
-            self.skip_player = next_player
-            self.human.tell("{}'s next discard will be skipped.".format(next_player.name))
+            self.human.tell(self)
+            if not losses:
+                next_player = self.skip_player()
+                self.human.tell("\n{}'s next discard will be skipped.".format(next_player))
         # Otherwise I'm confused.
         else:
             self.human.error("I'm sorry, sir, but that is simply not acceptable in this venue.")
@@ -296,46 +292,59 @@ class Cribbage(game.Game):
         if max(self.scores.values()) >= self.target_score:
             # Reset the teams in solo play.
             if self.solo:
-                self.teams = {player.name: [player.name] for player in self.players}
+                self.teams = {player: [player] for player in self.players}
             # Determine the winner.
             scores = self.sorted_scores()
-            names = ' and '.join(self.teams[scores[0][1]])
-            plural = ('s', '')[' and ' in names]
+            names = ' and '.join(player.name for player in self.teams[scores[0][1]])
+            plural = '' if ' and ' in names else 's'
             self.human.tell('\n{} win{} with {} points.'.format(names, plural, scores[0][0]))
             # Check for skunk.
-            game_score = self.skunk_scores[0]
-            if scores[1][0] < self.skunk:
-                game_score = self.skunk_scores[1]
-                self.human.tell('{1} got skunked with {0} points.'.format(*scores[1]))
-            elif scores[1][0] < self.double_skunk:
-                game_score = self.skunk_scores[2]
+            match_points = self.skunk_scores[0]
+            if scores[1][0] < self.double_skunk:
+                match_points = self.skunk_scores[2]
                 self.human.tell('{1} got double skunked with {0} points.'.format(*scores[1]))
+            elif scores[1][0] < self.skunk:
+                match_points = self.skunk_scores[1]
+                self.human.tell('{1} got skunked with {0} points.'.format(*scores[1]))
             # Record the match scores.
-            self.match_scores[scores[0][1]] += game_score
+            self.match_scores[scores[0][1]] += match_points
             if self.match > 1:
                 self.show_match()
-            # Calcualte win/loss/draw stats.
-            human_score = self.scores[self.human]
-            for score, name in scores:
-                if name in self.teams[self.human]:
-                    continue
-                elif score < human_score:
-                    self.win_loss_draw[0] += game_score
-                elif score > human_score:
-                    self.win_loss_draw[1] += game_score
-                elif score == human_score:
-                    self.win_loss_draw[2] += game_score
-            # Tell human their place, if they didn't win.
-            if self.win_loss_draw[1]:
-                place = utility.number_word(self.win_loss_draw[1] + 1, ordinal = True)
-                if not self.win_loss_draw[0]:
-                    place = 'last'
-                self.human.tell('You came in {} place with {} points.'.format(place, human_score))
-            # Halve win/loss/draw for team games, so it's per team not per preson.
-            if self.partners:
-                self.win_loss_draw = [x // 2 for x in self.win_loss_draw]
-            # Check for a match win.
+            # Determine end of match.
             if max(self.match_scores.values()) >= self.match:
+                if self.match > 1:
+                    score_data = self.match_scores
+                    points_type = 'match '
+                else:
+                    score_data = self.scores
+                    points_type = ''
+                # Calculate win/loss/draw stats.
+                human_score = score_data[self.human]
+                max_score, max_player = human_score, self.human
+                for player, score in score_data.items():
+                    if player in self.teams[self.human]:
+                        continue
+                    elif score < human_score:
+                        self.win_loss_draw[0] += 1
+                    elif score > human_score:
+                        self.win_loss_draw[1] += 1
+                    elif score == human_score:
+                        self.win_loss_draw[2] += 1
+                    if score > max_score:
+                        max_score, max_player = score, player
+                # Declare the match winner.
+                if self.match > 1:
+                    self.human.tell('{} won the match with {} match points.'.format(max_player, max_score))
+                # Tell human their place, if they didn't win.
+                if self.win_loss_draw[1]:
+                    place = utility.number_word(self.win_loss_draw[1] + 1, ordinal = True)
+                    if not self.win_loss_draw[0]:
+                        place = 'last'
+                    message = 'You came in {} place with {} {}points.'
+                    self.human.tell(message.format(place, human_score, points_type))
+                # Halve win/loss/draw for team games, so it's per team not per preson.
+                if self.partners:
+                    self.win_loss_draw = [x // 2 for x in self.win_loss_draw]
                 return True
             else:
                 # Reset for the next game in the match.
@@ -344,6 +353,7 @@ class Cribbage(game.Game):
                 self.card_total = 0
                 self.go_count = 0
                 self.in_play['Play Sequence'].cards = []
+                return False
         else:
             return False
 
@@ -365,7 +375,7 @@ class Cribbage(game.Game):
         # Warn user for trying to make a team with an odd number of players.
         if self.partners and len(self.players) % 2:
             warning = 'Invalid number of players for the partners option: {}.'
-            self.human.error(warning.format(len(self.players)))
+            self.option_set.errors.append(warning.format(len(self.players)))
             self.partners = False
         # Set up match play.
         if self.match > 1:
@@ -380,14 +390,8 @@ class Cribbage(game.Game):
             elif self.skunk_scores == 'four':
                 self.skunk_scores = (1, 2, 4)
             else:
-                # Set custom skunk scores or report an error.
-                try:
-                    self.skunk_scores = [int(score) for score in self.skunk_scores.split('/')]
-                    check = self.skunk_scores[2]
-                except (ValueError, IndexError):
-                    warning = 'Invalid setting for match-scores option: {!r}.'
-                    self.human.error(warning.format(self.skunk_scores))
-                    self.skunk_scores = (2, 3, 3)
+                # Set custom skunk scores.
+                self.skunk_scores = tuple(int(score) for score in self.skunk_scores)
         else:
             # Set dummy values for non-match play.
             self.match = 1
@@ -411,12 +415,7 @@ class Cribbage(game.Game):
             return self.player_discards(player)
         # Handle playing cards for pegging.
         elif self.phase == 'play':
-            if self.skip_player == player:
-                print("{}'s discard is skipped.".format(player))
-                self.skip_player = None
-                return False
-            else:
-                return self.player_play(player)
+            return self.player_play(player)
 
     def player_discards(self, player):
         """
@@ -426,40 +425,27 @@ class Cribbage(game.Game):
         player: The current player. (player.Player)
         """
         # Handle solo option for dealer.
-        if self.solo and player == self.players[self.dealer_index]:
+        if self.solo and player == self.dealer:
             # Handle different discard count.
             discard_save = self.discards
             self.discards = self.cards - self.discards
             # Reset the crib.
             self.hands['The Crib'] = cards.Hand(deck = self.deck)
-        # Loop until the right number of discards have been made
-        to_discard = self.discards
-        while to_discard:
-            # Get and parse the discards.
-            discard_plural = utility.number_plural(to_discard, 'card')
-            query = '\nWhich {} would you like to discard to the crib, {}? '
-            answer = player.ask(query.format(discard_plural, player))
-            discards = self.deck.card_re.findall(answer)
-            if not discards:
-                # If no discards, assume it's another command.
-                if not self.handle_cmd(answer):
+        # Get the discards.
+        discard_plural = utility.num_text(self.discards, 'card')
+        query = '\nWhich {} would you like to discard to the crib, {}? '.format(discard_plural, player)
+        while True:
+            discards = player.ask_card_list(query, self.hands[player], [self.discards])
+            if isinstance(discards, str):
+                if not self.handle_cmd(discards):
                     return False
-                else:
-                    # Update the player after command output.
-                    player.tell(self)
-            elif len(discards) > to_discard:
-                # Warn on the wrong number of discards.
-                player.error('You can only discard {}.'.format(discard_plural))
-            elif not all(card in self.hands[player] for card in discards):
-                # Block discarding cards you don't have.
-                player.error('You do not have all of those cards in your hand.')
             else:
-                # Handle discards.
-                for card in discards:
-                    self.hands[player].shift(card, self.hands['The Crib'])
-                to_discard -= len(discards)
+                break
+        # Handle discards.
+        for card in discards:
+            self.hands[player].shift(card, self.hands['The Crib'])
         # Check for starting play after dealer discards.
-        if self.players.index(player) == self.dealer_index:
+        if player == self.dealer:
             self.phase = 'play'
             self.starter = self.deck.deal(up = True)
             if self.solo:
@@ -469,8 +455,7 @@ class Cribbage(game.Game):
                 self.human.tell('The dealer got their heels.')
                 if not self.auto_score:
                     self.human.ask(ENTER_TEXT)
-                dealer = self.players[self.dealer_index]
-                self.add_points(dealer, 2)
+                self.add_points(self.dealer, 2)
         return False
 
     def player_play(self, player):
@@ -481,8 +466,8 @@ class Cribbage(game.Game):
         player: The current player. (player.Player)
         """
         # Get the player information
-        hand = self.hands[player.name]
-        in_play = self.in_play[player.name]
+        hand = self.hands[player]
+        in_play = self.in_play[player]
         # Check for playable cards.
         playable = [card for card in hand if card + self.card_total <= 31]
         if not playable:
@@ -501,40 +486,36 @@ class Cribbage(game.Game):
                 self.reset()
             return False
         # Get card to play.
-        answer = player.ask('\nWhich card would you like to play, {}? '.format(player))
-        card = self.deck.card_re.match(answer)
-        if card:
-            card = cards.Card(*answer[:2].upper())
-            if card not in hand:
-                # Warn the player about cards they don't have.
-                player.error('You do not have that card in your hand.')
-                return True
-            if card + self.card_total > 31:
+        while True:
+            query = '\nWhich card would you like to play, {}? '.format(player)
+            card = player.ask_card(query, valid = hand)
+            if isinstance(card, str):
+                if not self.handle_cmd(card):
+                    return False
+            elif card + self.card_total > 31:
                 # Warn the player about unplayable cards.
                 player.error('That card would put the running total over 31.')
                 return True
             else:
-                # Score the card.
-                points, message = self.score_sequence(player, card)
-                if points:
-                    self.add_points(player, points)
-                    # Inform the user.
-                    self.human.tell(message)
-                    if not self.auto_score:
-                        self.human.ask(ENTER_TEXT)
-                # Play the card.
-                hand.shift(card, in_play)
-                self.in_play['Play Sequence'].cards.append(in_play.cards[-1])
-                # Update the tracking variables.
-                self.card_total += card
-                self.go_count = 0
-                # Check for end of round
-                if self.card_total == 31:
-                    self.reset()
-                return False
-        else:
-            # Handle anything that isn't a playing card.
-            return self.handle_cmd(answer)
+                break
+        # Score the card.
+        points, message = self.score_sequence(player, card)
+        if points:
+            self.add_points(player, points)
+            # Inform the user.
+            self.human.tell(message)
+            if not self.auto_score:
+                self.human.ask(ENTER_TEXT)
+        # Play the card.
+        hand.shift(card, in_play)
+        self.in_play['Play Sequence'].cards.append(in_play.cards[-1])
+        # Update the tracking variables.
+        self.card_total += card
+        self.go_count = 0
+        # Check for end of round
+        if self.card_total == 31:
+            self.reset()
+        return False
 
     def reset(self):
         """Reset the game after a pegging round. (None)"""
@@ -568,7 +549,7 @@ class Cribbage(game.Game):
         cards: The cards to score. (list of Card)
         """
         score = 0
-        suits = set([card.suit for card in cards])
+        suits = set(card.suit for card in cards)
         if len(suits) == 1:
             # Check for five card flush.
             if self.starter.suit in suits:
@@ -597,11 +578,11 @@ class Cribbage(game.Game):
             self.human.tell()
             # Score the crib to the dealer.
             if name == 'The Crib':
-                cards = self.hands['The Crib'].cards
-                name = self.players[self.dealer_index].name
+                cards = self.hands['The Crib'][:]
+                name = self.dealer.name
                 message = 'Now scoring the crib for the dealer ({}): {} + {}'
             else:
-                cards = self.hands[name].cards + self.in_play[name].cards
+                cards = self.hands[name] + self.in_play[name]
                 message = "Now scoring {}'s hand: {} + {}"
             self.human.tell(message.format(name, ', '.join([str(card) for card in cards]), self.starter))
             hand_score = self.score_one_hand(cards, name)
@@ -768,7 +749,7 @@ class Cribbage(game.Game):
             text = '{} scores {} points for getting a {}-card straight.'
             message.append(text.format(player.name, run_count, utility.number_word(run_count)))
         # Check for a total of 31.
-        elif next_total == 31:
+        if next_total == 31:
             points += 2
             text = '\nThe count has reached 31.\n{} scores 2 points for reaching 31.'
             message.append(text.format(player.name))
@@ -804,7 +785,7 @@ class Cribbage(game.Game):
         # Set the match options.
         self.option_set.add_option('match', ['m'], converter = int, default = 1,
             question = 'How many games for match play (return for single game)? ')
-        self.option_set.add_option('skunk-scores', ['ss'], valid = ('acc', 'long', 'free', 'four'),
+        self.option_set.add_option('skunk-scores', ['ss'], str.lower, check = skunk_check,
             default = 'acc', question = 'Should match scores be ACC, long, free, or triple? ')
         # Set the variant groups.
         five_card = 'one-go cards=5 discards=1 win=61 skunk=31 last=3'
@@ -814,7 +795,8 @@ class Cribbage(game.Game):
         self.option_set.add_group('four-partners', ['4-partners', '4p'], four_partners)
         three_solo = 'one-go cards=5 discards=1 win=61 skunk=31 n-bots=2 solo'
         self.option_set.add_group('three-solo', ['3-solo', '3s'], three_solo)
-        gonzo = 'target-score=49 match=5 skunk=31 double-skunk=18 skunk-scores=four'
+        gonzo = 'target-score=61 match=5 skunk=51 double-skunk=41 skunk-scores=four'
+        gonzo += ' no-cut no-pick auto-go auto-score'
         self.option_set.add_group('gonzo', ['gz'], gonzo)
         # Interface options (do not count in num_options)
         self.option_set.add_group('fast', 'auto-go auto-score no-cut no-pick')
@@ -837,21 +819,20 @@ class Cribbage(game.Game):
         self.go_count = 0
         self.match_scores = {player.name: 0 for player in self.players}
         self.double_pairs = False
-        self.skip_player = None
         # Set up the deck.
         self.deck = cards.Deck()
         self.deck.shuffle()
         # Set up the hands.
-        self.hands = {player.name: cards.Hand(deck = self.deck) for player in self.players}
+        self.hands = self.deck.player_hands(self.players)
         self.hands['The Crib'] = cards.Hand(deck = self.deck)
-        self.in_play = {player.name: cards.Hand(deck = self.deck) for player in self.players}
+        self.in_play = self.deck.player_hands(self.players)
         self.in_play['Play Sequence'] = cards.Hand(deck = self.deck)
         # Pick the dealer.
         if self.no_pick:
             random.shuffle(self.players)
             self.dealer_index = -1
         else:
-            players = self.players
+            players = self.players[:]
             while True:
                 # Have every player pick a card.
                 cards_picked = []
@@ -862,25 +843,28 @@ class Cribbage(game.Game):
                     self.human.tell('{} picked the {:n}.'.format(player, card))
                     self.deck.discard(card)
                     cards_picked.append((card.rank_num, player))
-                # Determine the highest rangk.
-                cards_picked.sort()
+                # Determine the highest rank.
+                cards_picked.sort(reverse = True)
                 # Sort players by card, no tie for winner.
                 self.players[:len(cards_picked)] = [player for card, player in cards_picked]
                 if cards_picked[0][0] == cards_picked[1][0]:
                     self.human.tell('Tie! Pick again.')
-                    players = [plyr for crd, plyr in cards_picked if crd.rank_num == cards_picked[0][0]]
+                    players = [player for card, player in cards_picked if card == cards_picked[0][0]]
                 else:
                     break
             self.dealer_index = -1
+        self.dealer = self.players[self.dealer_index]
         # Set up teams.
-        self.teams = {player.name: [player.name] for player in self.players}
+        self.teams = {player: [player] for player in self.players}
         if self.partners:
+            self.human.tell('\nThe teams are:')
             num_teams = len(self.players) // 2
             for player_index, player in enumerate(self.players[:num_teams]):
                 team_mate = self.players[player_index + num_teams]
-                team = [player.name, team_mate.name]
-                self.teams[player.name] = team
-                self.teams[team_mate.name] = team
+                team = [player, team_mate]
+                self.teams[player] = team
+                self.teams[team_mate] = team
+                self.human.tell('{} and {}'.format(player, team_mate))
 
     def show_match(self):
         """Show the match scores. (None)"""
@@ -913,24 +897,52 @@ class CribBot(player.Bot):
         Parameters:
         query: The question the game asked. (str)
         """
-        # Get you hand.
-        hand = self.game.hands[self]
-        # Discard a card.
-        if 'discard' in query:
-            return self.get_discard()
         # Pass when you can't play.
-        elif 'no playable' in query:
+        if 'no playable' in query:
             self.game.human.tell('\n{} calls "go."'.format(self))
             return ''
-        # Play a card for pegging.
-        elif 'play' in query:
-            return self.get_play()
         # Press enter.
         elif query.startswith('Please press enter'):
             return ''
         # Raise error on unknown question.
         else:
             raise player.BotError('Unexepected question to CribBot: {!r}'.format(query))
+
+    def ask_card(self, prompt, valid = [], default = None, cmd = True):
+        """
+        Get a card from the player. (cards.Card)
+
+        Parameters:
+        prompt: The question asking for the card. (str)
+        valid: The valid values for the card. (container of cards.Card)
+        default: The default choice. (cards.Card or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        # Play a card for pegging.
+        if 'play' in prompt:
+            return self.get_play()
+        # Raise error on unknown question.
+        else:
+            raise player.BotError('Unexepected question to CribBot: {!r}'.format(query))
+
+    def ask_card_list(self, prompt, valid = [], valid_lens = [], default = None, cmd = True):
+        """
+        Get a multiple card response from the human. (int)
+
+        Parameters:
+        prompt: The question asking for the card. (str)
+        valid: The valid values for the cards. (list of int)
+        valid_lens: The valid numbers of values. (list of int)
+        default: The default choice. (list or None)
+        cmd: A flag for returning commands for processing. (bool)
+        """
+        # Discard a card.
+        if 'discard' in prompt:
+            return self.get_discard()
+        # Raise error on unknown question.
+        else:
+            raise player.BotError('Unexepected question to CribBot: {!r}'.format(query))
+
 
     def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
         """
@@ -970,7 +982,7 @@ class CribBot(player.Bot):
             possibles.append((score, discards))
         # Discard the highest rated batch.
         possibles.sort(reverse = True)
-        return ' '.join([str(card) for card in possibles[0][1]])
+        return possibles[0][1]
 
     def get_play(self):
         """Get a card to play. (str)"""
@@ -1006,7 +1018,7 @@ class CribBot(player.Bot):
             play = playable[0]
         # Make the play.
         self.game.human.tell('\n{} played the {:n}.'.format(self.name, play))
-        return str(play)
+        return play
 
     def score_discards(self, cards):
         """
@@ -1057,3 +1069,17 @@ class CribBot(player.Bot):
             pass
         else:
             super(CribBot, self).tell(message)
+
+def skunk_check(setting):
+    """
+    Check a skunk-scores option setting. (bool)
+
+    Parameters:
+    setting: The option setting to check. (str)
+    """
+    if setting in ('acc', 'long', 'free', 'four'):
+        return True
+    else:
+        if len(setting) != 3:
+            return False
+        return(all(num.isdigit() for num in setting))

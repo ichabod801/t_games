@@ -84,6 +84,7 @@ class DollarGame(game.Game):
     do_take: Take one dollar from each of a node's neighbors. (bool)
 
     Overridden Methods:
+    __str__
     handle_options
     player_action
     set_options
@@ -99,6 +100,10 @@ class DollarGame(game.Game):
     options = OPTIONS
     rules = RULES
 
+    def __str__(self):
+        """Human readable text representation. (str)"""
+        return str(self.graph)
+
     def do_donate(self, arguments):
         """
         Donate one dollar from a node to each of it's neighbors.
@@ -109,9 +114,9 @@ class DollarGame(game.Game):
             arguments = arguments.upper()
         try:
             self.graph.donate(arguments)
-            return True
         except KeyError:
             self.human.error('{} is not a node in the graph.'.format(arguments))
+            return True
 
     def do_gipf(self, arguments):
         """
@@ -140,9 +145,10 @@ class DollarGame(game.Game):
                 self.graph.values[give] += 1
                 go = True
         else:
-            beg = self.human.ask("\nCould you gipf a dollar to a fellow American who's down on his luck?")
+            beg = self.human.ask("\nCould you gipf a dollar to a fellow American who's down on his luck? ")
             if beg in utility.YES:
                 self.human.tell('Thank you.')
+            go = False
         return go
 
     def do_take(self, arguments):
@@ -155,16 +161,16 @@ class DollarGame(game.Game):
             arguments = arguments.upper()
         try:
             self.graph.take(arguments)
-            return True
         except KeyError:
             self.human.error('{} is not a node in the graph.'.format(arguments))
+            return True
 
     def game_over(self):
         """Determine if the game has been won. (bool)"""
         if min(self.graph.values.values()) >= 0:
             self.human.tell('You won in {} turns!'.format(self.turns))
             self.win_loss_draw = [1, 0, 0]
-            self.scores[self.human.name] = self.genus - self.ease
+            self.scores[self.human] = self.genus - self.ease
             return True
         else:
             return False
@@ -177,17 +183,6 @@ class DollarGame(game.Game):
         self.edges = self.genus + self.nodes - 1
         self.total_value = self.genus + self.ease - 1
         self.auto_cap = (self.nodes < 27)
-
-    def player_action(self, player):
-        """
-        Handle a player's turn or other player actions. (bool)
-
-        Parameters:
-        player: The player whose turn it is. (Player)
-        """
-        print(self.graph)
-        move = player.ask('\nWhat is your move? ')
-        self.handle_cmd(move)
 
     def set_options(self):
         """Set up the game options. (None)"""
@@ -268,7 +263,7 @@ class DollarGraph(object):
         """
         Generate a random set of edges. (None)
 
-        Algorithm from David Bruce Wilson. Should generate every possible tree with
+        Algorithm from David Bruce Wilson. It should generate every possible tree with
         equal probability.
 
         Parameters:

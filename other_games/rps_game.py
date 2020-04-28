@@ -37,8 +37,8 @@ Special Thanks: Matt Groening
 """
 
 OPTIONS = """
-bot= (b=): The bot you will play against. The valid bots are bart (b), lisa
-    (l), memor (m), and Randy (r). Defaults to Memor.
+bot= (b=): The bot you will play against. The valid bots are Bart (b), Lisa
+    (l), Memor (m), and Randy (r). Defaults to Memor.
 gonzo (gz): Equivalent to 'bot=randy lizard-spock match=23'.
 lizard-spock (ls): Add the lizard and Spock moves.
 match= (m=): The number of rounds played. Defaults to 3.
@@ -109,8 +109,8 @@ class Memor(player.Bot):
 
     Overridden Methods:
     __init__
-    __del__
     ask
+    clean_up
     tell
     """
 
@@ -127,14 +127,6 @@ class Memor(player.Bot):
         self.file_path = 'rps_memor_data{}.txt'
         self.losses = {}
         self.memory = {}
-
-    def __del__(self):
-        """Garbage collect the instance. (None)"""
-        # Save any stored move data.
-        if '{}' not in self.file_path:
-            with open(self.file_path, 'w') as data_file:
-                for move, count in self.memory.items():
-                    data_file.write('{}:{}\n'.format(move, count))
 
     def ask(self, prompt):
         """
@@ -158,6 +150,14 @@ class Memor(player.Bot):
         else:
             super(Memor, self).ask(prompt)
 
+    def clean_up(self):
+        """Garbage collect the instance. (None)"""
+        # Save any stored move data.
+        if '{}' not in self.file_path:
+            with open(self.file_path, 'w') as data_file:
+                for move, count in self.memory.items():
+                    data_file.write('{}:{}\n'.format(move, count))
+
     def load_data(self):
         """Load stored data of previous plays. (None)"""
         with open(self.file_path) as data_file:
@@ -172,15 +172,14 @@ class Memor(player.Bot):
         data_tag = ''
         if self.game.wins == self.game.lizard_spock:
             data_tag = '_ls'
+        # Seed the initial memory.
+        self.memory = {move: 1 for move in self.game.wins}
         # Check for a true human opponent.
-        if hasattr(self.game.human, 'folder_path'):
+        if hasattr(self.game.human, 'folder_name'):
             # Load any data stored for a human's plays.
-            self.file_path = os.path.join(self.game.human.folder_path, self.file_path.format(data_tag))
+            self.file_path = os.path.join(self.game.human.folder_name, self.file_path.format(data_tag))
             if os.path.exists(self.file_path):
                 self.load_data()
-        else:
-            # Seed the initial memory.
-            self.memory = {move: 1 for move in self.game.wins}
         # Get a reverse wins dictionary.
         self.losses = {move: [] for move in self.game.wins}
         for move, beats in self.game.wins.items():
@@ -355,8 +354,8 @@ class RPS(game.Game):
         """Check for the end of the game. (bool)"""
         # Only check if both players have moved.
         if not self.turns % 2:
-            move = self.moves[self.human.name]
-            bot_move = self.moves[self.bot.name]
+            move = self.moves[self.human]
+            bot_move = self.moves[self.bot]
             # Check for a bot win.
             if move in self.wins[bot_move] and not self.loss_draw:
                 self.human.tell('{} beats {}, you lose.'.format(bot_move, move))
@@ -398,7 +397,7 @@ class RPS(game.Game):
         # Parse the options.
         super(RPS, self).handle_options()
         # Set the players.
-        self.bot = self.bot_classes[self.bot_cls]([self.human.name])
+        self.bot = self.bot_classes[self.bot_cls]([self.human])
         self.players = [self.human, self.bot]
         # Set match play flag.
         if self.match > 1:
@@ -415,7 +414,7 @@ class RPS(game.Game):
         move = self.move_aliases.get(move, move)
         # Process game moves.
         if move in self.wins:
-            self.moves[player.name] = move
+            self.moves[player] = move
         # Process other commands.
         else:
             return self.handle_cmd(move)

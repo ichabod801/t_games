@@ -225,7 +225,8 @@ class OptionSet(object):
             setting = self.take_action(definition, definition['value'])
             return [(definition['name'], None)]
         else:
-            setting = self.take_action(definition, definition['default'])
+            if definition['default'] is not None:
+                setting = self.take_action(definition, definition['default'])
             return []
 
     def ask_bot_count(self, definition):
@@ -289,8 +290,11 @@ class OptionSet(object):
         while True:
             raw_setting = self.game.human.ask(definition['question'])
             if not raw_setting:
-                setting = definition['default']
-                break
+                if definition['default'] is None:
+                    return []
+                else:
+                    setting = definition['default']
+                    break
             setting = self.validate_setting(definition, raw_setting)
             if setting is None:
                 self.game.human.error('That input is not valid.')

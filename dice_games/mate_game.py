@@ -13,6 +13,9 @@ RULES: The rules of Mate. (str)
 
 Classes:
 Mate: A game of mate. (game.Game)
+MateBot: A bot player for the game of Mate. (player.Bot)
+MateAttackBot: A bot that goes after the biggest target. (MateBot)
+MateDefendBot: A bot that removes it's biggest piece. (MateAttackBot)
 """
 
 
@@ -75,7 +78,7 @@ class Mate(game.Game):
 
     Attributes:
     dice: The dice for each player, keyed by player name. (dict of str: dice.Pool)
-    turns_left: The number of turns left after a winning tie. (int)
+    skip_turns: The number of turns to skip after a winning tie. (int)
 
     Methods:
     dice_line: Show a player's dice with their columns. (str)
@@ -109,17 +112,17 @@ class Mate(game.Game):
     def __str__(self):
         """Human readable text representation. (str)"""
         # Get the correct player viewpoint.
-        if self.players[self.player_index] == self.human:
+        if self.current_player == self.human:
             bot = self.players[1 - self.player_index]
         else:
             bot = self.players[self.player_index]
         # Show the scores, columns and dice.
         lines = ['']
-        lines.append('{}: {}'.format(bot.name, self.scores[bot.name]))
-        lines.append(self.dice_line(self.dice[bot.name]))
+        lines.append('{}: {}'.format(bot, self.scores[bot]))
+        lines.append(self.dice_line(self.dice[bot]))
         lines.append('-' * 53)
-        lines.append(self.dice_line(self.dice[self.human.name]))
-        lines.append('{}: {}'.format(self.human.name, self.scores[self.human.name]))
+        lines.append(self.dice_line(self.dice[self.human]))
+        lines.append('{}: {}'.format(self.human, self.scores[self.human]))
         return '\n'.join(lines)
 
     def dice_line(self, pool):
@@ -153,12 +156,12 @@ class Mate(game.Game):
         Yukon allows a pawn to take any piece.
         """
         game, losses = self.gipf_check(arguments, ('yukon',))
-        player = self.players[self.player_index]
+        player = self.current_player
         # Yukon allows a pawn to take any piece.
         if game == 'yukon':
             # Get a pawn move as a queen.
             pawn_indexes = []
-            for index, value in enumerate(self.dice[player.name].values):
+            for index, value in enumerate(self.dice[player].values):
                 if value == 'Pawn':
                     pawn_indexes.append(index)
             player.tell(self)
@@ -166,9 +169,9 @@ class Mate(game.Game):
             target = player.ask_int('Choose any column to attack: ', valid = range(5))
             # Make the move.
             defender = self.players[1 - self.player_index]
-            self.scores[player.name] += self.points[self.dice[defender.name].values[target]]
-            self.dice[player.name].roll(pawn)
-            self.dice[defender.name].roll(target)
+            self.scores[player] += self.points[self.dice[defender].values[target]]
+            self.dice[player].roll(pawn)
+            self.dice[defender].roll(target)
         # Otherwise I'm confused.
         else:
             self.human.tell("That capture can only be done en passant.")
@@ -184,8 +187,8 @@ class Mate(game.Game):
         those pieces are in.
         """
         # Get the players
-        attacker = self.players[self.player_index]
-        defender = self.players[1 - self.player_index]
+        attacker = self.current_player
+        defender = self.get_next_player()
         # Clean the arguments.
         words = [word for word in arguments.split() if word not in ('with', 'w', 'w/', 'the', 'teh', 'a')]
         arguments = ' '.join(words)
@@ -224,10 +227,10 @@ class Mate(game.Game):
                 possible = [move for move in possible if move[1] == narrow]
         # Score the move.
         attack_index, target_index = possible[0]
-        self.scores[attacker.name] += self.points[self.dice[defender.name].values[target_index]]
+        self.scores[attacker] += self.points[self.dice[defender].values[target_index]]
         # Reroll the dice.
-        self.dice[attacker.name].roll(attack_index)
-        self.dice[defender.name].roll(target_index)
+        self.dice[attacker].roll(attack_index)
+        self.dice[defender].roll(target_index)
 
     def game_over(self):
         """Check for the end of the game. (bool)"""
@@ -235,18 +238,18 @@ class Mate(game.Game):
         if self.turns % 2:
             return False
         # Get the scores.
-        if self.players[self.player_index] == self.human:
-            bot = self.players[1 - self.player_index]
+        if self.current_player == self.human:
+            bot = self.get_next_player()
         else:
             bot = self.players[self.player_index]
-        bot_score = self.scores[bot.name]
-        human_score = self.scores[self.human.name]
+        bot_score = self.scores[bot]
+        human_score = self.scores[self.human]
         # Check for a continuing play.
-        if self.turns_left:
-            self.turns_left -= 1
+        if self.skip_turns:
+            self.skip_turns -= 1
             return False
         elif bot_score == human_score and bot_score >= self.win:
-            self.turns_left = 2
+            self.skip_turns = 1
             return False
         elif bot_score < self.win and human_score < self.win:
             return False
@@ -269,7 +272,7 @@ class Mate(game.Game):
         valid = []
         targets = range(5)
         for attacker in range(5):
-            for attack in self.attacks[self.dice[player.name].values[attacker]]:
+            for attack in self.attacks[self.dice[player].values[attacker]]:
                 if attacker + attack in targets:
                     valid.append([attacker, attacker + attack])
         return valid
@@ -280,11 +283,11 @@ class Mate(game.Game):
         if self.one_pawn:
             self.sides = self.sides[1:]
         if self.bot_level in ('m', 'medium'):
-            self.bot = MateDefendBot(taken_names = [self.human.name])
+            self.bot = MateDefendBot(taken_names = [self.human])
         elif self.bot_level in ('e', 'easy'):
-            self.bot = MateAttackBot(taken_names = [self.human.name])
+            self.bot = MateAttackBot(taken_names = [self.human])
         else:
-            self.bot = MateBot(taken_names = [self.human.name])
+            self.bot = MateBot(taken_names = [self.human])
         self.players = [self.human, self.bot]
 
     def piece_indexes(self, piece, values):
@@ -344,9 +347,9 @@ class Mate(game.Game):
         # Set up the dice.
         self.dice = {}
         for player in self.players:
-            self.dice[player.name] = dice.Pool([self.sides for die in range(5)])
+            self.dice[player] = dice.Pool([self.sides for die in range(5)])
         # Set up end of game tracking.
-        self.turns_left = 0
+        self.skip_turns = 0
 
 
 class MateBot(player.Bot):
@@ -377,10 +380,10 @@ class MateBot(player.Bot):
             valid_targets = [move[1] for move in moves if move[0] == attacker]
             target = self.choose_target(valid_targets)
             # Show the move.
-            attacker_name = self.game.dice[self.name].values[attacker]
-            foe = self.game.players[1 - self.game.players.index(self)]
-            target_name = self.game.dice[foe.name].values[target]
-            fields = (self.name, target_name, target, attacker_name, attacker)
+            attacker_name = self.game.dice[self].values[attacker]
+            foe = self.game.get_next_player()
+            target_name = self.game.dice[foe].values[target]
+            fields = (self, target_name, target, attacker_name, attacker)
             self.game.human.tell('\n{} takes your {} ({}) with their {} ({}).'.format(*fields))
             # Make the move.
             return 'take {} {}'.format(target, attacker)
@@ -405,6 +408,9 @@ class MateBot(player.Bot):
 class MateAttackBot(MateBot):
     """
     A bot that goes after the biggest target. (MateBot)
+
+    Methods:
+    value_moves: Value moves by highest points, then biggest attacker. (list)
 
     Overridden Methods:
     choose_attacker

@@ -80,8 +80,8 @@ The Lotus       (1-0-8): 24 bucks
 The Wheel       (8-0-1): 24 bucks
 
 One or more eights in the result doubles the payout, so the Lotus and the
-Wheel payout 48 bucks total. Downers and uppers must be sequences in order,
-and the Lotus and the Wheel must be those exact numbers.
+Wheel payout 48 bucks total. Downers, uppers, the Lotus, and the Wheel must be
+in order.
 
 Eight Ball only has one play.
 """
@@ -105,8 +105,8 @@ Five-of-a-Kind   100000 bucks
 
 A password has at least one digit, at least one symbol, at least one upper
 case letter, and at least one lower case letter. A purity has only numbers,
-symbols, or letters. A full house is a pair and three-of-a-kind. Xyzzy can be
-any case.
+only symbols, or only letters. A full house is a pair and three-of-a-kind.
+Xyzzy can be any case, but must be in order.
 
 Getting a full house with mutliple plays doubles every other play you score on.
 Getting a pair and a three-of-a-kind on separate plays doubles both of them.
@@ -137,7 +137,7 @@ RULES = """
 At the start you choose which game (type of slot machine) you want to play.
 Pick one, and enter the spin command. The cost of the machine will be auto-
 matically deducted from your stake. The reels will spin, as shown on the
-screen, and based on the final values, you may get a payout in return.
+screen. Based on the final values, you may get a payout in return.
 
 Some machines will have more than row in the final output, and will allow you
 to make multiple plays each spin. To make more than one play, you entere the
@@ -173,7 +173,7 @@ The Seven       (?-?-?-?): 2626 bucks
 The Seven Words that give the max payout are secret, but the Ginger Oracle
 knows. Pairs and three of a kind can be in any order. Three letter words
 must be either the first three letters or the last three letters. All words
-must be in order.
+must have the letters in the correct order.
 
 Seven Words has three rows and one, two, or three plays. One play plays the
 center row, two plays plays the top and bottom row, and three plays plays all
@@ -222,8 +222,8 @@ class Machine(object):
     def __repr__(self):
         """Debugging text representation. (str)"""
         text = '<{} Machine with {} and {}>'
-        reel_text = '{} {}'.format(len(self.reels), utility.plural(len(self.reels), 'reel'))
-        row_text = '{} {}'.format(rows, utility.plural(rows, 'row'))
+        reel_text = utility.num_text(len(self.reels), 'reel')
+        row_text = utility.num_text(rows, 'row')
         return text.format(self.name, reel_text, row_text)
 
     def __str__(self):
@@ -254,7 +254,7 @@ class Machine(object):
 
     def finish(self):
         """Fill in the extra rows of the machine. (None)"""
-        for reel in range(len(self.reels) - 1):
+        for reel in range(self.rows - 1):
             self.state.append([(index + 1) % len(reel) for index, reel in zip(self.state[-1], self.reels)])
         self.state = self.state[-self.rows:]
 
@@ -308,7 +308,7 @@ class Machine(object):
         """
         Spin the reels. (list)
 
-        The return value explained in the help for all_payouts.
+        The return value is explained in the help for all_payouts.
 
         Parameters:
         player: The player making the spin. (player.Player)
@@ -324,10 +324,10 @@ class Machine(object):
         for step in range(108):
             player.tell(self.row_text(self.state[-1]))
             time.sleep(pause)
-            if step >= 50:
-                pause += 0.005
-            if step >= 80:
-                pause += 0.005
+            if step >= 66:
+                pause += 0.003
+            if step >= 97:
+                pause += 0.007
             self.step()
         # Show the final state of the machine.
         self.finish()
@@ -499,11 +499,11 @@ class FullHouse(Machine):
         has_letters = has_lowers or has_uppers
         # Determine the payouts.
         if has_digits and has_lowers and has_uppers and has_symbols:
-            payout, text = 2, 'a password'
+            payout, text = 4, 'a password'
         else:
             payout, text = 0, 'nothing'
         if counts == [5, 5, 5, 5, 5]:
-            payout, text = 10000, 'the fiver jackpot'
+            payout, text = 100000, 'the fiver jackpot'
         elif has_digits and not has_letters and not has_symbols:
             payout, text = 30, 'pure digits'
         elif ''.join(raw_values).lower() == 'xyzzy':
@@ -521,7 +521,7 @@ class FullHouse(Machine):
             if text == 'a password':
                 payout, text = 12, "a password pair ({}'s)".format(pair)
             else:
-                payout, text = 4, "a pair ({}'s)".format(pair)
+                payout, text = 2, "a pair ({}'s)".format(pair)
         elif counts == [1, 2, 2, 2, 2]:
             high, low = values[3], values[1]
             payout, text = 15, "two pair ({}'s and {}'s)".format(high, low)
@@ -609,10 +609,9 @@ class SevenWords(Machine):
         elif counts == [4, 4, 4, 4]:
             payout, text = 1080, "four-of-a-kind ({}'s)".format(values[0])
         elif counts == [1, 3, 3, 3]:
-            values.sort()
-            payout, text = 40, "three-of-a-kind ({}'s)".format(values[1])
+            payout, text = 40, "three-of-a-kind ({}'s)".format(sorted(values)[1])
         elif counts == [2, 2, 2, 2]:
-            values.sort()
+            values = sorted(values)
             payout, text = 22, "two pair ({}'s and {}'s)".format(values[0], values[2])
         elif word in self.words_four:
             payout, text = 16, 'a four letter English word ({})'.format(word.lower())
@@ -651,7 +650,6 @@ class Slots(game.Game):
     default
     do_quit
     game_over
-    player_action
     set_options
     set_up
     """
@@ -661,6 +659,7 @@ class Slots(game.Game):
     aliases = {'s': 'spin', 'sw': 'switch', 'pull': 'spin', 'p': 'spin', '': 'spin'}
     credits = CREDITS
     categories = ['Gambling Games']
+    move_query = '\nWhat would you like to do? '
     name = 'Slot Machines'
     num_options = 1
     options = OPTIONS
@@ -668,9 +667,9 @@ class Slots(game.Game):
 
     def __str__(self):
         """Human readable text representation. (str)"""
-        text = '\nYou are playing {}.\nYou have {} {} left'
-        bucks = utility.plural(self.scores[self.human.name], 'buck')
-        return text.format(self.machine.name, self.scores[self.human.name], bucks)
+        text = '\nYou are playing {}.\nYou have {} left'
+        bucks = utility.num_text(self.scores[self.human.name], 'buck')
+        return text.format(self.machine.name, bucks)
 
     def do_gipf(self, arguments):
         """
@@ -722,19 +721,19 @@ class Slots(game.Game):
         Stop playing Blackjack. (!)
         """
         # Determine overall winnings or losses.
-        self.scores[self.human.name] -= self.stake
+        self.scores[self.human] -= self.stake
         # Determine if the game is a win or a loss.
         result = 'won'
-        if self.scores[self.human.name] > 0:
+        if self.scores[self.human] > 0:
             self.win_loss_draw[0] = 1
-        elif self.scores[self.human.name] < 0:
+        elif self.scores[self.human] < 0:
             result = 'lost'
             self.win_loss_draw[1] = 1
         else:
             self.win_loss_draw[2] = 1
         # Inform the user.
-        plural = utility.plural(abs(self.scores[self.human.name]), 'buck')
-        self.human.tell('\nYou {} {} {}.'.format(result, abs(self.scores[self.human.name]), plural))
+        plural = utility.num_text(abs(self.scores[self.human]), 'buck')
+        self.human.tell('\nYou {} {}.'.format(result, plural))
         # Quit the game.
         self.flags |= 4
         self.force_end = True
@@ -759,7 +758,7 @@ class Slots(game.Game):
             # Use the default if there are no arguments.
             plays = self.default_plays
         # Make sure the player has enough money.
-        if plays * self.machine.cost > self.scores[self.human.name]:
+        if plays * self.machine.cost > self.scores[self.human]:
             self.human.error('\nYou do not have enough money to do that.')
             return True
         # Spin the machine.
@@ -772,7 +771,7 @@ class Slots(game.Game):
         freebies = min(self.free_spins, plays)
         plays -= freebies
         self.free_spins -= freebies
-        self.scores[self.human.name] -= self.machine.cost * plays
+        self.scores[self.human] -= self.machine.cost * plays
         # Inform the player of the results.
         self.human.tell('')
         total_payout = 0
@@ -788,8 +787,8 @@ class Slots(game.Game):
             total_payout += bucks
         # Give the overall results.
         if total_payout:
-            bucks = utility.plural(total_payout, 'buck')
-            self.human.tell('\nYour won a total of {} {} this spin.'.format(total_payout, bucks))
+            bucks = utility.num_text(total_payout, 'buck')
+            self.human.tell('\nYour won a total of {} this spin.'.format(bucks))
             self.scores[self.human.name] += total_payout
         else:
             self.human.tell('\nYou did not win anything this spin.')
@@ -845,17 +844,6 @@ class Slots(game.Game):
             return True
         else:
             return False
-
-    def player_action(self, player):
-        """
-        Handle a player's turn or other player actions. (bool)
-
-        Parameters:
-        player: The player whose turn it is. (Player)
-        """
-        player.tell(self)
-        move = player.ask('\nWhat would you like to do? ')
-        return self.handle_cmd(move)
 
     def set_options(self):
         """Define the game options. (None)"""

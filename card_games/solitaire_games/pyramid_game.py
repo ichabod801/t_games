@@ -26,27 +26,7 @@ Game Design: Traditional
 Game Programming: Craig "Ichabod" O'Brien
 """
 
-# The rules for Pyramid.
-RULES = """
-A pyramid of cards is dealt out with one card on the top row, two cards on the
-second row, and so on for seven rows. Cards are open on the tableau if both of
-the card under that card have been removed. For example, in this layout:
-
-    AC
-  JD  KD
-5S
-
-The five of spades and the king of diamonds are available for play, but the
-jack of diamonds is blocked by the five of spades, and the ace of clubs is
-blocked by the jack and king of diamonds.
-
-Any pair that totals thirteen may be matched to the foundation. Jacks count as
-11, queens as 12, and kings as 13 (kings may just be sorted to the
-foundation). The stock may be turned over one at a time to be matched with
-cards on the tableau. However, any unused waste cards are sorted to the
-foundation.
-"""
-
+# The options for Pyramid.
 OPTIONS = """
 cells= (c): The number of free cells available. 0 to 10, defaults to 0.
 giza (g): Fully open game with 8 reserve piles. Equivalent to 'reserve=8
@@ -66,6 +46,27 @@ standard-turn (st): Cards are not sorted from the waste when turning cards
     from the stock.
 turn-count= (tc): How many cards are turned over from the stock at a time.
     Defaults to 1.
+"""
+
+# The rules for Pyramid.
+RULES = """
+A pyramid of cards is dealt out with one card on the top row, two cards on the
+second row, and so on for seven rows. Cards are open on the tableau if both of
+the card under that card have been removed. For example, in this layout:
+
+    AC
+  JD  KD
+5S
+
+The five of spades and the king of diamonds are available for play, but the
+jack of diamonds is blocked by the five of spades, and the ace of clubs is
+blocked by the jack and king of diamonds.
+
+Any pair that totals thirteen may be matched to the foundation. Jacks count as
+11, queens as 12, and kings as 13 (kings may just be sorted to the
+foundation). The stock may be turned over one at a time to be matched with
+cards on the tableau. However, any unused waste cards are sorted to the
+foundation.
 """
 
 

@@ -25,6 +25,11 @@ Game Design: Traditional
 Game Programming: Craig "Ichabod" O'Brien
 """
 
+OPTIONS = """
+gonzo (gz): equivalent to reserved.
+reserved (r): One pile is used as a reserve pile.
+"""
+
 RULES = """
 Four aces are dealt as four of the eight foundations. Thirteen columns of
 cards are dealt as the tableau: four columns of three cards under the ace
@@ -57,6 +62,7 @@ class Bisley(solitaire.Solitaire):
     credits = CREDITS
     name = 'Bisley'
     num_options = 1
+    options = OPTIONS
     rules = RULES
 
     def __str__(self):
@@ -72,7 +78,7 @@ class Bisley(solitaire.Solitaire):
         """
         Liar's Dice shuffles one tableau pile.
 
-        Strategy lets you move on stack into an empty lane.
+        Strategy lets you move one stack into an empty lane.
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ("liar's dice", 'strategy'))

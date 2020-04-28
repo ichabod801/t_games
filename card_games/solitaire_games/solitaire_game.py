@@ -23,6 +23,7 @@ import random
 from ... import cards
 from ... import game
 from .rule_checkers import *
+from ... import utility
 
 
 HELP_TEXT = """
@@ -269,8 +270,10 @@ class Solitaire(game.Game):
         else:
             self.human.tell('\nYou lost. Better luck next time.')
         # Give a contrats message.
-        message = 'You made {} moves (with {} undos), for a score of {}.'
-        self.human.tell(message.format(self.turns, self.undo_count, self.scores[self.human.name]))
+        message = 'You made {} (with {}), for a score of {}.'
+        move_text = utility.num_text(self.turns, 'move', ':n')
+        undo_text = utility.num_text(self.undo_count, 'undo', ':n')
+        self.human.tell(message.format(move_text, undo_text, self.scores[self.human.name]))
 
     def deal(self):
         """Deal the initial set up for the game. (None)"""
@@ -288,6 +291,7 @@ class Solitaire(game.Game):
         # No cards is just standard error.
         if not cards:
             self.human.error('\nI do not recognize that command.')
+            return True
         # One or two cards are guess moves.
         elif len(cards) == 1:
             return self.guess(cards[0])
@@ -296,6 +300,7 @@ class Solitaire(game.Game):
         # More than two cards is someone being silly.
         else:
             self.human.error("\nI don't know what to do with that many cards.")
+            return True
 
     def do_auto(self, arguments):
         """
@@ -796,7 +801,9 @@ class Solitaire(game.Game):
         deal_text_index = self.option_set.settings_text.find('deal-num')
         if deal_text_index != -1:
             self.option_set.settings_text = self.option_set.settings_text[:(deal_text_index - 1)]
-        if self.raw_options.lower() != 'none' and not self.silent:
+        low_options = self.raw_options.lower()
+        gonzo = 'gonzo' in low_options or 'gz' in low_options
+        if not gonzo and low_options != 'none' and not self.silent:
             prompt = '\nEnter the deal number, or return for a random deal: '
             deal_num = self.human.ask_int(prompt, low = 0, default = -1, cmd = False)
         if deal_num == -1:
@@ -1363,12 +1370,11 @@ class MultiSolitaire(Solitaire):
                         # Check laning the card.
                         elif self.lane_check(card, moving_stack, False):
                             moves.append('lane {:u}'.format(card))
-            if moves:
-                break
         # Make a move if you have one.
         if moves:
-            moves.reverse()
-            return self.handle_cmd(moves.pop())
+            # Sort moves in priority order
+            moves.sort(key = lambda move: 'sbmfl'.index(move[0]))
+            return self.handle_cmd(moves[0])
         # If no moves were found, errror out.
         elif cards:
             self.human.error('\nThere is no valid move for {:a}.'.format(card))
@@ -1453,7 +1459,9 @@ class MultiSolitaire(Solitaire):
         deal_text_index = self.option_set.settings_text.find('deal-num')
         if deal_text_index != -1:
             self.option_set.settings_text = self.option_set.settings_text[:(deal_text_index - 1)]
-        if self.raw_options.lower() != 'none' and not self.silent:
+        low_options = self.raw_options.lower()
+        gonzo = 'gonzo' in low_options or 'gz' in low_options
+        if not gonzo and low_options != 'none' and not self.silent:
             prompt = '\nEnter the deal number, or return for a random deal: '
             deal_num = self.human.ask_int(prompt, low = 0, default = -1, cmd = False)
         if deal_num == -1:

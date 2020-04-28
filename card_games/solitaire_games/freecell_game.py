@@ -121,7 +121,7 @@ class FreeCell(solitaire.Solitaire):
                 self.pair_checkers = []
                 # Get the cards to move.
                 while True:
-                    cards_raw = self.human.ask('Enter a free cell card and a card to build it on: ')
+                    cards_raw = self.human.ask('\nEnter a free cell card and a card to build it on: ')
                     cards = cards_raw.upper().split()
                     if cards[0] not in cell_check:
                         self.human.error('You must build with a free cell card.')
@@ -151,9 +151,11 @@ class FreeCell(solitaire.Solitaire):
         # Set the dealers
         max_cards = (52 - self.num_cells) if self.fill_free else 52
         if self.challenge:
-            self.dealers = [solitaire.deal_twos, solitaire.deal_aces, solitaire.deal_n(max_cards - 8)]
+            self.dealers = [solitaire.deal_twos, solitaire.deal_aces]
+            self.dealers.append(solitaire.deal_n(max_cards - 8, up = True, start = 8))
         elif self.egnellahc:
-            self.dealers = [solitaire.deal_aces, solitaire.deal_twos, solitaire.deal_n(max_cards - 8)]
+            self.dealers = [solitaire.deal_aces, solitaire.deal_twos]
+            self.dealers.append(solitaire.deal_n(max_cards - 8, up = True, start = 8))
         else:
             self.dealers = [solitaire.deal_n(max_cards)]
         if self.fill_free:

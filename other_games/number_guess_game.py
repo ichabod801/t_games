@@ -149,7 +149,7 @@ class GuessBotter(GuessBot):
         """
         # Start in the middle, with fudging to avoid predictability.
         width = high - low + 1
-        start = width // 2 + random.choice((-1, 0, 1))
+        start = width // 2 + random.choice((-1, 0, 1)) + low
         base = [low, start, high]
         # Run a binary search from there.
         while len(base) < width:
@@ -222,15 +222,23 @@ class NumberGuess(game.Game):
         """
         # Run the edge, if possible.
         game, losses = self.gipf_check(arguments, ('canfield', 'ninety-nine'))
-        # Winning Snakes and Ladders gets you a free spin.
+        # Winning Canfield gets you a free guess.
         if game == 'canfield':
             if not losses:
                 self.guesses -= 1
+        # Winning 99 gets you the secret number mod 9.
         elif game == 'ninety-nine':
             if not losses:
                 self.human.tell('\nThe secret number modulo 9 is {}.'.format(self.number % 9))
+        # Otherwise I'm confused.
         else:
             self.human.tell("\nGipf is inside the innermost possible secret number.")
+            return True
+        self.human.tell('\nYour last guess was {}.'.format(self.last_guess))
+        if self.last_guess < self.number:
+            self.human.tell('That was lower than the secret number.')
+        else:
+            self.human.tell('That was higher than the secret number.')
         return True
 
     def do_guess(self, arguments):

@@ -170,10 +170,13 @@ class CalvinCards(solitaire.Solitaire):
                     self.max_passes += 1
                 item = 'tree'
             elif change == 'free':
-                # Increase the number of free cells.
-                self.options['num-cells'] += 1
-                self.num_cells += 1
-                item = 'flag'
+                # Increase the number of free cells, but only to one past max.
+                if self.num_cells <= self.max_cells:
+                    self.options['num-cells'] += 1
+                    self.num_cells += 1
+                    item = 'flag'
+                else:
+                    continue
             elif change == 'reserve':
                 # Redeal the reserve into a random number of piles, if there are enough reserve cards.
                 reserve_cards = sum(self.reserve, [])
@@ -186,9 +189,9 @@ class CalvinCards(solitaire.Solitaire):
             elif change == 'tableau':
                 # Increase the number of tableau piles.
                 if self.tableau.count([]) < 2:
-                    self.options['num-cells'] += 1
-                    self.num_cells += 1
-                    item = 'flag'
+                    self.options['num-tableau'] += 1
+                    self.tableau.append([])
+                    item = 'wicket'
                 else:
                     continue
             break
@@ -206,14 +209,16 @@ class CalvinCards(solitaire.Solitaire):
         game, losses = self.gipf_check(arguments, ('gin rummy', 'rock-paper-scissors'))
         # Gin Rummy forces the build rules to change.
         if game == 'gin rummy':
-            self.change_rules('build')
-            self.keep_rules = 8
+            if not losses:
+                self.change_rules('build')
+                self.keep_rules = 8
         # RPS flips half the cards face up.
         elif game == 'rock-paper-scissors':
-            for pile in self.tableau:
-                for card in pile:
-                    if not card.up and random.randrange(2):
-                        card.up = True
+            if not losses:
+                for pile in self.tableau:
+                    for card in pile:
+                        if not card.up and random.randrange(2):
+                            card.up = True
         # Otherwise I'm confused.
         else:
             self.human.tell('You have stumbled past the perimeter of confusion.')
@@ -230,7 +235,8 @@ class CalvinCards(solitaire.Solitaire):
         """Handle the option settings for this game. (None)"""
         # Confirm the player is wearing a mask.
         if not self.human.ask_yes_no('\nAre you wearing a mask? '):
-            self.option_set.errors.append('No mask.')
+            self.option_set.errors.append("You can't play if you aren't wearing a mask.")
+            self.human.held_inputs = ['no']
             return
         # Do the standard option handling, with no deal number request, and no questions.
         self.silent = True
@@ -245,8 +251,8 @@ class CalvinCards(solitaire.Solitaire):
 
     def increase_sorting_base(self):
         """Increase the base card for sorting. (None)"""
-        current = self.deck.ranks.index(self.foundation_rank)
-        self.foundation_rank = self.deck.ranks[(current + 1) % len(self.deck.ranks)]
+        current = self.deck.rank_set.index(self.foundation_rank)
+        self.foundation_rank = self.deck.rank_set.chars[(current + 1) % len(self.deck.rank_set.chars)]
         if self.foundation_rank == 'X':
             self.foundation_rank = 'A'
         self.lane_ranks.append(self.sort_to_lane[self.foundation_rank])
@@ -308,7 +314,7 @@ class CalvinCards(solitaire.Solitaire):
                     # Remove the tableau pile.
                     self.options['num-tableau'] -= 1
                     del self.tableau[[old_loc is pile for pile in self.tableau].index(True)]
-                    item = 'ball'
+                    item = 'wicket'
                 # Set a message if anything was removed.
                 if item:
                     of = random.choice(self.ofs)
@@ -320,7 +326,7 @@ class CalvinCards(solitaire.Solitaire):
 
     def randomize_build(self):
         """Randomize the building and pairing rules. (None)"""
-        # Get a random build type, but let it stay on by_suit if it is already there.
+        # Get a random build type, but don't let it stay on by_suit if it is already there.
         suit_build = solitaire.pair_suit in self.build_checkers
         while True:
             build_type = random.choice(self.build_types)
@@ -341,7 +347,7 @@ class CalvinCards(solitaire.Solitaire):
         self.deck.cards = reserve_cards
         for card_index in range(len(reserve_cards)):
             self.deck.deal(self.reserve[card_index % len(self.reserve)])
-        self.deck.in_play = self.deck.in_play[:52]  # clean up card tracking.
+        self.deck.in_play = self.deck.in_play[:52]  # clean duplicates out of card tracking.
 
     def set_checkers(self):
         """Randomize the initial rule checkers. (None)"""

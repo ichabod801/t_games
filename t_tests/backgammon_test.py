@@ -218,6 +218,7 @@ class BackDefaultTest(unittest.TestCase):
         self.bot = unitility.AutoBot()
         self.game = backgammon.Backgammon(self.bot, 'none')
         self.game.player_index = 0
+        self.game.current_player = self.game.players[0]
 
     def testAsterisk(self):
         """Test repeating a command with an asterisk."""
@@ -262,6 +263,7 @@ class BackDoBearOTest(unittest.TestCase):
         self.game.players[1].name = 'Evil {}'.format(self.bot.name)
         self.game.set_up()
         self.game.player_index = self.game.players.index(self.game.bot)
+        self.game.current_player = self.game.bot
 
     def testBarredBearError(self):
         """Test of error from bearing off an O with an O still on the bar."""
@@ -392,6 +394,7 @@ class BackDoBearXTest(unittest.TestCase):
         self.game.layout = ((4, 2), (2, 2), (1, 2))
         self.game.set_up()
         self.game.player_index = self.game.players.index(self.bot)
+        self.game.current_player = self.bot
 
     def testAutoBear(self):
         """Test that auto_bear is called after do_bear with no arguments."""
@@ -543,6 +546,7 @@ class BackDoEnterTestO(unittest.TestCase):
         self.game.players[1].name = 'Evil {}'.format(self.bot.name)
         self.game.set_up()
         self.game.player_index = self.game.players.index(self.game.bot)
+        self.game.current_player = self.game.bot
         self.game.board.cells[BAR].contents = ['O']
 
     def testEnterBlockedBar(self):
@@ -652,6 +656,7 @@ class BackDoEnterTestX(unittest.TestCase):
         self.game.layout = ((1, 2), (2, 1), (4, 2), (20, 1))
         self.game.set_up()
         self.game.player_index = self.game.players.index(self.bot)
+        self.game.current_player = self.bot
         self.game.board.cells[BAR].contents = ['X']
 
     def testEnterBlockedBar(self):
@@ -788,8 +793,8 @@ class BackDoubleTest(unittest.TestCase):
 
     def testRefuseContinue(self):
         """Test no match win after a doubling is refused."""
-        self.bot_x.replies = ['yes', '']
-        self.bot_o.replies = ['no']
+        self.bot_x.replies = ['yes', 'no']
+        self.bot_o.replies = ['', 'no']
         self.game.scores = {self.bot_x.name: 2, self.bot_o.name: 1}
         self.game.doubling_die = 1
         self.game.match = 8
@@ -799,7 +804,7 @@ class BackDoubleTest(unittest.TestCase):
 
     def testRefuseLoss(self):
         """Test O winning the game after a doubling is refused."""
-        self.bot_x.replies = ['nein', '']
+        self.bot_x.replies = ['nyet', '']
         self.bot_o.replies = ['Si']
         self.game.scores = {self.bot_x.name: 2, self.bot_o.name: 1}
         self.game.doubling_die = 8
@@ -811,7 +816,7 @@ class BackDoubleTest(unittest.TestCase):
 
     def testRefuseLossMessage(self):
         """Test the message after O wins the game after a doubling is refused."""
-        self.bot_x.replies = ['nein', '']
+        self.bot_x.replies = ['nyet', '']
         self.bot_o.replies = ['Si']
         self.game.scores = {self.bot_x.name: 2, self.bot_o.name: 1}
         self.game.doubling_die = 8
@@ -824,7 +829,7 @@ class BackDoubleTest(unittest.TestCase):
     def testRefuseMatchMessage(self):
         """Test the message after a doubling is refused."""
         self.bot_x.replies = ['Yes', '']
-        self.bot_o.replies = ['nein']
+        self.bot_o.replies = ['nyet']
         self.game.scores = {self.bot_x.name: 1, self.bot_o.name: 2}
         self.game.doubling_die = 2
         self.game.match = 4
@@ -836,7 +841,7 @@ class BackDoubleTest(unittest.TestCase):
     def testRefuseMessage(self):
         """Test the message after a doubling is refused."""
         self.bot_x.replies = ['Yes', '']
-        self.bot_o.replies = ['nein']
+        self.bot_o.replies = ['nyet']
         self.game.scores = {self.bot_x.name: 2, self.bot_o.name: 1}
         self.game.double(self.bot_x, 'X')
         check = '\n{} refuses the double, you win the game.\n'.format(self.bot_o.name)
@@ -845,7 +850,7 @@ class BackDoubleTest(unittest.TestCase):
     def testRefuseScore(self):
         """Test the score after a doubling is refused."""
         self.bot_x.replies = ['Yes', '']
-        self.bot_o.replies = ['nein']
+        self.bot_o.replies = ['nyet']
         self.game.scores = {self.bot_x.name: 1, self.bot_o.name: 1}
         self.game.double(self.bot_x, 'X')
         self.assertEqual(2, self.game.scores[self.bot_x.name])
@@ -853,7 +858,7 @@ class BackDoubleTest(unittest.TestCase):
     def testRefuseWin(self):
         """Test X winning the game after a doubling is refused."""
         self.bot_x.replies = ['Yes', '']
-        self.bot_o.replies = ['nein']
+        self.bot_o.replies = ['nyet']
         self.game.scores = {self.bot_x.name: 2, self.bot_o.name: 1}
         self.game.doubling_die = 2
         self.game.match = 4
@@ -863,7 +868,7 @@ class BackDoubleTest(unittest.TestCase):
     def testRefuseWinMessage(self):
         """Test the message after X wins the game after a doubling is refused."""
         self.bot_x.replies = ['Yes', '']
-        self.bot_o.replies = ['nein']
+        self.bot_o.replies = ['nyet']
         self.game.scores = {self.bot_x.name: 2, self.bot_o.name: 1}
         self.game.doubling_die = 2
         self.game.match = 4

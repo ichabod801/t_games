@@ -61,10 +61,6 @@ class SolitaireDice(game.Game):
     """
     A game of Solitaire Dice. (game.Game)
 
-    Class Attributes:
-    three_numbers_re: A regular expression for three dice. (re.SRE_Expression)
-    two_numbers_re: A regular expression for two dice. (re.SRE_Expression)
-
     Attributes:
     dice: The dice that are rolled. (dice.Pool)
     discards: The numbers discarded and how many times. (dict of int: int)
@@ -92,8 +88,6 @@ class SolitaireDice(game.Game):
     credits = CREDITS
     name = 'Solitaire Dice'
     rules = RULES
-    three_numbers_re = re.compile('([123456]).*?([123456]).*?([123456])')
-    two_numbers_re = re.compile('([123456]).*?([123456])')
 
     def discard_mode(self, player):
         """
@@ -104,13 +98,14 @@ class SolitaireDice(game.Game):
         """
         # Determine what can be discarded.
         if len(self.discards) == 3:
-            allowed_discards = [d for d in self.discards if d in self.roll]
+            allowed_discards = [d for d in self.discards if d in self.dice]
             # Check for a free ride.
             if not allowed_discards or self.free_free:
                 player.tell('Free ride! You may discard any die you want.')
-                allowed_discards = set(self.roll)
+                allowed_discards = self.dice
+                self.free_free = False
         else:
-            allowed_discards = set(self.roll)
+            allowed_discards = self.dice
         # Get the required/requested discard.
         if len(allowed_discards) == 1:
             discard = allowed_discards.pop()
@@ -121,8 +116,7 @@ class SolitaireDice(game.Game):
             # Process valid discards (don't store free rides).
             if len(self.discards) < 3 or discard in self.discards:
                 self.discards[discard] += 1
-            self.roll.remove(discard)
-            self.free_free = False
+            self.dice.hold(discard)
             self.mode = 'split'
         else:
             return self.handle_cmd(discard)
@@ -141,11 +135,11 @@ class SolitaireDice(game.Game):
         # Gargantua lets you change one die to a six.
         elif game == 'gargantua':
             if not losses:
-                self.human.tell('Your roll is:', ', '.join([str(x) for x in self.roll]))
+                self.human.tell('\nYour roll is: {}.'.format(self.dice))
                 query = 'Which value would you like to change to a six? '
-                to_six = self.human.ask_int(query, valid = set(self.roll))
-                self.roll.remove(to_six)
-                self.roll.append(6)
+                to_six = self.human.ask_int(query, valid = self.dice)
+                to_change = self.dice.index(to_six)
+                self.dice[to_change].value = 6
                 return True
         # Otherwise I'm confused.
         else:
@@ -154,7 +148,7 @@ class SolitaireDice(game.Game):
     def game_over(self):
         """Check for any number being discarded 8 times. (bool)"""
         if self.mode == 'roll' and max(self.discards.values()) == 8:
-            score = self.scores[self.human.name]
+            score = self.scores[self.human]
             # Win
             if score < 0:
                 self.human.tell('You lost with {} points. :('.format(score))
@@ -195,9 +189,9 @@ class SolitaireDice(game.Game):
         player: The player whose turn it is. (Player)
         """
         # Roll the dice.
+        self.dice.release()
         self.dice.roll()
-        self.roll = self.dice.values
-        self.roll.sort()
+        self.dice.sort()
         # Set tracking variables.
         self.mode = 'discard'
         self.message = ''
@@ -235,16 +229,16 @@ class SolitaireDice(game.Game):
         player.tell('\nDISCARDS:')
         player.tell('#  Count')
         player.tell('-- -----')
-        for value in self.discards:
-            player.tell('{}: {}'.format(value, self.discards[value]))
+        for value in sorted(self.discards.items()):
+            player.tell('{}: {}'.format(*value))
         # show score
-        player.tell('\nYour current score is {}.'.format(self.scores[player.name]))
+        player.tell('\nYour current score is {}.'.format(self.scores[player]))
         # show message
         if self.message:
             player.tell(self.message.strip())
             self.message = ''
         # show roll
-        player.tell('Your roll is:', ', '.join([str(x) for x in self.roll]))
+        player.tell('Your roll is: {}.'.format(self.dice))
 
     def split_mode(self, player):
         """
@@ -255,13 +249,13 @@ class SolitaireDice(game.Game):
         """
         # Get the split
         prompt = 'Choose two numbers to make a pair: '
-        split = player.ask_int_list(prompt, valid = self.roll, valid_lens = [2])
+        split = player.ask_int_list(prompt, valid = self.dice, valid_lens = [2])
         if isinstance(split, list):
             # Handle a valid split
             self.totals[sum(split)] += 1
-            self.roll.remove(split[0])
-            self.roll.remove(split[1])
-            self.totals[sum(self.roll)] += 1
+            self.dice.hold(split[0])
+            self.dice.hold(split[1])
+            self.totals[sum(self.dice.get_free())] += 1
             self.update_score(player, split)
             self.mode = 'roll'
         else:
@@ -283,4 +277,4 @@ class SolitaireDice(game.Game):
                 score -= 200
             elif total:
                 score += (min(total, 10) - 5) * value
-        self.scores[player.name] = score
+        self.scores[player] = score

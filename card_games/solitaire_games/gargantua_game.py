@@ -74,7 +74,7 @@ class Gargantua(solitaire.MultiSolitaire):
                 for card in self.deck.in_play:
                     if card.rank == 'A':
                         card.up = True
-        if game == 'calvin cards':
+        elif game == 'calvin cards':
             if not losses:
                 self.max_passes += 1
         # Otherwise I'm confused.
@@ -98,6 +98,6 @@ class Gargantua(solitaire.MultiSolitaire):
         self.option_set.add_option('piles', ['p'], action = 'key=num-tableau', target = self.options,
             default = 9, converter = int, question = 'How many tableau piles should their be? ')
         self.option_set.add_option('max-passes', ['mp'], action = 'key=max-passes', target = self.options,
-        	default = 2, converter = int, question = 'How many time can you go through the stock? ')
+        	default = 2, converter = int, question = 'How many times can you go through the stock? ')
         self.option_set.add_group('gonzo', ['gz'], 'max-passes = -1 piles = 10')
         self.option_set.add_group('harp', ['h'], 'max-passes=4')

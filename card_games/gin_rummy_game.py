@@ -252,8 +252,7 @@ class GinBot(player.Bot):
             return [], []
         # Loop through pairs of cards
         full, part, current = [], [], []
-        previous = cards[0]
-        for card in cards[1:]:
+        for previous, card in zip(cards, cards[1:]):
             if check_function(previous, card):
                 # Track melds as they grow.
                 if current:
@@ -261,17 +260,18 @@ class GinBot(player.Bot):
                 else:
                     current = [previous, card]
                 # Check for continuing high/low straights.
-                if card.rank == 'K' and self.game.high_low and 'A' + card.suit in cards:
-                    for meld in full + part:
-                        if 'A' + card.suit in meld and meld[-1].rank != 'A':
-                            current += meld
-                            if meld in full:
-                                full.remove(meld)
-                            else:
-                                part.remove(meld)
-                            break
-                    else:
-                        current.append(cards[cards.index('A' + card.suit)])
+                if self.game.high_low:
+                    if card.rank == 'K' and previous.rank == 'Q' and 'A' + card.suit in cards:
+                        for meld in full + part:
+                            if 'A' + card.suit in meld and meld[-1].rank != 'A':
+                                current += meld
+                                if meld in full:
+                                    full.remove(meld)
+                                else:
+                                    part.remove(meld)
+                                break
+                        else:
+                            current.append(cards[cards.index('A' + card.suit)])
             else:
                 # If the current pair is not a meld, store any previous melds and reset.
                 if len(current) >= 3:
@@ -279,7 +279,6 @@ class GinBot(player.Bot):
                 elif current:
                     part.append(current)
                 current = []
-            previous = card
         # Catch the last match, if any.
         if len(current) >= 3:
             full.append(current)
@@ -298,7 +297,7 @@ class GinBot(player.Bot):
             melds = self.tracking['full-set'] + self.tracking['full-run']
             possibles = sum([meld for meld in melds if len(meld) > 3], [])
         # Discard the one worth the most points.
-        possibles.sort(key = lambda card: self.game.card_values[card.rank])
+        possibles.sort(key = cards.by_rank)
         if not possibles:
             raise player.BotError("Can't find discard with {}.".format(self.hand))
         return possibles[-1]
@@ -309,12 +308,12 @@ class GinBot(player.Bot):
         discard = self.get_discard()
         # Determine score (if you knock).
         dead = sum(self.tracking['part-run'] + self.tracking['part-set'], []) + self.tracking['deadwood']
-        score = sum(self.game.card_values[card.rank] for card in dead)
+        score = sum(dead)
         if dead:
-            dead.sort(key = lambda card: card.rank_num)
-            discard_score = self.game.card_values[dead[-1].rank]
+            dead.sort(key = cards.by_rank)
+            discard_score = dead[-1].value
         else:
-            discard_score = self.game.card_values[discard.rank]
+            discard_score = discard.value
         # Check if knocking is possible/reasonable.
         command = 'discard'
         if score - discard_score <= self.knock_max():
@@ -411,27 +410,27 @@ class GinBot(player.Bot):
         Note that if a card is in a run and a set, this tracks the run as a meld and
         the set as a potential meld.
         """
-        cards = self.hand[:]
+        my_cards = self.hand[:]
         # Check for runs.
-        cards.sort()
-        full_runs, part_runs = self.find_melds(cards, self.run_pair)
+        my_cards.sort()
+        full_runs, part_runs = self.find_melds(my_cards, self.run_pair)
         # Remove cards in full runs.
         used = set(sum(full_runs, []))
-        cards = [card for card in cards if card not in used]
+        my_cards = [card for card in my_cards if card not in used]
         # Check for sets.
-        cards.sort(key = lambda card: card.rank_num)
-        full_sets, part_sets = self.find_melds(cards, self.set_pair)
+        my_cards.sort(key = cards.by_rank)
+        full_sets, part_sets = self.find_melds(my_cards, self.set_pair)
         # Find partial sets matching full runs.
         breaks = []
         for part_set in part_sets:
             for run in full_runs:
                 if part_set[0].rank in [card.rank for card in run]:
                     # Compare the score of the broken run to the broken group.
-                    rank_score = self.game.card_values[part_set[0].rank]
+                    rank_score = part_set[0].value
                     broken_run = [card for card in run if card.rank != part_set[0].rank]
                     remainder, waste = self.find_melds(broken_run, self.run_pair)
-                    remainder_score = sum([self.game.card_values[card.rank] for card in sum(remainder, [])])
-                    run_score = sum([self.game.card_values[card.rank] for card in run])
+                    remainder_score = sum(sum(remainder, []))
+                    run_score = sum(run)
                     # If the broken run leaves less points in hand, mark it for breaking.
                     if run_score - remainder_score - rank_score < 2 * rank_score:
                         full_set = part_set + [card for card in run if card.rank == part_set[0].rank]
@@ -446,13 +445,13 @@ class GinBot(player.Bot):
                 full_runs.extend(remainder)
         # Find the partial runs with the remaining cards.
         used = set(sum(full_sets + full_runs + part_sets, []))
-        cards = [card for card in self.hand if card not in used]
-        cards.sort(key = lambda card: (card.suit, card.rank_num))
-        empty, part_runs = self.find_melds(cards, self.run_pair)
+        my_cards = [card for card in self.hand if card not in used]
+        my_cards.sort(key = cards.by_suit_rank)
+        empty, part_runs = self.find_melds(my_cards, self.run_pair)
         # Calculate deadwood, and store the full and partial melds.
         used.update(*part_runs)
         self.tracking = {'attacks': [], 'full-run': full_runs, 'full-set': full_sets, 'part-run': part_runs,
-            'part-set': part_sets, 'deadwood': [card for card in cards if card not in used]}
+            'part-set': part_sets, 'deadwood': [card for card in my_cards if card not in used]}
 
     def tell(self, *args, **kwargs):
         """
@@ -552,17 +551,19 @@ class TrackingBot(GinBot):
         """
         # Loop through the target cards.
         adjacents = set()
+        targets = self.game.deck.parse_text(' '.join(targets))
+        if not isinstance(targets, list):
+            targets = [targets]
         for card in targets:
             # Add other cards of the same rank.
             for suit in self.game.deck.suits:
-                if suit != card[1]:
-                    adjacents.add(cards.Card(card[0], suit))
+                if suit != card.suit:
+                    adjacents.add(self.game.deck.parse_text(card.rank + suit))
             # Add other cards of the same suit and adjacent rank.
-            rank_index = self.game.deck.ranks.index(card[0])
-            if rank_index > 1:
-                adjacents.add(cards.Card(self.game.deck.ranks[rank_index - 1], card[1]))
-            if rank_index < 13:
-                adjacents.add(cards.Card(self.game.deck.ranks[rank_index + 1], card[1]))
+            if card.rank_num > 1:
+                adjacents.add(card.previous())
+            if card.rank_num < 13:
+                adjacents.add(card.next())
         return adjacents
 
     def get_discard(self):
@@ -583,7 +584,7 @@ class TrackingBot(GinBot):
                 possibles = sum([meld for meld in melds if len(meld) > 3], [])
                 possibles = [card for card in possibles if card not in dangerous]
             # Return the highest rank.
-            possibles.sort(key = lambda card: card.rank_num)
+            possibles.sort(key = cards.by_rank)
             if possibles:
                 return possibles[-1]
         if not possibles:
@@ -664,6 +665,7 @@ class GinRummy(game.Game):
     knock_max: The maximum number of points you can have when knocking. (int)
     match: How many games are played to determine the winner. (int)
     match_scores: The total points scored by each player in the match. (dict)
+    rank_set: The ranks of cards used by the game. (cards.FeatureSet)
     side_deck: A deck of cards for determining knock limits. (cards.Deck)
     side_limit: A flag for using another deck to set the knock limit. (bool)
     spade_doubles: A flag for an intial spade discard doubling the score. (bool)
@@ -709,13 +711,11 @@ class GinRummy(game.Game):
     def deal(self):
         """Deal the cards. (None)"""
         # Rest the deck and the hands.
-        self.deck = cards.Deck()
-        self.hands = {player.name: cards.Hand(deck = self.deck) for player in self.players}
+        self.deck = cards.Deck(rank_set = self.rank_set)
+        self.hands = self.deck.player_hands(self.players)
         self.deck.shuffle()
         # Deal 10 cards to each player.
-        for card in range(10):
-            for hand in self.hands.values():
-                hand.draw()
+        self.deck.deal_n_each(10, self.players)
         for player in self.players:
             player.tell('\n{} deals.'.format(self.dealer))
         # Discard one card.
@@ -734,7 +734,7 @@ class GinRummy(game.Game):
                 self.knock_max = self.card_values[side_discard.rank]
             text = 'The discard from the side deck was {}, the maximum knock score is {}.'
             self.human.tell(text.format(side_discard, self.knock_max))
-        if (self.spade_doubles and discard.suit == 'S'):
+        if self.spade_doubles and discard.suit == 'S':
             self.doubler = 2
             self.human.tell('The score for this hand will be doubled.')
         else:
@@ -810,12 +810,7 @@ class GinRummy(game.Game):
             if not losses:
                 hand = self.hands[self.human]
                 self.human.tell('\nYour hand is: {}.'.format(hand))
-                while True:
-                    card = self.human.ask('What card do you want to change the rank of? ').upper()
-                    if card in hand:
-                        break
-                    else:
-                        self.human.error('You do not have the {} in your hand.'.format(card))
+                card = self.human.ask_card('What card do you want to change the rank of? ', valid = hand)
                 while True:
                     rank = self.human.ask('What do you want the new rank to be? ').upper()
                     if rank in self.deck.ranks:
@@ -823,7 +818,7 @@ class GinRummy(game.Game):
                     else:
                         self.human.error('{!r} is not a valid rank.'.format(rank))
                 card_index = hand.index(card)
-                new_card = cards.Card(rank, card[1])
+                new_card = self.deck.parse_text(rank + card.suit)
                 new_card.up = True
                 hand[card_index] = new_card
         # Liar's Dice changes one card's suit.
@@ -831,12 +826,7 @@ class GinRummy(game.Game):
             if not losses:
                 hand = self.hands[self.human]
                 self.human.tell('\nYour hand is: {}.'.format(hand))
-                while True:
-                    card = self.human.ask('What card do you want to change the suit of? ').upper()
-                    if card in hand:
-                        break
-                    else:
-                        self.human.error('You do not have the {} in your hand.'.format(card))
+                card = self.human.ask_card('What card do you want to change the suit of? ', valid = hand)
                 while True:
                     suit = self.human.ask('What do you want the new suit to be? ').upper()
                     if suit in self.deck.suits:
@@ -844,7 +834,7 @@ class GinRummy(game.Game):
                     else:
                         self.human.error('{!r} is not a valid suit.'.format(suit))
                 card_index = hand.index(card)
-                new_card = cards.Card(card[0], suit)
+                new_card = self.deck.parse_text(card.rank + suit)
                 new_card.up = True
                 hand[card_index] = new_card
         # Otherwise I'm confused.
@@ -858,7 +848,7 @@ class GinRummy(game.Game):
         """
         # Get the players.
         attacker = self.current_player
-        defender = self.players[1 - self.player_index]
+        defender = self.get_next_player()
         # Get the attacker's discard.
         discard = self.get_knock_discard(attacker, argument)
         if discard != 'BIG':
@@ -868,12 +858,12 @@ class GinRummy(game.Game):
             knock_max = 0
         # Spread the dealer's hand.
         attack_melds, attack_deadwood, attack_spread = self.spread(attacker)
-        attack_score = sum([self.card_values[card.rank] for card in attack_deadwood])
+        attack_score = sum(attack_deadwood)
         if attack_score > knock_max:
             if attack_melds:
                 text = 'You need {} points or less to knock, but you have {}.'
-                attacker.error(text.format(knock_max, attack_score), attack_melds, attack_deadwood, end = '\n')
-                self.hands[attacker.name].extend(attack_spread.cards)
+                attacker.error(text.format(knock_max, attack_score))
+                self.hands[attacker].extend(attack_spread.cards)
             return False
         self.show_melds(attack_melds, attack_deadwood, defender, 'attacking')
         # Get the defender's melds.
@@ -884,7 +874,7 @@ class GinRummy(game.Game):
         else:
             defender.tell('Gin! You may not lay off.')
             defense_melds, defense_deadwood, defense_spread = self.spread(defender)
-        defense_score = sum([self.card_values[card.rank] for card in defense_deadwood])
+        defense_score = sum(defense_deadwood)
         self.show_melds(defense_melds, defense_deadwood, attacker, 'defending')
         # Score the hands.
         score_diff = defense_score - attack_score
@@ -950,6 +940,7 @@ class GinRummy(game.Game):
                 reciever.tell('{}: {}/{}/{}'.format(player, *scores))
             else:
                 reciever.tell('{}: {}'.format(player, self.scores[player]))
+        return True
 
     def game_over(self):
         """Check for end of game and calculate the final score. (bool)"""
@@ -996,12 +987,14 @@ class GinRummy(game.Game):
         """
         self.human.tell('\nThe {}game is over.'.format(nth))
         # Give the ender the game bonus.
-        ender = self.current_player
+        score_pairs = [(score, player) for player, score in scores.items()]
+        score_pairs.sort()
+        ender = score_pairs[-1][1]
         text = '{} scores {} points for ending the {}game.'
-        self.human.tell(text.format(ender, self.game_bonus, nth))
+        self.human.tell(text.format(ender, self.game_bonus, nth)) # !! you can score 1 point.
         scores[ender] += self.game_bonus
         # Check for a sweep bonus.
-        opponent = self.players[1 - self.player_index]
+        opponent = score_pairs[0][1]
         if not wins[opponent]:
             self.human.tell('{} doubles their score for sweeping the {}game.'.format(ender, nth))
             scores[ender] *= 2
@@ -1059,10 +1052,10 @@ class GinRummy(game.Game):
         super(GinRummy, self).handle_options()
         # Set the players.
         if self.easy:
-            self.players = [self.human, GinBot(taken_names = [self.human.name])]
+            self.players = [self.human, GinBot(taken_names = [self.human])]
         else:
-            #self.players = [self.human, player.Cyborg(taken_names = [self.human.name])]
-            self.players = [self.human, TrackingBot(taken_names = [self.human.name])]
+            #self.players = [self.human, player.Cyborg(taken_names = [self.human])]
+            self.players = [self.human, TrackingBot(taken_names = [self.human])]
         # Handle match play.
         if self.match > 1:
             self.flags &= 256
@@ -1084,7 +1077,7 @@ class GinRummy(game.Game):
             target = target.strip()
         else:
             target = ''
-        card_text = self.parse_meld(arguments, hand.cards)
+        card_text = self.parse_meld(arguments, hand)
         # Make sure the target is in the hand.
         if target and target not in hand:
             player.error('You do not have the target card in your hand.')
@@ -1122,7 +1115,7 @@ class GinRummy(game.Game):
 
         Parameters:
         meld: The split input from the user. (list of str)
-        cards: The cards in hand at the moment. (list of card.Card)
+        cards: The cards in hand at the moment. (cards.Hand)
         """
         meld = meld.lower().replace(' -', '-').replace('- ', '-').split()   # !! this should be a regex
         # Check for shorthand.
@@ -1152,7 +1145,7 @@ class GinRummy(game.Game):
             elif len(meld[0]) == 1:
                 rank = meld[0].upper()
                 if rank in self.deck.ranks:
-                    meld = [card.up_text for card in cards if card.rank == meld[0].upper()]
+                    meld = [card.up_text for card in cards.find(rank = rank)]
                 else:
                     meld = ['error']
         # Return other melds unprocessed.
@@ -1191,6 +1184,7 @@ class GinRummy(game.Game):
             while True:
                 move = player.ask('Would you like to draw from the diScards or the top of the decK? ')
                 move = move.lower()
+                words = move.split()
                 if move in ('discard', 'discards', self.deck.discards[-1], 's'):
                     draw_text = '\n{} drew the {} from the discard pile.'
                     foe.tell(draw_text.format(player, self.deck.discards[-1]))
@@ -1200,7 +1194,7 @@ class GinRummy(game.Game):
                     foe.tell('\n{} drew from the deck.'.format(player))
                     self.hands[player].draw()
                     break
-                elif move.split()[0] in ('l', 'left', 'r', 'right'):
+                elif words and words[0] in ('l', 'left', 'r', 'right'):
                     self.handle_cmd(move)
                     player.tell('\nDiscard Pile: {}'.format(discard_text))
                     player.tell('Your Hand: {}'.format(self.hands[player]))
@@ -1278,11 +1272,11 @@ class GinRummy(game.Game):
     def set_up(self):
         """Set up the game. (None)"""
         # Set up the cards.
-        rank_set = cards.STANDARD_RANKS.copy()
-        rank_set.values['A'] = self.ace_penalty
-        self.card_values = rank_set.values
-        self.deck = cards.Deck(rank_set = rank_set)
-        self.hands = {player: cards.Hand(deck = self.deck) for player in self.players}
+        self.rank_set = cards.STANDARD_RANKS.copy()
+        self.rank_set.values['A'] = self.ace_penalty
+        self.card_values = self.rank_set.values
+        self.deck = cards.Deck(rank_set = self.rank_set)
+        self.hands = self.deck.player_hands(self.players)
         self.dealer = random.choice(self.players)
         self.side_deck = cards.Deck()
         # Set up the tracking variables.
@@ -1325,15 +1319,17 @@ class GinRummy(game.Game):
         spread = cards.Hand(deck = self.deck)
         # Get the melds and layoffs.
         scoring_sets = []
+        player.tell('\nWhile spreading cards you may hit enter to finish, cancel to abort, or')
+        player.tell('   reset to start over again.')
         while True:
             player.tell('\nThe following cards are still in your hand: {}'.format(unspread))
-            meld_text = player.ask('Enter a set of cards to spread (return to finish, cancel to abort): ')
+            meld_text = player.ask('Enter a set of cards to spread (or enter/cancel/reset): ')
             meld = self.parse_meld(meld_text, unspread)
             # Check for no more scoring cards.
             if not meld:
                 break
             elif meld == ['cancel']:
-                if player == self.players[self.player_index]:
+                if player == self.current_player:
                     unspread.extend(spread.cards)
                     spread.cards = []
                     return [], unspread, spread
@@ -1359,8 +1355,8 @@ class GinRummy(game.Game):
                     for target in attack:
                         valid = self.validate_meld([card.up_text for card in target] + meld)
                         if valid:
-                            target.extend([cards.Card(*card.upper()) for card in meld])
-                            target.sort(key = lambda card: card.rank_num)
+                            target.extend([self.deck.parse_text(card) for card in meld])
+                            target.sort(key = cards.by_rank)
                             break
                 # Handle the cards.
                 if valid:
@@ -1374,7 +1370,7 @@ class GinRummy(game.Game):
                 elif has_cards:   # only print one error message.
                     # Warn if the meld or layoff is invalid.
                     layoff = ' or layoff' if attack else ''
-                    player.error('That is not a valid meld{}.'.format(layoff))
+                    player.error('{!r} is not a valid meld{}.'.format(meld_text, layoff))
         # Return the melds and the deadwood.
         return scoring_sets, unspread, spread
 
@@ -1412,6 +1408,7 @@ class GinRummy(game.Game):
         try:
             meld.sort(key = lambda card: self.deck.rank_set.index(card[0].upper()))
         except ValueError:
+            #print('Meld sort error')
             return False
         # Check for a set.
         if len(set(card[0].upper() for card in meld)) == 1:

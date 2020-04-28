@@ -339,27 +339,27 @@ class InterfacePlayGameTest(unittest.TestCase):
 
     def testAgain(self):
         """Test playing a game and then playing again."""
-        self.bot.replies = ['win', 'y', 'loss' 'n', '!']
+        self.bot.replies = ['win', 'y', 'loss', 'n', '!']
         self.interface.play_game(unitility.TestGame, '')
         self.assertEqual(2, len(self.bot.results))
 
     def testCheat(self):
         """Test playing a game with cheating."""
-        self.bot.replies = ["& setattr(self, 'flags', 2)", 'win' 'n', '!']
+        self.bot.replies = ["& setattr(self, 'flags', 2)", 'win', 'n', '!']
         self.interface.play_game(unitility.TestGame, '')
         check = '\nStatistics were calculated with the following options: cheat.\n'
         self.assertIn(check, self.bot.info)
 
     def testGipf(self):
         """Test playing a game with gipfing."""
-        self.bot.replies = ["& setattr(self, 'flags', 8)", 'win' 'n', '!']
+        self.bot.replies = ["& setattr(self, 'flags', 8)", 'win', 'n', '!']
         self.interface.play_game(unitility.TestGame, '')
         check = '\nStatistics were calculated with the following options: gipf.\n'
         self.assertIn(check, self.bot.info)
 
     def testMultiFilter(self):
         """Test playing a game with multiple statistics blocks."""
-        self.bot.replies = ["& setattr(self, 'flags', 130)", 'win' 'n', '!']
+        self.bot.replies = ["& setattr(self, 'flags', 130)", 'win', 'n', '!']
         self.interface.play_game(unitility.TestGame, 'cheat xyzzy')
         check = '\nStatistics were calculated with the following options: cheat xyzzy.\n'
         self.assertIn(check, self.bot.info)
@@ -383,7 +383,7 @@ class InterfacePlayGameTest(unittest.TestCase):
 
     def testXyzzy(self):
         """Test playing a game with xyzzy."""
-        self.bot.replies = ["& setattr(self, 'flags', 128)", 'win' 'n', '!']
+        self.bot.replies = ["& setattr(self, 'flags', 128)", 'win', 'n', '!']
         self.interface.play_game(unitility.TestGame, '')
         check = '\nStatistics were calculated with the following options: xyzzy.\n'
         self.assertIn(check, self.bot.info)

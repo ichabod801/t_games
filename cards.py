@@ -155,7 +155,7 @@ class FeatureSet(object):
         Parameters:
         char: The rank character to check validity of. (str)
         """
-        return char in self.names
+        return char in self.chars
 
     def __iter__(self):
         """Iterate over the characters. (iterator)"""
@@ -741,15 +741,15 @@ class Deck(Pile):
         # Get the joker ranks and suits.
         joker_ranks = self.rank_set.chars[:self.rank_set.skip]
         if self.suit_set.skip:
-            joker_suits = self.suit_set.chars
-        else:
             joker_suits = self.suit_set.chars[:self.suit_set.skip]
+        else:
+            joker_suits = self.suit_set.chars
         # Add the jokers.
         for deck in range(decks):
             for rank in joker_ranks:
                 for suit_index in range(self.jokers):
                     suit = joker_suits[suit_index % len(self.suit_set)]
-                    self.cards.append(Card(joker_rank, suit))
+                    self.cards.append(Card(rank, suit))
 
     def cut(self, card_index):
         """
@@ -795,9 +795,10 @@ class Deck(Pile):
             return [self.deal(up = up) for card in range(n)]
         else:
             # Deal n cards to each player.
+            game = players[0].game
             for card in range(n):
-                for player, hand in players[0].game.hands.items():
-                    hand.draw()
+                for player in players:
+                    game.hands[player].append(self.deal(up = up))
 
     def discard(self, card, up = False):
         """
@@ -882,6 +883,7 @@ class Hand(Pile):
     A hand of cards held by a player. (Pile)
 
     Attributes:
+    cards: The cards in the hand. (list of Card)
     deck: The deck the cards in the hand come from. (Deck)
 
     Methods:
@@ -1006,7 +1008,7 @@ class Hand(Pile):
         """
         Get a subset of the cards in the hand. (Hand)
 
-        Parameters are processed in the following order: rank, suit, re, not_rank,
+        Parameters are processed in the following order: rank, suit, regex, not_rank,
         not_suit. Without parameters it returns a shallow copy of the hand.
 
         Parameters:

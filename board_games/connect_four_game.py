@@ -43,7 +43,7 @@ OPTIONS = """
 bot-level= (b=): How good the computer opponent is. Can be easy (e),
     medium (m), or hard (h). The default is medium.
 columns (c): How many columns the board should have (4-35, default 7).
-gonzo: Equivalent to 'columns = 17 rows = 18 pop'.
+gonzo: Equivalent to 'columns = 7 rows = 18 pop'.
 pop (p): Allow pop moves, where you remove a piece of yours that is at the
     bottom of a column.
 rows: (r): How many rows the board should have (4-20, default 6).
@@ -98,7 +98,10 @@ class C4BotAlphaBeta(player.AlphaBetaBot):
         prompt: The information needed from the player. (str)
         """
         if prompt == '\nWhat symbol would you like to use? ':
-            self.symbol = random.choice('@#XO')
+            while True:
+                self.symbol = random.choice('@#XO')
+                if self.symbol not in self.game.symbols:
+                    break
             return self.symbol
         else:
             super(C4BotAlphaBeta, self).ask(prompt)
@@ -548,12 +551,12 @@ class ConnectFour(game.Game):
             if not losses:
                 self.bot_random = True
         # Handle Hunt the Wumpus edge.
-        elif game == 'wumpus':
+        elif game == 'hunt the wumpus':
             if not losses:
                 # Remind the human.
                 self.human.tell(self)
                 # Get the column to reverse.
-                query = 'Which column would you like to reverse? '
+                query = '\nWhich column would you like to reverse? '
                 col = self.human.ask_int(query, low = 1, high = self.board.dimensions[0])
                 # Get the cell contents in reverse.
                 pieces = []

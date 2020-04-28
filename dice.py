@@ -659,9 +659,12 @@ class Pool(object):
         rolled. Will raise an error for non-integer dice, and may be sparse depending
         on the value of self.sides.
         """
-        counts = [0] * (max(self.dice[0].sides)  + 1)
-        for value in self.values:
-            counts[value] += 1
+        if self.dice:
+            counts = [0] * (max(self.dice[0].sides)  + 1)
+            for value in self.values:
+                counts[value] += 1
+        else:
+            counts = [0] * 7
         return counts
 
     def describe(self):
@@ -714,7 +717,9 @@ class Pool(object):
         values: The values of the dice to hold. (int or list of int)
         """
         # Check for single value.
-        if not isinstance(values, (list, tuple, set)):
+        try:
+            values = iter(values)
+        except TypeError:
             values = [values]
         # Loop through the values.
         unheld = [die for die in self.dice if not die.held]

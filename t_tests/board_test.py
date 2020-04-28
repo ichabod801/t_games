@@ -225,8 +225,9 @@ class BoardTest(unittest.TestCase):
     def testValues(self):
         """Test iterating over a board's items."""
         data = [cell.contents for cell in self.board.values()]
-        data.sort()
-        self.assertEqual([None, None, None, '&', '@'], data)
+        self.assertEqual(data.count(None), 3)
+        self.assertEqual(data.count('@'), 1)
+        self.assertEqual(data.count('&'), 1)
 
 
 class BoardCellTest(unittest.TestCase):

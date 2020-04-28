@@ -92,13 +92,13 @@ cars-pay-3 (c3): Make 12 (boxcars) pay 3:1 on a field bet.
 gonzo (gz): Equivalent to 'cars-pay-3 limit=1000 max-payout=5 odds-max=81
     yo-pays-2'.
 lazy-hard (lh): Turns hard way bets off during the come out roll.
-limit= (l=): The maximum ammount that can be bet (20).
+limit= (l=): The maximum ammount that can be bet (8).
 max-payout= (m$=): The multiple of the limit that is the maximum payout (3).
 max-players= (mp=): The maximum number of players at the table (7).
 odds-max= (om=): The multiple of the limit for odds bets. If odds-max = 345,
     the maximum is 3x the limit for 4 or 10, 4x the limit for 5 or 9, and 5x
     the limit for 6 or 10. (345)
-stake= (s=): The ammount of money the player starts with (250).
+stake= (s=): The ammount of money the player starts with (100).
 yo-pays-2 (y2): Makes 11 (yo) pay 2:1 on a field bet.
 """
 
@@ -165,15 +165,16 @@ Hard Way (Hard): A hard way bet can be played on 4, 6, 8, or 10. It is a bet
 PROPOSITION (SINGLE-ROLL) BETS:
 (To make a proposition bet, type "prop" or "propositon" and the name of the
     bet.)
-2 (snake eyes/aces): Wins if the next roll is a 2. Pays
-3 (ace-duece): Wins if the next roll is a 3. Pays
-11 (yo): Wins if the next roll is an 11. Pays
-12 (boxcars/midnight/cornrows): Wins if the next roll is a 12. Pays
+2 (snake eyes/aces): Wins if the next roll is a 2. Pays 30:1
+3 (ace-deuce): Wins if the next roll is a 3. Pays 15:1
+11 (yo): Wins if the next roll is an 11. Pays 15:1
+12 (boxcars/midnight/cornrows): Wins if the next roll is a 12. Pays 30:1
 Any 7: Wins if the next roll is a 7. Pays 4:1
-Any Craps (craps/three-way): Wins if the next roll is a 2, 3, or 12. Pays
+Any Craps (craps/three-way): Wins if the next roll is a 2, 3, or 12. Pays 7:1
+C&E: Wins if the next roll is a 2, 3, 11, or 12. Pays 7:1 on 11, 3:1 otherwise.
 Field: Wins if the next roll is 2, 3, 4, 9, 10, 11, or 12. Pays 1:1, or 2:1
     if the 2 or 12 are rolled.
-Hi-lo (2 or 12): Wins if the next roll is either a 2 or a 12. Pays
+Hi-lo (2 or 12): Wins if the next roll is either a 2 or a 12. Pays 15:1
 Horn: Wins if the next roll is 2, 3, 11, or 12. Pays 27:4 if 2 or 12 is
     rolled, 3:1 if 3 or 11 is rolled.
 Whirl (world): Wins if the next rolls is a 2, 3, 11, or 12. Pays 26:5 if 2 or
@@ -210,7 +211,7 @@ class Craps(game.Game):
     bets: The bets the players have made this round. (dict of str: list)
     cars_pay_3: A flag for 12 paying at 3:1 on field bets. (bool)
     dice: The dice that get rolled. (dice.Pool)
-    force_roll: The number that must be rolled next (0 means no forced roll). (int)
+    force_roll: The number that must be rolled next (tuple).
     lazy_hard: A flag for hard ways bets to be off on come out rolls. (bool)
     limit: The maximum bet that can be made. (int)
     max_payout: The multiple of the limit that can be paid out on one bet. (int)
@@ -222,6 +223,7 @@ class Craps(game.Game):
     yo_pays_2: A flag for 11 paying at 2:1 on field bets. (bool)
 
     Methods:
+    add_player: Add a new player to the game. (None)
     do_bets: Show the player's bets. (bool)
     do_done: Finish the player's turn. (bool)
     do_remove: Remove bets that are in play. (bool)
@@ -256,22 +258,32 @@ class Craps(game.Game):
 
     def __str__(self):
         """Create a human readable text representation. (str)"""
-        player = self.players[self.player_index]
+        player = self.current_player
         # Display shooter and point.
         if self.point:
             point_text = 'point = {}'.format(self.point)
         else:
             point_text = 'off'
-        lines = ['\nThe shooter is {} ({}).'.format(self.players[self.shooter_index].name, point_text)]
+        lines = ['\nThe shooter is {} ({}).'.format(self.players[self.shooter_index], point_text)]
         # Display outstanding bets.
-        bet_text = utility.number_plural(len(self.bets[player.name]), 'bet')
-        total_bet = sum(bet.wager for bet in self.bets[player.name])
-        buck_text = utility.plural(total_bet, 'buck')
-        lines.append('You have {} in play totalling {} {}.'.format(bet_text, total_bet, buck_text))
+        bet_text = utility.num_text(len(self.bets[player]), 'bet')
+        total_bet = sum(bet.wager for bet in self.bets[player])
+        buck_text = utility.num_text(total_bet, 'buck')
+        lines.append('You have {} in play totalling {}.'.format(bet_text, buck_text))
         # Display remaining money.
-        plural = utility.plural(self.scores[player.name], 'buck')
-        lines.append('You have {} {} remaining to bet.'.format(self.scores[player.name], buck_text))
+        buck_text = utility.num_text(self.scores[player], 'buck')
+        lines.append('You have {} remaining to bet.'.format(buck_text))
         return '\n'.join(lines)
+
+    def add_player(self):
+        """Add a new player to the game. (None)"""
+        newbie = random.choice(self.bot_classes)(self.scores.keys())
+        newbie.game = self
+        newbie.set_up()
+        self.players.append(newbie)
+        self.scores[newbie] = self.stake
+        self.bets[newbie] = []
+        self.human.tell('\n{} has joined the game.'.format(newbie))
 
     def default(self, line):
         """
@@ -281,7 +293,7 @@ class Craps(game.Game):
         line: The command entered by the user. (str)
         """
         # Gather useful data.
-        player = self.players[self.player_index]
+        player = self.current_player
         words = line.lower().split()
         # Check for odds bets.
         if 'odds' in words:
@@ -296,7 +308,7 @@ class Craps(game.Game):
                 player.error('That is an invalid odds bet.')
                 return True
             # Find valid base bet.
-            possibles = [b for b in self.bets[player.name] if b.match(base_bet, number) and not b.odds_bet]
+            possibles = [b for b in self.bets[player] if b.match(base_bet, number) and not b.odds_bet]
             if possibles:
                 # Make the odds bet.
                 bet = OddsBet(player, base_bet + ' odds', number, possibles[0])
@@ -333,18 +345,17 @@ class Craps(game.Game):
             self.get_wager(bet)
         # Add bets with valid wagers.
         if bet.wager:
-            self.bets[player.name].append(bet)
+            self.bets[player].append(bet)
         return True
 
     def do_bets(self, argument):
         """
         Show the player's bets. (b)
         """
-        player = self.players[self.player_index]
+        player = self.current_player
         player.tell('\n---Your Bets---\n')
-        for bet in self.bets[player.name]:
-            plural = utility.plural(bet.wager, 'buck')
-            player.tell('{} for {} {}.'.format(bet, bet.wager, plural).capitalize())
+        for bet in self.bets[player]:
+            player.tell('{} for {}.'.format(bet, utility.num_text(bet.wager, 'buck')).capitalize())
         return True
 
     def do_done(self, argument):
@@ -356,7 +367,7 @@ class Craps(game.Game):
         the done command to automatically roll if you are asked to. Or, you can just
         use the roll command to do that.
         """
-        player = self.players[self.player_index]
+        player = self.current_player
         # Check for shooter's turn.
         if self.player_index == self.shooter_index:
             # Check for a pass or don't pass bet:
@@ -376,11 +387,16 @@ class Craps(game.Game):
             self.human.tell('\n{} rolled {}.'.format(player.name, self.dice))
             self.resolve_bets()
             self.human.ask('Press enter to continue: ')
+            # Pass the dice if the shooter has no money for a pass/don't pass bet.
+            if not self.validate_shooter(player):
+                    self.next_shooter()
         return False
 
     def do_gipf(self, arguments):
         """
         Crazy Eights makes the next roll an eight.
+
+        Slot Machines forces the next roll to be a pair.
         """
         game, losses = self.gipf_check(arguments, ('crazy eights', 'slot machines'))
         # Crazy Eights forces the next roll to be an eight.
@@ -403,19 +419,19 @@ class Craps(game.Game):
         Stop playing Craps. (!)
         """
         # Determine overall winnings or losses.
-        self.scores[self.human.name] -= self.stake
+        self.scores[self.human] -= self.stake
         # Determine if the game is a win or a loss.
         result = 'won'
-        if self.scores[self.human.name] > 0:
+        if self.scores[self.human] > 0:
             self.win_loss_draw[0] = 1
-        elif self.scores[self.human.name] < 0:
+        elif self.scores[self.human] < 0:
             result = 'lost'
             self.win_loss_draw[1] = 1
         else:
             self.win_loss_draw[2] = 1
         # Inform the user.
-        plural = utility.plural(abs(self.scores[self.human.name]), 'buck')
-        self.human.tell('\nYou {} {} {}.'.format(result, abs(self.scores[self.human.name]), plural))
+        winnings_text = utility.num_text(abs(self.scores[self.human.name]), 'buck')
+        self.human.tell('\nYou {} {}.'.format(result, winnings_text))
         # Quit the game.
         self.flags |= 4
         self.force_end = True
@@ -426,27 +442,25 @@ class Craps(game.Game):
 
         You will be shown a list of removable bets, from which you may pick one to
         remove. To remove all of your removable bets, use 'all' or 'a' as an argument
-        to the bet command.
+        to the remove command.
         """
-        player = self.players[self.player_index]
+        player = self.current_player
         # Get the removable bets.
-        removable = [bet for bet in self.bets[player.name] if bet.removable]
+        removable = [bet for bet in self.bets[player] if bet.removable]
         # Check that there are removable bets.
         if not removable:
             player.tell('You have not made any bets that can be removed.')
         # Check for remove all.
         elif argument.lower() in ('a', 'all'):
             for bet in removable:
-                plural = utility.plural(bet.wager, 'buck')
-                player.tell('Removing your {} bet for {} {}.'.format(bet, bet.wager, plural))
+                player.tell('Removing your {} bet for {}.'.format(bet, utility.num_text(bet.wager, 'buck')))
                 self.remove_bet(bet)
         else:
             # Show the bets.
             player.tell('\n---Removable Bets---\n')
-            row_text = '{}: {} bet for {} {}.'
+            row_text = '{}: {} bet for {}.'
             for bet_index, bet in enumerate(removable):
-                plural = utility.plural(bet.wager, 'buck')
-                player.tell(row_text.format(bet_index, bet, bet.wager, plural))
+                player.tell(row_text.format(bet_index, bet, utility.num_text(bet.wager, 'buck')))
             # Get the bet to remove.
             query = '\nWhich bet would you like to remove (-1 for none)? '
             choice = player.ask_int(query, low = -1, high = len(removable) - 1)
@@ -455,8 +469,8 @@ class Craps(game.Game):
                 pass
             else:
                 bet = removable[choice]
-                plural = utility.plural(bet.wager, 'buck')
-                player.tell('Removing your {} bet for {} {}.'.format(bet, bet.wager, plural))
+                buck_text = utility.num_text(bet.wager, 'buck')
+                player.tell('Removing your {} bet for {}.'.format(bet, buck_text))
                 self.remove_bet(bet)
         return True
 
@@ -473,10 +487,10 @@ class Craps(game.Game):
     def game_over(self):
         """Check for the end of the game. (bool)"""
         # The game is over when the human is out of money (and live bets).
-        if self.scores[self.human.name] == 0 and not self.bets[self.human.name]:
+        if self.scores[self.human] == 0 and not self.bets[self.human]:
             # Set the results.
             self.win_loss_draw[1] = 1
-            self.scores[self.human.name] -= self.stake
+            self.scores[self.human] = -self.stake
             self.human.tell('\nYou lost all of your money.')
             return True
         else:
@@ -491,22 +505,31 @@ class Craps(game.Game):
         """
         # Calcuate the maximum allowed bet.
         max_bet = bet.max_bet(self.limit, self.limit * self.max_payout)
-        player_max = int(self.scores[bet.player.name] / (1 + bet.commission))
+        player_max = int(self.scores[bet.player] / (1 + bet.commission))
         max_bet = min(player_max, max_bet)
+        # Calculate the minimum allowed bet.
+        min_bet = 1
+        while True:
+            bet.set_wager(min_bet)
+            if bet.payout > 0:
+                break
+            min_bet += 1
+        if min_bet > max_bet:
+            min_bet = 0
         # Get the bet (or not).
-        if max_bet:
-            query = 'How much would you like to bet (max = {})? '.format(max_bet)
-            wager = bet.player.ask_int(query, low = 1, high = max_bet, cmd = False)
+        if min_bet and max_bet:
+            query = 'How much would you like to bet ({} to {} bucks)? '.format(min_bet, max_bet)
+            wager = bet.player.ask_int(query, low = min_bet, high = max_bet, cmd = False)
         else:
             wager = 0
             bet.player.error('That is not a valid bet at this time.')
         # Set the bet.
         bet.set_wager(wager)
-        self.scores[bet.player.name] -= wager
+        self.scores[bet.player] -= wager
         if bet.commission:
             commission = int(math.ceil(wager * bet.commission))
-            bet.player.tell('The bank charges a {} dollar commission on that bet.'.format(commission))
-            self.scores[bet.player.name] -= commission
+            bet.player.tell('The bank charges a {} buck commission on that bet.'.format(commission))
+            self.scores[bet.player] -= commission
 
     def handle_options(self):
         """Handle the specified options. (None)"""
@@ -529,18 +552,23 @@ class Craps(game.Game):
         """"Determine the next shooter and the next player (better). (None)"""
         # Check for new players.
         if len(self.players) < self.max_players and random.random() < (1 / len(self.players)):
-            newbie = random.choice(self.bot_classes)(self.scores.keys())
-            newbie.game = self
-            newbie.set_up()
-            self.players.append(newbie)
-            self.scores[newbie.name] = self.stake
-            self.bets[newbie.name] = []
-            self.human.tell('\n{} has joined the game.'.format(newbie.name))
+            self.add_player()
         # Go to the next player who has money to bet.
-        while True:
+        for player in range(len(self.players)):
             self.shooter_index = (self.shooter_index + 1) % len(self.players)
-            if self.scores[self.players[self.shooter_index].name]:
+            if self.scores[self.players[self.shooter_index]]:
                 break
+        else:
+            # If no one has money,
+            if len(self.players) < self.max_players:
+                # Add a player if possible.
+                self.add_player()
+            else:
+                # Otherwise give out loans.
+                self.stake += 18
+                for player in self.players:
+                    self.scores[player] += 18
+                self.human.tell('\nAs no one has any money, each player has been given a 18 buck loan.')
         # Set the next person to the shooter, assuming end of turn will adjust it to the next player.
         self.player_index = self.shooter_index
 
@@ -551,25 +579,14 @@ class Craps(game.Game):
         Parameters:
         player: The current player. (player.Player)
         """
-        # Check for no output yet.
-        '''if not self.turns and not sum(self.bets.values(), []):
-            self.human.tell()'''
         # Check for removing a player.
-        if not (self.scores[player.name] or self.bets[player.name]):
+        if not (self.scores[player] or self.bets[player]):
             self.players.remove(player)
-            self.human.tell('{} dropped out due to lack of funds.'.format(player.name))
+            self.human.tell('\n{} dropped out due to lack of funds.'.format(player))
             self.player_index -= 1
             if self.shooter_index > self.player_index:
                 self.shooter_index -= 1
             return False
-        # Pass the dice if the shooter has no money for a pass/don't pass bet.
-        elif self.shooter_index == self.player_index and not self.validate_shooter(player):
-            for bet in self.bets[player.name]:
-                if 'pass' in bet.match_text and not bet.number:
-                    break
-            else:
-                self.next_shooter()
-                return False
         # Display the game status.
         player.tell(str(self))
         # Get the bet or other command.
@@ -586,11 +603,11 @@ class Craps(game.Game):
         bet: The bet to remove. (CrapsBet)
         """
         # Find the bet.
-        player_name = bet.player.name
-        bets = self.bets[player_name]
+        player = bet.player
+        bets = self.bets[player]
         # Refund the wager.
-        self.scores[player_name] += bet.wager
-        self.scores[player_name] += int(math.ceil(bet.wager * bet.commission))
+        self.scores[player] += bet.wager
+        self.scores[player] += int(math.ceil(bet.wager * bet.commission))
         # Remove the bet and any associated odds bet.
         bets.remove(bet)
         if bet.odds_bet:
@@ -603,16 +620,14 @@ class Craps(game.Game):
             for bet in self.bets[player.name][:]:  # loop through copy to allow changes.
                 payout = bet.resolve(self.dice)
                 if payout > 0:
-                    message = '{} won {} {} on their {}.'
-                    plural = utility.plural(payout, 'buck')
-                    self.human.tell(message.format(player.name, payout, plural, bet))
-                    self.scores[player.name] += payout + bet.wager
-                    self.bets[player.name].remove(bet)
+                    message = '{} won {} on their {}.'
+                    self.human.tell(message.format(player.name, utility.num_text(payout, 'buck'), bet))
+                    self.scores[player] += payout + bet.wager
+                    self.bets[player].remove(bet)
                 elif payout < 0:
-                    message = '{} lost {} {} on their {}.'
-                    plural = utility.plural(bet.wager, 'buck')
-                    self.human.tell(message.format(player.name, bet.wager, plural, bet))
-                    self.bets[player.name].remove(bet)
+                    message = '{} lost {} on their {}.'
+                    self.human.tell(message.format(player.name, utility.num_text(bet.wager, 'buck'), bet))
+                    self.bets[player].remove(bet)
         # Set the point and shooter.
         if self.point:
             if sum(self.dice) == self.point:
@@ -659,18 +674,18 @@ class Craps(game.Game):
             classes.extend(cls.__subclasses__())
         # Set up the players.
         self.players = []
-        taken_names = [self.human.name]
+        taken_names = [self.human]
         while True:
             self.players.append(random.choice(self.bot_classes)(taken_names))
-            taken_names.append(self.players[-1].name)
+            taken_names.append(self.players[-1])
             if not random.randrange(self.max_players - len(self.players)):
                 break
         for player in self.players:
             player.game = self
         self.players.append(self.human)
         # Set up the tracking variables.
-        self.scores = {player.name: self.stake for player in self.players}
-        self.bets = {player.name: [] for player in self.players}
+        self.scores = {player: self.stake for player in self.players}
+        self.bets = {player: [] for player in self.players}
         self.shooter_index = len(self.players) - 1
         self.point = 0
         self.force_roll = 0
@@ -693,7 +708,7 @@ class Craps(game.Game):
         Parameters:
         player: The potential shooter to validate. (player.Player)
         """
-        if not self.scores[player.name] and not self.point:
+        if not self.scores[player] and not self.point:
             for bet in self.bets[player.name]:
                 if bet.match('pass', 0) or bet.match("don't pass", 0):
                     return True
@@ -749,7 +764,6 @@ class CrapsBet(object):
         # Set the calculated attributes.
         self.game = self.player.game
         # Set the default attributes.
-        self.ammo = False
         self.odds_bet = None
         self.wager = 0
 
@@ -854,7 +868,7 @@ class HardWayBet(CrapsBet):
             result = 0
         # Check for resolution.
         elif sum(roll) in (self.number, 7):
-            if roll.values[0] == roll.values[1]:
+            if roll[0] == roll[1]:
                 result = self.payout
             else:
                 result = self.wager * -1
@@ -879,7 +893,7 @@ class HardWayBet(CrapsBet):
     def validate(self):
         """Check that the bet is valid. (str)"""
         errors = []
-        bets = self.game.bets[self.player.name]
+        bets = self.game.bets[self.player]
         made = [bet for bet in bets if bet.match(self.match_text, self.number)]
         if made:
             errors.append('You have already made that bet.')
@@ -968,7 +982,7 @@ class ComeBet(PassBet):
             # Catch the parent class setting the number.
             if self.number != number:
                 message = "{}'s {} bet's number was set to {}"
-                self.player.tell(message.format(self.player.name, self.raw_text, self.number))
+                self.player.tell(message.format(self.player, self.raw_text, self.number))
         else:
             result = 0
         return result
@@ -1195,7 +1209,7 @@ class PlaceBet(CrapsBet):
     def validate(self):
         """Check that the bet is valid. (str)"""
         errors = []
-        bets = self.game.bets[self.player.name]
+        bets = self.game.bets[self.player]
         made = [bet for bet in bets if bet.match(self.match_text, self.number)]
         if made:
             errors.append('You have already made that bet.')
@@ -1245,11 +1259,12 @@ class PropositionBet(CrapsBet):
     """
 
     prop_aliases = {'2': '2', '2 or 12': 'hi-lo', '3': '3', '6': '6', '7': '7', '8': '8', '11': 'yo',
-        '12': '12', 'ace-duece': '3', 'aces': '2', 'any 7': '7', 'any craps': 'craps', 'boxcars': '12',
-        'c&e': 'c & e', 'c & e': 'c & e', 'cornrows': '12', 'craps': 'craps', 'field': 'field',
-        'hi-lo': 'hi-lo', 'hi-low': 'hi-lo', 'high-lo': 'hi-lo', 'high-low': 'hi-lo', 'horn': 'horn',
-        'midnight': '12', 'snake-eyes': '2', 'three-way': 'craps', 'whirl': 'whirl', 'world': 'whirl',
-        'yo': 'yo'}
+        '12': '12', 'ace deuce': '3', 'ace-deuce': '3', 'aces': '2', 'any 7': '7', 'any-7': '7',
+        'any craps': 'craps', 'any-craps': 'craps', 'boxcars': '12', 'c&e': 'c & e', 'c & e': 'c & e',
+        'cornrows': '12', 'craps': 'craps', 'field': 'field', 'hi lo': 'hi-lo', 'hi-lo': 'hi-lo',
+        'hi-low': 'hi-lo', 'high-lo': 'hi-lo', 'high-low': 'hi-lo', 'horn': 'horn', 'midnight': '12',
+        'snake eyes': '2', 'snake-eyes': '2', 'three-way': 'craps', 'three-way': 'craps', 'whirl': 'whirl',
+        'world': 'whirl', 'yo': 'yo'}
     prop_bets = {'2': ((2,), 30, 1), '3': ((3,), 15, 1), '6': ((6,), 1, 1), '7': ((7,), 4, 1),
         '8': ((8,), 1, 1), 'yo': ((11,), 15, 1), '12': ((12,), 30, 1), 'hi-lo': ((2, 12), 15, 1),
         'craps': ((2, 3, 12), 7, 1), 'c & e': ((2, 3, 11, 12), 3, 1, {11: (7, 1)}),
@@ -1279,7 +1294,6 @@ class PropositionBet(CrapsBet):
         else:
             self.special_odds = {}
         # Set the default attributes.
-        self.ammo = False
         self.odds_bet = None
         self.wager = 0
 
@@ -1289,10 +1303,11 @@ class PropositionBet(CrapsBet):
 
     def max_bet(self, limit, max_payout):
         """
-        Calculate the maximum odds wager. (int)
+        Calculate the maximum wager. (int)
 
         Parameters:
-        odds_multiples: The multipliers for odds bets. (dict of int: int)
+        limit: The game's maximum bet. (int)
+        max_payout: The game's maximum payout. (int)
         """
         return max(1, int(max_payout * self.divisor / self.multiplier))
 
@@ -1338,7 +1353,6 @@ class CrapsBot(player.Bot):
 
     Class Attributes:
     bet_type: The main type of bet to make. (str)
-    max_re: A regex for getting the max bet from a question. (SRE_Pattern)
 
     Attributes:
     last_act: The last action taken by the bot. (int)
@@ -1352,7 +1366,6 @@ class CrapsBot(player.Bot):
     """
 
     bet_type = "don't pass"
-    max_re = re.compile('\d+')
 
     def ask(self, prompt):
         """
@@ -1363,12 +1376,12 @@ class CrapsBot(player.Bot):
         """
         if prompt.startswith('\nWhat kind of bet'):
             # Make pass or don't pass bets, and then odds bets on them.
-            my_bets = self.game.bets[self.name]
+            my_bets = self.game.bets[self]
             # Mandatory actions based on errors.
             if self.last_act[:4] == 'must':
                 self.last_act = self.last_act[5:]
             # One bet per round, when you can.
-            elif not self.game.scores[self.name] or self.last_act == 'wager':
+            elif not self.game.scores[self] or self.last_act == 'wager':
                 self.last_act = 'done'
             # Make the primary bet if no bet.
             elif not my_bets:
@@ -1384,19 +1397,24 @@ class CrapsBot(player.Bot):
         else:
             raise player.BotError('Unexpected question to CrapsBot: {!r}'.format(prompt))
 
-    def ask_int(self, *args, **kwargs):
+    def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
         """
-        Ask the bot for an integer. (int)
+        Get an integer response from the player. (int)
 
         Parameters:
-        the parameters are ingored.
+        prompt: The question asking for the integer. (str)
+        low: The lowest acceptable value for the integer. (int or None)
+        high: The highest acceptable value for the integer. (int or None)
+        valid: The valid values for the integer. (container of int)
+        default: The default choice. (int or None)
+        cmd: A flag for returning commands for processing. (bool)
         """
         # Find the maximum possible bet.
-        max_bet = int(self.max_re.search(args[0]).group())
-        wager = min(max_bet, max(1, self.game.scores[self.name] // 5))
+        wager = min(high, max(1, self.game.scores[self] // 5))
+        wager = max(wager, low)
         # Make that bet.
-        message = "\n{} made a {} bet for {} bucks."
-        self.game.human.tell(message.format(self.name, self.last_act, wager))
+        message = "\n{} made a {} bet for {}."
+        self.game.human.tell(message.format(self, self.last_act, utility.num_text(wager, 'buck')))
         # Track making a bet.
         self.last_act = 'wager'
         return wager
@@ -1598,19 +1616,23 @@ class Randy(CrapsBot):
         else:
             raise player.BotError('Unexpected question to Randy: {!r}'.format(prompt))
 
-    def ask_int(self, *args, **kwargs):
+    def ask_int(self, prompt, low = None, high = None, valid = [], default = None, cmd = True):
         """
-        Ask the bot for an integer. (int)
+        Get an integer response from the player. (int)
 
         Parameters:
-        the parameters are ingored.
+        prompt: The question asking for the integer. (str)
+        low: The lowest acceptable value for the integer. (int or None)
+        high: The highest acceptable value for the integer. (int or None)
+        valid: The valid values for the integer. (container of int)
+        default: The default choice. (int or None)
+        cmd: A flag for returning commands for processing. (bool)
         """
         # Make a random bet.
-        max_bet = min(int(self.max_re.search(args[0]).group()), self.game.scores[self.name])
-        wager = random.randint(1, max_bet)
+        wager = random.randint(low, high)
         # Inform the human.
-        message = "\n{} made a {} bet for {} bucks."
-        self.game.human.tell(message.format(self.name, self.last_act, wager))
+        message = "\n{} made a {} bet for {}."
+        self.game.human.tell(message.format(self, self.last_act, utility.num_text(wager, 'buck')))
         # Track making the bet.
         self.last_act = 'wager'
         return wager

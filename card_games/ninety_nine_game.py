@@ -38,8 +38,6 @@ OPTIONS = """
     separated by slashes. (default is 9)
 chicago (chi): Equivalent to zero=4/9 skip=9 99=K minus=T plus-minus=!
 easy= (e=): How many easy bots you will play against. (default = 2)
-face=: The ranks that have their face value. This is used to reset default
-    non-face values. Face cards will have a value of 10.
 gonzo (gz): Equivalent to zero=4/k reverse=a jokers=2 99=9/x skip=2 minus=j.
 jokers= (j=): The number of jokers in the deck. Their default value is 99.
 joker-rules (jr): Equivalent to zero=9/k reverse=k jokers=2 99=x skip=!
@@ -123,7 +121,7 @@ class NinetyNine(game.Game):
     categories = ['Card Games']
     credits = CREDITS
     name = 'Ninety-Nine'
-    ninety_nine_re = re.compile('([1-9atjqkx][cdhs]).*?(-?\d\d?)', re.I)
+    ninety_nine_re = re.compile('\s*([1-9atjqkx][cdhs])[ \t,/:]*(-?\d\d?)', re.I)
     num_options = 7
     options = OPTIONS
     rules = RULES
@@ -182,24 +180,23 @@ class NinetyNine(game.Game):
             self.free_pass = False
         else:
             # Remove a token.
-            player = self.players[self.player_index]
-            self.scores[player.name] -= 1
-            plural = utility.plural(self.scores[player.name], 'token')
+            player = self.current_player
+            self.scores[player] -= 1
+            plural = utility.plural(self.scores[player], 'token')
             message = '{} loses a token. They now have {} {}.'
-            self.human.tell(message.format(player.name, self.scores[player.name], plural))
+            self.human.tell(message.format(player, self.scores[player], plural))
             # Check for removing the player from the game..
-            if not self.scores[player.name]:
+            if not self.scores[player]:
                 # Adjust scoring (last player out should score higher).
                 for name, value in self.scores.items():
                     if value < 1:
                         self.scores[name] = value - 1
                 # Remove the player without messing up player tracking.
-                next_player = self.players[(self.player_index + 1) % len(self.players)]
+                self.next_player = self.get_next_player()
                 self.players.remove(player)
                 self.out_of_the_game.append(player)
-                self.hands[player.name].discard()
-                self.player_index = self.players.index(next_player) - 1
-                self.human.tell('{} is out of the game.'.format(player.name))
+                self.hands[player].discard()
+                self.human.tell('{} is out of the game.'.format(player))
         # Reset the game.
         self.deal()
         self.total = 0
@@ -210,7 +207,7 @@ class NinetyNine(game.Game):
         """
         self.human.tell()
         for player in self.players:
-            self.human.tell('{} has {} tokens left.'.format(player.name, self.scores[player.name]))
+            self.human.tell('{} has {} tokens left.'.format(player, self.scores[player]))
         return True
 
     def do_quit(self, arguments):
@@ -232,7 +229,7 @@ class NinetyNine(game.Game):
         # Play until only one player is in the game.
         if len(self.players) == 1:
             # Set the win-loss-draw.
-            human_score = self.scores[self.human.name]
+            human_score = self.scores[self.human]
             for score in self.scores.values():
                 if score < human_score:
                     self.win_loss_draw[0] += 1
@@ -252,7 +249,7 @@ class NinetyNine(game.Game):
         """Handle the game options(None)"""
         super(NinetyNine, self).handle_options()
         # Set the special rank values.
-        rank_set = cards.STANDARD_RANKS
+        rank_set = cards.STANDARD_RANKS.copy()
         for rank in rank_set.chars:
             if rank in self.rank99:
                 self.card_values[rank] = (99,)
@@ -265,9 +262,9 @@ class NinetyNine(game.Game):
         # Set the paleyrs.
         self.players = [self.human]
         for bot in range(self.easy):
-            self.players.append(Bot99([player.name for player in self.players]))
+            self.players.append(Bot99(self.players))
         for bot in range(self.medium):
-            self.players.append(Bot99Medium([player.name for player in self.players]))
+            self.players.append(Bot99Medium(self.players))
 
     def help_ranks(self):
         """Show the current special ranks in the game. (None)"""
@@ -283,7 +280,7 @@ class NinetyNine(game.Game):
             rank_name = self.deck.rank_set.names[self.reverse_rank]
             self.human.tell('The rank to reverse the order of play is {}.'.format(rank_name))
         if self.skip_rank:
-            rank_name = self.deck.rank_set.names[self.reverse_rank]
+            rank_name = self.deck.rank_set.names[self.skip_rank]
             self.human.tell('The rank to skip the next player is {}.'.format(rank_name))
 
     def player_action(self, player):
@@ -294,7 +291,7 @@ class NinetyNine(game.Game):
         player: The player whose turn it is. (Player)
         """
         # Get the relevant hand of cards.
-        hand = self.hands[player.name]
+        hand = self.hands[player]
         # Display the current game status.
         self.human.tell()
         player.tell('The total to you is {}.'.format(self.total))
@@ -321,7 +318,7 @@ class NinetyNine(game.Game):
                     self.total = new_total
                     self.eight_nine = False
                     message = '{} played the {}, the total is {}.'
-                    self.human.tell(message.format(player.name, card, self.total))
+                    self.human.tell(message.format(player, card, self.total))
                     # Handle reversing the order of play.
                     if card[0] == self.reverse_rank:
                         self.players.reverse()
@@ -352,7 +349,7 @@ class NinetyNine(game.Game):
     def set_options(self):
         """Define the options for the game. (None)"""
         # Set the standard card values.
-        rank_set = cards.STANDARD_RANKS
+        rank_set = cards.STANDARD_RANKS.copy()
         self.card_values = {rank: (min(10, index),) for index, rank in enumerate(rank_set.chars)}
         self.card_values['A'] = (1, 11)
         self.free_pass = False
@@ -399,10 +396,10 @@ class NinetyNine(game.Game):
         random.shuffle(self.players)
         self.out_of_the_game = []
         # Hand out tokens.
-        self.scores = {player.name: 3 for player in self.players}
+        self.scores = {player: 3 for player in self.players}
         # Set up deck and hands.
         self.deck = cards.Deck(jokers = self.jokers)
-        self.hands = {player.name: cards.Hand(deck = self.deck) for player in self.players}
+        self.hands = self.deck.player_hands(self.players)
         # Deal three cards to each player.
         self.deal()
         # Set the tracking variables

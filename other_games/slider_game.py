@@ -31,12 +31,13 @@ Game Programming: Craig "Ichabod" O'Brien
 """
 
 OPTIONS = """
-columns= (c=): The number of columns in the puzzle.
-gonzo (gz): Equivalent to 'columns=6 rows=10'.
-rows= (r=): The number of rows in the puzzle.
+columns= (c=): The number of columns in the puzzle (defaults to 4).
+gonzo (gz): Equivalent to 'columns=7 rows=8 shuffles=9'.
+rows= (r=): The number of rows in the puzzle (defaults to 4).
 size= (s=): The number of columns and rows in the table.
-shuffle= (sh=): The number of times to shuffle the solved puzzle before play.
-text= (t=): The text to use in the puzzle.
+shuffles= (sh=): The number of times to shuffle the solved puzzle before play
+    (defaults to 3).
+text= (t=): The text to use in the puzzle (defaults to 1-9A-Za-z).
 """
 
 RULES = """
@@ -132,7 +133,7 @@ class Slider(game.Game):
         """
         Move the tile to the east of the blank spot. (e)
         """
-        self.direction_move((0, 1), 'east', argument)
+        self.direction_move((1, 0), 'east', argument)
 
     def do_gipf(self, arguments):
         """
@@ -237,19 +238,19 @@ class Slider(game.Game):
         """
         Move the tile to the north of the blank spot. (n)
         """
-        self.direction_move((-1, 0), 'north', argument)
+        self.direction_move((0, -1), 'north', argument)
 
     def do_south(self, argument):
         """
         Move the tile to the south of the blank spot. (s)
         """
-        self.direction_move((1, 0), 'south', argument)
+        self.direction_move((0, 1), 'south', argument)
 
     def do_west(self, argument):
         """
         Move the tile to the west of the blank spot. (w)
         """
-        self.direction_move((0, -1), 'west', argument)
+        self.direction_move((-1, 0), 'west', argument)
 
     def game_over(self):
         """Determine if the puzzle is solved. (None)"""
@@ -286,6 +287,10 @@ class Slider(game.Game):
         elif len(self.text) > text_len:
             self.human.error('Puzzle text truncated because it is too long.')
         self.text = (self.text + self.tiles)[:text_len]
+        if len(self.text) < text_len:
+            self.option_set.errors.append('Puzzle text is too short. Puzzle size shrunk to max square.')
+            self.columns = int(len(self.text) ** 0.5)
+            self.rows = self.columns
 
     def place_text(self):
         """Put the text into the puzzle. (None)"""
@@ -316,12 +321,12 @@ class Slider(game.Game):
         self.option_set.add_option('rows', ['r'], int, 4, check = lambda x: x > 0,
             question = 'How many columns should the board have (return for 4)? ')
         self.option_set.add_option('size', ['s'], int, 0, check = lambda x: x > 0,
-            question = 'How many columns and rows should the board have (return for 4)? ')
+            question = 'How many columns and rows should the board have (return to ignore)? ')
         self.option_set.add_option('text', ['t'], default = '',
             question = 'What text should the solution be (return for numbers + letters)? ')
-        self.option_set.add_option('shuffles', ['sh'], default = 3, check = lambda x: x > 0,
+        self.option_set.add_option('shuffles', ['sh'], int, default = 3, check = lambda x: x > 0,
             question = 'How many times should the puzzle be shuffled (return for 3)? ')
-        self.option_set.add_group('gonzo', ['gz'], 'columns=6 rows=10')
+        self.option_set.add_group('gonzo', ['gz'], 'columns=7 rows=8 shuffles=9')
 
     def set_up(self):
         """Set up the board for the game. (None)"""

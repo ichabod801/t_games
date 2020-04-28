@@ -342,7 +342,7 @@ class SnakesAndLadders(game.Game):
         if game == 'number guessing game':
             if not losses:
                 self.force = 6
-        if game == 'forty thieves':
+        elif game == 'forty thieves':
             if not losses:
                 player = self.players[self.player_index]
                 player.tell()

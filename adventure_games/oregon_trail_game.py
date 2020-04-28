@@ -569,7 +569,7 @@ class OregonTrail(game.Game):
     def poisonous_snake(self):
         """Handle the poisonous snake hazard. (None)"""
         # Update the user.
-        self.human.tell('You kill a poisonous snake rabbit after it bites you.')
+        self.human.tell('You kill a poisonous snake after it bites you.')
         # Update the consumables.
         self.bullets -= 10
         self.miscellaneous -= 5
@@ -591,7 +591,7 @@ class OregonTrail(game.Game):
             self.human.tell(INITIAL_PURCHASES.format(self.starting_money))
             # Purchase steeds.
             query = 'How much would you like to spend on steeds? '
-            self.oxen = self.human.ask_int(query, low = 200, high = 300, default = 0, cmd = False)
+            self.oxen = self.human.ask_int(query, low = 200, high = 300, default = 200, cmd = False)
             self.money -= self.oxen
             modifier = 1
         # Purchase food.
@@ -701,7 +701,7 @@ class OregonTrail(game.Game):
             self.bullets = max(self.bullets - int(speed * 200) - 80, 0)
             self.miscellaneous = max(self.miscellaneous - 15, 0)
             self.rider_combat(speed)
-        # Handle continuing on (running away withotu steed loss).
+        # Handle continuing on (running away without steed loss).
         elif tactics == 'continue':
             self.bullets = max(self.bullets - 150, 0)
             self.miscellaneous = max(self.miscellaneous - 15, 0)
@@ -709,6 +709,8 @@ class OregonTrail(game.Game):
         if not self.bullets:
             self.human.tell('You ran out of bullets and got massacred.')
             self.death = 'an attack by riders'
+        else:
+            self.human.tell('You manage to fight off the outlaws.')
 
     def river_fording(self):
         """Handle the river fording hazard. (None)"""

@@ -49,7 +49,11 @@ liar (lr): Add a dishonest (sometimes) bot to the game.
 tokens= (t=): Change the number of tokens each player has. (default = 3)
 one-six (16): Ones count as sixes.
 one-wild (1w): Ones are wild.
-two-rerolls (2r): Each player can roll the dice twice before stating their claim.
+two-rerolls (2r): Each player can roll the dice twice before stating their
+    claim.
+
+Note that the default is to have one of each bot (honest, challenge, liar, and
+    double trouble).
 """
 
 # The rules for Liar's Dice.
@@ -617,6 +621,9 @@ class LiarsDice(game.Game):
             player.tell('\nThe roll passed to you is {}.'.format(self.dice))
         else:
             player.tell('\nYour roll is {}.'.format(self.dice))
+        # Tell the player what they need to beat.
+        if sum(self.claim):
+            player.tell('You need to beat {}.'.format(self.poker_text(self.poker_score(self.claim))))
         # Get the player action
         if self.phase == 'claim':
             # Get the claimed value.
