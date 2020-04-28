@@ -18,8 +18,8 @@ StreakTest: Tests of longest streak calculations. (unittest.TestCase)
 
 import unittest
 
-from .. import utility
-#from t_games import utility
+#from .. import utility
+from t_games import utility
 
 class FactorialTest(unittest.TestCase):
     """Tests of factorial functions in utility. (unittest.TestCase)"""
