@@ -132,13 +132,12 @@ class AutoBot(player.Bot):
         other: Other answers to be returned as strings. (tuple of str)
         cmd: A flag for returning commands for processing. (bool)
         """
-        reply = self.replies.pop(0).lower()
-        if reply in player.YES or reply in other:
-            return True
-        elif reply in player.NO:
-            return False
-        else:
-            raise player.BotError('Invalid reply in AutoBot.ask_yes_no: {!r}.'.format(reply))
+        while True:
+            reply = self.replies.pop(0).lower()
+            if reply in player.YES or reply in other:
+                return True
+            elif reply in player.NO:
+                return False
 
     def clean_up(self):
         """Do any necessary post-game processing. (None)"""
@@ -418,7 +417,7 @@ class TestGame(game.Game):
         player: The player whose turn it is. (Player)
         """
         self.move = player.ask('What is your move, {}? '.format(player.name)).lower()
-        print(self.move)
+        #print(self.move)
         # Check for continuation.
         if self.move == 'continue':
             return True
