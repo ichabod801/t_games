@@ -318,7 +318,7 @@ class GradualBot(PrisonerBot):
             return self.foe_data['tits'].pop()
         elif self.last_them() == 'defect':
             self.foe_data['retaliations'] += 1
-            self.foe_data['tits'] = ['c', 'c'] + ['d'] * self.foe_data['retaliations']
+            self.foe_data['tits'] = ['cooperate', 'cooperate'] + ['defect'] * self.foe_data['retaliations']
             return self.foe_data['tits'].pop()
         else:
             return 'cooperate'
