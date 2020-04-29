@@ -25,6 +25,8 @@ None. The t_games system is designed to run in base Pyton, in either 2.7 or the 
 
 The t_games project is idling at the moment. I wanted to get the project to a point I could call "finished," and it's there. Now I want to move on. If you would like to do some development on the project or add some games to it, please email me at t_admin at xenomind dot com.
 
+I will certainly work on any bug reports I get. Either make an issue and add it to the Weevilwood project, or email me at t_admin at xenomind dot com. Please include as much information as possible. Best is a copy and paste from the console including the last game state, your last action, and the full text of the traceback (or a description of why the output was wrong). If you were playing the game with any options, please include those as well.
+
 ### Versioning
 
 The t_games project uses a three number versioning system compatible with [PEP 440](https://www.python.org/dev/peps/pep-0440/). The first number is the major release cycle, the second number is the number of games contained in the release, and the third number is the number of changes since the last game was released. Alpha and beta releases will be identified as per GitHub conventions.
